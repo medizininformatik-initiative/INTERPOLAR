@@ -33,7 +33,7 @@ isValidTable <- function(table) {
 #' @param dt A data table (data.table) to which a new row will be appended.
 #' @param ... All values to fill a new row in the table.
 #'
-#' @return The data table with the added row.
+#' @return The data table with the added row. Note: all rows are converted to character type.
 #'
 #' @examples
 #' library(data.table)

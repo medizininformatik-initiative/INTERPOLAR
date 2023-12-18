@@ -12,7 +12,7 @@ addTableRow(dt, ...)
 \item{...}{All values to fill a new row in the table.}
 }
 \value{
-The data table with the added row.
+The data table with the added row. Note: all rows are converted to character type.
 }
 \description{
 This function appends a new row to the end of a data table by combining the existing table with a new row
