@@ -3,3 +3,5 @@
 .Rhistory
 *interpolar.R.utils*.tar.gz
 *Rcheck*
+.project
+*.core.prefs
