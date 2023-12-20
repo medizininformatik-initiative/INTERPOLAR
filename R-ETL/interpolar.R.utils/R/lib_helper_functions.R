@@ -119,6 +119,65 @@ isError <- function(obj) sum(class(obj) %in% "try-error") > 0
 #' @export
 isOK <- function(obj) !isError(obj)
 
+#'
+#' Creates a named list of all parameters. The names are the variable names of the parameters.
+#'
+#' @param ... A vector from which a named list will be created.
+#'
+#' @examples
+#' # Create a named list with specified names using the variables
+#' a <- 1
+#' b <- 2
+#' c <- 3
+#' named_list <- namedListByParam(a, b, c)
+#' print(named_list)  # Output: $a [1] 1, $b [1] 2, $c [1] 3
+#'
+#' #Create a named list of 2 tables
+#' library(data.table)
+#'
+#' table1 <- data.table(
+#'   column1 = c(1:5),
+#'   column2 = c('A', 'B', 'C', 'D', 'E')
+#' )
+#' table2 <- data.table(
+#'   column1 = c(1:10),
+#'   column2 = c('f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o')
+#' )
+#'
+#' tableList <- namedListByParam(table1, table2)
+#'
+#' @export
+namedListByParam <- function(...) {
+  params <- list(...)
+  names <- rep(NULL, length(params))
+  for (i in seq_len(length(params))) {
+    names[i] <- as.character(sys.call()[i + 1])
+  }
+  names(params) <- names
+  params
+}
+
+#' Create a named list based on the values of a vector.
+#'
+#' This function takes a vector as input and returns a named list in which the names and the content of the list elements are identical.
+#'
+#' @param ... A vector from which a named list will be created.
+#'
+#' @return A named list where the names are identical to the values of the input vector.
+#'
+#' @examples
+#' # Create a named list from a vector
+#' values <- c("apple", "banana", "cherry", NA_character_)
+#' named_list <- namedListByValue(values)
+#' print(named_list)
+#'
+#' @export
+namedListByValue <- function(...) {
+  x <- as.list(c(...))
+  names(x) <- as.character(x)
+  x
+}
+
 
 
 
@@ -466,55 +525,6 @@ isOK <- function(obj) !isError(obj)
 #' #' b <- 2
 #' #' c <- 3
 #' #'
-#' #' # Create a named list with specified names using the variables
-#' #' named_list <- namedListByParam(a, b, c)
-#' #' print(named_list)  # Output: $a [1] 1, $b [1] 2, $c [1] 3
-#' #'
-#' #' #Create a named list of 2 tables
-#' #' library(data.table)
-#' #'
-#' #' table1 <- data.table(
-#' #'   column1 = c(1:5),
-#' #'   column2 = c('A', 'B', 'C', 'D', 'E')
-#' #' )
-#' #' table2 <- data.table(
-#' #'   column1 = c(1:10),
-#' #'   column2 = c('f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o')
-#' #' )
-#' #'
-#' #' tableList <- namedListByParam(table1, table2)
-#' #'
-#' #' @export
-#' namedListByParam <- function(...) {
-#'   params <- list(...)
-#'   names <- rep(NULL, length(params))
-#'   for (i in seq_len(length(params))) {
-#'     names[i] <- as.character(sys.call()[i + 1])
-#'   }
-#'   names(params) <- names
-#'   params
-#' }
-#'
-#' #' Create a named list based on the values of a vector.
-#' #'
-#' #' This function takes a vector as input and returns a named list in which the names and the content of the list elements are identical.
-#' #'
-#' #' @param x A vector from which a named list will be created.
-#' #'
-#' #' @return A named list where the names are identical to the values of the input vector.
-#' #'
-#' #' @examples
-#' #' # Create a named list from a vector
-#' #' values <- c("apple", "banana", "cherry", NA_character_)
-#' #' named_list <- namedListByValue(values)
-#' #' print(named_list)
-#' #'
-#' namedListByValue <- function(...) {
-#'   x <- as.list(c(...))
-#'   names(x) <- as.character(x)
-#'   x
-#' }
-#'
 #' #'
 #' #' @param references single string or list of strings
 #' #' @return single string or list of strings where only the last part of each string

@@ -122,7 +122,7 @@ toMatrix <- function(list, colCount, fill = NA) {
 #' @export
 getTableFromList <- function(list, colNames) {
   colCount <- length(colNames)
-  table <- data.table(toMatrix(list, colCount), check.names = FALSE)
+  table <- data.table::data.table(toMatrix(list, colCount), check.names = FALSE)
   colnames(table) <- colNames
   return(table)
 }
