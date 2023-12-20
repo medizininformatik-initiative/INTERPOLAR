@@ -1,3 +1,5 @@
 .env*
 .Rproj.user
 .Rhistory
+*interpolar.R.utils*.tar.gz
+*Rcheck*
