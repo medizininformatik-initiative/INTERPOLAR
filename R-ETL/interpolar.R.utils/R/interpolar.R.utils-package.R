@@ -7,6 +7,7 @@
 #' @importFrom data.table setcolorder
 #' @importFrom data.table setDF
 #' @importFrom data.table setDT
+#' @importFrom methods new
 #' @importFrom rlang :=
 ## usethis namespace: end
 NULL

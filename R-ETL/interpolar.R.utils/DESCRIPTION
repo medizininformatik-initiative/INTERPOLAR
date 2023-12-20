@@ -11,8 +11,12 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
     data.table,
+    fhircrackr,
+    methods,
     openxlsx,
-    rlang
+    rlang,
+    stringr,
+    xml2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
