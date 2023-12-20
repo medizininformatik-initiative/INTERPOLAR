@@ -1,0 +1,58 @@
+##############################################
+# Project Definition interpolar RETL process #
+##############################################
+
+PROJECT_NAME = "interpolar"
+
+[retrieve]
+
+###
+# VERBOSE LEVELS
+###
+# VL_00_NOTHING             = 0
+# VL_10_MAIN_INFO           = 1
+# VL_20_OUTER_SCRIPTS       = 2
+# VL_30_INNER_SCRIPTS       = 3
+# VL_40_INNER_SCRIPTS_INFOS = 4
+# VL_50_TABLES              = 5
+# VL_60_ALL_TABLES          = 6
+# VL_70_DOWNLOAD            = 7
+# VL_80_COI_PROCESSING      = 8
+# VL_90_FHIR_RESPONSE       = 9
+VERBOSE               = 7 # Retrieval / analysis verbose level
+
+
+[retrieve.fhir_server]
+
+
+FHIR_SERVER_ENDPOINT = "https://mii-agiop-3p.life.uni-leipzig.de/blaze"
+FHIR_SERVER_USER = ""
+FHIR_SERVER_PASS = ""
+
+FHIR_TOKEN                  = ""
+FHIR_TOKEN_REFRESH_URL      = ""
+FHIR_TOKEN_REFRESH_USER     = ""
+FHIR_TOKEN_REFRESH_PASSWORD = ""
+
+
+MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests [ehemals MAX_LEN]
+MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE = 300  # reserve 300 characters for further parameters, whose length cannot estimated [ehemals RES_LEN]
+
+MIN_PATIENT_AGE                    = 18           # defined Age threshold in POLAR basic population
+MIN_BIRTHDAY                       = "1910-01-01" # lowest possible birthday
+DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the default birth date if the real date is missing
+
+ENCOUNTER_IDENTIFIER_PATH          = "serviceProvider/identifier/value" # FHIR path in Encounter resource to identify relevant encounters
+ENCOUNTER_IDENTIFIER_VALUE_PATTERN =  "" # grep Pattern to identify the relevant encounters, maybe something like "Station 1|Station 2". If empty then all Encounters are relevant.
+
+MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
+COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
+SORT                               = ""  # some Fhir server require a sort parameter per default
+BUNDLES_AT_ONCE                    = 10  # bundles per request - number of bundles which are processed in a FHIR request
+IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
+
+# polar_download_by_ids_and_crack_parallel() and polar_download_and_crack_parallel()
+MAX_CORES                          = 0 # paralellization, number of cores used, 0: unlimited
+FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack parallel with basic method, avoid polar_download_by_ids_and_crack_parallel()
+NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
+DELAY_REQ                          = 2 # if request fails, wait X seconds, the delay X=DELAY_REQ^(1..n) in seconds

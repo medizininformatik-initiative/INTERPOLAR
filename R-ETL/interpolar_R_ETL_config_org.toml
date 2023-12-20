@@ -1,0 +1,103 @@
+###########################################################
+# Project Definition for the VHF (Vorhofflimmern) Project #
+###########################################################
+
+observation_name = "NTproBNP"
+
+[retrieve]
+
+[retrieve.observation]
+### Code system of the Observations codes
+codesystem = "http://loinc.org"
+### Codes of the Observations which should be found
+codes = [
+  "33763-4",
+  "71425-3",
+  "33762-6",
+  "83107-3",
+  "83108-1",
+  "77622-9",
+  "77621-1"
+]
+# start date and end date
+period  = ["2019-01-01", "2022-12-31"]
+
+[analysis]
+
+### Values to define the Value range for the observation after converting in the
+### reference unit and to log a table with a style like this (in Analysis.log):
+###
+### Full cohort NTproBNP values:
+###   total before cleanup: 164
+###                     NA: 16 (removed)
+###                    < 0: 28 (removed)
+###                    < 1: 0
+###                    > 0: 96
+###                > 10000: 16
+###                > 20000: 0
+###                > 30000: 0
+###                > 40000: 0
+###                > 50000: 0
+###                > 60000: 0
+###                > 70000: 0
+###                > 80000: 4
+###                > 90000: 0
+###                > 1e+05: 0
+###    total after cleanup: 116
+###
+### 1. value is the minimum value. Values below will be removed.
+### 2. value is the maximum value. Values above will be included but logged in the last line of '>' signs
+### 3. value is the step width for the log from minumum up to maximum after '>' signs
+### Example: the above table was created with the observation_value_log_cuts = [0, 100000, 10000]
+observation_value_log_cuts = [0, 100000, 10000]
+
+[analysis.observation]
+### all valid NTproBNP units taken from http://www.unitslab.com/node/163
+units = [
+  # UCUM unit | Conversion factor
+     "pg/mL",    "1", # Reference Unit as first value; all units will be converted in this unit
+      "ng/L",    "1",
+     "pg/dL",  "100",
+  "pg/100mL",  "100",
+       "pg%",  "100",
+      "pg/L", "1000",
+    "pmol/L",    "0.1182"
+]
+# display name of the reference unit (to correct the label in the table after conversion)
+reference_unit_display = "picogram per milliliter"
+
+# List of all diagnoses with their names and full codes or code parts relevant in this DUP.
+# The same diagnosis IDs will be used in [analysis.cohort] to define the diagnoses_options.
+[analysis.condition.diagnoses]
+  AtrialFibrillation = "I48.0|I48.1|I48.2|48.9"
+MyocardialInfarction = "I21|I22|I25.2"
+        HeartFailure = "I50"
+              Stroke = "I60|I61|I62|I63|I64|I69"
+
+[analysis.cohort]
+diagnoses_options = [
+  # diagnoses ID/Name | Comma separated diagnoses of IDs to exclude |         Display name of the current analysis
+  #    to analyze     |        from the current analysis            |               for Logs and Plots
+  #                   |    (whitespaces will be ignored/trimmed)    |
+  "AtrialFibrillation",                                           "", "Atrial Fibrillation incl. all other diagnoses",
+        "HeartFailure",                                           "", "Heart Failure incl. all other diagnoses",
+  "AtrialFibrillation",               "MyocardialInfarction, Stroke", "Atrial Fibrillation incl. Heart Failure, excl. Myocardial Infarction and Stroke",
+        "HeartFailure",               "MyocardialInfarction, Stroke", "Heart Failure incl. Atrial Fibrillation, excl. Myocardial Infarction and Stroke",
+  "AtrialFibrillation", "MyocardialInfarction, Stroke, HeartFailure", "Atrial Fibrillation excl. Myocardial Infarction, Stroke and Heart Failure"
+]
+
+# If TRUE ( = DEFAULT) then all cohorts are splittet by gender (only male or only female).
+# If FALSE then only the full cohort inclusive all genders will be analyzed.
+split_gender = "TRUE"
+
+# Defines the cohort analysis on age groups. Everey main cohort (full cohort, male cohort, female cohort)
+# will be additinal splitted in these here defined groups of ages. A valid definition should consist of
+# pairs of valid ages (at the moment in years). The first pair value is the minimum age. Every age should
+# be greater than this and the second value is the maximum. Every age must be lower or equal than this.
+# A missing second Value defines a range only with a minimum. The implicit second value is infinite.
+# The default definition is the range from 0 to infinite ([0] as the only value 'pair' in this list).
+split_age = [
+  [0],     #  0 < Age < Inf
+  [0, 50], #  0 < Age <= 50
+  [50]     # 50 < Age < Inf
+]
