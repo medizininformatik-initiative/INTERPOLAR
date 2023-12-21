@@ -13,7 +13,6 @@ human_readable_duration <- function(
       0 * 24 * 3600 + 1 * 3600 + 0 * 60 + 1.001001001
     )
 ) {
-
   # store current count of digits for diplaying doubles
   digits <- getOption('digits')
   # set digits to 20
@@ -98,6 +97,7 @@ STATE_LEVELS <- c('OK', 'ERROR', 'RUNNING', 'UNDEFINED')
 #' represents a clock that can be used to measure process times and maintain a
 #' history of activities.
 #'
+#' @importFrom stringr str_pad
 #' @export
 #' @rdname Clock
 Clock = setRefClass(

@@ -51,9 +51,9 @@ isValidTable <- function(table) {
 #'
 #' @export
 addTableRow <- function(dt, ...) {
-  base::rbind(
+  rbind(
     dt,
-    base::cbind(...),
+    cbind(...),
     use.names = FALSE
   )
 }
@@ -325,7 +325,7 @@ splitColumnToRows <- function(dt, columnName, split = '\\s+') {
     splitted <- strsplit(dt[[columnName]], split)
     dt <- cbind(dt[rep(seq_len(nrow(dt)), lengths(splitted)), !(..columnName)], irrelevantColumnName = unlist(splitted))
     names(dt)[length(names(dt))] <- columnName
-    setcolorder(dt, colNames)
+    data.table::setcolorder(dt, colNames)
   }
   dt
 }

@@ -176,7 +176,7 @@ polar_save_bundles <- function(bundles) {
 #'
 #' @export
 polar_save_request <- function(request, filename_without_extension) {
-  write.table(data.table::data.table(request = request), file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "requests", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
+  utils::write.table(data.table::data.table(request = request), file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "requests", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
 }
 
 
@@ -212,7 +212,7 @@ save_performance <- function(filename_without_extension, clock = if (is.null(pol
 #' @return NULL
 #' @export
 polar_save_versions <- function(versions) {
-  write.table(
+  utils::write.table(
     x         = versions,
     file      = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, 'performance', 'versions-retrieval', ext = '.tsv'),
     sep       = '\t',
