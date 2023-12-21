@@ -79,6 +79,8 @@ human_readable_duration <- function(
   # restore digits
   options(digits = digits)
 
+  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+  .SD <- NULL
   # return data table without empty leading column
   #    hours mins secs msecs µsecs nsecs
   # 1:     1    1    1     1     1     1

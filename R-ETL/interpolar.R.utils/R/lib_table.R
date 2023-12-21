@@ -227,6 +227,8 @@ replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replac
 
   # Loop through each pattern to replace
   for (pattern in patterns_to_replace) {
+    # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+    .SD <- NULL
     # Use gsub() to replace the pattern with the replacement in the specified column
     dt[, (column_name) := lapply(.SD, function(x) gsub(pattern, replacement, x)), .SDcols = column_name]
   }
@@ -320,6 +322,8 @@ trimTableValues <- function(dt, colnames = NA) {
 #'
 #' @export
 splitColumnToRows <- function(dt, columnName, split = '\\s+') {
+  # Binding the variable ..columnName_to_check locally to the function, so the R CMD check has nothing to complain about
+  ..columnName <- NULL
   if (isValidTable(dt) && is.character(dt[[columnName]])) { # works only for character columns
     colNames <- names(dt)
     splitted <- strsplit(dt[[columnName]], split)
@@ -403,9 +407,10 @@ removeRowsWithNAorEmpty <- function(dt, columns_to_check) {
   if (nrow(dt) == 0) {
     return(dt)
   }
-
+  # Binding the variable ..columns_to_check locally to the function, so the R CMD check has nothing to complain about
+  ..columns_to_check <- NULL
   # Check the condition for each row in the data.table
-  rows_to_remove <- apply(dt[, ..columns_to_check], 1, function(row) {
+  rows_to_remove <- apply(dt[, ..columns_to_check, with = FALSE], 1, function(row) {
     all(is.na(row) | (nchar(trimws(row)) == 0))
   })
 
