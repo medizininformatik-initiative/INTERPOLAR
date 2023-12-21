@@ -13,24 +13,24 @@
 #' @export
 get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
 
-  PROJECT_NAME <<- project_name
-  PROJECT_TIME_STAMP <<- project_time_stamp
+  PROJECT_NAME <- project_name
+  PROJECT_TIME_STAMP <- project_time_stamp
 
-  global <- "outputGlobal"
-  local <- "outputLocal"
+  global_dir <- "outputGlobal"
+  local_dir <- "outputLocal"
 
   local_results_directories_names  <- c("bundles", "log", "performance", "tables")
   global_results_directories_names <- c("performance", "requests")
 
-  global_main_path <- fhircrackr::pastep(global, project_name)
-  local_main_path <- fhircrackr::pastep(local, project_name)
+  global_main_path <- fhircrackr::pastep(global_dir, project_name)
+  local_main_path <- fhircrackr::pastep(local_dir, project_name)
 
   global_main_path <- paste0(global_main_path, PROJECT_TIME_STAMP)
   local_main_path <- paste0(local_main_path, PROJECT_TIME_STAMP)
 
   namedListByParam(
-    gobal,
-    local,
+    global_dir,
+    local_dir,
     local_results_directories_names,
     global_results_directories_names,
     global_main_path,
@@ -45,7 +45,7 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #'
 #' @export
 create_dirs <- function(project_name = PROJECT_NAME) {
-  SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
+  SUB_PROJECTS_DIRS <- get_project_dir_names(project_name)
 
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_main_path, "/", rd), recursive = TRUE)
