@@ -178,90 +178,183 @@ namedListByValue <- function(...) {
   x
 }
 
+#'
+#' Check if debugging mode is enabled.
+#'
+#' This function checks if debugging mode is enabled by verifying the existence of the 'DEBUG' variable and if it is
+#' set to TRUE. his can be used in code to enable code sections only if a global variable DEGUG is set to TRUE.
+#'
+#' @return TRUE if debugging mode is enabled, otherwise FALSE.
+#'
+isDebug <- function() exists('DEBUG') && DEBUG
 
+#' Execute an outer script with a specified message and process
+#'
+#' This function runs an outer script with the provided message and process, controlling
+#' the verbosity level.
+#'
+#' @param message A character string describing the purpose of the outer script.
+#' @param process A function representing the outer script to be executed.
+#'
+#' @export
+run_out <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose_level = VL_20_OUTER_SCRIPTS
+  )}
 
+#' Execute an inner script with a specified message and process
+#'
+#' This function runs an inner script with the provided message and process, controlling
+#' the verbosity level.
+#'
+#' @param message A character string describing the purpose of the inner script.
+#' @param process A function representing the inner script to be executed.
+#'
+#' @export
+run_in <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose_level = VL_30_INNER_SCRIPTS
+  )}
 
+#' Execute an inner script info with a specified message and process
 #'
+#' This function runs an inner script info with the provided message and process, controlling
+#' the verbosity level.
 #'
+#' @param message A character string describing the purpose of the inner script info.
+#' @param process A function representing the inner script info to be executed.
 #'
+#' @export
+run_in_in <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose_level = VL_40_INNER_SCRIPTS_INFOS
+  )}
+
+#' Execute a script with specified message, process, and verbosity level
 #'
-#' #'
-#' #' Check if debugging mode is enabled.
-#' #'
-#' #' This function checks if debugging mode is enabled by verifying the existence of the 'DEBUG' variable and if it is
-#' #' set to TRUE. his can be used in code to enable code sections only if a global variable DEGUG is set to TRUE.
-#' #'
-#' #' @return TRUE if debugging mode is enabled, otherwise FALSE.
-#' #'
-#' isDebug <- function() exists('DEBUG') && DEBUG
+#' This function runs a script with the provided message and process, controlling
+#' the verbosity level.
 #'
+#' @param message A character string describing the purpose of the script.
+#' @param process A function representing the script to be executed.
+#' @param verbose_level An integer specifying the verbosity level.
 #'
-#' run_out <- function(message, process) {
-#'   run(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_20_OUTER_SCRIPTS
-#'   )}
+#' @export
+run <- function(message, process, verbose_level) {
+  polar_run(
+    message = message,
+    process = process,
+    verbose = VERBOSE - verbose_level + 1,
+    single_line = VERBOSE <= verbose_level
+  )}
+
+#' Execute an outer script with specified message and process (single line)
 #'
-#' run_in <- function(message, process) {
-#'   run(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_30_INNER_SCRIPTS
-#'   )}
+#' This function runs an outer script with the provided message and process, controlling
+#' the verbosity level. Unlike `runs`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
 #'
-#' run_in_in <- function(message, process) {
-#'   run(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_40_INNER_SCRIPTS_INFOS
-#'   )}
+#' @param message A character string describing the purpose of the outer script.
+#' @param process A function representing the outer script to be executed.
 #'
+#' @export
+runs_out <- function(message, process) {
+  runs(
+    message = message,
+    process = process,
+    verbose_level = VL_20_OUTER_SCRIPTS
+  )}
+
+#' Execute an inner script with specified message and process (single line)
 #'
-#' run <- function(message, process, verbose_level) {
-#'   polar_run(
-#'     message = message,
-#'     process = process,
-#'     verbose = VERBOSE - verbose_level + 1,
-#'     single_line = VERBOSE <= verbose_level
-#'   )}
+#' This function runs an inner script with the provided message and process, controlling
+#' the verbosity level. Unlike `runs`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
 #'
+#' @param message A character string describing the purpose of the inner script.
+#' @param process A function representing the inner script to be executed.
 #'
-#' runs_out <- function(message, process) {
-#'   runs(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_20_OUTER_SCRIPTS
-#'   )}
+#' @export
+runs_in <- function(message, process) {
+  runs(
+    message = message,
+    process = process,
+    verbose_level = VL_30_INNER_SCRIPTS
+  )}
+
+#' Execute an inner script info with specified message and process (single line)
 #'
-#' runs_in <- function(message, process) {
-#'   runs(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_30_INNER_SCRIPTS
-#'   )}
+#' This function runs an inner script info with the provided message and process, controlling
+#' the verbosity level. Unlike `runs`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
 #'
-#' runs_in_in <- function(message, process) {
-#'   runs(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_40_INNER_SCRIPTS_INFOS
-#'   )}
+#' @param message A character string describing the purpose of the inner script info.
+#' @param process A function representing the inner script info to be executed.
 #'
-#' runs <- function(message, process, verbose_level) {
-#'   polar_run(
-#'     message = message,
-#'     process = process,
-#'     verbose = VERBOSE - verbose_level + 1,
-#'     single_line = TRUE
-#'   )}
+#' @export
+runs_in_in <- function(message, process) {
+  runs(
+    message = message,
+    process = process,
+    verbose_level = VL_40_INNER_SCRIPTS_INFOS
+  )}
+
+#' Execute a script with specified message, process, and verbosity level (single line)
 #'
-#' catl <- function(...) {
-#'   if (VL_50_TABLES <= VERBOSE) {
-#'     cat(..., '\n')
-#'   }
-#' }
+#' This function runs a script with the provided message and process, controlling
+#' the verbosity level. Unlike `run`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
 #'
+#' @param message A character string describing the purpose of the script.
+#' @param process A function representing the script to be executed.
+#' @param verbose_level An integer specifying the verbosity level.
+#'
+#' @export
+runs <- function(message, process, verbose_level) {
+  polar_run(
+    message = message,
+    process = process,
+    verbose = VERBOSE - verbose_level + 1,
+    single_line = TRUE
+  )}
+
+#' Conditional Print to Console (for tables) based on verbosity level
+#'
+#' This function prints the provided content to the console only if the global
+#' verbosity level is equal to or greater than `VL_50_TABLES`.
+#'
+#' @param ... Objects to be printed to the console.
+#'
+#' @export
+catl <- function(...) {
+  if (VL_50_TABLES <= VERBOSE) {
+    cat(..., '\n')
+  }
+}
+
+#' Refresh FHIR Token
+#'
+#' This function refreshes the FHIR token if it is defined.
+#'
+#' @details
+#' If the FHIR_TOKEN is defined, the function attempts to refresh it using the \code{polar_refresh_token} function.
+#'
+#' @export
+refreshFhirToken <- function() {
+  #refresh token, if defined
+  if (FHIR_TOKEN != '') {
+    polar_run('Refresh FHIR_TOKEN', {
+      FHIR_TOKEN <- polar_refresh_token()
+    }, single_line = VERBOSE <= VL_60_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1, throw_exception = FALSE)
+  }
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
@@ -309,7 +402,7 @@ namedListByValue <- function(...) {
 #'     print_table_summary(table, table_name)
 #'   }
 #' }
-#'
+
 #' #' This function checks if the given 'code' matches any of the patterns in the 'patternList'.
 #' #'
 #' #' @param patternList A character vector containing the patterns to match against the 'code'.
@@ -360,18 +453,6 @@ namedListByValue <- function(...) {
 #' catContacts <- function(contacts) {
 #'   contacts_name <- as.character(sys.call()[2]) # get parameter name
 #'   catl(paste0(contacts_name, ':\n', paste0('  ', names(contacts), ': ', sapply(contacts, ansi, underline = TRUE), collapse = '\n')))
-#' }
-#'
-#' #'
-#' #' Refreshes the FHIR token if defined.
-#' #'
-#' refreshFhirToken <- function() {
-#'   #refresh token, if defined
-#'   if (FHIR_TOKEN != '') {
-#'     polar_run('Refresh FHIR_TOKEN', {
-#'       FHIR_TOKEN <<- polar_refresh_token()
-#'     }, single_line = VERBOSE <= VL_60_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1, throw_exception = FALSE)
-#'   }
 #' }
 #'
 #' #'
