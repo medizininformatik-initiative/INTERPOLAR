@@ -43,7 +43,7 @@ MIN_BIRTHDAY                       = "1910-01-01" # lowest possible birthday
 DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the default birth date if the real date is missing
 
 ENCOUNTER_IDENTIFIER_PATH          = "serviceProvider/identifier/value" # FHIR path in Encounter resource to identify relevant encounters
-ENCOUNTER_IDENTIFIER_VALUE_PATTERN =  "" # grep Pattern to identify the relevant encounters, maybe something like "Station 1|Station 2". If empty then all Encounters are relevant.
+ENCOUNTER_IDENTIFIER_VALUE_PATTERN = "" # grep Pattern to identify the relevant encounters, maybe something like "Station 1|Station 2". If empty then all Encounters are relevant.
 
 MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
 COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
