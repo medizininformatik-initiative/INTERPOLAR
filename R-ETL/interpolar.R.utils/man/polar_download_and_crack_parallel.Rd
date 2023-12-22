@@ -9,7 +9,7 @@ polar_download_and_crack_parallel(
   table_description = TABLE_DESCRIPTION$Encounter,
   bundles_at_once = 20,
   verbose = 1,
-  bundles_left = MAX_BUNDLES,
+  bundles_left = MAX_ENCOUNTER_BUNDLES,
   max_cores = 2,
   log_errors = "enc_error.xml"
 )
