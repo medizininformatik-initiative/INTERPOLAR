@@ -355,6 +355,41 @@ refreshFhirToken <- function() {
   }
 }
 
+#' Flatten a nested list
+#'
+#' This function takes a nested list and flattens it into a single-level list and
+#' removes parent names from the variable names.
+#' It is particularly useful when you have flattened nested structures and want to
+#' clean up the variable names by removing the prefixes introduced during flattening.
+#'
+#' @param x The input nested list.
+#' @param prefix An optional prefix to be added to the names of the flattened list.
+#'
+#' @return A flattened list.
+#'
+#' @details
+#' The function recursively iterates through the nested list, creating a flattened list
+#' with modified variable names by adding the specified prefix. If no prefix is provided,
+#' the original names are retained. The function uses a regular expression to remove parent names from variable names.
+#' It looks for patterns at the beginning of each name and removes everything up to
+#' the first uppercase letter, assuming that uppercase letters indicate the start of a new variable.
+#' For example, "retrieve_fhir_server_SORT" becomes "SORT".
+#' @export
+flatten_list <- function(x, prefix = NULL) {
+  result <- list()
+  for (name in names(x)) {
+    new_prefix <- ifelse(is.null(prefix), name, paste0(prefix, "_", name))
+    if (is.list(x[[name]])) {
+      result <- c(result, flatten_list(x[[name]], new_prefix))
+    } else {
+      result[[new_prefix]] <- x[[name]]
+    }
+  }
+  # Remove parent names from variable names
+  names(result) <- gsub("^[^A-Z]+", "", names(result))
+  result
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
