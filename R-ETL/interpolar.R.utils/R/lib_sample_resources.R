@@ -302,7 +302,7 @@ polar_get_resources_by_ids <- function(
     fhircrackr::fhir_bundle_list(bundles) # return bundles list as fhir_crackr class bundle_list
   }
   polar_get_resources_by_ids_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
-    parameters_list <- list(paste0(ids, collapse = ","), COUNT) # add all ids
+    parameters_list <- list(paste0(ids, collapse = ","), COUNT_PER_BUNDLE) # add all ids
     names(parameters_list) <- c(id_param_str, '_count') # name arguments
     polar_fhir_search(
       request = fhircrackr::fhir_url(# get resources
@@ -438,7 +438,7 @@ polar_download_and_crack_parallel <- function(
   table_description = TABLE_DESCRIPTION$Encounter,
   bundles_at_once   = 20,
   verbose           = 1,
-  bundles_left      = MAX_BUNDLES,
+  bundles_left      = MAX_ENCOUNTER_BUNDLES,
   max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
   log_errors        = 'enc_error.xml'
 ) {
@@ -685,8 +685,8 @@ polar_download_and_crack_parallel <- function(
 #'       '\n'
 #'     ))
 #'   }
-#'   mb <- MAX_BUNDLES # for later restoring
-#'   MAX_BUNDLES <<- Inf
+#'   mb <- MAX_ENCOUNTER_BUNDLES # for later restoring
+#'   MAX_ENCOUNTER_BUNDLES <<- Inf
 #'   run <- 0
 #'   tables <- list()
 #'   pkg <- list()
@@ -842,7 +842,7 @@ polar_download_and_crack_parallel <- function(
 #'
 #'     run <- run + 1
 #'   }
-#'   MAX_BUNDLES <<- mb
+#'   MAX_ENCOUNTER_BUNDLES <<- mb
 #'   polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 #' }
 #'

@@ -43,7 +43,7 @@
 #'
 #' @return A styled string.
 #' @export
-styled_string <- function(
+styled_string <- function( #old name str.
     ...,
     sep        = '',
     fg         = NULL,

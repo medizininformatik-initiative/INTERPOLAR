@@ -13,8 +13,8 @@
 #' @export
 get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
 
-  PROJECT_NAME <- project_name
-  PROJECT_TIME_STAMP <- project_time_stamp
+  PROJECT_NAME <<- project_name
+  PROJECT_TIME_STAMP <<- project_time_stamp
 
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
@@ -45,7 +45,7 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #'
 #' @export
 create_dirs <- function(project_name = PROJECT_NAME) {
-  SUB_PROJECTS_DIRS <- get_project_dir_names(project_name)
+  SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
 
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_main_path, "/", rd), recursive = TRUE)
@@ -65,7 +65,7 @@ create_dirs <- function(project_name = PROJECT_NAME) {
 #'
 #' @export
 polar_path_to_log_directory <- function(project_name = PROJECT_NAME) {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "log")
+  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_main_path, "log")
 }
 
 
@@ -199,30 +199,10 @@ polar_save_request <- function(request, filename_without_extension) {
 #'
 #' @return Nothing.
 #' @export
-save_performance <- function(filename_without_extension, clock = if (is.null(polar_clock)) NULL else polar_clock) {
+save_performance <- function(filename_without_extension, clock = if (is.null(POLAR_CLOCK)) NULL else POLAR_CLOCK) {
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "performance", filename_without_extension), hide_errors = FALSE)
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "performance", filename_without_extension), hide_errors = TRUE)
 }
-
-
-#' Write versions to folder performance
-#'
-#' @param versions A data.table containing the columns Software and Verion
-#'
-#' @return NULL
-#' @export
-polar_save_versions <- function(versions) {
-  utils::write.table(
-    x         = versions,
-    file      = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, 'performance', 'versions-retrieval', ext = '.tsv'),
-    sep       = '\t',
-    quote     = FALSE,
-    dec       = '.',
-    row.names = FALSE,
-    col.names = TRUE
-  )
-}
-
 
 ###
 # save error into the sub project related log directory

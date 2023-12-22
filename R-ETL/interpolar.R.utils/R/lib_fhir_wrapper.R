@@ -25,7 +25,7 @@
 polar_fhir_search <- function(
   request                = fhircrackr::fhir_current_request(),
   body                   = NULL,
-  max_bundles            = MAX_BUNDLES,
+  max_bundles            = MAX_ENCOUNTER_BUNDLES,
   verbose                = 1,
   max_attempts           = 5,
   delay_between_attempts = 10,

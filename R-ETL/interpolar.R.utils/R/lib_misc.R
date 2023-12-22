@@ -23,7 +23,7 @@ polar_run <- function(
     cat(paste0(message, ':', if (single_line) ' ' else paste0(colourise(text = ' RUNNING ...', fg = 'blue'), '\n')))
   }
 
-  err <- polar_clock$measure_process_time(
+  err <- POLAR_CLOCK$measure_process_time(
     message = message,
     process = process
   )
@@ -56,8 +56,8 @@ polar_run <- function(
 #' @export
 polar_add_common_request_params <- function(parameters = NULL) {
   parameters <- parameters[!is.na(parameters)]
-  if (!'_count' %in% names(parameters) && exists('COUNT') && !is.null(COUNT) && !is.na(COUNT) && COUNT != '') {
-    parameters <- c(parameters, c('_count' = COUNT))
+  if (!'_count' %in% names(parameters) && exists('COUNT_PER_BUNDLE') && !is.null(COUNT_PER_BUNDLE) && !is.na(COUNT_PER_BUNDLE) && COUNT_PER_BUNDLE != '') {
+    parameters <- c(parameters, c('_count' = COUNT_PER_BUNDLE))
   }
   if (!'_sort' %in% names(parameters) && exists('SORT') && !is.null(SORT) && !is.na(SORT) && SORT != '') {
     parameters <- c(parameters, c('_sort' = SORT))
