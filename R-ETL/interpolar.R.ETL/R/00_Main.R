@@ -3,6 +3,9 @@
 ###
 CONFIG <- RcppTOML::parseToml(paste0('../interpolar_R_ETL_config.toml'))
 
+# Set the global VERBOSE variable used by all interpolar.R.utils scripts
+VERBOSE <- CONFIG$VERBOSE
+
 ###
 # Create globally used polar_clock
 ###

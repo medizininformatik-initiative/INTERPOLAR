@@ -4,8 +4,6 @@
 
 PROJECT_NAME = "interpolar"
 
-[retrieve]
-
 ###
 # VERBOSE LEVELS
 ###
@@ -20,6 +18,9 @@ PROJECT_NAME = "interpolar"
 # VL_80_COI_PROCESSING      = 8
 # VL_90_FHIR_RESPONSE       = 9
 VERBOSE               = 7 # Retrieval / analysis verbose level
+
+
+[retrieve]
 
 
 [retrieve.fhir_server]
