@@ -13,9 +13,9 @@
 #' saved as RData files.
 #'
 #' @export
-polar_110_get_encounters <- function() {
+get_encounters <- function() {
 
-  run_in(toupper('polar_110_get_encounters'), {
+  run_in(toupper('get_encounters'), {
 
     #refresh token, if defined
     refreshFhirToken()
@@ -23,66 +23,92 @@ polar_110_get_encounters <- function() {
     resource <- 'Encounter'
 
     # download encounter from fhir server or load encouter table from snapshot?
-    if (resource %in% RESOURCES_TO_DOWNLOAD) {
+    #if (resource %in% RESOURCES_TO_DOWNLOAD) {
       #
       #for date restriction, identify the specification required in endpoint
       # do we need {sa, eb} or {ge, le}
       #
       runs_in_in('Create Test Request for Search Parameter \'sa\' and \'eb\'', {
-        request <- fhircrackr::fhir_url(FHIR_ENDPOINT, 'Encounter',
+        request <- fhircrackr::fhir_url(FHIR_SERVER_ENDPOINT, 'Encounter',
           parameters = c(
-            'date' = paste0('sa', PERIOD_START),
-            'date' = paste0('eb', PERIOD_END),
+            # 'date' = paste0('sa', PERIOD_START),
+            # 'date' = paste0('eb', PERIOD_END),
             '_summary' = 'count'
           )
         )
       })
 
       polar_run('Send Test Request', {
-        test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE - VL_60_DOWNLOAD), silent = TRUE)
+        test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE - 7), silent = TRUE)
         NULL
-      }, single_line = VERBOSE <= VL_60_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1, throw_exception = FALSE)
+      }, single_line = VERBOSE <= 7, verbose = VERBOSE - 4 + 1, throw_exception = FALSE)
 
+      # #
+      # # determine, whether date restrictions must be specified with
+      # #  {sa, eb} or {ge, le}
+      # #
+      # run_in_in('Check Response', {
       #
-      # determine, whether date restrictions must be specified with
-      #  {sa, eb} or {ge, le}
+      # params <- if (
+      #   succ <- !inherits(test_bundles, 'try-error') &&
+      #   0 < length(test_bundles) && {
+      #     total <- as.numeric(
+      #       xml2::xml_attr(
+      #         x = xml2::xml_find_all(
+      #           x = test_bundles[[1]],
+      #           xpath = './/total'
+      #         ),
+      #         'value'
+      #       )
+      #     )
+      #     !is.na(total) && 0 < total
+      #   }
+      # ) {
+      #     c(
+      #       'date' = paste0('sa', PERIOD_START),
+      #       'date' = paste0('eb', PERIOD_END)
+      #     )
+      #   } else {
+      #     c(
+      #       'date' = paste0('ge', PERIOD_START),
+      #       'date' = paste0('le', PERIOD_END)
+      #     )
+      #   }
       #
+      #   catl('Request')
+      #   catl(styled_string(request, fg = 2, underline = TRUE))
+      #   if (succ) {
+      #     catl('returned', total, 'available Encounters.')
+      #     catl('Will download Encounters using parameters "sa" and "eb"')
+      #   } else {
+      #     catl('did not return any available Encounters.')
+      #     catl('Will download Encounters using parameters "ge" and "le"')
+      #   }
+      #
+      #   op.beg <- gsub("^([a-z]+).*", "\\1", params[1])
+      #   op.end <- gsub("^([a-z]+).*", "\\1", params[2])
+      # })
+
       run_in_in('Check Response', {
 
-      params <- if (
-        succ <- !inherits(test_bundles, 'try-error') &&
-        0 < length(test_bundles) && {
-          total <- as.numeric(
-            xml2::xml_attr(
-              x = xml2::xml_find_all(
-                x = test_bundles[[1]],
-                xpath = './/total'
-              ),
-              'value'
+        params <- if (
+          succ <- !inherits(test_bundles, 'try-error') &&
+          0 < length(test_bundles) && {
+            total <- as.numeric(
+              xml2::xml_attr(
+                x = xml2::xml_find_all(
+                  x = test_bundles[[1]],
+                  xpath = './/total'
+                ),
+                'value'
+              )
             )
-          )
-          !is.na(total) && 0 < total
-        }
-      ) {
-          c(
-            'date' = paste0('sa', PERIOD_START),
-            'date' = paste0('eb', PERIOD_END)
-          )
-        } else {
-          c(
-            'date' = paste0('ge', PERIOD_START),
-            'date' = paste0('le', PERIOD_END)
-          )
-        }
-
-        catl('Request')
-        catl(styled_string(request, fg = 2, underline = TRUE))
-        if (succ) {
+            !is.na(total) && 0 < total
+          }
+        ) {
+          catl('Request')
+          catl(styled_string(request, fg = 2, underline = TRUE))
           catl('returned', total, 'available Encounters.')
-          catl('Will download Encounters using parameters "sa" and "eb"')
-        } else {
-          catl('did not return any available Encounters.')
-          catl('Will download Encounters using parameters "ge" and "le"')
         }
 
         op.beg <- gsub("^([a-z]+).*", "\\1", params[1])
@@ -90,14 +116,14 @@ polar_110_get_encounters <- function() {
       })
 
       polar_run('Download and Crack Encounters', {
-        #
-        # is this parameter defined ?
-        # must be set manual by used interaction
-        # can be something like 'einrichtungskontakt'
-        #
-        if (ENC_REQ_TYPE != "") {
-          params <- c(params, 'type' = ENC_REQ_TYPE)
-        }
+        # #
+        # # is this parameter defined ?
+        # # must be set manual by used interaction
+        # # can be something like 'einrichtungskontakt'
+        # #
+        # if (ENC_REQ_TYPE != "") {
+        #   params <- c(params, 'type' = ENC_REQ_TYPE)
+        # }
 
         #
         # type of encounter collection
@@ -109,12 +135,13 @@ polar_110_get_encounters <- function() {
         # may generate tremendous overhead, as those encounter are not excluded by the
         # period restriction. They will be downloaded with each request
         #
-        if (ENC_REQ_PER == "full") {
+        #if (ENC_REQ_PER == "full") {
 
           request_encounter <- fhircrackr::fhir_url(
-            url        = FHIR_ENDPOINT,
-            resource   = 'Encounter',
-            parameters = polar_add_common_request_params(params)
+            url        = FHIR_SERVER_ENDPOINT,
+            resource   = 'Encounter'#,
+            #parameters = polar_add_common_request_params(params)
+            #parameters = '_count' = COUNT_PER_BUNDLE
           )
 
           table_enc <- polar_download_and_crack_parallel(
@@ -122,71 +149,71 @@ polar_110_get_encounters <- function() {
             table_description = TABLE_DESCRIPTION$Encounter,
             bundles_at_once   = BUNDLES_AT_ONCE,
             log_errors        = 'enc_error.xml',
-            verbose           = VERBOSE - VL_60_DOWNLOAD
+            verbose           = VERBOSE - 7
           )
-        } else if (grepl("^(month|year)$", ENC_REQ_PER) ) {
-
-          table_enc <- list()
-
-          #determine the parallelization level
-          os <- get_os()
-          ncores <- get_ncores(os)
-
-          # download seqence, month by month or year by year
-          period.seq <- seq(as.Date(PERIOD_START), as.Date(PERIOD_END), by = ENC_REQ_PER)
-
-          # apply parallel download of encounter from several month/years
-          table_enc <- parallel::mclapply(
-
-            X = 1:length(period.seq),
-            mc.cores = limit_ncores(ncores),
-            FUN = function (X) {
-
-              #determine start and end date for sub-period
-              period.beg <- period.seq[X]
-              if (X == length(period.seq)) {
-
-                period.end <- PERIOD_END
-              } else {
-
-                period.end <- period.seq[X+1]-1 # previous day, the last day of the month before
-              }
-
-              #
-              # params has been defined above and may contain additional parameters, such as type=='einrichtungskontakt'
-              #  thus, replace params 1 and 2 only
-              #  TODO do we need a special check here to determine the right index
-              #
-              params[1] <- paste0(op.beg, period.beg)
-              params[2] <- paste0(op.end, period.end)
-
-              if (VL_60_ALL_TABLES <= VERBOSE) {
-
-                message("Retrieve encounter from ",params[1]," - ",params[2],"\n")
-              }
-
-              request_encounter <- fhircrackr::fhir_url(
-                url        = FHIR_ENDPOINT,
-                resource   = 'Encounter',
-                parameters = polar_add_common_request_params(params)
-              )
-
-              # return request result to table_enc
-              polar_download_and_crack_parallel(
-                request           = request_encounter,
-                table_description = TABLE_DESCRIPTION$Encounter,
-                bundles_at_once   = BUNDLES_AT_ONCE,
-                log_errors        = 'enc_error.xml',
-                max_cores         = 1, #avoid double parallelization with inner mclapply
-                verbose           = VERBOSE - VL_60_DOWNLOAD
-              )
-          })
+        # } else if (grepl("^(month|year)$", ENC_REQ_PER) ) {
+        #
+        #   table_enc <- list()
+        #
+        #   #determine the parallelization level
+        #   os <- get_os()
+        #   ncores <- get_ncores(os)
+        #
+        #   # download seqence, month by month or year by year
+        #   period.seq <- seq(as.Date(PERIOD_START), as.Date(PERIOD_END), by = ENC_REQ_PER)
+        #
+        #   # apply parallel download of encounter from several month/years
+        #   table_enc <- parallel::mclapply(
+        #
+        #     X = 1:length(period.seq),
+        #     mc.cores = limit_ncores(ncores),
+        #     FUN = function (X) {
+        #
+        #       #determine start and end date for sub-period
+        #       period.beg <- period.seq[X]
+        #       if (X == length(period.seq)) {
+        #
+        #         period.end <- PERIOD_END
+        #       } else {
+        #
+        #         period.end <- period.seq[X+1]-1 # previous day, the last day of the month before
+        #       }
+        #
+        #       #
+        #       # params has been defined above and may contain additional parameters, such as type=='einrichtungskontakt'
+        #       #  thus, replace params 1 and 2 only
+        #       #  TODO do we need a special check here to determine the right index
+        #       #
+        #       params[1] <- paste0(op.beg, period.beg)
+        #       params[2] <- paste0(op.end, period.end)
+        #
+        #       if (VL_60_ALL_TABLES <= VERBOSE) {
+        #
+        #         message("Retrieve encounter from ",params[1]," - ",params[2],"\n")
+        #       }
+        #
+        #       request_encounter <- fhircrackr::fhir_url(
+        #         url        = FHIR_ENDPOINT,
+        #         resource   = 'Encounter',
+        #         parameters = polar_add_common_request_params(params)
+        #       )
+        #
+        #       # return request result to table_enc
+        #       polar_download_and_crack_parallel(
+        #         request           = request_encounter,
+        #         table_description = TABLE_DESCRIPTION$Encounter,
+        #         bundles_at_once   = BUNDLES_AT_ONCE,
+        #         log_errors        = 'enc_error.xml',
+        #         max_cores         = 1, #avoid double parallelization with inner mclapply
+        #         verbose           = VERBOSE - 7
+        #       )
+        #   })
 
           # combine the results from each request
           table_enc <- unique(data.table::rbindlist(table_enc))
-        }
-      }, single_line = VERBOSE <= VL_60_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1)
-    }
+        #}
+      }, single_line = VERBOSE <= 7, verbose = VERBOSE - 4 + 1)
+    #}
 
     # run_in_in('change column classes', {
     #   table_enc <- table_enc[, lapply(.SD, as.character), ]
