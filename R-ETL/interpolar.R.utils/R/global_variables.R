@@ -1,3 +1,18 @@
+###
+# VERBOSE LEVEL variables
+###
+VL_00_NOTHING             = 0
+VL_10_MAIN_INFO           = 1
+VL_20_OUTER_SCRIPTS       = 2
+VL_30_INNER_SCRIPTS       = 3
+VL_40_INNER_SCRIPTS_INFOS = 4
+VL_50_TABLES              = 5
+VL_60_ALL_TABLES          = 6
+VL_70_DOWNLOAD            = 7
+VL_80_COI_PROCESSING      = 8
+VL_90_FHIR_RESPONSE       = 9
+
+
 # global variables for fhir-requests
 utils::globalVariables(c("BUNDLES_AT_ONCE", "ENC_REQ_PER", "ENC_REQ_TYPE", "FHIR_SERVER_ENDPOINT", "MAX_CORES", "MAX_ENCOUNTER_BUNDLES",
                          "DELAY_REQ", "FHIR_SERVER_USER", "FHIR_SERVER_PASS", "COUNT_PER_BUNDLE", "FHIR_TOKEN", "FHIR_TOKEN_REFRESH_PASSWORD",
@@ -10,8 +25,5 @@ utils::globalVariables(c("PERIOD_END", "PERIOD_START", "RESOURCES_TO_DOWNLOAD", 
 utils::globalVariables(c("PROJECT_NAME", "SUB_PROJECTS_DIRS", "PROJECT_TIME_STAMP"))
 # global variables for logging
 utils::globalVariables(c("POLAR_CLOCK", "VERBOSE", "DEBUG", "VERSIONS"))
-# global variables for verbose level
-utils::globalVariables(c("VL_20_OUTER_SCRIPTS", "VL_30_INNER_SCRIPTS", "VL_40_INNER_SCRIPTS_INFOS", "VL_50_TABLES",
-                         "VL_60_ALL_TABLES", "VL_60_DOWNLOAD", "VL_90_FHIR_RESPONSE"))
 # global variables for other functionalities
 #utils::globalVariables(c("ENC_RES_MERGE", "MEDICATION_RESOURCE"))

@@ -98,7 +98,7 @@ paste_parameters <- function(parameters = NULL, parameters2add = NULL, add_quest
           seq_along(arg),
           function(i) {
             if (is.null(arg[i]) || is.na(arg[i])) {# if element is NULL or NA
-              if (VL_60_DOWNLOAD <= VERBOSE) {# if verbose level is at least VL_60_DOWNLOAD
+              if (VL_70_DOWNLOAD <= VERBOSE) {# if verbose level is at least VL_70_DOWNLOAD
                 warning("WARNING: Ignore parameter ",n[i]," which is ",arg[i],"\n")
               }
               ""
@@ -888,7 +888,7 @@ polar_download_and_crack_parallel <- function(
 #'         bundles_left      = Inf,
 #'         log_errors        = paste0(tolower(substr(res_name,1,3)),'_error.xml'),
 #'         max_cores         = 1, #avoid double parallelization with inner mclapply
-#'         verbose           = VERBOSE - VL_60_DOWNLOAD
+#'         verbose           = VERBOSE - VL_70_DOWNLOAD
 #'       )
 #'     }
 #'   )

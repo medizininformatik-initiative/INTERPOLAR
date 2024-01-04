@@ -201,7 +201,7 @@ run_out <- function(message, process) {
   run(
     message = message,
     process = process,
-    verbose_level = VL_20_OUTER_SCRIPTS
+    verbose = VL_20_OUTER_SCRIPTS
   )}
 
 #' Execute an inner script with a specified message and process
@@ -217,7 +217,7 @@ run_in <- function(message, process) {
   run(
     message = message,
     process = process,
-    verbose_level = VL_30_INNER_SCRIPTS
+    verbose = VL_30_INNER_SCRIPTS
   )}
 
 #' Execute an inner script info with a specified message and process
@@ -233,7 +233,7 @@ run_in_in <- function(message, process) {
   run(
     message = message,
     process = process,
-    verbose_level = VL_40_INNER_SCRIPTS_INFOS
+    verbose = VL_40_INNER_SCRIPTS_INFOS
   )}
 
 #' Execute a script with specified message, process, and verbosity level
@@ -243,15 +243,15 @@ run_in_in <- function(message, process) {
 #'
 #' @param message A character string describing the purpose of the script.
 #' @param process A function representing the script to be executed.
-#' @param verbose_level An integer specifying the verbosity level.
+#' @param verbose An integer specifying the verbosity level.
 #'
 #' @export
-run <- function(message, process, verbose_level) {
+run <- function(message, process, verbose) {
   polar_run(
     message = message,
     process = process,
-    verbose = VERBOSE - verbose_level + 1,
-    single_line = VERBOSE <= verbose_level
+    verbose = VERBOSE - verbose + 1,
+    single_line = VERBOSE <= verbose,
   )}
 
 #' Execute an outer script with specified message and process (single line)
@@ -268,7 +268,7 @@ runs_out <- function(message, process) {
   runs(
     message = message,
     process = process,
-    verbose_level = VL_20_OUTER_SCRIPTS
+    verbose = VL_20_OUTER_SCRIPTS
   )}
 
 #' Execute an inner script with specified message and process (single line)
@@ -285,7 +285,7 @@ runs_in <- function(message, process) {
   runs(
     message = message,
     process = process,
-    verbose_level = VL_30_INNER_SCRIPTS
+    verbose = VL_30_INNER_SCRIPTS
   )}
 
 #' Execute an inner script info with specified message and process (single line)
@@ -302,7 +302,7 @@ runs_in_in <- function(message, process) {
   runs(
     message = message,
     process = process,
-    verbose_level = VL_40_INNER_SCRIPTS_INFOS
+    verbose = VL_40_INNER_SCRIPTS_INFOS
   )}
 
 #' Execute a script with specified message, process, and verbosity level (single line)
@@ -313,14 +313,14 @@ runs_in_in <- function(message, process) {
 #'
 #' @param message A character string describing the purpose of the script.
 #' @param process A function representing the script to be executed.
-#' @param verbose_level An integer specifying the verbosity level.
+#' @param verbose An integer specifying the verbosity level.
 #'
 #' @export
-runs <- function(message, process, verbose_level) {
+runs <- function(message, process, verbose) {
   polar_run(
     message = message,
     process = process,
-    verbose = VERBOSE - verbose_level + 1,
+    verbose = VERBOSE - verbose + 1,
     single_line = TRUE
   )}
 
@@ -351,7 +351,7 @@ refreshFhirToken <- function() {
   if (FHIR_TOKEN != '') {
     polar_run('Refresh FHIR_TOKEN', {
       FHIR_TOKEN <- polar_refresh_token()
-    }, single_line = VERBOSE <= VL_60_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1, throw_exception = FALSE)
+    }, single_line = VERBOSE <= VL_70_DOWNLOAD, verbose = VERBOSE - VL_30_INNER_SCRIPTS, throw_exception = FALSE)
   }
 }
 
