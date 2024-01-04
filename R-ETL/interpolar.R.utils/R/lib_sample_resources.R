@@ -459,7 +459,7 @@ polar_download_and_crack_parallel <- function(
   # in case of relative URL in next_link
   # extract the base url, FHIR_ENDPOINT might contain some additional paths, such as
   # http://im.a.fhir.endpoint/fhir/api/v4
-  baseurl <- stringr::str_match(FHIR_ENDPOINT, "(.*?:\\/\\/.*?)\\/")[[2]]
+  baseurl <- stringr::str_match(FHIR_SERVER_ENDPOINT, "(.*?:\\/\\/.*?)\\/")[[2]]
   tables <- list()
   i <- 0
   curr_request <- request # first request
@@ -571,11 +571,11 @@ polar_download_and_crack_parallel <- function(
 
               #is nl a relative URL?
                 if (grepl("^/",nl) == TRUE) {
-                  nl <- fhircrackr::fhir_url(paste0(baseurl,nl), url_enc = NL_ENCODE)
+                  nl <- fhircrackr::fhir_url(paste0(baseurl,nl), url_enc = NEXT_LINK_ENCODE)
                 }
 
                 #check for issues such as missing port specification
-                if (VL_90_FHIR_RESPONSE <= VERBOSE) {
+                if (9 <= VERBOSE) {
 
                   if (!grepl(baseurl, nl)) {
 

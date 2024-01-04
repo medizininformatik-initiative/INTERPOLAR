@@ -47,13 +47,13 @@ polar_fhir_search <- function(
       save_to_disc           = if (!is.null(save_to_disc)) polar_add_to_bundles_path(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
-  } else if (!is.null(FHIR_USERNAME) && !is.null(FHIR_PASSWORD) && FHIR_USERNAME != "" && FHIR_PASSWORD != "") {
+  } else if (!is.null(FHIR_SERVER_USER) && !is.null(FHIR_SERVER_PASS) && FHIR_SERVER_USER != "" && FHIR_SERVER_PASS != "") {
 
     fhircrackr::fhir_search(
       request                = request,
       body                   = body,
-      username               = FHIR_USERNAME,
-      password               = FHIR_PASSWORD,
+      username               = FHIR_SERVER_USER,
+      password               = FHIR_SERVER_PASS,
       max_bundles            = max_bundles,
       verbose                = verbose,
       delay_between_attempts = delay_between_attempts,
