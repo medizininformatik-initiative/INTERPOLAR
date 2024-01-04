@@ -5,7 +5,7 @@ SEP      <- ' ~ '
 
 #Create Table-Descriptions and Designs for relevant resources
 TABLE_DESCRIPTION <- list(
-  'Encounter' = fhir_table_description(
+  'Encounter' = fhircrackr::fhir_table_description(
     resource = 'Encounter',
     cols = c(
       Enc.Enc.ID                 = 'id',
@@ -27,13 +27,13 @@ TABLE_DESCRIPTION <- list(
       Enc.ServiceProvider.System = 'serviceProvider/identifier/system',
       Enc.ServiceProvider.Value  = 'serviceProvider/identifier/value'
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
   ),
 
-  'Patient' = fhir_table_description(
+  'Patient' = fhircrackr::fhir_table_description(
     resource = 'Patient',
     cols     = c(
       Pat.Pat.ID = 'id',
@@ -41,13 +41,13 @@ TABLE_DESCRIPTION <- list(
       Pat.DOB    = 'birthDate',
       Pat.Gender = 'gender'
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
   ),
 
-  'Condition' = fhir_table_description(
+  'Condition' = fhircrackr::fhir_table_description(
     resource = 'Condition',
     cols     = c(
       Con.Con.ID      = 'id',
@@ -58,13 +58,13 @@ TABLE_DESCRIPTION <- list(
       Con.Name        = 'code/text',
       Con.Time        = 'recordedDate'
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
   ),
 
-  'Medication' = fhir_table_description(
+  'Medication' = fhircrackr::fhir_table_description(
     resource = 'Medication',
     cols     = c(
       Med.Med.ID                   = 'id',
@@ -84,13 +84,13 @@ TABLE_DESCRIPTION <- list(
       Ingredient.denominator.code  = 'ingredient/strength/denominator/code',
       Ingredient.denominator.unit  = 'ingredient/strength/denominator/unit'
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
   ),
 
-  'MedicationAdministration' = fhir_table_description(
+  'MedicationAdministration' = fhircrackr::fhir_table_description(
     resource = 'MedicationAdministration',
     cols     = c(
       MedAdm.MedAdm.ID       = 'id',
@@ -104,13 +104,13 @@ TABLE_DESCRIPTION <- list(
       MedAdm.Dosage.Code     = 'dosage/dose/code',
       MedAdm.Dosage.Unit     = 'dosage/dose/unit'
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
   ),
 
-  'MedicationStatement' = fhir_table_description(
+  'MedicationStatement' = fhircrackr::fhir_table_description(
     resource = 'MedicationStatement',
     cols     = c(
       MedStat.MedStat.ID      = 'id',
@@ -125,13 +125,13 @@ TABLE_DESCRIPTION <- list(
       MedStat.Dosage.Unit     = 'dosage/doseAndRate/doseQuantity/unit'
       #MedStat.Dosage.Unit     = 'dosage/dose/unit'
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
   ),
 
-  "Observation" = fhir_table_description(
+  "Observation" = fhircrackr::fhir_table_description(
     resource = "Observation",
     cols = c(
       Obs.Obs.ID              = "id",
@@ -147,7 +147,7 @@ TABLE_DESCRIPTION <- list(
       Obs.ValueQuantity.Unit  = "valueQuantity/unit"
 
     ),
-    style    = fhir_style(
+    style    = fhircrackr::fhir_style(
       sep      = SEP,
       brackets = NULL
     )
