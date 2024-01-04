@@ -38,10 +38,10 @@ get_encounters <- function() {
         )
       })
 
-      polar_run('Send Test Request', {
+      run_in_in_ignore_error('Send Test Request', {
         test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE - 7), silent = TRUE)
         NULL
-      }, single_line = VERBOSE <= 7, verbose = VERBOSE - 4 + 1, throw_exception = FALSE)
+      })
 
       # #
       # # determine, whether date restrictions must be specified with
