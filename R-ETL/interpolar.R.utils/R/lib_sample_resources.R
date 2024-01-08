@@ -375,7 +375,7 @@ polar_sample_identified_resources <- function(
     stop("The sample must be smaller or equal than the population size.")
   }
   set.seed(seed = seed)
-  ids <- try(sample(ids, sample_size, replace = F)) # sample sample_size ids
+  ids <- try(sample(ids, sample_size, replace = FALSE)) # sample sample_size ids
   if (inherits(ids, "try-error")) {
     stop("The sample must be smaller or equal than the population size.")
   }
@@ -442,6 +442,7 @@ polar_download_and_crack_parallel <- function(
   max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
   log_errors        = 'enc_error.xml'
 ) {
+
   WAIT_TIMES <- DELAY_REQ ** (0 : 7) # try 8 times and wait DELAY_REQ^loop seconds
   max_trials <- length(WAIT_TIMES) # 8
 
@@ -489,10 +490,11 @@ polar_download_and_crack_parallel <- function(
     }
     trial <- 1
     succ <- FALSE
+
     while (trial <= max_trials && !succ) {
       pkg <- parallel::mclapply(# parallel apply with max max_cores cores if available
         mc.cores = limit_ncores(max_cores),
-        X        = dplyr::lst(names(pkg)),
+        X        = namedListByValue(names(pkg)),
         # alternating function
         FUN      = function(n) {# n <- names(pkg)[[1]]
           element <- pkg[[n]] # get nth pkg element
