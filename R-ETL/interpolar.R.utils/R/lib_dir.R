@@ -22,19 +22,17 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
   local_results_directories_names  <- c("bundles", "log", "performance", "tables")
   global_results_directories_names <- c("performance", "requests")
 
-  global_main_path <- fhircrackr::pastep(global_dir, project_name)
-  local_main_path <- fhircrackr::pastep(local_dir, project_name)
+  global_dir <- fhircrackr::pastep(global_dir, project_name)
+  local_dir <- fhircrackr::pastep(local_dir, project_name)
 
-  global_main_path <- paste0(global_main_path, PROJECT_TIME_STAMP)
-  local_main_path <- paste0(local_main_path, PROJECT_TIME_STAMP)
+  global_dir <- paste0(global_dir, PROJECT_TIME_STAMP)
+  local_dir <- paste0(local_dir, PROJECT_TIME_STAMP)
 
   namedListByParam(
     global_dir,
     local_dir,
     local_results_directories_names,
-    global_results_directories_names,
-    global_main_path,
-    local_main_path
+    global_results_directories_names
   )
 }
 
@@ -48,11 +46,11 @@ create_dirs <- function(project_name = PROJECT_NAME) {
   SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
 
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
-    dir.create(paste0(SUB_PROJECTS_DIRS$global_main_path, "/", rd), recursive = TRUE)
+    dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE)
   }
 
   for (rd in SUB_PROJECTS_DIRS$local_results_directories_names) {
-    dir.create(paste0(SUB_PROJECTS_DIRS$local_main_path, "/", rd), recursive = TRUE)
+    dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE)
   }
 }
 
@@ -65,7 +63,7 @@ create_dirs <- function(project_name = PROJECT_NAME) {
 #'
 #' @export
 polar_path_to_log_directory <- function(project_name = PROJECT_NAME) {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_main_path, "log")
+  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log")
 }
 
 
@@ -88,7 +86,7 @@ polar_add_to_log_path <- function(path) {
 #'
 #' @export
 polar_path_to_bundles_directory <- function() {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "bundles")
+  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "bundles")
 }
 
 
@@ -111,7 +109,7 @@ polar_add_to_bundles_path <- function(path) {
 #'
 #' @export
 polar_path_to_tables_directory <- function() {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables")
+  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
 }
 
 
@@ -154,7 +152,7 @@ polar_load_bundle <- function(path) {
 #' @export
 polar_save_bundles <- function(bundles) {
   bundles_name <- deparse(substitute(bundles))
-  fhircrackr::fhir_save(bundles = bundles, directory = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "bundles", bundles_name))
+  fhircrackr::fhir_save(bundles = bundles, directory = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "bundles", bundles_name))
 }
 
 
@@ -176,7 +174,7 @@ polar_save_bundles <- function(bundles) {
 #'
 #' @export
 polar_save_request <- function(request, filename_without_extension) {
-  utils::write.table(data.table::data.table(request = request), file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "requests", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
+  utils::write.table(data.table::data.table(request = request), file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "requests", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
 }
 
 
@@ -200,8 +198,8 @@ polar_save_request <- function(request, filename_without_extension) {
 #' @return Nothing.
 #' @export
 save_performance <- function(filename_without_extension, clock = if (is.null(POLAR_CLOCK)) NULL else POLAR_CLOCK) {
-  clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "performance", filename_without_extension), hide_errors = FALSE)
-  clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "performance", filename_without_extension), hide_errors = TRUE)
+  clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
+  clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
 
 ###
@@ -217,7 +215,7 @@ save_performance <- function(filename_without_extension, clock = if (is.null(POL
 #' @return Nothing.
 #' @export
 polar_save_error <- function(err, filename_without_extension) {
-  cat(err, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "log", filename_without_extension, ext = ".txt"), sep = "\n")
+  cat(err, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log", filename_without_extension, ext = ".txt"), sep = "\n")
 }
 
 
@@ -239,7 +237,7 @@ polar_save_table_as_csv <- function(table, filename_without_extension = NA, sep 
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables", filename_without_extension, ext = ".csv"), sep = sep, quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
+  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = ".csv"), sep = sep, quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
 }
 
 
@@ -260,7 +258,7 @@ polar_save_table_as_tsv <- function(table, filename_without_extension = NA) {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
+  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
 }
 
 
@@ -281,7 +279,7 @@ polar_save_table_as_rdata <- function(table, table_name = NA) {
   if (is.na(table_name)) {
     table_name <- as.character(sys.call()[2]) # get the table variable name
   }
-  save(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables", table_name, ext = '.RData'))
+  save(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData'))
 }
 
 #' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
@@ -302,8 +300,8 @@ polar_write_rdata <- function(object = table, filename_without_extension = NA, p
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
   if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables")
-    #saveRDS(object = object, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables", filename_without_extension, ext = '.RData'))
+    project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
+    #saveRDS(object = object, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = '.RData'))
   } else {
     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
   }
@@ -324,7 +322,7 @@ polar_write_rdata <- function(object = table, filename_without_extension = NA, p
 polar_read_rdata <- function(filename_without_extension, project_sub_dir = NA) {
   # default project_sub_dir is NA -> load tables from outputLocal/tables
   if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables")
+    project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
   } else {
     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
   }
@@ -359,7 +357,7 @@ polar_read_rdata <- function(filename_without_extension, project_sub_dir = NA) {
 #' @return Nothing.
 #' @export
 polar_save_rdata <- function(...) {
-  save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, 'tables', 'tables.RData'))
+  save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, 'tables', 'tables.RData'))
 }
 
 #' Save a Result Table of an ***ANALYSIS-SCTIPT*** in the *public* `results` directory to which was created for the specific subproject.
@@ -381,7 +379,7 @@ polar_save_result_table_as_csv <- function(table, filename_without_extension = N
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
   convertListColumnsToString(table, separator = collapse) # converts all list to strings
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "results", filename_without_extension, ext = extension), sep = sep, quote = FALSE, dec = dec, row.names = row.names, col.names = TRUE)
+  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "results", filename_without_extension, ext = extension), sep = sep, quote = FALSE, dec = dec, row.names = row.names, col.names = TRUE)
 }
 
 #' Save a Result Table of an ***ANALYSIS-SCTIPT*** in the *local* `tables` directory to which was created for the specific subproject.
@@ -403,7 +401,7 @@ polar_save_result_table_as_csv_local <- function(table, filename_without_extensi
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
   convertListColumnsToString(table, separator = collapse) # converts all list to strings
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local, "tables", filename_without_extension, ext = extension), sep = sep, quote = FALSE, dec = dec, row.names = row.names, col.names = TRUE)
+  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = extension), sep = sep, quote = FALSE, dec = dec, row.names = row.names, col.names = TRUE)
 }
 
 #' Save a Result of an ***ANALYSIS-SCTIPT*** in the *public* `results` directory to which was created for the specific subproject.
@@ -414,5 +412,5 @@ polar_save_result_table_as_csv_local <- function(table, filename_without_extensi
 #' @return Nothing.
 #' @export
 polar_save_result_as_rdata <- function(..., filename_without_extension) {
-  save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global, "results", filename_without_extension, ext = ".RData"))
+  save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "results", filename_without_extension, ext = ".RData"))
 }
