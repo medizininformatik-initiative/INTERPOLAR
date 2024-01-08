@@ -2,8 +2,6 @@
 # Project Definition interpolar RETL process #
 ##############################################
 
-PROJECT_NAME = "interpolar"
-
 ###
 # VERBOSE LEVELS
 ###
@@ -19,6 +17,11 @@ PROJECT_NAME = "interpolar"
 # VL_90_FHIR_RESPONSE       = 9
 VERBOSE               = 7 # Retrieval / analysis verbose level
 
+# Set true if every sourcing of the 00_Main file should create result directories in the otuputGlobal and otuputLocal
+# directores with a timestamp suffix. If false then every run will write in the same subdirectory without a timestamp.
+# The default behaviour should write in subdirectories with the name 'interpolar' (false) or in 'interpolar_timestamp'
+# (true)
+USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
 [retrieve]
 

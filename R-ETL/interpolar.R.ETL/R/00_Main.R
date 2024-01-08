@@ -1,10 +1,8 @@
 ###
 # Read the configuration toml file
 ###
-CONFIG <- RcppTOML::parseToml(paste0('../interpolar_R_ETL_config.toml'))
 
-# Set the global VERBOSE variable used by all interpolar.R.utils scripts
-VERBOSE <- CONFIG$VERBOSE
+interpolar.R.utils::initConstants('../interpolar_R_ETL_config.toml')
 
 ###
 # Create globally used polar_clock
@@ -14,25 +12,6 @@ POLAR_CLOCK <- interpolar.R.utils::createClock()
 ###
 # Set the project name to 'interpolar'
 PROJECT_NAME <<- 'interpolar'
-###
-
-###
-# Set the project timestamp to the current date and time in the format '-%Y-%m%d-%H%M%S'
-PROJECT_TIME_STAMP <<- format(Sys.time(), "-%Y-%m%d-%H%M%S")
-###
-
-###
-# Take nested list CONFIG and flattens it into a single-level list
-# Remove parent names from variable names
-# And assign list values to the global environment
-flatten_CONFIG <- interpolar.R.utils::flatten_list(CONFIG)
-# Extract variable names from flatten_CONFIG
-variable_names <- names(flatten_CONFIG)
-# Assign values to variables from flatten_CONFIG
-for (variable_name in variable_names) {
-  assign(variable_name, flatten_CONFIG[[variable_name]])
-}
-rm(variable_name, variable_names, flatten_CONFIG)
 ###
 
 interpolar.R.utils::create_dirs(PROJECT_NAME)

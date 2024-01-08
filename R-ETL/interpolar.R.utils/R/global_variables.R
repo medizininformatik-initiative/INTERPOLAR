@@ -1,18 +1,3 @@
-###
-# VERBOSE LEVEL variables
-###
-VL_00_NOTHING             = 0
-VL_10_MAIN_INFO           = 1
-VL_20_OUTER_SCRIPTS       = 2
-VL_30_INNER_SCRIPTS       = 3
-VL_40_INNER_SCRIPTS_INFOS = 4
-VL_50_TABLES              = 5
-VL_60_ALL_TABLES          = 6
-VL_70_DOWNLOAD            = 7
-VL_80_COI_PROCESSING      = 8
-VL_90_FHIR_RESPONSE       = 9
-
-
 # global variables for fhir-requests
 utils::globalVariables(c("BUNDLES_AT_ONCE", "ENC_REQ_PER", "ENC_REQ_TYPE", "FHIR_SERVER_ENDPOINT", "MAX_CORES", "MAX_ENCOUNTER_BUNDLES",
                          "DELAY_REQ", "FHIR_SERVER_USER", "FHIR_SERVER_PASS", "COUNT_PER_BUNDLE", "FHIR_TOKEN", "FHIR_TOKEN_REFRESH_PASSWORD",
