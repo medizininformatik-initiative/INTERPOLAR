@@ -4,14 +4,16 @@
 \alias{run}
 \title{Execute a script with specified message, process, and verbosity level}
 \usage{
-run(message, process, verbose_level)
+run(message, process, verbose, throw_exception = TRUE)
 }
 \arguments{
 \item{message}{A character string describing the purpose of the script.}
 
 \item{process}{A function representing the script to be executed.}
 
-\item{verbose_level}{An integer specifying the verbosity level.}
+\item{verbose}{An integer specifying the verbosity level.}
+
+\item{throw_exception}{if TRUE the execution of the current expression will be stopped}
 }
 \description{
 This function runs a script with the provided message and process, controlling

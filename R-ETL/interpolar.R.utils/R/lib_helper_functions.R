@@ -261,7 +261,7 @@ run_in_in_ignore_error <- function(message, process) {
 #' @param message A character string describing the purpose of the script.
 #' @param process A function representing the script to be executed.
 #' @param verbose An integer specifying the verbosity level.
-#' @param throw_execption if TRUE the execution of the current expression will be stopped
+#' @param throw_exception if TRUE the execution of the current expression will be stopped
 #'
 #' @export
 run <- function(message, process, verbose, throw_exception = TRUE) {
@@ -368,9 +368,9 @@ catl <- function(...) {
 refreshFhirToken <- function() {
   #refresh token, if defined
   if (FHIR_TOKEN != '') {
-    polar_run('Refresh FHIR_TOKEN', {
+    run_in_in_ignore_error('Refresh FHIR_TOKEN', {
       FHIR_TOKEN <- polar_refresh_token()
-    }, single_line = VERBOSE <= VL_70_DOWNLOAD, verbose = VERBOSE - VL_30_INNER_SCRIPTS, throw_exception = FALSE)
+    })
   }
 }
 
