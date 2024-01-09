@@ -40,17 +40,18 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #' This function is used by the framework itself
 #'
 #' @param project_name name of the project
+#' @param showWarnings logical; should the warnings on failure be shown?
 #'
 #' @export
-create_dirs <- function(project_name = PROJECT_NAME) {
+create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
 
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
-    dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE)
+    dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
 
   for (rd in SUB_PROJECTS_DIRS$local_results_directories_names) {
-    dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE)
+    dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
 }
 
