@@ -420,3 +420,69 @@ polar_disclaimer <- function() {
     pos = 'center', edge = ' ', hori = ' ', vert = ' '
   )
 }
+
+#' Print a summary for a table
+#'
+#' This function prints a summary for the specified table, including information
+#' about the class, type, number of available values, and number of missing values
+#' for each column. The summary is displayed in a formatted table.
+#'
+#' @param table The input table to summarize. For example, you can use the mtcars dataset.
+#' @param table_name An optional name for the table, used in the summary output.
+#' @return This function does not explicitly return a value. It prints the summary to the console.
+#'
+#' @examples
+#' # Load required packages
+#' library(datasets)
+#' library(data.table)
+#'
+#' # Load the mtcars dataset and convert it to a data.table
+#' data(mtcars)
+#' setDT(mtcars)
+#'
+#' # Print summary for the mtcars table
+#' print_table_summary(table = mtcars, table_name = 'mtcars')
+#'
+#' @export
+print_table_summary <- function(table=table_enc, table_name = '') {
+  dt <- data.table::as.data.table(
+    cbind(
+      class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
+      type       = sapply(names(table), function(n) typeof(table[[n]])),
+      available  = sapply(names(table), function(n) sum(!is.na(table[[n]]))),
+      missing    = sapply(names(table), function(n) sum( is.na(table[[n]])))
+    ),
+    keep.rownames = TRUE
+  )
+  if (0 < nrow(dt)) {
+    cat(
+      frame_string(
+        text = paste0(
+          'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n',
+          data.table.as.character(
+            data.table::setnames(
+              x = dt,
+              new = c('Column', 'Class', 'Type', 'Available', 'Missing')
+            ),
+            header = TRUE,
+            footer = TRUE
+          )
+        ),
+        edge = c('\u231c\u231d\u231e\u231f'),
+        hori = ' ',
+        vert = ' '
+      )
+    )
+  } else {
+    cat(
+      frame_string(
+        text = paste0(
+          'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n'
+        ),
+        edge = c('\u231c\u231d\u231e\u231f'),
+        hori = ' ',
+        vert = ' '
+      )
+    )
+  }
+}

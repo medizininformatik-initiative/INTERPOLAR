@@ -439,6 +439,89 @@ initConstants <- function(path_to_toml) {
   }
 }
 
+
+#' Print a table if VERBOSE level allows.
+#'
+#' This function prints a summary for the specified table if the VERBOSE level is
+#' greater than or equal to VL_50_TABLES (= 5). It uses the `print_table_summary` function
+#' for generating the summary.
+#'
+#' @param table The input table to print. For example, you can use the mtcars dataset.
+#'
+#' @details
+#' This function checks the VERBOSE level (assumed to be a global variable) and
+#' prints a summary for the specified table only if the VERBOSE level is greater than
+#' or equal to VL_50_TABLES. The table_name is obtained from the calling function's name.
+#'
+#' @seealso
+#' \code{\link{print_table_summary}}
+#'
+#' @export
+#'
+#' @examples
+#' # Load required packages
+#' library(datasets)
+#' library(data.table)
+#'
+#' #' # Load the mtcars dataset and convert it to a data.table
+#' data(mtcars)
+#' setDT(mtcars)
+#'
+#' # Set VL_50_TABLES and VERBOSE to appropriate values
+#' VL_50_TABLES <- 5
+#' VERBOSE <- 7
+#'
+#' # Assuming VERBOSE and VL_50_TABLES are defined
+#' print_table(mtcars)
+#'
+print_table <- function(table) {
+  if (VERBOSE >= VL_50_TABLES) {
+    table_name <- as.character(sys.call()[2]) # get parameter names
+    print_table_summary(table, table_name)
+  }
+}
+
+#' Print a table if VERBOSE level allows.
+#'
+#' This function prints a summary for the specified table if the VERBOSE level is
+#' greater than or equal to VL_60_ALL_TABLES (= 6). It uses the `print_table_summary` function
+#' for generating the summary.
+#'
+#' @param table The input table to print. For example, you can use the mtcars dataset.
+#'
+#' @details
+#' This function checks the VERBOSE level (assumed to be a global variable) and
+#' prints a summary for the specified table only if the VERBOSE level is greater than
+#' or equal to VL_60_ALL_TABLES The table_name is obtained from the calling function's name.
+#'
+#' @seealso
+#' \code{\link{print_table_summary}}
+#'
+#' @export
+#'
+#' @examples
+#' # Load required packages
+#' library(datasets)
+#' library(data.table)
+#'
+#' # Load the mtcars dataset and convert it to a data.table
+#' data(mtcars)
+#' setDT(mtcars)
+#'
+#' # Set VL_60_ALL_TABLES and VERBOSE to appropriate values
+#' VL_60_ALL_TABLES <- 6
+#' VERBOSE <- 7
+#'
+#' # Assuming VERBOSE and VL_60_ALL_TABLES are defined
+#' print_table_if_all(mtcars)
+#'
+print_table_if_all <- function(table) {
+  if (VERBOSE >= VL_60_ALL_TABLES) {
+    table_name <- as.character(sys.call()[2]) # get parameter name
+    print_table_summary(table, table_name)
+  }
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
@@ -473,20 +556,6 @@ initConstants <- function(path_to_toml) {
 #'   }
 #' }
 #'
-#' print_table <- function(table) {
-#'   if (VL_50_TABLES <= VERBOSE) {
-#'     table_name <- as.character(sys.call()[2]) # get parameter names (-1 to cut off the function name)
-#'     print_table_summary(table, table_name)
-#'   }
-#' }
-#'
-#' print_table_if_all <- function(table) {
-#'   if (VL_60_ALL_TABLES <= VERBOSE) {
-#'     table_name <- as.character(sys.call()[2]) # get parameter name
-#'     print_table_summary(table, table_name)
-#'   }
-#' }
-
 #' #' This function checks if the given 'code' matches any of the patterns in the 'patternList'.
 #' #'
 #' #' @param patternList A character vector containing the patterns to match against the 'code'.
