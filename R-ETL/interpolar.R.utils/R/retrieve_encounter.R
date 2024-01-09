@@ -87,83 +87,31 @@ get_encounters <- function() {
       op.end <- gsub("^([a-z]+).*", "\\1", params[2])
     })
 
-    # run_in_in('Check Response', {
-      #
-      #   params <- if (
-      #     succ <- !inherits(test_bundles, 'try-error') &&
-      #     0 < length(test_bundles) && {
-      #       total <- as.numeric(
-      #         xml2::xml_attr(
-      #           x = xml2::xml_find_all(
-      #             x = test_bundles[[1]],
-      #             xpath = './/total'
-      #           ),
-      #           'value'
-      #         )
-      #       )
-      #       !is.na(total) && 0 < total
-      #     }
-      #   ) {
-      #     catl('Request')
-      #     catl(styled_string(request, fg = 2, underline = TRUE))
-      #     catl('returned', total, 'available Encounters.')
-      #   }
-      #
-      #   op.beg <- gsub("^([a-z]+).*", "\\1", params[1])
-      #   op.end <- gsub("^([a-z]+).*", "\\1", params[2])
-      # })
-      #
-      polar_run('Download and Crack Encounters', {
-        # #
-        # # is this parameter defined ?
-        # # must be set manual by used interaction
-        # # can be something like 'einrichtungskontakt'
-        # #
-        # if (ENC_REQ_TYPE != "") {
-        #   params <- c(params, 'type' = ENC_REQ_TYPE)
-        # }
+    polar_run('Download and Crack Encounters', {
+      request_encounter <- fhircrackr::fhir_url(
+        url        = FHIR_SERVER_ENDPOINT,
+        resource   = 'Encounter',
+        parameters = polar_add_common_request_params(params)
+      )
 
-        #
-        # type of encounter collection
-        # full: download any encounter within period
-        # month: download encounter within period month-by-month
-        # year: download encounter within period year-by-year
-        #
-        # take care, encounter with missing end-date (patient is still in hospital)
-        # may generate tremendous overhead, as those encounter are not excluded by the
-        # period restriction. They will be downloaded with each request
-        #
-        #if (ENC_REQ_PER == "full") {
+      table_enc <- polar_download_and_crack_parallel(
+        request           = request_encounter,
+        table_description = TABLE_DESCRIPTION$Encounter,
+        bundles_at_once   = BUNDLES_AT_ONCE,
+        log_errors        = 'enc_error.xml',
+        verbose           = VERBOSE - VL_70_DOWNLOAD
+      )
 
-          request_encounter <- fhircrackr::fhir_url(
-            url        = FHIR_SERVER_ENDPOINT,
-            resource   = 'Encounter',
-            parameters = polar_add_common_request_params(params)
-          )
+    }, single_line = VERBOSE <= VL_70_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1)
 
-          # #download and crack bundles
-          # bundles <- fhircrackr::fhir_search(request_encounter, max_bundles = MAX_ENCOUNTER_BUNDLES, log_errors = 'enc_error.xml')
-          # table_enc <- fhircrackr::fhir_crack(bundles = bundles, design = TABLE_DESCRIPTION$Encounter, verbose = 10)
+    run_in_in('change column classes', {
+      table_enc <- table_enc[, lapply(.SD, as.character), ]
+    })
 
-          table_enc <- polar_download_and_crack_parallel(
-            request           = request_encounter,
-            table_description = TABLE_DESCRIPTION$Encounter,
-            bundles_at_once   = BUNDLES_AT_ONCE,
-            log_errors        = 'enc_error.xml',
-            verbose           = VERBOSE - VL_70_DOWNLOAD
-          )
+    runs_in_in('Save Encounter table after download before remove something', {
+      polar_write_rdata(table_enc, 'table_enc_all') # name differs from variable name!?
+    })
 
-        #}
-      }, single_line = VERBOSE <= VL_70_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1)
-    #}
-
-    # run_in_in('change column classes', {
-    #   table_enc <- table_enc[, lapply(.SD, as.character), ]
-    # })
-    #
-    # runs_in_in('Save Encounter table after download before remove something', {
-    #   polar_write_rdata(table_enc, 'table_enc_all') # name differs from variable name!?
-    # })
     #
     # # if (isDebug()) {
     # #   retainColumns(table_enc, c('Enc.Enc.ID', 'Enc.PartOf.ID', 'Enc.Service.Code'))
@@ -176,9 +124,9 @@ get_encounters <- function() {
     # #   table_enc[3, Enc.Service.Code := 1600]
     # #   table_enc[4, Enc.Service.Code := 3200]
     # # }
-    #
-    # print_table_if_all(table_enc)
-    #
+
+    print_table_if_all(table_enc)
+
     # runs_in_in('Create Table with ServiceType', {
     #   table_serviceType <- unique(table_enc[ , c("Enc.Service.Type", "Enc.Service.Code", "Enc.Service.Display")])
     #   table_serviceType <- table_serviceType[rowSums(is.na(table_serviceType)) != ncol(table_serviceType), ]
