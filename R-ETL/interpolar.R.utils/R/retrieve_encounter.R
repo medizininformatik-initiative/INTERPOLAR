@@ -104,7 +104,7 @@ get_encounters <- function() {
 
     }, single_line = VERBOSE <= VL_70_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1)
 
-    run_in_in('change column classes', {
+    runs_in_in('change column classes', {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
@@ -127,72 +127,19 @@ get_encounters <- function() {
 
     print_table_if_all(table_enc)
 
-    # runs_in_in('Create Table with ServiceType', {
-    #   table_serviceType <- unique(table_enc[ , c("Enc.Service.Type", "Enc.Service.Code", "Enc.Service.Display")])
-    #   table_serviceType <- table_serviceType[rowSums(is.na(table_serviceType)) != ncol(table_serviceType), ]
-    #   setnames(table_serviceType, old = c('Enc.Service.Type', 'Enc.Service.Code', 'Enc.Service.Display'),
-    #            new = c('serviceType', 'Code', 'Name'))
-    # })
-    #
-    # print_table(table_serviceType)
-    #
-    # runs_in_in('Extract sub Encounters ("Abteilungskontakt" + "Versorgungsstellenkontakt")', {
-    #   # sub encounters have partOf references
-    #   table_enc_sub <- unique(table_enc[!is.na(Enc.PartOf.ID)])
-    # })
-    #
-    # runs_in_in('Extract super Encounters ("Einrichtungskontakt")', {
-    #   table_enc <- unique(table_enc[is.na(Enc.PartOf.ID)])
-    # })
-    #
-    # runs_in_in('Retain only Depatment Encounters in sub Encounters ("Abteilungskontakt")', {
-    #
-    #   table_enc_sub[, Enc.PartOf.ID := makeRelative(Enc.PartOf.ID)]
-    #
-    #   # only department encounters have a reference to the super encounters
-    #   table_enc_sub <- unique(table_enc_sub[Enc.PartOf.ID %in% table_enc$Enc.Enc.ID])
-    #
-    #   # remove all departmente encounters without a service type code information
-    #   table_enc_sub <- table_enc_sub[!is.na(Enc.Service.Code) & nchar(as.character(Enc.Service.Code))]
-    #
-    # })
-    #
-    # runs_in_in('Add department codes to encounter table', {
-    #   table_enc[, Enc.Service.Code := {
-    #     id <- Enc.Enc.ID
-    #     table_enc_sub_parts <- table_enc_sub[Enc.PartOf.ID %in% (id)]
-    #     codes <- table_enc_sub_parts$Enc.Service.Code
-    #     # if (isDebug() && !all(is.na(codes))) codes <- c(codes, 3200, 50, 'ABC') ###### D E B U G changes to ensure all cobinations of codes ###############
-    #     # get indices of number strings < 1000
-    #     is_small_number <- !is.na(as.integer(codes)) & as.integer(codes) < 1000
-    #     # fill the number stings with leading 0 up to 4 chars
-    #     codes[is_small_number] <- sprintf('%04d', as.integer(codes[is_small_number]))
-    #     paste0(sort(unique(codes)), collapse = ' ~ ')
-    #   }, by = Enc.Enc.ID]
-    #   #remove the sub encounter table
-    #   rm(table_enc_sub)
-    # })
-    #
-    # runs_in_in('Remove unnecessary Columns', {
-    #   table_enc[, Enc.PartOf.ID := NULL]
-    # })
-    #
-    # # some stats
-    # run_in_in('Update \'tab.resource.used\' Table', {
-    #   tab.resource.used <- polar_read_rdata('tab.resource.used')
-    #   tab.resource.used[name == 'Encounter (unfiltered)', value := length(unique(table_enc$Enc.Enc.ID))]
-    # })
-    #
-    # runs_in_in('Fix Dates in Encounter Table', {
-    #   # splits the provided dates into day and time columns, if data is available
-    #   # converts fhir dates to R dates
-    #   # fix the column class to date()
-    #   polar_fix_dates(table_enc, c('Enc.Start', 'Enc.End'))
-    #
-    #   # combine day and time column in a column of type date()
-    #   table_enc[, Enc.Start.Datetime := do.call(paste,.SD), .SDcols = c('Enc.Start', 'Enc.Start.TimeSpec')]
-    #   table_enc[, Enc.End.Datetime   := do.call(paste,.SD), .SDcols = c('Enc.End', 'Enc.End.TimeSpec')]
-    # })
+    runs_in_in('Fix Dates in Encounter Table', {
+      # splits the provided dates into day and time columns, if data is available
+      # converts fhir dates to R dates
+      # fix the column class to date()
+      polar_fix_dates(table_enc, c('Enc.Period.Start', 'Enc.Period.End'))
+
+      # combine day and time column in a column of type date()
+      table_enc[, Enc.Period.Start.Datetime := do.call(paste,.SD), .SDcols = c('Enc.Period.Start', 'Enc.Period.Start.TimeSpec')]
+      table_enc[, Enc.Period.End.Datetime   := do.call(paste,.SD), .SDcols = c('Enc.Period.End', 'Enc.Period.End.TimeSpec')]
+    })
+
+    # AXS 10.01.2024: das können wir leider nicht mehr machen, weil jeden Tag ein anderer Patient die pat.id 1 oder
+    #                 ein anderer Fall die fall.no 1 bekommen würde.
     #
     # # generate generic pat.id and fall.no, that will be used during retrieval and analysis
     # #  ensures the ID-class numeric()
@@ -204,6 +151,9 @@ get_encounters <- function() {
     #   ]
     # })
     #
+
+    # AXS 10.01.2024: Keine Ahnung warum das hier gemacht werden musste, aber es bleibt als Erinnerung auskommentiert drin.
+    #
     # # if available, simplify the evaluation of Enc.Hospitalization.Code
     # #  TODO: tolower() must be removed, if any DIC provides these data correctly
     # runs_in_in('Convert hospitalization code to upper case', {
@@ -211,7 +161,8 @@ get_encounters <- function() {
     #     table_enc[, Enc.Hospitalization.Code := toupper(Enc.Hospitalization.Code)]
     #   }
     # })
-    #
+
+    # AXS 10.01.2024: Keine Ahnung warum das hier gemacht werden musste, aber es bleibt als Erinnerung auskommentiert drin.
     # #
     # # filter applied once again, even though the filter has been applied during request
     # # however, filter might fail during request
@@ -222,13 +173,13 @@ get_encounters <- function() {
     # #
     # runs_in_in('Filter for Encounter Period', {
     #   table_enc <- table_enc[
-    #     !is.na(Enc.Start)                      &
-    #     !is.na(Enc.End)                        &
-    #     0 <= difftime(Enc.Start, PERIOD_START) &
-    #     0 <= difftime(PERIOD_END, Enc.End)
+    #     !is.na(Enc.Period.Start)                      &
+    #     !is.na(Enc.Period.End)                        &
+    #     0 <= difftime(Enc.Period.Start, PERIOD_START) &
+    #     0 <= difftime(PERIOD_END, Enc.Period.End)
     #   ]
     # })
-    #
+
     # #
     # # we want to analyse inpatient encounters only
     # #   inpatient can be provided by a variety of values
@@ -249,7 +200,7 @@ get_encounters <- function() {
     #
     # #Exclusion criterion
     # runs_in_in('Check for Time Direction Violating Encounters and mark them', {
-    #   table_enc[,Exclusion.TimeOrderViolation := Enc.End.Datetime < Enc.Start.Datetime]
+    #   table_enc[,Exclusion.TimeOrderViolation := Enc.Period.End.Datetime < Enc.Period.Start.Datetime]
     # })
     #
     # #Exclusion criterion
@@ -258,8 +209,8 @@ get_encounters <- function() {
     #   tab.pat.fall <- table_enc[Exclusion.TimeOrderViolation == FALSE, .(
     #     "pat.id"  = pat.id,
     #     "fall.no" = fall.no,
-    #     "Start"   = Enc.Start,
-    #     "End"     = Enc.End
+    #     "Start"   = Enc.Period.Start,
+    #     "End"     = Enc.Period.End
     #   )]
     #
     #   # expand periods to day-by-day notation
@@ -322,9 +273,6 @@ get_encounters <- function() {
 
     run_in_in('Save and Delete Encounters Table', {
       polar_write_rdata(table_enc)
-      # polar_write_rdata(patient_refs_ids)
-      # polar_write_rdata(table_serviceType)
-      # rm(table_enc, patient_refs_ids, table_serviceType)
     })
   })
 }
