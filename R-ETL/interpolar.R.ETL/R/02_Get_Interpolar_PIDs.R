@@ -1,5 +1,8 @@
+#' Extracts the Interploar relevant patient IDs from download Encounter resources.
 #'
 #' @return the Interploar relevant patient IDs
+#'
+#' @export
 getInterpolarPatientIDs <- function() {
 
   interpolar.R.utils::run_in(toupper('get_encounters'), {
@@ -15,5 +18,3 @@ getInterpolarPatientIDs <- function() {
   # table_enc <- fhircrackr::fhir_crack(bundles = bundles, design = TABLE_DESCRIPTION$Encounter, verbose = 10)
 
 }
-
-getInterpolarPatientIDs()
