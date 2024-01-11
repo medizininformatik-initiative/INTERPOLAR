@@ -12,8 +12,12 @@ RoxygenNote: 7.2.3
 Imports: 
     data.table,
     fhircrackr,
+    httr,
+    lubridate,
+    memuse,
     methods,
     openxlsx,
+    RcppTOML,
     rlang,
     stringr,
     xml2
