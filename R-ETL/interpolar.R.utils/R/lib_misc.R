@@ -129,7 +129,7 @@ polar_complete_table <- function(table, table_description) {
     new = col_names
   )
   d <- data.table::rbindlist(list(empty_table, table), fill = TRUE, use.names = TRUE)
-  d[,lapply(.SD, function(x) methods::as(x, 'character'))]
+  d[, lapply(.SD, function(x) methods::as(x, 'character'))]
 }
 
 #' Convert Data.Table to Character String
@@ -486,3 +486,204 @@ print_table_summary <- function(table=table_enc, table_name = '') {
     )
   }
 }
+
+#' Convert a polar time representation to POSIXct format
+#'
+#' This function takes a time column in a polar format, extracts the time part,
+#' and converts it to POSIXct format with a default date of "2020-01-01". The input
+#' time_column is expected to be in a format containing hours, minutes, and seconds.
+#' NA and an empty string will return NA.
+#'
+#' @param time_column A column containing time information in a polar format.
+#' @return A character vector representing the time in POSIXct format ("%H:%M:%S").
+#'
+#' @examples
+#' # Test case 1: Valid time representation
+#' time_column_valid <- c("12:30:45", "08:15:00", "23:59:59")
+#' result_valid <- polar_as_time(time_column_valid)
+#' cat("Result for valid time representations:\n", result_valid, "\n\n")
+#'
+#' # Test case 2: NA input, should return NA
+#' time_column_na <- c(NA, NA, NA)
+#' result_na <- polar_as_time(time_column_na)
+#' cat("Result for NA input:\n", result_na, "\n\n")
+#'
+#' # Test case 3: Empty string input, should throw an error
+#' time_column_empty <- c("", "", "")
+#' tryCatch(
+#'   {
+#'     result_empty <- polar_as_time(time_column_empty)
+#'     cat("Result for empty string input:\n", result_empty, "\n\n")
+#'   },
+#'   error = function(e) cat("Error for empty string input:\n", e$message, "\n\n")
+#' )
+#'
+#' @export
+polar_as_time <- function(time_column) {
+  dc <- time_column
+  dc <- ifelse(nzchar(dc), dc, NA) # empty string is the same as NA
+  if (!all(is.na(dc))) {
+    pat <- '^.*?([0-9]+:[0-9]+:[0-9]+).*?$'
+    # Remove date or return midnight
+    dc <- ifelse (grepl(pat, dc), gsub(pat, "\\1", as.character(dc)), "00:00:00")
+    # Any day will work
+    dc <- paste("2020-01-01", dc)
+  }
+  # as.POSIXct returns NA, if it is not a valid date
+  format(as.POSIXct(dc, optional = TRUE), "%H:%M:%S")
+}
+
+#' Get a regular expression pattern for matching YYYY format
+#'
+#' This function returns a regular expression pattern for matching the YYYY format
+#' (four-digit year). It can be used for validating and extracting year information
+#' from strings.
+#'
+#' @return A character vector representing the regular expression pattern for YYYY format.
+#'
+#' @examples
+#' get_pattern_YYYY()
+#'
+#' @export
+#'
+get_pattern_YYYY <- function() '^[0-9]{4}$'
+
+#' Get a regular expression pattern for matching YYYY-MM format
+#'
+#' This function returns a regular expression pattern for matching the YYYY-MM format
+#' (four-digit year followed by a hyphen and two-digit month). It can be used for
+#' validating and extracting year and month information from strings.
+#'
+#' @return A character vector representing the regular expression pattern for YYYY-MM format.
+#'
+#' @examples
+#' get_pattern_YYYY_MM()
+#'
+#' @export
+#'
+get_pattern_YYYY_MM <- function() '^[0-9]{4}-[0-9]{2}$'
+
+
+#' Convert a date representation to Date format
+#'
+#' This function takes a date column in a polar format, cleans and standardizes
+#' the format, and converts it to Date format. The input date_column is expected
+#' to be in a format containing year, month, and day information. The function
+#' supports patterns for YYYY and YYYY-MM. It utilizes the functions
+#' \code{\link{get_pattern_YYYY}} and \code{\link{get_pattern_YYYY_MM}} for obtaining
+#' regular expression patterns.
+#'
+#' @param date_column A column containing date information in a polar format.
+#' @return A Date vector representing the converted date information.
+#'
+#' @examples
+#' library(lubridate)
+#'
+#' # Test case 1: YYYY format
+#' date_column_YYYY <- c("2022", "1990", "1980")
+#' result_YYYY <- polar_as_date(date_column_YYYY)
+#'
+#' # Test case 2: YYYY-MM format
+#' date_column_YYYY_MM <- c("2022-12", "1990-05", "1980-11")
+#' result_YYYY_MM <- polar_as_date(date_column_YYYY_MM)
+#'
+#' # Test case 3: Date with time, should be cleaned
+#' date_column_with_time <- c("2022-12-01T15:30:00", "1990-05-01T08:45:00")
+#' result_with_time <- polar_as_date(date_column_with_time)
+#'
+#' # Test case 4: Date with '/' separator, should be replaced with '-'
+#' date_column_slash_separator <- c("2022/12/01", "1990/05/01")
+#' result_slash_separator <- polar_as_date(date_column_slash_separator)
+#'
+#' @seealso
+#' \code{\link{get_pattern_YYYY}}, \code{\link{get_pattern_YYYY_MM}}
+#'
+#' @export
+#'
+polar_as_date <- function(date_column) {
+
+  dc <- as.character(date_column)
+  dc <- gsub('T.+$', '', dc)
+  dc <- gsub('/', '-', dc)
+
+  incomplete_date_pattern <- get_pattern_YYYY()
+  years <- grepl(incomplete_date_pattern, dc)
+  dc[years] <- paste0(dc[years], '-01-01')
+
+  incomplete_date_pattern <- get_pattern_YYYY_MM()
+  years <- grepl(incomplete_date_pattern, dc)
+  dc[years] <- paste0(dc[years], '-01')
+
+  lubridate::as_date(dc)
+}
+
+#'
+#' Fix uncommon date formats
+#'
+#' This function takes a data.table (`dt`), a set of date columns (`date_columns`),
+#' and an optional parameter (`preserve_time`) to fix uncommon date formats.
+#' It performs the following tasks:
+#'
+#' - If `preserve_time` is TRUE, it extracts the time part from each date column
+#'   and saves it into respective TimeSpec columns by appending ".TimeSpec" to the
+#'   original date column names.
+#'
+#' - It then converts the original date columns to Date format using the
+#'   `polar_as_date` function.
+#'
+#' @param dt A data.table containing the data to be processed.
+#' @param date_columns A character vector specifying the names of the date columns to be fixed.
+#' @param preserve_time A logical value indicating whether to preserve time information. Default is TRUE.
+#' @return The modified data.table with fixed date formats.
+#'
+#' @examples
+#' # Create an example data.table
+#' dt <- data.table::data.table(
+#'   date1 = c("2022", "1990-05", "1980-11"),
+#'   date2 = c("2022-12", "1990-05", "1980-11"),
+#'   value = c(1, 2, 3)
+#' )
+#'
+#' # Fix uncommon date formats with time preservation
+#' polar_fix_dates(dt, c("date1", "date2"), preserve_time = TRUE)
+#'
+#' # The resulting data.table will have additional columns date1.TimeSpec and date2.TimeSpec
+#' # containing the extracted time information, and the original date columns date1 and date2
+#' # will be converted to Date format.
+#' dt
+#'
+#' # Expected output:
+#' #    date1      date2 value date1.TimeSpec date2.TimeSpec
+#' # 1: 2022-01-01 2022-12-01     1       00:00:00       00:00:00
+#' # 2: 1990-05-01 1990-05-01     2       00:00:00       00:00:00
+#' # 3: 1980-11-01 1980-11-01     3       00:00:00       00:00:00
+#'
+#' @seealso
+#' \code{\link{polar_as_time}}, \code{\link{polar_as_date}}
+#'
+#' @export
+#'
+polar_fix_dates <- function(dt, date_columns, preserve_time = TRUE) {
+
+  #preserve time information
+  if (preserve_time) {
+
+    time_columns <- paste0(date_columns, ".TimeSpec") #add suffix HourMinutesSeconds
+
+    #col by col
+    for (dc in date_columns) {
+
+      tc <- paste0(dc, ".TimeSpec")
+      if (0 < nrow(dt)) {
+
+        #extract time from any datetime column and save it into the respecive TimeSpec column
+        dt[, (tc) := sapply(dt[[dc]], polar_as_time)]
+      } else {
+        #avoid columns of type list, which will be generated from empty resource
+        dt[, (tc) := character()]
+      }
+    }
+  }
+  dt[, (date_columns) := lapply(.SD, polar_as_date), .SDcols = date_columns]
+}
+
