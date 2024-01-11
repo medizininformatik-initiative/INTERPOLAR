@@ -1,9 +1,19 @@
 
-#Set SEP and BRACKETS
+#' Brackets for the fhir table descriptions used for the indices of multi value entries.
+#'
+#' @details If a xpath expression returns more than 1 value (if it is a list of multiple values (e.g.
+#' list of codes and corresponding code systems), then all
+#'
+#' @export
 BRACKETS <- c('[', ']')
+
+#' Brackets for the fhir table descriptions
+#' @export
 SEP      <- ' ~ '
 
-#Create Table-Descriptions and Designs for relevant resources
+#' Create Table-Descriptions and Designs for relevant resources
+#'
+#' @export
 TABLE_DESCRIPTION <- list(
   'Encounter' = fhircrackr::fhir_table_description(
     resource = 'Encounter',
@@ -27,10 +37,8 @@ TABLE_DESCRIPTION <- list(
       Enc.ServiceProvider.System = 'serviceProvider/identifier/system',
       Enc.ServiceProvider.Value  = 'serviceProvider/identifier/value'
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   ),
 
   'Patient' = fhircrackr::fhir_table_description(
@@ -41,10 +49,8 @@ TABLE_DESCRIPTION <- list(
       Pat.DOB    = 'birthDate',
       Pat.Gender = 'gender'
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   ),
 
   'Condition' = fhircrackr::fhir_table_description(
@@ -58,10 +64,8 @@ TABLE_DESCRIPTION <- list(
       Con.Name        = 'code/text',
       Con.Time        = 'recordedDate'
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   ),
 
   'Medication' = fhircrackr::fhir_table_description(
@@ -84,10 +88,8 @@ TABLE_DESCRIPTION <- list(
       Ingredient.denominator.code  = 'ingredient/strength/denominator/code',
       Ingredient.denominator.unit  = 'ingredient/strength/denominator/unit'
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   ),
 
   'MedicationAdministration' = fhircrackr::fhir_table_description(
@@ -104,10 +106,8 @@ TABLE_DESCRIPTION <- list(
       MedAdm.Dosage.Code     = 'dosage/dose/code',
       MedAdm.Dosage.Unit     = 'dosage/dose/unit'
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   ),
 
   'MedicationStatement' = fhircrackr::fhir_table_description(
@@ -125,10 +125,8 @@ TABLE_DESCRIPTION <- list(
       MedStat.Dosage.Unit     = 'dosage/doseAndRate/doseQuantity/unit'
       #MedStat.Dosage.Unit     = 'dosage/dose/unit'
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   ),
 
   "Observation" = fhircrackr::fhir_table_description(
@@ -147,9 +145,7 @@ TABLE_DESCRIPTION <- list(
       Obs.ValueQuantity.Unit  = "valueQuantity/unit"
 
     ),
-    style    = fhircrackr::fhir_style(
-      sep      = SEP,
-      brackets = NULL
-    )
+    sep      = SEP,
+    brackets = NULL
   )
 )
