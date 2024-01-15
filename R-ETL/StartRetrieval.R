@@ -3,6 +3,7 @@
 ##########################################################################
 rm(list = ls())
 
+library(interpolar.R.utils)
 library(interpolar.R.ETL)
 
 retrieve()
