@@ -60,6 +60,11 @@ DELAY_REQ                          = 2 # if request fails, wait X seconds, the d
 
 [retrieve.patient_id_filtering]
 
+# Enable the following parameter, if the Interpolar relevant patient IDs (PID) are provided
+# by an external system and if they are stored in a text file (1 PID pr line). This  deactivates the
+# search for relevant PIDs via encounters (see ENCOUNTER_FILTER_PATTERNS).
+#PATH_TO_PID_LIST_FILE = "../Interpolar-PIDs.txt"
+
 # Use this defintion to set the filters to identify all Encounters of the INTERPOLAR relevant wards,
 # This is only necessary if the relevant Patient IDs should be derived from this Encounters and are
 # not provided in any other way.

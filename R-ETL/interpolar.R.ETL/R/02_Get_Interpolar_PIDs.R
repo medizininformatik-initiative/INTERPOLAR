@@ -49,7 +49,14 @@ convertFilterPatterns <- function(table_description, filter_patterns_name) {
 #' @return the Interploar relevant patient IDs
 #'
 #' @export
-getInterpolarPatientIDs <- function() {
+getInterpolarPatientIDs <- function(path_to_PID_list_file) {
+
+  interpolar.R.utils::run_in('get_encounters', {
+    if (!is.na(path_to_PID_list_file)) {
+      pids <- readLines(path_to_PID_list_file)
+      return(unique(sort(pids)))
+    }
+  })
 
   interpolar.R.utils::run_in('get_encounters', {
     PERIOD_START <<- "2019-01-01"

@@ -33,7 +33,7 @@ retrieve <- function() {
   interpolar.R.utils::start_logging('retrieval-total')
 
   interpolar.R.utils::run_out('Run Retrieve', {
-    patientIDs <- getInterpolarPatientIDs()
+    patientIDs <- getInterpolarPatientIDs(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
   })
 
   ###
