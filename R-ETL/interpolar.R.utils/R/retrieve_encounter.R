@@ -38,7 +38,6 @@ get_encounters <- function() {
 
     run_in_in_ignore_error('Send Test Request', {
       test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE - VL_70_DOWNLOAD), silent = TRUE)
-      NULL
     })
 
     #
@@ -274,5 +273,7 @@ get_encounters <- function() {
     run_in_in('Save and Delete Encounters Table', {
       polar_write_rdata(table_enc)
     })
+
+    table_enc
   })
 }
