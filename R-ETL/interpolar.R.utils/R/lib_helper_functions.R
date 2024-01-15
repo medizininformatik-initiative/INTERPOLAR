@@ -415,12 +415,12 @@ flatten_list <- function(x, prefix = NULL) {
 #'
 #' @export
 initConstants <- function(path_to_toml) {
-  # load the config toml file
-  config <- RcppTOML::parseToml(path_to_toml)
+  # load the config toml file in the global environment
+  CONFIG <<- RcppTOML::parseToml(path_to_toml)
   # Take nested list CONFIG and flattens it into a single-level list
   # Remove parent names from variable names
   # And assign list values to the global environment
-  flattenConfig <- flatten_list(config)
+  flattenConfig <- flatten_list(CONFIG)
   # Extract variable names from flattenConfig
   variable_names <- names(flattenConfig)
   # Assign values to variables from flattenConfig
@@ -433,9 +433,9 @@ initConstants <- function(path_to_toml) {
   # this functionality. To enable timestamp suffixes at the result dir set
   # the variable USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = true in the config toml file.
   PROJECT_TIME_STAMP <<- if (exists('USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX') && USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX) {
-    format(Sys.time(), "-%Y-%m%d-%H%M%S")
+    format(Sys.time(), '-%Y-%m%d-%H%M%S')
   } else {
-    ""
+    ''
   }
 }
 
