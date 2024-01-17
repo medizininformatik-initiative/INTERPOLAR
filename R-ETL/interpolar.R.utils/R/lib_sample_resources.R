@@ -612,6 +612,279 @@ polar_download_and_crack_parallel <- function(
   polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
+#' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.
+#'
+#' This function downloads FHIR resources specified by the provided IDs for a given resource type in parallel.
+#' It then performs cracking on the obtained bundles using the specified table description.
+#'
+#' @param resource The type of FHIR resource to download and crack.
+#' @param ids A vector of patient IDs for the FHIR resources.
+#' @param table_description A table description object specifying the structure of the resulting data table.
+#' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
+#' @param id_param_str Additional parameter string for constructing the FHIR request URL (default: 'subject').
+#' @param verbose Verbosity level
+#'
+#' @return A data.table containing the cracked FHIR resources.
+#' @export
+polar_download_by_ids_and_crack_parallel <- function(
+    resource,
+    ids,
+    table_description,
+    ids_at_once       = IDS_AT_ONCE,
+    id_param_str      = 'subject',
+    verbose
+) {
+  WAIT_TIMES <- 2 ** (0 : 7)
+  max_trials <- length(WAIT_TIMES)
+
+  verbose <- max(c(0, verbose))
+  request <- fhircrackr::fhir_url(
+    url        = FHIR_SERVER_ENDPOINT,
+    resource   = resource,
+    parameters = c(
+      '_summary' = 'count',
+      '_count'   = '1'
+    ),
+    url_enc = TRUE
+  )
+  bndls <- try(
+    polar_fhir_search(
+      request    = request,
+      log_errors = paste0(resource, 'Availability-Test-error.xml'),
+      verbose    = verbose
+    )
+  )
+  if (VL_90_FHIR_RESPONSE <= VERBOSE) {
+    print (bndls)
+  }
+  total <- if (inherits(bndls, 'try-error')) {
+    if (0 < verbose) {
+      cat(styled_string('\nAvailability-Check failed.', fg = 1), '\n')
+    }
+    0
+  } else {
+    as.numeric(xml2::xml_attr(xml2::xml_find_all(bndls[[1]], '//total'), 'value'))
+  }
+  if (total < 1) {
+    if (0 < verbose) cat_red(paste0('No ', resource, 's found. Return empty Table. Please note! This may cause further problems.\n'))
+    return(polar_complete_table(data.table::data.table(), table_description))
+  }
+
+  curr_len <- min(ids_at_once, length(ids))
+
+  if (curr_len < 1) {# if no ids for download. return empty data.table with required columns
+    return(polar_complete_table(data.table::data.table(), table_description))
+  }
+
+  os <- get_os()
+  ncores <- get_ncores(os)
+  if (1 < verbose) {
+    cat(paste0(
+      'OS:    ',
+      styled_string(os, bold = TRUE),
+      '\nCores: ',
+      styled_string(ncores, bold = TRUE),
+      '\n'
+    ))
+  }
+  mb <- MAX_ENCOUNTER_BUNDLES # for later restoring
+  MAX_ENCOUNTER_BUNDLES <<- Inf
+  run <- 0
+  tables <- list()
+  pkg <- list()
+
+  curr_len_recent <- 0
+  seq_ids  <- seq_len(curr_len)
+  curr_ids <- ids[seq_ids]
+  ids      <- ids[-seq_ids]
+
+  pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
+
+  if (1 < ncores) {# split ids on cores
+    for (nc in seq_len(ncores - 1)) {#nc <- seq_len(ncores - 2)
+
+      curr_len <- min(ids_at_once, length(ids))
+      seq_ids  <- seq_len(curr_len)
+      curr_ids <- ids[seq_ids]
+      ids      <- ids[-seq_ids]
+
+      pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
+    }
+  }
+
+  # if there elements in pkg and at least one of them has a positive length
+  while (0 < length(pkg) && any(0 < sapply(pkg, length))) {
+
+    requests <- sapply(pkg, is.character)
+    bndl_lengths <- if (0 < sum(requests)) {
+      sum(sapply(pkg[requests], length))
+    } else 0
+
+    if (0 < verbose) {
+      if (any(sapply(pkg, is.character)) && any(!sapply(pkg, is.character))) {
+        cat(paste0(
+          'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
+          ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' and Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
+        ))
+      } else if (any(sapply(pkg, is.character))) {
+        cat(paste0(
+          'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
+          ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          '\n'
+        ))
+      } else {
+        cat(paste0(
+          'Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
+        ))
+      }
+    }
+    pkg <- parallel::mclapply(
+      mc.cores = ncores,
+      X        = pkg,
+      FUN      = function(element) {# element <- pkg[[1]]
+        if (!inherits(element, 'character')) {
+          usb <- try(lapply(element, fhircrackr::fhir_unserialize))
+          if (inherits(usb, 'try-error')) {
+            usb
+          } else {
+            try({
+              data.table::rbindlist(
+                l         = lapply(
+                  usb,
+                  function(b) {
+                    fhircrackr::fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
+                  }
+                ),
+                fill      = TRUE,
+                use.names = TRUE
+              )
+            })
+          }
+        } else {
+          if (0 < length(element)) {
+            trial <- 1
+            while (trial <= max_trials) {
+              bundles <- try(polar_get_resources_by_ids(
+                endpoint     = FHIR_SERVER_ENDPOINT,
+                resource     = resource,
+                ids          = element,
+                id_param_str = id_param_str,
+                parameters   = NULL,
+                verbose      = verbose
+              ))
+              if (inherits(bundles, 'try-error')) {
+                if (0 < verbose) {
+                  cat(
+                    styled_string(
+                      'Bundles for the following IDs could not be downloaded:',
+                      element,
+                      fg = 1,
+                      bold = TRUE
+                    ),
+                    '\n',
+                    pkg$ids
+                  )
+                  cat(styled_string('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
+                }
+                Sys.sleep(WAIT_TIMES[[trial]])
+                trial <- trial + 1
+              } else {
+                break
+              }
+            }
+            if (max_trials < trial) {
+              if (0 < verbose) {
+                cat(
+                  styled_string(
+                    trial,
+                    verbose_numbers(trial),
+                    'attempt to Download Bundle failed. Bundle is lost. ',
+                    'Please note! This may cause further Problems.',
+                    fg = 1,
+                    bold = TRUE
+                  ),
+                  '\n'
+                )
+              }
+              NULL
+            } else {
+              try(fhircrackr::fhir_serialize(bundles))
+            }
+          }
+        }
+      }
+    )
+
+    for (dt in pkg[sapply(pkg, inherits, 'data.table')]) {
+      tables <- c(tables, list(dt))
+    }
+
+    pkg <- list(pkg[sapply(pkg, inherits, 'fhir_bundle_list')])
+
+    curr_len_recent <- bndl_lengths
+    curr_len <- min(ids_at_once, length(ids))
+    seq_ids  <- seq_len(curr_len)
+    curr_ids <- ids[seq_ids]
+    ids      <- ids[-seq_ids]
+    pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
+
+    if (2 < ncores) {
+      for (nc in seq_len(ncores - 2)) {#nc <- seq_len(ncores - 1)[[1]]
+        curr_len <- min(ids_at_once, length(ids))
+        seq_ids  <- seq_len(curr_len)
+        curr_ids <- ids[seq_ids]
+        ids      <- ids[-seq_ids]
+
+        pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
+        #        nc <- nc + 1
+      }
+    }
+
+    run <- run + 1
+  }
+  MAX_ENCOUNTER_BUNDLES <<- mb
+  polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+}
+
+#' Download FHIR resources by patient IDs and perform parallel cracking for each resource type.
+#'
+#' This function iterates over the resource types defined in table_description, and for each resource type,
+#' it calls the polar_download_by_ids_and_crack_parallel function to download and crack FHIR resources
+#' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
+#'
+#' @param patientIDs A vector of patient IDs for whom FHIR resources should be retrieved.
+#' @param table_description A list of table descriptions for different FHIR resource types.
+#'
+#' @return A list containing tables for each resource type, with resource type names as keys.
+#' @export
+loadResourcesByPID <- function(patientIDs, table_description) {
+
+  table_name_to_tables <- list()
+
+  for (resource in names(table_description)) {
+    if (names(table_description[resource]) == "Patient") {
+      resource_table <- interpolar.R.utils::polar_download_by_ids_and_crack_parallel(
+        resource = names(table_description[resource]),
+        id_param_str = '_id',
+        ids = patientIDs,
+        table_description = table_description[[resource]],
+        verbose = VERBOSE
+      )
+    }
+    else {
+      resource_table <- interpolar.R.utils::polar_download_by_ids_and_crack_parallel(
+        resource = names(table_description[resource]),
+        ids = patientIDs,
+        table_description = table_description[[resource]],
+        verbose = VERBOSE
+      )
+    }
+    table_name_to_tables[[resource]] <- resource_table
+  }
+  table_name_to_tables
+}
+
 #' #' Download and Crack FHIR Resources in Parallel by IDs
 #' #'
 #' #' This function downloads FHIR resources by specified IDs and cracks the bundles in parallel.
