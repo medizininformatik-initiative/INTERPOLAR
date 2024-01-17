@@ -110,8 +110,8 @@ TABLE_DESCRIPTION <- list(
     brackets = NULL
   ),
 
-  'MedicationStatement' = fhircrackr::fhir_table_description(
-    resource = 'MedicationStatement',
+  'MedicationRequest' = fhircrackr::fhir_table_description(
+    resource = 'MedicationRequest',
     cols     = c(
       MedStat.MedStat.ID      = 'id',
       MedStat.Med.ID          = 'medicationReference/reference',
