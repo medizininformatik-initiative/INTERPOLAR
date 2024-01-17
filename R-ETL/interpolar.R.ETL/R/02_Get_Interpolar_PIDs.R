@@ -51,20 +51,20 @@ convertFilterPatterns <- function(table_description, filter_patterns_name) {
 #' @export
 getInterpolarPatientIDs <- function(path_to_PID_list_file) {
 
-  interpolar.R.utils::run_in('get_encounters', {
+  interpolar.R.utils::run_in_in('Get Patient IDs by file', {
     if (!is.na(path_to_PID_list_file)) {
       pids <- readLines(path_to_PID_list_file)
       return(unique(sort(pids)))
     }
   })
 
-  interpolar.R.utils::run_in('get_encounters', {
+  interpolar.R.utils::run_in_in('Get Encounters', {
     PERIOD_START <<- "2019-01-01"
     PERIOD_END <<- "2019-01-02"
     encounters <- interpolar.R.utils::get_encounters()
   })
 
-  interpolar.R.utils::runs_in('Filter Interpolar relevant encounters ', {
+  interpolar.R.utils::runs_in_in('Filter Interpolar relevant encounters', {
     converted_filter_patterns <- convertFilterPatterns(TABLE_DESCRIPTION$Encounter, 'ENCOUNTER_FILTER_PATTERNS')
     encounters <- filterResources(encounters, converted_filter_patterns)
     return(unique(sort(encounters$Enc.Pat.ID)))

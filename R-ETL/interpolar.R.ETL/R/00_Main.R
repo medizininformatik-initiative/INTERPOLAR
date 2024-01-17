@@ -33,7 +33,15 @@ retrieve <- function() {
   interpolar.R.utils::start_logging('retrieval-total')
 
   interpolar.R.utils::run_out('Run Retrieve', {
-    patientIDs <- getInterpolarPatientIDs(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
+
+    interpolar.R.utils::run_in('Extract Patient IDs', {
+      patientIDs <- getInterpolarPatientIDs(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
+    })
+
+    interpolar.R.utils::run_in('Download and crack resources by Patient IDs', {
+      resource_table_list <- interpolar.R.utils::loadResourcesByPID(patientIDs, TABLE_DESCRIPTION)
+    })
+
   })
 
   ###
