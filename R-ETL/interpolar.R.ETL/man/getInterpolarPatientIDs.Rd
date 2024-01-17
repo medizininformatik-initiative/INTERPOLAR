@@ -4,7 +4,7 @@
 \alias{getInterpolarPatientIDs}
 \title{Extracts the Interploar relevant patient IDs from download Encounter resources.}
 \usage{
-getInterpolarPatientIDs()
+getInterpolarPatientIDs(path_to_PID_list_file)
 }
 \value{
 the Interploar relevant patient IDs

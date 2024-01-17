@@ -7,10 +7,26 @@
 filterResources(resources, filter_patterns)
 }
 \arguments{
-\item{resources}{description}
+\item{resources}{A data.table representing the resources table to be filtered.}
 
-\item{filter_patterns}{description}
+\item{filter_patterns}{A list of filter conditions. Each condition is a character string containing multiple
+subconditions separated by '+'.}
+
+\item{row}{A row (list or data.frame) to be checked against the condition.}
+
+\item{condition}{A list where each element is a grep pattern, and the name corresponds to the column in the row.}
+}
+\value{
+A filtered data.table based on the given filter patterns.
+
+TRUE if the row fulfills the condition, FALSE otherwise.
 }
 \description{
-Filters the given resources table by the given filter patterns.
+This function filters a resources table based on the provided filter patterns.
+}
+\details{
+This function applies an OR operation across the filter patterns, meaning that a row will be retained if at
+least one condition is fulfilled.
+However, within each individual condition (subconditions separated by '+'), an AND operation is applied,
+requiring all subconditions to be met for the condition to be satisfied.
 }
