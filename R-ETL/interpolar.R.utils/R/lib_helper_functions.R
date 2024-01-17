@@ -470,10 +470,6 @@ filterResources <- function(resources, filter_patterns) {
   #' @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
   #' @return TRUE if the row fulfills the condition, FALSE otherwise.
   #'
-  #' @examples
-  #' # Assuming row is a list or data.frame and condition is a list of grep patterns
-  #' fulfills_condition(row, condition)
-  #'
   fulfills_condition <- function(row, condition) {
     subConditionColumns <- names(condition)
     for (i in 1:length(condition)) { # i <- 1
