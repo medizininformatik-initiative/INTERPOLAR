@@ -462,14 +462,14 @@ filterResources <- function(resources, filter_patterns) {
   # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
   resources[, Filter_Column_Keep := FALSE]
 
-  #' Check if a row fulfills a given condition
-  #'
-  #' This function checks if a row meets a given condition based on grep patterns for each column.
-  #'
-  #' @param row A row (list or data.frame) to be checked against the condition.
-  #' @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
-  #' @return TRUE if the row fulfills the condition, FALSE otherwise.
-  #'
+  # Check if a row fulfills a given condition
+  #
+  # This function checks if a row meets a given condition based on grep patterns for each column.
+  #
+  # @param row A row (list or data.frame) to be checked against the condition.
+  # @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
+  # @return TRUE if the row fulfills the condition, FALSE otherwise.
+  #
   fulfills_condition <- function(row, condition) {
     subConditionColumns <- names(condition)
     for (i in 1:length(condition)) { # i <- 1
