@@ -2,13 +2,20 @@
 % Please edit documentation in R/02_Get_Interpolar_PIDs.R
 \name{getInterpolarPatientIDs}
 \alias{getInterpolarPatientIDs}
-\title{Extracts the Interploar relevant patient IDs from download Encounter resources.}
+\title{Extracts the Interploar relevant patient IDs from download Encounter resources. If the file name parameter
+is NA then the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file
+name parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).}
 \usage{
-getInterpolarPatientIDs(path_to_PID_list_file)
+getInterpolarPatientIDs(path_to_PID_list_file = NA)
+}
+\arguments{
+\item{path_to_PID_list_file}{file name if the list of patient IDs should be loaded from a file (if not then NA)}
 }
 \value{
 the Interploar relevant patient IDs
 }
 \description{
-Extracts the Interploar relevant patient IDs from download Encounter resources.
+Extracts the Interploar relevant patient IDs from download Encounter resources. If the file name parameter
+is NA then the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file
+name parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
 }
