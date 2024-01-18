@@ -44,12 +44,16 @@ convertFilterPatterns <- function(table_description, filter_patterns_name) {
 }
 
 
-#' Extracts the Interploar relevant patient IDs from download Encounter resources.
+#' Extracts the Interploar relevant patient IDs from download Encounter resources. If the file name parameter
+#' is NA then the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file
+#' name parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
+#'
+#' @param path_to_PID_list_file file name if the list of patient IDs should be loaded from a file (if not then NA)
 #'
 #' @return the Interploar relevant patient IDs
 #'
 #' @export
-getInterpolarPatientIDs <- function(path_to_PID_list_file) {
+getInterpolarPatientIDs <- function(path_to_PID_list_file = NA) {
 
   interpolar.R.utils::run_in_in('Get Patient IDs by file', {
     if (!is.na(path_to_PID_list_file)) {
@@ -66,7 +70,7 @@ getInterpolarPatientIDs <- function(path_to_PID_list_file) {
 
   interpolar.R.utils::runs_in_in('Filter Interpolar relevant encounters', {
     converted_filter_patterns <- convertFilterPatterns(TABLE_DESCRIPTION$Encounter, 'ENCOUNTER_FILTER_PATTERNS')
-    encounters <- filterResources(encounters, converted_filter_patterns)
+    encounters <- interpolar.R.utils::filterResources(encounters, converted_filter_patterns)
     return(unique(sort(encounters$Enc.Pat.ID)))
   })
 
