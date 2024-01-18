@@ -1,4 +1,3 @@
-
 #' Brackets for the fhir table descriptions used for the indices of multi value entries.
 #'
 #' @details If a xpath expression returns more than 1 value (if it is a list of multiple values (e.g.
@@ -11,141 +10,78 @@ BRACKETS <- c('[', ']')
 #' @export
 SEP      <- ' ~ '
 
-#' Create Table-Descriptions and Designs for relevant resources
+#' Get a table with the Table Descriptions for all fhir resources from Excel file
+#'
+#' This function reads the "Table_Description.xlsx" file from the "extdata" directory
+#' in the package and returns the data as a data frame.
+#'
+#' @return A data table with the table descriptions.
 #'
 #' @export
-TABLE_DESCRIPTION <- list(
-  'Encounter' = fhircrackr::fhir_table_description(
-    resource = 'Encounter',
-    cols = c(
-      Enc.Enc.ID                 = 'id',
-      Enc.Ext.ID                 = 'identifier/value',
-      Enc.Pat.ID                 = 'subject/reference',
-      Enc.Con.ID                 = 'diagnosis/condition/reference',
-      Enc.PartOf.ID              = 'partOf/reference',
-      Enc.Class.Code             = 'class/code',
-      Enc.Class.System           = 'class/system',
-      Enc.Class.Display          = 'class/display',
-      Enc.Hospitalization.Code   = 'hospitalization/admitSource/coding/code',
-      Enc.ServiceType.System     = 'serviceType/coding/system',
-      Enc.Service.Code           = 'serviceType/coding/code',
-      Enc.Service.Display        = 'serviceType/coding/display',
-      Enc.Period.Start           = 'period/start',
-      Enc.Period.End             = 'period/end',
-      Enc.Type.System            = 'type/coding/system',
-      Enc.Type.Code              = 'type/coding/code',
-      Enc.ServiceProvider.System = 'serviceProvider/identifier/system',
-      Enc.ServiceProvider.Value  = 'serviceProvider/identifier/value'
-    ),
-    sep      = SEP,
-    brackets = NULL
-  ),
+getTableDescriptionTable <- function() {
+  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "interpolar.R.ETL")
+  table_description <- interpolar.R.utils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
+  # remove all full NA rows
+  table_description <- table_description[rowSums(is.na(table_description)) < ncol(table_description), ]
+  # fill resource NA column with the last valid (non NA) value above
+  table_description[, resource := resource[1], .(cumsum(!is.na(resource)))]
+}
 
-  'Patient' = fhircrackr::fhir_table_description(
-    resource = 'Patient',
-    cols     = c(
-      Pat.Pat.ID = 'id',
-      Pat.Ext.ID = 'identifier/value',
-      Pat.DOB    = 'birthDate',
-      Pat.Gender = 'gender'
-    ),
-    sep      = SEP,
-    brackets = NULL
-  ),
+#' Get a list of fhircrackr::fhir_table_description() objects based on a table description.
+#'
+#' This function takes a table description table, typically obtained from
+#' `getTableDescriptionTable()`, and creates a list of
+#' `fhircrackr::fhir_table_description()` objects, each corresponding to a resource
+#' group in the table.
+#'
+#' @param table_description_table A data table containing information about
+#'   resources, column names, and FHIR expressions. If not provided, it
+#'   defaults to the result of calling `getTableDescriptionTable()`.
+#'
+#' @return A list of `fhircrackr::fhir_table_description()` objects, where each object
+#'   represents a resource group, and its elements correspond to the specified columns
+#'   and FHIR expressions.
+#'
+#' @examples
+#' \dontrun{
+#'   # Example usage:
+#'   table_desc <- getTableDescription()
+#'   # Access the fhir_table_description() object for a specific resource group (e.g., "Encounter")
+#'   encounter_description <- table_desc[["Encounter"]]
+#' }
+#'
+#' @seealso
+#' \code{\link{getTableDescriptionTable}}, \code{\link[fhircrackr]{fhir_table_description}}
+#'
+#' @importFrom fhircrackr fhir_table_description
+#'
+#' @keywords data manipulation
+#' @export
+getTableDescription <- function(table_description_table = NA) {
+  if (is.na(table_description_table)) {
+    table_description_table <- getTableDescriptionTable()
+  }
 
-  'Condition' = fhircrackr::fhir_table_description(
-    resource = 'Condition',
-    cols     = c(
-      Con.Con.ID      = 'id',
-      Con.Enc.ID      = 'encounter/reference',
-      Con.Pat.ID      = 'subject/reference',
-      Con.Code.System = 'code/coding/system',
-      Con.Code.Code   = 'code/coding/code',
-      Con.Name        = 'code/text',
-      Con.Time        = 'recordedDate'
-    ),
-    sep      = SEP,
-    brackets = NULL
-  ),
+  # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects
+  list_of_fhir_tables <- lapply(split(table_description_table, table_description_table$resource), function(subset) {
+    resource_name <- unique(subset$resource)
+    col_names <- subset$column_name
+    fhir_expressions <- subset$fhir_expression
 
-  'Medication' = fhircrackr::fhir_table_description(
-    resource = 'Medication',
-    cols     = c(
-      Med.Med.ID                   = 'id',
-      Med.Code                     = 'code/coding/code',
-      Med.Display                  = 'code/coding/display',
-      Med.Name                     = 'code/text',
-      Med.System                   = 'code/coding/system',
-      Med.Version                  = 'code/coding/version',
-      # TODO: Ingredient handle requires a major revision
-      #Ingredient.display           = 'ingredient/itemCodeableConcept/display',
-      #Ingredient.code              = 'ingredient/itemCodeableConcept/coding/code',
-      #Ingredient.system            = 'ingredient/itemCodeableConcept/coding/system',
-      Ingredient.numerator.value   = 'ingredient/strength/numerator/value',
-      Ingredient.numerator.code    = 'ingredient/strength/numerator/code',
-      Ingredient.numerator.unit    = 'ingredient/strength/numerator/unit',
-      Ingredient.denominator.value = 'ingredient/strength/denominator/value',
-      Ingredient.denominator.code  = 'ingredient/strength/denominator/code',
-      Ingredient.denominator.unit  = 'ingredient/strength/denominator/unit'
-    ),
-    sep      = SEP,
-    brackets = NULL
-  ),
+    # Creating a named vector for the 'cols' argument
+    cols_vector <- setNames(as.list(fhir_expressions), col_names)
 
-  'MedicationAdministration' = fhircrackr::fhir_table_description(
-    resource = 'MedicationAdministration',
-    cols     = c(
-      MedAdm.MedAdm.ID       = 'id',
-      MedAdm.Med.ID          = 'medicationReference/reference',
-      MedAdm.Pat.ID          = 'subject/reference',
-      MedAdm.Enc.ID          = 'context/reference',
-      MedAdm.Start           = 'effectivePeriod/start',
-      MedAdm.End             = 'effectivePeriod/end',
-      MedAdm.Time            = 'effectiveDateTime',
-      MedAdm.Dosage.Quantity = 'dosage/dose/value',
-      MedAdm.Dosage.Code     = 'dosage/dose/code',
-      MedAdm.Dosage.Unit     = 'dosage/dose/unit'
-    ),
-    sep      = SEP,
-    brackets = NULL
-  ),
+    # Creating fhircrackr::fhir_table_description() for the current 'resource'
+    fhir_table_desc <- fhircrackr::fhir_table_description(
+      resource = resource_name,
+      cols = cols_vector,
+      sep = SEP,
+      brackets = NULL
+    )
 
-  'MedicationRequest' = fhircrackr::fhir_table_description(
-    resource = 'MedicationRequest',
-    cols     = c(
-      MedStat.MedStat.ID      = 'id',
-      MedStat.Med.ID          = 'medicationReference/reference',
-      MedStat.Pat.ID          = 'subject/reference',
-      MedStat.Enc.ID          = 'context/reference',
-      MedStat.Start           = 'effectivePeriod/start',
-      MedStat.End             = 'effectivePeriod/end',
-      MedStat.Time            = 'effectiveDateTime',
-      MedStat.Dosage.Quantity = 'dosage/doseAndRate/doseQuantity/value',
-      MedStat.Dosage.Code     = 'dosage/doseAndRate/doseQuantity/code',
-      MedStat.Dosage.Unit     = 'dosage/doseAndRate/doseQuantity/unit'
-      #MedStat.Dosage.Unit     = 'dosage/dose/unit'
-    ),
-    sep      = SEP,
-    brackets = NULL
-  ),
+    return(fhir_table_desc)
+  })
 
-  "Observation" = fhircrackr::fhir_table_description(
-    resource = "Observation",
-    cols = c(
-      Obs.Obs.ID              = "id",
-      Obs.Pat.ID              = "subject/reference",
-      Obs.Enc.ID              = "encounter/reference",
-      Obs.Ext.ID              = 'identifier/value',
-      Obs.Code.System         = "code/coding/system",
-      Obs.Code.Code           = "code/coding/code",
-      Obs.Name                = "code/text",
-      Obs.Time                = "effectiveDateTime",
-      Obs.ValueQuantity.Value = "valueQuantity/value",
-      Obs.ValueQuantity.Code  = "valueQuantity/code",
-      Obs.ValueQuantity.Unit  = "valueQuantity/unit"
-
-    ),
-    sep      = SEP,
-    brackets = NULL
-  )
-)
+  # Returning the list of fhircrackr::fhir_table_description() objects
+  return(list_of_fhir_tables)
+}

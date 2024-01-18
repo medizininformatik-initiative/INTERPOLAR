@@ -34,6 +34,10 @@ retrieve <- function() {
 
   interpolar.R.utils::run_out('Run Retrieve', {
 
+    interpolar.R.utils::run_in('Load Table Description', {
+      TABLE_DESCRIPTION <<- getTableDescription()
+    })
+
     interpolar.R.utils::run_in('Extract Patient IDs', {
       patientIDs <- getInterpolarPatientIDs(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
     })

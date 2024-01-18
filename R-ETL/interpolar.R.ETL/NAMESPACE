@@ -2,8 +2,9 @@
 
 export(BRACKETS)
 export(SEP)
-export(TABLE_DESCRIPTION)
 export(getInterpolarPatientIDs)
+export(getTableDescription)
+export(getTableDescriptionTable)
 export(retrieve)
 importFrom(data.table,data.table)
 importFrom(data.table,is.data.table)
