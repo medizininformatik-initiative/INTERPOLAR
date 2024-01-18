@@ -178,90 +178,410 @@ namedListByValue <- function(...) {
   x
 }
 
+#'
+#' Check if debugging mode is enabled.
+#'
+#' This function checks if debugging mode is enabled by verifying the existence of the 'DEBUG' variable and if it is
+#' set to TRUE. his can be used in code to enable code sections only if a global variable DEGUG is set to TRUE.
+#'
+#' @return TRUE if debugging mode is enabled, otherwise FALSE.
+#'
+isDebug <- function() exists('DEBUG') && DEBUG
+
+#' Execute an outer script with a specified message and process
+#'
+#' This function runs an outer script with the provided message and process, controlling
+#' the verbosity level.
+#'
+#' @param message A character string describing the purpose of the outer script.
+#' @param process A function representing the outer script to be executed.
+#'
+#' @export
+run_out <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose = VL_20_OUTER_SCRIPTS
+  )}
+
+#' Execute an inner script with a specified message and process
+#'
+#' This function runs an inner script with the provided message and process, controlling
+#' the verbosity level.
+#'
+#' @param message A character string describing the purpose of the inner script.
+#' @param process A function representing the inner script to be executed.
+#'
+#' @export
+run_in <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose = VL_30_INNER_SCRIPTS
+  )}
+
+#' Execute an inner script info with a specified message and process
+#'
+#' This function runs an inner script info with the provided message and process, controlling
+#' the verbosity level.
+#'
+#' @param message A character string describing the purpose of the inner script info.
+#' @param process A function representing the inner script info to be executed.
+#'
+#' @export
+run_in_in <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose = VL_40_INNER_SCRIPTS_INFOS
+  )}
+
+#' Execute an inner script info with a specified message and process
+#'
+#' This function runs an inner script info with the provided message and process, controlling
+#' the verbosity level. If an error occurs, it is ignored.
+#'
+#' @param message A character string describing the purpose of the inner script info.
+#' @param process A function representing the inner script info to be executed.
+#'
+#' @export
+run_in_in_ignore_error <- function(message, process) {
+  run(
+    message = message,
+    process = process,
+    verbose = VL_40_INNER_SCRIPTS_INFOS,
+    throw_exception = FALSE
+  )}
+
+#' Execute a script with specified message, process, and verbosity level
+#'
+#' This function runs a script with the provided message and process, controlling
+#' the verbosity level.
+#'
+#' @param message A character string describing the purpose of the script.
+#' @param process A function representing the script to be executed.
+#' @param verbose An integer specifying the verbosity level.
+#' @param throw_exception if TRUE the execution of the current expression will be stopped
+#'
+#' @export
+run <- function(message, process, verbose, throw_exception = TRUE) {
+  polar_run(
+    message = message,
+    process = process,
+    verbose = VERBOSE - verbose + 1,
+    single_line = VERBOSE <= verbose,
+    throw_exception = throw_exception
+  )}
+
+#' Execute an outer script with specified message and process (single line)
+#'
+#' This function runs an outer script with the provided message and process, controlling
+#' the verbosity level. Unlike `runs`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
+#'
+#' @param message A character string describing the purpose of the outer script.
+#' @param process A function representing the outer script to be executed.
+#'
+#' @export
+runs_out <- function(message, process) {
+  runs(
+    message = message,
+    process = process,
+    verbose = VL_20_OUTER_SCRIPTS
+  )}
+
+#' Execute an inner script with specified message and process (single line)
+#'
+#' This function runs an inner script with the provided message and process, controlling
+#' the verbosity level. Unlike `runs`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
+#'
+#' @param message A character string describing the purpose of the inner script.
+#' @param process A function representing the inner script to be executed.
+#'
+#' @export
+runs_in <- function(message, process) {
+  runs(
+    message = message,
+    process = process,
+    verbose = VL_30_INNER_SCRIPTS
+  )}
+
+#' Execute an inner script info with specified message and process (single line)
+#'
+#' This function runs an inner script info with the provided message and process, controlling
+#' the verbosity level. Unlike `runs`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
+#'
+#' @param message A character string describing the purpose of the inner script info.
+#' @param process A function representing the inner script info to be executed.
+#'
+#' @export
+runs_in_in <- function(message, process) {
+  runs(
+    message = message,
+    process = process,
+    verbose = VL_40_INNER_SCRIPTS_INFOS
+  )}
+
+#' Execute a script with specified message, process, and verbosity level (single line)
+#'
+#' This function runs a script with the provided message and process, controlling
+#' the verbosity level. Unlike `run`, this function always displays output in a
+#' single line, regardless of the global verbosity setting.
+#'
+#' @param message A character string describing the purpose of the script.
+#' @param process A function representing the script to be executed.
+#' @param verbose An integer specifying the verbosity level.
+#'
+#' @export
+runs <- function(message, process, verbose) {
+  polar_run(
+    message = message,
+    process = process,
+    verbose = VERBOSE - verbose + 1,
+    single_line = TRUE
+  )}
+
+#' Conditional Print to Console (for tables) based on verbosity level
+#'
+#' This function prints the provided content to the console only if the global
+#' verbosity level is equal to or greater than `VL_50_TABLES`.
+#'
+#' @param ... Objects to be printed to the console.
+#'
+#' @export
+catl <- function(...) {
+  if (VL_50_TABLES <= VERBOSE) {
+    cat(..., '\n')
+  }
+}
+
+#' Refresh FHIR Token
+#'
+#' This function refreshes the FHIR token if it is defined.
+#'
+#' @details
+#' If the FHIR_TOKEN is defined, the function attempts to refresh it using the \code{polar_refresh_token} function.
+#'
+#' @export
+refreshFhirToken <- function() {
+  #refresh token, if defined
+  if (FHIR_TOKEN != '') {
+    run_in_in_ignore_error('Refresh FHIR_TOKEN', {
+      FHIR_TOKEN <- polar_refresh_token()
+    })
+  }
+}
+
+#' Flatten a nested list
+#'
+#' This function takes a nested list and flattens it into a single-level list and
+#' removes parent names from the variable names.
+#' It is particularly useful when you have flattened nested structures and want to
+#' clean up the variable names by removing the prefixes introduced during flattening.
+#'
+#' @param x The input nested list.
+#' @param prefix An optional prefix to be added to the names of the flattened list.
+#'
+#' @return A flattened list.
+#'
+#' @details
+#' The function recursively iterates through the nested list, creating a flattened list
+#' with modified variable names by adding the specified prefix. If no prefix is provided,
+#' the original names are retained. The function uses a regular expression to remove parent names from variable names.
+#' It looks for patterns at the beginning of each name and removes everything up to
+#' the first uppercase letter, assuming that uppercase letters indicate the start of a new variable.
+#' For example, "retrieve_fhir_server_SORT" becomes "SORT".
+#' @export
+flatten_list <- function(x, prefix = NULL) {
+  result <- list()
+  for (name in names(x)) {
+    new_prefix <- ifelse(is.null(prefix), name, paste0(prefix, "_", name))
+    if (is.list(x[[name]])) {
+      result <- c(result, flatten_list(x[[name]], new_prefix))
+    } else {
+      result[[name]] <- x[[name]]
+    }
+  }
+  result
+}
+
+#'
+#' Loads a configuration toml file and sets all variables in this file in the global
+#' context.
+#'
+#' @param path_to_toml path to the configuration toml file.
+#'
+#' @export
+initConstants <- function(path_to_toml) {
+  # load the config toml file in the global environment
+  CONFIG <<- RcppTOML::parseToml(path_to_toml)
+  # Take nested list CONFIG and flattens it into a single-level list
+  # Remove parent names from variable names
+  # And assign list values to the global environment
+  flattenConfig <- flatten_list(CONFIG)
+  # Extract variable names from flattenConfig
+  variable_names <- names(flattenConfig)
+  # Assign values to variables from flattenConfig
+  for (variable_name in variable_names) {
+    assign(variable_name, flattenConfig[[variable_name]], envir = .GlobalEnv)
+  }
+
+  # the result dir can be extended by an timestamp. this is not neccessary
+  # in Interploar but was used in Polar. For debug reasons we have not deactivated
+  # this functionality. To enable timestamp suffixes at the result dir set
+  # the variable USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = true in the config toml file.
+  PROJECT_TIME_STAMP <<- if (exists('USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX') && USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX) {
+    format(Sys.time(), '-%Y-%m%d-%H%M%S')
+  } else {
+    ''
+  }
+}
 
 
+#' Filters the given resources table by the given filter patterns.
+#'
+#' This function filters a resources table based on the provided filter patterns.
+#'
+#' @param resources A data.table representing the resources table to be filtered.
+#' @param filter_patterns A list of filter conditions. Each condition is a character string containing multiple
+#' subconditions separated by '+'.
+#'
+#' @return A filtered data.table based on the given filter patterns.
+#'
+#' @details
+#' This function applies an OR operation across the filter patterns, meaning that a row will be retained if at
+#' least one condition is fulfilled.
+#' However, within each individual condition (subconditions separated by '+'), an AND operation is applied,
+#' requiring all subconditions to be met for the condition to be satisfied.
+#'
+#' @export
+filterResources <- function(resources, filter_patterns) {
 
+  # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
+  resources[, Filter_Column_Keep := FALSE]
+
+  # Check if a row fulfills a given condition
+  #
+  # This function checks if a row meets a given condition based on grep patterns for each column.
+  #
+  # @param row A row (list or data.frame) to be checked against the condition.
+  # @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
+  # @return TRUE if the row fulfills the condition, FALSE otherwise.
+  #
+  fulfills_condition <- function(row, condition) {
+    subConditionColumns <- names(condition)
+    for (i in 1:length(condition)) { # i <- 1
+      subConditionColumn <- subConditionColumns[[i]]
+      subCondition <- condition[[i]]
+      if (!grepl(subCondition, row[[subConditionColumn]], ignore.case = TRUE, perl = TRUE)) {
+        return(FALSE)
+      }
+    }
+    return(TRUE)
+  }
+
+  # filterPatterns can have a list of conditions in this style:
+  # "type/coding/code = 'Abteilungskontakt' + serviceType/coding/code = '0100|0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  # Such a condition means that 3 subconditions must be fulfilled (separated by '+').
+  for (condition in filter_patterns) { # condition <- filter_patterns[[1]]
+    resources[, Filter_Column_Keep_Subcondition := FALSE]
+    for (i in seq_len(nrow(resources))) {
+      resources[i, Filter_Column_Keep := resources[i, Filter_Column_Keep] || fulfills_condition(resources[i], condition)]
+    }
+  }
+
+  resources[, Filter_Column_Keep_Subcondition := NULL]
+  resources <- resources[Filter_Column_Keep == TRUE]
+  resources[, Filter_Column_Keep := NULL]
+  return(resources)
+}
+
+
+#' Print a table if VERBOSE level allows.
 #'
+#' This function prints a summary for the specified table if the VERBOSE level is
+#' greater than or equal to VL_50_TABLES (= 5). It uses the `print_table_summary` function
+#' for generating the summary.
 #'
+#' @param table The input table to print. For example, you can use the mtcars dataset.
 #'
+#' @details
+#' This function checks the VERBOSE level (assumed to be a global variable) and
+#' prints a summary for the specified table only if the VERBOSE level is greater than
+#' or equal to VL_50_TABLES. The table_name is obtained from the calling function's name.
 #'
-#' #'
-#' #' Check if debugging mode is enabled.
-#' #'
-#' #' This function checks if debugging mode is enabled by verifying the existence of the 'DEBUG' variable and if it is
-#' #' set to TRUE. his can be used in code to enable code sections only if a global variable DEGUG is set to TRUE.
-#' #'
-#' #' @return TRUE if debugging mode is enabled, otherwise FALSE.
-#' #'
-#' isDebug <- function() exists('DEBUG') && DEBUG
+#' @seealso
+#' \code{\link{print_table_summary}}
 #'
+#' @export
 #'
-#' run_out <- function(message, process) {
-#'   run(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_20_OUTER_SCRIPTS
-#'   )}
+#' @examples
+#' # Load required packages
+#' library(datasets)
+#' library(data.table)
 #'
-#' run_in <- function(message, process) {
-#'   run(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_30_INNER_SCRIPTS
-#'   )}
+#' #' # Load the mtcars dataset and convert it to a data.table
+#' data(mtcars)
+#' setDT(mtcars)
 #'
-#' run_in_in <- function(message, process) {
-#'   run(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_40_INNER_SCRIPTS_INFOS
-#'   )}
+#' # Set VL_50_TABLES and VERBOSE to appropriate values
+#' VL_50_TABLES <- 5
+#' VERBOSE <- 7
 #'
+#' # Assuming VERBOSE and VL_50_TABLES are defined
+#' print_table(mtcars)
 #'
-#' run <- function(message, process, verbose_level) {
-#'   polar_run(
-#'     message = message,
-#'     process = process,
-#'     verbose = VERBOSE - verbose_level + 1,
-#'     single_line = VERBOSE <= verbose_level
-#'   )}
+print_table <- function(table) {
+  if (VERBOSE >= VL_50_TABLES) {
+    table_name <- as.character(sys.call()[2]) # get parameter names
+    print_table_summary(table, table_name)
+  }
+}
+
+#' Print a table if VERBOSE level allows.
 #'
+#' This function prints a summary for the specified table if the VERBOSE level is
+#' greater than or equal to VL_60_ALL_TABLES (= 6). It uses the `print_table_summary` function
+#' for generating the summary.
 #'
-#' runs_out <- function(message, process) {
-#'   runs(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_20_OUTER_SCRIPTS
-#'   )}
+#' @param table The input table to print. For example, you can use the mtcars dataset.
 #'
-#' runs_in <- function(message, process) {
-#'   runs(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_30_INNER_SCRIPTS
-#'   )}
+#' @details
+#' This function checks the VERBOSE level (assumed to be a global variable) and
+#' prints a summary for the specified table only if the VERBOSE level is greater than
+#' or equal to VL_60_ALL_TABLES The table_name is obtained from the calling function's name.
 #'
-#' runs_in_in <- function(message, process) {
-#'   runs(
-#'     message = message,
-#'     process = process,
-#'     verbose_level = VL_40_INNER_SCRIPTS_INFOS
-#'   )}
+#' @seealso
+#' \code{\link{print_table_summary}}
 #'
-#' runs <- function(message, process, verbose_level) {
-#'   polar_run(
-#'     message = message,
-#'     process = process,
-#'     verbose = VERBOSE - verbose_level + 1,
-#'     single_line = TRUE
-#'   )}
+#' @export
 #'
-#' catl <- function(...) {
-#'   if (VL_50_TABLES <= VERBOSE) {
-#'     cat(..., '\n')
-#'   }
-#' }
+#' @examples
+#' # Load required packages
+#' library(datasets)
+#' library(data.table)
 #'
+#' # Load the mtcars dataset and convert it to a data.table
+#' data(mtcars)
+#' setDT(mtcars)
+#'
+#' # Set VL_60_ALL_TABLES and VERBOSE to appropriate values
+#' VL_60_ALL_TABLES <- 6
+#' VERBOSE <- 7
+#'
+#' # Assuming VERBOSE and VL_60_ALL_TABLES are defined
+#' print_table_if_all(mtcars)
+#'
+print_table_if_all <- function(table) {
+  if (VERBOSE >= VL_60_ALL_TABLES) {
+    table_name <- as.character(sys.call()[2]) # get parameter name
+    print_table_summary(table, table_name)
+  }
+}
+
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
@@ -293,20 +613,6 @@ namedListByValue <- function(...) {
 #'     var_name <- paste0(var_names[i], ':')
 #'     var_name <- stringr::str_pad(var_name, min_length, 'left', ' ')
 #'     cat(var_name, paste0(unlist(list[i])), '\n')
-#'   }
-#' }
-#'
-#' print_table <- function(table) {
-#'   if (VL_50_TABLES <= VERBOSE) {
-#'     table_name <- as.character(sys.call()[2]) # get parameter names (-1 to cut off the function name)
-#'     print_table_summary(table, table_name)
-#'   }
-#' }
-#'
-#' print_table_if_all <- function(table) {
-#'   if (VL_60_ALL_TABLES <= VERBOSE) {
-#'     table_name <- as.character(sys.call()[2]) # get parameter name
-#'     print_table_summary(table, table_name)
 #'   }
 #' }
 #'
@@ -360,18 +666,6 @@ namedListByValue <- function(...) {
 #' catContacts <- function(contacts) {
 #'   contacts_name <- as.character(sys.call()[2]) # get parameter name
 #'   catl(paste0(contacts_name, ':\n', paste0('  ', names(contacts), ': ', sapply(contacts, ansi, underline = TRUE), collapse = '\n')))
-#' }
-#'
-#' #'
-#' #' Refreshes the FHIR token if defined.
-#' #'
-#' refreshFhirToken <- function() {
-#'   #refresh token, if defined
-#'   if (FHIR_TOKEN != '') {
-#'     polar_run('Refresh FHIR_TOKEN', {
-#'       FHIR_TOKEN <<- polar_refresh_token()
-#'     }, single_line = VERBOSE <= VL_60_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1, throw_exception = FALSE)
-#'   }
 #' }
 #'
 #' #'

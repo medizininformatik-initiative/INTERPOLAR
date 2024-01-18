@@ -11,10 +11,16 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
     data.table,
+    DBI,
     fhircrackr,
+    httr,
+    lubridate,
+    memuse,
     methods,
     openxlsx,
+    RcppTOML,
     rlang,
+    RPostgres,
     stringr,
     xml2
 Suggests: 

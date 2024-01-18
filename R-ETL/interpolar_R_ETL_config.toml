@@ -2,10 +2,6 @@
 # Project Definition interpolar RETL process #
 ##############################################
 
-PROJECT_NAME = "interpolar"
-
-[retrieve]
-
 ###
 # VERBOSE LEVELS
 ###
@@ -20,6 +16,14 @@ PROJECT_NAME = "interpolar"
 # VL_80_COI_PROCESSING      = 8
 # VL_90_FHIR_RESPONSE       = 9
 VERBOSE               = 7 # Retrieval / analysis verbose level
+
+# Set true if every sourcing of the 00_Main file should create result directories in the otuputGlobal and otuputLocal
+# directores with a timestamp suffix. If false then every run will write in the same subdirectory without a timestamp.
+# The default behaviour should write in subdirectories with the name 'interpolar' (false) or in 'interpolar_timestamp'
+# (true)
+USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
+
+[retrieve]
 
 
 [retrieve.fhir_server]
@@ -42,9 +46,6 @@ MIN_PATIENT_AGE                    = 18           # defined Age threshold in POL
 MIN_BIRTHDAY                       = "1910-01-01" # lowest possible birthday
 DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the default birth date if the real date is missing
 
-ENCOUNTER_IDENTIFIER_PATH          = "serviceProvider/identifier/value" # FHIR path in Encounter resource to identify relevant encounters
-ENCOUNTER_IDENTIFIER_VALUE_PATTERN =  "" # grep Pattern to identify the relevant encounters, maybe something like "Station 1|Station 2". If empty then all Encounters are relevant.
-
 MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
 COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
 SORT                               = ""  # some Fhir server require a sort parameter per default
@@ -56,3 +57,30 @@ MAX_CORES                          = 0 # paralellization, number of cores used, 
 FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack parallel with basic method, avoid polar_download_by_ids_and_crack_parallel()
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
 DELAY_REQ                          = 2 # if request fails, wait X seconds, the delay X=DELAY_REQ^(1..n) in seconds
+
+[retrieve.patient_id_filtering]
+
+# Enable the following parameter, if the Interpolar relevant patient IDs (PID) are provided by an
+# external system and they are stored in a text file (1 PID pr line). This deactivates the search
+# for relevant PIDs via encounters (see ENCOUNTER_FILTER_PATTERNS).
+#PATH_TO_PID_LIST_FILE = "../Interpolar-PIDs.txt"
+
+# Use this defintion to set the filters to identify all Encounters of the INTERPOLAR relevant wards,
+# This is only necessary if the relevant Patient IDs should be derived from this Encounters and are
+# not provided in any other way.
+# Every entry defines a single condition. An Encounter will be accepted, if at least one condition is
+# fulfilled (OR connected). A condition defines which columns of the Encounter table should have which
+# value. The column names are defined in the 01_Table_Description.R file. The values can be defined as
+# grep patterns. Multilpe column values can be connected by + (logcal AND).
+# All Patterns are Case INSENSITIVE!
+ENCOUNTER_FILTER_PATTERNS = [
+  # This is the mapping from xpath expressions to the resulting column names. The correct and really used
+  # mapping is defined in the 01_Table_Description.R file.
+  "enc_service_display = 'Unfallchirurgie' + enc_service_code = '1600' + enc_class_code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+  #"type/coding/code = 'Abteilungskontakt' + serviceType/coding/code = '0100|0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+  "serviceProvider/identifier/value = '.*'"
+  # THE following is the equivalent notation using the resulting column names instead of xpath expressions
+  # "enc_type_code = 'Abteilungskontakt' + enc_service_code = '0100|0500' + enc_class_code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+  # "enc_serviceprovider_value = '.*'"
+
+]
