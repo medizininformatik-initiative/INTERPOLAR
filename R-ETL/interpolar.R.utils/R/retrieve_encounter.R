@@ -111,31 +111,20 @@ get_encounters <- function() {
       polar_write_rdata(table_enc, 'table_enc_all') # name differs from variable name!?
     })
 
-    #
-    # # if (isDebug()) {
-    # #   retainColumns(table_enc, c('Enc.Enc.ID', 'Enc.PartOf.ID', 'Enc.Service.Code'))
-    # #   table_enc <- setkey(table_enc, Enc.Enc.ID)
-    # #   table_enc[3, ] <-  table_enc[2, ]
-    # #   table_enc[4, ] <-  table_enc[2, ]
-    # #   table_enc[2, Enc.Enc.ID := paste0(Enc.Enc.ID, '_1')]
-    # #   table_enc[3, Enc.Enc.ID := paste0(Enc.Enc.ID, '_2')]
-    # #   table_enc[4, Enc.Enc.ID := paste0(Enc.Enc.ID, '_3')]
-    # #   table_enc[3, Enc.Service.Code := 1600]
-    # #   table_enc[4, Enc.Service.Code := 3200]
-    # # }
-
     print_table_if_all(table_enc)
 
-    runs_in_in('Fix Dates in Encounter Table', {
-      # splits the provided dates into day and time columns, if data is available
-      # converts fhir dates to R dates
-      # fix the column class to date()
-      polar_fix_dates(table_enc, c('Enc.Period.Start', 'Enc.Period.End'))
 
-      # combine day and time column in a column of type date()
-      table_enc[, Enc.Period.Start.Datetime := do.call(paste,.SD), .SDcols = c('Enc.Period.Start', 'Enc.Period.Start.TimeSpec')]
-      table_enc[, Enc.Period.End.Datetime   := do.call(paste,.SD), .SDcols = c('Enc.Period.End', 'Enc.Period.End.TimeSpec')]
-    })
+    # TODO: das hier muss wahrscheinlich für alle Resourcen nochmal getan werden, die wir dann endgültig vom FHIR-Server herunterladen
+    # runs_in_in('Fix Dates in Encounter Table', {
+    #   # splits the provided dates into day and time columns, if data is available
+    #   # converts fhir dates to R dates
+    #   # fix the column class to date()
+    #   polar_fix_dates(table_enc, c('Enc.Period.Start', 'Enc.Period.End'))
+    #
+    #   # combine day and time column in a column of type date()
+    #   table_enc[, Enc.Period.Start.Datetime := do.call(paste,.SD), .SDcols = c('Enc.Period.Start', 'Enc.Period.Start.TimeSpec')]
+    #   table_enc[, Enc.Period.End.Datetime   := do.call(paste,.SD), .SDcols = c('Enc.Period.End', 'Enc.Period.End.TimeSpec')]
+    # })
 
     # AXS 10.01.2024: das können wir leider nicht mehr machen, weil jeden Tag ein anderer Patient die pat.id 1 oder
     #                 ein anderer Fall die fall.no 1 bekommen würde.
