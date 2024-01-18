@@ -13,4 +13,9 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
-    interpolar.R.utils
+    data.table,
+    DBI,
+    fhircrackr,
+    interpolar.R.utils,
+    methods,
+    rlang
