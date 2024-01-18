@@ -11,15 +11,9 @@ filterResources(resources, filter_patterns)
 
 \item{filter_patterns}{A list of filter conditions. Each condition is a character string containing multiple
 subconditions separated by '+'.}
-
-\item{row}{A row (list or data.frame) to be checked against the condition.}
-
-\item{condition}{A list where each element is a grep pattern, and the name corresponds to the column in the row.}
 }
 \value{
 A filtered data.table based on the given filter patterns.
-
-TRUE if the row fulfills the condition, FALSE otherwise.
 }
 \description{
 This function filters a resources table based on the provided filter patterns.

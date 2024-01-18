@@ -2,7 +2,7 @@
 % Please edit documentation in R/lib_sample_resources.R
 \name{polar_download_by_ids_and_crack_parallel}
 \alias{polar_download_by_ids_and_crack_parallel}
-\title{#' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.}
+\title{Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.}
 \usage{
 polar_download_by_ids_and_crack_parallel(
   resource,
@@ -16,11 +16,11 @@ polar_download_by_ids_and_crack_parallel(
 \arguments{
 \item{resource}{The type of FHIR resource to download and crack.}
 
-\item{ids}{A vector of IDs for the FHIR resources.}
+\item{ids}{A vector of patient IDs for the FHIR resources.}
 
 \item{table_description}{A table description object specifying the structure of the resulting data table.}
 
-\item{ids_at_once}{The maximum number of IDs to process in each iteration.}
+\item{ids_at_once}{The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).}
 
 \item{id_param_str}{Additional parameter string for constructing the FHIR request URL (default: 'subject').}
 
