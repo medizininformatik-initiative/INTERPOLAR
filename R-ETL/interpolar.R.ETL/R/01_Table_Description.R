@@ -21,6 +21,8 @@ SEP      <- ' ~ '
 getTableDescriptionTable <- function() {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "interpolar.R.ETL")
   table_description <- interpolar.R.utils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
+  #remove unneccesary columns
+  interpolar.R.utils::retainColumns(table_description, c('resource', 'column_name', 'fhir_expression'))
   # remove all full NA rows
   table_description <- table_description[rowSums(is.na(table_description)) < ncol(table_description), ]
   # fill resource NA column with the last valid (non NA) value above
