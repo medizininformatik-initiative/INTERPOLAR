@@ -668,12 +668,12 @@ polar_fix_dates <- function(dt, date_columns, preserve_time = TRUE) {
   #preserve time information
   if (preserve_time) {
 
-    time_columns <- paste0(date_columns, ".TimeSpec") #add suffix HourMinutesSeconds
+    time_columns <- paste0(date_columns, "_timespec") #add suffix HourMinutesSeconds
 
     #col by col
     for (dc in date_columns) {
 
-      tc <- paste0(dc, ".TimeSpec")
+      tc <- paste0(dc, "_timespec")
       if (0 < nrow(dt)) {
 
         #extract time from any datetime column and save it into the respecive TimeSpec column
