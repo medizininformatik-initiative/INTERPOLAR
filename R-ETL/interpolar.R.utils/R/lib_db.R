@@ -70,4 +70,24 @@ addTableContentToDatabase <- function(db_connection, table_name, table) {
   print(paste0("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)"))
 }
 
+#' Delete all rows from a table in the database.
+#'
+#' This function deletes all rows from a specified table in the database.
+#'
+#' @param db_connection A database connection object.
+#' @param table_name    The name of the table from which rows should be deleted.
+#' @return              The result of the delete operation.
+#'
+#' @examples
+#' \dontrun{
+#' # Connect to a database (replace with your actual connection details)
+#' con <- DBI::dbConnect(RSQLite::SQLite(), dbname = "your_database.db")
+#'
+#' # Delete all rows from the "your_table" table
+#' deleteTableContentFromDatabase(con, "your_table")
+#' }
+#'
+#' @export
+deleteTableContentFromDatabase <- function(db_connection, table_name) {
+  DBI::dbExecute(db_connection, paste0('DELETE FROM ', table_name, ';'))
 }
