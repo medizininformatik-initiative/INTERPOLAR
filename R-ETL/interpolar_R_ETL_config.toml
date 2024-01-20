@@ -84,3 +84,12 @@ ENCOUNTER_FILTER_PATTERNS = [
   # "enc_serviceprovider_value = '.*'"
 
 ]
+
+[database]
+
+DB_HOST = "databasehost"
+DB_PORT = 1234
+DB_USER = "databaseuser"
+DB_PASSWORD = "databasepassword"
+DB_SCHEMA = "databaseschema"
+DB_NAME = "databasename"
