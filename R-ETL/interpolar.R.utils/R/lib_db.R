@@ -54,19 +54,20 @@ showTablesStructure <- function(db_connection) {
 #'
 #' This function inserts rows from a data.table or data.frame into a specified PostgreSQL table.
 #'
+#' @param db_connection A valid database connection object.
 #' @param table_name The name of the table in the database.
 #' @param table A data.table or data.frame containing the rows to be inserted.
-#' @param db_connection A valid database connection object.
 #'
 #' @export
-addTableContentToDatabase <- function(table_name, table, db_connection) {
-  print(paste("Inserting rows into", table_name, appendLF = FALSE))
+addTableContentToDatabase <- function(db_connection, table_name, table) {
+  #print(paste("Inserting rows into", table_name, appendLF = FALSE))
+  time0 <- Sys.time()
   row_count <- nrow(table)
-
   if (row_count > 0) {
-    result <- RPostgres::dbAppendTable(db_connection, table_name, table)
+    RPostgres::dbAppendTable(db_connection, table_name, table)
   }
-
   duration <- difftime(Sys.time(), time0, units = "secs")
-  print(paste0("DONE ", table_name, ", inserted ", row_count, " rows (took ", duration, " seconds)"))
+  print(paste0("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)"))
+}
+
 }
