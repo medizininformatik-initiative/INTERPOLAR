@@ -647,13 +647,13 @@ polar_as_date <- function(date_column) {
 #' # Fix uncommon date formats with time preservation
 #' polar_fix_dates(dt, c("date1", "date2"), preserve_time = TRUE)
 #'
-#' # The resulting data.table will have additional columns date1.TimeSpec and date2.TimeSpec
+#' # The resulting data.table will have additional columns date1_timespec and date2_timespec
 #' # containing the extracted time information, and the original date columns date1 and date2
 #' # will be converted to Date format.
 #' dt
 #'
 #' # Expected output:
-#' #    date1      date2 value date1.TimeSpec date2.TimeSpec
+#' #    date1      date2 value date1_timespec date2_timespec
 #' # 1: 2022-01-01 2022-12-01     1       00:00:00       00:00:00
 #' # 2: 1990-05-01 1990-05-01     2       00:00:00       00:00:00
 #' # 3: 1980-11-01 1980-11-01     3       00:00:00       00:00:00
