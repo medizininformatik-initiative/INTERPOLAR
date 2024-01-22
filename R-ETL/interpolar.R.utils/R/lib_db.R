@@ -7,6 +7,7 @@
 #' @param dbname The name of the database.
 #' @param host The host address where the database is located.
 #' @param port The port number for the database connection.
+#' @param schema The schema under which the tables can be found
 #'
 #' @return A database connection object.
 #'
@@ -15,14 +16,16 @@ getDBConnection <- function(user = DB_USER,
                             password = DB_PASSWORD,
                             dbname = DB_NAME,
                             host = DB_HOST,
-                            port = DB_PORT) {
+                            port = DB_PORT,
+                            schema = DB_SCHEMA) {
 
   db_connection <- DBI::dbConnect(RPostgres::Postgres(),
                                   dbname = dbname,
                                   host = host,
                                   port = port,
                                   user = user,
-                                  password = password)
+                                  password = password,
+                                  options = paste0("-c search_path=", schema))
   # command line would be:
   # psql -p DB_PORT -U DB_USER -d DB_NAME -h DB_HOST
   # or with values

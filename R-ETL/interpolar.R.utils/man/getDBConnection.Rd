@@ -9,7 +9,8 @@ getDBConnection(
   password = DB_PASSWORD,
   dbname = DB_NAME,
   host = DB_HOST,
-  port = DB_PORT
+  port = DB_PORT,
+  schema = DB_SCHEMA
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ getDBConnection(
 \item{host}{The host address where the database is located.}
 
 \item{port}{The port number for the database connection.}
+
+\item{schema}{The schema under which the tables can be found}
 }
 \value{
 A database connection object.
