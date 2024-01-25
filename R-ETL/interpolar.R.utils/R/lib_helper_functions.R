@@ -640,6 +640,24 @@ getGlobalVariablesByPrefix <- function(prefix) {
 #' @export
 getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(var_name)) get(var_name) else default
 
+#' Extracts the local, relative part from absolute references.
+#'
+#' This function takes a character vector of absolute references and removes the leading part
+#' to return only the local, relative portion of each reference.
+#'
+#' @param references A character vector containing absolute references.
+#' @return A character vector with only the local, relative part of each reference.
+#'
+#' @examples
+#' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001')
+#' relative <- makeRelative(absolute)
+#' print(relative)
+#'
+#' @export
+makeRelative <- function(references) {
+  return(sub(".*/", "", references))
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
@@ -859,30 +877,5 @@ getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(va
 #'     }
 #'   }
 #'   return(text)
-#' }
-#'
-#' #'
-#' #' Create a named list from input values.
-#' #'
-#' #' This function creates a named list by taking a variable number of input values and assigning
-#' #' names to each element based on the argument names provided.
-#' #'
-#' #' @param ... Input values to be included in the named list.
-#' #'
-#' #' @return A named list with elements named according to the argument names.
-#' #'
-#' #' @examples
-#' #' # Create three variables
-#' #' a <- 1
-#' #' b <- 2
-#' #' c <- 3
-#' #'
-#' #'
-#' #' @param references single string or list of strings
-#' #' @return single string or list of strings where only the last part of each string
-#' #' remains after a slash '/'. Strings without slashes are returned unchanged.
-#' #'
-#' makeRelative <- function(references) {
-#'   return(sub(".*/", "", references))
 #' }
 #'
