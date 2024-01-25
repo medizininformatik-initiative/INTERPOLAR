@@ -582,6 +582,64 @@ print_table_if_all <- function(table) {
 }
 
 
+#' Get a list of global variables with a specified prefix.
+#'
+#' This function searches for global variables in the current workspace whose names
+#' start with the specified prefix and returns a list containing variable names
+#' along with their values.
+#'
+#' @param prefix The prefix to match in variable names.
+#'
+#' @return A list containing the names and values of global variables with the given prefix.
+#'
+#' @examples
+#' \dontrun{
+#' prefix <- "my_prefix"
+#' result <- getGlobalVariablesByPrefix(prefix)
+#' print(result)
+#' }
+#'
+#' @seealso
+#' \code{\link{ls}}, \code{\link{eapply}}
+#'
+#' @keywords global variables workspace prefix
+#'
+#' @export
+getGlobalVariablesByPrefix <- function(prefix) {
+  global_vars <- ls(globalenv())
+  matching_vars <- grep(paste0("^", prefix), global_vars, value = TRUE)
+  result_list <- lapply(matching_vars, function(var_name) {
+    var_value <- get(var_name, envir = globalenv())
+    setNames(list(var_value), var_name)
+  })
+  return(result_list)
+}
+
+#' Get the value of a variable by name or a default value if the variable is missing.
+#'
+#' This function checks if a variable with the specified name exists. If it does,
+#' it returns the value of the variable; otherwise, it returns the specified default value.
+#'
+#' @param var_name A character string specifying the name of the variable.
+#' @param default The default value to be returned if the variable is missing. Defaults to NA.
+#'
+#' @return The value of the variable if it exists; otherwise, the specified default value.
+#'
+#' @examples
+#' # Set a variable
+#' my_variable <- 123
+#'
+#' # Use getVarByNameOrDefaultIfMissing to retrieve the value
+#' result <- getVarByNameOrDefaultIfMissing("my_variable", default = 42)
+#' print(result)  # Output: 123
+#'
+#' # Try with a non-existing variable
+#' result_missing <- getVarByNameOrDefaultIfMissing("nonexistent_variable", default = "Not found")
+#' print(result_missing)  # Output: "Not found"
+#'
+#' @export
+getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(var_name)) get(var_name) else default
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
