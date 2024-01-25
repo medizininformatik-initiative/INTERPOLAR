@@ -58,6 +58,31 @@ FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack p
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
 DELAY_REQ                          = 2 # if request fails, wait X seconds, the delay X=DELAY_REQ^(1..n) in seconds
 
+
+[retrieve.fhir_search]
+
+# Number of days to look into the past when searching for unfinished Encounters based on time.now() (resp. Sys.time()
+# in R) if the table for Encounters in the database is still completely empty (initial start)
+INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 30
+
+# Number of days to look into the past when searching for unfinished Encounters based on time.now() (resp. Sys.time()
+# in R) if the program is started regularly after the initial start. This number should always be at least large enough
+# to include the entire period since the last start (preferably at least 1 day more).
+USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 2
+
+###################
+# FOR DEBUG ONLY: #
+###################
+
+# If DEBUG_PERIOD_START is enabled then the start date is not time.now (resp. Sys.time() in R) but this date
+DEBUG_PERIOD_START = "2019-01-01"
+
+# If DEBUG_PERIOD_END is enabled then the both values INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS and
+# USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS will be ignored and only Encounters in the range of DEBUG_PERIOD_START
+# and DEBUG_PERIOD_END will be loaded. DEBUG_PERIOD_END will be ignored if DEBUG_PERIOD_START is not set.
+DEBUG_PERIOD_END = "2019-01-02"
+
+
 [retrieve.patient_id_filtering]
 
 # Enable the following parameter, if the Interpolar relevant patient IDs (PID) are provided by an
