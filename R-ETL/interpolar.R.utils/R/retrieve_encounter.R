@@ -3,6 +3,9 @@
 #' This function retrieves encounter data from a FHIR server, applies various filters,
 #' and performs data processing tasks.
 #'
+#' @param table_description the fhir crackr table description with the columns definition
+#' of the returned table.
+#'
 #' @details
 #' The function handles the download of encounter data, filtering based on date ranges,
 #' and additional processing steps such as fixing dates, adding columns, and handling
@@ -13,7 +16,7 @@
 #' saved as RData files.
 #'
 #' @export
-get_encounters <- function() {
+get_encounters <- function(table_description) {
 
   run_in(toupper('get_encounters'), {
 
@@ -95,7 +98,7 @@ get_encounters <- function() {
 
       table_enc <- polar_download_and_crack_parallel(
         request           = request_encounter,
-        table_description = TABLE_DESCRIPTION$Encounter,
+        table_description = table_description,
         bundles_at_once   = BUNDLES_AT_ONCE,
         log_errors        = 'enc_error.xml',
         verbose           = VERBOSE - VL_70_DOWNLOAD

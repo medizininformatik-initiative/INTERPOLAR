@@ -1,46 +1,215 @@
-
 #' Converts a filter pattern list from the toml file into an internal representation
 #' as a list of lists. Every subcondition in a sublist must be fulfilled to fulfill
 #' the whole condition represented by the sublist (AND connected). Lines of the table
 #' can be accepted by the filter if at least one of the main conditions (which consists
 #' of these subconditions) in the main list is fulfilled (OR connected).
 #'
-#' @param table_description the table descrption that corresponds to the same resource
-#' like the defined filter patterns
-#' @param filter_patterns_name name of the variable in the glogbal environment which
+#' @param filter_patterns_global_variable_name_prefix name of the variable in the glogbal environment which
 #' contains the filter patterns from the toml file
 #'
 #' @return the filter patterns which are converted to a list of lists
 #'
-convertFilterPatterns <- function(table_description, filter_patterns_name) {
+convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 'ENCOUNTER_FILTER_PATTERN') {
 
-  table_description_col_names <- table_description@cols@names
-  table_description_xpath_expressions <- table_description@cols@.Data
+  ward_pids_filter_patterns <- interpolar.R.utils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
+  if (!length(ward_pids_filter_patterns)) {
+    STOP <<- TRUE
+    stop(paste('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file'))
+  }
 
-  converted_filter_patterns <- NA
-  if (exists(filter_patterns_name)) {
-    converted_filter_patterns <- list() # the result list with all
-    resource_filter_patterns <- get(filter_patterns_name)
-    for (filter_patterns in resource_filter_patterns) {
-      and_conditions <- list()
-      filter_pattern_conditions <- unlist(strsplit(filter_patterns, '\\+'))
-      for (condition in filter_pattern_conditions) {
-        condition_key_value <- unlist(strsplit(condition, '='))
+  getStringBetweenSingleQuotes <- function(x) gsub(".*?'(.*?)'.*", "\\1", as.character(x))
 
-        condition_column <- trimws(condition_key_value[1])
-        xpath_index <- match(condition_column, table_description_xpath_expressions)
-        if (!is.na(xpath_index)) {
-          condition_column <- table_description_col_names[xpath_index]
+  # the result list with all. The structure of the list is the following:
+  # list of
+  converted_filter_patterns <- list()
+  ward_index <- 1
+  for (ward_filter_patterns in ward_pids_filter_patterns) {
+    single_ward_converted_filter_patterns <- list()
+    ward_name <- paste('Interpolar Station', ward_index)
+    for (filter_patterns in ward_filter_patterns) { # filter_patterns <- ward_pids_filter_patterns[[1]]
+      for (filter_pattern in filter_patterns) { # filter_pattern <- filter_patterns$value[2]
+        if (startsWith(filter_pattern, 'ward_name')) {
+          ward_name <- getStringBetweenSingleQuotes(filter_pattern)
+        } else {
+          and_conditions <- list()
+          filter_pattern_conditions <- unlist(strsplit(filter_pattern, '\\+'))
+          for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
+            condition_key_value <- unlist(strsplit(condition, '='))
+            condition_column <- trimws(condition_key_value[1])
+            condition_value <- getStringBetweenSingleQuotes(condition_key_value[2])
+            and_conditions[[condition_column]] <- condition_value
+          }
+          single_ward_converted_filter_patterns[[paste0('Condition_', length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
         }
-        condition_value <- trimws(condition_key_value[2])
-        # remove the single quotes at the beginning and the end
-        condition_value <- substr(condition_value, start = 2, stop = nchar(condition_value) - 1)
-        and_conditions[[condition_column]] <- condition_value
       }
-      converted_filter_patterns[[paste0('Condition_', length(converted_filter_patterns) + 1)]] <- and_conditions
+      converted_filter_patterns[[length(converted_filter_patterns) + 1]] <- single_ward_converted_filter_patterns
+      names(converted_filter_patterns)[length(converted_filter_patterns)] <- ward_name
     }
   }
   converted_filter_patterns
+
+}
+
+#' Get FHIR table description based on filter patterns.
+#'
+#' This function takes a list of filter patterns and extracts unique column names
+#' from them to create a FHIR table description for the 'Encounter' resource.
+#'
+#' @param filter_patterns A list of filter patterns, where each pattern is a list of conditions.
+#'   Each condition is expected to have named elements representing column names.
+#' @param ... Additional columns to be included in the FHIR table description.
+#'
+#' @return A FHIR table description object for the 'Encounter' resource with columns based
+#'   on the unique names extracted from the filter patterns, including additional columns.
+#'
+getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
+  cols_vector <- c()
+  for (ward_conditions in filter_patterns) {
+    for (condition in ward_conditions) {
+      cols_vector <- c(cols_vector, names(condition))
+    }
+  }
+  cols_vector <- c(cols_vector, ...)
+  cols_vector <- sort(unique(cols_vector))
+  fhir_table_desc <- fhircrackr::fhir_table_description(
+    resource = 'Encounter',
+    cols = cols_vector,
+    sep = SEP,
+    brackets = NULL
+  )
+}
+
+#' Filters the given resources table by the given filter patterns.
+#'
+#' This function filters a resources table based on the provided filter patterns.
+#'
+#' @param resources A data.table representing the resources table to be filtered.
+#' @param filter_patterns A list of filter conditions. Each condition is a character string containing multiple
+#' subconditions separated by '+'.
+#'
+#' @return A filtered data.table based on the given filter patterns.
+#'
+#' @details
+#' This function applies an OR operation across the filter patterns, meaning that a row will be retained if at
+#' least one condition is fulfilled.
+#' However, within each individual condition (subconditions separated by '+'), an AND operation is applied,
+#' requiring all subconditions to be met for the condition to be satisfied.
+#'
+filterResources <- function(resources, filter_patterns) {
+
+  # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
+  resources[, Filter_Column_Keep := FALSE]
+
+  # Check if a row fulfills a given condition
+  #
+  # This function checks if a row meets a given condition based on grep patterns for each column.
+  #
+  # @param row A row (list or data.frame) to be checked against the condition.
+  # @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
+  # @return TRUE if the row fulfills the condition, FALSE otherwise.
+  #
+  fulfills_condition <- function(row, condition) {
+    subConditionColumns <- names(condition)
+    for (i in 1:length(condition)) { # i <- 1
+      subConditionColumn <- subConditionColumns[[i]]
+      subCondition <- condition[[i]]
+      if (!grepl(subCondition, row[[subConditionColumn]], ignore.case = TRUE, perl = TRUE)) {
+        return(FALSE)
+      }
+    }
+    return(TRUE)
+  }
+
+  # filterPatterns can have a list of conditions in this style:
+  # "type/coding/code = 'Abteilungskontakt' + serviceType/coding/code = '0100|0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  # Such a condition means that 3 subconditions must be fulfilled (separated by '+').
+  for (condition in filter_patterns) { # condition <- filter_patterns[[1]]
+    resources[, Filter_Column_Keep_Subcondition := FALSE]
+    for (i in seq_len(nrow(resources))) {
+      resources[i, Filter_Column_Keep := resources[i, Filter_Column_Keep] || fulfills_condition(resources[i], condition)]
+    }
+  }
+
+  resources[, Filter_Column_Keep_Subcondition := NULL]
+  filtered_resources <- resources[Filter_Column_Keep == TRUE]
+  filtered_resources[, Filter_Column_Keep := NULL]
+  resources[, Filter_Column_Keep := NULL]
+  return(filtered_resources)
+}
+
+#' Get unique patient IDs per ward based on filter patterns.
+#'
+#' This function takes a list of resources and a corresponding list of filter patterns for each ward.
+#' It filters the resources for each ward based on the provided filter patterns and extracts unique
+#' patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
+#' and the values are unique patient IDs for that ward.
+#'
+#' @param resources A list of resources to filter.
+#' @param all_wards_filter_patterns A list of filter patterns, where each element corresponds to a ward.
+#'
+#' @return A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
+#'
+getPIDsPerWard <- function(resources, all_wards_filter_patterns) {
+  wards_pids <- list()
+  for (i in seq_along(all_wards_filter_patterns)) {
+    ward_filter_patterns <- all_wards_filter_patterns[[i]]
+    ward_resources <- filterResources(resources, ward_filter_patterns)
+    wards_pids[[i]] <- unique(sort(ward_resources$'subject/reference')) # PID is always in 'subject/reference'
+    names(wards_pids)[i] <- names(all_wards_filter_patterns)[i]
+  }
+  return(wards_pids)
+}
+
+#' Parse and interpolate patient IDs from a file.
+#'
+#' This function reads patient IDs from a file specified by the provided path.
+#' The patient IDs are then returned as a unique, sorted list.
+#'
+#' @param path_to_PID_list_file The path to the file containing patient IDs.
+#'
+#' @return A unique, sorted list of patient IDs.
+#'
+parseInterpolarPatientIDsFromFile <- function(path_to_PID_list_file) {
+  # TODO: das hier muss noch auf die neue Form umgeschrieben werden und getestet werden auch mit Filter Patterns, die dieselben Patienten auf verschiedenen Stationen finden
+  pids <- readLines(path_to_PID_list_file)
+  return(unique(sort(pids)))
+}
+
+#' Checks whether this start of the application is the very first start.
+#'
+#' @return TRUE when this application fills the database for the first time. This is recognized by whether the
+#' Encounter table is still completely empty. If there is already something in this table, FALSE is returned,
+#' as this cannot be the initial start.
+#'
+isEncounterTableEmpty <- function() {
+  # TODO: implement check if Encounter table in database is empty
+  TRUE
+}
+
+
+#' Get unique patient IDs per ward based on filter patterns.
+#'
+#' This function takes a list of resources and a corresponding list of filter patterns for each ward.
+#' It filters the resources for each ward based on the provided filter patterns and extracts unique
+#' patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
+#' and the values are unique patient IDs for that ward.
+#'
+#' @param resources A list of resources to filter.
+#' @param all_wards_filter_patterns A list of filter patterns, where each element corresponds to a ward.
+#'
+#' @return A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
+#'   The list is structured such that each outer list represents a ward, and the inner lists contain
+#'   unique patient IDs for that ward.
+#'
+getPIDsPerWard <- function(resources, all_wards_filter_patterns) {
+  wards_pids <- list()
+  for (i in seq_along(all_wards_filter_patterns)) {
+    ward_filter_patterns <- all_wards_filter_patterns[[i]]
+    ward_resources <- filterResources(resources, ward_filter_patterns)
+    wards_pids[[i]] <- unique(sort(ward_resources$'subject/reference')) # PID is always in 'subject/reference'
+    names(wards_pids)[i] <- names(all_wards_filter_patterns)[i]
+  }
+  return(wards_pids)
 }
 
 
@@ -52,26 +221,32 @@ convertFilterPatterns <- function(table_description, filter_patterns_name) {
 #'
 #' @return the Interploar relevant patient IDs
 #'
-#' @export
-getInterpolarPatientIDs <- function(path_to_PID_list_file = NA) {
+getInterpolarPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
 
   interpolar.R.utils::run_in_in('Get Patient IDs by file', {
     if (!is.na(path_to_PID_list_file)) {
-      pids <- readLines(path_to_PID_list_file)
-      return(unique(sort(pids)))
+      return(parseInterpolarPatientIDsFromFile(path_to_PID_list_file))
     }
   })
 
   interpolar.R.utils::run_in_in('Get Encounters', {
     PERIOD_START <<- "2019-01-01"
     PERIOD_END <<- "2019-01-02"
-    encounters <- interpolar.R.utils::get_encounters()
-  })
-
-  interpolar.R.utils::runs_in_in('Filter Interpolar relevant encounters', {
-    converted_filter_patterns <- convertFilterPatterns(TABLE_DESCRIPTION$Encounter, 'ENCOUNTER_FILTER_PATTERNS')
-    encounters <- interpolar.R.utils::filterResources(encounters, converted_filter_patterns)
-    return(unique(sort(encounters$Enc.Pat.ID)))
+    filter_patterns <- convertFilterPatterns()
+    # the subject reference is needed in every case to extract them if the encounter matches the pattern
+    # the period end is needed to check if the Encounter is still finsihed
+    # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
+    filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'subject/reference', 'period/start', 'period/end')
+    # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
+    # additional paths above
+    encounters <- interpolar.R.utils::get_encounters(filter_enc_table_description)
+    # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
+    # names for the filtering -> set them here
+    names(encounters) <- filter_enc_table_description@cols@.Data
+    # now filter the encounters with the patterns and then extract the PIDs
+    pidsPerWard <- getPIDsPerWard(encounters, filter_patterns)
+    return(pidsPerWard)
   })
 
 }
+

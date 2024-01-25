@@ -2,7 +2,6 @@
 
 export(BRACKETS)
 export(SEP)
-export(getInterpolarPatientIDs)
 export(getTableDescription)
 export(getTableDescriptionTable)
 export(retrieve)

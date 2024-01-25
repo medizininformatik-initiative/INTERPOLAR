@@ -8,13 +8,12 @@ the whole condition represented by the sublist (AND connected). Lines of the tab
 can be accepted by the filter if at least one of the main conditions (which consists
 of these subconditions) in the main list is fulfilled (OR connected).}
 \usage{
-convertFilterPatterns(table_description, filter_patterns_name)
+convertFilterPatterns(
+  filter_patterns_global_variable_name_prefix = "ENCOUNTER_FILTER_PATTERN"
+)
 }
 \arguments{
-\item{table_description}{the table descrption that corresponds to the same resource
-like the defined filter patterns}
-
-\item{filter_patterns_name}{name of the variable in the glogbal environment which
+\item{filter_patterns_global_variable_name_prefix}{name of the variable in the glogbal environment which
 contains the filter patterns from the toml file}
 }
 \value{

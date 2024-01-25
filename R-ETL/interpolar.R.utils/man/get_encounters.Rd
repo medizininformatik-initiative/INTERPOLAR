@@ -4,7 +4,11 @@
 \alias{get_encounters}
 \title{Download and preprocess encounter data from FHIR server}
 \usage{
-get_encounters()
+get_encounters(table_description)
+}
+\arguments{
+\item{table_description}{the fhir crackr table description with the columns definition
+of the returned table.}
 }
 \value{
 The processed encounter data is saved, and relevant tables are returned and/or
