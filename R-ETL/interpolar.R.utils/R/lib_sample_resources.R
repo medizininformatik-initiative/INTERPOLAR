@@ -863,18 +863,18 @@ loadResourcesByPID <- function(patientIDs, table_description) {
   table_name_to_tables <- list()
 
   for (resource in names(table_description)) {
-    if (names(table_description[resource]) == "Patient") {
+    if (resource == "Patient") {
       resource_table <- interpolar.R.utils::polar_download_by_ids_and_crack_parallel(
-        resource = names(table_description[resource]),
+        resource = 'Patient',
         id_param_str = '_id',
-        ids = patientIDs,
+        ids = makeRelative(patientIDs),
         table_description = table_description[[resource]],
         verbose = VERBOSE
       )
     }
     else {
       resource_table <- interpolar.R.utils::polar_download_by_ids_and_crack_parallel(
-        resource = names(table_description[resource]),
+        resource = resource,
         ids = patientIDs,
         table_description = table_description[[resource]],
         verbose = VERBOSE
