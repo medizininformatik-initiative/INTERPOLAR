@@ -47,7 +47,7 @@ polar_fix_dates(dt, c("date1", "date2"), preserve_time = TRUE)
 dt
 
 # Expected output:
-#    date1      date2 value date1timespec date2_timespec
+#    date1      date2 value date1_timespec date2_timespec
 # 1: 2022-01-01 2022-12-01     1       00:00:00       00:00:00
 # 2: 1990-05-01 1990-05-01     2       00:00:00       00:00:00
 # 3: 1980-11-01 1980-11-01     3       00:00:00       00:00:00
