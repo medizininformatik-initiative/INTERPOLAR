@@ -110,12 +110,7 @@ get_encounters <- function(table_description) {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
-    runs_in_in('Save Encounter table after download before remove something', {
-      polar_write_rdata(table_enc, 'table_enc_all') # name differs from variable name!?
-    })
-
     print_table_if_all(table_enc)
-
 
     # TODO: das hier muss wahrscheinlich für alle Resourcen nochmal getan werden, die wir dann endgültig vom FHIR-Server herunterladen
     # runs_in_in('Fix Dates in Encounter Table', {
@@ -263,7 +258,7 @@ get_encounters <- function(table_description) {
     # })
 
     run_in_in('Save and Delete Encounters Table', {
-      polar_write_rdata(table_enc)
+      polar_write_rdata(table_enc, 'pid_source_encounter_unfiltered')
     })
 
     table_enc

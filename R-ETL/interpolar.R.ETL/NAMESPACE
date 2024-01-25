@@ -2,8 +2,10 @@
 
 export(BRACKETS)
 export(SEP)
+export(createWardPatitentIDPerDateTable)
 export(getTableDescription)
 export(getTableDescriptionTable)
+export(loadResourcesByPatientIDFromFHIRServer)
 export(retrieve)
 importFrom(data.table,data.table)
 importFrom(data.table,is.data.table)

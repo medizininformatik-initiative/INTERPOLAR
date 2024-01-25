@@ -222,53 +222,54 @@ initEncounterPeriodToDownload <- function() {
 
 #' Get unique patient IDs per ward based on filter patterns.
 #'
-#' This function takes a list of resources and a corresponding list of filter patterns for each ward.
-#' It filters the resources for each ward based on the provided filter patterns and extracts unique
+#' This function takes a list of encounters and a corresponding list of filter patterns for each ward.
+#' It filters the encounters for each ward based on the provided filter patterns and extracts unique
 #' patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
 #' and the values are unique patient IDs for that ward.
 #'
-#' @param resources A list of resources to filter.
+#' @param encounters A list of encounter to filter.
 #' @param all_wards_filter_patterns A list of filter patterns, where each element corresponds to a ward.
 #'
 #' @return A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
 #'   The list is structured such that each outer list represents a ward, and the inner lists contain
 #'   unique patient IDs for that ward.
 #'
-getPIDsPerWard <- function(resources, all_wards_filter_patterns) {
+getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   wards_pids <- list()
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
-    ward_resources <- filterResources(resources, ward_filter_patterns)
-    wards_pids[[i]] <- unique(sort(ward_resources$'subject/reference')) # PID is always in 'subject/reference'
+    ward_encounters <- filterResources(encounters, ward_filter_patterns)
+    polar_write_rdata(ward_encounters, 'pid_source_encounter_filtered')
+    wards_pids[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(wards_pids)[i] <- names(all_wards_filter_patterns)[i]
   }
   return(wards_pids)
 }
 
 
-#' Extracts the Interploar relevant patient IDs from download Encounter resources. If the file name parameter
+#' Extracts the Interpolar relevant patient IDs from download Encounter resources. If the file name parameter
 #' is NA then the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file
 #' name parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
 #'
 #' @param path_to_PID_list_file file name if the list of patient IDs should be loaded from a file (if not then NA)
 #'
-#' @return the Interploar relevant patient IDs
+#' @return the Interpolar relevant patient IDs per ward
 #'
 getInterpolarPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
 
-  interpolar.R.utils::run_in_in('Get Patient IDs by file', {
+  interpolar.R.utils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
     if (!is.na(path_to_PID_list_file)) {
       return(parseInterpolarPatientIDsFromFile(path_to_PID_list_file))
     }
   })
 
-  interpolar.R.utils::run_in_in('Get Encounters', {
+  interpolar.R.utils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
     initEncounterPeriodToDownload()
     filter_patterns <- convertFilterPatterns()
     # the subject reference is needed in every case to extract them if the encounter matches the pattern
     # the period end is needed to check if the Encounter is still finsihed
     # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
-    filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'subject/reference', 'period/start', 'period/end')
+    filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
     # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
     # additional paths above
     encounters <- interpolar.R.utils::get_encounters(filter_enc_table_description)
