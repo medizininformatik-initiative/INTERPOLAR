@@ -39,11 +39,11 @@ retrieve <- function() {
     })
 
     interpolar.R.utils::run_in('Load Table Description', {
-      TABLE_DESCRIPTION <<- getTableDescription()
+      table_descriptions <- getTableDescription()
     })
 
     interpolar.R.utils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_table_list <<- interpolar.R.utils::loadResourcesByPID(unique(unlist(patientIDsPerWard)), TABLE_DESCRIPTION)
+      resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
     })
 
   })
