@@ -252,15 +252,15 @@ initEncounterPeriodToDownload <- function() {
 #'   unique patient IDs for that ward.
 #'
 getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
-  wards_pids <- list()
+  pids_per_ward <- list()
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
     ward_encounters <- filterResources(encounters, ward_filter_patterns)
     polar_write_rdata(ward_encounters, 'pid_source_encounter_filtered')
-    wards_pids[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
-    names(wards_pids)[i] <- names(all_wards_filter_patterns)[i]
+    pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
+    names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
   }
-  return(wards_pids)
+  return(pids_per_ward)
 }
 
 
