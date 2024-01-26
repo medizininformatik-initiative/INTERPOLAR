@@ -599,6 +599,25 @@ makeRelative <- function(references) {
   return(sub(".*/", "", references))
 }
 
+#' Extract text between single or double quotes in a string.
+#'
+#' This function takes a string and extracts the text between the first pair
+#' of single or double quotes encountered. It uses regular expressions to find
+#' the text enclosed within the quotes and returns it.
+#'
+#' @param x A character vector or string containing text with single or double quotes.
+#' @return A character vector containing the text between the first pair of quotes.
+#'
+#' @examples
+#' # Example usage
+#' result_single <- getStringBetweenQuotes("This is a 'sample' string.")
+#' result_double <- getStringBetweenQuotes('Another "example" string.')
+#' print(result_single)  # Output: "sample"
+#' print(result_double)  # Output: "example"
+#'
+#' @export
+getStringBetweenQuotes <- function(x) gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1

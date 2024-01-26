@@ -17,8 +17,6 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     stop(paste('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file'))
   }
 
-  getStringBetweenSingleQuotes <- function(x) gsub(".*?'(.*?)'.*", "\\1", as.character(x))
-
   # the result list with all. The structure of the list is the following:
   # list of
   converted_filter_patterns <- list()
@@ -29,14 +27,14 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     for (filter_patterns in ward_filter_patterns) { # filter_patterns <- ward_pids_filter_patterns[[1]]
       for (filter_pattern in filter_patterns) { # filter_pattern <- filter_patterns$value[2]
         if (startsWith(filter_pattern, 'ward_name')) {
-          ward_name <- getStringBetweenSingleQuotes(filter_pattern)
+          ward_name <- interpolar.R.utils::getStringBetweenQuotes(filter_pattern)
         } else {
           and_conditions <- list()
           filter_pattern_conditions <- unlist(strsplit(filter_pattern, '\\+'))
           for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
             condition_key_value <- unlist(strsplit(condition, '='))
             condition_column <- trimws(condition_key_value[1])
-            condition_value <- getStringBetweenSingleQuotes(condition_key_value[2])
+            condition_value <- interpolar.R.utils::getStringBetweenQuotes(condition_key_value[2])
             and_conditions[[condition_column]] <- condition_value
           }
           single_ward_converted_filter_patterns[[paste0('Condition_', length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
