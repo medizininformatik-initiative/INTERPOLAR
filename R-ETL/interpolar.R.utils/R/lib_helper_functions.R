@@ -178,6 +178,42 @@ namedListByValue <- function(...) {
   x
 }
 
+#' Sort a named list alphabetically by its values.
+#'
+#' This function takes a list and sorts it alphabetically based on its values.
+#'
+#' @param list A list to be sorted.
+#' @return A sorted list.
+#'
+#' @examples
+#' # Create an unsorted named list
+#' unsorted_list <- list(b = 3, a = 2, c = 1)
+#'
+#' # Sort the named list
+#' sorted_list <- sortListByValue(unsorted_list)
+#' print(sorted_list)
+#'
+#' @export
+sortListByValue <- function(list) list[order(names(setNames(list, list)))]
+
+#' Sort a named list alphabetically by its names.
+#'
+#' This function takes a named list and sorts it alphabetically based on its names.
+#'
+#' @param list A named list to be sorted.
+#' @return A sorted named list.
+#'
+#' @examples
+#' # Create an unsorted named list
+#' unsorted_list <- list(b = 3, a = 2, c = 1)
+#'
+#' # Sort the named list
+#' sorted_list <- sortListByName(unsorted_list)
+#' print(sorted_list)
+#'
+#' @export
+sortListByName <- function(list) list[order(names(list))]
+
 #'
 #' Check if debugging mode is enabled.
 #'
