@@ -167,10 +167,29 @@ getPIDsPerWard <- function(resources, all_wards_filter_patterns) {
 #'
 #' @return A unique, sorted list of patient IDs.
 #'
-parseInterpolarPatientIDsFromFile <- function(path_to_PID_list_file) {
-  # TODO: das hier muss noch auf die neue Form umgeschrieben werden und getestet werden auch mit Filter Patterns, die dieselben Patienten auf verschiedenen Stationen finden
-  pids <- readLines(path_to_PID_list_file)
-  return(unique(sort(pids)))
+parseInterpolarPatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
+  pids_per_ward <- list()
+  lines <- readLines(path_to_PID_list_file)
+  single_ward_pids <- list()
+  ward_name <- NA
+  for (line in lines) {
+    line <- trimws(sub("#.*$", "", line)) # remove comments (starts with '#')
+    if (nchar(line)) {
+      if (startsWith(line, 'ward_name')) {
+        if (!is.na(ward_name)) {
+          pids_per_ward[[ward_name]] <- interpolar.R.utils::sortListByValue(unique(single_ward_pids))
+          single_ward_pids <- list()
+        }
+        ward_name <- interpolar.R.utils::getStringBetweenQuotes(line)
+      } else {
+        single_ward_pids[[length(single_ward_pids) + 1]] <- line
+      }
+    }
+  }
+  if (!is.na(ward_name)) {
+    pids_per_ward[[ward_name]] <- interpolar.R.utils::sortListByValue(unique(single_ward_pids))
+  }
+  return(pids_per_ward)
 }
 
 #' Checks whether this start of the application is the very first start.
@@ -257,7 +276,7 @@ getInterpolarPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
 
   interpolar.R.utils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
     if (!is.na(path_to_PID_list_file)) {
-      return(parseInterpolarPatientIDsFromFile(path_to_PID_list_file))
+      return(parseInterpolarPatientIDsPerWardFromFile(path_to_PID_list_file))
     }
   })
 
