@@ -97,6 +97,7 @@ DEBUG_PERIOD_END = "2019-01-02"
 # fulfilled (OR connected). A condition defines which expressions of the Encounter should have which
 # value. The values can be defined as grep patterns. Multilpe subconditions can be connected by '+'
 # (logcal AND). All Patterns are Case INSENSITIVE!
+# A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Interpolar Station 1'",
   "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
