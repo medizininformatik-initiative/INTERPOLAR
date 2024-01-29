@@ -39,7 +39,7 @@ retrieve <- function() {
     })
 
     interpolar.R.utils::run_in('Load Table Description', {
-      table_descriptions <- getTableDescription()
+      table_descriptions <- getTableDescriptions()
     })
 
     interpolar.R.utils::run_in('Download and crack resources by Patient IDs per ward', {

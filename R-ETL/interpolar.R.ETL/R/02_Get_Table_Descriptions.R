@@ -18,7 +18,7 @@ SEP      <- ' ~ '
 #' @return A data table with the table descriptions.
 #'
 #' @export
-getTableDescriptionTable <- function() {
+getTableDescriptionsTable <- function() {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "interpolar.R.ETL")
   table_description <- interpolar.R.utils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
   #remove unneccesary columns
@@ -32,13 +32,13 @@ getTableDescriptionTable <- function() {
 #' Get a list of fhircrackr::fhir_table_description() objects based on a table description.
 #'
 #' This function takes a table description table, typically obtained from
-#' `getTableDescriptionTable()`, and creates a list of
+#' `getTableDescriptionsTable()`, and creates a list of
 #' `fhircrackr::fhir_table_description()` objects, each corresponding to a resource
 #' group in the table.
 #'
 #' @param table_description_table A data table containing information about
 #'   resources, column names, and FHIR expressions. If not provided, it
-#'   defaults to the result of calling `getTableDescriptionTable()`.
+#'   defaults to the result of calling `getTableDescriptionsTable()`.
 #'
 #' @return A list of `fhircrackr::fhir_table_description()` objects, where each object
 #'   represents a resource group, and its elements correspond to the specified columns
@@ -47,21 +47,21 @@ getTableDescriptionTable <- function() {
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   table_desc <- getTableDescription()
+#'   table_desc <- getTableDescriptions()
 #'   # Access the fhir_table_description() object for a specific resource group (e.g., "Encounter")
 #'   encounter_description <- table_desc[["Encounter"]]
 #' }
 #'
 #' @seealso
-#' \code{\link{getTableDescriptionTable}}, \code{\link[fhircrackr]{fhir_table_description}}
+#' \code{\link{getTableDescriptionsTable}}, \code{\link[fhircrackr]{fhir_table_description}}
 #'
 #' @importFrom fhircrackr fhir_table_description
 #'
 #' @keywords data manipulation
 #' @export
-getTableDescription <- function(table_description_table = NA) {
+getTableDescriptions <- function(table_description_table = NA) {
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionTable()
+    table_description_table <- getTableDescriptionsTable()
   }
 
   # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects
