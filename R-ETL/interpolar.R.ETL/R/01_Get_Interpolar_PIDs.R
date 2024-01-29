@@ -135,29 +135,6 @@ filterResources <- function(resources, filter_patterns) {
   return(filtered_resources)
 }
 
-#' Get unique patient IDs per ward based on filter patterns.
-#'
-#' This function takes a list of resources and a corresponding list of filter patterns for each ward.
-#' It filters the resources for each ward based on the provided filter patterns and extracts unique
-#' patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
-#' and the values are unique patient IDs for that ward.
-#'
-#' @param resources A list of resources to filter.
-#' @param all_wards_filter_patterns A list of filter patterns, where each element corresponds to a ward.
-#'
-#' @return A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
-#'
-getPIDsPerWard <- function(resources, all_wards_filter_patterns) {
-  wards_pids <- list()
-  for (i in seq_along(all_wards_filter_patterns)) {
-    ward_filter_patterns <- all_wards_filter_patterns[[i]]
-    ward_resources <- filterResources(resources, ward_filter_patterns)
-    wards_pids[[i]] <- unique(sort(ward_resources$'subject/reference')) # PID is always in 'subject/reference'
-    names(wards_pids)[i] <- names(all_wards_filter_patterns)[i]
-  }
-  return(wards_pids)
-}
-
 #' Parse and interpolate patient IDs from a file.
 #'
 #' This function reads patient IDs from a file specified by the provided path.

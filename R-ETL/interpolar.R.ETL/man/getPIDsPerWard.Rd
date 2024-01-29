@@ -5,29 +5,18 @@
 \title{Get unique patient IDs per ward based on filter patterns.}
 \usage{
 getPIDsPerWard(encounters, all_wards_filter_patterns)
-
-getPIDsPerWard(encounters, all_wards_filter_patterns)
 }
 \arguments{
 \item{encounters}{A list of encounter to filter.}
 
 \item{all_wards_filter_patterns}{A list of filter patterns, where each element corresponds to a ward.}
-
-\item{resources}{A list of resources to filter.}
 }
 \value{
-A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
-
 A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
 The list is structured such that each outer list represents a ward, and the inner lists contain
 unique patient IDs for that ward.
 }
 \description{
-This function takes a list of resources and a corresponding list of filter patterns for each ward.
-It filters the resources for each ward based on the provided filter patterns and extracts unique
-patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
-and the values are unique patient IDs for that ward.
-
 This function takes a list of encounters and a corresponding list of filter patterns for each ward.
 It filters the encounters for each ward based on the provided filter patterns and extracts unique
 patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
