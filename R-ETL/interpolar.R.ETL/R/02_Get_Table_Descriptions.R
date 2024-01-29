@@ -23,8 +23,8 @@ getTableDescriptionsTable <- function() {
   table_description <- interpolar.R.utils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
   #remove unneccesary columns
   interpolar.R.utils::retainColumns(table_description, c('resource', 'column_name', 'fhir_expression'))
-  # remove all full NA rows
-  table_description <- table_description[rowSums(is.na(table_description)) < ncol(table_description), ]
+  # remove all rows with NA in column 'fhir_expression'
+  table_description <- table_description[!is.na(fhir_expression), ]
   # fill resource NA column with the last valid (non NA) value above
   table_description[, resource := resource[1], .(cumsum(!is.na(resource)))]
 }
