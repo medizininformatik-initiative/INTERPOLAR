@@ -12,13 +12,7 @@
 #' @return A database connection object.
 #'
 #' @export
-getDBConnection <- function(user = DB_USER,
-                            password = DB_PASSWORD,
-                            dbname = DB_NAME,
-                            host = DB_HOST,
-                            port = DB_PORT,
-                            schema = DB_SCHEMA) {
-
+getDBConnection <- function(user, password, dbname, host, port, schema) {
   db_connection <- DBI::dbConnect(RPostgres::Postgres(),
                                   dbname = dbname,
                                   host = host,
@@ -26,11 +20,6 @@ getDBConnection <- function(user = DB_USER,
                                   user = user,
                                   password = password,
                                   options = paste0("-c search_path=", schema))
-  # command line would be:
-  # psql -p DB_PORT -U DB_USER -d DB_NAME -h DB_HOST
-  # or with values
-  # psql -p 5431 -U user_1234 -d db_with_fancy_name -h localhost
-
   ## get more than default (4MB) memory for this connectoin
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
   return(db_connection)
@@ -51,7 +40,6 @@ showTablesStructure <- function(db_connection) {
   # Display structure of tables
   utils::str(tables)
 }
-
 
 #' Add table content to a PostgreSQL database
 #'

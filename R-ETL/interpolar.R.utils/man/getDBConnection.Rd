@@ -4,14 +4,7 @@
 \alias{getDBConnection}
 \title{Get a database connection}
 \usage{
-getDBConnection(
-  user = DB_USER,
-  password = DB_PASSWORD,
-  dbname = DB_NAME,
-  host = DB_HOST,
-  port = DB_PORT,
-  schema = DB_SCHEMA
-)
+getDBConnection(user, password, dbname, host, port, schema)
 }
 \arguments{
 \item{user}{The username for the database connection.}

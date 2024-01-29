@@ -117,9 +117,9 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 
 [database]
 
-DB_HOST = "databasehost"
-DB_PORT = 1234
-DB_USER = "databaseuser"
-DB_PASSWORD = "databasepassword"
-DB_SCHEMA = "databaseschema"
-DB_NAME = "databasename"
+DB_HOST_ETL = "databasehost"
+DB_PORT_ETL = 1234
+DB_USER_ETL = "databaseuser"
+DB_PASSWORD_ETL = "databasepassword"
+DB_SCHEMA_ETL = "databaseschema"
+DB_NAME_ETL = "databasename"
