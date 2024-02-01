@@ -19,7 +19,7 @@ getDBConnection <- function(user, password, dbname, host, port, schema) {
                                   port = port,
                                   user = user,
                                   password = password,
-                                  options = paste0("-c search_path=", schema))
+                                  options = paste0('-c search_path=', schema))
   ## get more than default (4MB) memory for this connectoin
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
   return(db_connection)
@@ -51,14 +51,17 @@ showTablesStructure <- function(db_connection) {
 #'
 #' @export
 addTableContentToDatabase <- function(db_connection, table_name, table) {
-  #print(paste("Inserting rows into", table_name, appendLF = FALSE))
   time0 <- Sys.time()
   row_count <- nrow(table)
   if (row_count > 0) {
-    RPostgres::dbAppendTable(db_connection, table_name, table)
+    db_insert_result <- try(RPostgres::dbAppendTable(db_connection, table_name, table))
+    if (isError(db_insert_result)) {
+      print(db_insert_result)
+      STOP <<- TRUE
+    }
   }
-  duration <- difftime(Sys.time(), time0, units = "secs")
-  print(paste0("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)"))
+  duration <- difftime(Sys.time(), time0, units = 'secs')
+  print(paste0('Inserted in ', table_name, ', ', row_count, ' rows (took ', duration, ' seconds)', ifelse(STOP, 'with error', '')))
 }
 
 #' Delete all rows from a table in the database.
@@ -72,10 +75,10 @@ addTableContentToDatabase <- function(db_connection, table_name, table) {
 #' @examples
 #' \dontrun{
 #' # Connect to a database (replace with your actual connection details)
-#' con <- DBI::dbConnect(RSQLite::SQLite(), dbname = "your_database.db")
+#' con <- DBI::dbConnect(RSQLite::SQLite(), dbname = 'your_database.db')
 #'
-#' # Delete all rows from the "your_table" table
-#' deleteTableContentFromDatabase(con, "your_table")
+#' # Delete all rows from the 'your_table' table
+#' deleteTableContentFromDatabase(con, 'your_table')
 #' }
 #'
 #' @export
