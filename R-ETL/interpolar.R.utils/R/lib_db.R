@@ -51,6 +51,8 @@ showTablesStructure <- function(db_connection) {
 #'
 #' @export
 addTableContentToDatabase <- function(db_connection, table_name, table) {
+  # Postgres only accepts lower case names -> convert them hard here
+  table_name <- tolower(table_name)
   time0 <- Sys.time()
   row_count <- nrow(table)
   if (row_count > 0) {
@@ -61,7 +63,7 @@ addTableContentToDatabase <- function(db_connection, table_name, table) {
     }
   }
   duration <- difftime(Sys.time(), time0, units = 'secs')
-  print(paste0('Inserted in ', table_name, ', ', row_count, ' rows (took ', duration, ' seconds)', ifelse(STOP, 'with error', '')))
+  print(paste0('Inserted in ', table_name, ', ', row_count, ' rows (took ', duration, ' seconds)', ifelse(STOP, ' with error', '')))
 }
 
 #' Delete all rows from a table in the database.
@@ -83,5 +85,46 @@ addTableContentToDatabase <- function(db_connection, table_name, table) {
 #'
 #' @export
 deleteTableContentFromDatabase <- function(db_connection, table_name) {
+  # Postgres only accepts lower case names -> convert them hard here
+  table_name <- tolower(table_name)
   DBI::dbExecute(db_connection, paste0('DELETE FROM ', table_name, ';'))
 }
+
+#' Add Internal Columns to Database Tables
+#'
+#' This function modifies a list of data.tables by adding several internal columns
+#' specific for database management. These columns include a unique ID column for each table,
+#' columns for input and last check datetimes, and a column for the current dataset status.
+#' All added columns are initialized with NA values. The unique ID column is placed as the
+#' first column in each table.
+#'
+#' @param tables A list of data.table objects. Each data.table represents a table in the database
+#'               where internal columns need to be added.
+#'
+#' @return The modified list of data.tables with added internal columns.
+#'
+#' @examples
+#' # Example usage:
+#' library(data.table)
+#' my_tables <- list(table1 = data.table(id = 1:3, data = c("A", "B", "C")),
+#'                   table2 = data.table(id = 4:6, data = c("D", "E", "F")))
+#' my_tables <- addDatabaseInternalColumns(my_tables)
+#'
+#' # Now `my_tables` will have additional internal columns in each data.table
+#'
+#' @export
+addDatabaseInternalColumns <- function(tables) {
+  # Postgres only accepts lower case names -> convert them hard here
+  names(tables) <- tolower(names(tables))
+  for (i in seq_along(tables)) {
+    table_name <- tolower(names(tables)[i])
+    db_internal_id_column_name <- paste0(table_name, '_id')
+    tables[[i]][, (db_internal_id_column_name) := NA_integer_]
+    tables[[i]][, input_datetime := as.Date(NA_character_)]
+    tables[[i]][, last_check_datetime := as.Date(NA_character_)]
+    tables[[i]][, current_dataset_status := NA_character_]
+    setcolorder(tables[[i]], db_internal_id_column_name)
+  }
+  tables
+}
+

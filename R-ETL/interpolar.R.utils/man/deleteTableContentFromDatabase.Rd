@@ -21,10 +21,10 @@ This function deletes all rows from a specified table in the database.
 \examples{
 \dontrun{
 # Connect to a database (replace with your actual connection details)
-con <- DBI::dbConnect(RSQLite::SQLite(), dbname = "your_database.db")
+con <- DBI::dbConnect(RSQLite::SQLite(), dbname = 'your_database.db')
 
-# Delete all rows from the "your_table" table
-deleteTableContentFromDatabase(con, "your_table")
+# Delete all rows from the 'your_table' table
+deleteTableContentFromDatabase(con, 'your_table')
 }
 
 }
