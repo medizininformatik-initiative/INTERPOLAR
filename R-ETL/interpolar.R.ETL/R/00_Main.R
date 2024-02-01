@@ -46,6 +46,10 @@ retrieve <- function() {
       resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
     })
 
+    interpolar.R.utils::run_in('Write resource tables to database', {
+      writeTablesToDatabase(resource_table_list)
+    })
+
   })
 
   ###
