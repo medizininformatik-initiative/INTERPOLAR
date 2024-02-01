@@ -1,3 +1,6 @@
+# this is an example file
+
+ward_name = "Station 1"
 UKB-0001
 UKB-0002
 UKB-0003
@@ -5,6 +8,8 @@ UKB-0004
 UKB-0005
 UKB-0006
 UKB-0007
+
+ward_name = "Station 2"
 UKB-0008
 UKB-0009
 UKB-0010

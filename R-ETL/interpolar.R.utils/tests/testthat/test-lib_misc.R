@@ -34,14 +34,14 @@ test_that("polar_fix_dates fixes uncommon date formats", {
   # Testen Sie die Funktion mit der Zeit beizubehalten
   polar_fix_dates(dt, c("date1", "date2"), preserve_time = TRUE)
 
-  # Erwartete Ergebnisse für date1.TimeSpec und date2.TimeSpec
+  # Erwartete Ergebnisse für date1_timespec und date2_timespec
   expected_time_cols <- data.table::data.table(
-    date1.TimeSpec = c("00:00:00", "00:00:00", "00:00:00"),
-    date2.TimeSpec = c("00:00:00", "00:00:00", "00:00:00")
+    date1_timespec = c("00:00:00", "00:00:00", "00:00:00"),
+    date2_timespec = c("00:00:00", "00:00:00", "00:00:00")
   )
 
   # Überprüfen Sie, ob die Zeit-Spalten korrekt hinzugefügt wurden
-  expect_equal(dt[, .(date1.TimeSpec, date2.TimeSpec)], expected_time_cols)
+  expect_equal(dt[, .(date1_timespec, date2_timespec)], expected_time_cols)
 
   # Erwartete Ergebnisse für date1 und date2
   expected_date_cols <- data.table::data.table(

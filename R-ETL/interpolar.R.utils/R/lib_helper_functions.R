@@ -178,6 +178,42 @@ namedListByValue <- function(...) {
   x
 }
 
+#' Sort a named list alphabetically by its values.
+#'
+#' This function takes a list and sorts it alphabetically based on its values.
+#'
+#' @param list A list to be sorted.
+#' @return A sorted list.
+#'
+#' @examples
+#' # Create an unsorted named list
+#' unsorted_list <- list(b = 3, a = 2, c = 1)
+#'
+#' # Sort the named list
+#' sorted_list <- sortListByValue(unsorted_list)
+#' print(sorted_list)
+#'
+#' @export
+sortListByValue <- function(list) list[order(names(setNames(list, list)))]
+
+#' Sort a named list alphabetically by its names.
+#'
+#' This function takes a named list and sorts it alphabetically based on its names.
+#'
+#' @param list A named list to be sorted.
+#' @return A sorted named list.
+#'
+#' @examples
+#' # Create an unsorted named list
+#' unsorted_list <- list(b = 3, a = 2, c = 1)
+#'
+#' # Sort the named list
+#' sorted_list <- sortListByName(unsorted_list)
+#' print(sorted_list)
+#'
+#' @export
+sortListByName <- function(list) list[order(names(list))]
+
 #'
 #' Check if debugging mode is enabled.
 #'
@@ -440,65 +476,6 @@ initConstants <- function(path_to_toml) {
 }
 
 
-#' Filters the given resources table by the given filter patterns.
-#'
-#' This function filters a resources table based on the provided filter patterns.
-#'
-#' @param resources A data.table representing the resources table to be filtered.
-#' @param filter_patterns A list of filter conditions. Each condition is a character string containing multiple
-#' subconditions separated by '+'.
-#'
-#' @return A filtered data.table based on the given filter patterns.
-#'
-#' @details
-#' This function applies an OR operation across the filter patterns, meaning that a row will be retained if at
-#' least one condition is fulfilled.
-#' However, within each individual condition (subconditions separated by '+'), an AND operation is applied,
-#' requiring all subconditions to be met for the condition to be satisfied.
-#'
-#' @export
-filterResources <- function(resources, filter_patterns) {
-
-  # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
-  resources[, Filter_Column_Keep := FALSE]
-
-  # Check if a row fulfills a given condition
-  #
-  # This function checks if a row meets a given condition based on grep patterns for each column.
-  #
-  # @param row A row (list or data.frame) to be checked against the condition.
-  # @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
-  # @return TRUE if the row fulfills the condition, FALSE otherwise.
-  #
-  fulfills_condition <- function(row, condition) {
-    subConditionColumns <- names(condition)
-    for (i in 1:length(condition)) { # i <- 1
-      subConditionColumn <- subConditionColumns[[i]]
-      subCondition <- condition[[i]]
-      if (!grepl(subCondition, row[[subConditionColumn]], ignore.case = TRUE, perl = TRUE)) {
-        return(FALSE)
-      }
-    }
-    return(TRUE)
-  }
-
-  # filterPatterns can have a list of conditions in this style:
-  # "type/coding/code = 'Abteilungskontakt' + serviceType/coding/code = '0100|0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
-  # Such a condition means that 3 subconditions must be fulfilled (separated by '+').
-  for (condition in filter_patterns) { # condition <- filter_patterns[[1]]
-    resources[, Filter_Column_Keep_Subcondition := FALSE]
-    for (i in seq_len(nrow(resources))) {
-      resources[i, Filter_Column_Keep := resources[i, Filter_Column_Keep] || fulfills_condition(resources[i], condition)]
-    }
-  }
-
-  resources[, Filter_Column_Keep_Subcondition := NULL]
-  resources <- resources[Filter_Column_Keep == TRUE]
-  resources[, Filter_Column_Keep := NULL]
-  return(resources)
-}
-
-
 #' Print a table if VERBOSE level allows.
 #'
 #' This function prints a summary for the specified table if the VERBOSE level is
@@ -581,6 +558,127 @@ print_table_if_all <- function(table) {
   }
 }
 
+
+#' Get a list of global variables with a specified prefix.
+#'
+#' This function searches for global variables in the current workspace whose names
+#' start with the specified prefix and returns a list containing variable names
+#' along with their values.
+#'
+#' @param prefix The prefix to match in variable names.
+#'
+#' @return A list containing the names and values of global variables with the given prefix.
+#'
+#' @examples
+#' \dontrun{
+#' prefix <- "my_prefix"
+#' result <- getGlobalVariablesByPrefix(prefix)
+#' print(result)
+#' }
+#'
+#' @seealso
+#' \code{\link{ls}}, \code{\link{eapply}}
+#'
+#' @keywords global variables workspace prefix
+#'
+#' @export
+getGlobalVariablesByPrefix <- function(prefix) {
+  global_vars <- ls(globalenv())
+  matching_vars <- grep(paste0("^", prefix), global_vars, value = TRUE)
+  result_list <- lapply(matching_vars, function(var_name) {
+    var_value <- get(var_name, envir = globalenv())
+    setNames(list(var_value), var_name)
+  })
+  return(result_list)
+}
+
+#' Get the value of a variable by name or a default value if the variable is missing.
+#'
+#' This function checks if a variable with the specified name exists. If it does,
+#' it returns the value of the variable; otherwise, it returns the specified default value.
+#'
+#' @param var_name A character string specifying the name of the variable.
+#' @param default The default value to be returned if the variable is missing. Defaults to NA.
+#'
+#' @return The value of the variable if it exists; otherwise, the specified default value.
+#'
+#' @examples
+#' # Set a variable
+#' my_variable <- 123
+#'
+#' # Use getVarByNameOrDefaultIfMissing to retrieve the value
+#' result <- getVarByNameOrDefaultIfMissing("my_variable", default = 42)
+#' print(result)  # Output: 123
+#'
+#' # Try with a non-existing variable
+#' result_missing <- getVarByNameOrDefaultIfMissing("nonexistent_variable", default = "Not found")
+#' print(result_missing)  # Output: "Not found"
+#'
+#' @export
+getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(var_name)) get(var_name) else default
+
+#' Extract Everything After the Last Slash
+#'
+#' This function takes a vector of strings and returns a new vector where each element
+#' is modified to include only the portion of the original string that appears
+#' after the last slash.
+#'
+#' @param strings A character vector where each element is a string potentially
+#'   containing slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element
+#'   is the part of the original string after the last slash.
+#'
+#' @examples
+#' strings <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getAfterLastSlash(strings)
+#'
+#' @export
+getAfterLastSlash <- function(strings) {
+  return(sub(".*/", "", strings))
+}
+
+#' Extract Everything Before the Last Slash
+#'
+#' This function takes a vector of strings and returns a new vector where each element
+#' is modified to include only the portion of the original string that appears
+#' before the last slash. The last slash itself is not included in the returned strings.
+#'
+#' @param strings A character vector where each element is a string potentially
+#'   containing slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element
+#'   is the part of the original string up to (but not including) the last slash.
+#'
+#' @examples
+#' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getBeforeLastSlash(absolute)
+#'
+#' @export
+getBeforeLastSlash <- function(strings) {
+  sub("/[^/]*$", "", strings)
+}
+
+#' Extract text between single or double quotes in a string.
+#'
+#' This function takes a string and extracts the text between the first pair
+#' of single or double quotes encountered. It uses regular expressions to find
+#' the text enclosed within the quotes and returns it.
+#'
+#' @param x A character vector or string containing text with single or double quotes.
+#' @return A character vector containing the text between the first pair of quotes.
+#'
+#' @examples
+#' # Example usage
+#' result_single <- getBetweenQuotes("This is a 'sample' string.")
+#' result_double <- getBetweenQuotes('Another "example" string.')
+#' print(result_single)  # Output: "sample"
+#' print(result_double)  # Output: "example"
+#'
+#' @export
+getBetweenQuotes <- function(x) {
+  gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
+}
 
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
@@ -801,30 +899,5 @@ print_table_if_all <- function(table) {
 #'     }
 #'   }
 #'   return(text)
-#' }
-#'
-#' #'
-#' #' Create a named list from input values.
-#' #'
-#' #' This function creates a named list by taking a variable number of input values and assigning
-#' #' names to each element based on the argument names provided.
-#' #'
-#' #' @param ... Input values to be included in the named list.
-#' #'
-#' #' @return A named list with elements named according to the argument names.
-#' #'
-#' #' @examples
-#' #' # Create three variables
-#' #' a <- 1
-#' #' b <- 2
-#' #' c <- 3
-#' #'
-#' #'
-#' #' @param references single string or list of strings
-#' #' @return single string or list of strings where only the last part of each string
-#' #' remains after a slash '/'. Strings without slashes are returned unchanged.
-#' #'
-#' makeRelative <- function(references) {
-#'   return(sub(".*/", "", references))
 #' }
 #'

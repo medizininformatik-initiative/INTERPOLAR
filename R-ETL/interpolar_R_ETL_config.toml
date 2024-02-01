@@ -58,6 +58,31 @@ FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack p
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
 DELAY_REQ                          = 2 # if request fails, wait X seconds, the delay X=DELAY_REQ^(1..n) in seconds
 
+
+[retrieve.fhir_search]
+
+# Number of days to look into the past when searching for unfinished Encounters based on time.now() (resp. Sys.time()
+# in R) if the table for Encounters in the database is still completely empty (initial start)
+INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 30
+
+# Number of days to look into the past when searching for unfinished Encounters based on time.now() (resp. Sys.time()
+# in R) if the program is started regularly after the initial start. This number should always be at least large enough
+# to include the entire period since the last start (preferably at least 1 day more).
+USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 2
+
+###################
+# FOR DEBUG ONLY: #
+###################
+
+# If DEBUG_PERIOD_START is enabled then the start date is not time.now (resp. Sys.time() in R) but this date
+DEBUG_PERIOD_START = "2019-01-01"
+
+# If DEBUG_PERIOD_END is enabled then the both values INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS and
+# USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS will be ignored and only Encounters in the range of DEBUG_PERIOD_START
+# and DEBUG_PERIOD_END will be loaded. DEBUG_PERIOD_END will be ignored if DEBUG_PERIOD_START is not set.
+DEBUG_PERIOD_END = "2019-01-02"
+
+
 [retrieve.patient_id_filtering]
 
 # Enable the following parameter, if the Interpolar relevant patient IDs (PID) are provided by an
@@ -69,18 +94,32 @@ DELAY_REQ                          = 2 # if request fails, wait X seconds, the d
 # This is only necessary if the relevant Patient IDs should be derived from this Encounters and are
 # not provided in any other way.
 # Every entry defines a single condition. An Encounter will be accepted, if at least one condition is
-# fulfilled (OR connected). A condition defines which columns of the Encounter table should have which
-# value. The column names are defined in the 01_Table_Description.R file. The values can be defined as
-# grep patterns. Multilpe column values can be connected by + (logcal AND).
-# All Patterns are Case INSENSITIVE!
-ENCOUNTER_FILTER_PATTERNS = [
-  # This is the mapping from xpath expressions to the resulting column names. The correct and really used
-  # mapping is defined in the 01_Table_Description.R file.
-  "enc_service_display = 'Unfallchirurgie' + enc_service_code = '1600' + enc_class_code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  #"type/coding/code = 'Abteilungskontakt' + serviceType/coding/code = '0100|0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceProvider/identifier/value = '.*'"
-  # THE following is the equivalent notation using the resulting column names instead of xpath expressions
-  # "enc_type_code = 'Abteilungskontakt' + enc_service_code = '0100|0500' + enc_class_code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  # "enc_serviceprovider_value = '.*'"
-
+# fulfilled (OR connected). A condition defines which expressions of the Encounter should have which
+# value. The values can be defined as grep patterns. Multilpe subconditions can be connected by '+'
+# (logcal AND). All Patterns are Case INSENSITIVE!
+# A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
+ENCOUNTER_FILTER_PATTERN_1 = [
+  "ward_name = 'Interpolar Station 1'",
+  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
+
+ENCOUNTER_FILTER_PATTERN_2 = [
+  "ward_name = 'Interpolar Station 2'",
+  "serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+]
+
+ENCOUNTER_FILTER_PATTERN_3 = [
+  "ward_name = 'Interpolar Station 3'",
+  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+]
+
+[database]
+
+DB_HOST_ETL = "databasehost"
+DB_PORT_ETL = 1234
+DB_USER_ETL = "databaseuser"
+DB_PASSWORD_ETL = "databasepassword"
+DB_SCHEMA_ETL = "databaseschema"
+DB_NAME_ETL = "databasename"

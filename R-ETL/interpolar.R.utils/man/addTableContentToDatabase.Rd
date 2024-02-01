@@ -4,14 +4,14 @@
 \alias{addTableContentToDatabase}
 \title{Add table content to a PostgreSQL database}
 \usage{
-addTableContentToDatabase(table_name, table, db_connection)
+addTableContentToDatabase(db_connection, table_name, table)
 }
 \arguments{
+\item{db_connection}{A valid database connection object.}
+
 \item{table_name}{The name of the table in the database.}
 
 \item{table}{A data.table or data.frame containing the rows to be inserted.}
-
-\item{db_connection}{A valid database connection object.}
 }
 \description{
 This function inserts rows from a data.table or data.frame into a specified PostgreSQL table.

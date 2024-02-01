@@ -34,16 +34,20 @@ retrieve <- function() {
 
   interpolar.R.utils::run_out('Run Retrieve', {
 
-    interpolar.R.utils::run_in('Load Table Description', {
-      TABLE_DESCRIPTION <<- getTableDescription()
-    })
-
     interpolar.R.utils::run_in('Extract Patient IDs', {
-      patientIDs <- getInterpolarPatientIDs(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
+      patientIDsPerWard <- getInterpolarPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
     })
 
-    interpolar.R.utils::run_in('Download and crack resources by Patient IDs', {
-      resource_table_list <- interpolar.R.utils::loadResourcesByPID(patientIDs, TABLE_DESCRIPTION)
+    interpolar.R.utils::run_in('Load Table Description', {
+      table_descriptions <- getTableDescriptions()
+    })
+
+    interpolar.R.utils::run_in('Download and crack resources by Patient IDs per ward', {
+      resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
+    })
+
+    interpolar.R.utils::run_in('Write resource tables to database', {
+      writeTablesToDatabase(resource_table_list)
     })
 
   })
