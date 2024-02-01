@@ -27,14 +27,14 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     for (filter_patterns in ward_filter_patterns) { # filter_patterns <- ward_pids_filter_patterns[[1]]
       for (filter_pattern in filter_patterns) { # filter_pattern <- filter_patterns$value[2]
         if (startsWith(filter_pattern, 'ward_name')) {
-          ward_name <- interpolar.R.utils::getStringBetweenQuotes(filter_pattern)
+          ward_name <- interpolar.R.utils::getBetweenQuotes(filter_pattern)
         } else {
           and_conditions <- list()
           filter_pattern_conditions <- unlist(strsplit(filter_pattern, '\\+'))
           for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
             condition_key_value <- unlist(strsplit(condition, '='))
             condition_column <- trimws(condition_key_value[1])
-            condition_value <- interpolar.R.utils::getStringBetweenQuotes(condition_key_value[2])
+            condition_value <- interpolar.R.utils::getBetweenQuotes(condition_key_value[2])
             and_conditions[[condition_column]] <- condition_value
           }
           single_ward_converted_filter_patterns[[paste0('Condition_', length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
@@ -157,7 +157,7 @@ parseInterpolarPatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
           pids_per_ward[[ward_name]] <- interpolar.R.utils::sortListByValue(unique(single_ward_pids))
           single_ward_pids <- list()
         }
-        ward_name <- interpolar.R.utils::getStringBetweenQuotes(line)
+        ward_name <- interpolar.R.utils::getBetweenQuotes(line)
       } else {
         single_ward_pids[[length(single_ward_pids) + 1]] <- line
       }

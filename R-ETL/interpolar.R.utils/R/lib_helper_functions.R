@@ -617,22 +617,46 @@ getGlobalVariablesByPrefix <- function(prefix) {
 #' @export
 getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(var_name)) get(var_name) else default
 
-#' Extracts the local, relative part from absolute references.
+#' Extract Everything After the Last Slash
 #'
-#' This function takes a character vector of absolute references and removes the leading part
-#' to return only the local, relative portion of each reference.
+#' This function takes a vector of strings and returns a new vector where each element
+#' is modified to include only the portion of the original string that appears
+#' after the last slash.
 #'
-#' @param references A character vector containing absolute references.
-#' @return A character vector with only the local, relative part of each reference.
+#' @param strings A character vector where each element is a string potentially
+#'   containing slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element
+#'   is the part of the original string after the last slash.
 #'
 #' @examples
-#' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001')
-#' relative <- makeRelative(absolute)
-#' print(relative)
+#' strings <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getAfterLastSlash(strings)
 #'
 #' @export
-makeRelative <- function(references) {
-  return(sub(".*/", "", references))
+getAfterLastSlash <- function(strings) {
+  return(sub(".*/", "", strings))
+}
+
+#' Extract Everything Before the Last Slash
+#'
+#' This function takes a vector of strings and returns a new vector where each element
+#' is modified to include only the portion of the original string that appears
+#' before the last slash. The last slash itself is not included in the returned strings.
+#'
+#' @param strings A character vector where each element is a string potentially
+#'   containing slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element
+#'   is the part of the original string up to (but not including) the last slash.
+#'
+#' @examples
+#' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getBeforeLastSlash(absolute)
+#'
+#' @export
+getBeforeLastSlash <- function(strings) {
+  sub("/[^/]*$", "", strings)
 }
 
 #' Extract text between single or double quotes in a string.
@@ -646,13 +670,15 @@ makeRelative <- function(references) {
 #'
 #' @examples
 #' # Example usage
-#' result_single <- getStringBetweenQuotes("This is a 'sample' string.")
-#' result_double <- getStringBetweenQuotes('Another "example" string.')
+#' result_single <- getBetweenQuotes("This is a 'sample' string.")
+#' result_double <- getBetweenQuotes('Another "example" string.')
 #' print(result_single)  # Output: "sample"
 #' print(result_double)  # Output: "example"
 #'
 #' @export
-getStringBetweenQuotes <- function(x) gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
+getBetweenQuotes <- function(x) {
+  gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
+}
 
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style

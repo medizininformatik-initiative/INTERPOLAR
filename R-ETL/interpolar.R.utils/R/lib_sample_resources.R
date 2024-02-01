@@ -867,7 +867,7 @@ loadResourcesByPID <- function(patientIDs, table_description) {
       resource_table <- interpolar.R.utils::polar_download_by_ids_and_crack_parallel(
         resource = 'Patient',
         id_param_str = '_id',
-        ids = makeRelative(patientIDs),
+        ids = getAfterLastSlash(patientIDs),
         table_description = table_description[[resource]],
         verbose = VERBOSE
       )
