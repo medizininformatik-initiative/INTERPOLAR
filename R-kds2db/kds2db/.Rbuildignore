@@ -1,3 +1,5 @@
 ^kds2db\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^outputLocal$
+^outputGlobal$
