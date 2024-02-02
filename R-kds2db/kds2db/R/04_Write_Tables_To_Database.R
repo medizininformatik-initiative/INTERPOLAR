@@ -1,14 +1,17 @@
 #' Write Data Tables to a Database
 #'
-#' This function takes a list of data tables and writes them to a specified database. It establishes
-#' a database connection using provided credentials and configuration, adds necessary internal
-#' columns for database processing, and writes each table to the database. Users can choose to
-#' write all tables or specify which tables to write.
+#' This function takes a list of data.table objects and writes them to a specified database.
+#' It establishes a database connection using predefined credentials and configuration parameters.
+#' Users have the option to clear existing table contents before writing new data by setting
+#' `clear_before_insert` to TRUE. The function can write all provided tables or only specific tables
+#' if specified by the `table_names` parameter.
 #'
 #' @param tables A named list of data.table objects to be written to the database. Each element in
-#'               the list represents a table in the database.
+#'               the list represents a dataset intended for a corresponding table in the database.
 #' @param table_names An optional vector of table names to specify which tables should be written
 #'                    to the database. If `NA` (default), all tables in the `tables` list are written.
+#' @param clear_before_insert A logical flag indicating whether to clear the table contents
+#'                            before inserting new data. Defaults to FALSE.
 #'
 #' @examples
 #' \dontrun{
@@ -17,33 +20,40 @@
 #'                     table2 = data.table(id = 4:6, data = c("D", "E", "F")))
 #'   writeTablesToDatabase(my_tables)
 #'
-#'   # Write only specific tables
-#'   writeTablesToDatabase(my_tables, table_names = c("table1"))
+#'   # Write only specific tables and clear contents before inserting
+#'   writeTablesToDatabase(my_tables, table_names = c("table1"), clear_before_insert = TRUE)
 #' }
 #'
 #' @export
-writeTablesToDatabase <- function(tables, table_names = NA) {
-  db_connection <- mrputils::getDBConnection(
-    user = DB_USER_ETL,
-    password = DB_PASSWORD_ETL,
-    dbname = DB_NAME_ETL,
-    host = DB_HOST_ETL,
-    port = DB_PORT_ETL,
-    schema = DB_SCHEMA_ETL
-  )
+writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before_insert = FALSE) {
 
-  # Add columns which ate needed for DB internal processing
-  mrputils::addDatabaseInternalColumns(tables)
-
-  # write all tables (table_names == NA) or only tables with the gien names
+  # write all tables (table_names == NA) or only tables with the given names
   if (is.na(table_names)) {
     table_names <- names(tables)
   }
 
+  db_connection <- mrputils::dbConnect(
+    user = DB_KDS2DB_USER,
+    password = DB_KDS2DB_PASSWORD,
+    dbname = DB_GENERAL_NAME,
+    host = DB_GENERAL_HOST,
+    port = DB_GENERAL_PORT,
+    schema = DB_KDS2DB_SCHEMA_IN
+  )
+
+  db_table_names <- mrputils::dbListTables(db_connection)
+
   # write tables to DB
   for (table_name in table_names) {
-    table <- tables[[table_name]]
-    mrputils::addTableContentToDatabase(db_connection, table_name, table)
+    if (tolower(table_name) %in% db_table_names) {
+      table <- tables[[table_name]]
+      if (clear_before_insert) {
+        mrputils::dbDeleteContent(db_connection, table_name)
+      }
+      mrputils::dbAddContent(db_connection, table_name, table)
+    }
   }
+
+  mrputils::dbDisconnect(db_connection)
 
 }

@@ -5,10 +5,18 @@
 #' @export
 retrieve <- function() {
 
+  # Iniialzes the global STOP variable. If a subprocess sets this variable to TRUE then the execution will be stopped.
+  STOP <<- FALSE
+
   ###
-  # Read the configuration toml file
+  # Read the module configuration toml file
   ###
   mrputils::initConstants('../kds2db_config.toml')
+
+  ###
+  # Read the DB configuration toml file
+  ###
+  mrputils::initConstants(PATH_TO_DB_CONFIG_TOML)
 
   ###
   # Create globally used polar_clock
@@ -21,11 +29,6 @@ retrieve <- function() {
   ###
 
   mrputils::create_dirs(PROJECT_NAME)
-
-  ###
-  # STOP is set by a Script to TRUE, if this script 'wants' to stop the Scripts Loop
-  ###
-  STOP <- FALSE
 
   ###
   # log all console outputs and save them at the end
@@ -47,7 +50,7 @@ retrieve <- function() {
     })
 
     mrputils::run_in('Write resource tables to database', {
-      writeTablesToDatabase(resource_table_list)
+      writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
     })
 
   })
