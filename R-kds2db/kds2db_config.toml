@@ -116,11 +116,7 @@ ENCOUNTER_FILTER_PATTERN_3 = [
   "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
+
 [database]
 
-DB_HOST_ETL = "databasehost"
-DB_PORT_ETL = 1234
-DB_USER_ETL = "databaseuser"
-DB_PASSWORD_ETL = "databasepassword"
-DB_SCHEMA_ETL = "databaseschema"
-DB_NAME_ETL = "databasename"
+PATH_TO_DB_CONFIG_TOML = "../../mrp_db_config.toml"
