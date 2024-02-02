@@ -5,6 +5,9 @@
 #' @export
 retrieve <- function() {
 
+  # Iniialzes the global STOP variable. If a subprocess sets this variable to TRUE then the execution will be stopped.
+  STOP <<- FALSE
+
   ###
   # Read the configuration toml file
   ###
