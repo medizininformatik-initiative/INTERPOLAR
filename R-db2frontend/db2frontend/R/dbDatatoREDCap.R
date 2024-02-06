@@ -1,9 +1,9 @@
 #' Copy Database Content to REDCap
 #'
-#' This function retrieves data from a specific patient view or table in a database
-#' (defined in the schema `_out`) and imports this data into a REDCap project.
+#' This function retrieves data from the view or table in a database
+#' (defined in the schema `_out`) and imports this data into an existing REDCap project.
 #' It establishes a connection to a PostgreSQL database, fetches relevant patient data,
-#' then connects to a REDCap project using API credentials and imports the data.
+#' then connects to the REDCap project using API credentials and imports the data.
 #'
 #' Note: Database and REDCap connection details (e.g., credentials, table names) are
 #' required to be predefined or passed as arguments (not included in this example for

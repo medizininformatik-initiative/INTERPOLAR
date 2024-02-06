@@ -1,10 +1,11 @@
 Package: db2frontend
-Title: What the Package Does (One Line, Title Case)
+Title: Exchange data between a postgreSQL database and a REDCap project
 Version: 0.0.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    person("Maryam", "Yahiaoui-Doktor", , "maryam.yahiaoui-doktor@imise.uni-leipzig.de", role = c("aut", "cre"),
+           comment = c(ORCID = "https://orcid.org/0000-0002-3321-1598"))
+Description: This package fetches data from a postgreSQL database and imports into a REDCap project. In a future version,
+it will allow data from REDCap to be written to the databse.
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
