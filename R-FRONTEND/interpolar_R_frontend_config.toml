@@ -1,0 +1,17 @@
+##############################################
+# Project Definition interpolar RETL process #
+##############################################
+
+###
+# PARAMETER
+###
+#token <- "34CE1551599C60648B6098648425CAAF"
+#url <- "http://redcap/redcap-test/api/"
+
+#dbname<-"interpolar"
+#dbhost<-"172.18.145.250"
+#dbport<-15432
+#dbfrontenduser<-"db2frontend_user"
+#dbfrontendpassword<-"db2frontend"
+#dbfrontendoptionsout<-"-c search_path=db2frontend_out"
+#dboptions_in<-""
