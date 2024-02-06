@@ -1,0 +1,127 @@
+version: '3.2'
+services:
+  blaze-DIC:
+    #container_name: "blaze"
+    image: "samply/blaze:latest"
+    restart: unless-stopped
+    environment:
+      BASE_URL: "http://localhost:8080"
+      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
+      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
+      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
+      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
+      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - "blaze-data-DIC:/app/data"
+
+  mysql:
+    image: mariadb:10.3
+    #container_name: ${COMPOSE_PROJECT_NAME}_mysql
+    #command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    env_file: .env-redcap-db
+    volumes:
+      - ./mariadb.cnf:/etc/mysql/mariadb.cnf
+      - redcap-db-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./.my.cnf:/root/.my.cnf
+    networks:
+      - internal
+
+  redcap:
+    #image: php7
+    build: ./redcap-app
+    #user: "www-data:www-data"
+    #container_name: ${COMPOSE_PROJECT_NAME}_app
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    networks:
+      - internal
+      - external
+    ports:
+      - 127.0.0.1:8082:80
+    volumes:
+      - ./redcap-html/redcap:/var/www/html/redcap-test
+      - ./redcap-html/redcapdocs:/var/www/html/redcapdocs
+      - ./redcap-app/config/php.ini:/usr/local/etc/php/conf.d/my.ini
+      - ./redcap-app/log/:/var/log/
+
+  amts_db:
+    #image: postgres:15-alpine
+    build: ./Postgres-amts_db/build
+    #container_name: pg_container
+    restart: unless-stopped
+        #    healthcheck:
+    # test: [ "CMD-SHELL", "pg_isready -U postgres -d interpolar" ]
+    # interval: 10s
+    # timeout: 5s
+    # retries: 5
+    ports:
+      - "15432:5432"
+    environment:
+      TZ: Europe/Berlin
+      POSTGRES_PASSWORD_FILE: /run/secrets/amts_db.password
+      POSTGRES_USER: interpolar_admin
+      POSTGRES_DB: interpolar
+    secrets:
+      - amts_db.password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ${PWD}/Postgres-amts_db/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ${PWD}/Postgres-amts_db/init/:/docker-entrypoint-initdb.d/
+
+  pgadmin:
+    image: dpage/pgadmin4:7.2
+    #container_name: pgadmin4_container
+    restart: unless-stopped
+    ports:
+      - "8089:80"
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: "password"
+      PGADMIN_DEFAULT_EMAIL: a@b.cd
+    depends_on:
+      - amts_db
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+  r-kds2db:
+    image: rocker/tidyverse
+    restart: no
+    volumes:
+      - ./R-kds2db:/src
+
+  r-db2frontend:
+    #image: r-base:latest
+    build: ./R-Redcap-build
+    restart: no
+    volumes:
+      - ./R:/src
+    depends_on:
+      - redcap
+    networks:
+      - internal
+
+
+networks:
+  external:
+    driver: bridge
+  internal:
+    driver: bridge
+
+secrets:
+  amts_db.password:
+    file: ./Postgres-amts_db/.env_amts_db.password
+
+volumes:
+    redcap-db-data:
+    blaze-data-DIC:
+    blaze-data-IP:
+    db-data:
+    pgadmin-data:
+
+  # ToDo:
+  # - non-Root User, e.g. developer
+  # - 
