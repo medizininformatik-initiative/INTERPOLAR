@@ -15,14 +15,17 @@ SEP      <- ' ~ '
 #' This function reads the "Table_Description.xlsx" file from the "extdata" directory
 #' in the package and returns the data as a data frame.
 #'
+#' @param columns column names which should be in the return table. If NA then no column
+#' will be removed.
+#'
 #' @return A data table with the table descriptions.
 #'
 #' @export
-getTableDescriptionsTable <- function() {
+getTableDescriptionsTable <- function(columns = NA) {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "kds2db")
-  table_description <- mrputils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
+  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
   #remove unneccesary columns
-  mrputils::retainColumns(table_description, c('resource', 'column_name', 'fhir_expression'))
+  etlutils::retainColumns(table_description, columns)
   # remove all rows with NA in column 'fhir_expression'
   table_description <- table_description[!is.na(fhir_expression), ]
   # fill resource NA column with the last valid (non NA) value above
@@ -61,7 +64,7 @@ getTableDescriptionsTable <- function() {
 #' @export
 getTableDescriptions <- function(table_description_table = NA) {
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionsTable()
+    table_description_table <- getTableDescriptionsTable(c('resource', 'column_name', 'fhir_expression'))
   }
 
   # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects
@@ -80,10 +83,10 @@ getTableDescriptions <- function(table_description_table = NA) {
       sep = SEP,
       brackets = NULL
     )
-
     return(fhir_table_desc)
   })
 
   # Returning the list of fhircrackr::fhir_table_description() objects
   return(list_of_fhir_tables)
 }
+

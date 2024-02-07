@@ -1,5 +1,5 @@
-Package: mrputils
-Title: This are the specific utils for MRP detection
+Package: etlutils
+Title: These are the specific utils for ETL processing
 Version: 0.0.1
 Authors@R: 
     c(person(given = "Alexander",
@@ -12,7 +12,7 @@ Authors@R:
              role = "aut",
              email = "florian.schmidt@imise.uni-leipzig.de",
              comment = c(ORCID = "0000-0003-2027-8213")))
-Description: This package was created for shared functions as utils in the MRP detection context (file, database, table, etc).
+Description: This package was created for shared functions as utils in ETL processing contexts (file, database, table, etc).
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

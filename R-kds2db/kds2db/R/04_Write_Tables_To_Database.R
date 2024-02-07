@@ -32,7 +32,7 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
     table_names <- names(tables)
   }
 
-  db_connection <- mrputils::dbConnect(
+  db_connection <- etlutils::dbConnect(
     user = DB_KDS2DB_USER,
     password = DB_KDS2DB_PASSWORD,
     dbname = DB_GENERAL_NAME,
@@ -41,19 +41,19 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
     schema = DB_KDS2DB_SCHEMA_IN
   )
 
-  db_table_names <- mrputils::dbListTables(db_connection)
+  db_table_names <- etlutils::dbListTables(db_connection)
 
   # write tables to DB
   for (table_name in table_names) {
     if (tolower(table_name) %in% db_table_names) {
       table <- tables[[table_name]]
       if (clear_before_insert) {
-        mrputils::dbDeleteContent(db_connection, table_name)
+        etlutils::dbDeleteContent(db_connection, table_name)
       }
-      mrputils::dbAddContent(db_connection, table_name, table)
+      etlutils::dbAddContent(db_connection, table_name, table)
     }
   }
 
-  mrputils::dbDisconnect(db_connection)
+  etlutils::dbDisconnect(db_connection)
 
 }

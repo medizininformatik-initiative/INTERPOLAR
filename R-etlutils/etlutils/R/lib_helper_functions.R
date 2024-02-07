@@ -638,17 +638,16 @@ getAfterLastSlash <- function(strings) {
   return(sub(".*/", "", strings))
 }
 
-#' Extract Everything Before the Last Slash
+#' Extract Everything Before the Last Slash or Return Empty String if No Slash Present
 #'
-#' This function takes a vector of strings and returns a new vector where each element
-#' is modified to include only the portion of the original string that appears
-#' before the last slash. The last slash itself is not included in the returned strings.
+#' This function takes a vector of strings and returns a new vector. For strings containing slashes,
+#' it includes only the portion of the string that appears before the last slash. For strings without
+#' any slashes, it returns an empty string. The last slash itself is not included in the returned strings.
 #'
-#' @param strings A character vector where each element is a string potentially
-#'   containing slashes.
+#' @param strings A character vector where each element is a string that may or may not contain slashes.
 #'
-#' @return A character vector of the same length as `strings`, where each element
-#'   is the part of the original string up to (but not including) the last slash.
+#' @return A character vector of the same length as `strings`, where each element is the part of the
+#' original string up to (but not including) the last slash, or an empty string if no slash is present.
 #'
 #' @examples
 #' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
@@ -656,7 +655,13 @@ getAfterLastSlash <- function(strings) {
 #'
 #' @export
 getBeforeLastSlash <- function(strings) {
-  sub("/[^/]*$", "", strings)
+  sapply(strings, function(string) {
+    if (grepl("/", string)) {
+      sub("/[^/]*$", "", string)
+    } else {
+      ""
+    }
+  })
 }
 
 #' Extract text between single or double quotes in a string.

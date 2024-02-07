@@ -4,12 +4,13 @@
 \alias{retainColumns}
 \title{Retain specified columns in a data table.}
 \usage{
-retainColumns(table, columnNames)
+retainColumns(table, columnNames = NA)
 }
 \arguments{
 \item{table}{A data table from which columns will be retained.}
 
-\item{columnNames}{A character vector containing the names of columns to be retained.}
+\item{columnNames}{A character vector containing the names of columns to be retained.
+If NA (default) then no column will be removed and the full input table will be returned.}
 }
 \value{
 The data table with only the specified columns retained. The object is changed

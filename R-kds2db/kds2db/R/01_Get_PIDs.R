@@ -11,7 +11,7 @@
 #'
 convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 'ENCOUNTER_FILTER_PATTERN') {
 
-  ward_pids_filter_patterns <- mrputils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
+  ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
   if (!length(ward_pids_filter_patterns)) {
     STOP <<- TRUE
     stop(paste('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file'))
@@ -27,14 +27,14 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     for (filter_patterns in ward_filter_patterns) { # filter_patterns <- ward_pids_filter_patterns[[1]]
       for (filter_pattern in filter_patterns) { # filter_pattern <- filter_patterns$value[2]
         if (startsWith(filter_pattern, 'ward_name')) {
-          ward_name <- mrputils::getBetweenQuotes(filter_pattern)
+          ward_name <- etlutils::getBetweenQuotes(filter_pattern)
         } else {
           and_conditions <- list()
           filter_pattern_conditions <- unlist(strsplit(filter_pattern, '\\+'))
           for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
             condition_key_value <- unlist(strsplit(condition, '='))
             condition_column <- trimws(condition_key_value[1])
-            condition_value <- mrputils::getBetweenQuotes(condition_key_value[2])
+            condition_value <- etlutils::getBetweenQuotes(condition_key_value[2])
             and_conditions[[condition_column]] <- condition_value
           }
           single_ward_converted_filter_patterns[[paste0('Condition_', length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
@@ -154,17 +154,17 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
     if (nchar(line)) {
       if (startsWith(line, 'ward_name')) {
         if (!is.na(ward_name)) {
-          pids_per_ward[[ward_name]] <- mrputils::sortListByValue(unique(single_ward_pids))
+          pids_per_ward[[ward_name]] <- etlutils::sortListByValue(unique(single_ward_pids))
           single_ward_pids <- list()
         }
-        ward_name <- mrputils::getBetweenQuotes(line)
+        ward_name <- etlutils::getBetweenQuotes(line)
       } else {
         single_ward_pids[[length(single_ward_pids) + 1]] <- line
       }
     }
   }
   if (!is.na(ward_name)) {
-    pids_per_ward[[ward_name]] <- mrputils::sortListByValue(unique(single_ward_pids))
+    pids_per_ward[[ward_name]] <- etlutils::sortListByValue(unique(single_ward_pids))
   }
   return(pids_per_ward)
 }
@@ -251,13 +251,13 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 #'
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
 
-  mrputils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
+  etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
     if (!is.na(path_to_PID_list_file)) {
       return(parsePatientIDsPerWardFromFile(path_to_PID_list_file))
     }
   })
 
-  mrputils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
+  etlutils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
     initEncounterPeriodToDownload()
     filter_patterns <- convertFilterPatterns()
     # the subject reference is needed in every case to extract them if the encounter matches the pattern
@@ -266,7 +266,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
     filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
     # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
     # additional paths above
-    encounters <- mrputils::get_encounters(filter_enc_table_description)
+    encounters <- etlutils::get_encounters(filter_enc_table_description)
     # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
     # names for the filtering -> set them here
     names(encounters) <- filter_enc_table_description@cols@.Data
