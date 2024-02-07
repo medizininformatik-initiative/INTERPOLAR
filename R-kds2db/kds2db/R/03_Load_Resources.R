@@ -53,7 +53,7 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
 #' @export
 loadResourcesByPatientIDFromFHIRServer <- function(patientIDsPerWard, table_descriptions) {
   patientIDs <- unique(unlist(patientIDsPerWard))
-  resource_tables <- mrputils::loadResourcesByPID(patientIDs, table_descriptions)
+  resource_tables <- etlutils::loadResourcesByPID(patientIDs, table_descriptions)
 
   # Add additional table of ward-patient ID per date
   resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patientIDsPerWard)

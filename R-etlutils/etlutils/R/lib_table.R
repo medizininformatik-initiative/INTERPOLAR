@@ -568,6 +568,7 @@ removeTableHeader <- function(dt, pattern_list) {
 #'
 #' @param table A data table from which columns will be retained.
 #' @param columnNames A character vector containing the names of columns to be retained.
+#' If NA (default) then no column will be removed and the full input table will be returned.
 #'
 #' @return The data table with only the specified columns retained. The object is changed
 #' by reference.
@@ -591,10 +592,13 @@ removeTableHeader <- function(dt, pattern_list) {
 #' print(dt)
 #'
 #' @export
-retainColumns <- function(table, columnNames) {
-  names <- names(table)
-  names <- names[!(names %in% columnNames)]
-  table[, (names) := NULL]
+retainColumns <- function(table, columnNames = NA) {
+  if (!isSimpleNA(columnNames)) {
+    names <- names(table)
+    names <- names[!(names %in% columnNames)]
+    table[, (names) := NULL]
+  }
+  return(table)
 }
 
 #' Convert list or vector columns to character in a data.table
