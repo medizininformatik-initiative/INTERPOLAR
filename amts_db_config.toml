@@ -2,8 +2,8 @@
 # General database settings for all users/schemes #
 ###################################################
 
-DB_GENERAL_HOST = "172.18.145.250"
-DB_GENERAL_PORT = 15432
+DB_GENERAL_HOST = "amts_db"
+DB_GENERAL_PORT = 5432
 DB_GENERAL_NAME = "interpolar"
 
 ##########################
