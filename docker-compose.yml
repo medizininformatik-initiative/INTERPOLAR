@@ -87,11 +87,26 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
+  # This service is no service, but for building the kds2db R-package
+  # it is for using this package to execute (manualy) StartRetrieval.R
   r-kds2db:
-    image: rocker/tidyverse
+    #image: ip-test-r-etlutils
+    build: ./R-kds2db
     restart: no
     volumes:
       - ./R-kds2db:/src
+      - ./amts_db_config.toml:/src/amts_db_config.toml
+    depends_on:
+      - r-etlutils
+    command: ["/bin/true"]
+
+  # This service is no service, but for building the etlutils R-package
+  r-etlutils:
+    #image: rocker/r-ver:4.3.2
+    build: ./R-etlutils
+    restart: no
+    entrypoint: ["echo", "just for building R-Environment..."]
+    #command: ["/bin/true"]
 
   r-db2frontend:
     #image: r-base:latest

@@ -11,7 +11,7 @@ retrieve <- function() {
   ###
   # Read the module configuration toml file
   ###
-  etlutils::initConstants('../kds2db_config.toml')
+  etlutils::initConstants('./kds2db_config.toml')
 
   ###
   # Read the DB configuration toml file
