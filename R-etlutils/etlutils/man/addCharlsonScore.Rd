@@ -2,11 +2,7 @@
 % Please edit documentation in R/charlson_comorbidity_index.R
 \name{addCharlsonScore}
 \alias{addCharlsonScore}
-\title{Adds the 'cci' column to the passed table.
-If the 'cci' column does not already exist, it will be added.
-'cci' includes the Charlson Comorbidity Index as a factor,
-which is the sum of all relevant risk scores of all diagnoses in the
-same case. If the 'cci' column already exists, it will be overwritten.}
+\title{Adds the 'cci' column to the passed table.}
 \usage{
 addCharlsonScore(
   table,
@@ -30,6 +26,8 @@ be added (default is NA).}
 }
 \description{
 Adds the 'cci' column to the passed table.
+}
+\details{
 If the 'cci' column does not already exist, it will be added.
 'cci' includes the Charlson Comorbidity Index as a factor,
 which is the sum of all relevant risk scores of all diagnoses in the
@@ -39,20 +37,25 @@ same case. If the 'cci' column already exists, it will be overwritten.
 library(data.table)
 # Combinations of NA values in diagnoses but with valid age
 table <- data.table(
-  caseID = c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4),
-  diagnoses = c(NA, NA, NA, NA, NA, 'C77.1', 'C77.1', 'C77.2', 'X99.9', 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
-  age = c(90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90)
+  caseID    = c(      1,       2,       2,       3,  3,       3,       3,       3,       3,
+                      4,       4,       4,      4),
+  diagnoses = c(     NA,      NA,      NA,      NA, NA, 'C77.1', 'C77.1', 'C77.2', 'X99.9',
+                'C77.1', 'C77.1', 'C77.2', 'X99.9'),
+  age       = c(     90,      90,      90,      90, 90,      90,      90,      90,      90,
+                     90,      90,      90,      90)
 )
 addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
 addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
 print(table)
 
 # Check if low and high risk scores work fine
-# (Metastatic_solid_tumor overrides Any_malignancy_including_lymphoma_and_leukemia_except_malignant_neoplasm_of_skin)
+# (Metastatic_solid_tumor overrides
+# Any_malignancy_including_lymphoma_and_leukemia_except_malignant_neoplasm_of_skin)
 table <- data.table(
   caseID = c(1),
   # low risk diagnoses (some repeated) # high risk diagnoses from here (also repeated)
-  diagnoses = c('C00.1', 'C00.1', 'C01.1', 'C01.1', 'C77.1', 'C77.1', 'C78.1', 'C78.1', 'C78.1', 'C78.1'),
+  diagnoses = c('C00.1', 'C00.1', 'C01.1', 'C01.1', 'C77.1', 'C77.1', 'C78.1', 'C78.1',
+                'C78.1', 'C78.1'),
   age = c(90)
 )
 addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')

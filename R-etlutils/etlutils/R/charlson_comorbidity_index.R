@@ -1,4 +1,6 @@
 #' Adds the 'cci' column to the passed table.
+#'
+#' @details
 #' If the 'cci' column does not already exist, it will be added.
 #' 'cci' includes the Charlson Comorbidity Index as a factor,
 #' which is the sum of all relevant risk scores of all diagnoses in the
@@ -15,20 +17,24 @@
 #' library(data.table)
 #' # Combinations of NA values in diagnoses but with valid age
 #' table <- data.table(
-#'   caseID = c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4),
-#'   diagnoses = c(NA, NA, NA, NA, NA, 'C77.1', 'C77.1', 'C77.2', 'X99.9', 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
-#'   age = c(90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90)
+#'   caseID    = c(      1,       2,       2,       3,  3,       3,       3,       3,       3,
+#'                       4,       4,       4,      4),
+#'   diagnoses = c(     NA,      NA,      NA,      NA, NA, 'C77.1', 'C77.1', 'C77.2', 'X99.9',
+#'                 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
+#'   age       = c(     90,      90,      90,      90, 90,      90,      90,      90,      90,
+#'                      90,      90,      90,      90)
 #' )
 #' addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
 #' addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
 #' print(table)
 #'
-#' # Check if low and high risk scores work fine
-#' # (Metastatic_solid_tumor overrides Any_malignancy_including_lymphoma_and_leukemia_except_malignant_neoplasm_of_skin)
+#' # Check if low and high risk scores work fine (Metastatic_solid_tumor overrides
+#' # Any_malignancy_including_lymphoma_and_leukemia_except_malignant_neoplasm_of_skin)
 #' table <- data.table(
 #'   caseID = c(1),
 #'   # low risk diagnoses (some repeated) # high risk diagnoses from here (also repeated)
-#'   diagnoses = c('C00.1', 'C00.1', 'C01.1', 'C01.1', 'C77.1', 'C77.1', 'C78.1', 'C78.1', 'C78.1', 'C78.1'),
+#'   diagnoses = c('C00.1', 'C00.1', 'C01.1', 'C01.1', 'C77.1', 'C77.1', 'C78.1', 'C78.1',
+#'                 'C78.1', 'C78.1'),
 #'   age = c(90)
 #' )
 #' addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
@@ -231,9 +237,14 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
     }
 
     # set the low risk score as cci value in this row and store the index of the current sublist
-    table[rowsWithLowRisk, ':=' (cci = lowRiskCCIScore, cciListIndex = subCodesListIndex)]
+    table[rowsWithLowRisk, c("cci", "cciListIndex") := .(lowRiskCCIScore, subCodesListIndex)]
+    # Alte Schreibweise, die aber beim Install zu einer Warnung führt. Die neue Schreibweise hier drüber ist nicht getestet!
+    # table[rowsWithLowRisk, ':=' (cci = lowRiskCCIScore, cciListIndex = subCodesListIndex)]
     # set the high risk score as cci value in this row and store the index of the current sublist
-    table[rowsWithHighRisk, ':=' (cci = highRiskCCIScore, cciListIndex = subCodesListIndex)]
+    table[rowsWithHighRisk, c("cci", "cciListIndex") := .(highRiskCCIScore, subCodesListIndex)]
+    # Alte Schreibweise, die aber beim Install zu einer Warnung führt. Die neue Schreibweise hier drüber ist nicht getestet!
+    # table[rowsWithHighRisk, ':=' (cci = highRiskCCIScore, cciListIndex = subCodesListIndex)]
+
 
     subCodesListIndex <- subCodesListIndex + 1
 
@@ -276,9 +287,12 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 
 # # Combinations of NA values in diagnoses but with valid age
 # table <- data.table(
-#   caseID    = c( 1,       2,       2,       3,       3,       3,       3,       3,        3,       4,       4,       4,       4),
-#   diagnoses = c(NA,      NA,      NA,      NA,      NA, 'C77.1', 'C77.1', 'C77.2',  'X99.9', 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
-#   age       = c(90,      90,      90,      90,      90,      90,      90,      90,       90,      90,      90,      90,      90)
+#   caseID    = c( 1,       2,       2,       3,       3,       3,       3,       3,        3,
+#                  4,       4,       4,       4),
+#   diagnoses = c(NA,      NA,      NA,      NA,      NA, 'C77.1', 'C77.1', 'C77.2',  'X99.9',
+#                 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
+#   age       = c(90,      90,      90,      90,      90,      90,      90,      90,       90,
+#                 90,      90,      90,      90)
 # )
 # addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
 # addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
@@ -286,8 +300,10 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 #
 # # Combinations of NA values in diagnoses but with invalid age
 # table <- data.table(
-#   caseID    = c( 1,       2,       2,       3,       3,       3,       3,       3,        3,       4,       4,       4,       4),
-#   diagnoses = c(NA,      NA,      NA,      NA,      NA, 'C77.1', 'C77.1', 'C77.2',  'X99.9', 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
+#   caseID    = c( 1,       2,       2,       3,       3,       3,       3,       3,        3,
+#                  4,       4,       4,       4),
+#   diagnoses = c(NA,      NA,      NA,      NA,      NA, 'C77.1', 'C77.1', 'C77.2',  'X99.9',
+#                 'C77.1', 'C77.1', 'C77.2', 'X99.9'),
 #   age       = c(NA)
 # )
 # addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
@@ -299,10 +315,18 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 # # (only the diagnose 'Y66.0' is not relevant)
 # # If age is NA then the CCI without age can be calculated, but with age not -> NA
 # table <- data.table(
-#   caseID       = c(1,        1,       1,       1,       1,       1,       1,       1,       2,       2,       2,       2,       3,       4,      5,       6,      7,  8,   8),
-#   diagnoses    = c(NA, 'C77.1', 'C77.1', 'C77.2', 'Z94.4', 'E10.4', 'J47.0', 'Z94.4', 'C77.1', 'E10.5', 'Z94.4', 'K76.7', 'E10.7', 'Y66.0', NA,     'E10.7', NA, NA, 'I85.9'),
-#   age          = c(20,       20,      20,      20,      20,      20,      20,      20,      50,      50,      50,      50,      60,      90,     100,     NA,     NA, 70,  70),
-#   other_column = c(20,       20,      20,      20,      20,      20,      20,      20,      50,      50,      50,      50,      60,      90,     100,     NA,     NA, 70,  70)
+#   caseID       = c(      1,       1,       1,       1,       1,       1,       1,       1,
+#                          2,       2,       2,       2,       3,       4,       5,       6,
+#                          7,       8,      8),
+#   diagnoses    = c(     NA, 'C77.1', 'C77.1', 'C77.2', 'Z94.4', 'E10.4', 'J47.0', 'Z94.4',
+#                    'C77.1', 'E10.5', 'Z94.4', 'K76.7', 'E10.7', 'Y66.0',      NA, 'E10.7',
+#                         NA,      NA, 'I85.9'),
+#   age          = c(     20,      20,      20,      20,      20,      20,      20,      20,
+#                         50,      50,      50,      50,      60,      90,     100,      NA,
+#                         NA,      70,     70),
+#   other_column = c(     20,      20,      20,      20,      20,      20,      20,      20,
+#                         50,      50,      50,      50,      60,      90,     100,      NA,
+#                         NA,      70,      70)
 # )
 # addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
 # addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
@@ -312,10 +336,18 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 # # (only the diagnose 'Y66.0' is not relevant)
 # # If age is NA then the CCI without age can be calculated, but with age not -> NA
 # table <- data.table(
-#   caseID    = c(1,        1,       1,       1,       1,       1,       1,       1,       2,       2,       2,       2,       3,       4,      5,       6,      7,  8,   8),
-#   diagnoses = c('C77.1', 'C77.1', 'C77.1', 'C77.1', 'Z94.4', 'E10.4', 'J47.0', 'Z94.4', 'C77.1', 'E10.5', 'Z94.4', 'K76.7', 'E10.7', 'Y66.0', NA,     'E10.7', NA, NA, 'I85.9'),
-#   age       = c(20,       20,      20,      20,      20,      20,      20,      20,      50,      50,      50,      50,      60,      90,     100,     NA,     NA, 70,  70),
-#   test      = c(20,       20,      20,      20,      20,      20,      20,      20,      50,      50,      50,      50,      60,      90,     100,     NA,     NA, 70,  70)
+#   caseID    = c(      1,       1,       1,       1,       1,       1,       1,       1,
+#                       2,       2,       2,       2,       3,       4,       5,       6,
+#                       7,       8,       8),
+#   diagnoses = c('C77.1', 'C77.1', 'C77.1', 'C77.1', 'Z94.4', 'E10.4', 'J47.0', 'Z94.4',
+#                 'C77.1', 'E10.5', 'Z94.4', 'K76.7', 'E10.7', 'Y66.0',      NA, 'E10.7',
+#                      NA,      NA, 'I85.9'),
+#   age       = c(     20,      20,      20,      20,      20,      20,      20,      20,
+#                      50,      50,      50,      50,      60,      90,     100,      NA,
+#                      NA,      70,      70),
+#   test      = c(     20,      20,      20,      20,      20,      20,      20,      20,
+#                      50,      50,      50,      50,      60,      90,     100,      NA,
+#                      NA,      70,      70)
 # )
 # addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
 # addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
