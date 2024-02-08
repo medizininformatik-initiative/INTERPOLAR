@@ -32,7 +32,7 @@ copyDB2Redcap <- function() {
                      options = dbfrontendoptionsout)
 
   #get relevant columns
-  new_data <- DBI::dbGetQuery(dbcon, "SELECT record_id,pat_id,pat_name,pat_vorname,pat_ak_alter FROM patient")
+  new_data <- DBI::dbGetQuery(dbcon, "SELECT record_id,pat_id,pat_name,pat_vorname,pat_ak_alter,pat_gschlcht FROM patient")
 
   #connect to REDCap project
   redcapcon <- redcapAPI::redcapConnection(url = url,token = token)
