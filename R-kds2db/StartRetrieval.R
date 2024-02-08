@@ -1,6 +1,10 @@
-##########################################################################
+####################################################################################
+# Preferences: The current working directory must be the main project directory.   #
+#              In interactive setting this is the parent directory of the R-kds2db #
+#              directory (default 'interpolar').                                   #
+####################################################################################
+
 # free memory
-##########################################################################
 rm(list = ls())
 
 library(etlutils)
