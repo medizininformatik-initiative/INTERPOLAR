@@ -1,7 +1,11 @@
 version: '3.2'
+
 services:
+
+  # FHIR Server for testing/simulating
+  # replace it with the productive FHIR Server and/or configure this
+  # FHIR Server in the services below.
   blaze-DIC:
-    #container_name: "blaze"
     image: "samply/blaze:latest"
     restart: unless-stopped
     environment:
@@ -13,23 +17,28 @@ services:
       DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
     ports:
       - "127.0.0.1:8080:8080"
+    networks:
+      - internal
+      - external
     volumes:
       - "blaze-data-DIC:/app/data"
 
+  # SQL Server for redcap
   mysql:
     image: mariadb:10.3
     #container_name: ${COMPOSE_PROJECT_NAME}_mysql
     #command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     env_file: .env-redcap-db
+    networks:
+      - internal
     volumes:
       - ./mariadb.cnf:/etc/mysql/mariadb.cnf
       - redcap-db-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./.my.cnf:/root/.my.cnf
-    networks:
-      - internal
 
+  # Frontend (redcap)
   redcap:
     #image: php7
     build: ./redcap-app
@@ -42,13 +51,14 @@ services:
       - internal
       - external
     ports:
-      - 127.0.0.1:8082:80
+      - "127.0.0.1:8082:80"
     volumes:
       - ./redcap-html/redcap:/var/www/html/redcap-test
       - ./redcap-html/redcapdocs:/var/www/html/redcapdocs
       - ./redcap-app/config/php.ini:/usr/local/etc/php/conf.d/my.ini
       - ./redcap-app/log/:/var/log/
 
+  # Database (postgres) for medical safety (AMTS) information
   amts_db:
     #image: postgres:15-alpine
     build: ./Postgres-amts_db/build
@@ -68,26 +78,43 @@ services:
       POSTGRES_DB: interpolar
     secrets:
       - amts_db.password
+    networks:
+      - internal
     volumes:
       - db-data:/var/lib/postgresql/data
       - ${PWD}/Postgres-amts_db/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
       - ${PWD}/Postgres-amts_db/init/:/docker-entrypoint-initdb.d/
 
+  # Web-administration of amts_db (optional)
   pgadmin:
     image: dpage/pgadmin4:7.2
     #container_name: pgadmin4_container
     restart: unless-stopped
     ports:
-      - "8089:80"
+      - "127.0.0.1:8089:80"
     environment:
       PGADMIN_DEFAULT_PASSWORD: "password"
       PGADMIN_DEFAULT_EMAIL: a@b.cd
     depends_on:
       - amts_db
+    networks:
+      - internal
+      - external
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
-  # This service is no service, but for building the kds2db R-package
+  # This section is no service, but for building the etlutils R-package
+  # which is needed for r-kds2db and r-db2frontend
+  r-etlutils:
+    #image: rocker/r-ver:4.3.2
+    build: ./R-etlutils
+    restart: no
+    networks:
+      - internal
+    entrypoint: ["echo", "just for building R-Environment..."]
+    #command: ["/bin/true"]
+
+  # This section is no service, but for building the kds2db R-package
   # it is for using this package to execute (manualy) StartRetrieval.R
   r-kds2db:
     #image: ip-test-r-etlutils
@@ -98,16 +125,12 @@ services:
       - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
       - r-etlutils
+    networks:
+      - internal
     command: ["/bin/true"]
 
-  # This service is no service, but for building the etlutils R-package
-  r-etlutils:
-    #image: rocker/r-ver:4.3.2
-    build: ./R-etlutils
-    restart: no
-    entrypoint: ["echo", "just for building R-Environment..."]
-    #command: ["/bin/true"]
-
+  # This section is no service, but for building the db2frontend R-package
+  # it is for using this package to execute (manualy)
   r-db2frontend:
     #image: r-base:latest
     build: ./R-Redcap-build
@@ -137,6 +160,3 @@ volumes:
     db-data:
     pgadmin-data:
 
-  # ToDo:
-  # - non-Root User, e.g. developer
-  # - 
