@@ -4,14 +4,15 @@
 #'
 #' @export
 retrieve <- function() {
-
   # Iniialzes the global STOP variable. If a subprocess sets this variable to TRUE then the execution will be stopped.
   STOP <<- FALSE
 
   ###
-  # Read the module configuration toml file
+  # Read the module configuration toml file.
   ###
-  etlutils::initConstants('./kds2db_config.toml')
+  path2config_toml <- ifelse(interactive(), './R-kds2db', '.')
+  path2config_toml <- paste0(path2config_toml, '/kds2db_config.toml')
+  etlutils::initConstants(path2config_toml)
 
   ###
   # Read the DB configuration toml file
