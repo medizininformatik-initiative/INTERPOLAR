@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(mrputils)
+library(etlutils)
 
-test_check("mrputils")
+test_check("etlutils")

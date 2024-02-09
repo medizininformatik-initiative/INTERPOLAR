@@ -1,7 +1,8 @@
 .env*
 .Rproj.user
 .Rhistory
-*mrputils*.tar.gz
+.tar.gz
+*etlutils*.tar.gz
 *Rcheck*
 .project
 *.core.prefs

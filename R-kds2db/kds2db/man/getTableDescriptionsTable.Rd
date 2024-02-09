@@ -4,7 +4,11 @@
 \alias{getTableDescriptionsTable}
 \title{Get a table with the Table Descriptions for all fhir resources from Excel file}
 \usage{
-getTableDescriptionsTable()
+getTableDescriptionsTable(columns = NA)
+}
+\arguments{
+\item{columns}{column names which should be in the return table. If NA then no column
+will be removed.}
 }
 \value{
 A data table with the table descriptions.

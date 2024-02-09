@@ -16,5 +16,5 @@ Imports:
     data.table,
     fhircrackr,
     methods,
-    mrputils,
+    etlutils,
     rlang

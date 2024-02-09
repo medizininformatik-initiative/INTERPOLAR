@@ -1,0 +1,5 @@
+.env
+.env-redcap-db
+.git
+backup/
+download/
