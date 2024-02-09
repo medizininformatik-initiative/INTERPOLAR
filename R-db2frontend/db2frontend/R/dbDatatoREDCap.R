@@ -1,3 +1,40 @@
+#' Initialize Configuration Constants from TOML Files
+#'
+#' This function loads configuration settings from two TOML files: one for the module
+#' configuration and one for the database configuration.
+#' It sets all variables defined in these files in the global context. The function is
+#' designed to be run at the start of a session to set up necessary configurations.
+#' The path to the module configuration file is determined based on whether the session
+#' is interactive or not, defaulting to './R-db2frontend/db2frontend_config.toml' in
+#' interactive sessions. The path to the database configuration file is specified by
+#' the global variable PATH_TO_DB_CONFIG_TOML.
+#'
+#' @seealso \code{\link[etlutils]{initConstants}} for details on how configuration settings are loaded and set.
+#'
+initConstants <- function() {
+  # Path to the module configuration TOML file
+  path2config_toml <- ifelse(interactive(), './R-db2frontend', '.')
+  path2config_toml <- paste0(path2config_toml, '/db2frontend_config.toml')
+  # Load module configuration settings
+  etlutils::initConstants(path2config_toml)
+
+  # Load database configuration settings
+  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+}
+
+initConstants <- function() {
+  ###
+  # Read the module configuration toml file.
+  ###
+  path2config_toml <- ifelse(interactive(), './R-db2frontend', '.')
+  path2config_toml <- paste0(path2config_toml, '/db2frontend_config.toml')
+  etlutils::initConstants(path2config_toml)
+  ###
+  # Read the DB configuration toml file
+  ###
+  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+}
+
 #' Copy Database Content to REDCap
 #'
 #' This function retrieves data from the view or table in a database
@@ -22,17 +59,15 @@
 #' @export
 copyDB2Redcap <- function() {
   #get data from patient view / tabelle, schema _out
+  initConstants()
   #establish connection to db
-  dbcon <- dbConnect(RPostgres::Postgres(),
-                     dbname = dbname,
-                     host = dbhost,
-                     port = dbport,
-                     user = dbfrontenduser,
-                     password = dbfrontendpassword,
-                     options = dbfrontendoptionsout)
+  dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
+                   DB_GENERAL_PORT, DB_DB2FRONTEND_SCHEMA_OUT)
+
 
   #get relevant columns
-  new_data <- DBI::dbGetQuery(dbcon, "SELECT record_id,pat_id,pat_name,pat_vorname,pat_ak_alter,pat_gschlcht FROM patient")
+  new_data <- DBI::dbGetQuery(dbcon, "SELECT record_id,pat_id,pat_name,pat_vorname,pat_ak_alter,
+                              pat_gschlcht FROM patient")
 
   #connect to REDCap project
   redcapcon <- redcapAPI::redcapConnection(url = url,token = token)

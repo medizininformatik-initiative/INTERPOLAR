@@ -11,10 +11,10 @@ Invisible. The function is called for its side effects: importing data
 into REDCap and does not return a value.
 }
 \description{
-This function retrieves data from a specific patient view or table in a database
-(defined in the schema \verb{_out}) and imports this data into a REDCap project.
+This function retrieves data from the view or table in a database
+(defined in the schema \verb{_out}) and imports this data into an existing REDCap project.
 It establishes a connection to a PostgreSQL database, fetches relevant patient data,
-then connects to a REDCap project using API credentials and imports the data.
+then connects to the REDCap project using API credentials and imports the data.
 }
 \details{
 Note: Database and REDCap connection details (e.g., credentials, table names) are
