@@ -207,6 +207,7 @@ readFirstExcelFileAsTableList <- function(path, namePattern) {
 #' @param column_name The name of the column to perform replacements in.
 #' @param patterns_to_replace A vector of patterns to search for in the column's values.
 #' @param replacement The single replacement string to replace all matched patterns.
+#' @param perl logical. Should Perl-compatible regexps be used?
 #'
 #' @return The updated data.table with specified patterns replaced by the single replacement
 #'         string in the specified column.
@@ -235,7 +236,7 @@ readFirstExcelFileAsTableList <- function(path, namePattern) {
 #' print(dt)
 #'
 #' @export
-replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replacement) {
+replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replacement, perl = FALSE) {
   # Check if the specified column exists in the data.table
   if (!column_name %in% colnames(dt)) {
     return(dt)
@@ -246,7 +247,7 @@ replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replac
     # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
     .SD <- NULL
     # Use gsub() to replace the pattern with the replacement in the specified column
-    dt[, (column_name) := lapply(.SD, function(x) gsub(pattern, replacement, x, perl = TRUE)), .SDcols = column_name]
+    dt[, (column_name) := lapply(.SD, function(x) gsub(pattern, replacement, x, perl = perl)), .SDcols = column_name]
   }
 
   # Return the updated data.table
