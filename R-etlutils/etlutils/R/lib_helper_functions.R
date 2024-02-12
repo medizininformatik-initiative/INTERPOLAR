@@ -75,6 +75,24 @@ isSimpleFalseOr0 <- function(x) {
   is.atomic(x) && length(x) == 1 && !x
 }
 
+#' Check if the Input is a Non-Empty, Simple Character String
+#'
+#' This function checks if the input `s` is a non-empty, simple character string. It verifies that the input is atomic, not `NA`,
+#' of character type, and has a length greater than zero. This is useful for validating input parameters that are expected to be
+#' simple character strings.
+#'
+#' @param s Input that will be checked if it is a non-empty, simple character string.
+#' @return A logical value: `TRUE` if `s` is a non-empty, simple character string, otherwise `FALSE`.
+#' @examples
+#' isSimpleNotEmptyString("hello") # Returns TRUE
+#' isSimpleNotEmptyString("")      # Returns FALSE
+#' isSimpleNotEmptyString(NA)      # Returns FALSE
+#' isSimpleNotEmptyString(123)     # Returns FALSE
+#' @export
+isSimpleNotEmptyString <- function(s) {
+  is.atomic(s) && length(s) == 1 && !is.na(s) && is.character(s) && nchar(s) > 0
+}
+
 #'
 #' Tests the passed object for being an error.
 #'
