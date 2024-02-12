@@ -1,0 +1,4 @@
+MYSQL_ROOT_PASSWORD=<enter root pw here!>
+MYSQL_DATABASE=redcap
+MYSQL_USER=redcap
+MYSQL_PASSWORD=<enter user pw here!>
