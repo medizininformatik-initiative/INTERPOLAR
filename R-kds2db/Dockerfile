@@ -1,4 +1,4 @@
-FROM ip-test-r-etlutils
+FROM interpolar/r-etlutils
 
 COPY kds2db kds2db
 
