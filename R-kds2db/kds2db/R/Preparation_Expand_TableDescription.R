@@ -1,0 +1,257 @@
+#' Extract Replacement Patterns from a Table
+#'
+#' Extracts replacement patterns and their corresponding strings from a given table. This function
+#' is designed to parse a table where specific rows indicate the start of pattern-replacement pairs.
+#' Patterns are expected to be in the 'resource' column, and their corresponding replacement strings
+#' in the 'resource_prefix' column. The function uses a helper function to find the first row that
+#' contains the headers for patterns and replacements, and then iterates over the rows to collect
+#' these pairs into a list.
+#'
+#' @param table_description_collapsed A data table that contains the patterns and their replacements.
+#' The table must have at least 'resource' and 'resource_prefix' columns.
+#' @return A named list where each name-value pair corresponds to a pattern and its replacement string.
+#'
+#' @examples
+#' library(data.table)
+#' # Implementing the function with simulated data
+#' table_description_collapsed <- data.table(
+#'   resource = c("Line 1", "pattern", "pattern1", "pattern2"),
+#'   resource_prefix = c("Line 1", "replacement", "replace1", "replace2")
+#' )
+#' # Apply the function
+#' result <- extractReplacePatterns(table_description_collapsed)
+#' # Print the result
+#' print(result)
+#'
+#' @seealso \code{\link[etlutils]{getFirstRowWithPatterns}}, \code{\link[etlutils]{isSimpleNotEmptyString}}
+#'
+#' @export
+extractReplacePatterns <- function(table_description_collapsed) {
+  replace_patterns <- list()
+  # find the row withe the table header for the replace patterns
+  patterns_start_row <- etlutils::getFirstRowWithPatterns(table_description_collapsed, c('pattern', 'replacement')) + 1
+  # found the header line?
+  if (patterns_start_row > 0) {
+    for(r in patterns_start_row:nrow(table_description_collapsed)) {
+      pattern <- table_description_collapsed$resource[r] # patterns are in the column 'resource'
+      replace <- table_description_collapsed$resource_prefix[r] # replaces strings are in the column 'resource_prefix'
+      if (etlutils::isSimpleNotEmptyString(pattern)) {
+        replace_patterns[[pattern]] <- replace
+      }
+    }
+  }
+  return(replace_patterns)
+}
+
+#' Expand Table Description with Specified Expansion Tables
+#'
+#' This function expands a given table description by replacing certain rows with data from expansion tables.
+#' It specifically targets rows with patterns and replaces them based on a set of rules, effectively expanding
+#' the original table description. The expansion is guided by `resource_prefix` and `fhir_expression` columns.
+#' Rows with `NA` in `fhir_expression` are removed. The function adjusts the expansion tables to match the
+#' target table's structure, removing unnecessary columns and adding missing ones as `NA`. It generates full
+#' column names by combining `resource_prefix` with modified `fhir_expression` values, replacing slashes with
+#' underscores and appending prefixes. The expansion process might replace a single row with multiple rows
+#' from an expansion table, adjusting `count` values and column names accordingly.
+#' Finally, all `column_name` entries are converted to lowercase.
+#'
+#' @param table_description_collapsed A `data.table` object that contains the initial table description to be
+#' expanded.
+#' @param expansion_tables A list of `data.table` objects, each representing an expansion table to be used for
+#' replacing specific rows in the `table_description_collapsed`. The names of the list elements should match
+#' the keys used in the `fhir_expression` column of `table_description_collapsed` to indicate which expansion
+#' table to use.
+#'
+#' @return A `data.table` object with the expanded table description, where specific rows have been replaced
+#' according to the rules defined by the expansion tables.
+#'
+#' @examples
+#' library(data.table)
+#'
+#' # Assuming `table_description_collapsed` and `expansion_tables` are predefined
+#' # table_description_collapsed <- data.table(...) # Define your initial table description
+#' # expansion_tables <- list(...) # Define your expansion tables
+#'
+#' # Example function call
+#' # expanded_table <- expandTableDescriptionInternal(table_description_collapsed, expansion_tables)
+#' # print(expanded_table)
+#'
+#' @seealso \code{\link{extractReplacePatterns}}, \code{\link[etlutils]{getFirstRowWithPatterns}},
+#' \code{\link[etlutils]{isSimpleNotEmptyString}}, \code{\link[etlutils]{getAfterLastSlash}},
+#' \code{\link[etlutils]{getBeforeLastSlash}}, \code{\link[etlutils]{replacePatternsInString}}
+expandTableDescriptionInternal <- function(table_description_collapsed, expansion_tables) {
+
+  table <- data.table::copy(table_description_collapsed)
+
+  replace_patterns <- extractReplacePatterns(table)
+
+  # remove all rows with NA in column 'fhir_expression'
+  table <- table[!is.na(fhir_expression), ]
+
+  # prepare expand_table for rbind = add missing columns of target table and set same column order
+  for (expand_table in expansion_tables) {
+    for (col_name in colnames(table)) {
+      if (!(col_name %in% colnames(expand_table))) {
+        expand_table[, (col_name) := NA]
+      }
+    }
+    data.table::setcolorder(expand_table, names(table))
+    # remove unnecessary columns in the expansion tables
+    target_columns <- setdiff(names(expand_table), names(table))
+    expand_table[, (target_columns) := NULL]
+  }
+
+  getFullColumnName <- function(resource_prefix, fhir_expression) {
+    full_column_name <- gsub('/', '_', fhir_expression)
+    full_column_name <- paste0(resource_prefix, full_column_name)
+  }
+
+  table[, column_name := NA_character_]
+  resource_prefix <- NA
+
+  expand_table_names <- names(expansion_tables)
+  row <- 1
+  last_row_index <- nrow(table)
+  while (row < last_row_index) {
+    # row <- 4 # debug code
+
+    if (!is.na(table$resource_prefix[row])) {
+      resource_prefix <- paste0(table$resource_prefix[row], '_')
+    }
+
+    fhir_expression <- table$fhir_expression[row]
+    stringAfterLastlash <- etlutils::getAfterLastSlash(fhir_expression)
+    replace_table_index <- match(stringAfterLastlash, expand_table_names)
+    if (!is.na(replace_table_index)) {
+      fhir_expression <- substr(fhir_expression, 1, nchar(fhir_expression) - nchar(stringAfterLastlash))
+      replace_prefix_column_name <- getFullColumnName(resource_prefix, fhir_expression)
+      replace_prefix_fhir_expression <- etlutils::getBeforeLastSlash(table$fhir_expression[row])
+
+      expansion_table <- data.table::copy(expansion_tables[[expand_table_names[replace_table_index]]])
+      expansion_table[, count := ifelse(is.na(count), 1, count) * table$count[row]]
+
+      # replace line with the content of the expansion table
+      if (row == 1) {
+        new_table <- expansion_table
+      } else {
+        new_table <- rbind(table[1:(row - 1)], expansion_table, fill = TRUE)
+      }
+      new_table <- rbind(new_table, table[(row + 1):nrow(table)], fill = TRUE)
+
+      for (expanded_row_index in 1:nrow(expansion_table)) {
+        replaced_row_index <- as.integer(row + expanded_row_index - 1)
+        if (nchar(replace_prefix_column_name)) {
+          new_value <- paste0(replace_prefix_column_name, gsub('/', '_',expansion_table$fhir_expression[expanded_row_index]))
+          data.table::set(new_table, replaced_row_index, 'column_name', new_value)
+        }
+        if (nchar(replace_prefix_fhir_expression)) {
+          data.table::set(new_table, replaced_row_index, 'fhir_expression', paste(replace_prefix_fhir_expression, new_table$fhir_expression[replaced_row_index], sep = "/"))
+        }
+      }
+
+      last_row_index <- nrow(new_table)
+      table <- new_table
+
+    } else {
+      # simple add the resource prefix to the fhir expression (with replaces slashes) and set it as column name
+      full_column_name <- getFullColumnName(resource_prefix, fhir_expression)
+      # replace strings in the resulting column names according to the given replace definition
+      full_column_name <- etlutils::replacePatternsInString(replace_patterns, full_column_name, ignore.case = TRUE, perl = TRUE)
+      # set the final trasformed column name for the fhir expression in this row
+      table[row, column_name := full_column_name]
+      row <- row + 1
+    }
+  }
+  etlutils::moveColumnBefore(table, 'column_name', 'fhir_expression')
+  table[, column_name := tolower(column_name)]
+}
+
+#' Expand Table Description from an Excel File
+#'
+#' This function reads a table description from an Excel file and expands it using specified expansion tables
+#' also contained within the same Excel file. It is designed to facilitate the process of table expansion
+#' by directly working with file-based inputs. The function automatically appends a '.xlsx' extension if not present,
+#' determines the correct file path based on the execution context (interactive or package), reads the Excel file
+#' into a list of tables, extracts the collapsed table description, and then applies the expansion logic.
+#'
+#' @param table_description_collapsed_excel_simple_filename The filename of the Excel file containing
+#' the table description and expansion tables. The filename should not include the path or '.xlsx' extension.
+#'
+#' @return The function does not explicitly return a value but performs the expansion of the table description
+#' as a side effect, utilizing other functions within the package to read the Excel file, extract relevant tables,
+#' and expand the table description according to predefined rules.
+#'
+#' @examples
+#' # Assuming the Excel file 'Table_Description_Definition.xlsx' exists in the appropriate directory
+#' # and contains the necessary table description and expansion tables:
+#' # expandTableDescriptionFromFile("Table_Description_Definition")
+#'
+#' @seealso \code{\link[etlutils]{readExcelFileAsTableList}}, \code{\link{expandTableDescription}}
+expandTableDescriptionFromFile <- function(table_description_collapsed_excel_simple_filename) {
+  if (!grepl('.xlsx$', table_description_collapsed_excel_simple_filename)) {
+    table_description_collapsed_excel_simple_filename <- paste0(table_description_collapsed_excel_simple_filename, '.xlsx')
+  }
+  if (interactive()) {
+    table_description_file_path <- paste0('./R-kds2db/kds2db/inst/extdata/', table_description_collapsed_excel_simple_filename)
+  } else {
+    table_description_file_path <- system.file('extdata', table_description_collapsed_excel_simple_filename, package = 'kds2db')
+  }
+
+  tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
+
+  # extract the collapsed table description
+  table_description_collapsed <- tables[['table_description_collapsed']]
+  # delete the extracted collapsed table description from tables list
+  tables[['table_description_collapsed']] <- NULL
+  expandTableDescriptionInternal(table_description_collapsed, tables)
+}
+
+#' Expand Table Description from Definition File
+#'
+#' This function reads a table description from 'Table_Description_Definition.xlsx',
+#' expands it, and then checks if any of the resulting column names exceed the maximum
+#' length allowed for column names in Postgres databases (64 characters). If any column
+#' names are too long, it prints a message with these column names. Otherwise, it writes
+#' the expanded table description back to an Excel file named 'Table_Description.xlsx'.
+#'
+#' The function does not take any parameters and operates on a predefined Excel file.
+#' It relies on 'expandTableDescriptionFromFile' for the initial table expansion and
+#' uses 'etlutils::writeExcelFile' to save the expanded description.
+#'
+#' @details The function first expands the table description using
+#' 'expandTableDescriptionFromFile', passing 'Table_Description_Definition.xlsx' as the
+#' argument. It then checks the length of each column name in the expanded table
+#' description. If any column names are longer than 64 characters, a message is printed
+#' for each offending column name. If all column names are within the limit, a success
+#' message is printed, and the expanded table description is saved to an Excel file.
+#'
+#' This function is particularly useful for preparing database schema definitions where
+#' there are constraints on the length of column names, such as in Postgres databases.
+#'
+#' @return This function does not return a value but prints messages based on the length
+#' of the column names in the expanded table description and may write the expanded table
+#' description to an Excel file.
+#'
+#' @examples
+#' expandTableDescription()
+#'
+#' @export
+#' @importFrom etlutils writeExcelFile
+#' @seealso \code{\link{expandTableDescriptionFromFile}}
+expandTableDescription <- function() {
+  expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
+  max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
+  if (max_column_name_chars > 64) {
+    message('Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
+    for (s in expanded_table_description$column_name[which(nchar(na.omit(expanded_table_description$column_name)) > 64)]) {
+      message(s)
+    }
+  } else {
+    message('All result columns could be transformed or expanded.')
+    table_description_file_name <- './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx'
+    etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')
+    message('Expanded Table Description is written to ', normalizePath(table_description_file_name))
+  }
+}
+
+#expandTableDescription()

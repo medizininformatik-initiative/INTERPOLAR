@@ -43,7 +43,7 @@ isSimpleNA <- function(x) {
 #'
 #' @export
 isSimpleTrueOrNot0 <- function(x) {
-  is.atomic(x) && length(x) == 1 && x
+  is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && x
 }
 
 #'
@@ -72,7 +72,25 @@ isSimpleTrueOrNot0 <- function(x) {
 #'
 #' @export
 isSimpleFalseOr0 <- function(x) {
-  is.atomic(x) && length(x) == 1 && !x
+  is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && !x
+}
+
+#' Check if the Input is a Non-Empty, Simple Character String
+#'
+#' This function checks if the input `s` is a non-empty, simple character string. It verifies that the input is atomic, not `NA`,
+#' of character type, and has a length greater than zero. This is useful for validating input parameters that are expected to be
+#' simple character strings.
+#'
+#' @param s Input that will be checked if it is a non-empty, simple character string.
+#' @return A logical value: `TRUE` if `s` is a non-empty, simple character string, otherwise `FALSE`.
+#' @examples
+#' isSimpleNotEmptyString("hello") # Returns TRUE
+#' isSimpleNotEmptyString("")      # Returns FALSE
+#' isSimpleNotEmptyString(NA)      # Returns FALSE
+#' isSimpleNotEmptyString(123)     # Returns FALSE
+#' @export
+isSimpleNotEmptyString <- function(s) {
+  is.atomic(s) && length(s) == 1 && !is.na(s) && is.character(s) && nchar(s) > 0
 }
 
 #'
@@ -684,6 +702,43 @@ getBeforeLastSlash <- function(strings) {
 getBetweenQuotes <- function(x) {
   gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
 }
+
+#' Replace Patterns in a String with Specified Replacements
+#'
+#' This function replaces specified patterns in a given string with their corresponding replacements.
+#' It takes a named list (`patternsAndReplacements`) where each name-value pair corresponds to a pattern
+#' and its replacement. The function performs a case-insensitive replacement of these patterns within
+#' the provided string.
+#'
+#' @param patternsAndReplacements A named list where names are patterns to be replaced and values are
+#' the corresponding replacements.
+#' @param string The string within which the patterns should be replaced.
+#' @param ignore.case logical. Indicates whether the strings should be compared case sensitive. If TRUE
+#' then all result strings are in lower case.
+#' @param perl logical. Should Perl-compatible regexps be used?
+#'
+#' @return The modified string with all specified patterns replaced by their corresponding replacements.
+#'
+#' @examples
+#' patternsAndReplacements <- list("hello" = "hi", "world" = "earth")
+#' replacePatternsInString(patternsAndReplacements, "Hello World!")
+#' # Returns "hi earth!"
+#' @export
+replacePatternsInString <- function(patternsAndReplacements, string, ignore.case = FALSE, perl = FALSE) {
+  patterns <- names(patternsAndReplacements)
+  replacements <- unlist(patternsAndReplacements)
+  for (i in seq_along(patterns)) {
+    pattern <- patterns[i]
+    replacement <- replacements[i]
+    if (ignore.case) {
+      string <- gsub(tolower(pattern), replacement, tolower(string), ignore.case = TRUE, perl = perl)
+    } else {
+      string <- gsub(pattern, replacement, string, perl = perl)
+    }
+  }
+  return(string)
+}
+
 
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
