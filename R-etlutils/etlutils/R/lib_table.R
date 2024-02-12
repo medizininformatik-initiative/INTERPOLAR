@@ -152,6 +152,24 @@ readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
   tables
 }
 
+#' Write data to an Excel file using `openxlsx` package
+#'
+#' This function allows writing a data.frame or a list of objects to an Excel file.
+#' The objects in the list should be compatible with `writeData()` or `writeDataTable()`
+#' functions from the `openxlsx` package. It uses `write.xlsx` from `openxlsx` to perform the write operation.
+#'
+#' @param tables A `data.frame` or a (named) list of objects that can be handled by `writeData()`
+#' or `writeDataTable()` from the `openxlsx` package to write to an Excel file.
+#' @param file_name A string specifying the file path where the xlsx file will be saved.
+#'
+#' @return None
+#'
+#' @seealso \code{\link[openxlsx]{write.xlsx}} for the underlying function used to write Excel files.
+#' @export
+writeExcelFile <- function(tables, file_name) {
+  openxlsx::write.xlsx(tables, file_name)
+}
+
 #' Read the first Excel file that matches the specified name pattern in the given directory.
 #'
 #' This function searches for Excel files in the specified directory that match the provided name pattern.
