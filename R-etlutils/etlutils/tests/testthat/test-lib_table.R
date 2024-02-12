@@ -667,3 +667,39 @@ test_that("getcolumnIndex returns 0 for NA as column name", {
   index <- getcolumnIndex(dt, NA)
   expect_equal(index, 0)
 })
+
+####################
+# moveColumnBefore #
+####################
+
+test_that("moveColumnBefore correctly reorders columns", {
+  dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
+  moveColumnBefore(dt, "b", "c")
+  expect_equal(names(dt), c("a", "c", "b"))
+
+  dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
+  moveColumnBefore(dt, "a", "c")
+  expect_equal(names(dt), c("b", "c", "a"))
+})
+
+test_that("moveColumnBefore does not change the data", {
+  dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
+  original_dt <- data.table::copy(dt)
+  moveColumnBefore(dt, "b", "c")
+  expect_equal(dt$a, original_dt$a)
+  expect_equal(dt$b, original_dt$b)
+  expect_equal(dt$c, original_dt$c)
+})
+
+test_that("moveColumnBefore handles non-existing columns", {
+  dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
+  expect_error(moveColumnBefore(dt, "x", "c"))
+  expect_error(moveColumnBefore(dt, "a", "y"))
+})
+
+test_that("moveColumnBefore with already correct order does nothing", {
+  dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
+  original_order <- names(dt)
+  moveColumnBefore(dt, "b", "c")
+  expect_equal(names(dt), original_order)
+})

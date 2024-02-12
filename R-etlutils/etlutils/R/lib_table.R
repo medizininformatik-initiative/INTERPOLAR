@@ -715,3 +715,41 @@ getcolumnIndex <- function(table, columnName) {
   }
   return(0)
 }
+
+#' Move a column in a data.table directly before another column based on indices
+#'
+#' This function takes a data.table, the name of the column to be moved, and
+#' the name of the target column before which the first column should be placed.
+#' It adjusts the order of the columns in the data.table accordingly by manipulating
+#' column indices, without altering other columns' order unnecessarily.
+#'
+#' @param dt A data.table object.
+#' @param column_to_move The name of the column to move.
+#' @param target_column The name of the column before which to place the moved column.
+#'
+#' @return The data.table with adjusted column order. The original data.table is modified by reference.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(x = 1:3, y = 4:6, z = 7:9)
+#' moveColumnBefore(dt, "y", "z")
+#' print(dt) # Should show columns in the order x, z, y
+#'
+#' @export
+moveColumnBefore <- function(dt, column_to_move, target_column) {
+  # Find the current positions of the columns
+  cols <- names(dt)
+  move_index <- which(cols == column_to_move)
+  target_index <- which(cols == target_column)
+
+  new_order <- c(cols[-c(move_index)], cols[move_index])
+  # Adjust if move_index is before target_index, considering direct placement before target
+  if (move_index >= target_index) {
+    # Correct the order for when the column is moved forward
+    target_index <- target_index + (target_index > move_index)
+    new_order <- c(new_order[1:(target_index - 1)], new_order[length(new_order)], new_order[target_index:(length(new_order) - 1)])
+  }
+
+  # Apply the new order
+  setcolorder(dt, new_order)
+}
