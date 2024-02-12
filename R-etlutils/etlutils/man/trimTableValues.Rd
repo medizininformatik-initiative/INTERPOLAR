@@ -2,7 +2,7 @@
 % Please edit documentation in R/lib_table.R
 \name{trimTableValues}
 \alias{trimTableValues}
-\title{Trim whitespace from values in a data.table or data.frame column}
+\title{Trim whitespace from charachter type values in a data.table or data.frame column}
 \usage{
 trimTableValues(dt, colnames = NA)
 }
@@ -18,7 +18,7 @@ from the specified column(s). In case of data.table the table will be changed by
 reference.
 }
 \description{
-This function trims leading and trailing whitespace from all values
+This function trims leading and trailing whitespace from all character values
 in a specified column or multiple columns of a data.table.
 }
 \examples{

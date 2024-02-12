@@ -36,4 +36,17 @@ result_data <- removeRowsWithNAorEmpty(my_data, columns_to_check)
 print(my_data)
 print(result_data)
 
+# Example data.table
+my_data <- data.table(
+  Column1 = c("A", NA, "World", ""),
+  Column2 = c(1, NA, 2, NA),
+  Column3 = c("A", " ", "", NA)
+)
+print(my_data)
+# Names of columns to check
+columns_to_check <- c("Column1", "Column3")
+# Remove rows with NA or empty values in specified columns
+result_data <- removeRowsWithNAorEmpty(my_data, columns_to_check)
+print(result_data)
+
 }
