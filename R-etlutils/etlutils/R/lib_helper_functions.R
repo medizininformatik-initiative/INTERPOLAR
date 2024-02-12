@@ -43,7 +43,7 @@ isSimpleNA <- function(x) {
 #'
 #' @export
 isSimpleTrueOrNot0 <- function(x) {
-  is.atomic(x) && length(x) == 1 && x
+  is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && x
 }
 
 #'
@@ -72,7 +72,7 @@ isSimpleTrueOrNot0 <- function(x) {
 #'
 #' @export
 isSimpleFalseOr0 <- function(x) {
-  is.atomic(x) && length(x) == 1 && !x
+  is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && !x
 }
 
 #' Check if the Input is a Non-Empty, Simple Character String
