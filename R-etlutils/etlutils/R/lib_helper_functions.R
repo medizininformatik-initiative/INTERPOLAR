@@ -703,6 +703,43 @@ getBetweenQuotes <- function(x) {
   gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
 }
 
+#' Replace Patterns in a String with Specified Replacements
+#'
+#' This function replaces specified patterns in a given string with their corresponding replacements.
+#' It takes a named list (`patternsAndReplacements`) where each name-value pair corresponds to a pattern
+#' and its replacement. The function performs a case-insensitive replacement of these patterns within
+#' the provided string.
+#'
+#' @param patternsAndReplacements A named list where names are patterns to be replaced and values are
+#' the corresponding replacements.
+#' @param string The string within which the patterns should be replaced.
+#' @param ignore.case logical. Indicates whether the strings should be compared case sensitive. If TRUE
+#' then all result strings are in lower case.
+#' @param perl logical. Should Perl-compatible regexps be used?
+#'
+#' @return The modified string with all specified patterns replaced by their corresponding replacements.
+#'
+#' @examples
+#' patternsAndReplacements <- list("hello" = "hi", "world" = "earth")
+#' replacePatternsInString(patternsAndReplacements, "Hello World!")
+#' # Returns "hi earth!"
+#' @export
+replacePatternsInString <- function(patternsAndReplacements, string, ignore.case = FALSE, perl = FALSE) {
+  patterns <- names(patternsAndReplacements)
+  replacements <- unlist(patternsAndReplacements)
+  for (i in seq_along(patterns)) {
+    pattern <- patterns[i]
+    replacement <- replacements[i]
+    if (ignore.case) {
+      string <- gsub(tolower(pattern), replacement, tolower(string), ignore.case = TRUE, perl = perl)
+    } else {
+      string <- gsub(pattern, replacement, string, perl = perl)
+    }
+  }
+  return(string)
+}
+
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1

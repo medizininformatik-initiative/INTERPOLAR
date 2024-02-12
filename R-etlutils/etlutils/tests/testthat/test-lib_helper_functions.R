@@ -133,3 +133,47 @@ test_that("isSimpleNotEmptyString returns FALSE for a vector with multiple eleme
   expect_false(isSimpleNotEmptyString(c("hello", "world")))
 })
 
+###
+
+ # Hier fehlen noch Tests für viele Funktionen
+
+##
+
+###########################
+# replacePatternsInString #
+###########################
+
+# Test for case-insensitive replacement
+test_that("replacePatternsInString performs case-insensitive replacement correctly", {
+  patternsAndReplacements <- list("HELLO" = "hi", "WORLD" = "earth")
+  result <- replacePatternsInString(patternsAndReplacements, "Hello World!", ignore.case = TRUE)
+  expect_equal(result, "hi earth!")
+})
+
+# Test for case-sensitive replacement
+test_that("replacePatternsInString performs case-sensitive replacement correctly", {
+  patternsAndReplacements <- list("Hello" = "hi", "World" = "earth")
+  result <- replacePatternsInString(patternsAndReplacements, "Hello World!", ignore.case = FALSE)
+  expect_equal(result, "hi earth!")
+})
+
+# Test for Perl-compatible regex usage
+test_that("replacePatternsInString handles Perl-compatible regexps correctly", {
+  patternsAndReplacements <- list("\\bworld\\b" = "earth")
+  result <- replacePatternsInString(patternsAndReplacements, "Hello world!", perl = TRUE)
+  expect_equal(result, "Hello earth!")
+})
+
+# Test for combination of ignore.case and perl
+test_that("replacePatternsInString handles combination of ignore.case and perl correctly", {
+  patternsAndReplacements <- list("\\bWORLD\\b" = "earth")
+  result <- replacePatternsInString(patternsAndReplacements, "Hello WORLD!", ignore.case = TRUE, perl = TRUE)
+  expect_equal(result, "hello earth!")
+})
+
+# Test when no matches are found
+test_that("replacePatternsInString returns the original string when no matches are found", {
+  patternsAndReplacements <- list("xyz" = "abc")
+  result <- replacePatternsInString(patternsAndReplacements, "hello world!", ignore.case = FALSE)
+  expect_equal(result, "hello world!")
+})
