@@ -112,8 +112,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   expand_table_names <- names(expansion_tables)
   row <- 1
   last_row_index <- nrow(table)
-  while (row < last_row_index) {
-    # row <- 4 # debug code
+  while (row <= last_row_index) {
 
     if (!is.na(table$resource_prefix[row])) {
       resource_prefix <- paste0(table$resource_prefix[row], '_')
