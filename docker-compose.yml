@@ -41,25 +41,24 @@ services:
       - ${PWD}/REDCap-db/init:/docker-entrypoint-initdb.d
       #- ./.my.cnf:/root/.my.cnf
 
-#  # Frontend (redcap)
-#  redcap:
-#    #image: php7
-#    build: ./redcap-app
-#    #user: "www-data:www-data"
-#    #container_name: ${COMPOSE_PROJECT_NAME}_app
-#    depends_on:
-#      - mysql
-#    restart: unless-stopped
-#    networks:
-#      - internal
-#      - external
-#    ports:
-#      - "127.0.0.1:8082:80"
-#    volumes:
-#      - ./redcap-html/redcap:/var/www/html/redcap-test
-#      - ./redcap-html/redcapdocs:/var/www/html/redcapdocs
-#      - ./redcap-app/config/php.ini:/usr/local/etc/php/conf.d/my.ini
-#      - ./redcap-app/log/:/var/log/
+  # Frontend (redcap)
+  redcap:
+    build: ./REDCap-app/build
+    #user: "www-data:www-data"
+    #container_name: ${COMPOSE_PROJECT_NAME}_app
+    depends_on:
+      - redcap_db
+    restart: unless-stopped
+    networks:
+      - internal
+      - external
+    ports:
+      - "127.0.0.1:8082:80"
+    volumes:
+      - ./REDCap-app/html/redcap:/var/www/html/redcap
+      - ./REDCap-app/html/redcapdocs:/var/www/html/redcapdocs
+      - ./REDCap-app/build/config/php.ini:/usr/local/etc/php/conf.d/my.ini
+      - ./REDCap-app/log/:/var/log/
 
 
   # Database (postgres) for medical safety (AMTS) information
