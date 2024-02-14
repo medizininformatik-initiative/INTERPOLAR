@@ -30,6 +30,9 @@ services:
     #command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     env_file: ${PWD}/REDCap-db/.env-redcap-db
+    secrets:
+      - redcap_db_root.password
+      - redcap_db.password
     networks:
       - internal
     volumes:
@@ -109,8 +112,8 @@ services:
   # which is needed for r-kds2db and r-db2frontend
   r-etlutils:
     build: ./R-etlutils
-    image: interpolar/r-etlutils
-    restart: no
+    #image: interpolar/r-etlutils
+    restart: "no"
     networks:
       - internal
     entrypoint: ["echo", "just for building R-Environment..."]
@@ -121,7 +124,7 @@ services:
   r-kds2db:
     build: ./R-kds2db
     working_dir: /src
-    restart: no
+    restart: "no"
     volumes:
       - ./R-kds2db:/src
       - ./amts_db_config.toml:/src/amts_db_config.toml
@@ -154,6 +157,10 @@ networks:
 secrets:
   amts_db.password:
     file: ./Postgres-amts_db/.env_amts_db.password
+  redcap_db_root.password:
+    file: ./REDCap-db/.env_redcap_db_root.password
+  redcap_db.password:
+    file: ./REDCap-db/.env_redcap_db.password
 
 volumes:
     redcap-db-data:

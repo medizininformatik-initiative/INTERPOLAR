@@ -1,4 +1,4 @@
-MYSQL_ROOT_PASSWORD=<enter root pw here!>
+MYSQL_ROOT_PASSWORD=/run/secrets/redcap_db_root.password
 MYSQL_DATABASE=redcap
 MYSQL_USER=redcap
-MYSQL_PASSWORD=<enter user pw here!>
+MYSQL_PASSWORD=/run/secrets/redcap_db.password

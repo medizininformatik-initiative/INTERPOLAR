@@ -1,4 +1,4 @@
-FROM interpolar/r-etlutils
+FROM interpolar_r-etlutils
 
 COPY kds2db kds2db
 
