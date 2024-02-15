@@ -1,4 +1,4 @@
-MYSQL_ROOT_PASSWORD=/run/secrets/redcap_db_root.password
-MYSQL_DATABASE=redcap
-MYSQL_USER=redcap
-MYSQL_PASSWORD=/run/secrets/redcap_db.password
+MARIADB_ROOT_PASSWORD_FILE=/run/secrets/redcap_db_root.password
+MARIADB_DATABASE=redcap
+MARIADB_USER=redcap
+MARIADB_PASSWORD_FILE=/run/secrets/redcap_db.password
