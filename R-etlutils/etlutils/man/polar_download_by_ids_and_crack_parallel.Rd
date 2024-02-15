@@ -9,7 +9,7 @@ polar_download_by_ids_and_crack_parallel(
   ids,
   table_description,
   ids_at_once = IDS_AT_ONCE,
-  id_param_str = "subject",
+  id_param_str,
   verbose
 )
 }
