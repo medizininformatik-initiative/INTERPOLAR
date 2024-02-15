@@ -1,0 +1,1 @@
+Bitte kopieren Sie die Dateien REDCap-db/template_* nach REDCap-db/.* und passen Sie die Passwörter in den beiden Dateien .env_redcap_db_root.password und .env_redcap_db.password an.

@@ -3,7 +3,7 @@ https://redcap.vanderbilt.edu/community/custom/download.php
 
 Entpacken Sie die Zip-Datei, z.B. redcap14.1.5.zip in den Ordner 'html'.
 
-Bitte passen Sie die Verbindungsparameter zur Datenbank (mariadb in diesem Docker Compose Setup) in der Datei database.php an, in dem Sie die von Ihnen gewählten Redcap Datenbank-Namen, Benutzernamen und Passwort eintragen.
+Bitte passen Sie die Verbindungsparameter zur Datenbank (mariadb in diesem Docker Compose Setup) in der Datei database.php an. Verwenden Sie dafür den von Ihnen gewählten Redcap Datenbank-Namen, den Benutzernamen und das Passwort entspr. der Einträge in den .env-Dateien unter REDCap-db/.env_redcap_db* .
 Beispiel für die Einträge in REDCap-app/html/redcap/database.php:
 '''
 $hostname   = 'redcap_db';	//your_mysql_host_name
