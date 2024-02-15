@@ -25,7 +25,7 @@ services:
 
   # SQL Server for redcap
   redcap_db:
-    image: mariadb:10.3
+    image: mariadb:11
     #container_name: ${COMPOSE_PROJECT_NAME}_mysql
     #command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
