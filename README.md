@@ -24,4 +24,14 @@ Dieses R-Modul dient zur Übernahme von Daten aus eine Postgres-Datenbank in das
 docker-compose run --rm --no-deps r-db2frontend Rscript StartDB2Frontend.R
 ```
 
-...
+### Frontend (redcap)
+
+Austauschbar, aber Referenz mit REDCap ...
+
+#### REDCap-app
+
+Dieses Verzeichnis enthält die REDCap Web-Anwendung inkl. Anweisungen zur Erzeugung der Leufzeitumgebung (Dockerfile). Weitere Anweisungen befinden sich in der [REDCap-app/Readme.md](./REDCap-app/Readme.md)
+
+#### REDCap-db
+
+Die REDCap-app benötigt eine Datenbank (mariadb), welche in diesem Verzeichnis definiert (Passwörter, Umgebundgvariablen, etc.) imd initialisiert (init/redcap.sql) wird. Weitere Anweisungen befinden sich in der [REDCap-db/Readme.md](./REDCap-db/Readme.md)
