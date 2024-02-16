@@ -126,6 +126,9 @@ services:
     restart: "no"
     volumes:
       #- ./R-kds2db:/src
+      - ./R-kds2db/outputLocal:/src/outputLocal
+      - ./R-kds2db/outputGlobal:/src/outputGlobal
+      - ./R-kds2db/kds2db_config.toml:/src/kds2db_config.toml
       - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
       #- r-etlutils
@@ -143,6 +146,7 @@ services:
     restart: "no"
     volumes:
       #- ./R-db2frontend:/src
+      - ./R-db2frontend/db2frontend_config.toml:/src/db2frontend_config.toml
       - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
       - redcap
