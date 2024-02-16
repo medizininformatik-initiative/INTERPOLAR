@@ -161,7 +161,11 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       row <- row + 1
     }
   }
+  # set the column 'column_name' directly in front of column 'fhir_expression'
   etlutils::moveColumnBefore(table, 'column_name', 'fhir_expression')
+  # remove column resource_prefix
+  table[, resource_prefix := NULL]
+  # set all column_name entries to lower case
   table[, column_name := tolower(column_name)]
 }
 
@@ -235,22 +239,85 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
 #' expandTableDescription()
 #'
 #' @export
-#' @importFrom etlutils writeExcelFile
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
-  max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
-  if (max_column_name_chars > 64) {
-    message('Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
-    for (s in expanded_table_description$column_name[which(nchar(na.omit(expanded_table_description$column_name)) > 64)]) {
-      message(s)
-    }
-  } else {
+  if (checkResult(expanded_table_description)) {
     message('All result columns could be transformed or expanded.')
     table_description_file_name <- './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx'
     etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')
     message('Expanded Table Description is written to ', normalizePath(table_description_file_name))
   }
+}
+
+#' Check the Result of Expanded Table Description for Constraints
+#'
+#' Evaluates the expanded table description for specific constraints, such as the maximum length of column names
+#' allowed in Postgres databases, and checks for duplicated column names. It prints error messages for violations
+#' and provides suggestions for resolution.
+#'
+#' @param expanded_table_description A data.table object containing the expanded table description.
+#' This table must include at least the columns 'column_name' and 'resource'.
+#'
+#' @return Logical value indicating whether the expanded table description passes the checks.
+#' Returns `TRUE` if all checks pass (i.e., no column names exceed the maximum length and there are no duplicated column names),
+#' otherwise `FALSE`.
+#'
+#' @details The function performs two main checks:
+#' 1. It checks if any column names exceed 64 characters, which is the maximum allowed length for column names in Postgres databases.
+#'    If any column names are too long, it prints an error message with the offending column names and suggests defining a replacement
+#'    in the 'table_description_collapsed' section of the Table_Description_Definition.xlsx file to shorten these names.
+#'
+#' 2. It checks for duplicated column names within each 'resource' group. If duplicates are found, it prints an error message
+#'    with the duplicated names and suggests checking the 'fhir_expression' entries in the Table_Description_Definition.xlsx file
+#'    for potential duplicates.
+#'
+#' Error messages include specific solutions and notes to help address the identified issues.
+#'
+#' @examples
+#' # Assuming `expanded_table_description` is a data.table object obtained from expanding a table description:
+#' # result <- checkResult(expanded_table_description)
+#' # if (!result) {
+#' #  message("There were errors in the expanded table description.")
+#' # } else {
+#' #  message("The expanded table description passed all checks.")
+#' # }
+#'
+#' @export
+checkResult <- function(expanded_table_description) {
+  result <- TRUE
+  max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
+  if (max_column_name_chars > 64) {
+    message('ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
+    for (s in expanded_table_description$column_name[which(nchar(na.omit(expanded_table_description$column_name)) > 64)]) {
+      message(paste0("\t", s))
+    }
+    message(paste0("Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
+                   "Table_Description_Definition.xlsx file to shorten these column names.\n"))
+    result <- FALSE
+  }
+  column_names <- c()
+  for (row in seq_len(nrow(expanded_table_description))) {
+    if (!is.na(expanded_table_description$resource[row])) {
+      duplicates <- column_names[which(duplicated(column_names))]
+      if (length(duplicates)) {
+        message("ERROR: Resource ", resource,  ": The following result column names (Column 'column_names') in Table_Description.xlsx are duplicated:")
+        message(paste0("\t", duplicates, collapse = "\n"))
+        message("Solution: Check entries in Table_Description_Definition.xlsx in column 'fhir_expression' for these duplicates.")
+        message(paste0("Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
+                       "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
+                       "itself appears twice, this error occurs.\n"))
+
+        result <- FALSE
+      }
+
+      resource <- expanded_table_description$resource[row]
+      column_names <- c()
+    }
+    column_names[length(column_names) + 1] <- expanded_table_description$column_name[row]
+
+  }
+  return(result)
 }
 
 #expandTableDescription()

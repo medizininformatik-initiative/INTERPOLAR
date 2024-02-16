@@ -20,11 +20,6 @@ retrieve <- function() {
   etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
 
   ###
-  # Create globally used polar_clock
-  ###
-  POLAR_CLOCK <<- etlutils::createClock()
-
-  ###
   # Set the project name to 'kds2db'
   PROJECT_NAME <<- 'kds2db'
   ###
@@ -32,30 +27,65 @@ retrieve <- function() {
   etlutils::create_dirs(PROJECT_NAME)
 
   ###
+  # Create globally used polar_clock
+  ###
+  POLAR_CLOCK <<- etlutils::createClock()
+
+  ###
   # log all console outputs and save them at the end
   ###
   etlutils::start_logging('retrieval-total')
 
+  etlutils::START__()
   etlutils::run_out('Run Retrieve', {
 
-    etlutils::run_in('Extract Patient IDs', {
+    # Extract Patient IDs
+    etlutils::START__()
+    err <- try(etlutils::run_in('Extract Patient IDs', {
       patientIDsPerWard <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
-    })
+    }), silent = TRUE)
+    print(POLAR_CLOCK)
+    if(inherits(err, "try-error")) stop()
+    etlutils::END__()
 
-    etlutils::run_in('Load Table Description', {
+    # Load Table Description
+    etlutils::START__()
+    err <- try(etlutils::run_in('Load Table Description', {
       table_descriptions <- getTableDescriptions()
-    })
+      print(POLAR_CLOCK)
+    }), silent = TRUE)
+    print(POLAR_CLOCK)
+    if(inherits(err, "try-error")) stop()
+    etlutils::END__()
 
-    etlutils::run_in('Download and crack resources by Patient IDs per ward', {
+    # Download and crack resources by Patient IDs per ward
+    etlutils::START__()
+    err <- try(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
       resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
-    })
+    }), silent = TRUE)
+    print(POLAR_CLOCK)
+    if(inherits(err, "try-error")) stop()
+    etlutils::END__()
 
-    etlutils::run_in('Write resource tables to database', {
+    # Write resource tables to database
+    etlutils::START__()
+    err <- try(etlutils::run_in('Write resource tables to database', {
       writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
-    })
+    }), silent = TRUE)
+    print(POLAR_CLOCK)
+    if(inherits(err, "try-error")) stop()
+    etlutils::END__()
 
+    # # Maybe relevant in future
+    # if (STOP) {
+    #   cat_red('An Error occured in a for the following Scripts relevant Script. So stop execution here.\n')
+    #   cat(str.(err, fg = 1), '\n')
+    #   break;
+    # }
   })
-
+  etlutils::END__()
+  #warnings()
+  print(POLAR_CLOCK)
   ###
   # Save all console logs
   ###

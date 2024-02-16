@@ -631,7 +631,7 @@ polar_download_by_ids_and_crack_parallel <- function(
     ids,
     table_description,
     ids_at_once       = IDS_AT_ONCE,
-    id_param_str      = 'subject',
+    id_param_str,
     verbose
 ) {
   WAIT_TIMES <- 2 ** (0 : 7)
@@ -863,18 +863,19 @@ loadResourcesByPID <- function(patientIDs, table_description) {
   table_name_to_tables <- list()
 
   for (resource in names(table_description)) {
+    # Just for "Patient": The ID is the reference to the patient itself
     if (resource == "Patient") {
       resource_table <- polar_download_by_ids_and_crack_parallel(
-        resource = 'Patient',
+        resource = resource,
         id_param_str = '_id',
         ids = getAfterLastSlash(patientIDs),
         table_description = table_description[[resource]],
         verbose = VERBOSE
       )
-    }
-    else {
+    } else {
       resource_table <- polar_download_by_ids_and_crack_parallel(
         resource = resource,
+        id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
         ids = patientIDs,
         table_description = table_description[[resource]],
         verbose = VERBOSE
