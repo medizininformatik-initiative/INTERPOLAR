@@ -110,8 +110,8 @@ services:
   # This section is no service, but for building the etlutils R-package
   # which is needed for r-kds2db and r-db2frontend
   r-etlutils:
+    image: interpolar_r-etlutils
     build: ./R-etlutils
-    #image: interpolar/r-etlutils
     restart: "no"
     networks:
       - internal
@@ -125,26 +125,33 @@ services:
     working_dir: /src
     restart: "no"
     volumes:
-      - ./R-kds2db:/src
+      #- ./R-kds2db:/src
       - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
-      - r-etlutils
+      #- r-etlutils
+      - amts_db
     networks:
       - internal
     command: ["/bin/true"]
 
   # This section is no service, but for building the db2frontend R-package
   # it is for using this package to execute (manualy)
-#  r-db2frontend:
-#    #image: r-base:latest
-#    build: ./R-Redcap-build
-#    restart: no
-#    volumes:
-#      - ./R:/src
-#    depends_on:
-#      - redcap
-#    networks:
-#      - internal
+  r-db2frontend:
+    #image: r-base:latest
+    build: ./R-db2frontend
+    working_dir: /src
+    restart: "no"
+    volumes:
+      #- ./R-db2frontend:/src
+      - ./amts_db_config.toml:/src/amts_db_config.toml
+    depends_on:
+      - redcap
+      - redcap_db
+      - amts_db
+    #  - r-etlutils
+    networks:
+      - internal
+    command: ["/bin/true"]
 
 
 networks:
