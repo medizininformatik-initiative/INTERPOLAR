@@ -1,3 +1,80 @@
+#' START__
+#' @description Print Header of Block
+#'
+#' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
+#' @param len An integer of length 1, the length of the underline.
+#'
+#' @return NULL
+#'
+#' @export
+START__ <- function(verbose = VERBOSE - 4, len = 104) {
+
+  # if verb greater than zero, print a underlined line of len spaces followed by the word START
+  if (0 < verbose) {
+    cat(paste0(
+      # print a bold underlined line of len spaces
+      styled_string(paste0(rep(' ', len), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
+      '\n',
+      styled_string('START', fg = 7, bold = TRUE),
+      '\n'
+    ))
+  }
+}
+
+#' Print Footer of a Block
+#'
+#' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
+#' @param len An integer of length 1, the length of the underline.
+#'
+#' @return NULL
+#'
+#' @export
+END__ <- function(verbose = VERBOSE - 4, len = 104) {
+
+  # if verb greater than zero, print a underlined line of len spaces followed by the word START
+  if (0 < verbose) {
+    cat(paste0(
+      # print bold underlined word END
+      styled_string('END', fg = 7, bold = TRUE, underline = TRUE),
+      # fill up to length len with bold unerlined spaces
+      styled_string(paste0(rep(' ', len - 3), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
+      '\n'
+    ))
+  }
+}
+
+#' Print Footer for a Block followed by a Header for the next Block
+#'
+#' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
+#' @param len An integer of length 1, the length of the underline.
+#'
+#' @return NULL
+#'
+#' @export
+END__START__ <- function(verbose = VERBOSE - 4, len = 104) {
+  if (0 < verbose) {
+    END__(len)
+    cat('\n\n') # two empty lines between END and next START
+    START__(len)
+  }
+}
+
+#'
+#' Runs the given function surrounded with [START__()] and [END__()].
+#'
+#' @param process a function
+#' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
+#' @param len An integer of length 1, the length of the underline.
+#'
+#' @return NULL
+#'
+#' @export
+log_run <- function(process, verbose = VERBOSE - 4, len = 104) {
+  START__(verbose, len)
+  process()
+  END__(verbose, len)
+}
+
 #' Run and log a process
 #'
 #' @param message A character of length one. Has to be unique

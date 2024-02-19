@@ -4,12 +4,12 @@
 \alias{splitColumnToRows}
 \title{Split a column into separate rows.}
 \usage{
-splitColumnToRows(dt, columnName, split = "\\\\s+")
+splitColumnToRows(dt, name_of_column_to_split, split = "\\\\s+")
 }
 \arguments{
 \item{dt}{The input data.table.}
 
-\item{columnName}{The name of the column to split.}
+\item{name_of_column_to_split}{The name of the column to split.}
 
 \item{split}{The regular expression used to split values (default is '\\s+' for whitespace).}
 }

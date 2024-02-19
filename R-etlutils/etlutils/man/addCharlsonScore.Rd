@@ -48,8 +48,7 @@ addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age'
 addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
 print(table)
 
-# Check if low and high risk scores work fine
-# (Metastatic_solid_tumor overrides
+# Check if low and high risk scores work fine (Metastatic_solid_tumor overrides
 # Any_malignancy_including_lymphoma_and_leukemia_except_malignant_neoplasm_of_skin)
 table <- data.table(
   caseID = c(1),

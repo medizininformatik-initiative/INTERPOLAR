@@ -92,7 +92,6 @@ toMatrix <- function(list, colCount, fill = NA) {
   matrix(list, nrow = length(list) / colCount, byrow = TRUE)
 }
 
-#'
 #' Transform a list into a data.table with specified column names.
 #'
 #' This function takes a list and a corresponding list of column names (colNames)
@@ -153,6 +152,24 @@ readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
   tables
 }
 
+#' Write data to an Excel file using `openxlsx` package
+#'
+#' This function allows writing a data.frame or a list of objects to an Excel file.
+#' The objects in the list should be compatible with `writeData()` or `writeDataTable()`
+#' functions from the `openxlsx` package. It uses `write.xlsx` from `openxlsx` to perform the write operation.
+#'
+#' @param tables A `data.frame` or a (named) list of objects that can be handled by `writeData()`
+#' or `writeDataTable()` from the `openxlsx` package to write to an Excel file.
+#' @param file_name A string specifying the file path where the xlsx file will be saved.
+#'
+#' @return None
+#'
+#' @seealso \code{\link[openxlsx]{write.xlsx}} for the underlying function used to write Excel files.
+#' @export
+writeExcelFile <- function(tables, file_name) {
+  openxlsx::write.xlsx(tables, file_name)
+}
+
 #' Read the first Excel file that matches the specified name pattern in the given directory.
 #'
 #' This function searches for Excel files in the specified directory that match the provided name pattern.
@@ -190,6 +207,7 @@ readFirstExcelFileAsTableList <- function(path, namePattern) {
 #' @param column_name The name of the column to perform replacements in.
 #' @param patterns_to_replace A vector of patterns to search for in the column's values.
 #' @param replacement The single replacement string to replace all matched patterns.
+#' @param perl logical. Should Perl-compatible regexps be used?
 #'
 #' @return The updated data.table with specified patterns replaced by the single replacement
 #'         string in the specified column.
@@ -218,11 +236,10 @@ readFirstExcelFileAsTableList <- function(path, namePattern) {
 #' print(dt)
 #'
 #' @export
-replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replacement) {
+replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replacement, perl = FALSE) {
   # Check if the specified column exists in the data.table
   if (!column_name %in% colnames(dt)) {
-    cat("Column not found.")
-    return(NULL)
+    return(dt)
   }
 
   # Loop through each pattern to replace
@@ -230,16 +247,16 @@ replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replac
     # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
     .SD <- NULL
     # Use gsub() to replace the pattern with the replacement in the specified column
-    dt[, (column_name) := lapply(.SD, function(x) gsub(pattern, replacement, x)), .SDcols = column_name]
+    dt[, (column_name) := lapply(.SD, function(x) gsub(pattern, replacement, x, perl = perl)), .SDcols = column_name]
   }
 
   # Return the updated data.table
   return(dt)
 }
 
-#' Trim whitespace from values in a data.table or data.frame column
+#' Trim whitespace from charachter type values in a data.table or data.frame column
 #'
-#' This function trims leading and trailing whitespace from all values
+#' This function trims leading and trailing whitespace from all character values
 #' in a specified column or multiple columns of a data.table.
 #'
 #' @param dt A data.table or data.frame containing the target column(s).
@@ -284,18 +301,23 @@ replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replac
 trimTableValues <- function(dt, colnames = NA) {
   isDataFrame <- !'data.table' %in% class(dt)
   if (isDataFrame) {
-    setDT(dt)
+    setDT(dt) # Convert to data.table if it's a data.frame
   }
-  # Loop through all columns in the data.table
+
   if (is.na(colnames)) {
-    colnames <- colnames(dt)
+    colnames <- names(dt)
   }
+
+  # Apply trimws only on character columns
   for (col in colnames) {
+    if (is.character(dt[[col]]))
     dt[, (col) := trimws(get(col))]
   }
+
   if (isDataFrame) {
-    setDF(dt)
+    setDF(dt) # Convert back to data.frame if the original input was a data.frame
   }
+
   return(dt)
 }
 
@@ -305,7 +327,7 @@ trimTableValues <- function(dt, colnames = NA) {
 #' and splits each value into a separate row, while retaining all other columns.
 #'
 #' @param dt The input data.table.
-#' @param columnName The name of the column to split.
+#' @param name_of_column_to_split The name of the column to split.
 #' @param split The regular expression used to split values (default is '\\s+' for whitespace).
 #'
 #' @return A new data.table with the specified column split into separate rows, while retaining all other columns.
@@ -321,14 +343,12 @@ trimTableValues <- function(dt, colnames = NA) {
 #' splitColumnToRows(table2, "ICD")
 #'
 #' @export
-splitColumnToRows <- function(dt, columnName, split = '\\s+') {
-  # Binding the variable ..columnName_to_check locally to the function, so the R CMD check has nothing to complain about
-  ..columnName <- NULL
-  if (isValidTable(dt) && is.character(dt[[columnName]])) { # works only for character columns
+splitColumnToRows <- function(dt, name_of_column_to_split, split = '\\s+') {
+  if (isValidTable(dt) && is.character(dt[[name_of_column_to_split]])) { # works only for character columns
     colNames <- names(dt)
-    splitted <- strsplit(dt[[columnName]], split)
-    dt <- cbind(dt[rep(seq_len(nrow(dt)), lengths(splitted)), !(..columnName)], irrelevantColumnName = unlist(splitted))
-    names(dt)[length(names(dt))] <- columnName
+    splitted <- strsplit(dt[[name_of_column_to_split]], split)
+    dt <- cbind(dt[rep(seq_len(nrow(dt)), lengths(splitted)), !(..name_of_column_to_split)], irrelevant_column_name = unlist(splitted))
+    names(dt)[length(names(dt))] <- name_of_column_to_split
     data.table::setcolorder(dt, colNames)
   }
   dt
@@ -401,14 +421,26 @@ combineDataTables <- function(dt_list) {
 #' print(my_data)
 #' print(result_data)
 #'
+#' # Example data.table
+#' my_data <- data.table(
+#'   Column1 = c("A", NA, "World", ""),
+#'   Column2 = c(1, NA, 2, NA),
+#'   Column3 = c("A", " ", "", NA)
+#' )
+#' print(my_data)
+#' # Names of columns to check
+#' columns_to_check <- c("Column1", "Column3")
+#' # Remove rows with NA or empty values in specified columns
+#' result_data <- removeRowsWithNAorEmpty(my_data, columns_to_check)
+#' print(result_data)
+
+#'
 #' @export
 removeRowsWithNAorEmpty <- function(dt, columns_to_check) {
   # Check if the provided data.table is empty
   if (nrow(dt) == 0) {
     return(dt)
   }
-  # Binding the variable ..columns_to_check locally to the function, so the R CMD check has nothing to complain about
-  ..columns_to_check <- NULL
   # Check the condition for each row in the data.table
   rows_to_remove <- apply(dt[, ..columns_to_check, with = FALSE], 1, function(row) {
     all(is.na(row) | (nchar(trimws(row)) == 0))
@@ -420,7 +452,6 @@ removeRowsWithNAorEmpty <- function(dt, columns_to_check) {
   return(dt)
 }
 
-#'
 #' Get the index of the first row in a data table that matches specified patterns in its columns.
 #'
 #' This function searches for the first row in a data table that contains matches for a set of specified patterns
@@ -517,7 +548,6 @@ removeRowsUpToIndex <- function(dt, index) {
   return(dt)
 }
 
-#'
 #' Remove the table header from a data table.
 #'
 #' This function removes the rows above the row containing column names
@@ -685,4 +715,42 @@ getcolumnIndex <- function(table, columnName) {
     }
   }
   return(0)
+}
+
+#' Move a column in a data.table directly before another column based on indices
+#'
+#' This function takes a data.table, the name of the column to be moved, and
+#' the name of the target column before which the first column should be placed.
+#' It adjusts the order of the columns in the data.table accordingly by manipulating
+#' column indices, without altering other columns' order unnecessarily.
+#'
+#' @param dt A data.table object.
+#' @param column_to_move The name of the column to move.
+#' @param target_column The name of the column before which to place the moved column.
+#'
+#' @return The data.table with adjusted column order. The original data.table is modified by reference.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(x = 1:3, y = 4:6, z = 7:9)
+#' moveColumnBefore(dt, "y", "z")
+#' print(dt) # Should show columns in the order x, z, y
+#'
+#' @export
+moveColumnBefore <- function(dt, column_to_move, target_column) {
+  # Find the current positions of the columns
+  cols <- names(dt)
+  move_index <- which(cols == column_to_move)
+  target_index <- which(cols == target_column)
+
+  new_order <- c(cols[-c(move_index)], cols[move_index])
+  # Adjust if move_index is before target_index, considering direct placement before target
+  if (move_index >= target_index) {
+    # Correct the order for when the column is moved forward
+    target_index <- target_index + (target_index > move_index)
+    new_order <- c(new_order[1:(target_index - 1)], new_order[length(new_order)], new_order[target_index:(length(new_order) - 1)])
+  }
+
+  # Apply the new order
+  setcolorder(dt, new_order)
 }

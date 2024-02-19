@@ -4,7 +4,13 @@
 \alias{replacePatternsInColumn}
 \title{Replace Multiple Patterns in a Specific Column of a Data.Table}
 \usage{
-replacePatternsInColumn(dt, column_name, patterns_to_replace, replacement)
+replacePatternsInColumn(
+  dt,
+  column_name,
+  patterns_to_replace,
+  replacement,
+  perl = FALSE
+)
 }
 \arguments{
 \item{dt}{A data.table containing the target column.}
@@ -14,6 +20,8 @@ replacePatternsInColumn(dt, column_name, patterns_to_replace, replacement)
 \item{patterns_to_replace}{A vector of patterns to search for in the column's values.}
 
 \item{replacement}{The single replacement string to replace all matched patterns.}
+
+\item{perl}{logical. Should Perl-compatible regexps be used?}
 }
 \value{
 The updated data.table with specified patterns replaced by the single replacement

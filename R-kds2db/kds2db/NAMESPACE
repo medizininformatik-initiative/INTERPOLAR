@@ -2,7 +2,10 @@
 
 export(BRACKETS)
 export(SEP)
+export(checkResult)
 export(createWardPatitentIDPerDateTable)
+export(expandTableDescription)
+export(extractReplacePatterns)
 export(getTableDescriptions)
 export(getTableDescriptionsTable)
 export(loadResourcesByPatientIDFromFHIRServer)
