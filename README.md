@@ -14,14 +14,14 @@ Dieser Ordner ist eine Sammlung von R Funktionen, die von allen R-Modulen des Ge
 
 Dieses R-Modul dient zur Ausleitung Kerndatensatz-konformer Daten in eine Postgres-Datenbank.
 ```console
-docker-compose run --rm --no-deps r-kds2db Rscript StartRetrieval.R
+docker-compose run --rm --no-deps r-env Rscript R-kds2db/StartRetrieval.R
 ```
 
 ### R-db2frontend
 
 Dieses R-Modul dient zur Übernahme von Daten aus eine Postgres-Datenbank in das Frontent (redcap).
 ```console
-docker-compose run --rm --no-deps r-db2frontend Rscript StartDB2Frontend.R
+docker-compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
 ```
 
 ### Frontend (redcap)
