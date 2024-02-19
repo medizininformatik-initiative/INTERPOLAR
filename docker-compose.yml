@@ -5,47 +5,49 @@ services:
   # FHIR Server for testing/simulating
   # replace it with the productive FHIR Server and/or configure this
   # FHIR Server in the services below.
-  blaze-DIC:
-    image: "samply/blaze:latest"
-    restart: unless-stopped
-    environment:
-      BASE_URL: "http://localhost:8080"
-      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
-      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
-      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
-      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
-      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
-    ports:
-      - "127.0.0.1:8080:8080"
-    networks:
-      - internal
-      - external
-    volumes:
-      - "blaze-data-DIC:/app/data"
+#  blaze-DIC:
+#    image: "samply/blaze:latest"
+#    restart: unless-stopped
+#    environment:
+#      BASE_URL: "http://localhost:8080"
+#      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
+#      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
+#      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
+#      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
+#      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
+#    ports:
+#      - "127.0.0.1:8080:8080"
+#    networks:
+#      - internal
+#      - external
+#    volumes:
+#      - "blaze-data-DIC:/app/data"
 
   # SQL Server for redcap
-  mysql:
-    image: mariadb:10.3
+  redcap_db:
+    image: mariadb:11
     #container_name: ${COMPOSE_PROJECT_NAME}_mysql
     #command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
-    env_file: .env-redcap-db
+    env_file: ${PWD}/REDCap-db/.env-redcap-db
+    secrets:
+      - redcap_db_root.password
+      - redcap_db.password
     networks:
       - internal
     volumes:
-      - ./mariadb.cnf:/etc/mysql/mariadb.cnf
+      - ${PWD}/REDCap-db/mariadb.cnf:/etc/mysql/mariadb.cnf
       - redcap-db-data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
-      - ./.my.cnf:/root/.my.cnf
+      - ${PWD}/REDCap-db/init:/docker-entrypoint-initdb.d
+      #- ./.my.cnf:/root/.my.cnf
 
   # Frontend (redcap)
   redcap:
-    #image: php7
-    build: ./redcap-app
+    build: ./REDCap-app/build
     #user: "www-data:www-data"
     #container_name: ${COMPOSE_PROJECT_NAME}_app
     depends_on:
-      - mysql
+      - redcap_db
     restart: unless-stopped
     networks:
       - internal
@@ -53,14 +55,15 @@ services:
     ports:
       - "127.0.0.1:8082:80"
     volumes:
-      - ./redcap-html/redcap:/var/www/html/redcap-test
-      - ./redcap-html/redcapdocs:/var/www/html/redcapdocs
-      - ./redcap-app/config/php.ini:/usr/local/etc/php/conf.d/my.ini
-      - ./redcap-app/log/:/var/log/
+      - ./REDCap-app/html/redcap:/var/www/html/redcap
+      - ./REDCap-app/html/redcapdocs:/var/www/html/redcapdocs
+      - ./REDCap-app/build/config/php.ini:/usr/local/etc/php/conf.d/my.ini
+      - ./REDCap-app/log/:/var/log/
+
 
   # Database (postgres) for medical safety (AMTS) information
   amts_db:
-    #image: postgres:15-alpine
+    #image: postgres:15
     build: ./Postgres-amts_db/build
     #container_name: pg_container
     restart: unless-stopped
@@ -76,13 +79,14 @@ services:
       POSTGRES_PASSWORD_FILE: /run/secrets/amts_db.password
       POSTGRES_USER: interpolar_admin
       POSTGRES_DB: interpolar
+    command: "-c config_file=/etc/postgresql.conf"
     secrets:
       - amts_db.password
     networks:
       - internal
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ${PWD}/Postgres-amts_db/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ${PWD}/Postgres-amts_db/postgresql.conf:/etc/postgresql.conf
       - ${PWD}/Postgres-amts_db/init/:/docker-entrypoint-initdb.d/
 
   # Web-administration of amts_db (optional)
@@ -106,9 +110,9 @@ services:
   # This section is no service, but for building the etlutils R-package
   # which is needed for r-kds2db and r-db2frontend
   r-etlutils:
-    #image: rocker/r-ver:4.3.2
+    image: interpolar_r-etlutils
     build: ./R-etlutils
-    restart: no
+    restart: "no"
     networks:
       - internal
     entrypoint: ["echo", "just for building R-Environment..."]
@@ -117,14 +121,18 @@ services:
   # This section is no service, but for building the kds2db R-package
   # it is for using this package to execute (manualy) StartRetrieval.R
   r-kds2db:
-    #image: ip-test-r-etlutils
     build: ./R-kds2db
-    restart: no
+    working_dir: /src
+    restart: "no"
     volumes:
-      - ./R-kds2db:/src
+      #- ./R-kds2db:/src
+      - ./R-kds2db/outputLocal:/src/outputLocal
+      - ./R-kds2db/outputGlobal:/src/outputGlobal
+      - ./R-kds2db/kds2db_config.toml:/src/kds2db_config.toml
       - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
-      - r-etlutils
+      #- r-etlutils
+      - amts_db
     networks:
       - internal
     command: ["/bin/true"]
@@ -133,14 +141,21 @@ services:
   # it is for using this package to execute (manualy)
   r-db2frontend:
     #image: r-base:latest
-    build: ./R-Redcap-build
-    restart: no
+    build: ./R-db2frontend
+    working_dir: /src
+    restart: "no"
     volumes:
-      - ./R:/src
+      #- ./R-db2frontend:/src
+      - ./R-db2frontend/db2frontend_config.toml:/src/db2frontend_config.toml
+      - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
       - redcap
+      - redcap_db
+      - amts_db
+    #  - r-etlutils
     networks:
       - internal
+    command: ["/bin/true"]
 
 
 networks:
@@ -152,6 +167,10 @@ networks:
 secrets:
   amts_db.password:
     file: ./Postgres-amts_db/.env_amts_db.password
+  redcap_db_root.password:
+    file: ./REDCap-db/.env_redcap_db_root.password
+  redcap_db.password:
+    file: ./REDCap-db/.env_redcap_db.password
 
 volumes:
     redcap-db-data:

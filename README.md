@@ -6,12 +6,32 @@ Dieses Repository enthält Module der KDS (Kerndatensatz) Pipeline zur Verarbeit
 
 Hier werden alle verwendeten Module aufgelistet. Detailliertere Beschreibungen befinden sich im jeweiligen Modul-Ordner.
 
-### R-mrputils
+### R-etlutils
 
 Dieser Ordner ist eine Sammlung von R Funktionen, die von allen R-Modulen des Gesamtprojektes gemeinsam genutzt werden.
 
 ### R-kds2db
 
 Dieses R-Modul dient zur Ausleitung Kerndatensatz-konformer Daten in eine Postgres-Datenbank.
+```console
+docker-compose run --rm --no-deps r-kds2db Rscript StartRetrieval.R
+```
 
-...
+### R-db2frontend
+
+Dieses R-Modul dient zur Übernahme von Daten aus eine Postgres-Datenbank in das Frontent (redcap).
+```console
+docker-compose run --rm --no-deps r-db2frontend Rscript StartDB2Frontend.R
+```
+
+### Frontend (redcap)
+
+Austauschbar, aber Referenz mit REDCap ...
+
+#### REDCap-app
+
+Dieses Verzeichnis enthält die REDCap Web-Anwendung inkl. Anweisungen zur Erzeugung der Leufzeitumgebung (Dockerfile). Weitere Anweisungen befinden sich in der [REDCap-app/Readme.md](./REDCap-app/Readme.md)
+
+#### REDCap-db
+
+Die REDCap-app benötigt eine Datenbank (mariadb), welche in diesem Verzeichnis definiert (Passwörter, Umgebundgvariablen, etc.) imd initialisiert (init/redcap.sql) wird. Weitere Anweisungen befinden sich in der [REDCap-db/Readme.md](./REDCap-db/Readme.md)

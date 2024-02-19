@@ -190,7 +190,7 @@ CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
 
 
 --GRANT INSERT, SELECT ON TABLE kds2db_in.patient TO 100; -- nach Entwicklungsphase
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE kds2db_in.patient TO ; -- Entwicklungsphase
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE kds2db_in.patient TO kds2db_user; -- Entwicklungsphase
 GRANT TRIGGER ON kds2db_in.patient TO kds2db_user;
 ALTER TABLE kds2db_in.patient ALTER COLUMN patient_id SET DEFAULT (nextval('kds2db_in.kds2db_in_seq'));
 
@@ -454,7 +454,7 @@ CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
   EXECUTE PROCEDURE  db.encounter_tr_ins_fkt();
 
 --GRANT INSERT, SELECT ON TABLE db.patient TO 100; -- nach Entwicklungsphase
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE db.patient TO ; -- Entwicklungsphase
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE db.patient TO db_user; -- Entwicklungsphase
 GRANT TRIGGER ON db.patient TO db_user;
 ALTER TABLE db.patient ALTER COLUMN patient_id SET DEFAULT (nextval('db.db_seq'));
 

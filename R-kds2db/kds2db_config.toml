@@ -76,12 +76,12 @@ USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 2
 ###################
 
 # If DEBUG_PERIOD_START is enabled then the start date is not time.now (resp. Sys.time() in R) but this date
-DEBUG_PERIOD_START = "2019-01-01"
+DEBUG_PERIOD_START = "2020-01-01"
 
 # If DEBUG_PERIOD_END is enabled then the both values INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS and
 # USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS will be ignored and only Encounters in the range of DEBUG_PERIOD_START
 # and DEBUG_PERIOD_END will be loaded. DEBUG_PERIOD_END will be ignored if DEBUG_PERIOD_START is not set.
-DEBUG_PERIOD_END = "2019-01-02"
+DEBUG_PERIOD_END = "2021-01-02"
 
 
 [retrieve.patient_id_filtering]
