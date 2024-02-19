@@ -329,6 +329,15 @@ initConstants <- function(path_to_toml) {
     assign(variable_name, flattenConfig[[variable_name]], envir = .GlobalEnv)
   }
 
+  # Port specification in the fhir server url can cause problems -> warning
+  URL_PORT_SPEC <<- FALSE
+  if (exists('FHIR_SERVER_ENDPOINT')) {
+    if (grepl(":[0-9]+(/.*)?$", FHIR_SERVER_ENDPOINT)) {
+      URL_PORT_SPEC <<- TRUE
+      warning("FHIR_ENDPOINT use PORT specification. Some Fhir servers do not provide this port in pagination's next_link")
+    }
+  }
+
   # the result dir can be extended by an timestamp. this is not neccessary
   # in Interploar but was used in Polar. For debug reasons we have not deactivated
   # this functionality. To enable timestamp suffixes at the result dir set
