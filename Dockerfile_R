@@ -1,0 +1,47 @@
+# etlutils
+
+FROM rocker/r-ver:4.3.2
+
+RUN apt-get update \
+    && apt-get install -y libssl-dev libcurl4-openssl-dev libpq-dev
+
+RUN /rocker_scripts/bin/install2.r fhircrackr memuse openxlsx RcppTOML DBI lubridate RPostgres
+
+WORKDIR /src
+
+COPY R-etlutils R-etlutils
+
+RUN R CMD build R-etlutils/etlutils
+    
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-etlutils/etlutils
+
+
+# kds2db
+COPY R-kds2db R-kds2db
+
+RUN R CMD build R-kds2db/kds2db
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-kds2db/kds2db
+
+#COPY StartRetrieval.R /src/StartRetrieval.R
+
+#COPY kds2db_config.toml /src/kds2db_config.toml
+
+
+# db2frontend
+RUN apt-get install -y libsodium-dev
+
+RUN /rocker_scripts/bin/install2.r redcapAPI dplyr
+
+COPY R-db2frontend R-db2frontend
+
+RUN R CMD build R-db2frontend/db2frontend
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-db2frontend/db2frontend
+
+#COPY StartDB2Frontend.R /src/StartDB2Frontend.R
+
+#COPY db2frontend_config.toml /src/db2frontend_config.toml
+
+# cleanup
+RUN apt-get autoremove && apt-get clean
