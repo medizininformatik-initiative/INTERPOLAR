@@ -107,52 +107,26 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
-  # This section is no service, but for building the etlutils R-package
-  # which is needed for r-kds2db and r-db2frontend
-  r-etlutils:
-    image: interpolar_r-etlutils
-    build: ./R-etlutils
-    restart: "no"
-    networks:
-      - internal
-    entrypoint: ["echo", "just for building R-Environment..."]
-    #command: ["/bin/true"]
-
-  # This section is no service, but for building the kds2db R-package
-  # it is for using this package to execute (manualy) StartRetrieval.R
-  r-kds2db:
-    build: ./R-kds2db
+  # This section is no service, but for building the R-environment
+  # to execute (manualy) R scripts for r-kds2db and r-db2frontend,
+  # e.g. StartRetrieval.R
+  r-env:
+    build:
+      context: ./
+      dockerfile: Dockerfile_R
     working_dir: /src
     restart: "no"
     volumes:
       #- ./R-kds2db:/src
-      - ./R-kds2db/outputLocal:/src/outputLocal
-      - ./R-kds2db/outputGlobal:/src/outputGlobal
-      - ./R-kds2db/kds2db_config.toml:/src/kds2db_config.toml
+      - ./R-kds2db/outputLocal:/src/R-kds2db/outputLocal
+      - ./R-kds2db/outputGlobal:/src/R-kds2db/outputGlobal
+      - ./R-kds2db/kds2db_config.toml:/src/R-kds2db/kds2db_config.toml
+      - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./amts_db_config.toml:/src/amts_db_config.toml
     depends_on:
-      #- r-etlutils
       - amts_db
-    networks:
-      - internal
-    command: ["/bin/true"]
-
-  # This section is no service, but for building the db2frontend R-package
-  # it is for using this package to execute (manualy)
-  r-db2frontend:
-    #image: r-base:latest
-    build: ./R-db2frontend
-    working_dir: /src
-    restart: "no"
-    volumes:
-      #- ./R-db2frontend:/src
-      - ./R-db2frontend/db2frontend_config.toml:/src/db2frontend_config.toml
-      - ./amts_db_config.toml:/src/amts_db_config.toml
-    depends_on:
       - redcap
       - redcap_db
-      - amts_db
-    #  - r-etlutils
     networks:
       - internal
     command: ["/bin/true"]
