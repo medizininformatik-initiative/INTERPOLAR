@@ -26,8 +26,6 @@ services:
   # SQL Server for redcap
   redcap_db:
     image: mariadb:11
-    #container_name: ${COMPOSE_PROJECT_NAME}_mysql
-    #command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     env_file: ${PWD}/REDCap-db/.env-redcap-db
     secrets:
@@ -40,12 +38,12 @@ services:
       - redcap-db-data:/var/lib/mysql
       - ${PWD}/REDCap-db/init:/docker-entrypoint-initdb.d
       #- ./.my.cnf:/root/.my.cnf
+    #command: --default-authentication-plugin=mysql_native_password
 
   # Frontend (redcap)
   redcap:
     build: ./REDCap-app/build
     #user: "www-data:www-data"
-    #container_name: ${COMPOSE_PROJECT_NAME}_app
     depends_on:
       - redcap_db
     restart: unless-stopped
@@ -63,9 +61,7 @@ services:
 
   # Database (postgres) for medical safety (AMTS) information
   amts_db:
-    #image: postgres:15
     build: ./Postgres-amts_db/build
-    #container_name: pg_container
     restart: unless-stopped
         #    healthcheck:
     # test: [ "CMD-SHELL", "pg_isready -U postgres -d interpolar" ]
@@ -92,7 +88,6 @@ services:
   # Web-administration of amts_db (optional)
   pgadmin:
     image: dpage/pgadmin4:7.2
-    #container_name: pgadmin4_container
     restart: unless-stopped
     ports:
       - "127.0.0.1:8089:80"
@@ -117,7 +112,6 @@ services:
     working_dir: /src
     restart: "no"
     volumes:
-      #- ./R-kds2db:/src
       - ./R-kds2db/outputLocal:/src/R-kds2db/outputLocal
       - ./R-kds2db/outputGlobal:/src/R-kds2db/outputGlobal
       - ./R-kds2db/kds2db_config.toml:/src/R-kds2db/kds2db_config.toml
