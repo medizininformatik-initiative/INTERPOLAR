@@ -4183,7 +4183,7 @@ INSERT INTO redcap_config (field_name, value) VALUES
 ('file_repository_upload_max', ''),
 ('file_repository_enabled', '1'),
 ('temp_files_last_delete', now()),
-('edoc_path', ''),
+('edoc_path', '/var/www/html/redcapdocs'),
 ('enable_edit_survey_response', '1'),
 ('enable_plotting', '2'),
 ('enable_plotting_survey_results', '1'),

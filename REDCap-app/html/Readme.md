@@ -13,6 +13,15 @@ $username   = 'redcap'; 	//your_mysql_db_username
 $password   = 'password_for_redcap_user'; 	//your_mysql_db_password
 ```
 
+Passen Sie die Zugriffrechte für die folgenden Verzeichnisse an:
+REDCap-app/html/redcap/temp
+REDCap-app/html/redcap/modules
+REDCap-app/html/redcapdocs
+
+```
+chmod ugo+x REDCap-app/html/redcap/temp REDCap-app/html/redcap/modules REDCap-app/html/redcapdocs
+```
+
 Rufen Sie im Browser die Seite auf: http://127.0.0.1:8082/redcap/
 
 (Sollten Sie eine Fehlermeldung erhalten, rufen Sie im Browser die Install-Seite auf: http://127.0.0.1:8082/redcap/install.php)
