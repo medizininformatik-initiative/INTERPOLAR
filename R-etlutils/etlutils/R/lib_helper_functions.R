@@ -314,6 +314,8 @@ flatten_list <- function(x, prefix = NULL) {
 #'
 #' @export
 initConstants <- function(path_to_toml) {
+  # normalize relative path for error message
+  path_to_toml <- normalizePath(path_to_toml)
   # load the config toml file in the global environment
   CONFIG <<- RcppTOML::parseToml(path_to_toml)
   # Take nested list CONFIG and flattens it into a single-level list

@@ -10,8 +10,7 @@ retrieve <- function() {
   ###
   # Read the module configuration toml file.
   ###
-  path2config_toml <- ifelse(interactive(), './R-kds2db', '.')
-  path2config_toml <- paste0(path2config_toml, '/kds2db_config.toml')
+  path2config_toml <- './R-kds2db/kds2db_config.toml'
   etlutils::initConstants(path2config_toml)
 
   ###
