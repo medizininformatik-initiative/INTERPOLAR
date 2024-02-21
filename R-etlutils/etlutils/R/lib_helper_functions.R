@@ -242,161 +242,6 @@ sortListByName <- function(list) list[order(names(list))]
 #'
 isDebug <- function() exists('DEBUG') && DEBUG
 
-#' Execute an outer script with a specified message and process
-#'
-#' This function runs an outer script with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the outer script.
-#' @param process A function representing the outer script to be executed.
-#'
-#' @export
-run_out <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_20_OUTER_SCRIPTS
-  )}
-
-#' Execute an inner script with a specified message and process
-#'
-#' This function runs an inner script with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the inner script.
-#' @param process A function representing the inner script to be executed.
-#'
-#' @export
-run_in <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_30_INNER_SCRIPTS
-  )}
-
-#' Execute an inner script info with a specified message and process
-#'
-#' This function runs an inner script info with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the inner script info.
-#' @param process A function representing the inner script info to be executed.
-#'
-#' @export
-run_in_in <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_40_INNER_SCRIPTS_INFOS
-  )}
-
-#' Execute an inner script info with a specified message and process
-#'
-#' This function runs an inner script info with the provided message and process, controlling
-#' the verbosity level. If an error occurs, it is ignored.
-#'
-#' @param message A character string describing the purpose of the inner script info.
-#' @param process A function representing the inner script info to be executed.
-#'
-#' @export
-run_in_in_ignore_error <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_40_INNER_SCRIPTS_INFOS,
-    throw_exception = FALSE
-  )}
-
-#' Execute a script with specified message, process, and verbosity level
-#'
-#' This function runs a script with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the script.
-#' @param process A function representing the script to be executed.
-#' @param verbose An integer specifying the verbosity level.
-#' @param throw_exception if TRUE the execution of the current expression will be stopped
-#'
-#' @export
-run <- function(message, process, verbose, throw_exception = TRUE) {
-  polar_run(
-    message = message,
-    process = process,
-    verbose = VERBOSE - verbose + 1,
-    single_line = VERBOSE <= verbose,
-    throw_exception = throw_exception
-  )}
-
-#' Execute an outer script with specified message and process (single line)
-#'
-#' This function runs an outer script with the provided message and process, controlling
-#' the verbosity level. Unlike `runs`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the outer script.
-#' @param process A function representing the outer script to be executed.
-#'
-#' @export
-runs_out <- function(message, process) {
-  runs(
-    message = message,
-    process = process,
-    verbose = VL_20_OUTER_SCRIPTS
-  )}
-
-#' Execute an inner script with specified message and process (single line)
-#'
-#' This function runs an inner script with the provided message and process, controlling
-#' the verbosity level. Unlike `runs`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the inner script.
-#' @param process A function representing the inner script to be executed.
-#'
-#' @export
-runs_in <- function(message, process) {
-  runs(
-    message = message,
-    process = process,
-    verbose = VL_30_INNER_SCRIPTS
-  )}
-
-#' Execute an inner script info with specified message and process (single line)
-#'
-#' This function runs an inner script info with the provided message and process, controlling
-#' the verbosity level. Unlike `runs`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the inner script info.
-#' @param process A function representing the inner script info to be executed.
-#'
-#' @export
-runs_in_in <- function(message, process) {
-  runs(
-    message = message,
-    process = process,
-    verbose = VL_40_INNER_SCRIPTS_INFOS
-  )}
-
-#' Execute a script with specified message, process, and verbosity level (single line)
-#'
-#' This function runs a script with the provided message and process, controlling
-#' the verbosity level. Unlike `run`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the script.
-#' @param process A function representing the script to be executed.
-#' @param verbose An integer specifying the verbosity level.
-#'
-#' @export
-runs <- function(message, process, verbose) {
-  polar_run(
-    message = message,
-    process = process,
-    verbose = VERBOSE - verbose + 1,
-    single_line = TRUE
-  )}
-
 #' Conditional Print to Console (for tables) based on verbosity level
 #'
 #' This function prints the provided content to the console only if the global
@@ -739,6 +584,110 @@ replacePatternsInString <- function(patternsAndReplacements, string, ignore.case
   return(string)
 }
 
+#' Check for Errors
+#'
+#' @param err Any Type. In case of an error occurred it must contain try-error as class
+#' @param expr_ok An expression. This runs in case of no error.
+#' @param expr_err An expression. This runs in case of an error.
+#'
+#' @return err
+#' @export
+check_error <- function(err, expr_ok = {cat_ok()}, expr_err = {cat_error()}) {
+
+  if (!inherits(err, 'try-error')) {
+    expr_ok
+  } else {
+    expr_err
+  }
+}
+
+#' Convert Numbers to Verbose Number Representations
+#'
+#' This function converts numbers to verbose number representations, such as "1st," "2nd," "3rd," or "th."
+#'
+#' @param n Numeric vector to be converted.
+#'
+#' @return A character vector representing the verbose number representation.
+#' @export
+verbose_numbers <- function(n) {
+  n[n < 1 | 3 < n] <- paste0(n[n < 1 | 3 < n], 'th')
+  n[n == 1] <- '1st'
+  n[n == 2] <- '2nd'
+  n[n == 3] <- '3rd'
+  n
+}
+
+#' Pluralize Suffix Based on Count
+#'
+#' This function returns an empty string for count 1 and 's' for any other count.
+#'
+#' @param counts Numeric vector of counts.
+#'
+#' @return
+#' An empty string for count 1, 's' otherwise.
+#' @export
+plural_s <- function(counts) {
+  ifelse(counts == 1, '', 's')
+}
+
+#' Create a Framed String
+#'
+#' This function creates a framed string with specified formatting parameters.
+#'
+#' @param text A character string to be framed.
+#' @param pos The position of the framed text within the frame. It can be 'left', 'center', or 'right'.
+#' @param edge The characters to be used for framing the top, bottom, left, and right edges.
+#' @param hori The character to be used for horizontal framing.
+#' @param vert The character to be used for vertical framing.
+#' @return A character string representing the framed text.
+#'
+#' @details
+#' The function creates a framed string by adding specified framing characters (edges, horizontal, and vertical) around the input text.
+#' It allows customization of the frame's position, edge characters, and framing characters.
+#' The resulting framed string is useful for creating visually appealing console outputs.
+#'
+#' @export
+frame_string <- function(
+    text = styled_string('\nHello !!!\n\n\nIs\nthere\n\nA N Y O N E\n\nout\nthere\n???\n '),
+    pos  = c('left', 'center', 'right')[1],
+    edge = ' ',
+    hori = '-',
+    vert = '|') {
+  # own strpad function
+  # strpad("Hello", 10, "right", "-")
+  # "-----Hello"
+  strpad <- function(string, width, pos = c('left', 'right'), pad) {
+    # duplicate char count times
+    n_chars <- function(char, count) paste0(rep_len(char, count), collapse = '')
+    # remove utf codes from string and count characters
+    w <- nchar(gsub('\033\\[[0-9;]*m', '', string))
+    if (pos == 'left') {
+      paste0(string, n_chars(pad, width - w))
+    } else if (pos == 'right') {
+      paste0(n_chars(pad, width - w), string)
+    } else {
+      paste0(n_chars(pad, (width - w) %/% 2), string, n_chars(pad, width - w - (width - w) %/% 2))
+    }
+  }
+  # get all 4 edges strings
+  edge <- rep_len(strsplit(edge, '')[[1]], 4)[1 : 4]
+  r <- ''
+  s <- strsplit(text, '\n')[[1]]
+  # get height of frame
+  h <- length(s)
+  # get width of frame
+  w <- max(sapply(s, function(x) nchar(gsub('\033\\[[0-9;]*m', '', x))))
+  # build top and botton lines
+  hbt <- paste0(edge[1], paste0(rep_len(hori, w + 2), collapse = ''), edge[2], '\n')
+  hbb <- paste0(edge[3], paste0(rep_len(hori, w + 2), collapse = ''), edge[4], '\n')
+  # construct frame with text in it
+  r <- hbt
+  for (s_ in s) {# s_ <- s
+    r <- paste0(r, vert, ' ', strpad(string = s_, width = w, pos = pos, pad = ' '), ' ', vert, '\n')
+  }
+  r <- paste0(r, hbb)
+  r
+}
 
 #' Convert a time representation to POSIXct format
 #'
@@ -905,6 +854,7 @@ fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
   }
   dt[, (date_columns) := lapply(.SD, convertDateInformation), .SDcols = date_columns]
 }
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
