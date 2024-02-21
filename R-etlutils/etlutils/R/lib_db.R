@@ -68,8 +68,7 @@ dbDisconnect <- function(db_connection) {
 dbListTables <- function(db_connection) {
   # Get existing table names from the database connection
   tables <- DBI::dbListTables(db_connection)
-  # Display the table names using the str() function for a concise overview
-  utils::str(tables)
+  return(tables)
 }
 
 #' Insert Rows into a PostgreSQL Table
