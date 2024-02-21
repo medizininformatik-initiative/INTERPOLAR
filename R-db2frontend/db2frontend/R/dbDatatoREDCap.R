@@ -17,21 +17,7 @@ initConstants <- function() {
   path2config_toml <- paste0(path2config_toml, '/db2frontend_config.toml')
   # Load module configuration settings
   etlutils::initConstants(path2config_toml)
-
   # Load database configuration settings
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
-}
-
-initConstants <- function() {
-  ###
-  # Read the module configuration toml file.
-  ###
-  path2config_toml <- ifelse(interactive(), './R-db2frontend', '.')
-  path2config_toml <- paste0(path2config_toml, '/db2frontend_config.toml')
-  etlutils::initConstants(path2config_toml)
-  ###
-  # Read the DB configuration toml file
-  ###
   etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
 }
 
