@@ -27,9 +27,9 @@ retrieve <- function() {
   etlutils::create_dirs(PROJECT_NAME)
 
   ###
-  # Create globally used polar_clock
+  # Create globally used process_clock
   ###
-  POLAR_CLOCK <<- etlutils::createClock()
+  PROCESS_CLOCK <<- etlutils::createClock()
 
   ###
   # log all console outputs and save them at the end
@@ -44,7 +44,8 @@ retrieve <- function() {
     err <- try(etlutils::run_in('Extract Patient IDs', {
       patientIDsPerWard <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
@@ -52,9 +53,9 @@ retrieve <- function() {
     etlutils::START__()
     err <- try(etlutils::run_in('Load Table Description', {
       table_descriptions <- getTableDescriptions()
-      print(POLAR_CLOCK)
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
@@ -63,7 +64,8 @@ retrieve <- function() {
     err <- try(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
       resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
@@ -72,7 +74,8 @@ retrieve <- function() {
     err <- try(etlutils::run_in('Write resource tables to database', {
       writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
@@ -85,7 +88,7 @@ retrieve <- function() {
   })
   etlutils::END__()
   #warnings()
-  print(POLAR_CLOCK)
+  print(PROCESS_CLOCK)
   ###
   # Save all console logs
   ###

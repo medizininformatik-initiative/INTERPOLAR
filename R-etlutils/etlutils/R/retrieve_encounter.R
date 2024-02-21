@@ -117,7 +117,7 @@ get_encounters <- function(table_description) {
     #   # splits the provided dates into day and time columns, if data is available
     #   # converts fhir dates to R dates
     #   # fix the column class to date()
-    #   polar_fix_dates(table_enc, c('Enc.Period.Start', 'Enc.Period.End'))
+    #   fixDateFormat(table_enc, c('Enc.Period.Start', 'Enc.Period.End'))
     #
     #   # combine day and time column in a column of type date()
     #   table_enc[, Enc.Period.Start.Datetime := do.call(paste,.SD), .SDcols = c('Enc.Period.Start', 'Enc.Period.Start.TimeSpec')]
