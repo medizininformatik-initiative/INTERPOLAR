@@ -198,7 +198,7 @@ polar_save_request <- function(request, filename_without_extension) {
 #'
 #' @return Nothing.
 #' @export
-save_performance <- function(filename_without_extension, clock = if (is.null(POLAR_CLOCK)) NULL else POLAR_CLOCK) {
+save_performance <- function(filename_without_extension, clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
