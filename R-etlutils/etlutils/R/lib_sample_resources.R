@@ -242,7 +242,7 @@ polar_get_resources_by_ids <- function(
   resource,
   ids,
   id_param_str = '_id',
-  parameters   = polar_add_common_request_params(c()),
+  parameters   = fhir_url_add_common_request_params(c()),
   verbose      = 0
 ) {
   polar_get_resources_by_ids_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
@@ -285,7 +285,7 @@ polar_get_resources_by_ids <- function(
       # build request string of maximal max_ids ids
       ids_ <- collect_ids_for_request(ids = ids, max_ids = length(ids))
       # create request with list of resource ids to get from server
-      url_ <- fhircrackr::fhir_url(endpoint, resource, paste_parameters(paste0(id_param_str, "=", ids_$str), polar_add_common_request_params(parameters)))
+      url_ <- fhircrackr::fhir_url(endpoint, resource, paste_parameters(paste0(id_param_str, "=", ids_$str), fhir_url_add_common_request_params(parameters)))
       # get bundle
       bnd_ <- polar_fhir_search(request = url_, verbose = verbose)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
@@ -609,7 +609,7 @@ polar_download_and_crack_parallel <- function(
       cat_red('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
   }
   # complete tables with missing column
-  polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+	complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.
@@ -667,13 +667,13 @@ polar_download_by_ids_and_crack_parallel <- function(
   }
   if (total < 1) {
     if (0 < verbose) cat_red(paste0('No ', resource, 's found. Return empty Table. Please note! This may cause further problems.\n'))
-    return(polar_complete_table(data.table::data.table(), table_description))
+    return(complete_table(data.table::data.table(), table_description))
   }
 
   curr_len <- min(ids_at_once, length(ids))
 
   if (curr_len < 1) {# if no ids for download. return empty data.table with required columns
-    return(polar_complete_table(data.table::data.table(), table_description))
+    return(complete_table(data.table::data.table(), table_description))
   }
 
   os <- get_os()
@@ -844,7 +844,7 @@ polar_download_by_ids_and_crack_parallel <- function(
     run <- run + 1
   }
   MAX_ENCOUNTER_BUNDLES <<- mb
-  polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Download FHIR resources by patient IDs and perform parallel cracking for each resource type.
@@ -884,6 +884,26 @@ loadResourcesByPID <- function(patientIDs, table_description) {
     table_name_to_tables[[resource]] <- resource_table
   }
   table_name_to_tables
+}
+
+#' Add Common Parameters to FHIR Resource Request
+#'
+#' This function adds common parameters, such as '_count' and '_sort', to a list of FHIR resource query parameters.
+#'
+#' @param parameters A list of FHIR resource query parameters.
+#'
+#' @return A modified list of FHIR resource query parameters with common parameters added.
+#'
+#' @export
+fhir_url_add_common_request_params <- function(parameters = NULL) {
+  parameters <- parameters[!is.na(parameters)]
+  if (!'_count' %in% names(parameters) && exists('COUNT_PER_BUNDLE') && !is.null(COUNT_PER_BUNDLE) && !is.na(COUNT_PER_BUNDLE) && COUNT_PER_BUNDLE != '') {
+    parameters <- c(parameters, c('_count' = COUNT_PER_BUNDLE))
+  }
+  if (!'_sort' %in% names(parameters) && exists('SORT') && !is.null(SORT) && !is.na(SORT) && SORT != '') {
+    parameters <- c(parameters, c('_sort' = SORT))
+  }
+  parameters
 }
 
 #' #' Download and Crack FHIR Resources in Parallel by IDs
@@ -941,13 +961,13 @@ loadResourcesByPID <- function(patientIDs, table_description) {
 #'   }
 #'   if (total < 1) {
 #'     if (0 < verbose) cat_red(paste0('No ', resource, 's found. Return empty Table. Please note! This may cause further problems.\n'))
-#'     return(polar_complete_table(data.table::data.table(), table_description))
+#'     return(complete_table(data.table::data.table(), table_description))
 #'   }
 #'
 #'   curr_len <- min(ids_at_once, length(ids))
 #'
 #'   if (curr_len < 1) {# if no ids for download. return empty data.table with required columns
-#'     return(polar_complete_table(data.table::data.table(), table_description))
+#'     return(complete_table(data.table::data.table(), table_description))
 #'   }
 #'
 #'   os <- get_os()
@@ -1119,7 +1139,7 @@ loadResourcesByPID <- function(patientIDs, table_description) {
 #'     run <- run + 1
 #'   }
 #'   MAX_ENCOUNTER_BUNDLES <<- mb
-#'   polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+#'   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 #' }
 #'
 #' #' Download and Crack FHIR Resources with Maximum Length Limit
@@ -1154,7 +1174,7 @@ loadResourcesByPID <- function(patientIDs, table_description) {
 #'       request <- fhir_url(
 #'         url        = FHIR_ENDPOINT,
 #'         resource   = res_name,
-#'         parameters = polar_add_common_request_params(X)
+#'         parameters = fhir_url_add_common_request_params(X)
 #'       )
 #'
 #'       polar_download_and_crack_parallel(
@@ -1169,5 +1189,5 @@ loadResourcesByPID <- function(patientIDs, table_description) {
 #'     }
 #'   )
 #'
-#'   polar_complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+#'   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 #' }

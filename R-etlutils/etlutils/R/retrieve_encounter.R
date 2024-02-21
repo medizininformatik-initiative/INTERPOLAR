@@ -89,11 +89,11 @@ get_encounters <- function(table_description) {
       op.end <- gsub("^([a-z]+).*", "\\1", params[2])
     })
 
-    polar_run('Download and Crack Encounters', {
+    run_in_in('Download and Crack Encounters', {
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,
         resource   = 'Encounter',
-        parameters = polar_add_common_request_params(params)
+        parameters = fhir_url_add_common_request_params(params)
       )
 
       table_enc <- polar_download_and_crack_parallel(
@@ -103,8 +103,7 @@ get_encounters <- function(table_description) {
         log_errors        = 'enc_error.xml',
         verbose           = VERBOSE - VL_70_DOWNLOAD
       )
-
-    }, single_line = VERBOSE <= VL_70_DOWNLOAD, verbose = VERBOSE - VL_40_INNER_SCRIPTS_INFOS + 1)
+    })
 
     runs_in_in('change column classes', {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
