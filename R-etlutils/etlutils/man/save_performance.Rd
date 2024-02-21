@@ -6,7 +6,7 @@
 \usage{
 save_performance(
   filename_without_extension,
-  clock = if (is.null(POLAR_CLOCK)) NULL else POLAR_CLOCK
+  clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK
 )
 }
 \arguments{
