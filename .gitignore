@@ -1,1 +1,15 @@
 .env*
+.Rproj.user
+.Rhistory
+.tar.gz
+*etlutils*.tar.gz
+*Rcheck*
+.project
+*.core.prefs
+outputLocal
+outputGlobal
+*.RData
+REDCap-app/html/redcap
+REDCap-app/html/redcapdocs
+REDCap-app/build/config/msmtprc
+REDCap-app/log
