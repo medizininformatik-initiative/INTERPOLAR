@@ -22,5 +22,7 @@ max_allowed_packet=1G
 # Vorschläge für Cache Parameter (nicht aktiv)
 #query_cache_size = 256M
 #query_cache_limit = 64K
+optimizer_switch=rowid_filter=OFF
+
 # Import all .cnf files from configuration directory
 !includedir /etc/mysql/mariadb.conf.d/
