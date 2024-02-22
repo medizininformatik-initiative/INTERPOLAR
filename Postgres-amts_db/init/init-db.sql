@@ -5559,4 +5559,4 @@ GRANT USAGE ON SCHEMA db2frontend_out to db2frontend_user;
 GRANT SELECT ON db2frontend_out.patient to db2frontend_user;
 
 -- CopyJob KDS2DB -> DB
-SELECT cron.schedule('*/10 * * * *', 'CALL db.do_kds_import_to_db();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.do_kds_import_to_db();');
