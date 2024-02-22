@@ -55,7 +55,7 @@ copyDB2Redcap <- function() {
                               pat_gschlcht FROM patient")
 
   #connect to REDCap project
-  redcapcon <- redcapAPI::redcapConnection(url = url,token = token)
+  redcapcon <- redcapAPI::redcapConnection(url = "http://redcap/redcap/api/",token = token)
 
   #send data to REDCap
   redcapAPI::importRecords(redcapcon, data = new_data, logfile = "log.txt")
