@@ -4,9 +4,6 @@
 #'
 #' @export
 retrieve <- function() {
-  # Iniialzes the global STOP variable. If a subprocess sets this variable to TRUE then the execution will be stopped.
-  STOP <<- FALSE
-
   ###
   # Read the module configuration toml file.
   ###
@@ -61,7 +58,7 @@ retrieve <- function() {
     # Download and crack resources by Patient IDs per ward
     etlutils::START__()
     err <- try(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
+      resource_table_list <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
     }), silent = TRUE)
     print(PROCESS_CLOCK)
     warnings()
@@ -78,15 +75,9 @@ retrieve <- function() {
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
-    # # Maybe relevant in future
-    # if (STOP) {
-    #   cat_red('An Error occured in a for the following Scripts relevant Script. So stop execution here.\n')
-    #   cat(str.(err, fg = 1), '\n')
-    #   break;
-    # }
   })
   etlutils::END__()
-  #warnings()
+  warnings()
   print(PROCESS_CLOCK)
   ###
   # Save all console logs
