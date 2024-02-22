@@ -27,7 +27,7 @@ RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-kds2db/kds2db
 
 # db2frontend
 
-RUN apt-get install -y libsodium-dev
+RUN apt-get install -y libsodium-dev libsecret-1-0
 
 RUN /rocker_scripts/bin/install2.r redcapAPI dplyr
 
