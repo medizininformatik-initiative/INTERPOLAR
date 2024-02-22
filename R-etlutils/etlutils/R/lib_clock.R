@@ -263,7 +263,7 @@ Clock = setRefClass(
       last_row <- max(which(.history$state == 'RUNNING'))
       # add end time, error and state to this row
       .history[last_row, 'end'] <<- now_
-      .history[last_row, 'error'] <<- if (inherits(err, 'try-error')) err else ''
+      .history[last_row, 'error'] <<- if (inherits(err, 'try-error')) cat_red(err) else ''
       .history[last_row, 'state'] <<- if (inherits(err, 'try-error')) 'ERROR' else 'OK'
       # if 0 < verbose print some messages
       if (0 < verbose) {
