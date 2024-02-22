@@ -866,6 +866,22 @@ fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
   dt[, (date_columns) := lapply(.SD, convertDateInformation), .SDcols = date_columns]
 }
 
+#' Stop on Error
+#'
+#' This function stops execution and prints the concatenated error message.
+#'
+#' @param ... Character vectors to be concatenated and printed as an error message.
+#'
+#' @return This function does not return a value. It stops execution.
+#'
+#' @examples
+#' stopOnError("Error: Something went wrong.")
+#'
+#' @export
+stopOnError <- function(...) {
+  stop(cat_red(paste(c(...))))
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
