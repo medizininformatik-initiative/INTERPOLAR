@@ -1,3 +1,7 @@
 [database]
 
 PATH_TO_DB_CONFIG_TOML = "./amts_db_config.toml"
+
+# Redcap API-Token und API-URL
+# token = ""
+# url = ""
