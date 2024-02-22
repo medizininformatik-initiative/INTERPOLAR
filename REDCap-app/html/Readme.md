@@ -12,6 +12,15 @@ $db         = 'redcap'; 	//your_mysql_db_name
 $username   = 'redcap'; 	//your_mysql_db_username
 $password   = 'password_for_redcap_user'; 	//your_mysql_db_password
 ```
+Ändern Sie außerdem die SALT Variable, z.B.:
+
+```
+$salt = '32534739';
+```
+
+
+Legen Sie das folgende Verzeichnis an:
+REDCap-app/html/redcapdocs
 
 Passen Sie die Zugriffrechte für die folgenden Verzeichnisse an:
 REDCap-app/html/redcap/temp
