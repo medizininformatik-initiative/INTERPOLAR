@@ -129,7 +129,6 @@ last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zule
 current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
-DROP TABLE kds2db_in.patient;
 
 CREATE TABLE IF NOT EXISTS kds2db_in.patient (
 patient_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
@@ -1283,11 +1282,6 @@ input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an d
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
-
-CREATE TABLE IF NOT EXISTS kds2db_in.encounter (
-encounter_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-enc_id varchar (70),   -- id (70 x 1 varchar)"
-
 
 
 --GRANT INSERT, SELECT ON TABLE kds2db_in.encounter TO kds2db_user; -- nach Entwicklungsphase
