@@ -5467,62 +5467,68 @@ DECLARE
     current_record record;
     data_count integer;
 BEGIN
-    -- Funktion um Daten aus der Schnittstelle KDS2DB in den Kern der Datenbank persitent zu kopieren - falls es Änderungen gibt
-    -- patient
+    -- patient -------------------------------------------------------------------------------------------------
     FOR current_record IN (SELECT * FROM kds2db_in.patient WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
             FROM db.patient target_record
-            WHERE   target_record.pat_id = current_record.pat_id AND
-                    target_record.pat_identifier_value = current_record.pat_identifier_value AND
-                    target_record.pat_identifier_system = current_record.pat_identifier_system AND
-                    target_record.pat_identifier_type_system = current_record.pat_identifier_type_system AND
-                    target_record.pat_identifier_type_version = current_record.pat_identifier_type_version AND
-                    target_record.pat_identifier_type_code = current_record.pat_identifier_type_code AND
-                    target_record.pat_identifier_type_display = current_record.pat_identifier_type_display AND
-                    target_record.pat_identifier_type_text = current_record.pat_identifier_type_text AND
-                    target_record.pat_name_given = current_record.pat_name_given AND
-                    target_record.pat_name_family = current_record.pat_name_family AND
-                    target_record.pat_gender = current_record.pat_gender AND
-                    target_record.pat_birthdate = current_record.pat_birthdate AND
-                    target_record.pat_adress_postalcode = current_record.pat_adress_postalcode
+            WHERE   pat_identifier_use = pat_identifier_use AND
+                    pat_identifier_type_system = pat_identifier_type_system AND
+                    pat_identifier_type_version = pat_identifier_type_version AND
+                    pat_identifier_type_code = pat_identifier_type_code AND
+                    pat_identifier_type_display = pat_identifier_type_display AND
+                    pat_identifier_type_text = pat_identifier_type_text AND
+                    pat_identifier_system = pat_identifier_system AND
+                    pat_identifier_value = pat_identifier_value AND
+                    pat_identifier_start = pat_identifier_start AND
+                    pat_identifier_end = pat_identifier_end AND
+                    pat_name_given = pat_name_given AND
+                    pat_name_family = pat_name_family AND
+                    pat_gender = pat_gender AND
+                    pat_birthdate = pat_birthdate AND
+                    pat_address_postalcode = pat_address_postalcode
                   ;
 
             IF data_count=0
             THEN
                 -- Füge in die Backup-Tabelle ein, wenn kein übereinstimmender Datensatz gefunden wurde
                 INSERT INTO db.patient (
-                    pat_id,
-                    pat_identifier_value,
-                    pat_identifier_system,
-                    pat_identifier_type_system,
-                    pat_identifier_type_version,
-                    pat_identifier_type_code,
-                    pat_identifier_type_display,
-                    pat_identifier_type_text,
-                    pat_name_given,
-                    pat_name_family,
-                    pat_gender,
-                    pat_birthdate,
-                    pat_adress_postalcode,
-                    input_datetime
+                pat_identifier_use,
+                pat_identifier_type_system,
+                pat_identifier_type_version,
+                pat_identifier_type_code,
+                pat_identifier_type_display,
+                pat_identifier_type_text,
+                pat_identifier_system,
+                pat_identifier_value,
+                pat_identifier_start,
+                pat_identifier_end,
+                pat_name_given,
+                pat_name_family,
+                pat_gender,
+                pat_birthdate,
+                pat_address_postalcode,
+                input_datetime
                 )
                 VALUES (
-                    current_record.pat_id,
-                    current_record.pat_identifier_value,
-                    current_record.pat_identifier_system,
-                    current_record.pat_identifier_type_system,
-                    current_record.pat_identifier_type_version,
-                    current_record.pat_identifier_type_code,
-                    current_record.pat_identifier_type_display,
-                    current_record.pat_identifier_type_text,
-                    current_record.pat_name_given,
-                    current_record.pat_name_family,
-                    current_record.pat_gender,
-                    current_record.pat_birthdate,
-                    current_record.pat_adress_postalcode,
-                    current_record.input_datetime
+                current_record.pat_identifier_use,
+                current_record.pat_identifier_type_system,
+                current_record.pat_identifier_type_version,
+                current_record.pat_identifier_type_code,
+                current_record.pat_identifier_type_display,
+                current_record.pat_identifier_type_text,
+                current_record.pat_identifier_system,
+                current_record.pat_identifier_value,
+                current_record.pat_identifier_start,
+                current_record.pat_identifier_end,
+                current_record.pat_name_given,
+                current_record.pat_name_family,
+                current_record.pat_gender,
+                current_record.pat_birthdate,
+                current_record.pat_address_postalcode,
+                current_record.input_datetime
                 );
+
 
                 -- Aktualisiere den Zeitstempel für die letzte Überprüfung/Insert
                 UPDATE kds2db_in.patient
