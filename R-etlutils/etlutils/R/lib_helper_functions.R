@@ -880,6 +880,7 @@ fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
 #' @export
 stopOnError <- function(...) {
   stop(cat_red(paste(c(...))))
+  break
 }
 
 #' #'
