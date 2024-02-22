@@ -72,9 +72,9 @@ services:
       - "15432:5432"
     environment:
       TZ: Europe/Berlin
-      POSTGRES_PASSWORD_FILE: /run/secrets/amts_db.password
-      POSTGRES_USER: interpolar_admin
-      POSTGRES_DB: interpolar
+      POSTGRES_PASSWORD_FILE: /run/secrets/amts_db_admin.password
+      POSTGRES_USER: amts_db_admin
+      POSTGRES_DB: amts_db
     command: "-c config_file=/etc/postgresql.conf"
     secrets:
       - amts_db.password
@@ -134,7 +134,7 @@ networks:
 
 secrets:
   amts_db.password:
-    file: ./Postgres-amts_db/.env_amts_db.password
+    file: ./Postgres-amts_db/.env_amts_db_admin.password
   redcap_db_root.password:
     file: ./REDCap-db/.env_redcap_db_root.password
   redcap_db.password:

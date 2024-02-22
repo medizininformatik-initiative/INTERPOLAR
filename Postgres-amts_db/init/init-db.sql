@@ -4,7 +4,7 @@
 CREATE EXTENSION pg_cron;
 
 -- optionally, grant usage to regular users:
-GRANT USAGE ON SCHEMA cron TO interpolar_admin;
+GRANT USAGE ON SCHEMA cron TO amts_db_admin;
 
 -- Create USER SQL
 CREATE USER kds2db_user WITH PASSWORD 'kds2db' CONNECTION LIMIT 20;
