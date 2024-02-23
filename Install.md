@@ -19,4 +19,6 @@
   * Führen Sie die Anweisungen in [REDCap-app/html/Readme.md](REDCap-app/html/Readme.md) aus
   * Führen Sie docker-compose aus:
     ```docker-compose up```
+  * Die amts_db (Postges-Datenbank) erreichen Sie im Browser (PGAdmin) über die URL: [http://127.0.0.1:8089/](http://127.0.0.1:8089/)
+  * Das Frontend (REDCap) erreichen Sie im Browser über die URL: [http://127.0.0.1:8082/redcap](http://127.0.0.1:8082/redcap)
 
