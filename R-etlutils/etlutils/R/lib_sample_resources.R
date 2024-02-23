@@ -621,7 +621,7 @@ polar_download_and_crack_parallel <- function(
 #' @param ids A vector of patient IDs for the FHIR resources.
 #' @param table_description A table description object specifying the structure of the resulting data table.
 #' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
-#' @param id_param_str Additional parameter string for constructing the FHIR request URL (default: 'subject').
+#' @param id_param_str Additional parameter string for constructing the FHIR request URL (default VERBOSE).
 #' @param verbose Verbosity level
 #'
 #' @return A data.table containing the cracked FHIR resources.
@@ -632,7 +632,7 @@ polar_download_by_ids_and_crack_parallel <- function(
     table_description,
     ids_at_once       = IDS_AT_ONCE,
     id_param_str,
-    verbose
+    verbose = VERBOSE
 ) {
   WAIT_TIMES <- 2 ** (0 : 7)
   max_trials <- length(WAIT_TIMES)
