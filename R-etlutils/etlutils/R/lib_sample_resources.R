@@ -517,11 +517,11 @@ polar_download_and_crack_parallel <- function(
               }
             } else if (n == 'bundles') {# if name of pkg is 'bundles'
               if (inherits(element, 'fhir_bundle_list')) {# if element is a fhir_bundle_list
-                usb <- try(fhircrackr::fhir_unserialize(element)) # serialize bundles
-                if (inherits(usb, 'try-error')) {# return error stored in usb
-                  usb
+                unserialized_bundle <- try(fhircrackr::fhir_unserialize(element)) # serialize bundles
+                if (inherits(unserialized_bundle, 'try-error')) {# return error stored in unserialized_bundle
+                  unserialized_bundle
                 } else {# try to crack bundles ignoring errors
-                  try(fhircrackr::fhir_crack(bundles = usb, design = table_description, data.table = TRUE, verbose = verbose))
+                  try(fhircrackr::fhir_crack(bundles = unserialized_bundle, design = table_description, data.table = TRUE, verbose = verbose))
                 }
               } else {# return nothing
                 NULL
@@ -564,32 +564,32 @@ polar_download_and_crack_parallel <- function(
     } else if (succ) {# if trial <= max_trials
       pkg$bundles <- pkg$request # remember pkg request contains here a fhir_bundle_list
       if (!is.null(pkg$request) && inherits(pkg$request, 'fhir_bundle_list')) {# if it is so
-        usb <- fhircrackr::fhir_unserialize(pkg$request) # unserialize the bundles
-        bundles_left <- bundles_left - length(usb)
+        unserialized_bundle <- fhircrackr::fhir_unserialize(pkg$request) # unserialize the bundles
+        bundles_left <- bundles_left - length(unserialized_bundle)
         if (0 < bundles_left) {# if there are bundle left
           pkg$request <- # create next request from next link found in bundle
-            if (0 < length(usb) && 0 < length(usb[length(usb)][[1]]@next_link)) {
-              nl <- usb[length(usb)][[1]]@next_link
+            if (0 < length(unserialized_bundle) && 0 < length(unserialized_bundle[length(unserialized_bundle)][[1]]@next_link)) {
+				next_link <- unserialized_bundle[length(unserialized_bundle)][[1]]@next_link
 
-              #is nl a relative URL?
-                if (grepl("^/",nl) == TRUE) {
-                  nl <- fhircrackr::fhir_url(paste0(baseurl,nl), url_enc = NEXT_LINK_ENCODE)
+              #is next_link a relative URL?
+                if (grepl("^/", next_link) == TRUE) {
+					next_link <- fhircrackr::fhir_url(paste0(baseurl, next_link), url_enc = NEXT_LINK_ENCODE)
                 }
 
                 #check for issues such as missing port specification
                 if (9 <= VERBOSE) {
 
-                  if (!grepl(baseurl, nl)) {
+                  if (!grepl(baseurl, next_link)) {
 
                     warning("specified FHIR_ENDPOINT is not part of the next_link URL\n")
                   }
 
-                  if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", nl) ) {
+                  if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", next_link) ) {
 
                     warning("specified FHIR_ENDPOINT provides a PORT, whereas the next_link URL does not provide a PORT\n")
                   }
                 }
-                nl
+				next_link
             } else {
               NULL
             }
@@ -744,14 +744,14 @@ polar_download_by_ids_and_crack_parallel <- function(
       X        = pkg,
       FUN      = function(element) {# element <- pkg[[1]]
         if (!inherits(element, 'character')) {
-          usb <- try(lapply(element, fhircrackr::fhir_unserialize))
-          if (inherits(usb, 'try-error')) {
-            usb
+          unserialized_bundle <- try(lapply(element, fhircrackr::fhir_unserialize))
+          if (inherits(unserialized_bundle, 'try-error')) {
+            unserialized_bundle
           } else {
             try({
               data.table::rbindlist(
                 l         = lapply(
-                  usb,
+                  unserialized_bundle,
                   function(b) {
                     fhircrackr::fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
                   }
@@ -1039,14 +1039,14 @@ fhir_url_add_common_request_params <- function(parameters = NULL) {
 #'       X        = pkg,
 #'       FUN      = function(element) {# element <- pkg[[1]]
 #'         if (!inherits(element, 'character')) {
-#'           usb <- try(lapply(element, fhir_unserialize))
-#'           if (inherits(usb, 'try-error')) {
-#'             usb
+#'           unserialized_bundle <- try(lapply(element, fhir_unserialize))
+#'           if (inherits(unserialized_bundle, 'try-error')) {
+#'             unserialized_bundle
 #'           } else {
 #'             try({
 #'               data.table::rbindlist(
 #'                 l         = lapply(
-#'                   usb,
+#'                   unserialized_bundle,
 #'                   function(b) {
 #'                     fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
 #'                   }
