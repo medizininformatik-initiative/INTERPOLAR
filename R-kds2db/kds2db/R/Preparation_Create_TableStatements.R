@@ -9,8 +9,7 @@ getTableStatmentEndRows <- function() {
   end_rows <- paste0(end_rows, ");\n\n")
 }
 
-createKDS2DBTableStatements <- function() {
-  table_description <- etlutils::readExcelFileAsTableList('./R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
+createKDS2DBTableStatements <- function(table_description) {
   statements <- ''
   last_table_name <- NA
   for (row in 1:nrow(table_description)) {
@@ -35,15 +34,34 @@ createKDS2DBTableStatements <- function() {
   statements <- paste0(statements, getTableStatmentEndRows())
 }
 
+getReplacedContentFromFile <- function(file_path, placeholder, replacement) {
+  # read the content of the file
+  content <- readLines(file_path)
+  # Replace the placeholder with the replacement
+  content <- paste0(gsub(placeholder, replacement, content), collapse = '\n')
+}
+
+getGrantStatements <- function(table_names) {
+  grant_statements <- ''
+  for (table_name in table_names) {
+    grant <- getReplacedContentFromFile('./Postgres-amts_db/init/init-db_template_sub_kds2db_grant.sql', '<%KDS2DB_GRANT_TABLE_NAME%>', table_name)
+    grant_statements <- paste0(grant_statements, grant, '\n\n\n')
+  }
+  return(grant_statements)
+}
+
 replacePlaceholders <- function() {
-  # Read the content of the file
-  #content <- readLines('./Postgres-amts-db', encoding = "UTF-8")
-  content <- readLines('./Postgres-amts_db/init/init-db_template.sql')
-  statements <- createKDS2DBTableStatements()
-  # Replace the placeholder with the statements
-  modified_content <- gsub("<%KDS2DB_CREATE_TABLE_STATEMENTS%>", statements, content)
-  # Write the modified content back to the file
-  writeLines(modified_content, './Postgres-amts_db/init/init-db_generated.sql', useBytes = TRUE)
+  table_description <- etlutils::readExcelFileAsTableList('./R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
+  table_names <- na.omit(table_description$table)
+
+  # Load template and replace the placeholder with the create table statements
+  content <- getReplacedContentFromFile('./Postgres-amts_db/init/init-db_template.sql', '<%KDS2DB_CREATE_TABLE_STATEMENTS%>', createKDS2DBTableStatements(table_description))
+  # replace placeholder for grant statements
+  grant_statements <- getGrantStatements(table_names)
+  content <- gsub('<%KDS2DB_GRANT%>', getGrantStatements(table_names), content)
+
+  # Write the modified content to the file
+  writeLines(content, './Postgres-amts_db/init/init-db_generated.sql', useBytes = TRUE)
 }
 
 replacePlaceholders()
