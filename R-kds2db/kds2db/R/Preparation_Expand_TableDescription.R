@@ -149,8 +149,12 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   last_row_index <- nrow(table)
   while (row <= last_row_index) {
 
-    if (!is.na(table$resource_prefix[row])) {
-      resource_prefix <- paste0(table$resource_prefix[row], '_')
+    if (!is.na(table$resource[row])) {
+      if (!is.na(table$resource_prefix[row])) {
+        resource_prefix <- paste0(table$resource_prefix[row], '_')
+      } else {
+        resource_prefix <- ""
+      }
     }
 
     fhir_expression <- table$fhir_expression[row]
