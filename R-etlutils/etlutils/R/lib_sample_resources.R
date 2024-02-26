@@ -921,7 +921,7 @@ fhir_url_add_common_request_params <- function(parameters = NULL) {
 #' #'
 #' #' @export
 #' polar_download_by_ids_and_crack_parallel <- function(
-    #'   resource          = 'Patient',
+#'   resource          = 'Patient',
 #'   ids               = patient_refs_ids,
 #'   table_description = TABLE_DESCRIPTION$Patient,
 #'   ids_at_once       = 100,
