@@ -322,7 +322,7 @@ expandTableDescription <- function() {
 #'
 #' @export
 checkResult <- function(expanded_table_description) {
-  result <- TRUE
+  isValid <- TRUE
   max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
   if (max_column_name_chars > 64) {
     message('ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
@@ -331,7 +331,7 @@ checkResult <- function(expanded_table_description) {
     }
     message(paste0("Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
                    "Table_Description_Definition.xlsx file to shorten these column names.\n"))
-    result <- FALSE
+    isValid <- FALSE
   }
   column_names <- c()
   for (row in seq_len(nrow(expanded_table_description))) {
@@ -345,16 +345,27 @@ checkResult <- function(expanded_table_description) {
                        "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
                        "itself appears twice, this error occurs.\n"))
 
-        result <- FALSE
+        isValid <- FALSE
       }
 
       resource <- expanded_table_description$resource[row]
       column_names <- c()
     }
     column_names[length(column_names) + 1] <- expanded_table_description$column_name[row]
-
   }
-  return(result)
+  invalid_rows <- which(!is.na(expanded_table_description$fhir_expression) & is.na(expanded_table_description$single_length))
+  if (length(invalid_rows)) {
+    message("ERROR: The following rows have no entry in column single_length.")
+    # Erfasse die Ausgabe von print() in einem Vektor
+    message_data <- capture.output(print(expanded_table_description[invalid_rows]))
+    # Verwende message(), um den Vektor Zeile für Zeile auszugeben
+    message(paste(message_data, collapse = "\n"))
+    message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the fhir_expression column for a row that should be expanded.")
+    isValid <- FALSE
+  }
+
+
+  return(isValid)
 }
 
-#expandTableDescription()
+expandTableDescription()
