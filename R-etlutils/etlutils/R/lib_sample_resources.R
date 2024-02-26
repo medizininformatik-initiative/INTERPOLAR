@@ -65,7 +65,7 @@ polar_refresh_token <- function() {
     httr::authenticate(
       user = FHIR_TOKEN_REFRESH_USER,
       password = FHIR_TOKEN_REFRESH_PASSWORD
-  ))
+    ))
 
   #Token as payload
   httr::content(response, as = "text")
@@ -238,12 +238,12 @@ polar_get_resources_ids <- function(endpoint, resource, parameters = NULL, verbo
 #' @return A list of FHIR resources in the form of a fhir_bundle_list.
 #' @export
 polar_get_resources_by_ids <- function(
-  endpoint,
-  resource,
-  ids,
-  id_param_str = '_id',
-  parameters   = fhir_url_add_common_request_params(c()),
-  verbose      = 0
+    endpoint,
+    resource,
+    ids,
+    id_param_str = '_id',
+    parameters   = fhir_url_add_common_request_params(c()),
+    verbose      = 0
 ) {
   polar_get_resources_by_ids_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
@@ -363,13 +363,13 @@ polar_get_resources_by_ids <- function(
 #' @return A list of sampled FHIR resources.
 #' @export
 polar_sample_identified_resources <- function(
-  endpoint,
-  resource,
-  ids,
-  parameters  = NULL,
-  sample_size = 20,
-  seed        = as.double(Sys.time()),
-  verbose     = 1
+    endpoint,
+    resource,
+    ids,
+    parameters  = NULL,
+    sample_size = 20,
+    seed        = as.double(Sys.time()),
+    verbose     = 1
 ) {
   if (length(ids) < sample_size) {# if size of sample is smaller than number of ids
     stop("The sample must be smaller or equal than the population size.")
@@ -396,12 +396,12 @@ polar_sample_identified_resources <- function(
 #' @return A list of bundles containing sampled resources.
 #' @export
 polar_sample_resources <- function(
-  endpoint,
-  resource,
-  parameters  = parameters,
-  sample_size = 20,
-  seed        = as.double(Sys.time()),
-  verbose     = 1
+    endpoint,
+    resource,
+    parameters  = parameters,
+    sample_size = 20,
+    seed        = as.double(Sys.time()),
+    verbose     = 1
 ) {
   cnt <- polar_get_resources_count(endpoint = endpoint, resource = resource, parameters = parameters, verbose = verbose)
   if (cnt < sample_size) {# sample size must be smaller of resource on server
@@ -434,13 +434,13 @@ polar_sample_resources <- function(
 #' @return A data.table containing the cracked FHIR resource data.
 #' @export
 polar_download_and_crack_parallel <- function(
-  request           = REQUEST_ENCOUNTER,
-  table_description = TABLE_DESCRIPTION$Encounter,
-  bundles_at_once   = 20,
-  verbose           = 1,
-  bundles_left      = MAX_ENCOUNTER_BUNDLES,
-  max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
-  log_errors        = 'enc_error.xml'
+    request           = REQUEST_ENCOUNTER,
+    table_description = TABLE_DESCRIPTION$Encounter,
+    bundles_at_once   = 20,
+    verbose           = 1,
+    bundles_left      = MAX_ENCOUNTER_BUNDLES,
+    max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
+    log_errors        = 'enc_error.xml'
 ) {
 
   WAIT_TIMES <- DELAY_REQ ** (0 : 7) # try 8 times and wait DELAY_REQ^loop seconds
@@ -569,27 +569,27 @@ polar_download_and_crack_parallel <- function(
         if (0 < bundles_left) {# if there are bundle left
           pkg$request <- # create next request from next link found in bundle
             if (0 < length(unserialized_bundle) && 0 < length(unserialized_bundle[length(unserialized_bundle)][[1]]@next_link)) {
-				next_link <- unserialized_bundle[length(unserialized_bundle)][[1]]@next_link
+              next_link <- unserialized_bundle[length(unserialized_bundle)][[1]]@next_link
 
               #is next_link a relative URL?
-                if (grepl("^/", next_link) == TRUE) {
-					next_link <- fhircrackr::fhir_url(paste0(baseurl, next_link), url_enc = NEXT_LINK_ENCODE)
+              if (grepl("^/", next_link) == TRUE) {
+                next_link <- fhircrackr::fhir_url(paste0(baseurl, next_link), url_enc = NEXT_LINK_ENCODE)
+              }
+
+              #check for issues such as missing port specification
+              if (9 <= VERBOSE) {
+
+                if (!grepl(baseurl, next_link)) {
+
+                  warning("specified FHIR_ENDPOINT is not part of the next_link URL\n")
                 }
 
-                #check for issues such as missing port specification
-                if (9 <= VERBOSE) {
+                if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", next_link) ) {
 
-                  if (!grepl(baseurl, next_link)) {
-
-                    warning("specified FHIR_ENDPOINT is not part of the next_link URL\n")
-                  }
-
-                  if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", next_link) ) {
-
-                    warning("specified FHIR_ENDPOINT provides a PORT, whereas the next_link URL does not provide a PORT\n")
-                  }
+                  warning("specified FHIR_ENDPOINT provides a PORT, whereas the next_link URL does not provide a PORT\n")
                 }
-				next_link
+              }
+              next_link
             } else {
               NULL
             }
@@ -609,7 +609,7 @@ polar_download_and_crack_parallel <- function(
       cat_red('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
   }
   # complete tables with missing column
-	complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.
@@ -621,8 +621,8 @@ polar_download_and_crack_parallel <- function(
 #' @param ids A vector of patient IDs for the FHIR resources.
 #' @param table_description A table description object specifying the structure of the resulting data table.
 #' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
-#' @param id_param_str Additional parameter string for constructing the FHIR request URL (default VERBOSE).
-#' @param verbose Verbosity level
+#' @param id_param_str Additional parameter string for constructing the FHIR request URL.
+#' @param verbose Verbosity level (default: VERBOSE)
 #'
 #' @return A data.table containing the cracked FHIR resources.
 #' @export
@@ -921,7 +921,7 @@ fhir_url_add_common_request_params <- function(parameters = NULL) {
 #' #'
 #' #' @export
 #' polar_download_by_ids_and_crack_parallel <- function(
-#'   resource          = 'Patient',
+    #'   resource          = 'Patient',
 #'   ids               = patient_refs_ids,
 #'   table_description = TABLE_DESCRIPTION$Patient,
 #'   ids_at_once       = 100,
