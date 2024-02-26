@@ -43,6 +43,41 @@ extractReplacePatterns <- function(table_description_collapsed) {
   return(replace_patterns)
 }
 
+#' Add Empty Rows Before New Resource Entries in a Data Table
+#'
+#' This function inserts an empty row in a data table before each new resource entry,
+#' except before the first row and where the first column (`resource`) is not NA.
+#' It's useful for visually separating different resources in a data table.
+#'
+#' @param table A `data.table` object with a column named `resource`. The function
+#'              will insert empty rows based on the conditions specified.
+#' @return A modified `data.table` with empty rows inserted before new resource entries.
+#' @examples
+#' \dontrun{
+#' # Assuming `table` is a data.table with a column `resource`
+#' table <- data.table(resource = c(NA, 'Resource1', 'Resource1', NA, 'Resource2'),
+#'                     value = 1:5)
+#' table <- addEmptyRowsBeforeNewResource(table)
+#' print(table)
+#' }
+addEmptyRowsBeforeNewResource <- function(table) {
+
+  # Generate an index indicating where empty rows should be inserted
+  # (before each row except the first and if 'resource' column is not NA)
+  new_resource_start_rows <- which(!is.na(table$resource) & seq_len(nrow(table)) != 1)
+
+  for (empty_row_insert_index in seq(length(new_resource_start_rows), 1, by = -1)) {
+    index <- new_resource_start_rows[empty_row_insert_index]
+    # Duplicate the row and insert it, then set all values in the first of the two rows to NA
+    table <- rbind(
+      table[1:index - 1, ],
+      table[index, ][, lapply(.SD, function(x) NA)],
+      table[index:.N, ]
+    )
+  }
+  return(table)
+}
+
 #' Expand Table Description with Specified Expansion Tables
 #'
 #' This function expands a given table description by replacing certain rows with data from expansion tables.
@@ -167,6 +202,8 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   table[, resource_prefix := NULL]
   # set all column_name entries to lower case
   table[, column_name := tolower(column_name)]
+  # add empty row after every last entry of a resource (and before a new resource starts)
+  addEmptyRowsBeforeNewResource(table)
 }
 
 #' Expand Table Description from an Excel File
@@ -285,7 +322,7 @@ expandTableDescription <- function() {
 #'
 #' @export
 checkResult <- function(expanded_table_description) {
-  result <- TRUE
+  isValid <- TRUE
   max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
   if (max_column_name_chars > 64) {
     message('ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
@@ -294,7 +331,7 @@ checkResult <- function(expanded_table_description) {
     }
     message(paste0("Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
                    "Table_Description_Definition.xlsx file to shorten these column names.\n"))
-    result <- FALSE
+    isValid <- FALSE
   }
   column_names <- c()
   for (row in seq_len(nrow(expanded_table_description))) {
@@ -308,16 +345,27 @@ checkResult <- function(expanded_table_description) {
                        "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
                        "itself appears twice, this error occurs.\n"))
 
-        result <- FALSE
+        isValid <- FALSE
       }
 
       resource <- expanded_table_description$resource[row]
       column_names <- c()
     }
     column_names[length(column_names) + 1] <- expanded_table_description$column_name[row]
-
   }
-  return(result)
+  invalid_rows <- which(!is.na(expanded_table_description$fhir_expression) & is.na(expanded_table_description$single_length))
+  if (length(invalid_rows)) {
+    message("ERROR: The following rows have no entry in column single_length.")
+    # Erfasse die Ausgabe von print() in einem Vektor
+    message_data <- capture.output(print(expanded_table_description[invalid_rows]))
+    # Verwende message(), um den Vektor Zeile für Zeile auszugeben
+    message(paste(message_data, collapse = "\n"))
+    message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the fhir_expression column for a row that should be expanded.")
+    isValid <- FALSE
+  }
+
+
+  return(isValid)
 }
 
-#expandTableDescription()
+expandTableDescription()
