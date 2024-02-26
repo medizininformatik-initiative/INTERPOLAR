@@ -65,7 +65,7 @@ polar_refresh_token <- function() {
     httr::authenticate(
       user = FHIR_TOKEN_REFRESH_USER,
       password = FHIR_TOKEN_REFRESH_PASSWORD
-  ))
+    ))
 
   #Token as payload
   httr::content(response, as = "text")
@@ -238,12 +238,12 @@ polar_get_resources_ids <- function(endpoint, resource, parameters = NULL, verbo
 #' @return A list of FHIR resources in the form of a fhir_bundle_list.
 #' @export
 polar_get_resources_by_ids <- function(
-  endpoint,
-  resource,
-  ids,
-  id_param_str = '_id',
-  parameters   = fhir_url_add_common_request_params(c()),
-  verbose      = 0
+    endpoint,
+    resource,
+    ids,
+    id_param_str = '_id',
+    parameters   = fhir_url_add_common_request_params(c()),
+    verbose      = 0
 ) {
   polar_get_resources_by_ids_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
@@ -363,13 +363,13 @@ polar_get_resources_by_ids <- function(
 #' @return A list of sampled FHIR resources.
 #' @export
 polar_sample_identified_resources <- function(
-  endpoint,
-  resource,
-  ids,
-  parameters  = NULL,
-  sample_size = 20,
-  seed        = as.double(Sys.time()),
-  verbose     = 1
+    endpoint,
+    resource,
+    ids,
+    parameters  = NULL,
+    sample_size = 20,
+    seed        = as.double(Sys.time()),
+    verbose     = 1
 ) {
   if (length(ids) < sample_size) {# if size of sample is smaller than number of ids
     stop("The sample must be smaller or equal than the population size.")
@@ -396,12 +396,12 @@ polar_sample_identified_resources <- function(
 #' @return A list of bundles containing sampled resources.
 #' @export
 polar_sample_resources <- function(
-  endpoint,
-  resource,
-  parameters  = parameters,
-  sample_size = 20,
-  seed        = as.double(Sys.time()),
-  verbose     = 1
+    endpoint,
+    resource,
+    parameters  = parameters,
+    sample_size = 20,
+    seed        = as.double(Sys.time()),
+    verbose     = 1
 ) {
   cnt <- polar_get_resources_count(endpoint = endpoint, resource = resource, parameters = parameters, verbose = verbose)
   if (cnt < sample_size) {# sample size must be smaller of resource on server
@@ -434,13 +434,13 @@ polar_sample_resources <- function(
 #' @return A data.table containing the cracked FHIR resource data.
 #' @export
 polar_download_and_crack_parallel <- function(
-  request           = REQUEST_ENCOUNTER,
-  table_description = TABLE_DESCRIPTION$Encounter,
-  bundles_at_once   = 20,
-  verbose           = 1,
-  bundles_left      = MAX_ENCOUNTER_BUNDLES,
-  max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
-  log_errors        = 'enc_error.xml'
+    request           = REQUEST_ENCOUNTER,
+    table_description = TABLE_DESCRIPTION$Encounter,
+    bundles_at_once   = 20,
+    verbose           = 1,
+    bundles_left      = MAX_ENCOUNTER_BUNDLES,
+    max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
+    log_errors        = 'enc_error.xml'
 ) {
 
   WAIT_TIMES <- DELAY_REQ ** (0 : 7) # try 8 times and wait DELAY_REQ^loop seconds
@@ -517,11 +517,11 @@ polar_download_and_crack_parallel <- function(
               }
             } else if (n == 'bundles') {# if name of pkg is 'bundles'
               if (inherits(element, 'fhir_bundle_list')) {# if element is a fhir_bundle_list
-                usb <- try(fhircrackr::fhir_unserialize(element)) # serialize bundles
-                if (inherits(usb, 'try-error')) {# return error stored in usb
-                  usb
+                unserialized_bundle <- try(fhircrackr::fhir_unserialize(element)) # serialize bundles
+                if (inherits(unserialized_bundle, 'try-error')) {# return error stored in unserialized_bundle
+                  unserialized_bundle
                 } else {# try to crack bundles ignoring errors
-                  try(fhircrackr::fhir_crack(bundles = usb, design = table_description, data.table = TRUE, verbose = verbose))
+                  try(fhircrackr::fhir_crack(bundles = unserialized_bundle, design = table_description, data.table = TRUE, verbose = verbose))
                 }
               } else {# return nothing
                 NULL
@@ -564,32 +564,32 @@ polar_download_and_crack_parallel <- function(
     } else if (succ) {# if trial <= max_trials
       pkg$bundles <- pkg$request # remember pkg request contains here a fhir_bundle_list
       if (!is.null(pkg$request) && inherits(pkg$request, 'fhir_bundle_list')) {# if it is so
-        usb <- fhircrackr::fhir_unserialize(pkg$request) # unserialize the bundles
-        bundles_left <- bundles_left - length(usb)
+        unserialized_bundle <- fhircrackr::fhir_unserialize(pkg$request) # unserialize the bundles
+        bundles_left <- bundles_left - length(unserialized_bundle)
         if (0 < bundles_left) {# if there are bundle left
           pkg$request <- # create next request from next link found in bundle
-            if (0 < length(usb) && 0 < length(usb[length(usb)][[1]]@next_link)) {
-              nl <- usb[length(usb)][[1]]@next_link
+            if (0 < length(unserialized_bundle) && 0 < length(unserialized_bundle[length(unserialized_bundle)][[1]]@next_link)) {
+              next_link <- unserialized_bundle[length(unserialized_bundle)][[1]]@next_link
 
-              #is nl a relative URL?
-                if (grepl("^/",nl) == TRUE) {
-                  nl <- fhircrackr::fhir_url(paste0(baseurl,nl), url_enc = NEXT_LINK_ENCODE)
+              #is next_link a relative URL?
+              if (grepl("^/", next_link) == TRUE) {
+                next_link <- fhircrackr::fhir_url(paste0(baseurl, next_link), url_enc = NEXT_LINK_ENCODE)
+              }
+
+              #check for issues such as missing port specification
+              if (9 <= VERBOSE) {
+
+                if (!grepl(baseurl, next_link)) {
+
+                  warning("specified FHIR_ENDPOINT is not part of the next_link URL\n")
                 }
 
-                #check for issues such as missing port specification
-                if (9 <= VERBOSE) {
+                if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", next_link) ) {
 
-                  if (!grepl(baseurl, nl)) {
-
-                    warning("specified FHIR_ENDPOINT is not part of the next_link URL\n")
-                  }
-
-                  if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", nl) ) {
-
-                    warning("specified FHIR_ENDPOINT provides a PORT, whereas the next_link URL does not provide a PORT\n")
-                  }
+                  warning("specified FHIR_ENDPOINT provides a PORT, whereas the next_link URL does not provide a PORT\n")
                 }
-                nl
+              }
+              next_link
             } else {
               NULL
             }
@@ -609,7 +609,7 @@ polar_download_and_crack_parallel <- function(
       cat_red('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
   }
   # complete tables with missing column
-	complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.
@@ -621,8 +621,8 @@ polar_download_and_crack_parallel <- function(
 #' @param ids A vector of patient IDs for the FHIR resources.
 #' @param table_description A table description object specifying the structure of the resulting data table.
 #' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
-#' @param id_param_str Additional parameter string for constructing the FHIR request URL (default: 'subject').
-#' @param verbose Verbosity level
+#' @param id_param_str Additional parameter string for constructing the FHIR request URL.
+#' @param verbose Verbosity level (default: VERBOSE)
 #'
 #' @return A data.table containing the cracked FHIR resources.
 #' @export
@@ -632,7 +632,7 @@ polar_download_by_ids_and_crack_parallel <- function(
     table_description,
     ids_at_once       = IDS_AT_ONCE,
     id_param_str,
-    verbose
+    verbose = VERBOSE
 ) {
   WAIT_TIMES <- 2 ** (0 : 7)
   max_trials <- length(WAIT_TIMES)
@@ -744,14 +744,14 @@ polar_download_by_ids_and_crack_parallel <- function(
       X        = pkg,
       FUN      = function(element) {# element <- pkg[[1]]
         if (!inherits(element, 'character')) {
-          usb <- try(lapply(element, fhircrackr::fhir_unserialize))
-          if (inherits(usb, 'try-error')) {
-            usb
+          unserialized_bundle <- try(lapply(element, fhircrackr::fhir_unserialize))
+          if (inherits(unserialized_bundle, 'try-error')) {
+            unserialized_bundle
           } else {
             try({
               data.table::rbindlist(
                 l         = lapply(
-                  usb,
+                  unserialized_bundle,
                   function(b) {
                     fhircrackr::fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
                   }
@@ -1039,14 +1039,14 @@ fhir_url_add_common_request_params <- function(parameters = NULL) {
 #'       X        = pkg,
 #'       FUN      = function(element) {# element <- pkg[[1]]
 #'         if (!inherits(element, 'character')) {
-#'           usb <- try(lapply(element, fhir_unserialize))
-#'           if (inherits(usb, 'try-error')) {
-#'             usb
+#'           unserialized_bundle <- try(lapply(element, fhir_unserialize))
+#'           if (inherits(unserialized_bundle, 'try-error')) {
+#'             unserialized_bundle
 #'           } else {
 #'             try({
 #'               data.table::rbindlist(
 #'                 l         = lapply(
-#'                   usb,
+#'                   unserialized_bundle,
 #'                   function(b) {
 #'                     fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
 #'                   }

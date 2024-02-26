@@ -872,15 +872,9 @@ fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
 #'
 #' @param ... Character vectors to be concatenated and printed as an error message.
 #'
-#' @return This function does not return a value. It stops execution.
-#'
-#' @examples
-#' stopOnError("Error: Something went wrong.")
-#'
 #' @export
 stopOnError <- function(...) {
   stop(cat_red(paste(c(...))))
-  break
 }
 
 #' #'
