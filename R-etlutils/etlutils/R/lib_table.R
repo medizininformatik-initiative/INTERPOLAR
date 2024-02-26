@@ -754,3 +754,122 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
   # Apply the new order
   setcolorder(dt, new_order)
 }
+
+#' Print a summary for a table
+#'
+#' This function prints a summary for the specified table, including information
+#' about the class, type, number of available values, and number of missing values
+#' for each column. The summary is displayed in a formatted table.
+#'
+#' @param table The input table to summarize. For example, you can use the mtcars dataset.
+#' @param table_name An optional name for the table, used in the summary output.
+#' @return This function does not explicitly return a value. It prints the summary to the console.
+#'
+#' @examples
+#' # Load required packages
+#' library(datasets)
+#' library(data.table)
+#'
+#' # Load the mtcars dataset and convert it to a data.table
+#' data(mtcars)
+#' setDT(mtcars)
+#'
+#' # Print summary for the mtcars table
+#' print_table_summary(table = mtcars, table_name = 'mtcars')
+#'
+#' @export
+print_table_summary <- function(table=table_enc, table_name = '') {
+  dt <- data.table::as.data.table(
+    cbind(
+      class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
+      type       = sapply(names(table), function(n) typeof(table[[n]])),
+      available  = sapply(names(table), function(n) sum(!is.na(table[[n]]))),
+      missing    = sapply(names(table), function(n) sum( is.na(table[[n]])))
+    ),
+    keep.rownames = TRUE
+  )
+  if (0 < nrow(dt)) {
+    cat(
+      frame_string(
+        text = paste0(
+          'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n',
+          dataTableAsCharacter(
+            data.table::setnames(
+              x = dt,
+              new = c('Column', 'Class', 'Type', 'Available', 'Missing')
+            ),
+            header = TRUE,
+            footer = TRUE
+          )
+        ),
+        edge = c('\u231c\u231d\u231e\u231f'),
+        hori = ' ',
+        vert = ' '
+      )
+    )
+  } else {
+    cat(
+      frame_string(
+        text = paste0(
+          'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n'
+        ),
+        edge = c('\u231c\u231d\u231e\u231f'),
+        hori = ' ',
+        vert = ' '
+      )
+    )
+  }
+}
+
+#' Convert Data.Table to Character String
+#'
+#' This function converts a data.table to a formatted character string with optional header and footer.
+#'
+#' @param dt A data.table to be converted.
+#' @param header Logical, indicating whether to include a header with column names.
+#' @param footer Logical, indicating whether to include a footer with column names.
+#' @return A formatted character string representation of the data.table.
+#'
+#' @details
+#' The function converts a data.table to a character string, aligning columns and optionally including a header and footer.
+#' It pads each column to the maximum width of its elements for better alignment.
+#'
+#' @export
+dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
+  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+  .SD <- NULL
+  d <- if (header) rbind(as.list(names(dt)), dt) else dt
+  if (footer) d <- rbind(d, as.list(names(dt)))
+  l <- d[,lapply(.SD, function(x) max(nchar(x)))]
+  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = d[[i]], width = l[[i]], side = 'left', pad = ' ')))
+  paste0(
+    sapply(
+      seq_len(nrow(d)),
+      function(i) {
+        paste0(d[i, ], collapse = '  ')
+      }
+    ),
+    collapse = '\n'
+  )
+}
+
+#' Complete Table with Missing Columns
+#'
+#' This function completes a table by adding missing columns based on the specified table description.
+#'
+#' @param table A data.table representing the table to be completed.
+#' @param table_description A description of the expected table structure.
+#'
+#' @return A completed data.table with missing columns added.
+#' @export
+complete_table <- function(table, table_description) {
+  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+  .SD <- NULL
+  col_names <- names(table_description@cols)
+  empty_table <- data.table::setnames(
+    data.table::data.table(matrix(ncol = length(col_names), nrow = 0)),
+    new = col_names
+  )
+  d <- data.table::rbindlist(list(empty_table, table), fill = TRUE, use.names = TRUE)
+  d[, lapply(.SD, function(x) methods::as(x, 'character'))]
+}

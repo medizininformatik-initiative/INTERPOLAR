@@ -13,25 +13,10 @@
 #'
 initConstants <- function() {
   # Path to the module configuration TOML file
-  path2config_toml <- ifelse(interactive(), './R-db2frontend', '.')
-  path2config_toml <- paste0(path2config_toml, '/db2frontend_config.toml')
+  path2config_toml <- './R-db2frontend/db2frontend_config.toml'
   # Load module configuration settings
   etlutils::initConstants(path2config_toml)
-
   # Load database configuration settings
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
-}
-
-initConstants <- function() {
-  ###
-  # Read the module configuration toml file.
-  ###
-  path2config_toml <- ifelse(interactive(), './R-db2frontend', '.')
-  path2config_toml <- paste0(path2config_toml, '/db2frontend_config.toml')
-  etlutils::initConstants(path2config_toml)
-  ###
-  # Read the DB configuration toml file
-  ###
   etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
 }
 
@@ -60,6 +45,7 @@ initConstants <- function() {
 copyDB2Redcap <- function() {
   #get data from patient view / tabelle, schema _out
   initConstants()
+
   #establish connection to db
   dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
                    DB_GENERAL_PORT, DB_DB2FRONTEND_SCHEMA_OUT)
@@ -70,7 +56,7 @@ copyDB2Redcap <- function() {
                               pat_gschlcht FROM patient")
 
   #connect to REDCap project
-  redcapcon <- redcapAPI::redcapConnection(url = url,token = token)
+  redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
   #send data to REDCap
   redcapAPI::importRecords(redcapcon, data = new_data, logfile = "log.txt")

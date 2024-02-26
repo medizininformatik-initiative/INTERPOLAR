@@ -68,8 +68,7 @@ dbDisconnect <- function(db_connection) {
 dbListTables <- function(db_connection) {
   # Get existing table names from the database connection
   tables <- DBI::dbListTables(db_connection)
-  # Display the table names using the str() function for a concise overview
-  utils::str(tables)
+  return(tables)
 }
 
 #' Insert Rows into a PostgreSQL Table
@@ -94,17 +93,12 @@ dbAddContent <- function(db_connection, table_name, table) {
   # Get row count for reporting
   row_count <- nrow(table)
   if (row_count > 0) {
-    # Try to append table content and catch any error
-    db_insert_result <- try(RPostgres::dbAppendTable(db_connection, table_name, table))
-    # Check for error in insertion and stop execution if error occurs
-    if (isError(db_insert_result)) {
-      print(db_insert_result)
-      STOP <<- TRUE
-    }
+    # Append table content
+    db_insert_result <- RPostgres::dbAppendTable(db_connection, table_name, table)
   }
   # Calculate and print duration of operation
   duration <- difftime(Sys.time(), time0, units = 'secs')
-  print(paste0('Inserted in ', table_name, ', ', row_count, ' rows (took ', duration, ' seconds)', ifelse(STOP, ' with error', '')))
+  print(paste0('Inserted in ', table_name, ', ', row_count, ' rows (took ', duration, ' seconds)'))
 }
 
 #' Delete All Rows from a Database Table

@@ -242,161 +242,6 @@ sortListByName <- function(list) list[order(names(list))]
 #'
 isDebug <- function() exists('DEBUG') && DEBUG
 
-#' Execute an outer script with a specified message and process
-#'
-#' This function runs an outer script with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the outer script.
-#' @param process A function representing the outer script to be executed.
-#'
-#' @export
-run_out <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_20_OUTER_SCRIPTS
-  )}
-
-#' Execute an inner script with a specified message and process
-#'
-#' This function runs an inner script with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the inner script.
-#' @param process A function representing the inner script to be executed.
-#'
-#' @export
-run_in <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_30_INNER_SCRIPTS
-  )}
-
-#' Execute an inner script info with a specified message and process
-#'
-#' This function runs an inner script info with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the inner script info.
-#' @param process A function representing the inner script info to be executed.
-#'
-#' @export
-run_in_in <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_40_INNER_SCRIPTS_INFOS
-  )}
-
-#' Execute an inner script info with a specified message and process
-#'
-#' This function runs an inner script info with the provided message and process, controlling
-#' the verbosity level. If an error occurs, it is ignored.
-#'
-#' @param message A character string describing the purpose of the inner script info.
-#' @param process A function representing the inner script info to be executed.
-#'
-#' @export
-run_in_in_ignore_error <- function(message, process) {
-  run(
-    message = message,
-    process = process,
-    verbose = VL_40_INNER_SCRIPTS_INFOS,
-    throw_exception = FALSE
-  )}
-
-#' Execute a script with specified message, process, and verbosity level
-#'
-#' This function runs a script with the provided message and process, controlling
-#' the verbosity level.
-#'
-#' @param message A character string describing the purpose of the script.
-#' @param process A function representing the script to be executed.
-#' @param verbose An integer specifying the verbosity level.
-#' @param throw_exception if TRUE the execution of the current expression will be stopped
-#'
-#' @export
-run <- function(message, process, verbose, throw_exception = TRUE) {
-  polar_run(
-    message = message,
-    process = process,
-    verbose = VERBOSE - verbose + 1,
-    single_line = VERBOSE <= verbose,
-    throw_exception = throw_exception
-  )}
-
-#' Execute an outer script with specified message and process (single line)
-#'
-#' This function runs an outer script with the provided message and process, controlling
-#' the verbosity level. Unlike `runs`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the outer script.
-#' @param process A function representing the outer script to be executed.
-#'
-#' @export
-runs_out <- function(message, process) {
-  runs(
-    message = message,
-    process = process,
-    verbose = VL_20_OUTER_SCRIPTS
-  )}
-
-#' Execute an inner script with specified message and process (single line)
-#'
-#' This function runs an inner script with the provided message and process, controlling
-#' the verbosity level. Unlike `runs`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the inner script.
-#' @param process A function representing the inner script to be executed.
-#'
-#' @export
-runs_in <- function(message, process) {
-  runs(
-    message = message,
-    process = process,
-    verbose = VL_30_INNER_SCRIPTS
-  )}
-
-#' Execute an inner script info with specified message and process (single line)
-#'
-#' This function runs an inner script info with the provided message and process, controlling
-#' the verbosity level. Unlike `runs`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the inner script info.
-#' @param process A function representing the inner script info to be executed.
-#'
-#' @export
-runs_in_in <- function(message, process) {
-  runs(
-    message = message,
-    process = process,
-    verbose = VL_40_INNER_SCRIPTS_INFOS
-  )}
-
-#' Execute a script with specified message, process, and verbosity level (single line)
-#'
-#' This function runs a script with the provided message and process, controlling
-#' the verbosity level. Unlike `run`, this function always displays output in a
-#' single line, regardless of the global verbosity setting.
-#'
-#' @param message A character string describing the purpose of the script.
-#' @param process A function representing the script to be executed.
-#' @param verbose An integer specifying the verbosity level.
-#'
-#' @export
-runs <- function(message, process, verbose) {
-  polar_run(
-    message = message,
-    process = process,
-    verbose = VERBOSE - verbose + 1,
-    single_line = TRUE
-  )}
-
 #' Conditional Print to Console (for tables) based on verbosity level
 #'
 #' This function prints the provided content to the console only if the global
@@ -469,6 +314,8 @@ flatten_list <- function(x, prefix = NULL) {
 #'
 #' @export
 initConstants <- function(path_to_toml) {
+  # normalize relative path for error message
+  path_to_toml <- normalizePath(path_to_toml)
   # load the config toml file in the global environment
   CONFIG <<- RcppTOML::parseToml(path_to_toml)
   # Take nested list CONFIG and flattens it into a single-level list
@@ -480,6 +327,15 @@ initConstants <- function(path_to_toml) {
   # Assign values to variables from flattenConfig
   for (variable_name in variable_names) {
     assign(variable_name, flattenConfig[[variable_name]], envir = .GlobalEnv)
+  }
+
+  # Port specification in the fhir server url can cause problems -> warning
+  URL_PORT_SPEC <<- FALSE
+  if (exists('FHIR_SERVER_ENDPOINT')) {
+    if (grepl(":[0-9]+(/.*)?$", FHIR_SERVER_ENDPOINT)) {
+      URL_PORT_SPEC <<- TRUE
+      warning("FHIR_ENDPOINT use PORT specification. Some Fhir servers do not provide this port in pagination's next_link")
+    }
   }
 
   # the result dir can be extended by an timestamp. this is not neccessary
@@ -739,6 +595,293 @@ replacePatternsInString <- function(patternsAndReplacements, string, ignore.case
   return(string)
 }
 
+#' Check for Errors
+#'
+#' @param err Any Type. In case of an error occurred it must contain try-error as class
+#' @param expr_ok An expression. This runs in case of no error.
+#' @param expr_err An expression. This runs in case of an error.
+#'
+#' @return err
+#' @export
+check_error <- function(err, expr_ok = {cat_ok()}, expr_err = {cat_error()}) {
+
+  if (!inherits(err, 'try-error')) {
+    expr_ok
+  } else {
+    expr_err
+  }
+}
+
+#' Convert Numbers to Verbose Number Representations
+#'
+#' This function converts numbers to verbose number representations, such as "1st," "2nd," "3rd," or "th."
+#'
+#' @param n Numeric vector to be converted.
+#'
+#' @return A character vector representing the verbose number representation.
+#' @export
+verbose_numbers <- function(n) {
+  n[n < 1 | 3 < n] <- paste0(n[n < 1 | 3 < n], 'th')
+  n[n == 1] <- '1st'
+  n[n == 2] <- '2nd'
+  n[n == 3] <- '3rd'
+  n
+}
+
+#' Pluralize Suffix Based on Count
+#'
+#' This function returns an empty string for count 1 and 's' for any other count.
+#'
+#' @param counts Numeric vector of counts.
+#'
+#' @return
+#' An empty string for count 1, 's' otherwise.
+#' @export
+plural_s <- function(counts) {
+  ifelse(counts == 1, '', 's')
+}
+
+#' Create a Framed String
+#'
+#' This function creates a framed string with specified formatting parameters.
+#'
+#' @param text A character string to be framed.
+#' @param pos The position of the framed text within the frame. It can be 'left', 'center', or 'right'.
+#' @param edge The characters to be used for framing the top, bottom, left, and right edges.
+#' @param hori The character to be used for horizontal framing.
+#' @param vert The character to be used for vertical framing.
+#' @return A character string representing the framed text.
+#'
+#' @details
+#' The function creates a framed string by adding specified framing characters (edges, horizontal, and vertical) around the input text.
+#' It allows customization of the frame's position, edge characters, and framing characters.
+#' The resulting framed string is useful for creating visually appealing console outputs.
+#'
+#' @export
+frame_string <- function(
+    text = styled_string('\nHello !!!\n\n\nIs\nthere\n\nA N Y O N E\n\nout\nthere\n???\n '),
+    pos  = c('left', 'center', 'right')[1],
+    edge = ' ',
+    hori = '-',
+    vert = '|') {
+  # own strpad function
+  # strpad("Hello", 10, "right", "-")
+  # "-----Hello"
+  strpad <- function(string, width, pos = c('left', 'right'), pad) {
+    # duplicate char count times
+    n_chars <- function(char, count) paste0(rep_len(char, count), collapse = '')
+    # remove utf codes from string and count characters
+    w <- nchar(gsub('\033\\[[0-9;]*m', '', string))
+    if (pos == 'left') {
+      paste0(string, n_chars(pad, width - w))
+    } else if (pos == 'right') {
+      paste0(n_chars(pad, width - w), string)
+    } else {
+      paste0(n_chars(pad, (width - w) %/% 2), string, n_chars(pad, width - w - (width - w) %/% 2))
+    }
+  }
+  # get all 4 edges strings
+  edge <- rep_len(strsplit(edge, '')[[1]], 4)[1 : 4]
+  r <- ''
+  s <- strsplit(text, '\n')[[1]]
+  # get height of frame
+  h <- length(s)
+  # get width of frame
+  w <- max(sapply(s, function(x) nchar(gsub('\033\\[[0-9;]*m', '', x))))
+  # build top and botton lines
+  hbt <- paste0(edge[1], paste0(rep_len(hori, w + 2), collapse = ''), edge[2], '\n')
+  hbb <- paste0(edge[3], paste0(rep_len(hori, w + 2), collapse = ''), edge[4], '\n')
+  # construct frame with text in it
+  r <- hbt
+  for (s_ in s) {# s_ <- s
+    r <- paste0(r, vert, ' ', strpad(string = s_, width = w, pos = pos, pad = ' '), ' ', vert, '\n')
+  }
+  r <- paste0(r, hbb)
+  r
+}
+
+#' Convert a time representation to POSIXct format
+#'
+#' This function takes a time column in a format, extracts the time part,
+#' and converts it to POSIXct format with a default date of "2020-01-01". The input
+#' time_column is expected to be in a format containing hours, minutes, and seconds.
+#' NA and an empty string will return NA.
+#'
+#' @param time_column A column containing time information in a format.
+#' @return A character vector representing the time in POSIXct format ("%H:%M:%S").
+#'
+#' @examples
+#' # Test case 1: Valid time representation
+#' time_column_valid <- c("12:30:45", "08:15:00", "23:59:59")
+#' result_valid <- convertTimeToPOSIXct(time_column_valid)
+#' cat("Result for valid time representations:\n", result_valid, "\n\n")
+#'
+#' # Test case 2: NA input, should return NA
+#' time_column_na <- c(NA, NA, NA)
+#' result_na <- convertTimeToPOSIXct(time_column_na)
+#' cat("Result for NA input:\n", result_na, "\n\n")
+#'
+#' # Test case 3: Empty string input, should throw an error
+#' time_column_empty <- c("", "", "")
+#' tryCatch(
+#'   {
+#'     result_empty <- convertTimeToPOSIXct(time_column_empty)
+#'     cat("Result for empty string input:\n", result_empty, "\n\n")
+#'   },
+#'   error = function(e) cat("Error for empty string input:\n", e$message, "\n\n")
+#' )
+#'
+#' @export
+convertTimeToPOSIXct <- function(time_column) {
+  dc <- time_column
+  dc <- ifelse(nzchar(dc), dc, NA) # empty string is the same as NA
+  if (!all(is.na(dc))) {
+    pat <- '^.*?([0-9]+:[0-9]+:[0-9]+).*?$'
+    # Remove date or return midnight
+    dc <- ifelse (grepl(pat, dc), gsub(pat, "\\1", as.character(dc)), "00:00:00")
+    # Any day will work
+    dc <- paste("2020-01-01", dc)
+  }
+  # as.POSIXct returns NA, if it is not a valid date
+  format(as.POSIXct(dc, optional = TRUE), "%H:%M:%S")
+}
+
+#' Convert a date representation to Date format
+#'
+#' This function takes a date column in a format, cleans and standardizes
+#' the format, and converts it to Date format. The input date_column is expected
+#' to be in a format containing year, month, and day information. The function
+#' supports patterns for YYYY and YYYY-MM.
+#'
+#' @param date_column A column containing date information in a format.
+#' @return A Date vector representing the converted date information.
+#'
+#' @examples
+#' library(lubridate)
+#'
+#' # Test case 1: YYYY format
+#' date_column_YYYY <- c("2022", "1990", "1980")
+#' result_YYYY <- convertDateInformation(date_column_YYYY)
+#'
+#' # Test case 2: YYYY-MM format
+#' date_column_YYYY_MM <- c("2022-12", "1990-05", "1980-11")
+#' result_YYYY_MM <- convertDateInformation(date_column_YYYY_MM)
+#'
+#' # Test case 3: Date with time, should be cleaned
+#' date_column_with_time <- c("2022-12-01T15:30:00", "1990-05-01T08:45:00")
+#' result_with_time <- convertDateInformation(date_column_with_time)
+#'
+#' # Test case 4: Date with '/' separator, should be replaced with '-'
+#' date_column_slash_separator <- c("2022/12/01", "1990/05/01")
+#' result_slash_separator <- convertDateInformation(date_column_slash_separator)
+#'
+#' @export
+#'
+convertDateInformation <- function(date_column) {
+
+  dc <- as.character(date_column)
+  dc <- gsub('T.+$', '', dc)
+  dc <- gsub('/', '-', dc)
+
+  # Set a regular expression pattern for matching YYYY format
+  incomplete_date_pattern <- '^[0-9]{4}$'
+  years <- grepl(incomplete_date_pattern, dc)
+  dc[years] <- paste0(dc[years], '-01-01')
+
+  # Set a regular expression pattern for matching YYYY-MM format
+  incomplete_date_pattern <- '^[0-9]{4}-[0-9]{2}$'
+  years <- grepl(incomplete_date_pattern, dc)
+  dc[years] <- paste0(dc[years], '-01')
+
+  lubridate::as_date(dc)
+}
+
+#'
+#' Fix uncommon date formats
+#'
+#' This function takes a data.table (`dt`), a set of date columns (`date_columns`),
+#' and an optional parameter (`preserve_time`) to fix uncommon date formats.
+#' It performs the following tasks:
+#'
+#' - If `preserve_time` is TRUE, it extracts the time part from each date column
+#'   and saves it into respective TimeSpec columns by appending ".TimeSpec" to the
+#'   original date column names.
+#'
+#' - It then converts the original date columns to Date format using the
+#'   `convertDateInformation` function.
+#'
+#' @param dt A data.table containing the data to be processed.
+#' @param date_columns A character vector specifying the names of the date columns to be fixed.
+#' @param preserve_time A logical value indicating whether to preserve time information. Default is TRUE.
+#' @return The modified data.table with fixed date formats.
+#'
+#' @examples
+#' # Create an example data.table
+#' dt <- data.table::data.table(
+#'   date1 = c("2022", "1990-05", "1980-11"),
+#'   date2 = c("2022-12", "1990-05", "1980-11"),
+#'   value = c(1, 2, 3)
+#' )
+#'
+#' # Fix uncommon date formats with time preservation
+#' fixDateFormat(dt, c("date1", "date2"), preserve_time = TRUE)
+#'
+#' # The resulting data.table will have additional columns date1_timespec and date2_timespec
+#' # containing the extracted time information, and the original date columns date1 and date2
+#' # will be converted to Date format.
+#' dt
+#'
+#' # Expected output:
+#' #    date1      date2 value date1_timespec date2_timespec
+#' # 1: 2022-01-01 2022-12-01     1       00:00:00       00:00:00
+#' # 2: 1990-05-01 1990-05-01     2       00:00:00       00:00:00
+#' # 3: 1980-11-01 1980-11-01     3       00:00:00       00:00:00
+#'
+#' @seealso
+#' \code{\link{convertTimeToPOSIXct}}, \code{\link{convertDateInformation}}
+#'
+#' @export
+#'
+fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
+
+  #preserve time information
+  if (preserve_time) {
+
+    time_columns <- paste0(date_columns, "_timespec") #add suffix HourMinutesSeconds
+
+    #col by col
+    for (dc in date_columns) {
+
+      tc <- paste0(dc, "_timespec")
+      if (0 < nrow(dt)) {
+
+        #extract time from any datetime column and save it into the respecive TimeSpec column
+        dt[, (tc) := sapply(dt[[dc]], convertTimeToPOSIXct)]
+      } else {
+        #avoid columns of type list, which will be generated from empty resource
+        dt[, (tc) := character()]
+      }
+    }
+  }
+  dt[, (date_columns) := lapply(.SD, convertDateInformation), .SDcols = date_columns]
+}
+
+#' Stop on Error
+#'
+#' This function stops execution and prints the concatenated error message.
+#'
+#' @param ... Character vectors to be concatenated and printed as an error message.
+#'
+#' @return This function does not return a value. It stops execution.
+#'
+#' @examples
+#' stopOnError("Error: Something went wrong.")
+#'
+#' @export
+stopOnError <- function(...) {
+  stop(cat_red(paste(c(...))))
+  break
+}
 
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style

@@ -4,7 +4,7 @@
 
 DB_GENERAL_HOST = "amts_db"
 DB_GENERAL_PORT = 5432
-DB_GENERAL_NAME = "interpolar"
+DB_GENERAL_NAME = "amts_db"
 
 ##########################
 # KDS2DB module settings #

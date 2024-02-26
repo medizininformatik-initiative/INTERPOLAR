@@ -4,14 +4,10 @@
 #'
 #' @export
 retrieve <- function() {
-  # Iniialzes the global STOP variable. If a subprocess sets this variable to TRUE then the execution will be stopped.
-  STOP <<- FALSE
-
   ###
   # Read the module configuration toml file.
   ###
-  path2config_toml <- ifelse(interactive(), './R-kds2db', '.')
-  path2config_toml <- paste0(path2config_toml, '/kds2db_config.toml')
+  path2config_toml <- './R-kds2db/kds2db_config.toml'
   etlutils::initConstants(path2config_toml)
 
   ###
@@ -27,9 +23,9 @@ retrieve <- function() {
   etlutils::create_dirs(PROJECT_NAME)
 
   ###
-  # Create globally used polar_clock
+  # Create globally used process_clock
   ###
-  POLAR_CLOCK <<- etlutils::createClock()
+  PROCESS_CLOCK <<- etlutils::createClock()
 
   ###
   # log all console outputs and save them at the end
@@ -44,7 +40,8 @@ retrieve <- function() {
     err <- try(etlutils::run_in('Extract Patient IDs', {
       patientIDsPerWard <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
@@ -52,18 +49,19 @@ retrieve <- function() {
     etlutils::START__()
     err <- try(etlutils::run_in('Load Table Description', {
       table_descriptions <- getTableDescriptions()
-      print(POLAR_CLOCK)
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
     # Download and crack resources by Patient IDs per ward
     etlutils::START__()
     err <- try(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_table_list <<- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
+      resource_table_list <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
@@ -72,20 +70,15 @@ retrieve <- function() {
     err <- try(etlutils::run_in('Write resource tables to database', {
       writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
     }), silent = TRUE)
-    print(POLAR_CLOCK)
+    print(PROCESS_CLOCK)
+    warnings()
     if(inherits(err, "try-error")) stop()
     etlutils::END__()
 
-    # # Maybe relevant in future
-    # if (STOP) {
-    #   cat_red('An Error occured in a for the following Scripts relevant Script. So stop execution here.\n')
-    #   cat(str.(err, fg = 1), '\n')
-    #   break;
-    # }
   })
   etlutils::END__()
-  #warnings()
-  print(POLAR_CLOCK)
+  warnings()
+  print(PROCESS_CLOCK)
   ###
   # Save all console logs
   ###

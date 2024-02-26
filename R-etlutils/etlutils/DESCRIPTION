@@ -23,7 +23,6 @@ Imports:
     fhircrackr,
     httr,
     lubridate,
-    memuse,
     methods,
     openxlsx,
     RcppTOML,

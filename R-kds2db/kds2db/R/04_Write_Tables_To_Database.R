@@ -42,6 +42,11 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
   )
 
   db_table_names <- etlutils::dbListTables(db_connection)
+  # Display the table names
+  print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
+  if (is.null(db_table_names)) {
+    warning("There is no tables found in database")
+  }
 
   # write tables to DB
   for (table_name in table_names) {
@@ -51,6 +56,8 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
         etlutils::dbDeleteContent(db_connection, table_name)
       }
       etlutils::dbAddContent(db_connection, table_name, table)
+    } else {
+      warning(paste("Table", table_name, "not found in database"))
     }
   }
 

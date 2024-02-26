@@ -9,7 +9,7 @@ polar_get_resources_by_ids(
   resource,
   ids,
   id_param_str = "_id",
-  parameters = polar_add_common_request_params(c()),
+  parameters = fhir_url_add_common_request_params(c()),
   verbose = 0
 )
 }

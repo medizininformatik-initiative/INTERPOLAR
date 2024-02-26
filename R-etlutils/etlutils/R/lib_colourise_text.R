@@ -139,18 +139,6 @@ cat_red <- function(msg, bg = NULL) {
   cat_colourised(msg, fg = "light red", bg = bg)
 }
 
-#' Print Text in White Color
-#'
-#' This function prints text in white color.
-#'
-#' @param msg The text message to be printed.
-#' @param bg The background color. Defaults to NULL.
-#'
-#' @export
-cat_white <- function(msg, bg = NULL) {
-  cat_colourised(msg, fg = "white", bg = bg)
-}
-
 #' Print "OK" in Light Green Color
 #'
 #' This function prints "OK" in light green color.
@@ -175,12 +163,3 @@ cat_error <- function(msg = "ERROR\n", bg = NULL) {
   cat_red(msg, bg = bg)
 }
 
-#' Print Text in White Color (Headline Style)
-#'
-#' This function prints text in white color (headline style).
-#'
-#' @param msg The text message to be printed.
-#' @param bg The background color. Defaults to NULL.
-#'
-#' @export
-cat_headline <- cat_white
