@@ -207,7 +207,10 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   # set all column_name entries to lower case
   table[, column_name := tolower(column_name)]
   # add empty row after every last entry of a resource (and before a new resource starts)
-  addEmptyRowsBeforeNewResource(table)
+  table <- addEmptyRowsBeforeNewResource(table)
+  # rename column 'resource' to 'table' and set all 'table' entries to lower case
+  names(table)[1] <- 'table'
+  table[, table := tolower(table)]
 }
 
 #' Expand Table Description from an Excel File
@@ -327,6 +330,8 @@ expandTableDescription <- function() {
 #' @export
 checkResult <- function(expanded_table_description) {
   isValid <- TRUE
+
+  # check that there are no column names which exceeds the maximum length of 64 characters in Postgres DBs
   max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
   if (max_column_name_chars > 64) {
     message('ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
@@ -337,26 +342,33 @@ checkResult <- function(expanded_table_description) {
                    "Table_Description_Definition.xlsx file to shorten these column names.\n"))
     isValid <- FALSE
   }
+
+  # Check that there are no duplicates in the defined columns
   column_names <- c()
+  table_name <- NA
   for (row in seq_len(nrow(expanded_table_description))) {
-    if (!is.na(expanded_table_description$resource[row])) {
+    next_table_name <- expanded_table_description$table[row]
+    if (!is.na(table_name) && !is.na(next_table_name)) {
       duplicates <- column_names[which(duplicated(column_names))]
       if (length(duplicates)) {
-        message("ERROR: Resource ", resource,  ": The following result column names (Column 'column_names') in Table_Description.xlsx are duplicated:")
+        message("ERROR: Table ", table_name,  ": The following result column names (Column 'column_names') in Table_Description.xlsx are duplicated:")
         message(paste0("\t", duplicates, collapse = "\n"))
         message("Solution: Check entries in Table_Description_Definition.xlsx in column 'fhir_expression' for these duplicates.")
         message(paste0("Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
                        "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
                        "itself appears twice, this error occurs.\n"))
-
         isValid <- FALSE
       }
-
       resource <- expanded_table_description$resource[row]
       column_names <- c()
     }
+    if (!is.na(next_table_name)) {
+      table_name <- next_table_name
+    }
     column_names[length(column_names) + 1] <- expanded_table_description$column_name[row]
   }
+
+  # check that all entries have value in column 'single_length'
   invalid_rows <- which(!is.na(expanded_table_description$fhir_expression) & is.na(expanded_table_description$single_length))
   if (length(invalid_rows)) {
     message("ERROR: The following rows have no entry in column single_length.")
@@ -367,8 +379,6 @@ checkResult <- function(expanded_table_description) {
     message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the fhir_expression column for a row that should be expanded.")
     isValid <- FALSE
   }
-
-
   return(isValid)
 }
 
