@@ -9,7 +9,7 @@ Dies erfolgt in 2 Schritten:
 ## zu 1.
   * [build/Dockerfile](build/Dockerfile) beschreibt eine PHP-8 Umgebung inkl. Extensions, wie sie für REDCap benötigt werden
   * Im Verzeichnis [build/config](build/config) liegen Konfigurationsdateien, die zur Build-Zeit verwendet werden. Diese können auch auch zur Laufzeit in der [../docker-compose.yml](../docker-compose.yml) mittels Volumes überschrieben werden.
-  * Für den Mailversand aus dem REDCap-Container heraus ist z.B. die Konfigurationsdatei [build/config/msmtprc](build/config/msmtprc) entspr. anzupassen (Mailadressen, Mailhost, etc.).
+  * Optional: Für den Mailversand aus dem REDCap-Container heraus ist z.B. die Konfigurationsdatei [build/config/msmtprc](build/config/msmtprc) entspr. anzupassen (Mailadressen, Mailhost, etc.).
 
 ## zu 2.
 Siehe Anweisungen in [html/Readme.md](html/Readme.md)
