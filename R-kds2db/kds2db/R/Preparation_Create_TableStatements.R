@@ -1,6 +1,3 @@
-# free memory
-rm(list = ls())
-
 
 getTableStatmentEndRows <- function() {
   end_rows <- ''
@@ -115,4 +112,4 @@ replacePlaceholders <- function() {
   writeLines(content, './Postgres-amts_db/init/init-db.sql', useBytes = TRUE)
 }
 
-replacePlaceholders()
+#replacePlaceholders()

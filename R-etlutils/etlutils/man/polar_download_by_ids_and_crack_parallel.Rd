@@ -22,9 +22,9 @@ polar_download_by_ids_and_crack_parallel(
 
 \item{ids_at_once}{The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).}
 
-\item{id_param_str}{Additional parameter string for constructing the FHIR request URL (default VERBOSE).}
+\item{id_param_str}{Additional parameter string for constructing the FHIR request URL.}
 
-\item{verbose}{Verbosity level}
+\item{verbose}{Verbosity level (default: VERBOSE)}
 }
 \value{
 A data.table containing the cracked FHIR resources.
