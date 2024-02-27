@@ -1,6 +1,7 @@
 # free memory
 rm(list = ls())
 
+
 getTableStatmentEndRows <- function() {
   end_rows <- ''
   end_rows <- paste0(end_rows, "input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted\n")
@@ -9,15 +10,17 @@ getTableStatmentEndRows <- function() {
   end_rows <- paste0(end_rows, ");\n\n")
 }
 
+
 createKDS2DBTableStatements <- function(table_description) {
   statements <- ''
   last_table_name <- NA
   for (row in 1:nrow(table_description)) {
     table_name <- table_description$table[row]
     if (!is.na(table_name)) {
-      if (is.na(last_table_name)) {
+      if (!is.na(last_table_name)) {
         statements <- paste0(statements, getTableStatmentEndRows())
       }
+      last_table_name <- table_name
       statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS kds2db_in.", table_name, " (\n")
       statements <- paste0(statements, "", table_name, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
     }
@@ -34,6 +37,7 @@ createKDS2DBTableStatements <- function(table_description) {
   statements <- paste0(statements, getTableStatmentEndRows())
 }
 
+
 getReplacedContentFromFile <- function(file_path, placeholder, replacement) {
   # read the content of the file
   content <- readLines(file_path)
@@ -41,7 +45,8 @@ getReplacedContentFromFile <- function(file_path, placeholder, replacement) {
   content <- paste0(gsub(placeholder, replacement, content), collapse = '\n')
 }
 
-getGrantStatements <- function(table_names) {
+
+getKDS2DBGrantStatements <- function(table_names) {
   grant_statements <- ''
   for (table_name in table_names) {
     grant <- getReplacedContentFromFile('./Postgres-amts_db/init/init-db_template_sub_kds2db_grant.sql', '<%KDS2DB_GRANT_TABLE_NAME%>', table_name)
@@ -50,15 +55,45 @@ getGrantStatements <- function(table_names) {
   return(grant_statements)
 }
 
+
+getKDS2DBCommentStatements <- function(table_description) {
+  comment <- ''
+  table_name <- NA
+  for (row in 1:nrow(table_description)) {
+    if (!all(is.na(table_description[row]))) {
+      new_table_name <- table_description$table[row]
+      if (!is.na(new_table_name)) {
+        if (!is.na(table_name)) {
+          comment <- paste0(comment, '\n')
+        }
+        table_name <- new_table_name
+      }
+      single_length <- as.integer(table_description$single_length[row])
+      count <- as.integer(table_description$count[row])
+      if (is.na(count)) count <- 1
+      # generates something like this:
+      # comment on column kds2db_in.condition.con_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (70 x 18 1260)';
+      comment <- paste0(comment, "comment on column kds2db_in.", table_name, ".", table_description$column_name[row],
+                        " is '", table_description$fhir_expression[row], " (", single_length, " x ", count, " ",
+                        single_length * count, ")';\n")
+    }
+  }
+  return(comment)
+}
+
+
 replacePlaceholders <- function() {
   table_description <- etlutils::readExcelFileAsTableList('./R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
   table_names <- na.omit(table_description$table)
 
-  # Load template and replace the placeholder with the create table statements
+  # Load template and replace placeholder for the create table statements
   content <- getReplacedContentFromFile('./Postgres-amts_db/init/init-db_template.sql', '<%KDS2DB_CREATE_TABLE_STATEMENTS%>', createKDS2DBTableStatements(table_description))
+
   # replace placeholder for grant statements
-  grant_statements <- getGrantStatements(table_names)
-  content <- gsub('<%KDS2DB_GRANT%>', getGrantStatements(table_names), content)
+  content <- gsub('<%KDS2DB_GRANTS%>', getKDS2DBGrantStatements(table_names), content)
+
+  # replace placeholder for comment statements
+  content <- gsub('<%KDS2DB_COMMENTS%>', getKDS2DBCommentStatements(table_description), content)
 
   # Write the modified content to the file
   writeLines(content, './Postgres-amts_db/init/init-db_generated.sql', useBytes = TRUE)
