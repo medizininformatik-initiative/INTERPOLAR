@@ -4,9 +4,9 @@ rm(list = ls())
 
 getTableStatmentEndRows <- function() {
   end_rows <- ''
-  end_rows <- paste0(end_rows, "input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted\n")
-  end_rows <- paste0(end_rows, "last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked\n")
-  end_rows <- paste0(end_rows, "current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record\n")
+  end_rows <- paste0(end_rows, "  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted\n")
+  end_rows <- paste0(end_rows, "  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked\n")
+  end_rows <- paste0(end_rows, "  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record\n")
   end_rows <- paste0(end_rows, ");\n\n")
 }
 
@@ -22,7 +22,7 @@ createTableStatements <- function(table_description, schema_name) {
       }
       last_table_name <- table_name
       statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS ", schema_name, ".", table_name, " (\n")
-      statements <- paste0(statements, "", table_name, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
+      statements <- paste0(statements, "  ", table_name, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
     }
     if (!all(is.na(table_description[row]))) {
       count <- as.integer(table_description$count[row])
@@ -30,7 +30,7 @@ createTableStatements <- function(table_description, schema_name) {
       single_length <- as.integer(table_description$single_length[row])
       full_length <- single_length * count
       fhir_expression <- table_description$fhir_expression[row]
-      statements <- paste0(statements, "", table_description$column_name[row], " varchar (", full_length, "),   -- ", fhir_expression, " (", single_length, " x ", count, " varchar)\n")
+      statements <- paste0(statements, "  ", table_description$column_name[row], " varchar (", full_length, "),   -- ", fhir_expression, " (", single_length, " x ", count, " varchar)\n")
     }
 
   }
@@ -112,7 +112,7 @@ replacePlaceholders <- function() {
   content <- gsub('<%COMMENT_STATEMENTS_DB%>', getCommentStatements(table_description, "db"), content)
 
   # Write the modified content to the file
-  writeLines(content, './Postgres-amts_db/init/init-db_generated.sql', useBytes = TRUE)
+  writeLines(content, './Postgres-amts_db/init/init-db.sql', useBytes = TRUE)
 }
 
 replacePlaceholders()
