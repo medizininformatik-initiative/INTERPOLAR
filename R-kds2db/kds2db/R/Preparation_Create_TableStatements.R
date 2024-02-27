@@ -47,7 +47,7 @@ getGrantStatements <- function(table_names, schema_name) {
   grant_statements <- ''
   for (table_name in table_names) {
     # load grant template
-    grant <- getContentFromFile('./Postgres-amts_db/init/init-db_template_sub_grant.sql')
+    grant <- getContentFromFile('./Postgres-amts_db/init/template/init-db_template_sub_grant.sql')
     # replace placeholders in grant template
     grant <- gsub('<%GRANT_SCHEMA_NAME%>', schema_name, grant)
     grant <- gsub('<%GRANT_TABLE_NAME%>', table_name, grant)
@@ -88,7 +88,7 @@ replacePlaceholders <- function() {
   table_names <- na.omit(table_description$table)
 
   # Load sql template
-  content <- getContentFromFile('./Postgres-amts_db/init/init-db_template.sql')
+  content <- getContentFromFile('./Postgres-amts_db/init/template/init-db_template.sql')
 
   # replace placeholder for create table statements for schema kds2db
   content <- gsub('<%CREATE_TABLE_STATEMENTS_KDS2DB_IN%>', createTableStatements(table_description, "kds2db_in"), content)
