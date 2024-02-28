@@ -357,6 +357,7 @@ initConstants <- function(path_to_toml) {
 #' for generating the summary.
 #'
 #' @param table The input table to print. For example, you can use the mtcars dataset.
+#' @param table_name A table name to display in the output. If NA the variable name will be displayed.
 #'
 #' @details
 #' This function checks the VERBOSE level (assumed to be a global variable) and
@@ -384,9 +385,14 @@ initConstants <- function(path_to_toml) {
 #' # Assuming VERBOSE and VL_50_TABLES are defined
 #' print_table(mtcars)
 #'
-print_table <- function(table) {
+#' # Assuming VERBOSE and VL_60_ALL_TABLES are defined
+#' print_table(mtcars, 'This is a table full of cars')
+#'
+print_table <- function(table, table_name = NA) {
   if (VERBOSE >= VL_50_TABLES) {
-    table_name <- as.character(sys.call()[2]) # get parameter names
+    if (is.na(table_name)) {
+      table_name <- as.character(sys.call()[2]) # get parameter names
+    }
     print_table_summary(table, table_name)
   }
 }
@@ -398,6 +404,7 @@ print_table <- function(table) {
 #' for generating the summary.
 #'
 #' @param table The input table to print. For example, you can use the mtcars dataset.
+#' @param table_name A table name to display in the output. If NA the variable name will be displayed.
 #'
 #' @details
 #' This function checks the VERBOSE level (assumed to be a global variable) and
@@ -425,9 +432,14 @@ print_table <- function(table) {
 #' # Assuming VERBOSE and VL_60_ALL_TABLES are defined
 #' print_table_if_all(mtcars)
 #'
-print_table_if_all <- function(table) {
+#' # Assuming VERBOSE and VL_60_ALL_TABLES are defined
+#' print_table_if_all(mtcars, 'This is a table full of cars')
+#'
+print_table_if_all <- function(table, table_name = NA) {
   if (VERBOSE >= VL_60_ALL_TABLES) {
-    table_name <- as.character(sys.call()[2]) # get parameter name
+    if (is.na(table_name)) {
+      table_name <- as.character(sys.call()[2]) # get parameter names
+    }
     print_table_summary(table, table_name)
   }
 }

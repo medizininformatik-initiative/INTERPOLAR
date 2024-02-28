@@ -256,7 +256,7 @@ get_encounters <- function(table_description) {
     #   rm(tab.resource.used)
     # })
 
-    run_in_in('Save and Delete Encounters Table', {
+    runs_in_in('Save and Delete Encounters Table', {
       polar_write_rdata(table_enc, 'pid_source_encounter_unfiltered')
     })
 

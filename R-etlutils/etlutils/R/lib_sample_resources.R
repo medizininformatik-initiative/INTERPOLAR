@@ -655,10 +655,11 @@ polar_download_by_ids_and_crack_parallel <- function(
     )
   )
   if (VL_90_FHIR_RESPONSE <= VERBOSE) {
-    print (bndls)
+    print(bndls)
   }
-  total <- if (inherits(bndls, 'try-error')) {
-    if (0 < verbose) {
+
+  total <- if (isError(bndls)) {
+    if (verbose) {
       cat(styled_string('\nAvailability-Check failed.', fg = 1), '\n')
     }
     0
@@ -666,8 +667,8 @@ polar_download_by_ids_and_crack_parallel <- function(
     as.numeric(xml2::xml_attr(xml2::xml_find_all(bndls[[1]], '//total'), 'value'))
   }
   if (total < 1) {
-    if (0 < verbose) cat_red(paste0('No ', resource, 's found. Return empty Table. Please note! This may cause further problems.\n'))
-    return(complete_table(data.table::data.table(), table_description))
+    if (verbose) cat_warning(paste0('Warning: No ', resource, 's found in FHIR Server. Return empty Table. Please note!\n'))
+    return(NA)
   }
 
   curr_len <- min(ids_at_once, length(ids))
@@ -881,7 +882,14 @@ loadResourcesByPID <- function(patientIDs, table_description) {
         verbose = VERBOSE
       )
     }
-    table_name_to_tables[[resource]] <- resource_table
+    if (!isSimpleNA(resource_table)) {
+      table_name_to_tables[[resource]] <- resource_table
+      if (nrow(resource_table)) {
+        print_table_if_all(resource_table, resource)
+      } else {
+        cat_info(paste("Info: No", resource, "resources found for the given Patient IDs.\n"))
+      }
+    }
   }
   table_name_to_tables
 }

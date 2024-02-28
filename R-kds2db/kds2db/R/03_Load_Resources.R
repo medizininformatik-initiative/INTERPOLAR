@@ -53,7 +53,12 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
 #' @export
 loadResourcesByPatientIDFromFHIRServer <- function(patientIDsPerWard, table_descriptions) {
   patientIDs <- unique(unlist(patientIDsPerWard))
-  resource_tables <- etlutils::loadResourcesByPID(patientIDs, table_descriptions)
+
+  # Find the names of the elements that start with a lowercase letter (pids_per_ward are no resources to download)
+  # All names of real resources start with a capital letter
+  resource_table_descriptions <- table_descriptions[-grep("^[a-z]", names(table_descriptions))]
+
+  resource_tables <- etlutils::loadResourcesByPID(patientIDs, resource_table_descriptions)
 
   # Add additional table of ward-patient ID per date
   resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patientIDsPerWard)

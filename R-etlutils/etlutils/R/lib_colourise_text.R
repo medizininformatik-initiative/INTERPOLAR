@@ -139,6 +139,42 @@ cat_red <- function(msg, bg = NULL) {
   cat_colourised(msg, fg = "light red", bg = bg)
 }
 
+#' Print Text in Yellow Color
+#'
+#' This function prints text in yellow color.
+#'
+#' @param msg The text message to be printed.
+#' @param bg The background color. Defaults to NULL.
+#'
+#' @export
+cat_yellow <- function(msg, bg = NULL) {
+  cat_colourised(msg, fg = "yellow", bg = bg)
+}
+
+#' Print Text in Brown Color
+#'
+#' This function prints text in brown color.
+#'
+#' @param msg The text message to be printed.
+#' @param bg The background color. Defaults to NULL.
+#'
+#' @export
+cat_brown <- function(msg, bg = NULL) {
+  cat_colourised(msg, fg = "brown", bg = bg)
+}
+
+#' Print Text in Cyan Color
+#'
+#' This function prints text in cyan color.
+#'
+#' @param msg The text message to be printed.
+#' @param bg The background color. Defaults to NULL.
+#'
+#' @export
+cat_cyan <- function(msg, bg = NULL) {
+  cat_colourised(msg, fg = "cyan", bg = bg)
+}
+
 #' Print "OK" in Light Green Color
 #'
 #' This function prints "OK" in light green color.
@@ -153,7 +189,7 @@ cat_ok <- function(msg = "OK\n", bg = NULL) {
 
 #' Print "ERROR" in Light Red Color
 #'
-#' This function prints "ERROR" in light red color.
+#' This function prints a messge in light red color.
 #'
 #' @param msg The text message to be printed. Defaults to "ERROR".
 #' @param bg The background color. Defaults to NULL.
@@ -163,3 +199,26 @@ cat_error <- function(msg = "ERROR\n", bg = NULL) {
   cat_red(msg, bg = bg)
 }
 
+#' Print text in Brown Color
+#'
+#' This function prints a message in brown color.
+#'
+#' @param msg The text message to be printed.s.
+#' @param bg The background color. Defaults to NULL.
+#'
+#' @export
+cat_warning <- function(msg, bg = NULL) {
+  cat_brown(msg, bg = bg)
+}
+
+#' Print text in Cyan Color
+#'
+#' This function prints a message in cyan color.
+#'
+#' @param msg The text message to be printed.s.
+#' @param bg The background color. Defaults to NULL.
+#'
+#' @export
+cat_info <- function(msg, bg = NULL) {
+  cat_cyan(msg, bg = bg)
+}

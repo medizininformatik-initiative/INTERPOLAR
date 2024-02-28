@@ -12,5 +12,5 @@ cat_error(msg = "ERROR\\n", bg = NULL)
 \item{bg}{The background color. Defaults to NULL.}
 }
 \description{
-This function prints "ERROR" in light red color.
+This function prints a messge in light red color.
 }

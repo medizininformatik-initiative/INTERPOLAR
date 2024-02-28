@@ -4,7 +4,7 @@
 \alias{print_table_summary}
 \title{Print a summary for a table}
 \usage{
-print_table_summary(table = table_enc, table_name = "")
+print_table_summary(table, table_name = "")
 }
 \arguments{
 \item{table}{The input table to summarize. For example, you can use the mtcars dataset.}
