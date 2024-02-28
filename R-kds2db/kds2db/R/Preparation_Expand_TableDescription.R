@@ -208,9 +208,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   table[, column_name := tolower(column_name)]
   # add empty row after every last entry of a resource (and before a new resource starts)
   table <- addEmptyRowsBeforeNewResource(table)
-  # rename column 'resource' to 'table' and set all 'table' entries to lower case
-  names(table)[1] <- 'table'
-  table[, table := tolower(table)]
 }
 
 #' Expand Table Description from an Excel File
@@ -347,7 +344,7 @@ checkResult <- function(expanded_table_description) {
   column_names <- c()
   table_name <- NA
   for (row in seq_len(nrow(expanded_table_description))) {
-    next_table_name <- expanded_table_description$table[row]
+    next_table_name <- expanded_table_description$resource[row]
     if (!is.na(table_name) && !is.na(next_table_name)) {
       duplicates <- column_names[which(duplicated(column_names))]
       if (length(duplicates)) {
