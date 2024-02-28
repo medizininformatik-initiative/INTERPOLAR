@@ -31,8 +31,8 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
   patient_ids <- unlist(patientIDsPerWard)
   wardPatitentIDPerDate <- data.table::data.table(
     date_time = rep(date_time, length(patient_ids)),
-    ward = rep(ward_names, lengths(patientIDsPerWard)),
-    pid = patient_ids
+    ward_name = rep(ward_names, lengths(patientIDsPerWard)),
+    patient_id = patient_ids
   )
   return(wardPatitentIDPerDate)
 }
@@ -61,7 +61,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patientIDsPerWard, table_desc
   resource_tables <- etlutils::loadResourcesByPID(patientIDs, resource_table_descriptions)
 
   # Add additional table of ward-patient ID per date
-  resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patientIDsPerWard)
+  #resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patientIDsPerWard)
 
   for (i in seq_along(resource_tables)) {
     polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
