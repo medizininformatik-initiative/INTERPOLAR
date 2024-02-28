@@ -12,7 +12,7 @@ createTableStatements <- function(table_description, schema_name) {
   statements <- ''
   last_table_name <- NA
   for (row in 1:nrow(table_description)) {
-    table_name <- table_description$table[row]
+    table_name <- table_description$resource[row]
     if (!is.na(table_name)) {
       if (!is.na(last_table_name)) {
         statements <- paste0(statements, getTableStatmentEndRows())
@@ -62,7 +62,7 @@ getCommentStatements <- function(table_description, schema_name) {
   table_name <- NA
   for (row in 1:nrow(table_description)) {
     if (!all(is.na(table_description[row]))) {
-      new_table_name <- table_description$table[row]
+      new_table_name <- table_description$resource[row]
       if (!is.na(new_table_name)) {
         if (!is.na(table_name)) {
           comment <- paste0(comment, '\n')
@@ -85,7 +85,8 @@ getCommentStatements <- function(table_description, schema_name) {
 
 replacePlaceholders <- function() {
   table_description <- etlutils::readExcelFileAsTableList('./R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
-  table_names <- na.omit(table_description$table)
+  table_description$resource <- tolower(table_description$resource)
+  table_names <- na.omit(table_description$resource)
 
   # Load sql template
   content <- getContentFromFile('./Postgres-amts_db/init/template/init-db_template.sql')
