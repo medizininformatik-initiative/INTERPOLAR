@@ -1,0 +1,4 @@
+MARIADB_ROOT_PASSWORD_FILE=/run/secrets/redcap_db_root.password
+MARIADB_DATABASE=redcap
+MARIADB_USER=redcap
+MARIADB_PASSWORD_FILE=/run/secrets/redcap_db.password

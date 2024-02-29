@@ -1,0 +1,33 @@
+###################################################
+# General database settings for all users/schemes #
+###################################################
+
+DB_GENERAL_HOST = "amts_db"
+DB_GENERAL_PORT = 5432
+DB_GENERAL_NAME = "amts_db"
+
+##########################
+# KDS2DB module settings #
+##########################
+
+DB_KDS2DB_USER      = "kds2db_user"
+DB_KDS2DB_PASSWORD  = "kds2db"
+DB_KDS2DB_SCHEMA_IN = "kds2db_in"
+
+#################################
+# DataProcessor module settings #
+#################################
+
+DB_DATAPROCESSOR_USER      = "dataprocessor_user"
+DB_DATAPROCESSOR_PASSWORD  = "dataprocessor"
+DB_DATAPROCESSOR_SCHEMA_IN = "dataprocessor_in"
+DB_DATAPROCESSOR_SCHEMA_OUT = "dataprocessor_out"
+
+###############################
+# DB2Frontend module settings #
+###############################
+
+DB_DB2FRONTEND_USER      = "db2frontend_user"
+DB_DB2FRONTEND_PASSWORD  = "db2frontend"
+DB_DB2FRONTEND_SCHEMA_IN = "db2frontend_in"
+DB_DB2FRONTEND_SCHEMA_OUT = "db2frontend_out"
