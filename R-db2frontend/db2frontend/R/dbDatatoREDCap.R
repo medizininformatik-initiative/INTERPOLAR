@@ -45,6 +45,7 @@ initConstants <- function() {
 copyDB2Redcap <- function() {
   #get data from patient view / tabelle, schema _out
   initConstants()
+
   #establish connection to db
   dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
                    DB_GENERAL_PORT, DB_DB2FRONTEND_SCHEMA_OUT)
@@ -55,7 +56,7 @@ copyDB2Redcap <- function() {
                               pat_gschlcht FROM patient")
 
   #connect to REDCap project
-  redcapcon <- redcapAPI::redcapConnection(url = url,token = token)
+  redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
   #send data to REDCap
   redcapAPI::importRecords(redcapcon, data = new_data, logfile = "log.txt")

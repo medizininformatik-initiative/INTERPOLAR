@@ -9,13 +9,6 @@ stopOnError(...)
 \arguments{
 \item{...}{Character vectors to be concatenated and printed as an error message.}
 }
-\value{
-This function does not return a value. It stops execution.
-}
 \description{
 This function stops execution and prints the concatenated error message.
-}
-\examples{
-stopOnError("Error: Something went wrong.")
-
 }

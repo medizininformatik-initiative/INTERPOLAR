@@ -31,8 +31,8 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
   patient_ids <- unlist(patientIDsPerWard)
   wardPatitentIDPerDate <- data.table::data.table(
     date_time = rep(date_time, length(patient_ids)),
-    ward = rep(ward_names, lengths(patientIDsPerWard)),
-    pid = patient_ids
+    ward_name = rep(ward_names, lengths(patientIDsPerWard)),
+    patient_id = patient_ids
   )
   return(wardPatitentIDPerDate)
 }
@@ -53,10 +53,15 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
 #' @export
 loadResourcesByPatientIDFromFHIRServer <- function(patientIDsPerWard, table_descriptions) {
   patientIDs <- unique(unlist(patientIDsPerWard))
-  resource_tables <- etlutils::loadResourcesByPID(patientIDs, table_descriptions)
+
+  # Find the names of the elements that start with a lowercase letter (pids_per_ward are no resources to download)
+  # All names of real resources start with a capital letter
+  resource_table_descriptions <- table_descriptions[-grep("^[a-z]", names(table_descriptions))]
+
+  resource_tables <- etlutils::loadResourcesByPID(patientIDs, resource_table_descriptions)
 
   # Add additional table of ward-patient ID per date
-  resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patientIDsPerWard)
+  #resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patientIDsPerWard)
 
   for (i in seq_along(resource_tables)) {
     polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))

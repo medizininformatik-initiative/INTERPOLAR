@@ -4,10 +4,12 @@
 \alias{print_table}
 \title{Print a table if VERBOSE level allows.}
 \usage{
-print_table(table)
+print_table(table, table_name = NA)
 }
 \arguments{
 \item{table}{The input table to print. For example, you can use the mtcars dataset.}
+
+\item{table_name}{A table name to display in the output. If NA the variable name will be displayed.}
 }
 \description{
 This function prints a summary for the specified table if the VERBOSE level is
@@ -34,6 +36,9 @@ VERBOSE <- 7
 
 # Assuming VERBOSE and VL_50_TABLES are defined
 print_table(mtcars)
+
+# Assuming VERBOSE and VL_60_ALL_TABLES are defined
+print_table(mtcars, 'This is a table full of cars')
 
 }
 \seealso{

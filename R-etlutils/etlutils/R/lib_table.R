@@ -778,7 +778,7 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
 #' print_table_summary(table = mtcars, table_name = 'mtcars')
 #'
 #' @export
-print_table_summary <- function(table=table_enc, table_name = '') {
+print_table_summary <- function(table, table_name = '') {
   dt <- data.table::as.data.table(
     cbind(
       class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
