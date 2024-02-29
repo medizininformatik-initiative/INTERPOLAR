@@ -23,7 +23,7 @@ docker-compose run --rm --no-deps r-env Rscript R-kds2db/StartRetrieval.R
 
 Dieses R-Modul dient zur Übernahme von Daten aus eine Postgres-Datenbank in das Frontent (redcap).
 Damit dieses R-Script funktioniert, muss zuvor der Token für die REDCap-API in die Konfigurationsdatei R-db2frontend/db2frontend_config.toml eingetragen werden:
-```
+```toml
 # REDCap API token
 REDCAP_TOKEN = "Fill with your REDCap API token"
 ```
