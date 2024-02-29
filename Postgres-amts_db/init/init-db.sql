@@ -1292,7 +1292,7 @@ CREATE TABLE IF NOT EXISTS kds2db_in.location (
 
 CREATE TABLE IF NOT EXISTS kds2db_in.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
-  timestamp varchar (25),   -- timestamp (25 x 1 varchar)
+  date_time varchar (30),   -- date_time (30 x 1 varchar)
   ward_name varchar (30),   -- ward_name (30 x 1 varchar)
   patient_id varchar (30),   -- patient_id (30 x 1 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -2803,7 +2803,7 @@ comment on column kds2db_in.location.loc_name is 'name (50 x 1 50)';
 comment on column kds2db_in.location.loc_description is 'description (50 x 1 50)';
 comment on column kds2db_in.location.loc_alias is 'alias (30 x 3 90)';
 
-comment on column kds2db_in.pids_per_ward.timestamp is 'timestamp (25 x 1 25)';
+comment on column kds2db_in.pids_per_ward.date_time is 'date_time (30 x 1 30)';
 comment on column kds2db_in.pids_per_ward.ward_name is 'ward_name (30 x 1 30)';
 comment on column kds2db_in.pids_per_ward.patient_id is 'patient_id (30 x 1 30)';
 
@@ -4050,7 +4050,7 @@ CREATE TABLE IF NOT EXISTS db.location (
 
 CREATE TABLE IF NOT EXISTS db.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
-  timestamp varchar (25),   -- timestamp (25 x 1 varchar)
+  date_time varchar (30),   -- date_time (30 x 1 varchar)
   ward_name varchar (30),   -- ward_name (30 x 1 varchar)
   patient_id varchar (30),   -- patient_id (30 x 1 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -5561,7 +5561,7 @@ comment on column db.location.loc_name is 'name (50 x 1 50)';
 comment on column db.location.loc_description is 'description (50 x 1 50)';
 comment on column db.location.loc_alias is 'alias (30 x 3 90)';
 
-comment on column db.pids_per_ward.timestamp is 'timestamp (25 x 1 25)';
+comment on column db.pids_per_ward.date_time is 'date_time (30 x 1 30)';
 comment on column db.pids_per_ward.ward_name is 'ward_name (30 x 1 30)';
 comment on column db.pids_per_ward.patient_id is 'patient_id (30 x 1 30)';
 
