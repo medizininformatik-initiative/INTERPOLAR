@@ -2,7 +2,7 @@
 
 Dieses Repository enthält Module der KDS (Kerndatensatz) Pipeline zur Verarbeitung von [`MII KDS FHIR Ressourcen`](https://www.medizininformatik-initiative.de/de/basismodule-des-kerndatensatzes-der-mii) mit dem Ziel Medikationsprobleme (MRP) zu erkennen. Es handelt sich um eine Referenzimplementierung und ist modular aufgebaut.  Hierbei werden FHIR-Ressourcen vom KDS (Kerndatensatz) FHIR Store heruntergeladen, in eine Tabellenstruktur überführt und in eine Posgres-Datenbank geschrieben. In einen nächsten Schritt werden die Daten geprüft, harmonisiert und mit Hilfe von Algorithmen MRPs berechnet. Anschließend werden die Daten über ein AMTS-Cockpit (z.B. Redcap) auf einer Benutzeroberfläche sichtbar gemacht.
 
-![KDS-Pipeline](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/a023459b-b965-41fa-bdd3-5b41db7e1158)
+![KDS-Pipeline](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/535a0e1b-3338-4f5b-a4b5-46750591094c)
 
 ## Module
 
