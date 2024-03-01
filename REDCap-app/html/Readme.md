@@ -35,6 +35,8 @@
      * wählen Sie bei "Project creation option" &rarr; "Upload a REDCap project XML file" und importieren Sie diese aus dem Ordner _REDCap-app/INTERPOLARDev*.xml_. Rufen Sie den Browser nicht auf dem Computer auf, auf dem docker-compose ausgeführt ist, könenn Sie sich die Datei _[INTERPOLARDev*.xml](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/REDCap-app/INTERPOLARDev_2024-02-15_1502.REDCap.xml)_ aus dem GitHub-Repo herunterladen.
      * Klicken Sie auf "Create Project"
      * Unter "My Projects" einscheint nun das angelegte Projekt.
+     ![REDCap-Projekt importieren](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/0bfc855c-8586-4c82-8d58-84615ccb1a8f)
+
 
 [//]: # (Zurück zur Install-Anleitung einfügen)
 [//]: # (Doku für die Verwendung des REDCap INTERPOLAR-Projektes hier Verweis darauf einfügen)
