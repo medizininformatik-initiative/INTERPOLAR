@@ -279,10 +279,11 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
 #' of the column names in the expanded table description and may write the expanded table
 #' description to an Excel file.
 #'
+#' @export
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
-  if (checkResult(expanded_table_description)) {
+  if (checkTableDescriptionResult(expanded_table_description)) {
     message('All result columns could be transformed or expanded.')
     table_description_file_name <- './R-cds2db/cds2db/inst/extdata/Table_Description.xlsx'
     etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')
@@ -314,7 +315,8 @@ expandTableDescription <- function() {
 #'
 #' Error messages include specific solutions and notes to help address the identified issues.
 #'
-checkResult <- function(expanded_table_description) {
+#' @export
+checkTableDescriptionResult <- function(expanded_table_description) {
   isValid <- TRUE
 
   # check that there are no column names which exceeds the maximum length of 64 characters in Postgres DBs
