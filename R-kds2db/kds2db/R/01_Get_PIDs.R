@@ -9,7 +9,6 @@ isEncounterTableEmpty <- function() {
   TRUE
 }
 
-
 #' Initialize encounter retrieval period for downloading.
 #'
 #' This function initializes the period for downloading encounters based on various conditions.
@@ -20,26 +19,19 @@ isEncounterTableEmpty <- function() {
 #'
 initEncounterPeriodToDownload <- function() {
   # the debug parameters are given both
-  if (exists('DEBUG_PERIOD_START') && exists('DEBUG_PERIOD_END')) {
-    PERIOD_START <<- as.Date(DEBUG_PERIOD_START)
-    PERIOD_END <<- as.Date(DEBUG_PERIOD_END)
+  if (exists('DEBUG_FIXED_DATE')) {
+    period_end <- as.Date(DEBUG_FIXED_DATE)
   } else {
-    # is this the very first start?
-    if (isEncounterTableEmpty()) {
-      # only if the retrieval never ran before = initial start -> days_in_past should
-      # be a little bit more (maybe 30)
-      days_in_past <- get('INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS')
-    } else {
-      # it is not the very first start
-      days_in_past <- get('USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS')
-    }
-    days_in_past <- days_in_past * 24 * 3600 # this value must be subtracted from a date (days in seconds)
-    if (exists('DEBUG_PERIOD_START')) {
-      PERIOD_START <<- as.Date(DEBUG_PERIOD_START) - days_in_past
-    } else {
-      PERIOD_START <<- as.Date(Sys.time() - days_in_past)
-    }
-    PERIOD_END <<- as.Date(Sys.time() + 100 * 24 * 3600) # end must be somewhere in the future so we take 100 days
+    period_end <- as.Date(Sys.time())
+  }
+  if (isInitialStart()) {
+    PERIOD_START <<- period_end - INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS
+  } else {
+    PERIOD_START <<- period_end - USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS
+  }
+  if (exists('DEBUG_FIXED_DATE')) {
+    # we only need an end date if we are in DEBUG mode
+    PERIOD_END <<- period_end
   }
 }
 
