@@ -228,7 +228,7 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 #'   The list is structured such that each outer list represents a ward, and the inner lists contain
 #'   unique patient IDs for that ward.
 #'
-getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
+filterPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   pids_per_ward <- list()
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
