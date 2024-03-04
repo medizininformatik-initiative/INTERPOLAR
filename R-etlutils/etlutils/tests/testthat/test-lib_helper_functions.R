@@ -104,6 +104,23 @@ test_that("isSimpleFalseOr0 returns FALSE for TRUE and other data types", {
   expect_false(isSimpleFalseOr0(NA))
 })
 
+#######################
+# isSimplePositiveInt #
+#######################
+
+test_that("isSimplePositiveInt correctly identifies simple positive integers", {
+  # Test positive scenarios
+  expect_true(isSimplePositiveInt(5000L))
+
+  # Test negative scenarios
+  expect_false(isSimplePositiveInt(-1L))
+  expect_false(isSimplePositiveInt(2.5))
+  expect_false(isSimplePositiveInt(c(1L, 2L)))
+  expect_false(isSimplePositiveInt(NA))
+  expect_false(isSimplePositiveInt("5000"))
+  expect_false(isSimplePositiveInt(TRUE))
+})
+
 ##########################
 # isSimpleNotEmptyString #
 ##########################
@@ -176,6 +193,45 @@ test_that("replacePatternsInString returns the original string when no matches a
   patternsAndReplacements <- list("xyz" = "abc")
   result <- replacePatternsInString(patternsAndReplacements, "hello world!", ignore.case = FALSE)
   expect_equal(result, "hello world!")
+})
+
+########################################
+# replaceNonBreakingSpacesByWhitespace #
+########################################
+
+test_that("replaceNonBreakingSpacesByWhitespace correctly processes strings", {
+  # Generating the actual non-breaking space character and tab character
+  nbsp <- "\u00A0" # Unicode for non-breaking space
+  tab <- "\t" # Tab character
+
+  # Testing with non-breaking spaces, without merging multiple whitespaces
+  expect_equal(
+    replaceNonBreakingSpacesByWhitespace(paste("Example", nbsp, nbsp, "Text", sep = "")),
+    "Example  Text"
+  )
+
+  # Testing with non-breaking spaces and merging multiple whitespaces
+  expect_equal(
+    replaceNonBreakingSpacesByWhitespace(paste("More", nbsp, nbsp, nbsp, "Examples", nbsp, nbsp, nbsp, "Here", sep = "")),
+    "More   Examples   Here"
+  )
+
+  # Testing without non-breaking spaces and without merging multiple whitespaces
+  expect_equal(
+    replaceNonBreakingSpacesByWhitespace("No Extra Spaces"),
+    "No Extra Spaces"
+  )
+})
+
+#######################
+# mergeMultipleSpaces #
+#######################
+
+test_that("mergeMultipleSpaces correctly merges whitespace", {
+  # Test strings with various forms of whitespace
+  expect_equal(mergeMultipleSpaces("This   is  a   test."), "This is a test.")
+  expect_equal(mergeMultipleSpaces("Leading  and trailing   "), "Leading and trailing ")
+  expect_equal(mergeMultipleSpaces("\tTabs\tand\nnewlines\n"), " Tabs and newlines ")
 })
 
 ###########################

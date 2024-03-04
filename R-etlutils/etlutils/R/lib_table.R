@@ -301,7 +301,7 @@ replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replac
 trimTableValues <- function(dt, colnames = NA) {
   isDataFrame <- !'data.table' %in% class(dt)
   if (isDataFrame) {
-    setDT(dt) # Convert to data.table if it's a data.frame
+    data.table::setDT(dt) # Convert to data.table if it's a data.frame
   }
 
   if (is.na(colnames)) {
@@ -315,7 +315,49 @@ trimTableValues <- function(dt, colnames = NA) {
   }
 
   if (isDataFrame) {
-    setDF(dt) # Convert back to data.frame if the original input was a data.frame
+    data.table::setDF(dt) # Convert back to data.frame if the original input was a data.frame
+  }
+
+  return(dt)
+}
+
+#' Apply a Function to Table Values by Columns
+#'
+#' This function applies a specified function to each cell in one or more columns of a data.table or data.frame.
+#' It is designed to work with character columns, applying the function only to those columns. The table is
+#' modified in place if it is a data.table. If the input is a data.frame, it is temporarily converted to
+#' data.table for processing, then converted back before returning.
+#'
+#' @param dt A data.table or data.frame to process.
+#' @param cell_fun The function to apply to each cell in the specified columns. This function should accept a
+#' single character value and return a modified value.
+#' @param colnames A vector of column names to apply the function to. If NA (default), the function is applied
+#' to all columns.
+#' @return The modified data.table or data.frame with the function applied to the specified columns.
+#' @examples
+#' library(data.table)
+#' dt <- data.table(name = c(" John ", "Jane", "Doe "), age = c(30, 25, 22))
+#' runFunctionOnTableValues(dt, colnames = "name", cell_fun = trimws)
+#' @export
+runFunctionOnTableValues <- function(dt, cell_fun, colnames = NA) {
+  isDataFrame <- !'data.table' %in% class(dt)
+  if (isDataFrame) {
+    data.table::setDT(dt) # Convert to data.table if it's a data.frame
+  }
+
+  if (is.na(colnames)) {
+    colnames <- names(dt)
+  }
+
+  # Apply the specified function only on character columns
+  for (col in colnames) {
+    if (is.character(dt[[col]])) {
+      dt[, (col) := unlist(lapply(.SD[[col]], cell_fun), use.names = FALSE), .SDcols = col]
+    }
+  }
+
+  if (isDataFrame) {
+    data.table::setDF(dt) # Convert back to data.frame if the original input was a data.frame
   }
 
   return(dt)
