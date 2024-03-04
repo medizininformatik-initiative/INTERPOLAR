@@ -33,10 +33,6 @@ message is printed, and the expanded table description is saved to an Excel file
 This function is particularly useful for preparing database schema definitions where
 there are constraints on the length of column names, such as in Postgres databases.
 }
-\examples{
-expandTableDescription()
-
-}
 \seealso{
 \code{\link{expandTableDescriptionFromFile}}
 }

@@ -30,18 +30,6 @@ underscores and appending prefixes. The expansion process might replace a single
 from an expansion table, adjusting \code{count} values and column names accordingly.
 Finally, all \code{column_name} entries are converted to lowercase.
 }
-\examples{
-library(data.table)
-
-# Assuming `table_description_collapsed` and `expansion_tables` are predefined
-# table_description_collapsed <- data.table(...) # Define your initial table description
-# expansion_tables <- list(...) # Define your expansion tables
-
-# Example function call
-# expanded_table <- expandTableDescriptionInternal(table_description_collapsed, expansion_tables)
-# print(expanded_table)
-
-}
 \seealso{
 \code{\link{extractReplacePatterns}}, \code{\link[etlutils]{getFirstRowWithPatterns}},
 \code{\link[etlutils]{isSimpleNotEmptyString}}, \code{\link[etlutils]{getAfterLastSlash}},

@@ -24,12 +24,6 @@ by directly working with file-based inputs. The function automatically appends a
 determines the correct file path based on the execution context (interactive or package), reads the Excel file
 into a list of tables, extracts the collapsed table description, and then applies the expansion logic.
 }
-\examples{
-# Assuming the Excel file 'Table_Description_Definition.xlsx' exists in the appropriate directory
-# and contains the necessary table description and expansion tables:
-# expandTableDescriptionFromFile("Table_Description_Definition")
-
-}
 \seealso{
 \code{\link[etlutils]{readExcelFileAsTableList}}, \code{\link{expandTableDescription}}
 }

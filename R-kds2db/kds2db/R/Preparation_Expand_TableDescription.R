@@ -100,17 +100,6 @@ addEmptyRowsBeforeNewResource <- function(table) {
 #' @return A `data.table` object with the expanded table description, where specific rows have been replaced
 #' according to the rules defined by the expansion tables.
 #'
-#' @examples
-#' library(data.table)
-#'
-#' # Assuming `table_description_collapsed` and `expansion_tables` are predefined
-#' # table_description_collapsed <- data.table(...) # Define your initial table description
-#' # expansion_tables <- list(...) # Define your expansion tables
-#'
-#' # Example function call
-#' # expanded_table <- expandTableDescriptionInternal(table_description_collapsed, expansion_tables)
-#' # print(expanded_table)
-#'
 #' @seealso \code{\link{extractReplacePatterns}}, \code{\link[etlutils]{getFirstRowWithPatterns}},
 #' \code{\link[etlutils]{isSimpleNotEmptyString}}, \code{\link[etlutils]{getAfterLastSlash}},
 #' \code{\link[etlutils]{getBeforeLastSlash}}, \code{\link[etlutils]{replacePatternsInString}}
@@ -225,11 +214,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
 #' as a side effect, utilizing other functions within the package to read the Excel file, extract relevant tables,
 #' and expand the table description according to predefined rules.
 #'
-#' @examples
-#' # Assuming the Excel file 'Table_Description_Definition.xlsx' exists in the appropriate directory
-#' # and contains the necessary table description and expansion tables:
-#' # expandTableDescriptionFromFile("Table_Description_Definition")
-#'
 #' @seealso \code{\link[etlutils]{readExcelFileAsTableList}}, \code{\link{expandTableDescription}}
 expandTableDescriptionFromFile <- function(table_description_collapsed_excel_simple_filename) {
   if (!grepl('.xlsx$', table_description_collapsed_excel_simple_filename)) {
@@ -276,14 +260,11 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
 #' of the column names in the expanded table description and may write the expanded table
 #' description to an Excel file.
 #'
-#' @examples
-#' expandTableDescription()
-#'
 #' @export
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
-  if (checkResult(expanded_table_description)) {
+  if (checkTableDescriptionResult(expanded_table_description)) {
     message('All result columns could be transformed or expanded.')
     table_description_file_name <- './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx'
     etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')
@@ -316,7 +297,7 @@ expandTableDescription <- function() {
 #' Error messages include specific solutions and notes to help address the identified issues.
 #'
 #' @export
-checkResult <- function(expanded_table_description) {
+checkTableDescriptionResult <- function(expanded_table_description) {
   isValid <- TRUE
 
   # check that there are no column names which exceeds the maximum length of 64 characters in Postgres DBs
