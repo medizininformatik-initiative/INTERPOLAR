@@ -230,6 +230,34 @@ test_that("trimTableValues handles NA and empty strings correctly", {
   expect_equal(dt, expected_dt)
 })
 
+############################
+# runFunctionOnTableValues #
+############################
+
+test_that("runFunctionOnTableValues applies function to table values correctly", {
+  # Create a sample data.table
+  dt <- data.table(name = c(" John ", " Jane ", " Doe "), score = c(" 85 ", "90", "95 "))
+
+  # Define a custom function to trim and convert to uppercase
+  custom_fun <- function(x) toupper(trimws(x))
+
+  # Apply the function to 'name' column
+  runFunctionOnTableValues(dt, colnames = "name", cell_fun = custom_fun)
+
+  # Expected results
+  expected_names <- c("JOHN", "JANE", "DOE")
+  expected_scores <- c(" 85 ", "90", "95 ") # 'score' column should remain unchanged
+
+  # Check if 'name' column has been correctly processed
+  expect_equal(dt$name, expected_names)
+
+  # Check if 'score' column remains unchanged
+  expect_equal(dt$score, expected_scores)
+
+  # Optionally, check if the function works correctly when no column names are specified
+  # and it should apply the function to all applicable (character) columns
+})
+
 #####################
 # splitColumnToRows #
 #####################

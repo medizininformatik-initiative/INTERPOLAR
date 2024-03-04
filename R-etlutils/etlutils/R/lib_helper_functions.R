@@ -75,6 +75,35 @@ isSimpleFalseOr0 <- function(x) {
   is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && !x
 }
 
+#'
+#' Check if a value is a simple positive integer.
+#'
+#' This function evaluates whether the input value is an atomic element, not NA, an integer,
+#' and positive. If these conditions are met, the function returns TRUE; otherwise, it returns FALSE.
+#' This check is useful for validating inputs expected to be positive integers, such as counts or indexes.
+#'
+#' @param x The value to be checked.
+#'
+#' @return TRUE if the input is a simple positive integer, FALSE otherwise.
+#'
+#' @examples
+#' # Example 1: Check if 5 is a simple positive integer (TRUE)
+#' isSimplePositiveInt(5000L)
+#'
+#' # Example 2: Check if -1 is not a simple positive integer (FALSE)
+#' isSimplePositiveInt(-1L)
+#'
+#' # Example 3: Check if a numeric value 2.5 is a simple positive integer (FALSE)
+#' isSimplePositiveInt(2.5)
+#'
+#' # Example 4: Check if a vector of integers is a simple positive integer (FALSE)
+#' isSimplePositiveInt(c(1L, 2L))
+#'
+#' @export
+isSimplePositiveInt <- function(x) {
+  is.atomic(x) && length(x) == 1 && !is.na(x) && is.integer(x) && x > 0
+}
+
 #' Check if the Input is a Non-Empty, Simple Character String
 #'
 #' This function checks if the input `s` is a non-empty, simple character string. It verifies that the input is atomic, not `NA`,
@@ -604,6 +633,42 @@ replacePatternsInString <- function(patternsAndReplacements, string, ignore.case
       string <- gsub(pattern, replacement, string, perl = perl)
     }
   }
+  return(string)
+}
+
+#' Replace Non-Breaking Spaces with Normal Spaces and Optionally Merge Multiple Spaces
+#'
+#' This function replaces non-breaking spaces (UTF-8 code A0) in the input string with normal spaces.
+#'
+#' @param string The input string to process.
+#' @return The processed string with non-breaking spaces replaced by normal spaces, and optionally,
+#'         multiple whitespace characters merged into a single space.
+#' @examples
+#' string <- "This is a test\u00A0\u00A0string"
+#' print(string)
+#' utf8ToInt(string)
+#' string <- replaceNonBreakingSpacesByWhitespace(string)
+#' utf8ToInt(string)
+#' @export
+replaceNonBreakingSpacesByWhitespace <- function(string) {
+  string <- gsub("\\xA0", " ", string, perl = TRUE)
+  return(string)
+}
+
+#' Merge Multiple Whitespace Characters into a Single Space
+#'
+#' This function replaces sequences of one or more whitespace characters
+#' (spaces, tabs, newlines, etc.) in the provided string with a single space,
+#' effectively merging multiple spaces into one.
+#'
+#' @param string The input string to process.
+#' @return The modified string with multiple whitespace characters merged into
+#' a single space.
+#' @examples
+#' mergeMultipleSpaces("This   is  a   test.")
+#' @export
+mergeMultipleSpaces <- function(string) {
+  string <- gsub("\\s+", " ", string)
   return(string)
 }
 
