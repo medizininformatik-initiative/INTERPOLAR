@@ -1,0 +1,9 @@
+diff a/R-kds2db/kds2db/R/01_Get_PIDs.R b/R-kds2db/kds2db/R/01_Get_PIDs.R	(rejected hunks)
+@@ -274,7 +274,6 @@
+ -    pidsPerWard <- filterPIDsPerWard(resources, filter_patterns)
+ -    return(pidsPerWard)
+ -  })
+--
+ +  if (!is.na(path_to_PID_list_file)) {
+ +    etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
+ +      pidsPerWard <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
