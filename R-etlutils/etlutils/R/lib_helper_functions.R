@@ -889,6 +889,19 @@ stopWithError <- function(...) {
   stop(cat_red(paste(c(...))))
 }
 
+#' Stop on Error
+#'
+#' This function checks if the provided argument is an error. If it is, the
+#' function stops the execution.
+#'
+#' @param potential_error The object to check for being an error.
+#'
+#' @seealso stop
+#' @export
+stopOnError <- function(potential_error) {
+  if (isError(potential_error)) stop()
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1

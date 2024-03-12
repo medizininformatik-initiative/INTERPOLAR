@@ -4,11 +4,15 @@
 \alias{stopOnError}
 \title{Stop on Error}
 \usage{
-stopOnError(...)
+stopOnError(potential_error)
 }
 \arguments{
-\item{...}{Character vectors to be concatenated and printed as an error message.}
+\item{potential_error}{The object to check for being an error.}
 }
 \description{
-This function stops execution and prints the concatenated error message.
+This function checks if the provided argument is an error. If it is, the
+function stops the execution.
+}
+\seealso{
+stop
 }

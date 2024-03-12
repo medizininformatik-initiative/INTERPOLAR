@@ -42,8 +42,8 @@ retrieve <- function() {
     }), silent = TRUE)
     print(PROCESS_CLOCK)
     warnings()
-    if(inherits(err, "try-error")) stop()
     etlutils::END__()
+    etlutils::stopOnError(err)
 
     # Load Table Description
     etlutils::START__()
@@ -52,8 +52,8 @@ retrieve <- function() {
     }), silent = TRUE)
     print(PROCESS_CLOCK)
     warnings()
-    if(inherits(err, "try-error")) stop()
     etlutils::END__()
+    etlutils::stopOnError(err)
 
     # Download and crack resources by Patient IDs per ward
     etlutils::START__()
@@ -62,8 +62,8 @@ retrieve <- function() {
     }), silent = TRUE)
     print(PROCESS_CLOCK)
     warnings()
-    if(inherits(err, "try-error")) stop()
     etlutils::END__()
+    etlutils::stopOnError(err)
 
     # Write resource tables to database
     etlutils::START__()
@@ -72,8 +72,8 @@ retrieve <- function() {
     }), silent = TRUE)
     print(PROCESS_CLOCK)
     warnings()
-    if(inherits(err, "try-error")) stop()
     etlutils::END__()
+    etlutils::stopOnError(err)
 
   })
   etlutils::END__()
@@ -83,5 +83,4 @@ retrieve <- function() {
   # Save all console logs
   ###
   etlutils::end_logging()
-
 }
