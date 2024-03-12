@@ -4,7 +4,7 @@
 \alias{createClock}
 \title{Create a Clock}
 \usage{
-createClock()
+createClock(clock_variable_name = "PROCESS_CLOCK")
 }
 \value{
 a Clock

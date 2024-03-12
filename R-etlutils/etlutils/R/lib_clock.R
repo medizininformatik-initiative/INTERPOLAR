@@ -329,6 +329,18 @@ Clock = setRefClass(
 #' # )
 #'
 #' @export
-createClock <- function() {
-  methods::new(Class = 'Clock')
+createClock <- function(clock_variable_name = "PROCESS_CLOCK") {
+  assign(clock_variable_name, methods::new(Class = 'Clock'), envir = .GlobalEnv)
+}
+
+#' Print Clock Variable
+#'
+#' This function prints the value of a clock variable based on the provided name.
+#'
+#' @param clock_variable_name The name of the clock variable to print. Defaults to "PROCESS_CLOCK".
+#'
+#' @seealso get
+#' @export
+printClock <- function(clock_variable_name = "PROCESS_CLOCK") {
+  print(get(clock_variable_name))
 }
