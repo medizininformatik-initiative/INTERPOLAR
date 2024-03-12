@@ -107,6 +107,7 @@ colourise <- function(text, fg = "dark gray", bg = NULL) {
 #' @export
 cat_colourised <- function(msg, fg = NULL, bg = NULL) {
   cat(colourise(text = msg, fg = fg, bg = bg))
+  return(msg)
 }
 
 #' Print Text in Light Green Color
