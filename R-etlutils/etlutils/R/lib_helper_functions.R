@@ -878,14 +878,14 @@ fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
   dt[, (date_columns) := lapply(.SD, convertDateInformation), .SDcols = date_columns]
 }
 
-#' Stop on Error
+#' Stop execution with Error message
 #'
 #' This function stops execution and prints the concatenated error message.
 #'
 #' @param ... Character vectors to be concatenated and printed as an error message.
 #'
 #' @export
-stopOnError <- function(...) {
+stopWithError <- function(...) {
   stop(cat_red(paste(c(...))))
 }
 

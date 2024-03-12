@@ -14,7 +14,7 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
 
   if (!length(ward_pids_filter_patterns)) {
-    stopOnError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
+    stopWithError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
   }
 
   # the result list with all. The structure of the list is the following:
