@@ -36,49 +36,29 @@ retrieve <- function() {
   etlutils::run_out('Run Retrieve', {
 
     # Extract Patient IDs
-    etlutils::START__()
-    err <- try(etlutils::run_in('Extract Patient IDs', {
+    etlutils::startProcess(etlutils::run_in('Extract Patient IDs', {
       patientIDsPerWard <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
-    }), silent = TRUE)
-    etlutils::printClock()
-    warnings()
-    etlutils::END__()
-    etlutils::stopOnError(err)
+    }))
 
     # Load Table Description
-    etlutils::START__()
-    err <- try(etlutils::run_in('Load Table Description', {
+    etlutils::startProcess(etlutils::run_in('Load Table Description', {
       table_descriptions <- getTableDescriptions()
-    }), silent = TRUE)
-    etlutils::printClock()
-    warnings()
-    etlutils::END__()
-    etlutils::stopOnError(err)
+    }))
 
     # Download and crack resources by Patient IDs per ward
-    etlutils::START__()
-    err <- try(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
+    etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
       resource_table_list <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
-    }), silent = TRUE)
-    etlutils::printClock()
-    warnings()
-    etlutils::END__()
-    etlutils::stopOnError(err)
+    }))
 
     # Write resource tables to database
-    etlutils::START__()
-    err <- try(etlutils::run_in('Write resource tables to database', {
+    etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
       writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
-    }), silent = TRUE)
-    etlutils::printClock()
-    warnings()
-    etlutils::END__()
-    etlutils::stopOnError(err)
+    }))
 
   })
-  etlutils::END__()
-  warnings()
   etlutils::printClock()
+  warnings()
+  etlutils::END__()
   ###
   # Save all console logs
   ###
