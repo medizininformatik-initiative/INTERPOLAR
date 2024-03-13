@@ -280,3 +280,22 @@ runs <- function(message, process, verbose) {
     verbose = VERBOSE - verbose + 1,
     single_line = TRUE
   )}
+
+#' Start a Process with Error Handling
+#'
+#' This function initiates a process using the specified function and includes error handling.
+#'
+#' @param process The function representing the process to be executed.
+#' @return None (prints clock information and handles errors)
+#'
+#' @seealso START__, printClock, END__, stopOnError
+#'
+#' @export
+startProcess <- function(process) {
+  START__()
+  err <- try(process, silent = TRUE)
+  printClock()
+  warnings()
+  END__()
+  stopOnError(err)
+}
