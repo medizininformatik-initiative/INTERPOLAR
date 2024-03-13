@@ -49,3 +49,7 @@ Die REDCap-app benötigt eine Datenbank (mariadb), welche in diesem Verzeichnis 
 ## Installation
 
 Folgende Anweisungen müssen ausgeführt werden, um die MRP-Pipeline zu verwenden: [Install.md](Install.md)
+
+## Hilfe und Unterstützung
+- [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
+
