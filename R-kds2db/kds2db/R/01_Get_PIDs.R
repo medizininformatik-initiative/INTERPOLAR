@@ -14,7 +14,7 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
 
   if (!length(ward_pids_filter_patterns)) {
-    stopOnError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
+    stopWithError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
   }
 
   # the result list with all. The structure of the list is the following:
@@ -251,29 +251,28 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 #'
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
 
-  etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
-    if (!is.na(path_to_PID_list_file)) {
-      return(parsePatientIDsPerWardFromFile(path_to_PID_list_file))
-    }
-  })
-
-  etlutils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
-    initEncounterPeriodToDownload()
-    filter_patterns <- convertFilterPatterns()
-    # the subject reference is needed in every case to extract them if the encounter matches the pattern
-    # the period end is needed to check if the Encounter is still finsihed
-    # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
-    filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
-    # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
-    # additional paths above
-    encounters <- etlutils::get_encounters(filter_enc_table_description)
-    # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
-    # names for the filtering -> set them here
-    names(encounters) <- filter_enc_table_description@cols@.Data
-    # now filter the encounters with the patterns and then extract the PIDs
-    pidsPerWard <- getPIDsPerWard(encounters, filter_patterns)
-    return(pidsPerWard)
-  })
-
+  if (!is.na(path_to_PID_list_file)) {
+    etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
+      pidsPerWard <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
+    })
+  } else {
+    etlutils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
+      initEncounterPeriodToDownload()
+      filter_patterns <- convertFilterPatterns()
+      # the subject reference is needed in every case to extract them if the encounter matches the pattern
+      # the period end is needed to check if the Encounter is still finsihed
+      # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
+      filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
+      # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
+      # additional paths above
+      encounters <- etlutils::get_encounters(filter_enc_table_description)
+      # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
+      # names for the filtering -> set them here
+      names(encounters) <- filter_enc_table_description@cols@.Data
+      # now filter the encounters with the patterns and then extract the PIDs
+      pidsPerWard <- getPIDsPerWard(encounters, filter_patterns)
+    })
+  }
+  return(pidsPerWard)
 }
 
