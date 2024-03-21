@@ -791,29 +791,25 @@ convertDateTimeFormat <- function(dt, column) {
   dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
 }
 
-#' - If `preserve_time` is TRUE, it extracts the time part from each date column
-#'   and saves it into respective TimeSpec columns by appending ".TimeSpec" to the
-#'   original date column names.
+#' Fix integer format in specified column
 #'
-#' - It then converts the original date columns to Date format using the
-#'   `convertDateInformation` function.
+#' This function fixes the integer format in specified column of a data table.
 #'
-#' @param dt A data.table containing the data to be processed.
-#' @param date_columns A character vector specifying the names of the date columns to be fixed.
-#' @param preserve_time A logical value indicating whether to preserve time information. Default is TRUE.
-#' @return The modified data.table with fixed date formats.
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
 #'
-#' @examples
-#' # Create an example data.table
-#' dt <- data.table::data.table(
-#'   date1 = c("2022", "1990-05", "1980-11"),
-#'   date2 = c("2022-12", "1990-05", "1980-11"),
-#'   value = c(1, 2, 3)
-#' )
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to integers using \code{as.integer}.
 #'
-#' # Fix uncommon date formats with time preservation
-#' fixDateFormat(dt, c("date1", "date2"), preserve_time = TRUE)
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the integer format in the specified column
 #'
+#' @export
+convertIntegerFormat <- function(dt, column) {
+  dt[, (column) := as.integer((get(column)))]
+}
+
 #' # The resulting data.table will have additional columns date1_timespec and date2_timespec
 #' # containing the extracted time information, and the original date columns date1 and date2
 #' # will be converted to Date format.
