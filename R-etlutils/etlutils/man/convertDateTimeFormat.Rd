@@ -2,7 +2,7 @@
 % Please edit documentation in R/lib_helper_functions.R
 \name{convertDateTimeFormat}
 \alias{convertDateTimeFormat}
-\title{Fix date format in specified columns}
+\title{Fix datetime format in specified columns}
 \usage{
 convertDateTimeFormat(dt, column)
 }
