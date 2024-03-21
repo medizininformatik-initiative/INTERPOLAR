@@ -22,14 +22,14 @@ SEP      <- ' ~ '
 #'
 #' @export
 getTableDescriptionsTable <- function(columns = NA) {
-  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "kds2db")
-  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
-  #remove unneccesary columns
-  etlutils::retainColumns(table_description, columns)
+  table_description <- loadTableDescriptionFile()
   # remove all rows with NA in column 'fhir_expression'
   table_description <- table_description[!is.na(fhir_expression), ]
   # fill resource NA column with the last valid (non NA) value above
   table_description[, resource := resource[1], .(cumsum(!is.na(resource)))]
+  #remove unneccesary columns
+  etlutils::retainColumns(table_description, columns)
+  return(table_description)
 }
 
 #' Get a list of fhircrackr::fhir_table_description() objects based on a table description.
