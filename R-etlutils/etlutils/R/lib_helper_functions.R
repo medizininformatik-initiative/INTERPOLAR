@@ -734,54 +734,41 @@ convertTimeFormat <- function(dt, column) {
   dt[, (column) := ifelse(column != "", gsub(paste0(".*?(", time_pattern, ").*"), "\\1", column), NA)]
 }
 
-#' Convert a date representation to Date format
+#' Convert Date Format
 #'
-#' This function takes a date column in a format, cleans and standardizes
-#' the format, and converts it to Date format. The input date_column is expected
-#' to be in a format containing year, month, and day information. The function
-#' supports patterns for YYYY and YYYY-MM.
+#' This function converts the date format of a column in a data table.
 #'
-#' @param date_column A column containing date information in a format.
-#' @return A Date vector representing the converted date information.
+#' @param dt A data table.
+#' @param column The name of the column whose date format needs to be converted.
 #'
-#' @examples
-#' library(lubridate)
+#' @details This function takes a data table \code{dt} and the name of a column \code{column}
+#' as input. It converts the date format of the specified column in the following steps:
+#' - Convert the column to character type.
+#' - Remove time information (if any) from the column values.
+#' - Replace '/' with '-' in the column values.
+#' - If the values match the pattern YYYY, append '-01-01' to represent the complete date.
+#' - If the values match the pattern YYYY-MM, append '-01' to represent the complete date.
+#' - Finally, convert the column to date type using \code{lubridate::as_date}.
 #'
-#' # Test case 1: YYYY format
-#' date_column_YYYY <- c("2022", "1990", "1980")
-#' result_YYYY <- convertDateInformation(date_column_YYYY)
-#'
-#' # Test case 2: YYYY-MM format
-#' date_column_YYYY_MM <- c("2022-12", "1990-05", "1980-11")
-#' result_YYYY_MM <- convertDateInformation(date_column_YYYY_MM)
-#'
-#' # Test case 3: Date with time, should be cleaned
-#' date_column_with_time <- c("2022-12-01T15:30:00", "1990-05-01T08:45:00")
-#' result_with_time <- convertDateInformation(date_column_with_time)
-#'
-#' # Test case 4: Date with '/' separator, should be replaced with '-'
-#' date_column_slash_separator <- c("2022/12/01", "1990/05/01")
-#' result_slash_separator <- convertDateInformation(date_column_slash_separator)
+#' @return This function modifies the input data table \code{dt} by converting the date format
+#' of the specified column.
 #'
 #' @export
-#'
-convertDateInformation <- function(date_column) {
-
-  dc <- as.character(date_column)
-  dc <- gsub('T.+$', '', dc)
-  dc <- gsub('/', '-', dc)
-
+convertDateFormat <- function(dt, column) {
+  dt[, (column) := as.character(get(column))]
+  dt[, (column) := gsub('T.+$', '', get(column))]
+  dt[, (column) := gsub('/', '-', get(column))]
   # Set a regular expression pattern for matching YYYY format
   incomplete_date_pattern <- '^[0-9]{4}$'
-  years <- grepl(incomplete_date_pattern, dc)
-  dc[years] <- paste0(dc[years], '-01-01')
+  years <- grepl(incomplete_date_pattern, dt[[column]])
+  dt[years, (column) := paste0(dt[years, get(column)], '-01-01')]
 
   # Set a regular expression pattern for matching YYYY-MM format
   incomplete_date_pattern <- '^[0-9]{4}-[0-9]{2}$'
-  years <- grepl(incomplete_date_pattern, dc)
-  dc[years] <- paste0(dc[years], '-01')
+  months <- grepl(incomplete_date_pattern, dt[[column]])
+  dt[months, (column) := paste0(dt[months, get(column)], '-01')]
 
-  lubridate::as_date(dc)
+  dt[, (column) := lubridate::as_date(get(column))]
 }
 
 #'
