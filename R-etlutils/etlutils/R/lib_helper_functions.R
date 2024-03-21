@@ -771,13 +771,26 @@ convertDateFormat <- function(dt, column) {
   dt[, (column) := lubridate::as_date(get(column))]
 }
 
+#' Fix datetime format in specified columns
 #'
-#' Fix uncommon date formats
+#' This function fixes the date format in specified columns of a data table.
 #'
-#' This function takes a data.table (`dt`), a set of date columns (`date_columns`),
-#' and an optional parameter (`preserve_time`) to fix uncommon date formats.
-#' It performs the following tasks:
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
 #'
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to date-time objects with the format \code{ymd_hms},
+#' truncating the time to minutes and setting the timezone to "Europe/Berlin".
+#'
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the date format in the specified column
+#'
+#' @export
+convertDateTimeFormat <- function(dt, column) {
+  dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
+}
+
 #' - If `preserve_time` is TRUE, it extracts the time part from each date column
 #'   and saves it into respective TimeSpec columns by appending ".TimeSpec" to the
 #'   original date column names.
