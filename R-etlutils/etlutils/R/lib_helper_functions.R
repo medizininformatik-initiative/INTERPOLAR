@@ -829,29 +829,23 @@ convertDecimalFormat <- function(dt, column) {
   dt[, (column) := as.numeric(get(column))]
 }
 
+#' Fix boolean format in specified column
 #'
-fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
-
-  #preserve time information
-  if (preserve_time) {
-
-    time_columns <- paste0(date_columns, "_timespec") #add suffix HourMinutesSeconds
-
-    #col by col
-    for (dc in date_columns) {
-
-      tc <- paste0(dc, "_timespec")
-      if (0 < nrow(dt)) {
-
-        #extract time from any datetime column and save it into the respecive TimeSpec column
-        dt[, (tc) := sapply(dt[[dc]], convertTimeToPOSIXct)]
-      } else {
-        #avoid columns of type list, which will be generated from empty resource
-        dt[, (tc) := character()]
-      }
-    }
-  }
-  dt[, (date_columns) := lapply(.SD, convertDateInformation), .SDcols = date_columns]
+#' This function fixes the boolean format in specified column of a data table.
+#'
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
+#'
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to numeric, treating TRUE as 1 and FALSE as 0.
+#'
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the boolean format in the specified column
+#'
+#' @export
+convertBooleanFormat <- function(dt, column) {
+  dt[, (column) := as.logical(get(column))]
 }
 
 #' Stop execution with Error message
