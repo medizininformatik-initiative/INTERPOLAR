@@ -10,6 +10,21 @@ BRACKETS <- c('[', ']')
 #' @export
 SEP      <- ' ~ '
 
+#' Load Table Description Excel File
+#'
+#' This function loads a table description excel file
+#'
+#' @seealso \code{\link{etlutils::readExcelFileAsTableList}}
+#'
+#' @return A data table with table descriptions
+#'
+#' @export
+loadTableDescriptionFile <- function() {
+  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "kds2db")
+  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
+  return(table_description)
+}
+
 #' Get a table with the Table Descriptions for all fhir resources from Excel file
 #'
 #' This function reads the "Table_Description.xlsx" file from the "extdata" directory
