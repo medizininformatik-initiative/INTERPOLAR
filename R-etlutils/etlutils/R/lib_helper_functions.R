@@ -712,50 +712,26 @@ frame_string <- function(
   r
 }
 
-#' Convert a time representation to POSIXct format
+#' Convert Time Format
 #'
-#' This function takes a time column in a format, extracts the time part,
-#' and converts it to POSIXct format with a default date of "2020-01-01". The input
-#' time_column is expected to be in a format containing hours, minutes, and seconds.
-#' NA and an empty string will return NA.
+#' This function converts the time format of a column in a data table.
 #'
-#' @param time_column A column containing time information in a format.
-#' @return A character vector representing the time in POSIXct format ("%H:%M:%S").
+#' @param dt A data table.
+#' @param column The name of the column whose time format needs to be converted.
 #'
-#' @examples
-#' # Test case 1: Valid time representation
-#' time_column_valid <- c("12:30:45", "08:15:00", "23:59:59")
-#' result_valid <- convertTimeToPOSIXct(time_column_valid)
-#' cat("Result for valid time representations:\n", result_valid, "\n\n")
+#' @details This function takes a data table \code{dt} and the name of a column \code{column}
+#' as input. It converts the time format of the specified column using the following steps:
+#' - Parse the column values as POSIXct objects using \code{strptime}.
+#' - Format the POSIXct objects to the desired time format using \code{format}.
+#' - Update the column values in the data table with the formatted time values.
 #'
-#' # Test case 2: NA input, should return NA
-#' time_column_na <- c(NA, NA, NA)
-#' result_na <- convertTimeToPOSIXct(time_column_na)
-#' cat("Result for NA input:\n", result_na, "\n\n")
-#'
-#' # Test case 3: Empty string input, should throw an error
-#' time_column_empty <- c("", "", "")
-#' tryCatch(
-#'   {
-#'     result_empty <- convertTimeToPOSIXct(time_column_empty)
-#'     cat("Result for empty string input:\n", result_empty, "\n\n")
-#'   },
-#'   error = function(e) cat("Error for empty string input:\n", e$message, "\n\n")
-#' )
+#' @return This function modifies the input data table \code{dt} by converting the time format
+#' of the specified column.
 #'
 #' @export
-convertTimeToPOSIXct <- function(time_column) {
-  dc <- time_column
-  dc <- ifelse(nzchar(dc), dc, NA) # empty string is the same as NA
-  if (!all(is.na(dc))) {
-    pat <- '^.*?([0-9]+:[0-9]+:[0-9]+).*?$'
-    # Remove date or return midnight
-    dc <- ifelse (grepl(pat, dc), gsub(pat, "\\1", as.character(dc)), "00:00:00")
-    # Any day will work
-    dc <- paste("2020-01-01", dc)
-  }
-  # as.POSIXct returns NA, if it is not a valid date
-  format(as.POSIXct(dc, optional = TRUE), "%H:%M:%S")
+convertTimeFormat <- function(dt, column) {
+  time_pattern <- "([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)"
+  dt[, (column) := ifelse(column != "", gsub(paste0(".*?(", time_pattern, ").*"), "\\1", column), NA)]
 }
 
 #' Convert a date representation to Date format
