@@ -810,21 +810,25 @@ convertIntegerFormat <- function(dt, column) {
   dt[, (column) := as.integer((get(column)))]
 }
 
-#' # The resulting data.table will have additional columns date1_timespec and date2_timespec
-#' # containing the extracted time information, and the original date columns date1 and date2
-#' # will be converted to Date format.
-#' dt
+#' Fix decimal format in specified column
 #'
-#' # Expected output:
-#' #    date1      date2 value date1_timespec date2_timespec
-#' # 1: 2022-01-01 2022-12-01     1       00:00:00       00:00:00
-#' # 2: 1990-05-01 1990-05-01     2       00:00:00       00:00:00
-#' # 3: 1980-11-01 1980-11-01     3       00:00:00       00:00:00
+#' This function fixes the decimal format in specified column of a data table.
 #'
-#' @seealso
-#' \code{\link{convertTimeToPOSIXct}}, \code{\link{convertDateInformation}}
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
+#'
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to numeric using \code{as.numeric}.
+#'
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the decimal format in the specified column
 #'
 #' @export
+convertDecimalFormat <- function(dt, column) {
+  dt[, (column) := as.numeric(get(column))]
+}
+
 #'
 fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
 
