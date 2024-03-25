@@ -730,8 +730,10 @@ frame_string <- function(
 #'
 #' @export
 convertTimeFormat <- function(dt, column) {
-  time_pattern <- "([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)"
-  dt[, (column) := ifelse(column != "", gsub(paste0(".*?(", time_pattern, ").*"), "\\1", column), NA)]
+  # Convert string in POSIXct object
+  dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "UTC"), .SDcols = column]
+  # Set date to '1970-01-01'
+  dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "UTC")]
 }
 
 #' Convert Date Format
