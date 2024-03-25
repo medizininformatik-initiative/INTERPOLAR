@@ -14,9 +14,11 @@
 #'
 #' @export
 convertType <- function(resource_tables, convert_columns, convert_type_function) {
+  # Get table description
   table_description <- getTableDescriptionsTable(c("resource", "column_name", "type"))
-  # remove all rows with NA or string in column 'type'
+  # Remove all rows with NA or string in column 'type'
   table_description <- table_description[!is.na(type)]
+  # Internal function for converting column types
   convertDateInternal <- function() {
     convert_columns <- table_description[type %in% convert_columns]
     last_table_name <- NA
@@ -29,6 +31,7 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
       } else {
         datetime_columns <- c(column_name)
       }
+      # Check if the table is present in resource_tables and perform conversion
       if (!is.null(resource_tables[[table_name]]) && (!(table_name %in% last_table_name) || i == nrow(convert_columns))) {
         convert_type_function(resource_tables[[table_name]], datetime_columns)
         #cat("Converted column ", datetime_columns, " in table", table_name, "\n")
