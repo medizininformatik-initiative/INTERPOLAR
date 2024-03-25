@@ -21,7 +21,7 @@ It converts the data types of columns in these tables based on predefined mappin
 \itemize{
 \item Columns marked as "datetime" are converted to POSIXct objects using \code{etlutils::convertDateTimeFormat}.
 \item Columns marked as "date" are converted to date objects using \code{etlutils::convertDateFormat}.
-\item Columns marked as "time" are converted to POSIXct objects representing time of the day using \code{etlutils::convertTimeFormat}.
+\item Columns marked as "time" are converted to character objects representing time of the day using \code{etlutils::convertTimeFormat}.
 \item Columns marked as "int" are converted to integer values using \code{etlutils::convertIntegerFormat}.
 \item Columns marked as "decimal" are converted to numeric (floating-point) values using \code{etlutils::convertDecimalFormat}.
 \item Columns marked as "boolean" are converted to logical (TRUE/FALSE) values using \code{etlutils::convertBooleanFormat}.

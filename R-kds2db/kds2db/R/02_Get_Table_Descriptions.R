@@ -14,8 +14,6 @@ SEP      <- ' ~ '
 #'
 #' This function loads a table description excel file
 #'
-#' @seealso \code{\link{etlutils::readExcelFileAsTableList}}
-#'
 #' @return A data table with table descriptions
 #'
 #' @export
