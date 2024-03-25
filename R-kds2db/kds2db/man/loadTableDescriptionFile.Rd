@@ -12,6 +12,3 @@ A data table with table descriptions
 \description{
 This function loads a table description excel file
 }
-\seealso{
-\code{\link{etlutils::readExcelFileAsTableList}}
-}

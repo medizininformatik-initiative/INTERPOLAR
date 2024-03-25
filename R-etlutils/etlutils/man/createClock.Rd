@@ -2,33 +2,19 @@
 % Please edit documentation in R/lib_clock.R
 \name{createClock}
 \alias{createClock}
-\title{Create a Clock}
+\title{Create a Clock Object}
 \usage{
 createClock(clock_variable_name = "PROCESS_CLOCK")
 }
+\arguments{
+\item{clock_variable_name}{The name of the variable to which the clock object will be assigned. Default is "PROCESS_CLOCK".}
+}
 \value{
-a Clock
+The clock object is assigned to the global environment under the specified variable name.
 }
 \description{
-Create a Clock
+This function creates a clock object and assigns it to the global environment under the specified variable name.
 }
-\examples{
-my_clock <- createClock()
-my_clock$measure_process_time('Process A', {Sys.sleep(1)})
-# show raw data
-my_clock$complete()
-# reset clock
-my_clock$reset()
-# show clock
-my_clock$show() # the same as my_clock or print(my_clock)
-### save time measurements as tsv
-# my_clock$write('my_clock')
-### save time measurements as csv
-# my_clock$write(
-#   filename_without_extension = 'my_clock',
-#   sep = ',',
-#   ext = 'csv',
-#   hide_errors = FALSE
-# )
-
+\details{
+The function creates a clock object using the \code{methods::new()} function with the class "Clock" and assigns it to the global environment.
 }
