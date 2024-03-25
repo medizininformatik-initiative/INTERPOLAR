@@ -712,170 +712,142 @@ frame_string <- function(
   r
 }
 
-#' Convert a time representation to POSIXct format
+#' Convert Time Format
 #'
-#' This function takes a time column in a format, extracts the time part,
-#' and converts it to POSIXct format with a default date of "2020-01-01". The input
-#' time_column is expected to be in a format containing hours, minutes, and seconds.
-#' NA and an empty string will return NA.
+#' This function converts the time format of a column in a data table.
 #'
-#' @param time_column A column containing time information in a format.
-#' @return A character vector representing the time in POSIXct format ("%H:%M:%S").
+#' @param dt A data table.
+#' @param column The name of the column whose time format needs to be converted.
 #'
-#' @examples
-#' # Test case 1: Valid time representation
-#' time_column_valid <- c("12:30:45", "08:15:00", "23:59:59")
-#' result_valid <- convertTimeToPOSIXct(time_column_valid)
-#' cat("Result for valid time representations:\n", result_valid, "\n\n")
+#' @details This function takes a data table \code{dt} and the name of a column \code{column}
+#' as input. It converts the time format of the specified column using the following steps:
+#' - Parse the column values as POSIXct objects using \code{strptime}.
+#' - Format the POSIXct objects to the desired time format using \code{format}.
+#' - Update the column values in the data table with the formatted time values.
 #'
-#' # Test case 2: NA input, should return NA
-#' time_column_na <- c(NA, NA, NA)
-#' result_na <- convertTimeToPOSIXct(time_column_na)
-#' cat("Result for NA input:\n", result_na, "\n\n")
-#'
-#' # Test case 3: Empty string input, should throw an error
-#' time_column_empty <- c("", "", "")
-#' tryCatch(
-#'   {
-#'     result_empty <- convertTimeToPOSIXct(time_column_empty)
-#'     cat("Result for empty string input:\n", result_empty, "\n\n")
-#'   },
-#'   error = function(e) cat("Error for empty string input:\n", e$message, "\n\n")
-#' )
+#' @return This function modifies the input data table \code{dt} by converting the time format
+#' of the specified column.
 #'
 #' @export
-convertTimeToPOSIXct <- function(time_column) {
-  dc <- time_column
-  dc <- ifelse(nzchar(dc), dc, NA) # empty string is the same as NA
-  if (!all(is.na(dc))) {
-    pat <- '^.*?([0-9]+:[0-9]+:[0-9]+).*?$'
-    # Remove date or return midnight
-    dc <- ifelse (grepl(pat, dc), gsub(pat, "\\1", as.character(dc)), "00:00:00")
-    # Any day will work
-    dc <- paste("2020-01-01", dc)
-  }
-  # as.POSIXct returns NA, if it is not a valid date
-  format(as.POSIXct(dc, optional = TRUE), "%H:%M:%S")
+convertTimeFormat <- function(dt, column) {
+  # Convert string in POSIXct object
+  dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "UTC"), .SDcols = column]
+  # Set date to '1970-01-01'
+  dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "UTC")]
 }
 
-#' Convert a date representation to Date format
+#' Convert Date Format
 #'
-#' This function takes a date column in a format, cleans and standardizes
-#' the format, and converts it to Date format. The input date_column is expected
-#' to be in a format containing year, month, and day information. The function
-#' supports patterns for YYYY and YYYY-MM.
+#' This function converts the date format of a column in a data table.
 #'
-#' @param date_column A column containing date information in a format.
-#' @return A Date vector representing the converted date information.
+#' @param dt A data table.
+#' @param column The name of the column whose date format needs to be converted.
 #'
-#' @examples
-#' library(lubridate)
+#' @details This function takes a data table \code{dt} and the name of a column \code{column}
+#' as input. It converts the date format of the specified column in the following steps:
+#' - Convert the column to character type.
+#' - Remove time information (if any) from the column values.
+#' - Replace '/' with '-' in the column values.
+#' - If the values match the pattern YYYY, append '-01-01' to represent the complete date.
+#' - If the values match the pattern YYYY-MM, append '-01' to represent the complete date.
+#' - Finally, convert the column to date type using \code{lubridate::as_date}.
 #'
-#' # Test case 1: YYYY format
-#' date_column_YYYY <- c("2022", "1990", "1980")
-#' result_YYYY <- convertDateInformation(date_column_YYYY)
-#'
-#' # Test case 2: YYYY-MM format
-#' date_column_YYYY_MM <- c("2022-12", "1990-05", "1980-11")
-#' result_YYYY_MM <- convertDateInformation(date_column_YYYY_MM)
-#'
-#' # Test case 3: Date with time, should be cleaned
-#' date_column_with_time <- c("2022-12-01T15:30:00", "1990-05-01T08:45:00")
-#' result_with_time <- convertDateInformation(date_column_with_time)
-#'
-#' # Test case 4: Date with '/' separator, should be replaced with '-'
-#' date_column_slash_separator <- c("2022/12/01", "1990/05/01")
-#' result_slash_separator <- convertDateInformation(date_column_slash_separator)
+#' @return This function modifies the input data table \code{dt} by converting the date format
+#' of the specified column.
 #'
 #' @export
-#'
-convertDateInformation <- function(date_column) {
-
-  dc <- as.character(date_column)
-  dc <- gsub('T.+$', '', dc)
-  dc <- gsub('/', '-', dc)
-
+convertDateFormat <- function(dt, column) {
+  dt[, (column) := as.character(get(column))]
+  dt[, (column) := gsub('T.+$', '', get(column))]
+  dt[, (column) := gsub('/', '-', get(column))]
   # Set a regular expression pattern for matching YYYY format
   incomplete_date_pattern <- '^[0-9]{4}$'
-  years <- grepl(incomplete_date_pattern, dc)
-  dc[years] <- paste0(dc[years], '-01-01')
+  years <- grepl(incomplete_date_pattern, dt[[column]])
+  dt[years, (column) := paste0(dt[years, get(column)], '-01-01')]
 
   # Set a regular expression pattern for matching YYYY-MM format
   incomplete_date_pattern <- '^[0-9]{4}-[0-9]{2}$'
-  years <- grepl(incomplete_date_pattern, dc)
-  dc[years] <- paste0(dc[years], '-01')
+  months <- grepl(incomplete_date_pattern, dt[[column]])
+  dt[months, (column) := paste0(dt[months, get(column)], '-01')]
 
-  lubridate::as_date(dc)
+  dt[, (column) := lubridate::as_date(get(column))]
 }
 
+#' Fix datetime format in specified columns
 #'
-#' Fix uncommon date formats
+#' This function fixes the date format in specified columns of a data table.
 #'
-#' This function takes a data.table (`dt`), a set of date columns (`date_columns`),
-#' and an optional parameter (`preserve_time`) to fix uncommon date formats.
-#' It performs the following tasks:
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
 #'
-#' - If `preserve_time` is TRUE, it extracts the time part from each date column
-#'   and saves it into respective TimeSpec columns by appending ".TimeSpec" to the
-#'   original date column names.
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to date-time objects with the format \code{ymd_hms},
+#' truncating the time to minutes and setting the timezone to "Europe/Berlin".
 #'
-#' - It then converts the original date columns to Date format using the
-#'   `convertDateInformation` function.
-#'
-#' @param dt A data.table containing the data to be processed.
-#' @param date_columns A character vector specifying the names of the date columns to be fixed.
-#' @param preserve_time A logical value indicating whether to preserve time information. Default is TRUE.
-#' @return The modified data.table with fixed date formats.
-#'
-#' @examples
-#' # Create an example data.table
-#' dt <- data.table::data.table(
-#'   date1 = c("2022", "1990-05", "1980-11"),
-#'   date2 = c("2022-12", "1990-05", "1980-11"),
-#'   value = c(1, 2, 3)
-#' )
-#'
-#' # Fix uncommon date formats with time preservation
-#' fixDateFormat(dt, c("date1", "date2"), preserve_time = TRUE)
-#'
-#' # The resulting data.table will have additional columns date1_timespec and date2_timespec
-#' # containing the extracted time information, and the original date columns date1 and date2
-#' # will be converted to Date format.
-#' dt
-#'
-#' # Expected output:
-#' #    date1      date2 value date1_timespec date2_timespec
-#' # 1: 2022-01-01 2022-12-01     1       00:00:00       00:00:00
-#' # 2: 1990-05-01 1990-05-01     2       00:00:00       00:00:00
-#' # 3: 1980-11-01 1980-11-01     3       00:00:00       00:00:00
-#'
-#' @seealso
-#' \code{\link{convertTimeToPOSIXct}}, \code{\link{convertDateInformation}}
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the date format in the specified column
 #'
 #' @export
+convertDateTimeFormat <- function(dt, column) {
+  dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
+}
+
+#' Fix integer format in specified column
 #'
-fixDateFormat <- function(dt, date_columns, preserve_time = TRUE) {
+#' This function fixes the integer format in specified column of a data table.
+#'
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
+#'
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to integers using \code{as.integer}.
+#'
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the integer format in the specified column
+#'
+#' @export
+convertIntegerFormat <- function(dt, column) {
+  dt[, (column) := as.integer((get(column)))]
+}
 
-  #preserve time information
-  if (preserve_time) {
+#' Fix decimal format in specified column
+#'
+#' This function fixes the decimal format in specified column of a data table.
+#'
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
+#'
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to numeric using \code{as.numeric}.
+#'
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the decimal format in the specified column
+#'
+#' @export
+convertDecimalFormat <- function(dt, column) {
+  dt[, (column) := as.numeric(get(column))]
+}
 
-    time_columns <- paste0(date_columns, "_timespec") #add suffix HourMinutesSeconds
-
-    #col by col
-    for (dc in date_columns) {
-
-      tc <- paste0(dc, "_timespec")
-      if (0 < nrow(dt)) {
-
-        #extract time from any datetime column and save it into the respecive TimeSpec column
-        dt[, (tc) := sapply(dt[[dc]], convertTimeToPOSIXct)]
-      } else {
-        #avoid columns of type list, which will be generated from empty resource
-        dt[, (tc) := character()]
-      }
-    }
-  }
-  dt[, (date_columns) := lapply(.SD, convertDateInformation), .SDcols = date_columns]
+#' Fix boolean format in specified column
+#'
+#' This function fixes the boolean format in specified column of a data table.
+#'
+#' @param dt A data table.
+#' @param column A character vector specifying the column to fix.
+#'
+#' @details This function expects a data table \code{dt} and a character vector
+#' \code{column} specifying the column to be fixed. It converts the values in
+#' the specified column to numeric, treating TRUE as 1 and FALSE as 0.
+#'
+#' @return This function modifies the input data table \code{dt} in place by
+#' fixing the boolean format in the specified column
+#'
+#' @export
+convertBooleanFormat <- function(dt, column) {
+  dt[, (column) := as.logical(get(column))]
 }
 
 #' Stop execution with Error message

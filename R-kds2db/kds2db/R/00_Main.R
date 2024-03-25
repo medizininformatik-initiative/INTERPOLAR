@@ -47,12 +47,17 @@ retrieve <- function() {
 
     # Download and crack resources by Patient IDs per ward
     etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_table_list <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
+      resource_tables <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
     }))
 
     # Write resource tables to database
-    etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
+    etlutils::startProcess(etlutils::run_in('Write resource tables to database', {
+      writeResourceTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+    }))
+
+    # Convert Column Types in resource tables
+    etlutils::startProcess(etlutils::run_in('Convert Column Types in resource tables', {
+      convertTypes(resource_tables)
     }))
 
   })
