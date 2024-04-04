@@ -12,7 +12,7 @@
 #'
 #' @export
 start_logging <- function(prefix) {
-  log_file <- file(fhircrackr::paste_paths(polar_path_to_log_directory(), paste0(prefix, "-log.txt")), open = "wt")
+  log_file <- file(fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt")), open = "wt")
   sink(log_file, append = TRUE, split = TRUE)
   sink(log_file, append = TRUE, type = "message")
 }
