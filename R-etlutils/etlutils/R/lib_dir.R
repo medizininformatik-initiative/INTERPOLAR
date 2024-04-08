@@ -55,7 +55,6 @@ create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   }
 }
 
-
 #' Return the path to the log directory of the specific sub project
 #'
 #' @param project_name name of the project
@@ -219,7 +218,6 @@ polar_save_error <- function(err, filename_without_extension) {
   cat(err, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log", filename_without_extension, ext = ".txt"), sep = "\n")
 }
 
-
 ###
 # save a data.frame/data.table as tsv into the sub project related tables directory
 ###
@@ -280,7 +278,7 @@ polar_save_table_as_rdata <- function(table, table_name = NA) {
   if (is.na(table_name)) {
     table_name <- as.character(sys.call()[2]) # get the table variable name
   }
-  save(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData'))
+  save(table, file = getLocalRdataFileName(table_name))
 }
 
 #' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
@@ -414,4 +412,45 @@ polar_save_result_table_as_csv_local <- function(table, filename_without_extensi
 #' @export
 polar_save_result_as_rdata <- function(..., filename_without_extension) {
   save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "results", filename_without_extension, ext = ".RData"))
+}
+
+#' Get the filename for an RData file corresponding to a table
+#'
+#' This function constructs the filename for an RData file corresponding to the specified table.
+#'
+#' @param table_name The name of the table.
+#' @return A character string representing the filename for the RData file.
+#'
+#' @export
+getLocalRdataFileName <- function(table_name) {
+  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData')
+}
+
+#' Get file information for an RData file
+#'
+#' This function retrieves information about an RData file corresponding to the specified table.
+#'
+#' @param table_name The name of the table.
+#' @return A list containing file information such as size, permissions, and timestamps.
+#'
+#' @export
+getLocalRdataFileInfo <- function(table_name) {
+  table_name <- getLocalRdataFileName(table_name)
+  file_info <- list()
+  if (file.exists(table_name)) {
+    file_info <- file.info(table_name)
+  }
+  return(file_info)
+}
+
+#' Check if an RData file exists locally
+#'
+#' This function checks if an RData file corresponding to the specified table exists locally.
+#'
+#' @param table_name The name of the table.
+#' @return TRUE if the RData file exists locally, otherwise FALSE.
+#'
+#' @export
+existsLocalRdataFile <- function(table_name) {
+  file.exists(getLocalRdataFileName(table_name))
 }

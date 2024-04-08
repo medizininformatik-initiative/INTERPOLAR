@@ -874,6 +874,34 @@ stopOnError <- function(potential_error) {
   if (isError(potential_error)) stop()
 }
 
+#' Perform a case-insensitive pattern search using `grepl` with Perl patterns (perl = TRUE).
+#'
+#' @param pattern A pattern to search for.
+#' @param x A list or table where the pattern should be searched.
+#' @param whole_word If TRUE, the pattern will be treated as a whole word and matched accordingly.
+#'                   It adds '^' to the beginning and '$' to the end of the pattern if they don't exist.
+#' @param perl If TRUE, uses Perl-compatible regular expressions for pattern matching (default is TRUE).
+#' @seealso grepl
+#'
+#' This function performs case-insensitive pattern searches using `grepl` with Perl patterns. If `whole_word` is set to TRUE,
+#' the pattern is treated as a whole word, and '^' is added to the beginning and '$' to the end of the pattern if they are missing.
+#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching.
+#'
+#' @examples
+#' pattern <- 'AAA|BBB'
+#' greplic(pattern, 'I am a sentence with AAAA and CCC.', whole_word = TRUE) # FALSE
+#' greplic(pattern, 'I am a sentence with AAA and CCC.', whole_word = TRUE) # TRUE
+#'
+#' @export
+greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
+  if (whole_word) {
+    subPatterns <- unlist(strsplit(pattern, '\\|'))
+    subPatterns <- lapply(subPatterns, function(subPattern) subPattern <- paste0('(?<!\\S)', subPattern, '(?!\\S)'))
+    pattern <- paste0(subPatterns, collapse = '|')
+  }
+  grepl(pattern, x, ignore.case = TRUE, perl)
+}
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
@@ -1036,33 +1064,6 @@ stopOnError <- function(potential_error) {
 #'   }
 #' }
 #'
-#' #'
-#' #' Perform a case-insensitive pattern search using `grepl` with Perl patterns (perl = TRUE).
-#' #'
-#' #' @param pattern A pattern to search for.
-#' #' @param x A list or table where the pattern should be searched.
-#' #' @param whole_word If TRUE, the pattern will be treated as a whole word and matched accordingly.
-#' #'                   It adds '^' to the beginning and '$' to the end of the pattern if they don't exist.
-#' #' @param perl If TRUE, uses Perl-compatible regular expressions for pattern matching (default is TRUE).
-#' #' @seealso grepl
-#' #'
-#' #' This function performs case-insensitive pattern searches using `grepl` with Perl patterns. If `whole_word` is set to TRUE,
-#' #' the pattern is treated as a whole word, and '^' is added to the beginning and '$' to the end of the pattern if they are missing.
-#' #' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching.
-#' #'
-#' #' @examples
-#' #' pattern <- 'AAA|BBB'
-#' #' greplic(pattern, 'I am a sentence with AAAA and CCC.', whole_word = TRUE) # FALSE
-#' #' greplic(pattern, 'I am a sentence with AAA and CCC.', whole_word = TRUE) # TRUE
-#' #'
-#' greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
-#'   if (whole_word) {
-#'     subPatterns <- unlist(strsplit(pattern, '\\|'))
-#'     subPatterns <- lapply(subPatterns, function(subPattern) subPattern <- paste0('(?<!\\S)', subPattern, '(?!\\S)'))
-#'     pattern <- paste0(subPatterns, collapse = '|')
-#'   }
-#'   grepl(pattern, x, ignore.case = TRUE, perl)
-#' }
 #'
 #' #' Remove the last character from a string if it is not alphanumeric.
 #' #'
