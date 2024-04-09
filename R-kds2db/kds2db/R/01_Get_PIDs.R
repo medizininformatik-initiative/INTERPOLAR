@@ -250,7 +250,6 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 #' @return the relevant patient IDs per ward
 #'
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
-
   if (!is.na(path_to_PID_list_file)) {
     etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
       pidsPerWard <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
@@ -275,4 +274,3 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
   }
   return(pidsPerWard)
 }
-

@@ -37,7 +37,7 @@ retrieve <- function() {
 
     # Extract Patient IDs
     etlutils::startProcess(etlutils::run_in('Extract Patient IDs', {
-      patientIDsPerWard <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
+      patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
     }))
 
     # Load Table Description
@@ -47,7 +47,7 @@ retrieve <- function() {
 
     # Download and crack resources by Patient IDs per ward
     etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_tables <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
+      resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, table_descriptions)
     }))
 
     # Write resource tables to database

@@ -4,10 +4,13 @@
 \alias{loadResourcesByPatientIDFromFHIRServer}
 \title{Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.}
 \usage{
-loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
+loadResourcesByPatientIDFromFHIRServer(
+  patient_IDs_per_ward,
+  table_descriptions
+)
 }
 \arguments{
-\item{patientIDsPerWard}{A list of patient IDs, where each element corresponds to a ward.}
+\item{patient_IDs_per_ward}{A list of patient IDs, where each element corresponds to a ward.}
 
 \item{table_descriptions}{the fhircrackr table descriptions of the result tables}
 }
