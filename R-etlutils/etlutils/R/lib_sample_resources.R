@@ -848,42 +848,88 @@ polar_download_by_ids_and_crack_parallel <- function(
   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
+#' Load Resources by Their Own IDs
+#'
+#' This function downloads and processes resources specified by their IDs. It uses a parallel
+#' downloading and cracking method tailored for handling resources described in a table structure.
+#' The function is part of a larger workflow designed to work with polar data resources.
+#'
+#' @param ids A vector of resource IDs. These should be the unique identifiers for the resources you
+#' wish to download and process. The function expects these IDs to be in a specific format, where
+#' the actual ID follows the last slash ("/") in each string.
+#' @param table_description An object containing the description of the table where the resources
+#' are to be found. This object must have a specific structure, including a resource slot that
+#' contains the URL or identifier needed for downloading the resources.
+#'
+#' @return Returns a table of the downloaded resources, processed and cracked open according to the
+#' specifications in `table_description`. The exact structure of the returned table depends on the
+#' `table_description` parameter and the data processing within `polar_download_by_ids_and_crack_parallel`.
+#'
+#' @export
+loadFHIRResourcesByOwnID <- function(ids, table_description) {
+  resource <- table_description@resource@.Data
+  resource_table <- polar_download_by_ids_and_crack_parallel(
+    resource = resource,
+    id_param_str = '_id',
+    ids = getAfterLastSlash(ids),
+    table_description = table_description,
+    verbose = VERBOSE
+  )
+  return(resource_table)
+}
+
+#' Load Resources by Patient IDs
+#'
+#' This function is designed to load resources based on patient IDs. It checks if the requested
+#' resource is "Patient" and uses a specific loading function or the general downloading and
+#' cracking function for other types of resources. It's tailored for handling resources described
+#' in a table structure, specifically for patient-related data.
+#'
+#' @param patient_IDs A vector of patient IDs, which are the unique identifiers for the patients
+#' whose resources you wish to download and process.
+#' @param table_description An object describing the table where the resources are to be found.
+#' This object must have a specific structure, including a resource slot that contains the URL or
+#' identifier needed for downloading the resources.
+#'
+#' @return Returns a table of the downloaded resources, processed according to the specifications
+#' in `table_description`. The function handles different types of resources by adapting the ID
+#' parameter string based on the resource type, ensuring correct processing.
+#'
+#' @export
+loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
+  resource <- table_description@resource@.Data
+  if (resource == "Patient") {
+    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description)
+  } else {
+    resource_table <- polar_download_by_ids_and_crack_parallel(
+      resource = resource,
+      id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
+      ids = patient_IDs,
+      table_description = table_description,
+      verbose = VERBOSE
+    )
+  }
+  return(resource_table)
+}
+
 #' Download FHIR resources by patient IDs and perform parallel cracking for each resource type.
 #'
 #' This function iterates over the resource types defined in table_description, and for each resource type,
 #' it calls the polar_download_by_ids_and_crack_parallel function to download and crack FHIR resources
 #' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
 #'
-#' @param patientIDs A vector of patient IDs for whom FHIR resources should be retrieved.
-#' @param table_description A list of table descriptions for different FHIR resource types.
+#' @param patient_IDs A vector of patient IDs for whom FHIR resources should be retrieved.
+#' @param table_descriptions A list of table descriptions for different FHIR resource types.
 #'
-#' @return A list containing tables for each resource type, with resource type names as keys.
+#' @return A list containing a table for each resource type, with resource type names as keys.
 #' @export
-loadResourcesByPID <- function(patientIDs, table_description) {
-
-  table_name_to_tables <- list()
-
-  for (resource in names(table_description)) {
-    # Just for "Patient": The ID is the reference to the patient itself
-    if (resource == "Patient") {
-      resource_table <- polar_download_by_ids_and_crack_parallel(
-        resource = resource,
-        id_param_str = '_id',
-        ids = getAfterLastSlash(patientIDs),
-        table_description = table_description[[resource]],
-        verbose = VERBOSE
-      )
-    } else {
-      resource_table <- polar_download_by_ids_and_crack_parallel(
-        resource = resource,
-        id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
-        ids = patientIDs,
-        table_description = table_description[[resource]],
-        verbose = VERBOSE
-      )
-    }
+loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
+  resource_name_to_resources <- list()
+  for (table_description in table_descriptions) {
+    resource_table <- loadFHIRResourcesByPID(patient_IDs, table_description)
     if (!isSimpleNA(resource_table)) {
-      table_name_to_tables[[resource]] <- resource_table
+      resource <- table_description@resource@.Data
+      resource_name_to_resources[[resource]] <- resource_table
       if (nrow(resource_table)) {
         print_table_if_all(resource_table, resource)
       } else {
@@ -891,8 +937,9 @@ loadResourcesByPID <- function(patientIDs, table_description) {
       }
     }
   }
-  table_name_to_tables
+  resource_name_to_resources
 }
+
 
 #' Add Common Parameters to FHIR Resource Request
 #'
