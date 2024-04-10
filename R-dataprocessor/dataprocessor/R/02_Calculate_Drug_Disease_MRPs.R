@@ -113,35 +113,46 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
     return(result_mrps)
   }
 
-  calculateMRPsInternal()
-
-  # Check if drug_disease_mrp_definition must be expanded
-  # set must_expand to FALSE
-  must_expand <- FALSE
-  # load file info for drug-disease-mrp excel
-  file_info_drug_disease_mrp_definition <- file.info(readExcelFilePath(MRP_DEFINITION_FILE_DRUG_DISEASE))
-  # check if .RData files not exists or modification time is not equal -> set must_expand to TRUE
-  if (!etlutils::existsLocalRdataFile("mrp_definition_file_status") || !etlutils::existsLocalRdataFile("drug_disease_mrp_definition_expanded")) {
-    must_expand <- TRUE
-    mrp_definition_file_status <- list()
-  } else {
-    mrp_definition_file_status <- etlutils::polar_read_rdata("mrp_definition_file_status")
-    drug_disease_last_update <- mrp_definition_file_status[["drug_disease_last_update"]]
-    if (is.null(drug_disease_last_update) || file_info_drug_disease_mrp_definition$mtime != drug_disease_last_update) {
+  etlutils::run_in_in("Check if drug_disease_mrp_definition must be expanded", {
+    # Check if drug_disease_mrp_definition must be expanded
+    # set must_expand to FALSE
+    must_expand <- FALSE
+    # load file info for drug-disease-mrp excel
+    file_info_drug_disease_mrp_definition <- file.info(readExcelFilePath(MRP_DEFINITION_FILE_DRUG_DISEASE))
+    # check if .RData files not exists or modification time is not equal -> set must_expand to TRUE
+    if (!etlutils::existsLocalRdataFile("mrp_definition_file_status") || !etlutils::existsLocalRdataFile("drug_disease_mrp_definition_expanded")) {
       must_expand <- TRUE
+      mrp_definition_file_status <- list()
+    } else {
+      mrp_definition_file_status <- etlutils::polar_read_rdata("mrp_definition_file_status")
+      drug_disease_last_update <- mrp_definition_file_status[["drug_disease_last_update"]]
+      if (is.null(drug_disease_last_update) || file_info_drug_disease_mrp_definition$mtime != drug_disease_last_update) {
+        must_expand <- TRUE
+      }
     }
-  }
-  if (must_expand) {
-    # read drug-disease-mrp excel as table list
-    drug_disease_mrp_definition <- readExcelFileAsTableListFromExtData(MRP_DEFINITION_FILE_DRUG_DISEASE)[["Drug_Disease_Pairs"]]
-    # clean and expand table list
-    drug_disease_mrp_definition_expanded <- cleanAndExpandDefinition(drug_disease_mrp_definition)
-    polar_write_rdata(drug_disease_mrp_definition_expanded)
-    # set modification date of drug-disease-mrp excel file to new list with drug_disease_last_update
-    mrp_definition_file_status[["drug_disease_last_update"]] <- file_info_drug_disease_mrp_definition$mtime
-    polar_write_rdata(mrp_definition_file_status)
-  }
-  if (!exists("drug_disease_mrp_definition_expanded")) {
-    drug_disease_mrp_definition_expanded <- etlutils::polar_read_rdata("drug_disease_mrp_definition_expanded")
-  }
+  })
+
+  etlutils::run_in_in("Expand drug_disease_mrp_definition", {
+    if (must_expand) {
+      # read drug-disease-mrp excel as table list
+      drug_disease_mrp_definition <- readExcelFileAsTableListFromExtData(MRP_DEFINITION_FILE_DRUG_DISEASE)[["Drug_Disease_Pairs"]]
+      # clean and expand table list
+      drug_disease_mrp_definition_expanded <- cleanAndExpandDefinition(drug_disease_mrp_definition)
+      polar_write_rdata(drug_disease_mrp_definition_expanded)
+      # set modification date of drug-disease-mrp excel file to new list with drug_disease_last_update
+      mrp_definition_file_status[["drug_disease_last_update"]] <- file_info_drug_disease_mrp_definition$mtime
+      polar_write_rdata(mrp_definition_file_status)
+    }
+  })
+
+  etlutils::run_in_in("Load expanded drug_disease_mrp_definition from file", {
+    if (!exists("drug_disease_mrp_definition_expanded")) {
+      drug_disease_mrp_definition_expanded <- etlutils::polar_read_rdata("drug_disease_mrp_definition_expanded")
+    }
+  })
+
+  etlutils::run_in_in("Calculate Drug Disease MRPs internal", {
+    calculateMRPsInternal()
+  })
+
 }
