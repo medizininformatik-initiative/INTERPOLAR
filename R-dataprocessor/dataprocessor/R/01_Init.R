@@ -125,12 +125,10 @@ getIDColumn <- function(resource_name) {
 #'
 #' @export
 getResourcesByPID <- function(resource_name, pid) {
-  # get resource table name
-  resource_table_name <- paste0("resource_", resource_name)
   # get PID Column name
   pid_column_name <- getPIDColumn(resource_name)
   # load resource table
-  resource_table <- loadResourceTable(resource_table_name)
+  resource_table <- loadResourceTable(resource_name)
   # only for resource patient relevant, append string "Patient/"
   if (tolower(resource_name) == "patient" && startsWith(pid, "Patient/")) {
     resource_table[, pat_id := paste0("Patient/", pat_id)]
