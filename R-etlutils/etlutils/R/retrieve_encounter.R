@@ -21,7 +21,7 @@ get_encounters <- function(table_description) {
   run_in(toupper('get_encounters'), {
 
     #refresh token, if defined
-    refreshFhirToken()
+    refreshFHIRToken()
 
     resource <- 'Encounter'
 
@@ -93,10 +93,10 @@ get_encounters <- function(table_description) {
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,
         resource   = 'Encounter',
-        parameters = fhir_url_add_common_request_params(params)
+        parameters = addParamToFHIRRequest(params)
       )
 
-      table_enc <- polar_download_and_crack_parallel(
+      table_enc <- downloadAndCrackFHIRResources(
         request           = request_encounter,
         table_description = table_description,
         bundles_at_once   = BUNDLES_AT_ONCE,

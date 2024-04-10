@@ -16,6 +16,6 @@ A list containing a table for each resource type, with resource type names as ke
 }
 \description{
 This function iterates over the resource types defined in table_description, and for each resource type,
-it calls the polar_download_by_ids_and_crack_parallel function to download and crack FHIR resources
+it calls the downloadAndCrackFHIRResourcesByPIDs function to download and crack FHIR resources
 associated with the given patient IDs. The download behavior is adjusted based on the resource type.
 }
