@@ -256,23 +256,6 @@ catl <- function(...) {
   }
 }
 
-#' Refresh FHIR Token
-#'
-#' This function refreshes the FHIR token if it is defined.
-#'
-#' @details
-#' If the FHIR_TOKEN is defined, the function attempts to refresh it using the \code{polar_refresh_token} function.
-#'
-#' @export
-refreshFhirToken <- function() {
-  #refresh token, if defined
-  if (FHIR_TOKEN != '') {
-    run_in_in_ignore_error('Refresh FHIR_TOKEN', {
-      FHIR_TOKEN <- polar_refresh_token()
-    })
-  }
-}
-
 #' Flatten a nested list
 #'
 #' This function takes a nested list and flattens it into a single-level list and

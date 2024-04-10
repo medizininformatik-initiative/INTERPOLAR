@@ -18,7 +18,7 @@ contains the URL or identifier needed for downloading the resources.}
 \value{
 Returns a table of the downloaded resources, processed and cracked open according to the
 specifications in \code{table_description}. The exact structure of the returned table depends on the
-\code{table_description} parameter and the data processing within \code{polar_download_by_ids_and_crack_parallel}.
+\code{table_description} parameter and the data processing within \code{downloadAndCrackFHIRResourcesByPIDs}.
 }
 \description{
 This function downloads and processes resources specified by their IDs. It uses a parallel
