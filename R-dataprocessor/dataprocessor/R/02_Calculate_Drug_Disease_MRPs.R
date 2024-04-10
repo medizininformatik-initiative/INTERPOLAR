@@ -108,16 +108,11 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
 
     result_mrps <- data.table()
     for (pid in pids_per_ward$patient_id) {
-      patient_resource <- getPatientResource(pid)
-      encounter_resources <- getEncounterResource(pid)
-      condition_resources <- getConditionResource(pid)
-      #medication_resources <- getMedicationResource(pid)
-      medicationadministration_resources <- getMedicationAdministrationResource(pid)
-      medicationstatement_resources <- getMedicationStatementResource(pid)
       #TODO implement Drug Disease MRP calculation
     }
     return(result_mrps)
   }
+
   calculateMRPsInternal()
 
   # Check if drug_disease_mrp_definition must be expanded

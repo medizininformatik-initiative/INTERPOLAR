@@ -200,7 +200,7 @@ getPatientResource <- function(id_or_pid) {
 #' @return A data.table containing resource information for the specified encounter ID.
 #'
 #' @export
-getEncounterResource <- function(id_or_pid) {
+getEncounterResources <- function(id_or_pid) {
   getResources("Encounter", id_or_pid)
 }
 
@@ -213,7 +213,7 @@ getEncounterResource <- function(id_or_pid) {
 #' @return A data.table containing resource information for the specified condition ID.
 #'
 #' @export
-getConditionResource <- function(id_or_pid) {
+getConditionResources <- function(id_or_pid) {
   getResources("Condition", id_or_pid)
 }
 
@@ -226,7 +226,7 @@ getConditionResource <- function(id_or_pid) {
 #' @return A data.table containing resource information for the specified medication ID.
 #'
 #' @export
-getMedicationResource <- function(id) {
+getMedicationResources <- function(id) {
   getResources("Medication", id)
 }
 
@@ -239,7 +239,7 @@ getMedicationResource <- function(id) {
 #' @return A data.table containing resource information for the specified medication administration ID.
 #'
 #' @export
-getMedicationAdministrationResource <- function(id_or_pid) {
+getMedicationAdministrationResources <- function(id_or_pid) {
   getResources("Medicationadministration", id_or_pid)
 }
 
@@ -252,7 +252,7 @@ getMedicationAdministrationResource <- function(id_or_pid) {
 #' @return A data.table containing resource information for the specified medication statement ID.
 #'
 #' @export
-getMedicationStatementResource <- function(id_or_pid) {
+getMedicationStatementResources <- function(id_or_pid) {
   getResources("Medicationstatement", id_or_pid)
 }
 
