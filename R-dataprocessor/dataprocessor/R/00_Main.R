@@ -45,7 +45,7 @@ dataprocessor <- function() {
     }))
 
     # Calculate Drug Disease MPRS
-    etlutils::startProcess(etlutils::run_in('Calculate Drug Disease MPRS', {
+    etlutils::startProcess(etlutils::run_in('Calculate Drug Disease MRPs', {
       calculateDrugDiseaseMRPs()
     }))
 
