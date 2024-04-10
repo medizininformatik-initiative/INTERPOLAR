@@ -255,6 +255,51 @@ getMedicationAdministrationResource <- function(id_or_pid) {
 getMedicationStatementResource <- function(id_or_pid) {
   getResources("Medicationstatement", id_or_pid)
 }
+
+#' Checks whether strings in a vector of ICD codes match specified patterns.
+#'
+#' This function takes a vector of ICD (International Classification of Diseases)
+#' codes and checks whether the strings in this vector match predefined patterns.
+#' The patterns are retrieved from an external data frame named SIMPLE_ICD_PATTERN.
+#'
+#' @param codes A vector of strings containing the ICD codes to be checked.
+#' @return A logical vector that returns TRUE for strings that match the patterns
+#' and FALSE for strings that do not match the patterns.
+#' @seealso SIMPLE_ICD_PATTERN This data frame contains the predefined patterns
+#' for ICD codes.
+#'
+#' @examples
+#' codes <- c('H77+M55.2', 'H77', 'XXX', 'X+X', 'X+XXXXX')
+#' isICDCode(codes)
+#'
+#' @export
+isICDCode <- function(codes) {
+  icd_pattern <- paste(paste0('(', SIMPLE_ICD_PATTERN$ICD1, ')'), paste0('(', SIMPLE_ICD_PATTERN$ICD2_3, ')'), paste0('(', SIMPLE_ICD_PATTERN$ICD4_6, ')'), sep = '|')
+  full_icd_pattern <- paste0('(','^','(', icd_pattern,')', '$', ')', '|', '(', '^', '(', icd_pattern,')', '\\+{1}', '(', icd_pattern, '){1}', '$', ')')
+  grepl(full_icd_pattern, codes, perl = TRUE)
+}
+
+#' Clean and Validate ICD Code
+#'
+#' This function cleans and validates an ICD code by converting it to uppercase,
+#' removing trailing non-alphanumeric characters, and checking if the resulting
+#' code is a valid ICD code.
+#'
+#' @param icd A character vector representing the ICD code.
+#'
+#' @return A character vector containing the cleaned and validated ICD code,
+#'         or NULL if the input is not a valid ICD code.
+#' @examples
+#' cleanICD("A11")
+#' cleanICD(" B1.2 ")
+#' cleanICD("C23-") # This will return NULL as it's not a valid ICD code.
+#'
+#' @export
+cleanICD <- function(icd) {
+  icd <- toupper(etlutils::removeLastCharsIfNotAlphanumeric(trimws(icd)))
+  icd[isICDCode(icd)]
+}
+
 #' Reads the file path of an Excel file
 #'
 #' This function constructs the file path for an Excel file with the given file name.
@@ -306,6 +351,25 @@ WORD_ATC_PATTERN <- list(
   ATC4_5 = patternw(SIMPLE_ATC_PATTERN$ATC4_5),
   #ATC6 is not a valid ATC code
   ATC7 = patternw(SIMPLE_ATC_PATTERN$ATC7)
+)
+
+# https://stackoverflow.com/questions/69947452/regex-boundary-to-also-exclude-special-characters
+# These are PERL Patterns -> works only for grep with perl = TRUE
+SIMPLE_ICD_PATTERN <- list(
+  ICD1 = '[A-Z]',
+  ICD2_3 = '[A-Z][0-9]{1,2}',
+  ICD4_6 = '[A-Z][0-9]{2}\\.[0-9]{0,2}'
+)
+
+WORD_ICD_PATTERN <- list(
+  ICD1 = patternw(SIMPLE_ICD_PATTERN$ICD1),
+  ICD2_3 = patternw(SIMPLE_ICD_PATTERN$ICD2_3),
+  ICD4_6 = patternw(SIMPLE_ICD_PATTERN$ICD4_6)
+)
+
+
+ICD_CODES_PATTERN <- list(
+  ICD6orSmaller = paste(WORD_ICD_PATTERN$ICD4_6, WORD_ICD_PATTERN$ICD2_3, WORD_ICD_PATTERN$ICD1, sep = '|')
 )
 
 # medication codes pattern list

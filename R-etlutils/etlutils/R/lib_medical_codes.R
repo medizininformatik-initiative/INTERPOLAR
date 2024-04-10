@@ -190,28 +190,6 @@ interpolar_expandICDs <- function(...) {
 #'   ICD6orSmaller = paste(WORD_ICD_PATTERN$ICD4_6, WORD_ICD_PATTERN$ICD2_3, WORD_ICD_PATTERN$ICD1, sep = '|')
 #' )
 #'
-#' #' Checks whether strings in a vector of ICD codes match specified patterns.
-#' #'
-#' #' This function takes a vector of ICD (International Classification of Diseases)
-#' #' codes and checks whether the strings in this vector match predefined patterns.
-#' #' The patterns are retrieved from an external data frame named SIMPLE_ICD_PATTERN.
-#' #'
-#' #' @param codes A vector of strings containing the ICD codes to be checked.
-#' #' @return A logical vector that returns TRUE for strings that match the patterns
-#' #' and FALSE for strings that do not match the patterns.
-#' #' @seealso SIMPLE_ICD_PATTERN This data frame contains the predefined patterns
-#' #' for ICD codes.
-#' #'
-#' #' @examples
-#' #' codes <- c('H77+M55.2', 'H77', 'XXX', 'X+X', 'X+XXXXX')
-#' #' isICDCode(codes)
-#' #'
-#' #' @export
-#' isICDCode <- function(codes) {
-#'   icd_pattern <- paste(paste0('(', SIMPLE_ICD_PATTERN$ICD1, ')'), paste0('(', SIMPLE_ICD_PATTERN$ICD2_3, ')'), paste0('(', SIMPLE_ICD_PATTERN$ICD4_6, ')'), sep = '|')
-#'   full_icd_pattern <- paste0('(','^','(', icd_pattern,')', '$', ')', '|', '(', '^', '(', icd_pattern,')', '\\+{1}', '(', icd_pattern, '){1}', '$', ')')
-#'   grepl(full_icd_pattern, codes, perl = TRUE)
-#' }
 #'
 #' # # Tests for ICD_CODES_PATTERN
 #' # TEST_ICD <- c('A', 'A0', 'A01', 'A01.', 'A01.2', 'A01.23', 'AA01.', 'A1.', 'A01.234sdgfsdfsdf', '.A0')
@@ -225,10 +203,6 @@ interpolar_expandICDs <- function(...) {
 #'   codes_pattern <- paste0(paste0('^', c(...)), collapse = "|")
 #' }
 #'
-#' cleanICD <- function(icd) {
-#'   icd <- toupper(removeLastCharsIfNotAlphanumeric(trimws(icd)))
-#'   icd[isICDCode(icd)]
-#' }
 #'
 #' getATC <- function(...) {
 #'   getCodes('atc', ...)

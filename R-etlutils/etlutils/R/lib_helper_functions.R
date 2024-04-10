@@ -902,6 +902,38 @@ greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
   grepl(pattern, x, ignore.case = TRUE, perl)
 }
 
+#' Remove the last character from a string if it is not alphanumeric.
+#'
+#' This function takes a character vector and removes the last character
+#' from each string element if it is not alphanumeric (i.e., not a letter or a number).
+#'
+#' @param text A character vector containing strings.
+#'
+#' @return A character vector with the last character removed from each element if it is not alphanumeric.
+#'
+#' @examples
+#' # Example data.table
+#' library(data.table)
+#' dt <- data.table(
+#'   ID = 1:4,
+#'   Text = c("abc123!", "hello-", "world9", "example")
+#' )
+#'
+#' # Apply the function to the "Text" column
+#' dt[, Text := lapply(Text, removeLastCharsIfNotAlphanumeric)]
+#' print(dt)
+#'
+#' @export
+removeLastCharsIfNotAlphanumeric <- function(text) {
+  for (i in seq_len(length(text))) {
+    while (nchar(text[i]) & !grepl("[A-Za-z0-9]$", text[i])) {
+      text[i] <- substr(text[i], 1, nchar(text[i]) - 1)
+    }
+  }
+  return(text)
+}
+
+
 #' #'
 #' #' Prints a variable or a list of variables via cat() in the style
 #' #'      var1: value1
@@ -1064,35 +1096,4 @@ greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
 #'   }
 #' }
 #'
-#'
-#' #' Remove the last character from a string if it is not alphanumeric.
-#' #'
-#' #' This function takes a character vector and removes the last character
-#' #' from each string element if it is not alphanumeric (i.e., not a letter or a number).
-#' #'
-#' #' @param text A character vector containing strings.
-#' #'
-#' #' @return A character vector with the last character removed from each element if it is not alphanumeric.
-#' #'
-#' #' @examples
-#' #' # Example data.table
-#' #' library(data.table)
-#' #' dt <- data.table(
-#' #'   ID = 1:4,
-#' #'   Text = c("abc123!", "hello-", "world9", "example")
-#' #' )
-#' #'
-#' #' # Apply the function to the "Text" column
-#' #' dt[, Text := lapply(Text, removeLastCharsIfNotAlphanumeric)]
-#' #' print(dt)
-#' #'
-#' #' @export
-#' removeLastCharsIfNotAlphanumeric <- function(text) {
-#'   for (i in seq_len(length(text))) {
-#'     while (nchar(text[i]) & !grepl("[A-Za-z0-9]$", text[i])) {
-#'       text[i] <- substr(text[i], 1, nchar(text[i]) - 1)
-#'     }
-#'   }
-#'   return(text)
-#' }
 #'

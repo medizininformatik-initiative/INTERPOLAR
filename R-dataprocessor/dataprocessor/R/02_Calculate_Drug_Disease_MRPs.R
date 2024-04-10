@@ -1,6 +1,15 @@
-calculateDrugDiseaseMRPs <- function() {
+calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
 
-  # clean and expand table
+  #' Clean and Expand Drug_Disease_MRP Definition Table
+  #'
+  #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
+  #' splitting and trimming values, and expanding concatenated ICD codes.
+  #'
+  #' @param drug_disease_mrp_definition A data.table containing the MRP definition table.
+  #'
+  #' @return A cleaned and expanded data.table containing the MRP definition table.
+  #'
+  #' @export
   cleanAndExpandDefinition <- function(drug_disease_mrp_definition) {
 
     # remove table without the needed column names
@@ -92,6 +101,24 @@ calculateDrugDiseaseMRPs <- function() {
 
     return(drug_disease_mrp_definition)
   }
+
+  calculateMRPsInternal <- function() {
+    # load current relevant patient IDS per Ward
+    pids_per_ward <- loadPIDsPerWard()
+
+    result_mrps <- data.table()
+    for (pid in pids_per_ward$patient_id) {
+      patient_resource <- getPatientResource(pid)
+      encounter_resources <- getEncounterResource(pid)
+      condition_resources <- getConditionResource(pid)
+      #medication_resources <- getMedicationResource(pid)
+      medicationadministration_resources <- getMedicationAdministrationResource(pid)
+      medicationstatement_resources <- getMedicationStatementResource(pid)
+      #TODO implement Drug Disease MRP calculation
+    }
+    return(result_mrps)
+  }
+  calculateMRPsInternal()
 
   # Check if drug_disease_mrp_definition must be expanded
   # set must_expand to FALSE
