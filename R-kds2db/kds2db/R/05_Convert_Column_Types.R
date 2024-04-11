@@ -32,7 +32,7 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
         datetime_columns <- c(column_name)
       }
       # Check if the table is present in resource_tables and perform conversion
-      if (!is.null(resource_tables[[table_name]]) && (!(table_name %in% last_table_name) || i == nrow(convert_columns))) {
+      if ((!is.null(resource_tables[[table_name]]) && !isSimpleNA(resource_tables[[table_name]])) && (!(table_name %in% last_table_name) || i == nrow(convert_columns))) {
         convert_type_function(resource_tables[[table_name]], datetime_columns)
         #cat("Converted column ", datetime_columns, " in table", table_name, "\n")
         table_name <- last_table_name
@@ -67,4 +67,8 @@ convertTypes <- function(resource_tables) {
   convertType(resource_tables, c("int"), etlutils::convertIntegerFormat)
   convertType(resource_tables, c("decimal"), etlutils::convertDecimalFormat)
   convertType(resource_tables, c("boolean"), etlutils::convertBooleanFormat)
+
+  for (i in seq_along(resource_tables)) {
+    polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
+  }
 }
