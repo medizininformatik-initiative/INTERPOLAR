@@ -13,18 +13,15 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
   cleanAndExpandDefinition <- function(drug_disease_mrp_definition) {
 
     # remove table without the needed column names
-    columnnames <- c('ATC_WIRKSTOFF', 'Mit.ICD-10.codierbar', 'Mit.Drug.codierbar')
-
+    columnnames <- c('ATC_WIRKSTOFF', 'Mit Drug codierbar', 'Mit ICD-10 codierbar')
     if (!all(columnnames %in% names(drug_disease_mrp_definition))) {
       drug_disease_mrp_definition <- etlutils::removeTableHeader(drug_disease_mrp_definition, columnnames)
       if (!etlutils::isValidTable(drug_disease_mrp_definition)) {
         stop("drug_disease_mrp_definition table has invalid structure")
       }
     }
-    # remove all unnecessary columns
-    drug_disease_mrp_definition <- etlutils::retainColumns(drug_disease_mrp_definition, columnnames)
     # rename the columns
-    new_columnnames <- c('ATC', 'ICD', 'ATC_FOR_ICD')
+    new_columnnames <- c('ATC', 'ATC_FOR_ICD', 'ICD')
     for (i in seq_along(columnnames)) {
       old_col <- columnnames[i]
       new_col <- new_columnnames[i]
