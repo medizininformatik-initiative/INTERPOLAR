@@ -99,13 +99,67 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
     return(drug_disease_mrp_definition)
   }
 
-  calculateMRPsInternal <- function() {
+  calculateMRPsInternal <- function(drug_disease_mrp_definition_expanded) {
     # load current relevant patient IDS per Ward
     pids_per_ward <- loadPIDsPerWard()
 
     result_mrps <- data.table()
     for (pid in pids_per_ward$patient_id) {
-      #TODO implement Drug Disease MRP calculation
+
+      getCurrentDiagnosesByIcd <- function(pid, drug_disease_mrp_definition_expanded, current_date = Sys.Date()) {
+        # 0. Get the table with all diagnoses ever made for the patient
+        conditions <- getConditionResources(pid)
+        # 1. Remove all irrelevant conditions (not contained in the MRP lists)
+        diagnoses <- unique(na.omit(drug_disease_mrp_definition_expanded$ICD))
+        diagnoses <- sort(unique(unlist(strsplit(diagnoses, "\\+"))))
+        conditions <- conditions[con_code_code %in% diagnoses]
+        # 2. Remove all diagnoses that have a clinicalStatus and this is not 'active'
+        conditions <- conditions[is.na(con_clinicalstatus_code) || con_clinicalstatus_code == 'active']
+        # 3. Remove all diagnoses with a start date in the future
+        conditions <- conditions[con_recordeddate <= current_date]
+        # 4. Remove all diagnosis with an abatement date in the past
+        #   con_abatementdatetime is a date with time. We remove the time and add 1 day because we only calculate in days
+        conditions <- conditions[is.na(con_abatementdatetime) || as.Date(con_abatementdatetime) + 1 >= current_date]
+        # 5. Remove all diagnoses that are no longer valid
+        #   Extract for every diagnosis code the validity period (duration) in days
+        diagnoses_durations <- drug_disease_mrp_definition_expanded[ICD %in% conditions$con_code_code]
+        diagnoses_durations <- etlutils::retainColumns(diagnoses_durations, c("ICD", "Geltungsdauer"))
+        diagnoses_durations[, Geltungsdauer := as.integer(Geltungsdauer)]
+        diagnoses_durations <- unique(diagnoses_durations)
+        #   Filter diagnoses_durations to only keep the longest duration for each ICD code (if there are conflicting durations for the same code)
+        diagnoses_durations[is.na(Geltungsdauer), Geltungsdauer := Inf] # Replace NA with Inf
+        diagnoses_durations <- diagnoses_durations[, .SD[which.max(Geltungsdauer)], by = ICD]
+        #   Perform a join between conditions and diagnoses_durations to add the duration to each diagnosis in conditions
+        conditions <- merge(conditions, diagnoses_durations, by.x = "con_code_code", by.y = "ICD", all.x = TRUE)
+        #   Calculate the validity end date for each diagnosis in conditions and filter based on a given current_date
+        conditions[, validity_end := con_recordeddate + ifelse(is.infinite(Geltungsdauer), as.integer(as.Date("9999-12-31") - con_recordeddate), Geltungsdauer)]
+        conditions <- conditions[validity_end >= current_date | is.na(validity_end)]
+        MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE <- 30
+        # 6. Determine for the next MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE days which diagnoses apply in this period
+        # (inclusive abatement in the next MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE days)
+        #   Create the result table with the diagnoses in the rows and day 0 to day MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE
+        #   in the cols. The values (TRUE/NA) determine if the diagnosis in the row is valid at day x
+        col_names <- c("condition", paste0("day", c(0:MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE)))
+        current_conditions <- data.table::data.table(matrix(nrow = nrow(conditions), ncol = length(col_names)))
+        data.table::setnames(current_conditions, col_names)
+        current_conditions$condition <- conditions$con_code_code
+        #   Fill the TRUE values for every diagnosis
+        for (i in seq_len(nrow(current_conditions))) {
+          diagnosis_duration_from_current_date <- as.integer(conditions$validity_end[i]) -  as.integer(current_date)
+          abatement_date <- conditions$con_abatementdatetime[i]
+          abatement_date <- as.Date(ifelse (is.na(abatement_date), diagnosis_duration_from_current_date, as.Date(abatement_date) + 1))
+          diagnosis_abatement_duration_from_current_date <- as.integer(abatement_date) -  as.integer(current_date)
+          diagnosis_duration_from_current_date <- min(diagnosis_duration_from_current_date, diagnosis_abatement_duration_from_current_date)
+          if (diagnosis_duration_from_current_date >= 0) { # should always be >= 0 but sure is sure...
+            for (j in 0:min(MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE, diagnosis_duration_from_current_date)) {
+              current_conditions[i, j + 2] <- TRUE # the day columns start at position 2 -> column index + 2
+            }
+          }
+        }
+        return(current_conditions)
+      }
+
+      current_conditions <- getCurrentDiagnosesByIcd(pid, drug_disease_mrp_definition_expanded)
     }
     return(result_mrps)
   }
@@ -149,7 +203,7 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
   })
 
   etlutils::run_in_in("Calculate Drug Disease MRPs internal", {
-    calculateMRPsInternal()
+    calculateMRPsInternal(drug_disease_mrp_definition_expanded)
   })
 
 }
