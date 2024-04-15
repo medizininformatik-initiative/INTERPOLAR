@@ -106,7 +106,14 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
     result_mrps <- data.table()
     for (pid in pids_per_ward$patient_id) {
 
-      getCurrentDiagnosesByIcd <- function(pid, drug_disease_mrp_definition_expanded, current_date = Sys.Date()) {
+      getCurrentDiagnosesByICD <- function(pid, drug_disease_mrp_definition_expanded, current_time = Sys.time()) {
+
+        # At the moment, we assume that the diagnosis always applies to the whole day (based on the recorded date).
+        # However, if you look at a date in the past, a diagnosis that was only added in the afternoon would also apply
+        # to the morning in retrospect, so that different MRP results may come out than in the MRP calculation on the
+        # morning of the date (when the date was "now" and the afternoon diagnosis was still unknown).
+        current_date <- as.Date(current_time)
+
         # 0. Get the table with all diagnoses ever made for the patient
         conditions <- getConditionResources(pid)
         # 1. Remove all irrelevant conditions (not contained in the MRP lists)
@@ -159,7 +166,7 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
         return(current_conditions)
       }
 
-      current_conditions <- getCurrentDiagnosesByIcd(pid, drug_disease_mrp_definition_expanded)
+      current_conditions <- getCurrentDiagnosesByICD(pid, drug_disease_mrp_definition_expanded)
     }
     return(result_mrps)
   }
