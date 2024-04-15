@@ -75,14 +75,14 @@ get_encounters <- function(table_description) {
         )
       }
 
-      catl('Request')
-      catl(styled_string(request, fg = 2, underline = TRUE))
+      catByVerbose('Request')
+      catByVerbose(styled_string(request, fg = 2, underline = TRUE))
       if (succ) {
-        catl('returned', total, 'available Encounters.')
-        catl('Will download Encounters using parameters "sa" and "eb"')
+        catByVerbose('returned', total, 'available Encounters.')
+        catByVerbose('Will download Encounters using parameters "sa" and "eb"')
       } else {
-        catl('did not return any available Encounters.')
-        catl('Will download Encounters using parameters "ge" and "le"')
+        catByVerbose('did not return any available Encounters.')
+        catByVerbose('Will download Encounters using parameters "ge" and "le"')
       }
 
       op.beg <- gsub("^([a-z]+).*", "\\1", params[1])
@@ -109,7 +109,7 @@ get_encounters <- function(table_description) {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
-    print_table_if_all(table_enc)
+    printAllTables(table_enc)
 
     # TODO: das hier muss wahrscheinlich für alle Resourcen nochmal getan werden, die wir dann endgültig vom FHIR-Server herunterladen
     # runs_in_in('Fix Dates in Encounter Table', {
@@ -247,7 +247,7 @@ get_encounters <- function(table_description) {
     #   patient_refs_ids <- unique(table_enc[Exclusion.TimeOrderViolation == FALSE & Exclusion.TimeOverlap == FALSE, Enc.Pat.ID])
     # })
     #
-    # print_table(table_enc)
+    # printTable(table_enc)
     #
     # # some stats
     # run_in_in('Update \'tab.resource.used\' Table', {

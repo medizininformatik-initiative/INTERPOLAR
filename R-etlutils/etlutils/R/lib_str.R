@@ -21,3 +21,179 @@ extract_words <- function(input_string) {
 
   return(words)
 }
+
+#' Perform a case-insensitive pattern search using `grepl` with Perl patterns (perl = TRUE).
+#'
+#' @param pattern A pattern to search for.
+#' @param x A list or table where the pattern should be searched.
+#' @param whole_word If TRUE, the pattern will be treated as a whole word and matched accordingly.
+#'                   It adds '^' to the beginning and '$' to the end of the pattern if they don't exist.
+#' @param perl If TRUE, uses Perl-compatible regular expressions for pattern matching (default is TRUE).
+#' @seealso grepl
+#'
+#' This function performs case-insensitive pattern searches using `grepl` with Perl patterns. If `whole_word` is set to TRUE,
+#' the pattern is treated as a whole word, and '^' is added to the beginning and '$' to the end of the pattern if they are missing.
+#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching.
+#'
+#' @examples
+#' pattern <- 'AAA|BBB'
+#' greplic(pattern, 'I am a sentence with AAAA and CCC.', whole_word = TRUE) # FALSE
+#' greplic(pattern, 'I am a sentence with AAA and CCC.', whole_word = TRUE) # TRUE
+#'
+#' @export
+greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
+  if (whole_word) {
+    subPatterns <- unlist(strsplit(pattern, '\\|'))
+    subPatterns <- lapply(subPatterns, function(subPattern) subPattern <- paste0('(?<!\\S)', subPattern, '(?!\\S)'))
+    pattern <- paste0(subPatterns, collapse = '|')
+  }
+  grepl(pattern, x, ignore.case = TRUE, perl)
+}
+
+#' Remove the last character from a string if it is not alphanumeric.
+#'
+#' This function takes a character vector and removes the last character
+#' from each string element if it is not alphanumeric (i.e., not a letter or a number).
+#'
+#' @param text A character vector containing strings.
+#'
+#' @return A character vector with the last character removed from each element if it is not alphanumeric.
+#'
+#' @examples
+#' # Example data.table
+#' library(data.table)
+#' dt <- data.table(
+#'   ID = 1:4,
+#'   Text = c("abc123!", "hello-", "world9", "example")
+#' )
+#'
+#' # Apply the function to the "Text" column
+#' dt[, Text := lapply(Text, removeLastCharsIfNotAlphanumeric)]
+#' print(dt)
+#'
+#' @export
+removeLastCharsIfNotAlphanumeric <- function(text) {
+  for (i in seq_len(length(text))) {
+    while (nchar(text[i]) & !grepl("[A-Za-z0-9]$", text[i])) {
+      text[i] <- substr(text[i], 1, nchar(text[i]) - 1)
+    }
+  }
+  return(text)
+}
+
+#' Extract Everything After the Last Slash
+#'
+#' This function takes a vector of strings and returns a new vector where each element
+#' is modified to include only the portion of the original string that appears
+#' after the last slash.
+#'
+#' @param strings A character vector where each element is a string potentially
+#'   containing slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element
+#'   is the part of the original string after the last slash.
+#'
+#' @examples
+#' strings <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getAfterLastSlash(strings)
+#'
+#' @export
+getAfterLastSlash <- function(strings) {
+  return(sub(".*/", "", strings))
+}
+
+#' Extract Everything Before the Last Slash or Return Empty String if No Slash Present
+#'
+#' This function takes a vector of strings and returns a new vector. For strings containing slashes,
+#' it includes only the portion of the string that appears before the last slash. For strings without
+#' any slashes, it returns an empty string. The last slash itself is not included in the returned strings.
+#'
+#' @param strings A character vector where each element is a string that may or may not contain slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element is the part of the
+#' original string up to (but not including) the last slash, or an empty string if no slash is present.
+#'
+#' @examples
+#' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getBeforeLastSlash(absolute)
+#'
+#' @export
+getBeforeLastSlash <- function(strings) {
+  sapply(strings, function(string) {
+    if (grepl("/", string)) {
+      sub("/[^/]*$", "", string)
+    } else {
+      ""
+    }
+  })
+}
+
+#' Extract text between single or double quotes in a string.
+#'
+#' This function takes a string and extracts the text between the first pair
+#' of single or double quotes encountered. It uses regular expressions to find
+#' the text enclosed within the quotes and returns it.
+#'
+#' @param x A character vector or string containing text with single or double quotes.
+#' @return A character vector containing the text between the first pair of quotes.
+#'
+#' @examples
+#' # Example usage
+#' result_single <- getBetweenQuotes("This is a 'sample' string.")
+#' result_double <- getBetweenQuotes('Another "example" string.')
+#' print(result_single)  # Output: "sample"
+#' print(result_double)  # Output: "example"
+#'
+#' @export
+getBetweenQuotes <- function(x) {
+  gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
+}
+
+#' Replace Patterns in a String with Specified Replacements
+#'
+#' This function replaces specified patterns in a given string with their corresponding replacements.
+#' It takes a named list (`patternsAndReplacements`) where each name-value pair corresponds to a pattern
+#' and its replacement. The function performs a case-insensitive replacement of these patterns within
+#' the provided string.
+#'
+#' @param patternsAndReplacements A named list where names are patterns to be replaced and values are
+#' the corresponding replacements.
+#' @param string The string within which the patterns should be replaced.
+#' @param ignore.case logical. Indicates whether the strings should be compared case sensitive. If TRUE
+#' then all result strings are in lower case.
+#' @param perl logical. Should Perl-compatible regexps be used?
+#'
+#' @return The modified string with all specified patterns replaced by their corresponding replacements.
+#'
+#' @examples
+#' patternsAndReplacements <- list("hello" = "hi", "world" = "earth")
+#' replacePatternsInString(patternsAndReplacements, "Hello World!")
+#' # Returns "hi earth!"
+#' @export
+replacePatternsInString <- function(patternsAndReplacements, string, ignore.case = FALSE, perl = FALSE) {
+  patterns <- names(patternsAndReplacements)
+  replacements <- unlist(patternsAndReplacements)
+  for (i in seq_along(patterns)) {
+    pattern <- patterns[i]
+    replacement <- replacements[i]
+    if (ignore.case) {
+      string <- gsub(tolower(pattern), replacement, tolower(string), ignore.case = TRUE, perl = perl)
+    } else {
+      string <- gsub(pattern, replacement, string, perl = perl)
+    }
+  }
+  return(string)
+}
+
+#' Pluralize Suffix Based on Count
+#'
+#' This function returns an empty string for count 1 and 's' for any other count.
+#'
+#' @param counts Numeric vector of counts.
+#'
+#' @return
+#' An empty string for count 1, 's' otherwise.
+#' @export
+getPluralSuffix <- function(counts) {
+  ifelse(counts == 1, '', 's')
+}
