@@ -414,21 +414,21 @@ downloadAndCrackFHIRResources <- function(
     if (0 < verbose) {
       if (!is.null(pkg$request) && !is.null(pkg$bundles)) {
         cat(paste0(
-          'Download of ', verbose_numbers(i + 1), ' ', bundles_at_once, ' bundle', plural_s(bundles_at_once),
+          'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
           ' (FHIR Resource: ', as.character(table_description@resource), ' ',
           substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
-          ' and Crack of ', verbose_numbers(i), ' ', length(pkg$bundles), ' bundle', plural_s(length(pkg$bundles)), '.\n'
+          ' and Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
         ))
       } else if (!is.null(pkg$request) && is.null(pkg$bundles)) {
         cat(paste0(
-          'Download of ', verbose_numbers(i + 1), ' ', bundles_at_once, ' bundle', plural_s(bundles_at_once),
+          'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
           ' (FHIR Resource: ', as.character(table_description@resource), ' ',
           substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
           '.\n'
         ))
       } else {
         cat(paste0(
-          'Crack of ', verbose_numbers(i), ' ', length(pkg$bundles), ' bundle', plural_s(length(pkg$bundles)), '.\n'
+          'Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
         ))
       }
     }
@@ -668,19 +668,19 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     if (0 < verbose) {
       if (any(sapply(pkg, is.character)) && any(!sapply(pkg, is.character))) {
         cat(paste0(
-          'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
+          'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
           ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
-          ' and Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
+          ' and Crack of ', convertVerboseNumbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', getPluralSuffix(curr_len_recent), '.\n'
         ))
       } else if (any(sapply(pkg, is.character))) {
         cat(paste0(
-          'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
+          'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
           ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
           '\n'
         ))
       } else {
         cat(paste0(
-          'Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
+          'Crack of ', convertVerboseNumbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', getPluralSuffix(curr_len_recent), '.\n'
         ))
       }
     }
@@ -743,7 +743,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 cat(
                   styled_string(
                     trial,
-                    verbose_numbers(trial),
+                    convertVerboseNumbers(trial),
                     'attempt to Download Bundle failed. Bundle is lost. ',
                     'Please note! This may cause further Problems.',
                     fg = 1,
@@ -875,7 +875,7 @@ loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
       resource <- table_description@resource@.Data
       resource_name_to_resources[[resource]] <- resource_table
       if (nrow(resource_table)) {
-        print_table_if_all(resource_table, resource)
+        printAllTables(resource_table, resource)
       } else {
         cat_info(paste("Info: No", resource, "resources found for the given Patient IDs.\n"))
       }
