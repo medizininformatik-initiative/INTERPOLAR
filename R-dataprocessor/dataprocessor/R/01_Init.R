@@ -130,33 +130,32 @@ getResourcesByPID <- function(resource_name, pid) {
   # load resource table
   resource_table <- loadResourceTable(resource_name)
   # only for resource patient relevant, append string "Patient/"
-  if (tolower(resource_name) == "patient" && startsWith(pid, "Patient/")) {
+  if (tolower(resource_name) == "patient" && startsWith(pid[1], "Patient/")) {
     resource_table[, pat_id := paste0("Patient/", pat_id)]
   }
   # extract rows from resource table with match patient id
   return(resource_table[get(pid_column_name) == pid])
 }
 
-#' Get Resources for Specific Resource ID
+#' Get Resources for Specific Resource IDs
 #'
-#' This function filters rows from a resource table based on a resource ID.
+#' This function filters rows from a resource table based on resource IDs.
 #'
 #' @param resource_name A character string specifying the name of the resource.
-#' @param id A character string representing the specific resource ID to filter for.
+#' @param ids A vector of character string representing the specific resource ID to filter for.
 #'
-#' @return A filtered data.table containing resource information for the resource ID.
+#' @return A filtered data.table containing resource information for the resource IDs.
 #'
 #' @export
-getResourcesByID <- function(resource_name, id) {
-  resource_table_name <- paste0("resource_", resource_name)
+getResourcesByIDs <- function(resource_name, ids) {
   id_column_name <- getIDColumn(resource_name)
   # load resource table
   resource_table <- loadResourceTable(resource_table_name)
   # We need a relative ID here without the resource name. If a resource name appears before the
   # actual ID, it is removed.
-  id <- etlutils::getAfterLastSlash(id)
+  ids <- etlutils::getAfterLastSlash(ids)
   # extract rows from resource table with match patient id
-  return(resource_table[get(id_column_name) == id])
+  return(resource_table[get(id_column_name) %in% ids])
 }
 
 #' Get Resources by ID or PID
@@ -164,16 +163,16 @@ getResourcesByID <- function(resource_name, id) {
 #' This function retrieves resource information based on either a resource ID or a patient ID.
 #'
 #' @param resource_name A character string specifying the name of the resource.
-#' @param id_or_pid A character string representing either a resource ID or a patient ID.
+#' @param ids_or_pid A character string representing either a resource ID or a patient ID.
 #'
 #' @return A filtered data.table containing resource information based on the provided ID or PID.
 #'
 #' @export
-getResources <- function(resource_name, id_or_pid) {
-  if (startsWith(id_or_pid, "Patient/")) {
-    return(getResourcesByPID(resource_name, id_or_pid))
+getResources <- function(resource_name, ids_or_pid) {
+  if (startsWith(ids_or_pid[1], "Patient/")) {
+    return(getResourcesByPID(resource_name, ids_or_pid))
   }
-  return(getResourcesByID(resource_name, id_or_pid))
+  return(getResourcesByIDs(resource_name, ids_or_pid))
 }
 
 #' Get Patient Resource Information for Specific Patient ID
@@ -189,69 +188,82 @@ getPatientResource <- function(id_or_pid) {
   getResources("Patient", id_or_pid)
 }
 
-#' Get Encounter Resource Information for Specific Encounter ID
+#' Get Encounter Resource Information for Specific Encounter IDs
 #'
-#' This function retrieves resource information for a specific encounter ID from the resource_encounter table.
+#' This function retrieves resource information for specific encounter IDs from the resource_encounter table.
 #'
-#' @param id_or_pid A character string representing the specific encounter ID to retrieve resource information for.
+#' @param ids_or_pid A character string representing specific encounter IDs to retrieve resource information for.
 #'
-#' @return A data.table containing resource information for the specified encounter ID.
+#' @return A data.table containing resource information for specified encounter IDs.
 #'
 #' @export
-getEncounterResources <- function(id_or_pid) {
-  getResources("Encounter", id_or_pid)
+getEncounterResources <- function(ids_or_pid) {
+  getResources("Encounter", ids_or_pid)
 }
 
-#' Get Condition Resource Information for Specific Condition ID
+#' Get Condition Resource Information for Specific Condition IDs
 #'
-#' This function retrieves resource information for a specific condition ID from the resource_condition table.
+#' This function retrieves resource information for specific condition IDs from the resource_condition table.
 #'
-#' @param id_or_pid A character string representing the specific condition ID to retrieve resource information for.
+#' @param ids_or_pid A character string representing specific condition IDs to retrieve resource information for.
 #'
-#' @return A data.table containing resource information for the specified condition ID.
+#' @return A data.table containing resource information for specified condition IDs.
 #'
 #' @export
-getConditionResources <- function(id_or_pid) {
-  getResources("Condition", id_or_pid)
+getConditionResources <- function(ids_or_pid) {
+  getResources("Condition", ids_or_pid)
 }
 
-#' Get Medication Resource Information for Specific Medication ID
+#' Get Medication Resource Information for Specific Medication IDs
 #'
-#' This function retrieves resource information for a specific medication ID from the resource_medication table.
+#' This function retrieves resource information for aspecific medication IDs from the resource_medication table.
 #'
-#' @param id A character string representing the specific medication ID to retrieve resource information for.
+#' @param ids A character vector representing the specific medication IDs to retrieve resource information for.
 #'
-#' @return A data.table containing resource information for the specified medication ID.
+#' @return A data.table containing resource information for the specified medication IDs.
 #'
 #' @export
-getMedicationResources <- function(id) {
-  getResources("Medication", id)
+getMedicationResources <- function(ids) {
+  getResources("Medication", ids)
 }
 
-#' Get MedicationAdministration Resource Information for Specific Medication Administration ID
+#' Get MedicationAdministration Resource Information for Specific IDs or PID
 #'
-#' This function retrieves resource information for a specific medication administration ID from the resource_medicationadministration table.
+#' This function retrieves resource information for specific medication administration IDs or Patient ID  from the resource_medicationadministration table.
 #'
-#' @param id_or_pid A character string representing the specific medication administration ID to retrieve resource information for.
+#' @param ids_or_pid A character string representing specific medication administration IDs or Patient ID  to retrieve resource information for.
 #'
-#' @return A data.table containing resource information for the specified medication administration ID.
+#' @return A data.table containing resource information for specified medication administration IDs or Patient ID .
 #'
 #' @export
-getMedicationAdministrationResources <- function(id_or_pid) {
-  getResources("Medicationadministration", id_or_pid)
+getMedicationAdministrationResources <- function(ids_or_pid) {
+  getResources("MedicationAdministration", ids_or_pid)
 }
 
-#' Get MedicationStatement Resource Information for Specific Medication Statement ID
+#' Get MedicationStatement Resource Information for Specific IDs or PID
 #'
-#' This function retrieves resource information for a specific medication statement ID from the resource_medicationstatement table.
+#' This function retrieves resource information for specific medication statement IDs or Patient ID  from the resource_medicationstatement table.
 #'
-#' @param id_or_pid A character string representing the specific medication statement ID to retrieve resource information for.
+#' @param ids_or_pid A character string representing specific medication statement IDs or Patient ID  to retrieve resource information for.
 #'
-#' @return A data.table containing resource information for the specified medication statement ID.
+#' @return A data.table containing resource information for specified medication statement IDs or Patient ID .
 #'
 #' @export
-getMedicationStatementResources <- function(id_or_pid) {
-  getResources("Medicationstatement", id_or_pid)
+getMedicationStatementResources <- function(ids_or_pid) {
+  getResources("MedicationStatement", ids_or_pid)
+}
+
+#' Get MedicationRequest Resource Information for Specific IDs or PID
+#'
+#' This function retrieves resource information for specific medication request IDs or Patient ID from the resource_medicationstatement table.
+#'
+#' @param ids_or_pid A character string representing specific medication statement IDs or Patient ID to retrieve resource information for.
+#'
+#' @return A data.table containing resource information for specified medication statement ID or Patient ID .
+#'
+#' @export
+getMedicationRequestResources <- function(ids_or_pid) {
+  getResources("MedicationRequest", ids_or_pid)
 }
 
 #' Checks whether strings in a vector of ICD codes match specified patterns.
