@@ -395,6 +395,34 @@ MED_CODES_PATTERN <- list(
   PZN8orSmaller = patternw('[0-9]{7,8}')
 )
 
+#' Calculate Maximum Future Time to Check for MRPs
+#'
+#' This function calculates the maximum future time to check for Medication-Related Problems (MRPs)
+#' based on the current time and a defined number of days into the future. The number of days to look ahead
+#' is specified in the configuration file (`dataprocessor_config.toml`). This configuration sets
+#' the interval end as a certain number of days from the current time, converted to seconds.
+#'
+#' @param current_time The current time as a POSIXct object, representing the starting point
+#'   for the calculation.
+#'
+#' @return Returns a POSIXct object representing the maximum future time up to which MRPs should
+#'   be checked, based on the current time and the configuration.
+#'
+#' @examples
+#' MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE <- 30
+#' current_time <- Sys.time()
+#' future_time <- getMaxTimeInFutureToCheckForMRPs(current_time)
+#' print(paste(current_time, " -> ", future_time))
+#'
+#' @export
+getMaxTimeInFutureToCheckForMRPs <- function(current_time) {
+  # MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE is defined in the dataprocessor_config.toml file
+  max_seconds_checked_for_mrps_in_future <- MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE * 3600 * 24
+  # every interval will end MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE days in the from current_time
+  general_max_time <- current_time + max_seconds_checked_for_mrps_in_future
+  return(general_max_time)
+}
+
 init <- function() {
   tables <<- loadTables('./outputLocal/kds2db/tables/')
 }

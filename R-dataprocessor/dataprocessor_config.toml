@@ -24,6 +24,9 @@ VERBOSE               = 10 # Retrieval / analysis verbose level
 # (true)
 USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
+# Number of days to look into the future when searching for MRPs. If missing, default is 30.
+MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30
+
 [mrp_definition_files]
 
 # Name of the Excel file with the MRP definitions in the 'inst/extdata' directory without extension
