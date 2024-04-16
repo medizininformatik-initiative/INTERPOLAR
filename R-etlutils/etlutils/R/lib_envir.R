@@ -2,9 +2,12 @@
 #' context.
 #'
 #' @param path_to_toml path to the configuration toml file.
+#' @param defaults a vector with default values. The names of the elements are the variables names. If the variable
+#'                 is not found in the global context after the initialization with the toml file, then this default
+#'                 values will be set.
 #'
 #' @export
-initConstants <- function(path_to_toml) {
+initConstants <- function(path_to_toml, defaults = c()) {
   # normalize relative path for error message
   path_to_toml <- normalizePath(path_to_toml)
   # load the config toml file in the global environment
@@ -38,6 +41,15 @@ initConstants <- function(path_to_toml) {
   } else {
     ''
   }
+
+  # for all missing variables with a given default value -> set the default in the global environment
+  for (i in seq_along(defaults)) {
+    variable_name <- names(defaults)[i]
+    if (!exists(variable_name, envir = .GlobalEnv)) {
+      assign(variable_name, defaults[i], envir = .GlobalEnv)
+    }
+  }
+
 }
 
 #' Get a list of global variables with a specified prefix.
