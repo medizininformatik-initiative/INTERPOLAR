@@ -179,6 +179,42 @@ convertVerboseNumbers <- function(n) {
   n
 }
 
+#' Normalize POSIXct Time to UTC
+#'
+#' @param time A POSIXct date-time object.
+#' @return POSIXct date-time object in UTC timezone.
+#' @examples
+#' time1 <- as.POSIXct("2023-03-10 12:00:00", tz = "America/New_York")
+#' normalizeTimeToUTC(time1)
+#' @export
+normalizeTimeToUTC <- function(time) {
+  # Converts the provided POSIXct object to the UTC format
+  normalized_time <- as.POSIXct(format(time, tz = "UTC"), tz = "UTC")
+  return(normalized_time)
+}
+
+#' Normalize Specified Column of Data.Table to UTC
+#'
+#' This function modifies the specified column in a given data.table by converting
+#' all datetime entries to UTC format. The column is expected to contain POSIXct
+#' datetime objects.
+#'
+#' @param dt A data.table object containing at least one column with POSIXct datetime objects.
+#' @param column The name of the column to be normalized to UTC.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(time = as.POSIXct(c("2023-03-10 12:00:00",
+#'                                      "2023-03-11 15:00:00"),
+#'                                      tz = "America/New_York"))
+#' normalizeTableColumnToUTC(dt, "time")
+#' print(dt)
+#'
+#' @export
+normalizeTableColumnToUTC <- function(dt, column) {
+  dt[, (column) := as.POSIXct(format(.SD[[..column]], tz = "UTC"), tz = "UTC"), .SDcols = column]
+}
+
 #' Convert Time Format
 #'
 #' This function converts the time format of a column in a data table.
