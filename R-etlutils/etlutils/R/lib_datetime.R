@@ -24,14 +24,43 @@ normalizeTimeToUTC <- function(time) {
 #' @examples
 #' library(data.table)
 #' dt <- data.table(time = as.POSIXct(c("2023-03-10 12:00:00",
-#'                                      "2023-03-11 15:00:00"),
-#'                                      tz = "America/New_York"))
+#'                                      "2023-03-11 15:00:00"), tz = "America/New_York"))
 #' normalizeTableColumnToUTC(dt, "time")
 #' print(dt)
 #'
 #' @export
 normalizeTableColumnToUTC <- function(dt, column) {
   dt[, (column) := as.POSIXct(format(.SD[[..column]], tz = "UTC"), tz = "UTC"), .SDcols = column]
+}
+
+#' Normalize All POSIXct Columns in a Data.Table to UTC
+#'
+#' This function automatically detects all POSIXct columns in a given data.table
+#' and normalizes their time values to the UTC timezone. It modifies the data.table
+#' in place.
+#'
+#' @param dt A data.table object that potentially contains one or more columns
+#'   of POSIXct datetime objects.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(time1 = as.POSIXct(c("2023-03-10 12:00:00",
+#'                                       "2023-03-11 15:00:00"), tz = "America/New_York"),
+#'                  time2 = as.POSIXct(c("2023-03-10 11:00:00",
+#'                                       "2023-03-11 14:00:00"), tz = "Europe/Berlin"))
+#' normalizeAllPOSIXctToUTC(dt)
+#' print(dt)
+#'
+#' @export
+normalizeAllPOSIXctToUTC <- function(dt) {
+  # Identify all columns of type POSIXct
+  posixct_cols <- sapply(dt, function(x) inherits(x, "POSIXct"))
+
+  # Run through all POSIXct columns and convert them to UTC
+  for (col in names(posixct_cols[posixct_cols])) {
+    dt[, (col) := as.POSIXct(format(.SD[[col]], tz = "UTC"), tz = "UTC"), .SDcols = col]
+  }
+  # The function modifies the data.table directly, so no return is necessary
 }
 
 #' Convert Time Format
