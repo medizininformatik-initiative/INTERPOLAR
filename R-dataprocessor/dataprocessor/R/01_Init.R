@@ -170,9 +170,12 @@ getResourcesByIDs <- function(resource_name, ids) {
 #' @export
 getResources <- function(resource_name, ids_or_pid) {
   if (startsWith(ids_or_pid[1], "Patient/")) {
-    return(getResourcesByPID(resource_name, ids_or_pid))
+    resources <- getResourcesByPID(resource_name, ids_or_pid)
+  } else {
+    resources <- getResourcesByIDs(resource_name, ids_or_pid)
   }
-  return(getResourcesByIDs(resource_name, ids_or_pid))
+  etlutils::normalizeAllPOSIXctToUTC(resources)
+  return(resources)
 }
 
 #' Get Patient Resource Information for Specific Patient ID

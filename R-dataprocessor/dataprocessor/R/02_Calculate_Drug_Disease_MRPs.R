@@ -110,6 +110,8 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
 
 
       getCurrentDiagnosesByICD <- function(pid, drug_disease_mrp_definition_expanded, current_time = Sys.time()) {
+        # all resource datetimes are nromalized to UTC by the getResource() function -> normalize current_time too
+        current_time <- etlutils::normalizeTimeToUTC(current_time)
         # 0. Get the table with all diagnoses ever made for the patient
         conditions <- getConditionResources(pid)
         # 1. Remove all irrelevant conditions (not contained in the MRP lists)
@@ -120,11 +122,8 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
         # 2. Remove all diagnoses that have a clinicalStatus and this is not 'active'
         conditions <- conditions[is.na(con_clinicalstatus_code) || con_clinicalstatus_code == "active"]
         # 3. Remove all diagnoses with a start time in the future (recordeddate is a datetime)
-        current_time <- etlutils::normalizeTimeToUTC(current_time)
-        etlutils::normalizeTableColumnToUTC(conditions, "con_recordeddate")
         conditions <- conditions[con_recordeddate <= current_time]
         # 4. Remove all diagnosis with an abatement time in the past
-        etlutils::normalizeTableColumnToUTC(conditions, "con_abatementdatetime")
         conditions <- conditions[is.na(con_abatementdatetime) || con_abatementdatetime >= current_time]
         # 5. Remove all diagnoses that are no longer valid
         #TODO: Wir müssen hier auch nach Diagnosen suchen, die durch ihren Status vorher gestellte Diagnosen der gleichen ICD beenden (siehe TODO an 2.). Es kann zu mehreren Zeitintervallen für eine Diagnose kommen.
