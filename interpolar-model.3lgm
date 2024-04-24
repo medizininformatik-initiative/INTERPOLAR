@@ -2,9 +2,9 @@
 <!--Tool3lgmFile version='3.10' metamodel='TLGMServiceMetaModel@2388259974838049670' category='REGULAR'-->
 <modell_3lgm_2>
   <header>
-    <title>interpolar-model.3lgm</title>
+    <title>interpolar-model_v2.3lgm</title>
     <description></description>
-    <version>16_sippe_1713780961206</version>
+    <version>17_sippe_1713965520947</version>
   </header>
   <userFieldDefinitions>
     <userFieldFormat hash="FRM_1623450079169_2058">
@@ -166,8 +166,7 @@
       <userField hash="USERFIELD_1669884915184_32052">https://www.medizininformatik-initiative.de/Kerndatensatz/Modul_Biobank/IGMIIKDSModulBiobank.html</userField>
     </element>
     <element class="Group" hash="GRO_1709221936349_8954">
-      <field name="name">"KDS Pipeline" Module
-(Referenzimplementierung)</field>
+      <field name="name">"CDS tool chain"</field>
     </element>
     <element class="Textfield" hash="TEX_1709290692175_5204">
       <field name="name">1</field>
@@ -463,15 +462,15 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <field name="start">OTY_1709219592814_8881</field>
       <field name="end">RFO_1709219652236_8885</field>
     </element>
-    <element class="Group_HasPartEdge" hash="DLK_1669898238211_5953">
-      <field name="name">Hat-Teil-Beziehung 17</field>
-      <field name="start">GRO_1669898073958_5926</field>
-      <field name="end">OTY_1669884573092_32020</field>
-    </element>
     <element class="ObjectType_RepresentationForm_Edge" hash="DLK_1713779311937_5830">
       <field name="name">Connection 3</field>
       <field name="start">OTY_1713779129030_5819</field>
       <field name="end">RFO_1713779239426_5829</field>
+    </element>
+    <element class="Group_HasPartEdge" hash="DLK_1669898238211_5953">
+      <field name="name">Hat-Teil-Beziehung 17</field>
+      <field name="start">GRO_1669898073958_5926</field>
+      <field name="end">OTY_1669884573092_32020</field>
     </element>
     <element class="ApplicationComponent_RepresentationForm_Edge" hash="DLK_1709217057710_5098">
       <field name="name">Storage link 1</field>
@@ -743,6 +742,26 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <field name="start">ASY_1709217077017_5102</field>
       <field name="end">PDP_1710237986429_35736</field>
     </element>
+    <element class="PartableApplicationComponent_CommunicationInterface_Edge" hash="DLK_1713779389138_5940">
+      <field name="name">Subordination relation 19</field>
+      <field name="start">ASY_1713779361785_5925</field>
+      <field name="end">PIN_1713779389122_5939</field>
+    </element>
+    <element class="CommunicationLink_Edge" hash="DLK_1713779389165_5942">
+      <field name="name">Communication link 10</field>
+      <field name="start">IIN_1713779389158_5941</field>
+      <field name="end">PIN_1713779389122_5939</field>
+    </element>
+    <element class="PartableApplicationComponent_CommunicationInterface_Edge" hash="DLK_1713779389172_5943">
+      <field name="name">Subordination relation 20</field>
+      <field name="start">ASY_1709221073260_8924</field>
+      <field name="end">IIN_1713779389158_5941</field>
+    </element>
+    <element class="ApplicationComponent_RepresentationForm_Edge" hash="DLK_1713779409724_5949">
+      <field name="name">Storage link 5</field>
+      <field name="start">ASY_1713779361785_5925</field>
+      <field name="end">RFO_1713779239426_5829</field>
+    </element>
     <element class="PartableApplicationComponent_HasPartEdge" hash="DLK_1709217943947_8788">
       <field name="name">Has-Part-Relation 1</field>
       <field name="start">ASY_1709217584665_8734</field>
@@ -807,26 +826,6 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <field name="name">Has-Part-Relation 4</field>
       <field name="start">ASY_1709217584665_8734</field>
       <field name="end">ASY_1709295721441_6249</field>
-    </element>
-    <element class="PartableApplicationComponent_CommunicationInterface_Edge" hash="DLK_1713779389138_5940">
-      <field name="name">Subordination relation 19</field>
-      <field name="start">ASY_1713779361785_5925</field>
-      <field name="end">PIN_1713779389122_5939</field>
-    </element>
-    <element class="CommunicationLink_Edge" hash="DLK_1713779389165_5942">
-      <field name="name">Communication link 10</field>
-      <field name="start">IIN_1713779389158_5941</field>
-      <field name="end">PIN_1713779389122_5939</field>
-    </element>
-    <element class="PartableApplicationComponent_CommunicationInterface_Edge" hash="DLK_1713779389172_5943">
-      <field name="name">Subordination relation 20</field>
-      <field name="start">ASY_1709221073260_8924</field>
-      <field name="end">IIN_1713779389158_5941</field>
-    </element>
-    <element class="ApplicationComponent_RepresentationForm_Edge" hash="DLK_1713779409724_5949">
-      <field name="name">Storage link 5</field>
-      <field name="start">ASY_1713779361785_5925</field>
-      <field name="end">RFO_1713779239426_5829</field>
     </element>
     <element class="PhysicalDataProcessingComponent_Location_Edge" hash="DLK_1710237787613_35724">
       <field name="name">Connection 1</field>
@@ -963,11 +962,6 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <field name="kantenHash">DLK_1709221378118_8948</field>
       <field name="index">0</field>
     </element>
-    <element class="Bendpoint" hash="BEN_1709220643193_8920">
-      <field name="name">Bending point 9</field>
-      <field name="kantenHash">DLK_1709218125398_8803</field>
-      <field name="index">1</field>
-    </element>
     <element class="Bendpoint" hash="BEN_1709296125589_7604">
       <field name="name">Bending point 17</field>
       <field name="kantenHash">DLK_1709295721442_6253</field>
@@ -997,11 +991,6 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <field name="name">Bending point 11</field>
       <field name="kantenHash">DLK_1709218786710_8818</field>
       <field name="index">0</field>
-    </element>
-    <element class="Bendpoint" hash="BEN_1709220635798_8919">
-      <field name="name">Bending point 8</field>
-      <field name="kantenHash">DLK_1709218125398_8803</field>
-      <field name="index">2</field>
     </element>
     <element class="Bendpoint" hash="BEN_1709220941198_8922">
       <field name="name">Bending point 10</field>
@@ -1046,6 +1035,11 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
     <element class="Bendpoint" hash="BEN_1709222314802_9407">
       <field name="name">Bending point 14</field>
       <field name="kantenHash">DLK_1709221378118_8948</field>
+      <field name="index">1</field>
+    </element>
+    <element class="Bendpoint" hash="BEN_1713965322356_6232">
+      <field name="name">Bending point 23</field>
+      <field name="kantenHash">DLK_1709218125398_8803</field>
       <field name="index">1</field>
     </element>
     <element class="Bendpoint" hash="BEN_1710239816015_36120">
@@ -1581,10 +1575,10 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <font_family>Liberation Mono</font_family>
           <font_style>0</font_style>
           <font_size>20</font_size>
-          <x>40</x>
-          <y>-25</y>
-          <width>589</width>
-          <height>500</height>
+          <x>57</x>
+          <y>42</y>
+          <width>554</width>
+          <height>354</height>
           <valign>TOP</valign>
         </layout>
       </container>
@@ -1598,9 +1592,9 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <font_family>SansSerif</font_family>
           <font_style>1</font_style>
           <font_size>16</font_size>
-          <x>-398</x>
-          <y>-148</y>
-          <width>175</width>
+          <x>-310</x>
+          <y>-23</y>
+          <width>130</width>
           <height>95</height>
         </layout>
       </container>
@@ -1614,8 +1608,8 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <font_family>SansSerif</font_family>
           <font_style>0</font_style>
           <font_size>14</font_size>
-          <x>100</x>
-          <y>-148</y>
+          <x>-125</x>
+          <y>-44</y>
           <width>130</width>
           <height>50</height>
         </layout>
@@ -1631,9 +1625,9 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <font_style>1</font_style>
           <font_size>16</font_size>
           <x>135</x>
-          <y>5</y>
+          <y>18</y>
           <width>299</width>
-          <height>189</height>
+          <height>175</height>
           <valign>TOP</valign>
         </layout>
       </container>
@@ -1645,31 +1639,31 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
             <blue>229</blue>
           </color>
           <x>67</x>
-          <y>-15</y>
+          <y>15</y>
           <width>115</width>
           <height>30</height>
         </layout>
       </container>
       <container hash="IIN_1709218113531_8795">
         <layout>
-          <x>34</x>
-          <y>-147</y>
+          <x>-191</x>
+          <y>-43</y>
           <width>19</width>
           <height>19</height>
         </layout>
       </container>
       <container hash="PIN_1709218113540_8797">
         <layout>
-          <x>-310</x>
-          <y>-148</y>
+          <x>-244</x>
+          <y>-44</y>
           <width>19</width>
           <height>19</height>
         </layout>
       </container>
       <container hash="IIN_1709218125374_8800">
         <layout>
-          <x>49</x>
-          <y>-123</y>
+          <x>-60</x>
+          <y>-43</y>
           <width>19</width>
           <height>19</height>
         </layout>
@@ -1677,7 +1671,7 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <container hash="PIN_1709218125395_8802">
         <layout>
           <x>10</x>
-          <y>-15</y>
+          <y>15</y>
           <width>19</width>
           <height>19</height>
         </layout>
@@ -1698,9 +1692,9 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
             <green>229</green>
             <blue>229</blue>
           </color>
-          <x>67</x>
+          <x>192</x>
           <y>15</y>
-          <width>115</width>
+          <width>135</width>
           <height>30</height>
         </layout>
       </container>
@@ -1708,7 +1702,7 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
         <visible>false</visible>
         <layout>
           <x>85</x>
-          <y>1</y>
+          <y>31</y>
           <width>17</width>
           <height>17</height>
         </layout>
@@ -1725,7 +1719,7 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <container hash="PIN_1709218786693_8815">
         <visible>false</visible>
         <layout>
-          <x>85</x>
+          <x>213</x>
           <y>-6</y>
           <width>19</width>
           <height>19</height>
@@ -1795,10 +1789,10 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <font_family>SansSerif</font_family>
           <font_style>1</font_style>
           <font_size>16</font_size>
-          <x>-148</x>
+          <x>-126</x>
           <y>162</y>
-          <width>175</width>
-          <height>95</height>
+          <width>130</width>
+          <height>50</height>
         </layout>
       </container>
       <container hash="ASY_1709219827550_8903">
@@ -1813,13 +1807,13 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <font_size>14</font_size>
           <x>53</x>
           <y>162</y>
-          <width>134</width>
+          <width>130</width>
           <height>50</height>
         </layout>
       </container>
       <container hash="PIN_1709219958914_8909">
         <layout>
-          <x>-14</x>
+          <x>-12</x>
           <y>160</y>
           <width>19</width>
           <height>19</height>
@@ -1836,7 +1830,7 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       <container hash="PIN_1709219980372_8914">
         <layout>
           <x>-98</x>
-          <y>115</y>
+          <y>130</y>
           <width>19</width>
           <height>19</height>
         </layout>
@@ -1922,16 +1916,16 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
       </container>
       <container hash="TEX_1709290692175_5204">
         <layout>
-          <x>-10</x>
-          <y>-158</y>
+          <x>-205</x>
+          <y>-63</y>
           <width>40</width>
           <height>25</height>
         </layout>
       </container>
       <container hash="TEX_1709290750403_5322">
         <layout>
-          <x>10</x>
-          <y>-113</y>
+          <x>-45</x>
+          <y>-63</y>
           <width>40</width>
           <height>25</height>
         </layout>
@@ -2105,18 +2099,6 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <y>149</y>
         </layout>
       </container>
-      <container hash="BEN_1709220643193_8920">
-        <layout>
-          <color name="bg_color">
-            <red>0</red>
-            <green>0</green>
-            <blue>0</blue>
-            <alpha>0</alpha>
-          </color>
-          <x>0</x>
-          <y>-100</y>
-        </layout>
-      </container>
       <container hash="BEN_1709296125589_7604">
         <layout>
           <color name="bg_color">
@@ -2137,8 +2119,8 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
             <blue>0</blue>
             <alpha>0</alpha>
           </color>
-          <x>49</x>
-          <y>-100</y>
+          <x>-30</x>
+          <y>-43</y>
         </layout>
       </container>
       <container hash="BEN_1709221478374_8951">
@@ -2189,18 +2171,6 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           <y>73</y>
         </layout>
       </container>
-      <container hash="BEN_1709220635798_8919">
-        <layout>
-          <color name="bg_color">
-            <red>0</red>
-            <green>0</green>
-            <blue>0</blue>
-            <alpha>0</alpha>
-          </color>
-          <x>0</x>
-          <y>-35</y>
-        </layout>
-      </container>
       <container hash="BEN_1709220941198_8922">
         <layout>
           <color name="bg_color">
@@ -2211,6 +2181,18 @@ The Frontend may part of the KDS Pipeline. It is also possible to connect an exi
           </color>
           <x>95</x>
           <y>45</y>
+        </layout>
+      </container>
+      <container hash="BEN_1713965322356_6232">
+        <layout>
+          <color name="bg_color">
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+            <alpha>0</alpha>
+          </color>
+          <x>-30</x>
+          <y>0</y>
         </layout>
       </container>
     </layer>
