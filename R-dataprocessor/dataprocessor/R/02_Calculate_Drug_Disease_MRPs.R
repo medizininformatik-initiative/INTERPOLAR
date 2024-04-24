@@ -1,21 +1,27 @@
-calculateDrugDiseaseMRPs <- function() {
+calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
 
-  # clean and expand table
+  #' Clean and Expand Drug_Disease_MRP Definition Table
+  #'
+  #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
+  #' splitting and trimming values, and expanding concatenated ICD codes.
+  #'
+  #' @param drug_disease_mrp_definition A data.table containing the MRP definition table.
+  #'
+  #' @return A cleaned and expanded data.table containing the MRP definition table.
+  #'
+  #' @export
   cleanAndExpandDefinition <- function(drug_disease_mrp_definition) {
 
     # remove table without the needed column names
-    columnnames <- c('ATC_WIRKSTOFF', 'Mit.ICD-10.codierbar', 'Mit.Drug.codierbar')
-
+    columnnames <- c('ATC_WIRKSTOFF', 'Mit Drug codierbar', 'Mit ICD-10 codierbar')
     if (!all(columnnames %in% names(drug_disease_mrp_definition))) {
       drug_disease_mrp_definition <- etlutils::removeTableHeader(drug_disease_mrp_definition, columnnames)
       if (!etlutils::isValidTable(drug_disease_mrp_definition)) {
         stop("drug_disease_mrp_definition table has invalid structure")
       }
     }
-    # remove all unnecessary columns
-    drug_disease_mrp_definition <- etlutils::retainColumns(drug_disease_mrp_definition, columnnames)
     # rename the columns
-    new_columnnames <- c('ATC', 'ICD', 'ATC_FOR_ICD')
+    new_columnnames <- c('ATC', 'ATC_FOR_ICD', 'ICD')
     for (i in seq_along(columnnames)) {
       old_col <- columnnames[i]
       new_col <- new_columnnames[i]
@@ -93,33 +99,113 @@ calculateDrugDiseaseMRPs <- function() {
     return(drug_disease_mrp_definition)
   }
 
-  # Check if drug_disease_mrp_definition must be expanded
-  # set must_expand to FALSE
-  must_expand <- FALSE
-  # load file info for drug-disease-mrp excel
-  file_info_drug_disease_mrp_definition <- file.info(readExcelFilePath(MRP_DEFINITION_FILE_DRUG_DISEASE))
-  # check if .RData files not exists or modification time is not equal -> set must_expand to TRUE
-  if (!etlutils::existsLocalRdataFile("mrp_definition_file_status") || !etlutils::existsLocalRdataFile("drug_disease_mrp_definition_expanded")) {
-    must_expand <- TRUE
-    mrp_definition_file_status <- list()
-  } else {
-    mrp_definition_file_status <- etlutils::polar_read_rdata("mrp_definition_file_status")
-    drug_disease_last_update <- mrp_definition_file_status[["drug_disease_last_update"]]
-    if (is.null(drug_disease_last_update) || file_info_drug_disease_mrp_definition$mtime != drug_disease_last_update) {
-      must_expand <- TRUE
+  calculateMRPsInternal <- function(drug_disease_mrp_definition_expanded) {
+    # load current relevant patient IDS per Ward
+    pids_per_ward <- loadPIDsPerWard()
+
+    result_mrps <- data.table()
+    for (pid in pids_per_ward$patient_id) {
+
+      getCurrentDiagnosesByICD <- function(pid, drug_disease_mrp_definition_expanded, current_time = Sys.time()) {
+
+
+      getCurrentDiagnosesByICD <- function(pid, drug_disease_mrp_definition_expanded, current_time = Sys.time()) {
+        # all resource datetimes are nromalized to UTC by the getResource() function -> normalize current_time too
+        current_time <- etlutils::normalizeTimeToUTC(current_time)
+        # 0. Get the table with all diagnoses ever made for the patient
+        conditions <- getConditionResources(pid)
+        # 1. Remove all irrelevant conditions (not contained in the MRP lists)
+        diagnoses <- unique(na.omit(drug_disease_mrp_definition_expanded$ICD))
+        diagnoses <- sort(unique(unlist(strsplit(diagnoses, "\\+"))))
+        conditions <- conditions[con_code_code %in% diagnoses]
+        #TODO: Wenn wir die Stati "completed, "inactive" etc. als mögliches Ende einer vorher gestellten Diagose beachten wollen, dürfen wir das wegwerfen aller nicht-"active" Diagnosen nicht machen
+        # 2. Remove all diagnoses that have a clinicalStatus and this is not 'active'
+        conditions <- conditions[is.na(con_clinicalstatus_code) || con_clinicalstatus_code == "active"]
+        # 3. Remove all diagnoses with a start time in the future (recordeddate is a datetime)
+        conditions <- conditions[con_recordeddate <= current_time]
+        # 4. Remove all diagnosis with an abatement time in the past
+        conditions <- conditions[is.na(con_abatementdatetime) || con_abatementdatetime >= current_time]
+        # 5. Remove all diagnoses that are no longer valid
+        #TODO: Wir müssen hier auch nach Diagnosen suchen, die durch ihren Status vorher gestellte Diagnosen der gleichen ICD beenden (siehe TODO an 2.). Es kann zu mehreren Zeitintervallen für eine Diagnose kommen.
+        #   Extract for every diagnosis code the validity period (duration) in days
+        diagnoses_durations <- drug_disease_mrp_definition_expanded[ICD %in% conditions$con_code_code]
+        diagnoses_durations <- etlutils::retainColumns(diagnoses_durations, c("ICD", "Geltungsdauer"))
+        diagnoses_durations[, Geltungsdauer := as.integer(Geltungsdauer)]
+        diagnoses_durations <- unique(diagnoses_durations)
+        #   Filter diagnoses_durations to only keep the longest duration for each ICD code (if there are conflicting durations for the same code)
+        diagnoses_durations[is.na(Geltungsdauer), Geltungsdauer := Inf] # Replace NA with Inf
+        diagnoses_durations <- diagnoses_durations[, .SD[which.max(Geltungsdauer)], by = ICD]
+        #   Perform a join between conditions and diagnoses_durations to add the duration to each diagnosis in conditions
+        conditions <- merge(conditions, diagnoses_durations, by.x = "con_code_code", by.y = "ICD", all.x = TRUE)
+        #   Calculate the validity end date for each diagnosis in conditions and filter based on a given current_time
+        #      R's Integer values have 32 bit. To calculate with dates by Integer values the absolut maximum date is
+        #      "2038-01-19 04:14:07 CET". To express infinite diagnosis duration we select a slightly lower date in the
+        #      far away future.
+        conditions[, con_validity_end := as.POSIXct(ifelse(is.infinite(Geltungsdauer), "9999-12-31 23:59:59", as.integer(con_recordeddate + Geltungsdauer * 3600 * 24)))]
+        conditions[, con_validity_end := as.POSIXct(ifelse(is.na(con_abatementdatetime), con_validity_end, min(con_abatementdatetime, con_validity_end)))]
+        #   remove all no longer valid conditions (con_validity_end in the past -> drop them)
+        conditions <- conditions[con_validity_end >= current_time]
+
+        # every interval will end MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE days in the from current_time
+        general_diagnosis_max_time <- getMaxTimeInFutureToCheckForMRPs(current_time)
+        # 6. Determine for every diagnosis from current_time until general_diagnosis_max_time which diagnoses applies
+        #   Create a list of vectors with the diagnosis code as name for the list elements and an interval for the
+        #   validity period of the diagnosis.
+        current_conditions <- list()
+        for (i in seq_len(nrow(conditions))) {
+          condition <- conditions[i]
+          diagnosis_min_time <- max(condition$con_recordeddate, current_time)
+          diagnosis_max_time <- min(general_diagnosis_max_time, condition$con_validity_end)
+          current_conditions[[condition$con_code_code]] <- lubridate::interval(diagnosis_min_time, diagnosis_max_time)
+        }
+        return(current_conditions)
+      }
+
+      current_conditions <- getCurrentDiagnosesByICD(pid, drug_disease_mrp_definition_expanded)
     }
+    return(result_mrps)
   }
-  if (must_expand) {
-    # read drug-disease-mrp excel as table list
-    drug_disease_mrp_definition <- readExcelFileAsTableListFromExtData(MRP_DEFINITION_FILE_DRUG_DISEASE)[["Drug_Disease_Pairs"]]
-    # clean and expand table list
-    drug_disease_mrp_definition_expanded <- cleanAndExpandDefinition(drug_disease_mrp_definition)
-    polar_write_rdata(drug_disease_mrp_definition_expanded)
-    # set modification date of drug-disease-mrp excel file to new list with drug_disease_last_update
-    mrp_definition_file_status[["drug_disease_last_update"]] <- file_info_drug_disease_mrp_definition$mtime
-    polar_write_rdata(mrp_definition_file_status)
-  }
-  if (!exists("drug_disease_mrp_definition_expanded")) {
-    drug_disease_mrp_definition_expanded <- etlutils::polar_read_rdata("drug_disease_mrp_definition_expanded")
-  }
+
+  etlutils::run_in_in("Check if drug_disease_mrp_definition must be expanded", {
+    # Check if drug_disease_mrp_definition must be expanded
+    # set must_expand to FALSE
+    must_expand <- FALSE
+    # load file info for drug-disease-mrp excel
+    file_info_drug_disease_mrp_definition <- file.info(readExcelFilePath(MRP_DEFINITION_FILE_DRUG_DISEASE))
+    # check if .RData files not exists or modification time is not equal -> set must_expand to TRUE
+    if (!etlutils::existsLocalRdataFile("mrp_definition_file_status") || !etlutils::existsLocalRdataFile("drug_disease_mrp_definition_expanded")) {
+      must_expand <- TRUE
+      mrp_definition_file_status <- list()
+    } else {
+      mrp_definition_file_status <- etlutils::polar_read_rdata("mrp_definition_file_status")
+      drug_disease_last_update <- mrp_definition_file_status[["drug_disease_last_update"]]
+      if (is.null(drug_disease_last_update) || file_info_drug_disease_mrp_definition$mtime != drug_disease_last_update) {
+        must_expand <- TRUE
+      }
+    }
+  })
+
+  etlutils::run_in_in("Expand drug_disease_mrp_definition", {
+    if (must_expand) {
+      # read drug-disease-mrp excel as table list
+      drug_disease_mrp_definition <- readExcelFileAsTableListFromExtData(MRP_DEFINITION_FILE_DRUG_DISEASE)[["Drug_Disease_Pairs"]]
+      # clean and expand table list
+      drug_disease_mrp_definition_expanded <- cleanAndExpandDefinition(drug_disease_mrp_definition)
+      polar_write_rdata(drug_disease_mrp_definition_expanded)
+      # set modification date of drug-disease-mrp excel file to new list with drug_disease_last_update
+      mrp_definition_file_status[["drug_disease_last_update"]] <- file_info_drug_disease_mrp_definition$mtime
+      polar_write_rdata(mrp_definition_file_status)
+    }
+  })
+
+  etlutils::run_in_in("Load expanded drug_disease_mrp_definition from file", {
+    if (!exists("drug_disease_mrp_definition_expanded")) {
+      drug_disease_mrp_definition_expanded <- etlutils::polar_read_rdata("drug_disease_mrp_definition_expanded")
+    }
+  })
+
+  etlutils::run_in_in("Calculate Drug Disease MRPs internal", {
+    calculateMRPsInternal(drug_disease_mrp_definition_expanded)
+  })
+
 }

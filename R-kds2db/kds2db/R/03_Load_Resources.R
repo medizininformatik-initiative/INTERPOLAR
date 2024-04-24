@@ -61,7 +61,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
 
   # Add additional table of ward-patient ID per date
-  #resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patient_IDs_per_ward)
+  resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patient_IDs_per_ward)
 
   return(resource_tables)
 }
@@ -133,6 +133,7 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
   resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   for (i in seq_along(resource_tables)) {
-    polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
+    polar_write_rdata(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }
+  return(resource_tables)
 }
