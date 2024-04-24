@@ -36,6 +36,7 @@ loadTables <- function(table_path, name_pattern = NA) {
 #'
 #' @export
 loadResourceTable <- function(table_name) {
+  table_name <- tolower(table_name)
   readRDS(paste0("./outputLocal/kds2db/tables/", table_name, ".RData"))
 }
 
