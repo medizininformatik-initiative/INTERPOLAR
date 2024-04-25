@@ -21,6 +21,8 @@ start_logging <- function(prefix) {
 #'
 #' This function finalizes the logging process by closing the log file.
 #'
+#' @param prefix Prefix for the log file name. If provided, the function will overwrite the existing log file after removing ANSI escape sequences.
+#'
 #' @return NULL
 #'
 #' @details
@@ -28,9 +30,28 @@ start_logging <- function(prefix) {
 #' It closes the log file, ensuring that no further entries are appended to it.
 #'
 #' @export
-end_logging <- function() {
+end_logging <- function(prefix = NA) {
   sink(type = "message")
   sink()
+  if (!isSimpleNA(prefix)) {
+    log_filename <- fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt"))
+    log_file <- file(log_filename, open = "rt")
+    # Read the content of the log file
+    log_content <- readLines(log_file, warn = FALSE)
+    close(log_file)
+    # append all single line strings to one large string
+    log_content <- paste0(log_content, collapse = '\n')
+    # Function to remove ANSI escape sequences from a text
+    remove_ansi <- function(text) {
+      gsub("\033\\[[0-9;]+m", "", text, perl = TRUE)
+    }
+    # Remove ANSI escape sequences from the content of the log file
+    log_content <- lapply(log_content, remove_ansi)[[1]]
+    # Write the cleaned content back to the log file, overwriting it
+    log_file <- file(log_filename, open = "wt")
+    writeLines(log_content, log_file, useBytes = TRUE)
+    close(log_file)
+  }
 }
 
 #' START__

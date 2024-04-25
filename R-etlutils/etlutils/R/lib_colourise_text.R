@@ -289,7 +289,7 @@ styled_string <- function( #old name str.
   codes <- paste0(c(codes, colors), collapse = ';')
 
   # only paste the strings, if no codes given, otherwise paste the strings and surround them with ansi-codes
-  if (0 < length(codes)){
+  if (length(codes)) {
     paste0('\033[', codes, 'm', paste(strings, collapse = sep), '\033[0m')
   } else {
     paste(strings, collapse = sep)

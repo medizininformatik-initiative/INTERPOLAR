@@ -67,5 +67,5 @@ retrieve <- function() {
   ###
   # Save all console logs
   ###
-  etlutils::end_logging()
+  etlutils::end_logging('retrieval-total')
 }

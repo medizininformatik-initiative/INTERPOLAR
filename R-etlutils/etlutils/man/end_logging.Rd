@@ -4,7 +4,10 @@
 \alias{end_logging}
 \title{End Logging}
 \usage{
-end_logging()
+end_logging(prefix = NA)
+}
+\arguments{
+\item{prefix}{Prefix for the log file name. If provided, the function will overwrite the existing log file after removing ANSI escape sequences.}
 }
 \description{
 This function finalizes the logging process by closing the log file.
