@@ -452,8 +452,25 @@ downloadAndCrackFHIRResources <- function(
                   max_bundles = bundles_at_once
                 ))
                 if (inherits(bundles, 'try-error')) {# if download fails return error stored in variable bundle
-                  bundles
+                  if (0 < verbose) {
+                    cat(
+                      styled_string(
+                        'Bundles for the following IDs could not be downloaded:',
+                        element,
+                        "Request with error:",
+                        fhircrackr::fhir_current_request(),
+                        fg = 1,
+                        bold = TRUE,
+                        sep = "\n"
+                      ),
+                      '\n',
+                      pkg$ids
+                    )
+                    cat(styled_string('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
+                  }
                 } else {# if download was successful
+                  cat("Request:\n", bundles[[1]]@self_link, "\n")
+                  fhircrackr::fhir_current_request()
                   try(fhircrackr::fhir_serialize(bundles)) # return serialized bundles due to stable addressing
                 }
               } else {# return nothing
@@ -724,8 +741,11 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                     styled_string(
                       'Bundles for the following IDs could not be downloaded:',
                       element,
+                      "Request with error:",
+                      fhircrackr::fhir_current_request(),
                       fg = 1,
-                      bold = TRUE
+                      bold = TRUE,
+                      sep = "\n"
                     ),
                     '\n',
                     pkg$ids
@@ -735,6 +755,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 Sys.sleep(WAIT_TIMES[[trial]])
                 trial <- trial + 1
               } else {
+                cat("Request:\n", bundles[[1]]@self_link, "\n")
                 break
               }
             }
