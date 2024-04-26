@@ -43,7 +43,7 @@ end_logging <- function(prefix = NA) {
     log_content <- paste0(log_content, collapse = '\n')
     # Function to remove ANSI escape sequences from a text
     remove_ansi <- function(text) {
-      gsub("\033\\[[0-9;]+m", "", text, perl = TRUE)
+      gsub("\033\\[[0-9;]*m", "", text, perl = TRUE)
     }
     # Remove ANSI escape sequences from the content of the log file
     log_content <- lapply(log_content, remove_ansi)[[1]]
