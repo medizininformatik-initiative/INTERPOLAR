@@ -99,21 +99,11 @@ combineBundlePaths <- function(path) {
 
 #' Save a Clock history in the *public* `performance` directory to which was created for the specific subproject.
 #'
-#' clock_$reset()
-#' clock_$measure_process_time("Some Process", {for(i in 1:1000)function(n)mean(cos(1:n))})
-#' clock_
-#' polar_save_performance(filename_without_extension = "some_process")
-#' my_clock <- clock()
-#' my_clock$measure_process_time("Some different Process", {for(i in 1:1000)function(n)mean(cos(1:n))})
-#' my_clock
-#' save_performance(filename_without_extension = "some_differen_process", clock = my_clock)
-#'
 #' @param filename_without_extension A character vector of length one.
 #' @param clock A `Clock` object. Defaults to the global environment `Clock` object `clock_`.
 #'
-#' @return Nothing.
 #' @export
-save_performance <- function(filename_without_extension, clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
+savePerformance <- function(filename_without_extension, clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }

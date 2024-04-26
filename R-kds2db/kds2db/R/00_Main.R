@@ -63,6 +63,8 @@ retrieve <- function() {
   })
   etlutils::printClock()
   warnings()
+  # Save performance table
+  etlutils::savePerformance("Performance_informations")
   etlutils::END__()
   ###
   # Save all console logs
