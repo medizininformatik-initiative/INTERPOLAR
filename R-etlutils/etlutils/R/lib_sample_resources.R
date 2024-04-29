@@ -5,7 +5,7 @@
 #' @return A character string representing the operating system name.
 #'
 #' @export
-get_os <- function() {
+getOperationSystem <- function() {
   sysinf <- Sys.info()
   if (!is.null(sysinf)) {
     os <- sysinf[['sysname']]
@@ -29,7 +29,7 @@ get_os <- function() {
 #' @return An integer specifying the number of cores available for parallelization.
 #'
 #' @export
-get_ncores <- function(os) {
+getAvailableCoreNumber <- function(os) {
   n_cores <- if (os %in% c("linux", "osx")) parallel::detectCores() else 1
   if (0 < MAX_CORES) min(n_cores, MAX_CORES) else n_cores
 }
@@ -42,33 +42,49 @@ get_ncores <- function(os) {
 #' @return An integer representing the limited number of cores.
 #'
 #' @export
-limit_ncores <- function(ncores) {
-  os <- get_os()
-  available_cores <- get_ncores(os)
+limitAvailableCoreNumber <- function(ncores) {
+  os <- getOperationSystem()
+  available_cores <- getAvailableCoreNumber(os)
   if (is.null(ncores)) 1 else min(c(available_cores, ncores))
 }
 
-#' Refresh FHIR-Server authentication Token
+#' Refresh FHIR Token
 #'
-#' This function refreshes the FHIR-Server authentication token by making a request to the specified token refresh URL.
+#' This function refreshes the FHIR token if it is defined.
 #'
-#' @return A character string representing the refreshed FHIR-Server authentication token.
+#' @details
+#' If the FHIR_TOKEN is defined, the function attempts to refresh it using the \code{refreshFHIRToken} function.
 #'
 #' @export
-polar_refresh_token <- function() {
+refreshFHIRToken <- function() {
 
-  if (FHIR_TOKEN_REFRESH_URL == '' || FHIR_TOKEN_REFRESH_USER == '' || FHIR_TOKEN_REFRESH_PASSWORD == '') {return ("")}
+  # Refresh FHIR-Server authentication Token
+  #
+  # This function refreshes the FHIR-Server authentication token by making a request to the specified token refresh URL.
+  #
+  # @return A character string representing the refreshed FHIR-Server authentication token.
+  #
+  refreshFHIRTokenInternal <- function() {
+    if (FHIR_TOKEN_REFRESH_URL == '' || FHIR_TOKEN_REFRESH_USER == '' || FHIR_TOKEN_REFRESH_PASSWORD == '') {
+      return ("")
+    }
+    # Token call
+    response <- httr::GET(
+      url = FHIR_TOKEN_REFRESH_URL,
+      httr::authenticate(
+        user = FHIR_TOKEN_REFRESH_USER,
+        password = FHIR_TOKEN_REFRESH_PASSWORD
+      ))
+    # Token as payload
+    httr::content(response, as = "text")
+  }
 
-  #Token call
-  response <- httr::GET(
-    url = FHIR_TOKEN_REFRESH_URL,
-    httr::authenticate(
-      user = FHIR_TOKEN_REFRESH_USER,
-      password = FHIR_TOKEN_REFRESH_PASSWORD
-    ))
-
-  #Token as payload
-  httr::content(response, as = "text")
+  # refresh token, if defined
+  if (FHIR_TOKEN != '') {
+    run_in_in_ignore_error('Refresh FHIR_TOKEN', {
+      FHIR_TOKEN <- refreshFHIRTokenInternal()
+    })
+  }
 }
 
 #' Paste Parameters for a FHIR Search Request
@@ -83,7 +99,7 @@ polar_refresh_token <- function() {
 #'
 #' @return A character of length 1 representing the pasted parameter string.
 #' @export
-paste_parameters <- function(parameters = NULL, parameters2add = NULL, add_question_sign = F) {
+pasteFHIRSearchParams <- function(parameters = NULL, parameters2add = NULL, add_question_sign = F) {
   # convert list names and elements to a string of the form name1=element2&name1=element2&...
   convert <- function(arg) {
     n <- names(arg)
@@ -139,7 +155,7 @@ paste_parameters <- function(parameters = NULL, parameters2add = NULL, add_quest
 #' @return An integer of length 1 containing the number of resources named `resource`
 #' filtered by parameters available on the FHIR R4 endpoint.
 #' @export
-polar_get_resources_count <- function(endpoint, resource, parameters = NULL, verbose = 0) {
+getResourcesCounts <- function(endpoint, resource, parameters = NULL, verbose = 0) {
   as.numeric(# return as number
     xml2::xml_attr(# get attribute "value" of found xml tag "total"
       xml2::xml_find_first(# find first occurrence of tag "total"
@@ -147,7 +163,7 @@ polar_get_resources_count <- function(endpoint, resource, parameters = NULL, ver
           fhircrackr::fhir_url(
             url = endpoint,
             resource = resource,
-            parameters = paste_parameters(parameters = parameters, parameters2add = c("_summary" = "count"), add_question_sign = F),
+            parameters = pasteFHIRSearchParams(parameters = parameters, parameters2add = c("_summary" = "count"), add_question_sign = F),
           ),
           verbose = verbose
         )[[1]],
@@ -168,15 +184,15 @@ polar_get_resources_count <- function(endpoint, resource, parameters = NULL, ver
 #'
 #' @return A character containing the IDs all requested Resources.
 #' @export
-polar_get_resources_ids <- function(endpoint, resource, parameters = NULL, verbose = 0) {
+getResourcesIDs <- function(endpoint, resource, parameters = NULL, verbose = 0) {
   if (0 < verbose) {
     cat(
       paste0(
         "Download ",
-        polar_get_resources_count(
+        getResourcesCounts(
           endpoint = endpoint,
           resource = resource,
-          parameters = paste_parameters(parameters)
+          parameters = pasteFHIRSearchParams(parameters)
         ),
         " ",
         resource,
@@ -189,7 +205,7 @@ polar_get_resources_ids <- function(endpoint, resource, parameters = NULL, verbo
       url <- fhircrackr::fhir_url(
         url = endpoint,
         resource = resource,
-        parameters = paste_parameters(parameters, c("_elements" = "id", "_count" = "500"))
+        parameters = pasteFHIRSearchParams(parameters, c("_elements" = "id", "_count" = "500"))
       ),
       verbose = verbose
     )
@@ -237,15 +253,15 @@ polar_get_resources_ids <- function(endpoint, resource, parameters = NULL, verbo
 #'
 #' @return A list of FHIR resources in the form of a fhir_bundle_list.
 #' @export
-polar_get_resources_by_ids <- function(
+getResourcesByIDs <- function(
     endpoint,
     resource,
     ids,
     id_param_str = '_id',
-    parameters   = fhir_url_add_common_request_params(c()),
+    parameters   = addParamToFHIRRequest(c()),
     verbose      = 0
 ) {
-  polar_get_resources_by_ids_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
+  getResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
     collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_LEN - RES_LEN) {
       if (length(ids) < 1) {# if there are no more ids to stringify
@@ -285,7 +301,7 @@ polar_get_resources_by_ids <- function(
       # build request string of maximal max_ids ids
       ids_ <- collect_ids_for_request(ids = ids, max_ids = length(ids))
       # create request with list of resource ids to get from server
-      url_ <- fhircrackr::fhir_url(endpoint, resource, paste_parameters(paste0(id_param_str, "=", ids_$str), fhir_url_add_common_request_params(parameters)))
+      url_ <- fhircrackr::fhir_url(endpoint, resource, pasteFHIRSearchParams(paste0(id_param_str, "=", ids_$str), addParamToFHIRRequest(parameters)))
       # get bundle
       bnd_ <- polar_fhir_search(request = url_, verbose = verbose)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
@@ -301,7 +317,7 @@ polar_get_resources_by_ids <- function(
     }
     fhircrackr::fhir_bundle_list(bundles) # return bundles list as fhir_crackr class bundle_list
   }
-  polar_get_resources_by_ids_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
+  getResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     parameters_list <- list(paste0(ids, collapse = ","), COUNT_PER_BUNDLE) # add all ids
     names(parameters_list) <- c(id_param_str, '_count') # name arguments
     polar_fhir_search(
@@ -311,7 +327,7 @@ polar_get_resources_by_ids <- function(
         url_enc  = TRUE
       ),
       body    = fhircrackr::fhir_body(
-        content = paste_parameters(
+        content = pasteFHIRSearchParams(
           parameters     = parameters_list,
           parameters2add = parameters
         ),
@@ -323,7 +339,7 @@ polar_get_resources_by_ids <- function(
 
   # if getting resources via post fails, the try to get them via get
   bundles <- try(
-    polar_get_resources_by_ids_post(
+    getResourcesByIDs_post(
       endpoint   = endpoint,
       resource   = resource,
       ids        = ids,
@@ -334,7 +350,7 @@ polar_get_resources_by_ids <- function(
 
   if (inherits(bundles, "try-error")) {
     if (0 < verbose) cat("Getting Bundles via POST failed. Try to get them via GET.\n")
-    bundles <- polar_get_resources_by_ids_get(
+    bundles <- getResourcesByIDs_get(
       endpoint   = endpoint,
       resource   = resource,
       ids        = ids,
@@ -345,78 +361,6 @@ polar_get_resources_by_ids <- function(
   }
 
   bundles
-}
-
-#' Sample Identified FHIR Resources
-#'
-#' This function samples identified FHIR resources by randomly selecting a subset of IDs.
-#' It retrieves the sampled resources using the provided endpoint, resource, and parameters.
-#'
-#' @param endpoint The FHIR server endpoint URL.
-#' @param resource The name of the FHIR resource to sample.
-#' @param ids A vector of identifiers for the FHIR resources.
-#' @param parameters Additional parameters for the FHIR resource query (optional).
-#' @param sample_size The size of the sample to retrieve.
-#' @param seed The seed for the random number generator to ensure reproducibility (optional).
-#' @param verbose The level of verbosity for logging (default is 1).
-#'
-#' @return A list of sampled FHIR resources.
-#' @export
-polar_sample_identified_resources <- function(
-    endpoint,
-    resource,
-    ids,
-    parameters  = NULL,
-    sample_size = 20,
-    seed        = as.double(Sys.time()),
-    verbose     = 1
-) {
-  if (length(ids) < sample_size) {# if size of sample is smaller than number of ids
-    stop("The sample must be smaller or equal than the population size.")
-  }
-  set.seed(seed = seed)
-  ids <- try(sample(ids, sample_size, replace = FALSE)) # sample sample_size ids
-  if (inherits(ids, "try-error")) {
-    stop("The sample must be smaller or equal than the population size.")
-  }
-  # get the resources by their ids
-  polar_get_resources_by_ids(endpoint = endpoint, resource = resource, ids = ids, parameters = parameters, verbose = verbose)
-}
-
-#' Sample Resources of certain IDs
-#'
-#' @param endpoint A character of length 1 containing the FHIR R4 endpoint.
-#' @param resource A character of length 1 containing the Resource's name.
-#' @param parameters Either a character of length 1 containing the parameter string or
-#' a named vector of the form c("gender" = "male", "_summary" = "count").
-#' @param sample_size A integer of length 1 containing the size of the sample.
-#' @param seed A integer of length 1 containing the seed for the random generator.
-#' @param verbose An integer of length 1 containing the level of verbosity. Defaults to 1.
-#'
-#' @return A list of bundles containing sampled resources.
-#' @export
-polar_sample_resources <- function(
-    endpoint,
-    resource,
-    parameters  = parameters,
-    sample_size = 20,
-    seed        = as.double(Sys.time()),
-    verbose     = 1
-) {
-  cnt <- polar_get_resources_count(endpoint = endpoint, resource = resource, parameters = parameters, verbose = verbose)
-  if (cnt < sample_size) {# sample size must be smaller of resource on server
-    stop(paste0("The sample size ", sample_size, " must be smaller or equal than the population size ", cnt, "."))
-  }
-  # get ids of resource
-  ids <- polar_get_resources_ids(endpoint = endpoint, resource = resource, parameters = parameters, verbose = verbose)
-  polar_sample_identified_resources(# get a sample of size sample_size
-    endpoint = endpoint,
-    resource = resource,
-    ids = ids,
-    sample_size = sample_size,
-    seed = seed,
-    verbose = verbose
-  )
 }
 
 #' Download and Crack FHIR Resources in Parallel
@@ -433,7 +377,7 @@ polar_sample_resources <- function(
 #'
 #' @return A data.table containing the cracked FHIR resource data.
 #' @export
-polar_download_and_crack_parallel <- function(
+downloadAndCrackFHIRResources <- function(
     request           = REQUEST_ENCOUNTER,
     table_description = TABLE_DESCRIPTION$Encounter,
     bundles_at_once   = 20,
@@ -470,21 +414,21 @@ polar_download_and_crack_parallel <- function(
     if (0 < verbose) {
       if (!is.null(pkg$request) && !is.null(pkg$bundles)) {
         cat(paste0(
-          'Download of ', verbose_numbers(i + 1), ' ', bundles_at_once, ' bundle', plural_s(bundles_at_once),
+          'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
           ' (FHIR Resource: ', as.character(table_description@resource), ' ',
           substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
-          ' and Crack of ', verbose_numbers(i), ' ', length(pkg$bundles), ' bundle', plural_s(length(pkg$bundles)), '.\n'
+          ' and Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
         ))
       } else if (!is.null(pkg$request) && is.null(pkg$bundles)) {
         cat(paste0(
-          'Download of ', verbose_numbers(i + 1), ' ', bundles_at_once, ' bundle', plural_s(bundles_at_once),
+          'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
           ' (FHIR Resource: ', as.character(table_description@resource), ' ',
           substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
           '.\n'
         ))
       } else {
         cat(paste0(
-          'Crack of ', verbose_numbers(i), ' ', length(pkg$bundles), ' bundle', plural_s(length(pkg$bundles)), '.\n'
+          'Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
         ))
       }
     }
@@ -493,7 +437,7 @@ polar_download_and_crack_parallel <- function(
 
     while (trial <= max_trials && !succ) {
       pkg <- parallel::mclapply(# parallel apply with max max_cores cores if available
-        mc.cores = limit_ncores(max_cores),
+        mc.cores = limitAvailableCoreNumber(max_cores),
         X        = namedListByValue(names(pkg)),
         # alternating function
         FUN      = function(n) {# n <- names(pkg)[[1]]
@@ -626,7 +570,7 @@ polar_download_and_crack_parallel <- function(
 #'
 #' @return A data.table containing the cracked FHIR resources.
 #' @export
-polar_download_by_ids_and_crack_parallel <- function(
+downloadAndCrackFHIRResourcesByPIDs <- function(
     resource,
     ids,
     table_description,
@@ -677,8 +621,8 @@ polar_download_by_ids_and_crack_parallel <- function(
     return(complete_table(data.table::data.table(), table_description))
   }
 
-  os <- get_os()
-  ncores <- get_ncores(os)
+  os <- getOperationSystem()
+  ncores <- getAvailableCoreNumber(os)
   if (1 < verbose) {
     cat(paste0(
       'OS:    ',
@@ -724,19 +668,19 @@ polar_download_by_ids_and_crack_parallel <- function(
     if (0 < verbose) {
       if (any(sapply(pkg, is.character)) && any(!sapply(pkg, is.character))) {
         cat(paste0(
-          'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
+          'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
           ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
-          ' and Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
+          ' and Crack of ', convertVerboseNumbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', getPluralSuffix(curr_len_recent), '.\n'
         ))
       } else if (any(sapply(pkg, is.character))) {
         cat(paste0(
-          'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
+          'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
           ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
           '\n'
         ))
       } else {
         cat(paste0(
-          'Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
+          'Crack of ', convertVerboseNumbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', getPluralSuffix(curr_len_recent), '.\n'
         ))
       }
     }
@@ -766,7 +710,7 @@ polar_download_by_ids_and_crack_parallel <- function(
           if (0 < length(element)) {
             trial <- 1
             while (trial <= max_trials) {
-              bundles <- try(polar_get_resources_by_ids(
+              bundles <- try(getResourcesByIDs(
                 endpoint     = FHIR_SERVER_ENDPOINT,
                 resource     = resource,
                 ids          = element,
@@ -799,7 +743,7 @@ polar_download_by_ids_and_crack_parallel <- function(
                 cat(
                   styled_string(
                     trial,
-                    verbose_numbers(trial),
+                    convertVerboseNumbers(trial),
                     'attempt to Download Bundle failed. Bundle is lost. ',
                     'Please note! This may cause further Problems.',
                     fg = 1,
@@ -848,50 +792,96 @@ polar_download_by_ids_and_crack_parallel <- function(
   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
+#' Load Resources by Their Own IDs
+#'
+#' This function downloads and processes resources specified by their IDs. It uses a parallel
+#' downloading and cracking method tailored for handling resources described in a table structure.
+#' The function is part of a larger workflow designed to work with polar data resources.
+#'
+#' @param ids A vector of resource IDs. These should be the unique identifiers for the resources you
+#' wish to download and process. The function expects these IDs to be in a specific format, where
+#' the actual ID follows the last slash ("/") in each string.
+#' @param table_description An object containing the description of the table where the resources
+#' are to be found. This object must have a specific structure, including a resource slot that
+#' contains the URL or identifier needed for downloading the resources.
+#'
+#' @return Returns a table of the downloaded resources, processed and cracked open according to the
+#' specifications in `table_description`. The exact structure of the returned table depends on the
+#' `table_description` parameter and the data processing within `downloadAndCrackFHIRResourcesByPIDs`.
+#'
+#' @export
+loadFHIRResourcesByOwnID <- function(ids, table_description) {
+  resource <- table_description@resource@.Data
+  resource_table <- downloadAndCrackFHIRResourcesByPIDs(
+    resource = resource,
+    id_param_str = '_id',
+    ids = getAfterLastSlash(ids),
+    table_description = table_description,
+    verbose = VERBOSE
+  )
+  return(resource_table)
+}
+
+#' Load Resources by Patient IDs
+#'
+#' This function is designed to load resources based on patient IDs. It checks if the requested
+#' resource is "Patient" and uses a specific loading function or the general downloading and
+#' cracking function for other types of resources. It's tailored for handling resources described
+#' in a table structure, specifically for patient-related data.
+#'
+#' @param patient_IDs A vector of patient IDs, which are the unique identifiers for the patients
+#' whose resources you wish to download and process.
+#' @param table_description An object describing the table where the resources are to be found.
+#' This object must have a specific structure, including a resource slot that contains the URL or
+#' identifier needed for downloading the resources.
+#'
+#' @return Returns a table of the downloaded resources, processed according to the specifications
+#' in `table_description`. The function handles different types of resources by adapting the ID
+#' parameter string based on the resource type, ensuring correct processing.
+#'
+#' @export
+loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
+  resource <- table_description@resource@.Data
+  if (resource == "Patient") {
+    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description)
+  } else {
+    resource_table <- downloadAndCrackFHIRResourcesByPIDs(
+      resource = resource,
+      id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
+      ids = patient_IDs,
+      table_description = table_description,
+      verbose = VERBOSE
+    )
+  }
+  return(resource_table)
+}
+
 #' Download FHIR resources by patient IDs and perform parallel cracking for each resource type.
 #'
 #' This function iterates over the resource types defined in table_description, and for each resource type,
-#' it calls the polar_download_by_ids_and_crack_parallel function to download and crack FHIR resources
+#' it calls the downloadAndCrackFHIRResourcesByPIDs function to download and crack FHIR resources
 #' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
 #'
-#' @param patientIDs A vector of patient IDs for whom FHIR resources should be retrieved.
-#' @param table_description A list of table descriptions for different FHIR resource types.
+#' @param patient_IDs A vector of patient IDs for whom FHIR resources should be retrieved.
+#' @param table_descriptions A list of table descriptions for different FHIR resource types.
 #'
-#' @return A list containing tables for each resource type, with resource type names as keys.
+#' @return A list containing a table for each resource type, with resource type names as keys.
 #' @export
-loadResourcesByPID <- function(patientIDs, table_description) {
-
-  table_name_to_tables <- list()
-
-  for (resource in names(table_description)) {
-    # Just for "Patient": The ID is the reference to the patient itself
-    if (resource == "Patient") {
-      resource_table <- polar_download_by_ids_and_crack_parallel(
-        resource = resource,
-        id_param_str = '_id',
-        ids = getAfterLastSlash(patientIDs),
-        table_description = table_description[[resource]],
-        verbose = VERBOSE
-      )
-    } else {
-      resource_table <- polar_download_by_ids_and_crack_parallel(
-        resource = resource,
-        id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
-        ids = patientIDs,
-        table_description = table_description[[resource]],
-        verbose = VERBOSE
-      )
-    }
+loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
+  resource_name_to_resources <- list()
+  for (table_description in table_descriptions) {
+    resource_table <- loadFHIRResourcesByPID(patient_IDs, table_description)
     if (!isSimpleNA(resource_table)) {
-      table_name_to_tables[[resource]] <- resource_table
+      resource <- table_description@resource@.Data
+      resource_name_to_resources[[resource]] <- resource_table
       if (nrow(resource_table)) {
-        print_table_if_all(resource_table, resource)
+        printAllTables(resource_table, resource)
       } else {
         cat_info(paste("Info: No", resource, "resources found for the given Patient IDs.\n"))
       }
     }
   }
-  table_name_to_tables
+  resource_name_to_resources
 }
 
 #' Add Common Parameters to FHIR Resource Request
@@ -903,7 +893,7 @@ loadResourcesByPID <- function(patientIDs, table_description) {
 #' @return A modified list of FHIR resource query parameters with common parameters added.
 #'
 #' @export
-fhir_url_add_common_request_params <- function(parameters = NULL) {
+addParamToFHIRRequest <- function(parameters = NULL) {
   parameters <- parameters[!is.na(parameters)]
   if (!'_count' %in% names(parameters) && exists('COUNT_PER_BUNDLE') && !is.null(COUNT_PER_BUNDLE) && !is.na(COUNT_PER_BUNDLE) && COUNT_PER_BUNDLE != '') {
     parameters <- c(parameters, c('_count' = COUNT_PER_BUNDLE))
@@ -913,289 +903,3 @@ fhir_url_add_common_request_params <- function(parameters = NULL) {
   }
   parameters
 }
-
-#' #' Download and Crack FHIR Resources in Parallel by IDs
-#' #'
-#' #' This function downloads FHIR resources by specified IDs and cracks the bundles in parallel.
-#' #'
-#' #' @param resource The FHIR resource type (e.g., 'Patient').
-#' #' @param ids A vector of resource IDs to download.
-#' #' @param table_description The description of the expected table structure for the resource.
-#' #' @param ids_at_once The maximum number of IDs to process in a single iteration.
-#' #' @param id_param_str The parameter string used for IDs in the FHIR request URL.
-#' #' @param verbose An integer specifying the verbosity level.
-#' #'
-#' #' @return A data.table containing the cracked FHIR resource data.
-#' #'
-#' #' @export
-#' polar_download_by_ids_and_crack_parallel <- function(
-#'   resource          = 'Patient',
-#'   ids               = patient_refs_ids,
-#'   table_description = TABLE_DESCRIPTION$Patient,
-#'   ids_at_once       = 100,
-#'   id_param_str      = '_id',
-#'   verbose           = 1
-#' ) {
-#'   WAIT_TIMES <- 2 ** (0 : 7)
-#'   max_trials <- length(WAIT_TIMES)
-#'
-#'   verbose <- max(c(0, verbose))
-#'   request <- fhir_url(
-#'     url        = FHIR_ENDPOINT,
-#'     resource   = resource,
-#'     parameters = c(
-#'       '_summary' = 'count',
-#'       '_count'   = '1'
-#'     ),
-#'     url_enc = TRUE
-#'   )
-#'   bndls <- try(
-#'     polar_fhir_search(
-#'       request    = request,
-#'       log_errors = paste0(resource, 'Availability-Test-error.xml'),
-#'       verbose    = verbose
-#'     )
-#'   )
-#'   if (VL_90_FHIR_RESPONSE <= VERBOSE) {
-#'     print (bndls)
-#'   }
-#'   total <- if (inherits(bndls, 'try-error')) {
-#'     if (0 < verbose) {
-#'       cat(str.('\nAvailability-Check failed.', fg = 1), '\n')
-#'     }
-#'     0
-#'   } else {
-#'     as.numeric(xml_attr(xml_find_all(bndls[[1]], '//total'), 'value'))
-#'   }
-#'   if (total < 1) {
-#'     if (0 < verbose) cat_red(paste0('No ', resource, 's found. Return empty Table. Please note! This may cause further problems.\n'))
-#'     return(complete_table(data.table::data.table(), table_description))
-#'   }
-#'
-#'   curr_len <- min(ids_at_once, length(ids))
-#'
-#'   if (curr_len < 1) {# if no ids for download. return empty data.table with required columns
-#'     return(complete_table(data.table::data.table(), table_description))
-#'   }
-#'
-#'   os <- get_os()
-#'   ncores <- get_ncores(os)
-#'   if (1 < verbose) {
-#'     cat(paste0(
-#'       'OS:    ',
-#'       str.(os, bold = TRUE),
-#'       '\nCores: ',
-#'       str.(ncores, bold = TRUE),
-#'       '\n'
-#'     ))
-#'   }
-#'   mb <- MAX_ENCOUNTER_BUNDLES # for later restoring
-#'   MAX_ENCOUNTER_BUNDLES <<- Inf
-#'   run <- 0
-#'   tables <- list()
-#'   pkg <- list()
-#'
-#'   curr_len_recent <- 0
-#'   seq_ids  <- seq_len(curr_len)
-#'   curr_ids <- ids[seq_ids]
-#'   ids      <- ids[-seq_ids]
-#'
-#'   pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
-#'
-#'   if (1 < ncores) {# split ids on cores
-#'     for (nc in seq_len(ncores - 1)) {#nc <- seq_len(ncores - 2)
-#'
-#'       curr_len <- min(ids_at_once, length(ids))
-#'       seq_ids  <- seq_len(curr_len)
-#'       curr_ids <- ids[seq_ids]
-#'       ids      <- ids[-seq_ids]
-#'
-#'       pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
-#'     }
-#'   }
-#'
-#'   # if there elements in pkg and at least one of them has a positive length
-#'   while (0 < length(pkg) && any(0 < sapply(pkg, length))) {
-#'
-#'     requests <- sapply(pkg, is.character)
-#'     bndl_lengths <- if (0 < sum(requests)) {
-#'       sum(sapply(pkg[requests], length))
-#'     } else 0
-#'
-#'     if (0 < verbose) {
-#'       if (any(sapply(pkg, is.character)) && any(!sapply(pkg, is.character))) {
-#'         cat(paste0(
-#'           'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
-#'           ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
-#'           ' and Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
-#'         ))
-#'       } else if (any(sapply(pkg, is.character))) {
-#'         cat(paste0(
-#'           'Download of ', verbose_numbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', plural_s(bndl_lengths),
-#'           ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
-#'           '\n'
-#'         ))
-#'       } else {
-#'         cat(paste0(
-#'           'Crack of ', verbose_numbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', plural_s(curr_len_recent), '.\n'
-#'         ))
-#'       }
-#'     }
-#'
-#'     pkg <- mclapply(
-#'       mc.cores = ncores,
-#'       X        = pkg,
-#'       FUN      = function(element) {# element <- pkg[[1]]
-#'         if (!inherits(element, 'character')) {
-#'           unserialized_bundle <- try(lapply(element, fhir_unserialize))
-#'           if (inherits(unserialized_bundle, 'try-error')) {
-#'             unserialized_bundle
-#'           } else {
-#'             try({
-#'               data.table::rbindlist(
-#'                 l         = lapply(
-#'                   unserialized_bundle,
-#'                   function(b) {
-#'                     fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
-#'                   }
-#'                 ),
-#'                 fill      = TRUE,
-#'                 use.names = TRUE
-#'               )
-#'             })
-#'           }
-#'         } else {
-#'           if (0 < length(element)) {
-#'             trial <- 1
-#'             while (trial <= max_trials) {
-#'               bundles <- try(polar_get_resources_by_ids(
-#'                 endpoint     = FHIR_ENDPOINT,
-#'                 resource     = resource,
-#'                 ids          = element,
-#'                 id_param_str = id_param_str,
-#'                 parameters   = NULL,
-#'                 verbose      = verbose
-#'               ))
-#'               if (inherits(bundles, 'try-error')) {
-#'                 if (0 < verbose) {
-#'                   cat(
-#'                     str.(
-#'                       'Bundles for the following IDs could not be downloaded:',
-#'                       element,
-#'                       fg = 1,
-#'                       bold = TRUE
-#'                     ),
-#'                     '\n',
-#'                     pkg$ids
-#'                   )
-#'                   cat(str.('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
-#'                 }
-#'                 Sys.sleep(WAIT_TIMES[[trial]])
-#'                 trial <- trial + 1
-#'               } else {
-#'                 break
-#'               }
-#'             }
-#'             if (max_trials < trial) {
-#'               if (0 < verbose) {
-#'                 cat(
-#'                   str.(
-#'                     trial,
-#'                     verbose_numbers(trial),
-#'                     'attempt to Download Bundle failed. Bundle is lost. ',
-#'                     'Please note! This may cause further Problems.',
-#'                     fg = 1,
-#'                     bold = TRUE
-#'                   ),
-#'                   '\n'
-#'                 )
-#'               }
-#'               NULL
-#'             } else {
-#'               try(fhir_serialize(bundles))
-#'             }
-#'           }
-#'         }
-#'       }
-#'     )
-#'
-#'     for (dt in pkg[sapply(pkg, inherits, 'data.table')]) {
-#'       tables <- c(tables, list(dt))
-#'     }
-#'
-#'     pkg <- list(pkg[sapply(pkg, inherits, 'fhir_bundle_list')])
-#'
-#'     curr_len_recent <- bndl_lengths
-#'     curr_len <- min(ids_at_once, length(ids))
-#'     seq_ids  <- seq_len(curr_len)
-#'     curr_ids <- ids[seq_ids]
-#'     ids      <- ids[-seq_ids]
-#'     pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
-#'
-#'     if (2 < ncores) {
-#'       for (nc in seq_len(ncores - 2)) {#nc <- seq_len(ncores - 1)[[1]]
-#'         curr_len <- min(ids_at_once, length(ids))
-#'         seq_ids  <- seq_len(curr_len)
-#'         curr_ids <- ids[seq_ids]
-#'         ids      <- ids[-seq_ids]
-#'
-#'         pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
-#' #        nc <- nc + 1
-#'       }
-#'     }
-#'
-#'     run <- run + 1
-#'   }
-#'   MAX_ENCOUNTER_BUNDLES <<- mb
-#'   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
-#' }
-#'
-#' #' Download and Crack FHIR Resources with Maximum Length Limit
-#' #'
-#' #' This function downloads FHIR resources by splitting the IDs into chunks and making parallel requests.
-#' #' It then cracks the bundles in parallel.
-#' #'
-#' #' @param refs_ids A list of FHIR resource IDs to download.
-#' #' @param refs_name The name associated with the resource IDs.
-#' #' @param res_name The name of the FHIR resource to download.
-#' #' @param table_description The description of the expected table structure for the resource.
-#' #'
-#' #' @return A data.table containing the cracked FHIR resource data.
-#' #'
-#' #' @export
-#' polar_download_by_ids_and_crack_with_max_len <- function(refs_ids, refs_name, res_name, table_description) {
-#'
-#'   cat("polar_download_by_ids_and_crack_with_max_len refs_name:",refs_name,"res_name:",res_name,"\n")
-#'   n.split <- ceiling( seq_along(refs_ids) / ( (MAX_LEN-RES_LEN-nchar(FHIR_ENDPOINT) ) / nchar(refs_ids[[1]])))
-#'   split.ids <- split(refs_ids, n.split)
-#'
-#'   os <- get_os()
-#'
-#'   tables <- mclapply(
-#'     X = split.ids,
-#'     mc.cores = limit_ncores(get_ncores(os)),
-#'     FUN = function (X) {
-#'
-#'       X = paste(X, collapse=",")
-#'       names(X) = refs_name
-#'
-#'       request <- fhir_url(
-#'         url        = FHIR_ENDPOINT,
-#'         resource   = res_name,
-#'         parameters = fhir_url_add_common_request_params(X)
-#'       )
-#'
-#'       polar_download_and_crack_parallel(
-#'         request           = request,
-#'         table_description = table_description,
-#'         bundles_at_once   = BUNDLES_AT_ONCE,
-#'         bundles_left      = Inf,
-#'         log_errors        = paste0(tolower(substr(res_name,1,3)),'_error.xml'),
-#'         max_cores         = 1, #avoid double parallelization with inner mclapply
-#'         verbose           = VERBOSE - VL_70_DOWNLOAD
-#'       )
-#'     }
-#'   )
-#'
-#'   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
-#' }

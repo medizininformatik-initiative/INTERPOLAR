@@ -176,6 +176,11 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       }
       new_table <- rbind(new_table, table[(row + 1):nrow(table)], fill = TRUE)
 
+      # Only for References: If the reference_type column is filled for a Reference
+      # which should be expanded -> write the reference_type column value also to
+      # the first column of the expanded reference
+      new_table[row, reference_types := table[row][["reference_types"]]]
+
       for (expanded_row_index in 1:nrow(expansion_table)) {
         replaced_row_index <- as.integer(row + expanded_row_index - 1)
         if (nchar(replace_prefix_column_name)) {
@@ -314,15 +319,6 @@ expandTableDescription <- function() {
 #'    for potential duplicates.
 #'
 #' Error messages include specific solutions and notes to help address the identified issues.
-#'
-#' @examples
-#' # Assuming `expanded_table_description` is a data.table object obtained from expanding a table description:
-#' # result <- checkResult(expanded_table_description)
-#' # if (!result) {
-#' #  message("There were errors in the expanded table description.")
-#' # } else {
-#' #  message("The expanded table description passed all checks.")
-#' # }
 #'
 #' @export
 checkResult <- function(expanded_table_description) {

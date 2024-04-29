@@ -25,7 +25,7 @@ retrieve <- function() {
   ###
   # Create globally used process_clock
   ###
-  PROCESS_CLOCK <<- etlutils::createClock()
+  etlutils::createClock()
 
   ###
   # log all console outputs and save them at the end
@@ -36,52 +36,36 @@ retrieve <- function() {
   etlutils::run_out('Run Retrieve', {
 
     # Extract Patient IDs
-    etlutils::START__()
-    err <- try(etlutils::run_in('Extract Patient IDs', {
-      patientIDsPerWard <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
-    }), silent = TRUE)
-    print(PROCESS_CLOCK)
-    warnings()
-    if(inherits(err, "try-error")) stop()
-    etlutils::END__()
+    etlutils::startProcess(etlutils::run_in('Extract Patient IDs', {
+      patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
+    }))
 
     # Load Table Description
-    etlutils::START__()
-    err <- try(etlutils::run_in('Load Table Description', {
+    etlutils::startProcess(etlutils::run_in('Load Table Description', {
       table_descriptions <- getTableDescriptions()
-    }), silent = TRUE)
-    print(PROCESS_CLOCK)
-    warnings()
-    if(inherits(err, "try-error")) stop()
-    etlutils::END__()
+    }))
 
     # Download and crack resources by Patient IDs per ward
-    etlutils::START__()
-    err <- try(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_table_list <- loadResourcesByPatientIDFromFHIRServer(patientIDsPerWard, table_descriptions)
-    }), silent = TRUE)
-    print(PROCESS_CLOCK)
-    warnings()
-    if(inherits(err, "try-error")) stop()
-    etlutils::END__()
+    etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
+      resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, table_descriptions)
+    }))
 
     # Write resource tables to database
-    etlutils::START__()
-    err <- try(etlutils::run_in('Write resource tables to database', {
-      writeResourceTablesToDatabase(resource_table_list, clear_before_insert = FALSE)
-    }), silent = TRUE)
-    print(PROCESS_CLOCK)
-    warnings()
-    if(inherits(err, "try-error")) stop()
-    etlutils::END__()
+    etlutils::startProcess(etlutils::run_in('Write resource tables to database', {
+      writeResourceTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+    }))
+
+    # Convert Column Types in resource tables
+    etlutils::startProcess(etlutils::run_in('Convert Column Types in resource tables', {
+      convertTypes(resource_tables)
+    }))
 
   })
-  etlutils::END__()
+  etlutils::printClock()
   warnings()
-  print(PROCESS_CLOCK)
+  etlutils::END__()
   ###
   # Save all console logs
   ###
   etlutils::end_logging()
-
 }

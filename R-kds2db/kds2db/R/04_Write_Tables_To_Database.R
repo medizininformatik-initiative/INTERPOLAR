@@ -55,12 +55,13 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
       if (clear_before_insert) {
         etlutils::dbDeleteContent(db_connection, table_name)
       }
+      # Check column widths of table content
+      etlutils::dbCheckContent(db_connection, table_name, table)
+      # Add table content to DB
       etlutils::dbAddContent(db_connection, table_name, table)
     } else {
       warning(paste("Table", table_name, "not found in database"))
     }
   }
-
   etlutils::dbDisconnect(db_connection)
-
 }

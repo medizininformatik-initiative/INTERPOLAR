@@ -33,13 +33,3 @@ for potential duplicates.
 
 Error messages include specific solutions and notes to help address the identified issues.
 }
-\examples{
-# Assuming `expanded_table_description` is a data.table object obtained from expanding a table description:
-# result <- checkResult(expanded_table_description)
-# if (!result) {
-#  message("There were errors in the expanded table description.")
-# } else {
-#  message("The expanded table description passed all checks.")
-# }
-
-}
