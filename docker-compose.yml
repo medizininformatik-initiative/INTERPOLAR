@@ -27,16 +27,16 @@ services:
   redcap_db:
     image: mariadb:11
     restart: unless-stopped
-    env_file: ${PWD}/REDCap-db/.env-redcap-db
+    env_file: ./REDCap-db/.env-redcap-db
     secrets:
       - redcap_db_root.password
       - redcap_db.password
     networks:
       - internal
     volumes:
-      - ${PWD}/REDCap-db/mariadb.cnf:/etc/mysql/mariadb.cnf
+      - ./REDCap-db/mariadb.cnf:/etc/mysql/mariadb.cnf
       - redcap-db-data:/var/lib/mysql
-      - ${PWD}/REDCap-db/init:/docker-entrypoint-initdb.d
+      - ./REDCap-db/init:/docker-entrypoint-initdb.d
       #- ./.my.cnf:/root/.my.cnf
     #command: --default-authentication-plugin=mysql_native_password
 
@@ -82,8 +82,8 @@ services:
       - internal
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ${PWD}/Postgres-amts_db/postgresql.conf:/etc/postgresql.conf
-      - ${PWD}/Postgres-amts_db/init/:/docker-entrypoint-initdb.d/
+      - ./Postgres-amts_db/postgresql.conf:/etc/postgresql.conf
+      - ./Postgres-amts_db/init/:/docker-entrypoint-initdb.d/
 
   # Web-administration of amts_db (optional)
   pgadmin:

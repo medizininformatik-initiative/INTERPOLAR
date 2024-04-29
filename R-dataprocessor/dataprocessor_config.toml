@@ -1,0 +1,77 @@
+##################################################
+# Project Definition for module dataprocessor    #
+##################################################
+
+###
+# VERBOSE LEVELS
+###
+# VL_00_NOTHING             = 0
+# VL_10_MAIN_INFO           = 1
+# VL_20_OUTER_SCRIPTS       = 2
+# VL_30_INNER_SCRIPTS       = 3
+# VL_40_INNER_SCRIPTS_INFOS = 4
+# VL_50_TABLES              = 5
+# VL_60_ALL_TABLES          = 6
+# VL_70_DOWNLOAD            = 7
+# VL_80_COI_PROCESSING      = 8
+# VL_90_FHIR_RESPONSE       = 9
+VERBOSE               = 10 # Retrieval / analysis verbose level
+
+# Set true if every sourcing of the 00_Main file should create result directories in the otuputGlobal and otuputLocal
+# directores with a timestamp suffix. If false then every run will write in the same subdirectory without a timestamp.
+# The default behaviour should write in subdirectories with only the project name (false) or in or in a subdirectory
+# with the project name and the suffix '_timestamp'.
+# (true)
+USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
+
+# Number of days to look into the future when searching for MRPs. If missing, default is 30.
+MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30
+
+[mrp_definition_files]
+
+# Name of the Excel file with the MRP definitions in the 'inst/extdata' directory without extension
+MRP_DEFINITION_FILE_DRUG_DISEASE = "Drug-Disease_290124_ATC24_bereinigt"
+
+
+# Actually, only MedicationRequest should be used here, as it contains the prescription, the start time and the dosing
+# schedule. However, you can also use a different medication resource for testing purposes, even if the meaning is not
+# actually correct.
+[used_medication_request_resource]
+
+# Description of the follwing variables:
+#                                  MEDICATION_REQUEST_RESOURCE: Medication Resource Name (as in FHIR)
+#  MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME: Name of the column with the encounter reference
+# MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME: Name of the column with the Medication reference
+#            MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME: Name of the column with the time stamp when the
+#                                                               administrationof the medication should start or takes
+#                                                               place once
+#         MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME: Name of the column with the time stamp when the repeated
+#                                                               administration of the medication should begin
+#           MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME: Name of the column with the time stamp when the repeated
+#                                                               administration of the medication should end
+
+#MEDICATION_REQUEST_RESOURCE = "MedicationRequest"
+#MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id"
+#MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id"
+#MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event"
+#MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start"
+#MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end"
+
+MEDICATION_REQUEST_RESOURCE = "MedicationAdministration"
+MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medadm_encounter_id"
+MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medadm_medicationreference_id"
+MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medadm_effectivedatetime"
+MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medadm_effectiveperiod_start"
+MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medadm_effectiveperiod_end"
+
+#MEDICATION_REQUEST_RESOURCE = "MedicationStatement"
+#MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medstat_encounter_id"
+#MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medstat_medicationreference_id"
+#MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medstat_effectivedatetime"
+#MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medstat_effectiveperiod_start"
+#MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medstat_effectiveperiod_end"
+
+
+[database]
+
+PATH_TO_DB_CONFIG_TOML = "./amts_db_config.toml"
