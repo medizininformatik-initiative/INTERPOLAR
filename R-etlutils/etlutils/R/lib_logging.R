@@ -124,6 +124,7 @@ runProcess <- function(process) {
 finalize <- function() {
   printClock()
   warnings()
+  savePerformance()
   END__()
   ###
   # Save all console logs
