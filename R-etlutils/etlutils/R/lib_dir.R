@@ -40,10 +40,13 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #'
 #' This function checks if a specified directory exists. If it does, the directory is renamed
 #' by appending its creation time to its original name, optionally prefixed by a given string.
-#' This is useful for maintaining versioning or backups of directories based on when they were
-#' initially created.
+#' Also, this function deletes the oldest directories in the specified outer directory
+#' if the count of directories exceeds the specified limit.
 #'
 #' @param dir The directory path to check and rename.
+#' @param MAX_DIR_COUNT An optional maximum count of directories.
+#'        If the count of directories exceeds this value, the oldest directories will be deleted.
+#'        Default is NA, meaning no deletion is performed.
 #' @param timeStampPrefix An optional string to prefix to the creation time in the new name.
 #'        Default is an empty string.
 #'
@@ -52,11 +55,16 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #' name by appending this timestamp to the original directory name with an optional prefix.
 #' Finally, it renames the directory to this new name.
 #'
+#' If the `MAX_DIR_COUNT` parameter is provided and the count of directories in the outer directory
+#' exceeds this value, the function will delete the oldest directories until the count matches
+#' the specified limit. The deletion is performed in ascending order based on the creation time
+#' embedded in the directory names.
+#'
 #' @return Returns the new directory name if the directory exists and was renamed, or `NA`
 #' if the directory does not exist or no action was taken.
 #'
 #' @export
-renameWithCreationTimeIfDirExists <- function(dir, timeStampPrefix = "", max_dir_count = NA) {
+renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStampPrefix = "") {
   newName <- NA
   if (dir.exists(dir)) {
     dirCreationTime <- file.info(dir)$ctime
@@ -66,6 +74,28 @@ renameWithCreationTimeIfDirExists <- function(dir, timeStampPrefix = "", max_dir
     dirCreationTime <- gsub(":", "-", dirCreationTime)
     newName <- paste0(dir, timeStampPrefix, "_", dirCreationTime)
     file.rename(dir, newName)
+
+    # Extract outer directory
+    outer_dir <- sub("/.*", "", dir)
+    # Extract inner directory
+    inner_dir <- sub(".*/", "", dir)
+    # Specific Files in outer dir
+    files <- list.files(outer_dir, inner_dir)
+    # Number of files in outer dir
+    num_files <- length(files)
+    if (num_files > MAX_DIR_COUNT && !is.na(MAX_DIR_COUNT)) {
+      # Sort files (oldest first)
+      sorted_files <- sort(files)
+      # Calculate number of files to delete
+      num_files_to_delete <- num_files - MAX_DIR_COUNT
+      # Delete the oldest files
+      for (i in 1:num_files_to_delete) {
+        # Create full path to the file to be deleted
+        dir_path <- file.path(outer_dir, sorted_files[i])
+        # Delete paths
+        unlink(dir_path, recursive = TRUE)
+      }
+    }
   }
   return(newName)
 }
@@ -79,8 +109,8 @@ renameWithCreationTimeIfDirExists <- function(dir, timeStampPrefix = "", max_dir
 #' @export
 create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
-  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir)
-  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir)
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
