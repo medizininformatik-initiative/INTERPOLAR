@@ -1,3 +1,6 @@
+# Environment for saving the connections
+.log_env <- new.env()
+
 #' Start Logging to a File
 #'
 #' This function initializes logging by creating or opening a log file for writing.
@@ -12,16 +15,25 @@
 #'
 #' @export
 start_logging <- function(prefix) {
-  log_file <- file(fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt")), open = "wt")
+  log_filename <- fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt"))
+  # Make sure that the environment does not have an open connection to this file
+  if (!is.null(.log_env[[log_filename]])) {
+    warning("A log file is already open for '", log_filename, "'")
+    return(invisible(NULL))
+  }
+
+  # Open logfile data connection
+  log_file <- file(log_filename, open = "wt")
   sink(log_file, append = TRUE, split = TRUE)
   sink(log_file, append = TRUE, type = "message")
+  .log_env[[log_filename]] <- log_file
+  .log_env[["log_filename"]] <- log_filename
+  invisible(log_file)
 }
 
 #' End Logging
 #'
 #' This function finalizes the logging process by closing the log file.
-#'
-#' @param prefix Prefix for the log file name. If provided, the function will overwrite the existing log file after removing ANSI escape sequences.
 #'
 #' @return NULL
 #'
@@ -30,28 +42,18 @@ start_logging <- function(prefix) {
 #' It closes the log file, ensuring that no further entries are appended to it.
 #'
 #' @export
-end_logging <- function(prefix = NA) {
+end_logging <- function() {
   sink(type = "message")
   sink()
-  if (!isSimpleNA(prefix)) {
-    log_filename <- fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt"))
-    log_file <- file(log_filename, open = "rt")
-    # Read the content of the log file
-    log_content <- readLines(log_file, warn = FALSE)
+
+  log_filename <- .log_env[["log_filename"]]
+  log_file <- .log_env[[log_filename]]
+  if (!is.null(log_file)) {
     close(log_file)
-    # append all single line strings to one large string
-    log_content <- paste0(log_content, collapse = '\n')
-    # Function to remove ANSI escape sequences from a text
-    remove_ansi <- function(text) {
-      gsub("\033\\[[0-9;]*m", "", text, perl = TRUE)
-    }
-    # Remove ANSI escape sequences from the content of the log file
-    log_content <- lapply(log_content, remove_ansi)[[1]]
-    # Write the cleaned content back to the log file, overwriting it
-    log_file <- file(log_filename, open = "wt")
-    writeLines(log_content, log_file, useBytes = TRUE)
-    close(log_file)
+    .log_env[[log_filename]] <- NULL
+    .log_env[["log_filename"]] <- NULL
   }
+  removeANSIEscapeSequences(log_filename)
 }
 
 #' START__
@@ -64,7 +66,6 @@ end_logging <- function(prefix = NA) {
 #'
 #' @export
 START__ <- function(verbose = VERBOSE - 4, len = 104) {
-
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
   if (0 < verbose) {
     cat(paste0(
@@ -86,7 +87,6 @@ START__ <- function(verbose = VERBOSE - 4, len = 104) {
 #'
 #' @export
 END__ <- function(verbose = VERBOSE - 4, len = 104) {
-
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
   if (0 < verbose) {
     cat(paste0(
@@ -96,6 +96,65 @@ END__ <- function(verbose = VERBOSE - 4, len = 104) {
       styled_string(paste0(rep(' ', len - 3), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
       '\n'
     ))
+  }
+}
+
+#' Start a Process with Error Handling
+#'
+#' This function initiates a process using the specified function and includes error handling.
+#'
+#' @param process The function representing the process to be executed.
+#' @return None (prints clock information and handles errors)
+#'
+#' @seealso START__, printClock, END__, stopOnError
+#'
+#' @export
+runProcess <- function(process) {
+  START__()
+  err <- try(process, silent = TRUE)
+  printClock()
+  warnings()
+  END__()
+  stopOnError(err)
+}
+
+#' Finalzes the global process
+#'
+#' @export
+finalize <- function() {
+  printClock()
+  warnings()
+  END__()
+  ###
+  # Save all console logs
+  ###
+  end_logging()
+}
+
+#' Stop execution with Error message
+#'
+#' This function stops execution and prints the concatenated error message.
+#'
+#' @param ... Character vectors to be concatenated and printed as an error message.
+#'
+#' @export
+stopWithError <- function(...) {
+  stop(cat_red(paste(c(...))))
+}
+
+#' Stop on Error
+#'
+#' This function checks if the provided argument is an error. If it is, the
+#' function stops the execution.
+#'
+#' @param potential_error The object to check for being an error.
+#'
+#' @seealso stop
+#' @export
+stopOnError <- function(potential_error) {
+  if (isError(potential_error)) {
+    finalize()
+    stop()
   }
 }
 
@@ -109,8 +168,7 @@ END__ <- function(verbose = VERBOSE - 4, len = 104) {
 #'
 #' @return The value process returns.
 #'
-#' @export
-runProcess <- function(
+runProcessInternal <- function(
     message,
     process,
     single_line = TRUE,
@@ -145,7 +203,6 @@ runProcess <- function(
     )
   }
 }
-
 
 #' Execute an outer script with a specified message and process
 #'
@@ -224,7 +281,7 @@ run_in_in_ignore_error <- function(message, process) {
 #'
 #' @export
 run <- function(message, process, verbose, throw_exception = TRUE) {
-  runProcess(
+  runProcessInternal(
     message = message,
     process = process,
     verbose = VERBOSE - verbose + 1,
@@ -295,30 +352,48 @@ runs_in_in <- function(message, process) {
 #'
 #' @export
 runs <- function(message, process, verbose) {
-  runProcess(
+  runProcessInternal(
     message = message,
     process = process,
     verbose = VERBOSE - verbose + 1,
     single_line = TRUE
   )}
 
-#' Start a Process with Error Handling
+#' Remove ANSI Escape Sequences from a Log File
 #'
-#' This function initiates a process using the specified function and includes error handling.
+#' This function reads a file, removes all ANSI escape sequences used for text formatting in
+#' terminal outputs, and writes the cleaned text back to the same file. This can be useful for
+#' cleaning up log files generated from console outputs.
 #'
-#' @param process The function representing the process to be executed.
-#' @return None (prints clock information and handles errors)
+#' @param filename A string specifying the path to the log file from which ANSI escape sequences
+#'        will be removed.
 #'
-#' @seealso START__, printClock, END__, stopOnError
+#' @return This function does not return a value but writes directly to the file, overwriting the
+#'         content with the cleaned text.
+#'
+#' @note This function uses regular expressions (regex) to remove the escape sequences. The regex
+#'       used is designed to handle common ANSI sequences and may not capture all specialized or
+#'       extended sequences.
 #'
 #' @export
-startProcess <- function(process) {
-  START__()
-  err <- try(process, silent = TRUE)
-  printClock()
-  warnings()
-  END__()
-  stopOnError(err)
+removeANSIEscapeSequences <- function(filename) {
+  # Now remove ANSI escape sequences:
+  file <- file(filename, open = "rt")
+  # Read the content of the log file
+  content <- readLines(file, warn = FALSE)
+  close(file)
+  # append all single line strings to one large string
+  content <- paste0(content, collapse = '\n')
+  # Function to remove ANSI escape sequences from a text
+  remove_ansi <- function(text) {
+    gsub("\033\\[[0-9;]*m", "", text, perl = TRUE)
+  }
+  # Remove ANSI escape sequences from the content of the log file
+  content <- lapply(content, remove_ansi)[[1]]
+  # Write the cleaned content back to the log file, overwriting it
+  file <- file(filename, open = "wt")
+  writeLines(content, file, useBytes = TRUE)
+  close(file)
 }
 
 #' Conditional Print to Console (for tables) based on verbosity level
