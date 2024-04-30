@@ -36,6 +36,40 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
   )
 }
 
+#' Rename a Directory with Creation Timestamp If It Exists
+#'
+#' This function checks if a specified directory exists. If it does, the directory is renamed
+#' by appending its creation time to its original name, optionally prefixed by a given string.
+#' This is useful for maintaining versioning or backups of directories based on when they were
+#' initially created.
+#'
+#' @param dir The directory path to check and rename.
+#' @param timeStampPrefix An optional string to prefix to the creation time in the new name.
+#'        Default is an empty string.
+#'
+#' @details If the directory exists, the function retrieves its creation time, formats it to
+#' replace spaces with underscores and colons with dashes, and then constructs a new directory
+#' name by appending this timestamp to the original directory name with an optional prefix.
+#' Finally, it renames the directory to this new name.
+#'
+#' @return Returns the new directory name if the directory exists and was renamed, or `NA`
+#' if the directory does not exist or no action was taken.
+#'
+#' @export
+renameWithCreationTimeIfDirExists <- function(dir, timeStampPrefix = "", max_dir_count = NA) {
+  newName <- NA
+  if (dir.exists(dir)) {
+    dirCreationTime <- file.info(dir)$ctime
+    dirCreationTime <- as.POSIXct(dirCreationTime, tz = "GMT")  # Convert to POSIXct
+    dirCreationTime <- format(dirCreationTime, "%Y-%m-%d_%H-%M-%S")  # Format without milliseconds
+    dirCreationTime <- gsub(" ", "_", dirCreationTime)
+    dirCreationTime <- gsub(":", "-", dirCreationTime)
+    newName <- paste0(dir, timeStampPrefix, "_", dirCreationTime)
+    file.rename(dir, newName)
+  }
+  return(newName)
+}
+
 #'
 #' This function is used by the framework itself
 #'
@@ -45,11 +79,11 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #' @export
 create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
-
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir)
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
-
   for (rd in SUB_PROJECTS_DIRS$local_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
