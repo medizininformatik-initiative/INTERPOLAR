@@ -363,6 +363,36 @@ getResourcesByIDs <- function(
   bundles
 }
 
+#' Log Request Details to a File
+#'
+#' Logs a detailed request string for a specific resource to a file. This function is intended
+#' for debugging or auditing purposes. If the verbosity level is high enough, it also outputs
+#' the request details to the console.
+#'
+#' @param verbose current verbose level
+#' @param resource_name The name of the resource being requested.
+#' @param bundles A list of bundles where the first bundle's self link is included in the log.
+#'
+#' @details The function constructs a detailed request string from the resource name and the
+#' self link of the first bundle. If `verbose` is set to `VL_90_FHIR_RESPONSE` or higher, the
+#' request details are printed to the console using `cat()`. The log file path is generated
+#' using `fhircrackr::paste_paths()` and the file `kds2db_total_bundles.txt` in the specified
+#' directory. The file is created or overwritten in write-text mode and the request is logged.
+#'
+#' @return This function does not return a value, focusing instead on side effects such as
+#' writing to a file and potentially printing to the console.
+#'
+logRequest <- function(verbose, resource_name, bundles) {
+  bundles_requests <- paste0("Request for ", resource_name, ":\n", toString(bundles[[1]]@self_link), "\n")
+    if (verbose >= VL_90_FHIR_RESPONSE) {
+      cat(bundles_requests)
+    }
+  log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("kds2db_total_bundles.txt"))
+  log_file <- file(log_filename, open = "at")
+  writeLines(bundles_requests, log_file, useBytes = TRUE)
+  close(log_file)
+}
+
 #' Download and Crack FHIR Resources in Parallel
 #'
 #' This function downloads FHIR resources by making parallel requests and cracks the bundles in parallel.
@@ -470,8 +500,7 @@ downloadAndCrackFHIRResources <- function(
                     cat(styled_string('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
                   }
                 } else {# if download was successful
-                  cat("Request:\n", bundles[[1]]@self_link, "\n")
-                  fhircrackr::fhir_current_request()
+                  logRequest(verbose, resource_name, bundles)
                   try(fhircrackr::fhir_serialize(bundles)) # return serialized bundles due to stable addressing
                 }
               } else {# return nothing
@@ -757,7 +786,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 Sys.sleep(WAIT_TIMES[[trial]])
                 trial <- trial + 1
               } else {
-                cat("Request:\n", bundles[[1]]@self_link, "\n")
+                logRequest(verbose, resource_name, bundles)
                 break
               }
             }
