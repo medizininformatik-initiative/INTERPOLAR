@@ -410,20 +410,21 @@ downloadAndCrackFHIRResources <- function(
   curr_request <- request # first request
   pkg <- list(request = curr_request, bundles = NULL) # store request with empty bundle in pkg
   succesfully <- TRUE
+  resource_name <- table_description@resource
   while (!is.null(pkg$request) || !is.null(pkg$bundles)) {#while there is at least a request or a bundle in pkg
     if (0 < verbose) {
       if (!is.null(pkg$request) && !is.null(pkg$bundles)) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
-          ' (FHIR Resource: ', as.character(table_description@resource), ' ',
-          substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',
+          substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           ' and Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
         ))
       } else if (!is.null(pkg$request) && is.null(pkg$bundles)) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
-          ' (FHIR Resource: ', as.character(table_description@resource), ' ',
-          substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',
+          substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           '.\n'
         ))
       } else {
@@ -674,6 +675,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     }
   }
 
+  resource_name <- table_description@resource
   # if there elements in pkg and at least one of them has a positive length
   while (0 < length(pkg) && any(0 < sapply(pkg, length))) {
 
@@ -686,13 +688,13 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
       if (any(sapply(pkg, is.character)) && any(!sapply(pkg, is.character))) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
-          ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           ' and Crack of ', convertVerboseNumbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', getPluralSuffix(curr_len_recent), '.\n'
         ))
       } else if (any(sapply(pkg, is.character))) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
-          ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           '\n'
         ))
       } else {
