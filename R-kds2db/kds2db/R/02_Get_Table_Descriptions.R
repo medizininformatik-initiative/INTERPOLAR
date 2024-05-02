@@ -10,6 +10,19 @@ BRACKETS <- c('[', ']')
 #' @export
 SEP      <- ' ~ '
 
+#' Load Table Description Excel File
+#'
+#' This function loads a table description excel file
+#'
+#' @return A data table with table descriptions
+#'
+#' @export
+loadTableDescriptionFile <- function() {
+  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "kds2db")
+  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
+  return(table_description)
+}
+
 #' Get a table with the Table Descriptions for all fhir resources from Excel file
 #'
 #' This function reads the "Table_Description.xlsx" file from the "extdata" directory
@@ -22,14 +35,14 @@ SEP      <- ' ~ '
 #'
 #' @export
 getTableDescriptionsTable <- function(columns = NA) {
-  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "kds2db")
-  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
-  #remove unneccesary columns
-  etlutils::retainColumns(table_description, columns)
+  table_description <- loadTableDescriptionFile()
   # remove all rows with NA in column 'fhir_expression'
   table_description <- table_description[!is.na(fhir_expression), ]
   # fill resource NA column with the last valid (non NA) value above
   table_description[, resource := resource[1], .(cumsum(!is.na(resource)))]
+  #remove unneccesary columns
+  etlutils::retainColumns(table_description, columns)
+  return(table_description)
 }
 
 #' Get a list of fhircrackr::fhir_table_description() objects based on a table description.
@@ -63,12 +76,16 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @keywords data manipulation
 #' @export
 getTableDescriptions <- function(table_description_table = NA) {
+  isPIDDependant <- function(table_description) {
+    resource_name <- table_description@resource@.Data
+    return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
+  }
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionsTable(c('resource', 'column_name', 'fhir_expression'))
+    table_description_table <- getTableDescriptionsTable(c('resource', 'column_name', 'fhir_expression', 'reference_types'))
   }
 
   # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects
-  list_of_fhir_tables <- lapply(split(table_description_table, table_description_table$resource), function(subset) {
+  table_descriptions <- lapply(split(table_description_table, table_description_table$resource), function(subset) {
     resource_name <- unique(subset$resource)
     col_names <- subset$column_name
     fhir_expressions <- subset$fhir_expression
@@ -85,8 +102,18 @@ getTableDescriptions <- function(table_description_table = NA) {
     )
     return(fhir_table_desc)
   })
-
+  pid_dependant <- list()
+  pid_independant <- list()
+  for (table_description in table_descriptions) {
+    resource_name <- table_description@resource@.Data
+    if (isPIDDependant(table_description)) {
+      pid_dependant[resource_name] <- table_description
+    } else {
+      pid_independant[resource_name] <- table_description
+    }
+  }
+  reference_types <- table_description_table[!is.na(reference_types)]
   # Returning the list of fhircrackr::fhir_table_description() objects
-  return(list_of_fhir_tables)
+  return(list(pid_dependant = pid_dependant, pid_independant = pid_independant, reference_types = reference_types))
 }
 

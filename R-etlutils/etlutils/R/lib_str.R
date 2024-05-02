@@ -1,104 +1,199 @@
-###
-#
-# Deperecated!
-#
-# Use functions ansi() and cat_ansi() defined in instead!
-#
-###
-
-# # 16 foreground colors
-# ANSI_COLORS <- list(
-#   "black"        = 0,
-#   "darkred"      = 1,
-#   "green"        = 2,
-#   "brown"        = 3,
-#   "blue"         = 4,
-#   "purple"       = 5,
-#   "cyan"         = 6,
-#   "gray"         = 7,
-#   "lightgray"    = 8,
-#   "red"          = 9,
-#   "lightgreen"   = 10,
-#   "yellow"       = 11,
-#   "lightblue"    = 12,
-#   "magenta"      = 13,
-#   "lightcyan"    = 14,
-#   "white"        = 15
-# )
-#' Styled String
+#' Extract Words from String
 #'
-#' Format strings with ANSI escape codes for text styling.
+#' Extracts individual words from a string that contains words separated by
+#' any number of spaces and/or commas. Returns a vector of words.
 #'
-#' @param ... Character vectors to be styled.
-#' @param sep Separator between the styled strings.
-#' @param fg Foreground color (0-15).
-#' @param bg Background color (0-15).
-#' @param bold Use bold text.
-#' @param italic Use italic text.
-#' @param underline Underline text.
-#' @param slowblink Use slow blink effect.
-#' @param rapidblink Use rapid blink effect.
-#' @param invert Invert text colors.
-#' @param strike_out Strike out text.
-#'
-#' @return A styled string.
+#' @param input_string A character string from which to extract words.
+#' @return A character vector containing the extracted words.
+#' @examples
+#' input_string <- "Here are some words, separated, by, commas, and spaces"
+#' extract_words(input_string)
 #' @export
-styled_string <- function( #old name str.
-    ...,
-    sep        = '',
-    fg         = NULL,
-    bg         = NULL,
-    bold       = FALSE,
-    italic     = FALSE,
-    underline  = FALSE,
-    slowblink  = FALSE,
-    rapidblink = FALSE,
-    invert     = FALSE,
-    strike_out = FALSE
-) {
-  # collect all passed strings
-  strings <- list(...)
+extract_words <- function(input_string) {
+  # Replace commas with spaces for uniform separation
+  unified_string <- gsub(",", " ", input_string)
 
-  # if there are no strings, return
-  if (length(strings) < 1) {
-    return(strings)
+  # Extract all words based on space as the separator
+  words <- unlist(strsplit(unified_string, "\\s+"))
+
+  # Remove empty elements, if any
+  words <- words[words != ""]
+
+  return(words)
+}
+
+#' Perform a case-insensitive pattern search using `grepl` with Perl patterns (perl = TRUE).
+#'
+#' @param pattern A pattern to search for.
+#' @param x A list or table where the pattern should be searched.
+#' @param whole_word If TRUE, the pattern will be treated as a whole word and matched accordingly.
+#'                   It adds '^' to the beginning and '$' to the end of the pattern if they don't exist.
+#' @param perl If TRUE, uses Perl-compatible regular expressions for pattern matching (default is TRUE).
+#' @seealso grepl
+#'
+#' This function performs case-insensitive pattern searches using `grepl` with Perl patterns. If `whole_word` is set to TRUE,
+#' the pattern is treated as a whole word, and '^' is added to the beginning and '$' to the end of the pattern if they are missing.
+#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching.
+#'
+#' @examples
+#' pattern <- 'AAA|BBB'
+#' greplic(pattern, 'I am a sentence with AAAA and CCC.', whole_word = TRUE) # FALSE
+#' greplic(pattern, 'I am a sentence with AAA and CCC.', whole_word = TRUE) # TRUE
+#'
+#' @export
+greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
+  if (whole_word) {
+    subPatterns <- unlist(strsplit(pattern, '\\|'))
+    subPatterns <- lapply(subPatterns, function(subPattern) subPattern <- paste0('(?<!\\S)', subPattern, '(?!\\S)'))
+    pattern <- paste0(subPatterns, collapse = '|')
   }
+  grepl(pattern, x, ignore.case = TRUE, perl)
+}
 
-  # foreground and background have to be between 0 and 15
-  # if 7 < color, sub 8 and add 60 for brighter color code
-  if (!is.null(fg)) {
-    fg <- as.integer(fg) %% 16
-    if (7 < fg) fg <- fg + 52
+#' Remove the last character from a string if it is not alphanumeric.
+#'
+#' This function takes a character vector and removes the last character
+#' from each string element if it is not alphanumeric (i.e., not a letter or a number).
+#'
+#' @param text A character vector containing strings.
+#'
+#' @return A character vector with the last character removed from each element if it is not alphanumeric.
+#'
+#' @examples
+#' # Example data.table
+#' library(data.table)
+#' dt <- data.table(
+#'   ID = 1:4,
+#'   Text = c("abc123!", "hello-", "world9", "example")
+#' )
+#'
+#' # Apply the function to the "Text" column
+#' dt[, Text := lapply(Text, removeLastCharsIfNotAlphanumeric)]
+#' print(dt)
+#'
+#' @export
+removeLastCharsIfNotAlphanumeric <- function(text) {
+  for (i in seq_len(length(text))) {
+    while (nchar(text[i]) & !grepl("[A-Za-z0-9]$", text[i])) {
+      text[i] <- substr(text[i], 1, nchar(text[i]) - 1)
+    }
   }
-  if (!is.null(bg)) {
-    bg <- as.integer(bg) %% 16
-    if (7 < bg) bg <- bg + 52
+  return(text)
+}
+
+#' Extract Everything After the Last Slash
+#'
+#' This function takes a vector of strings and returns a new vector where each element
+#' is modified to include only the portion of the original string that appears
+#' after the last slash.
+#'
+#' @param strings A character vector where each element is a string potentially
+#'   containing slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element
+#'   is the part of the original string after the last slash.
+#'
+#' @examples
+#' strings <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getAfterLastSlash(strings)
+#'
+#' @export
+getAfterLastSlash <- function(strings) {
+  return(sub(".*/", "", strings))
+}
+
+#' Extract Everything Before the Last Slash or Return Empty String if No Slash Present
+#'
+#' This function takes a vector of strings and returns a new vector. For strings containing slashes,
+#' it includes only the portion of the string that appears before the last slash. For strings without
+#' any slashes, it returns an empty string. The last slash itself is not included in the returned strings.
+#'
+#' @param strings A character vector where each element is a string that may or may not contain slashes.
+#'
+#' @return A character vector of the same length as `strings`, where each element is the part of the
+#' original string up to (but not including) the last slash, or an empty string if no slash is present.
+#'
+#' @examples
+#' absolute <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
+#' getBeforeLastSlash(absolute)
+#'
+#' @export
+getBeforeLastSlash <- function(strings) {
+  sapply(strings, function(string) {
+    if (grepl("/", string)) {
+      sub("/[^/]*$", "", string)
+    } else {
+      ""
+    }
+  })
+}
+
+#' Extract text between single or double quotes in a string.
+#'
+#' This function takes a string and extracts the text between the first pair
+#' of single or double quotes encountered. It uses regular expressions to find
+#' the text enclosed within the quotes and returns it.
+#'
+#' @param x A character vector or string containing text with single or double quotes.
+#' @return A character vector containing the text between the first pair of quotes.
+#'
+#' @examples
+#' # Example usage
+#' result_single <- getBetweenQuotes("This is a 'sample' string.")
+#' result_double <- getBetweenQuotes('Another "example" string.')
+#' print(result_single)  # Output: "sample"
+#' print(result_double)  # Output: "example"
+#'
+#' @export
+getBetweenQuotes <- function(x) {
+  gsub(".*?['\"](.*?)['\"].*", "\\1", as.character(x))
+}
+
+#' Replace Patterns in a String with Specified Replacements
+#'
+#' This function replaces specified patterns in a given string with their corresponding replacements.
+#' It takes a named list (`patternsAndReplacements`) where each name-value pair corresponds to a pattern
+#' and its replacement. The function performs a case-insensitive replacement of these patterns within
+#' the provided string.
+#'
+#' @param patternsAndReplacements A named list where names are patterns to be replaced and values are
+#' the corresponding replacements.
+#' @param string The string within which the patterns should be replaced.
+#' @param ignore.case logical. Indicates whether the strings should be compared case sensitive. If TRUE
+#' then all result strings are in lower case.
+#' @param perl logical. Should Perl-compatible regexps be used?
+#'
+#' @return The modified string with all specified patterns replaced by their corresponding replacements.
+#'
+#' @examples
+#' patternsAndReplacements <- list("hello" = "hi", "world" = "earth")
+#' replacePatternsInString(patternsAndReplacements, "Hello World!")
+#' # Returns "hi earth!"
+#' @export
+replacePatternsInString <- function(patternsAndReplacements, string, ignore.case = FALSE, perl = FALSE) {
+  patterns <- names(patternsAndReplacements)
+  replacements <- unlist(patternsAndReplacements)
+  for (i in seq_along(patterns)) {
+    pattern <- patterns[i]
+    replacement <- replacements[i]
+    if (ignore.case) {
+      string <- gsub(tolower(pattern), replacement, tolower(string), ignore.case = TRUE, perl = perl)
+    } else {
+      string <- gsub(pattern, replacement, string, perl = perl)
+    }
   }
+  return(string)
+}
 
-  # map arguments to its codes and paste them separated by a ;
-  codes <- paste0(
-    c(       1,      3,         4,         5,          6,      7,          9)[
-      c(bold, italic, underline, slowblink, rapidblink, invert, strike_out)
-    ],
-    collapse = ';'
-  )
-
-  # if all arguments were FALSE set codes to NULL
-  if (codes == '') codes <- NULL
-
-  # create color codes
-  colors <- paste(c(30 + fg, 40 + bg), collapse = ';')
-
-  # if no colors present, return NULL
-  if (colors == '') colors <- NULL
-
-  # collect codes and colors
-  codes <- paste0(c(codes, colors), collapse = ';')
-
-  # only paste the strings, if no codes given, otherwise paste the strings and surround them with ansi-codes
-  if (0 < length(codes)){
-    paste0('\033[', codes, 'm', paste(strings, collapse = sep), '\033[0m')
-  } else {
-    paste(strings, collapse = sep)
-  }
+#' Pluralize Suffix Based on Count
+#'
+#' This function returns an empty string for count 1 and 's' for any other count.
+#'
+#' @param counts Numeric vector of counts.
+#'
+#' @return
+#' An empty string for count 1, 's' otherwise.
+#' @export
+getPluralSuffix <- function(counts) {
+  ifelse(counts == 1, '', 's')
 }

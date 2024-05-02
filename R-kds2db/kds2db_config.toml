@@ -24,6 +24,9 @@ VERBOSE               = 10 # Retrieval / analysis verbose level
 # (true)
 USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
+# Maximum of saved kds2db result folders in outputLocal and outputGlobal
+MAX_DIR_COUNT = 5
+
 [retrieve]
 
 
@@ -89,7 +92,7 @@ DEBUG_PERIOD_END = "2019-01-02"
 # Enable the following parameter, if the relevant patient IDs (PID) are provided by an external
 # system and they are stored in a text file (1 PID pr line). This deactivates the search for
 # relevant PIDs via encounters (see ENCOUNTER_FILTER_PATTERNS).
-#PATH_TO_PID_LIST_FILE = "../source_PIDs.txt"
+#PATH_TO_PID_LIST_FILE = "./R-kds2db/source_PIDs.txt"
 
 # Use this defintion to set the filters to identify all Encounters of the relevant wards. This is
 # only necessary if the relevant Patient IDs should be derived from this Encounters and are not

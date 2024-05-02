@@ -9,6 +9,7 @@
 outputLocal
 outputGlobal
 *.RData
+*.Rd
 REDCap-app/html/redcap
 REDCap-app/html/redcapdocs
 REDCap-app/log
