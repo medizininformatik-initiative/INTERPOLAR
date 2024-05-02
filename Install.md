@@ -19,8 +19,8 @@
   1. Führen Sie die Anweisungen in [REDCap-app/html/Readme.md](REDCap-app/html/Readme.md) aus
   1. Führen Sie docker-compose aus: \
     ```docker-compose up```
-  1. Die amts_db (Postges-Datenbank) erreichen Sie im Browser (PGAdmin) über die URL: [http://127.0.0.1:8089/](http://127.0.0.1:8089/)
+  1. Die cds_hub_db (Postges-Datenbank) erreichen Sie im Browser (PGAdmin) über die URL: [http://127.0.0.1:8089/](http://127.0.0.1:8089/)
      * Die Zugangsdaten für pgadmin entnehmen Sie bitte der [docker-compose.yml](/docker-compose.yml#L94) (services -> pgadmin) bzw. können Sie diese dort anpassen.
-     * ggf. muss im pgadmin die Verbindung zur KDS_db mit den Zugangsdaten aus der [docker-compose.yml](/docker-compose.yml#L63) (services -> kds_db: POSTGRES_USER, POSTGRES_DB) bzw. der Passwort-Datei (secrets -> amts_db_admin.password, Postgres-amts_db/.env_amts_db_admin.password) angelegt werden.
+     * ggf. muss im pgadmin die Verbindung zur cds_hub_db mit den Zugangsdaten aus der [docker-compose.yml](/docker-compose.yml#L63) (services -> cds_hub: POSTGRES_USER, POSTGRES_DB) bzw. der Passwort-Datei (secrets -> cds_hub_db_admin.password, Postgres-cds_ub/.env_cds_hub_db_admin.password) angelegt werden.
   1. Das Frontend (REDCap) erreichen Sie im Browser über die URL: [http://127.0.0.1:8082/redcap](http://127.0.0.1:8082/redcap)
 

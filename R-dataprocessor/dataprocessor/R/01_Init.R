@@ -37,7 +37,7 @@ loadTables <- function(table_path, name_pattern = NA) {
 #' @export
 loadResourceTable <- function(table_name) {
   table_name <- tolower(table_name)
-  readRDS(paste0("./outputLocal/kds2db/tables/", table_name, ".RData"))
+  readRDS(paste0("./outputLocal/cds2db/tables/", table_name, ".RData"))
 }
 
 #' Get current Patient IDs per ward from db
@@ -428,7 +428,7 @@ getMaxTimeInFutureToCheckForMRPs <- function(current_time) {
 }
 
 init <- function() {
-  tables <<- loadTables('./outputLocal/kds2db/tables/')
+  tables <<- loadTables('./outputLocal/cds2db/tables/')
 }
 
 loadTablesFromDatabase <- function(table_name) {

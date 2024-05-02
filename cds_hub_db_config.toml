@@ -2,17 +2,17 @@
 # General database settings for all users/schemes #
 ###################################################
 
-DB_GENERAL_HOST = "amts_db"
+DB_GENERAL_HOST = "cds_hub"
 DB_GENERAL_PORT = 5432
-DB_GENERAL_NAME = "amts_db"
+DB_GENERAL_NAME = "cds_hub_db"
 
 ##########################
-# KDS2DB module settings #
+# CDS2DB module settings #
 ##########################
 
-DB_KDS2DB_USER      = "kds2db_user"
-DB_KDS2DB_PASSWORD  = "kds2db"
-DB_KDS2DB_SCHEMA_IN = "kds2db_in"
+DB_CDS2DB_USER      = "cds2db_user"
+DB_CDS2DB_PASSWORD  = "cds2db"
+DB_CDS2DB_SCHEMA_IN = "cds2db_in"
 
 #################################
 # DataProcessor module settings #

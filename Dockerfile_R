@@ -16,13 +16,13 @@ RUN R CMD build R-etlutils/etlutils
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-etlutils/etlutils
 
 
-# kds2db
+# cds2db
 
-COPY R-kds2db R-kds2db
+COPY R-cds2db R-cds2db
 
-RUN R CMD build R-kds2db/kds2db
+RUN R CMD build R-cds2db/cds2db
 
-RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-kds2db/kds2db
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cds2db/cds2db
 
 
 # db2frontend

@@ -376,7 +376,7 @@ getResourcesByIDs <- function(
 #' @details The function constructs a detailed request string from the resource name and the
 #' self link of the first bundle. If `verbose` is set to `VL_90_FHIR_RESPONSE` or higher, the
 #' request details are printed to the console using `cat()`. The log file path is generated
-#' using `fhircrackr::paste_paths()` and the file `kds2db_total_bundles.txt` in the specified
+#' using `fhircrackr::paste_paths()` and the file `cds2db_total_bundles.txt` in the specified
 #' directory. The file is created or overwritten in write-text mode and the request is logged.
 #'
 #' @return This function does not return a value, focusing instead on side effects such as
@@ -387,7 +387,7 @@ logRequest <- function(verbose, resource_name, bundles) {
     if (verbose >= VL_90_FHIR_RESPONSE) {
       cat(bundles_requests)
     }
-  log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("kds2db_total_bundles.txt"))
+  log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("cds2db_total_bundles.txt"))
   log_file <- file(log_filename, open = "at")
   writeLines(bundles_requests, log_file, useBytes = TRUE)
   close(log_file)
