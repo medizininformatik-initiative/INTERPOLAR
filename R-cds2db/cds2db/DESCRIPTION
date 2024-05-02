@@ -1,4 +1,4 @@
-Package: kds2db
+Package: cds2db
 Title: ETL process to extract all FHIR data for specific Patients to a database
 Version: 0.0.1
 Authors@R: 

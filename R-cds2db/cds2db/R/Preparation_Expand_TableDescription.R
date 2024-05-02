@@ -241,9 +241,9 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
     table_description_collapsed_excel_simple_filename <- paste0(table_description_collapsed_excel_simple_filename, '.xlsx')
   }
   if (interactive()) {
-    table_description_file_path <- paste0('./R-kds2db/kds2db/inst/extdata/', table_description_collapsed_excel_simple_filename)
+    table_description_file_path <- paste0('./R-cds2db/cds2db/inst/extdata/', table_description_collapsed_excel_simple_filename)
   } else {
-    table_description_file_path <- system.file('extdata', table_description_collapsed_excel_simple_filename, package = 'kds2db')
+    table_description_file_path <- system.file('extdata', table_description_collapsed_excel_simple_filename, package = 'cds2db')
   }
 
   tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
@@ -290,8 +290,8 @@ expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
   if (checkResult(expanded_table_description)) {
     message('All result columns could be transformed or expanded.')
-    table_description_file_name <- './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx'
-    etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')
+    table_description_file_name <- './R-cds2db/cds2db/inst/extdata/Table_Description.xlsx'
+    etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')
     message('Expanded Table Description is written to ', normalizePath(table_description_file_name))
   }
 }

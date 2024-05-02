@@ -1,6 +1,6 @@
 [database]
 
-PATH_TO_DB_CONFIG_TOML = "./amts_db_config.toml"
+PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"
 
 [redcap]
 

@@ -1,4 +1,4 @@
-# kds2db - R Implementierung zur Ausleitung Kerndatensatz-konformer Daten (KDS) in eine Datenbank
+# cds2db - R Implementierung zur Ausleitung Kerndatensatz-konformer Daten (KDS) in eine Datenbank
 
 Dieses Implementierung setzt die Ausleitung KDS-konformer Daten von einem FHIR-Server in eine Postgres Datenbank um.
 

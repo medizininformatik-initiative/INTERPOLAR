@@ -7,7 +7,7 @@ retrieve <- function() {
   ###
   # Read the module configuration toml file.
   ###
-  path2config_toml <- './R-kds2db/kds2db_config.toml'
+  path2config_toml <- './R-cds2db/cds2db_config.toml'
   etlutils::initConstants(path2config_toml)
 
   ###
@@ -16,8 +16,8 @@ retrieve <- function() {
   etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
 
   ###
-  # Set the project name to 'kds2db'
-  PROJECT_NAME <<- 'kds2db'
+  # Set the project name to 'cds2db'
+  PROJECT_NAME <<- 'cds2db'
   ###
 
   etlutils::create_dirs(PROJECT_NAME)

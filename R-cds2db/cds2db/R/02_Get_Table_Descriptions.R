@@ -18,7 +18,7 @@ SEP      <- ' ~ '
 #'
 #' @export
 loadTableDescriptionFile <- function() {
-  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "kds2db")
+  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
   table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
   return(table_description)
 }

@@ -1,18 +1,18 @@
 ####################################################################################
 # Preferences: The current working directory must be the main project directory.   #
-#              In interactive setting this is the parent directory of the R-kds2db #
+#              In interactive setting this is the parent directory of the R-cds2db #
 #              directory (default 'INTERPOLAR').                                   #
 ####################################################################################
 
 # chance the working directory to the main directory
-if (grepl('/kds2db$', getwd())) setwd("../..")
-if (grepl('/R-kds2db$', getwd())) setwd("../")
+if (grepl('/cds2db$', getwd())) setwd("../..")
+if (grepl('/R-cds2db$', getwd())) setwd("../")
 
 # free memory
 rm(list = ls())
 
 library(etlutils)
-library(kds2db)
+library(cds2db)
 
 retrieve()
 
