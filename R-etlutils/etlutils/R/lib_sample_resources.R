@@ -363,6 +363,36 @@ getResourcesByIDs <- function(
   bundles
 }
 
+#' Log Request Details to a File
+#'
+#' Logs a detailed request string for a specific resource to a file. This function is intended
+#' for debugging or auditing purposes. If the verbosity level is high enough, it also outputs
+#' the request details to the console.
+#'
+#' @param verbose current verbose level
+#' @param resource_name The name of the resource being requested.
+#' @param bundles A list of bundles where the first bundle's self link is included in the log.
+#'
+#' @details The function constructs a detailed request string from the resource name and the
+#' self link of the first bundle. If `verbose` is set to `VL_90_FHIR_RESPONSE` or higher, the
+#' request details are printed to the console using `cat()`. The log file path is generated
+#' using `fhircrackr::paste_paths()` and the file `kds2db_total_bundles.txt` in the specified
+#' directory. The file is created or overwritten in write-text mode and the request is logged.
+#'
+#' @return This function does not return a value, focusing instead on side effects such as
+#' writing to a file and potentially printing to the console.
+#'
+logRequest <- function(verbose, resource_name, bundles) {
+  bundles_requests <- paste0("Request for ", resource_name, ":\n", toString(bundles[[1]]@self_link), "\n")
+    if (verbose >= VL_90_FHIR_RESPONSE) {
+      cat(bundles_requests)
+    }
+  log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("kds2db_total_bundles.txt"))
+  log_file <- file(log_filename, open = "at")
+  writeLines(bundles_requests, log_file, useBytes = TRUE)
+  close(log_file)
+}
+
 #' Download and Crack FHIR Resources in Parallel
 #'
 #' This function downloads FHIR resources by making parallel requests and cracks the bundles in parallel.
@@ -410,20 +440,21 @@ downloadAndCrackFHIRResources <- function(
   curr_request <- request # first request
   pkg <- list(request = curr_request, bundles = NULL) # store request with empty bundle in pkg
   succesfully <- TRUE
+  resource_name <- table_description@resource
   while (!is.null(pkg$request) || !is.null(pkg$bundles)) {#while there is at least a request or a bundle in pkg
     if (0 < verbose) {
       if (!is.null(pkg$request) && !is.null(pkg$bundles)) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
-          ' (FHIR Resource: ', as.character(table_description@resource), ' ',
-          substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',
+          substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           ' and Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
         ))
       } else if (!is.null(pkg$request) && is.null(pkg$bundles)) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
-          ' (FHIR Resource: ', as.character(table_description@resource), ' ',
-          substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',
+          substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           '.\n'
         ))
       } else {
@@ -452,8 +483,24 @@ downloadAndCrackFHIRResources <- function(
                   max_bundles = bundles_at_once
                 ))
                 if (inherits(bundles, 'try-error')) {# if download fails return error stored in variable bundle
-                  bundles
+                  if (0 < verbose) {
+                    cat(
+                      styled_string(
+                        'Bundles for the following IDs could not be downloaded:',
+                        element,
+                        "Request with error:",
+                        fhircrackr::fhir_current_request(),
+                        fg = 1,
+                        bold = TRUE,
+                        sep = "\n"
+                      ),
+                      '\n',
+                      pkg$ids
+                    )
+                    cat(styled_string('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
+                  }
                 } else {# if download was successful
+                  logRequest(verbose, resource_name, bundles)
                   try(fhircrackr::fhir_serialize(bundles)) # return serialized bundles due to stable addressing
                 }
               } else {# return nothing
@@ -657,6 +704,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     }
   }
 
+  resource_name <- table_description@resource
   # if there elements in pkg and at least one of them has a positive length
   while (0 < length(pkg) && any(0 < sapply(pkg, length))) {
 
@@ -669,13 +717,13 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
       if (any(sapply(pkg, is.character)) && any(!sapply(pkg, is.character))) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
-          ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           ' and Crack of ', convertVerboseNumbers(run), ' Set of Bundles for ', curr_len_recent, ' ID', getPluralSuffix(curr_len_recent), '.\n'
         ))
       } else if (any(sapply(pkg, is.character))) {
         cat(paste0(
           'Download of ', convertVerboseNumbers(run + 1), ' Set of Bundles for ', bndl_lengths, ' ID', getPluralSuffix(bndl_lengths),
-          ' (FHIR Resource: ',as.character(table_description@resource), ' ',substr(gsub(paste0(".*",table_description@resource), "", pkg$request@.Data),2,30),')',
+          ' (FHIR Resource: ', resource_name, ' ',substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
           '\n'
         ))
       } else {
@@ -724,8 +772,11 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                     styled_string(
                       'Bundles for the following IDs could not be downloaded:',
                       element,
+                      "Request with error:",
+                      fhircrackr::fhir_current_request(),
                       fg = 1,
-                      bold = TRUE
+                      bold = TRUE,
+                      sep = "\n"
                     ),
                     '\n',
                     pkg$ids
@@ -735,6 +786,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 Sys.sleep(WAIT_TIMES[[trial]])
                 trial <- trial + 1
               } else {
+                logRequest(verbose, resource_name, bundles)
                 break
               }
             }

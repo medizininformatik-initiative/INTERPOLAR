@@ -36,6 +36,70 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
   )
 }
 
+#' Rename a Directory with Creation Timestamp If It Exists
+#'
+#' This function checks if a specified directory exists. If it does, the directory is renamed
+#' by appending its creation time to its original name, optionally prefixed by a given string.
+#' Also, this function deletes the oldest directories in the specified outer directory
+#' if the count of directories exceeds the specified limit.
+#'
+#' @param dir The directory path to check and rename.
+#' @param MAX_DIR_COUNT An optional maximum count of directories.
+#'        If the count of directories exceeds this value, the oldest directories will be deleted.
+#'        Default is NA, meaning no deletion is performed.
+#' @param timeStampPrefix An optional string to prefix to the creation time in the new name.
+#'        Default is an empty string.
+#'
+#' @details If the directory exists, the function retrieves its creation time, formats it to
+#' replace spaces with underscores and colons with dashes, and then constructs a new directory
+#' name by appending this timestamp to the original directory name with an optional prefix.
+#' Finally, it renames the directory to this new name.
+#'
+#' If the `MAX_DIR_COUNT` parameter is provided and the count of directories in the outer directory
+#' exceeds this value, the function will delete the oldest directories until the count matches
+#' the specified limit. The deletion is performed in ascending order based on the creation time
+#' embedded in the directory names.
+#'
+#' @return Returns the new directory name if the directory exists and was renamed, or `NA`
+#' if the directory does not exist or no action was taken.
+#'
+#' @export
+renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStampPrefix = "") {
+  newName <- NA
+  if (dir.exists(dir)) {
+    dirCreationTime <- file.info(dir)$ctime
+    dirCreationTime <- as.POSIXct(dirCreationTime, tz = "GMT")  # Convert to POSIXct
+    dirCreationTime <- format(dirCreationTime, "%Y-%m-%d_%H-%M-%S")  # Format without milliseconds
+    dirCreationTime <- gsub(" ", "_", dirCreationTime)
+    dirCreationTime <- gsub(":", "-", dirCreationTime)
+    newName <- paste0(dir, timeStampPrefix, "_", dirCreationTime)
+    file.rename(dir, newName)
+
+    # Extract outer directory
+    outer_dir <- sub("/.*", "", dir)
+    # Extract inner directory
+    inner_dir <- sub(".*/", "", dir)
+    # Specific Files in outer dir
+    files <- list.files(outer_dir, inner_dir)
+    # Number of files in outer dir
+    num_files <- length(files)
+    if (num_files > MAX_DIR_COUNT && !is.na(MAX_DIR_COUNT)) {
+      # Sort files (oldest first)
+      sorted_files <- sort(files)
+      # Calculate number of files to delete
+      num_files_to_delete <- num_files - MAX_DIR_COUNT
+      # Delete the oldest files
+      for (i in 1:num_files_to_delete) {
+        # Create full path to the file to be deleted
+        dir_path <- file.path(outer_dir, sorted_files[i])
+        # Delete paths
+        unlink(dir_path, recursive = TRUE)
+      }
+    }
+  }
+  return(newName)
+}
+
 #'
 #' This function is used by the framework itself
 #'
@@ -45,11 +109,11 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #' @export
 create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
-
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
-
   for (rd in SUB_PROJECTS_DIRS$local_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
@@ -99,21 +163,11 @@ combineBundlePaths <- function(path) {
 
 #' Save a Clock history in the *public* `performance` directory to which was created for the specific subproject.
 #'
-#' clock_$reset()
-#' clock_$measure_process_time("Some Process", {for(i in 1:1000)function(n)mean(cos(1:n))})
-#' clock_
-#' polar_save_performance(filename_without_extension = "some_process")
-#' my_clock <- clock()
-#' my_clock$measure_process_time("Some different Process", {for(i in 1:1000)function(n)mean(cos(1:n))})
-#' my_clock
-#' save_performance(filename_without_extension = "some_differen_process", clock = my_clock)
-#'
 #' @param filename_without_extension A character vector of length one.
 #' @param clock A `Clock` object. Defaults to the global environment `Clock` object `clock_`.
 #'
-#' @return Nothing.
 #' @export
-save_performance <- function(filename_without_extension, clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
+savePerformance <- function(filename_without_extension = "Performance_informations", clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }

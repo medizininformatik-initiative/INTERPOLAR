@@ -1092,6 +1092,7 @@ CREATE TABLE IF NOT EXISTS kds2db_in.servicerequest (
   servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
   servreq_id varchar (70),   -- id (70 x 1 varchar)
   servreq_encounter_id varchar (70),   -- encounter/reference (70 x 1 varchar)
+  servreq_patient_id varchar (70),   -- subject/reference (70 x 1 varchar)
   servreq_identifier_use varchar (100),   -- identifier/use (50 x 2 varchar)
   servreq_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 varchar)
   servreq_identifier_type_version varchar (300),   -- identifier/type/coding/version (50 x 6 varchar)
@@ -1294,7 +1295,7 @@ CREATE TABLE IF NOT EXISTS kds2db_in.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
   date_time varchar (30),   -- date_time (30 x 1 varchar)
   ward_name varchar (30),   -- ward_name (30 x 1 varchar)
-  patient_id varchar (30),   -- patient_id (30 x 1 varchar)
+  patient_id varchar (70),   -- patient_id (70 x 1 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
@@ -2627,6 +2628,7 @@ comment on column kds2db_in.diagnosticreport.diagrep_conclusioncode_text is 'con
 
 comment on column kds2db_in.servicerequest.servreq_id is 'id (70 x 1 70)';
 comment on column kds2db_in.servicerequest.servreq_encounter_id is 'encounter/reference (70 x 1 70)';
+comment on column kds2db_in.servicerequest.servreq_patient_id is 'subject/reference (70 x 1 70)';
 comment on column kds2db_in.servicerequest.servreq_identifier_use is 'identifier/use (50 x 2 100)';
 comment on column kds2db_in.servicerequest.servreq_identifier_type_system is 'identifier/type/coding/system (70 x 6 420)';
 comment on column kds2db_in.servicerequest.servreq_identifier_type_version is 'identifier/type/coding/version (50 x 6 300)';
@@ -2805,7 +2807,7 @@ comment on column kds2db_in.location.loc_alias is 'alias (30 x 3 90)';
 
 comment on column kds2db_in.pids_per_ward.date_time is 'date_time (30 x 1 30)';
 comment on column kds2db_in.pids_per_ward.ward_name is 'ward_name (30 x 1 30)';
-comment on column kds2db_in.pids_per_ward.patient_id is 'patient_id (30 x 1 30)';
+comment on column kds2db_in.pids_per_ward.patient_id is 'patient_id (70 x 1 70)';
 
 
 -- Create SQL Table in Schema db
@@ -3850,6 +3852,7 @@ CREATE TABLE IF NOT EXISTS db.servicerequest (
   servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
   servreq_id varchar (70),   -- id (70 x 1 varchar)
   servreq_encounter_id varchar (70),   -- encounter/reference (70 x 1 varchar)
+  servreq_patient_id varchar (70),   -- subject/reference (70 x 1 varchar)
   servreq_identifier_use varchar (100),   -- identifier/use (50 x 2 varchar)
   servreq_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 varchar)
   servreq_identifier_type_version varchar (300),   -- identifier/type/coding/version (50 x 6 varchar)
@@ -4052,7 +4055,7 @@ CREATE TABLE IF NOT EXISTS db.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
   date_time varchar (30),   -- date_time (30 x 1 varchar)
   ward_name varchar (30),   -- ward_name (30 x 1 varchar)
-  patient_id varchar (30),   -- patient_id (30 x 1 varchar)
+  patient_id varchar (70),   -- patient_id (70 x 1 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
@@ -5385,6 +5388,7 @@ comment on column db.diagnosticreport.diagrep_conclusioncode_text is 'conclusion
 
 comment on column db.servicerequest.servreq_id is 'id (70 x 1 70)';
 comment on column db.servicerequest.servreq_encounter_id is 'encounter/reference (70 x 1 70)';
+comment on column db.servicerequest.servreq_patient_id is 'subject/reference (70 x 1 70)';
 comment on column db.servicerequest.servreq_identifier_use is 'identifier/use (50 x 2 100)';
 comment on column db.servicerequest.servreq_identifier_type_system is 'identifier/type/coding/system (70 x 6 420)';
 comment on column db.servicerequest.servreq_identifier_type_version is 'identifier/type/coding/version (50 x 6 300)';
@@ -5563,7 +5567,7 @@ comment on column db.location.loc_alias is 'alias (30 x 3 90)';
 
 comment on column db.pids_per_ward.date_time is 'date_time (30 x 1 30)';
 comment on column db.pids_per_ward.ward_name is 'ward_name (30 x 1 30)';
-comment on column db.pids_per_ward.patient_id is 'patient_id (30 x 1 30)';
+comment on column db.pids_per_ward.patient_id is 'patient_id (70 x 1 70)';
 
 
 -- Kleine Copy Funktion

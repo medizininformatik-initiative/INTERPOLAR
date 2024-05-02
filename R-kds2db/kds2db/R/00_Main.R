@@ -33,39 +33,36 @@ retrieve <- function() {
   etlutils::start_logging('retrieval-total')
 
   etlutils::START__()
+
   etlutils::run_out('Run Retrieve', {
 
     # Extract Patient IDs
-    etlutils::startProcess(etlutils::run_in('Extract Patient IDs', {
+    etlutils::runProcess(etlutils::run_in('Extract Patient IDs', {
       patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists('PATH_TO_PID_LIST_FILE'), PATH_TO_PID_LIST_FILE, NA))
     }))
 
     # Load Table Description
-    etlutils::startProcess(etlutils::run_in('Load Table Description', {
+    etlutils::runProcess(etlutils::run_in('Load Table Description', {
       table_descriptions <- getTableDescriptions()
     }))
 
     # Download and crack resources by Patient IDs per ward
-    etlutils::startProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
+    etlutils::runProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
       resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, table_descriptions)
     }))
 
     # Write resource tables to database
-    etlutils::startProcess(etlutils::run_in('Write resource tables to database', {
+    etlutils::runProcess(etlutils::run_in('Write resource tables to database', {
       writeResourceTablesToDatabase(resource_tables, clear_before_insert = FALSE)
     }))
 
     # Convert Column Types in resource tables
-    etlutils::startProcess(etlutils::run_in('Convert Column Types in resource tables', {
+    etlutils::runProcess(etlutils::run_in('Convert Column Types in resource tables', {
       convertTypes(resource_tables)
     }))
 
   })
-  etlutils::printClock()
-  warnings()
-  etlutils::END__()
-  ###
-  # Save all console logs
-  ###
-  etlutils::end_logging()
+
+  etlutils::finalize()
+
 }
