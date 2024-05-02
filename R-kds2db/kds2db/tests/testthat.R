@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(kds2db)
+library(cds2db)
 
-test_check("kds2db")
+test_check("cds2db")

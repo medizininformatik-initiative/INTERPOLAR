@@ -73,7 +73,7 @@ getCommentStatements <- function(table_description, schema_name) {
       count <- as.integer(table_description$count[row])
       if (is.na(count)) count <- 1
       # generates something like this:
-      # comment on column kds2db_in.condition.con_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (70 x 18 1260)';
+      # comment on column cds2db_in.condition.con_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (70 x 18 1260)';
       comment <- paste0(comment, "comment on column ", schema_name, ".", table_name, ".", table_description$column_name[row],
                         " is '", table_description$fhir_expression[row], " (", single_length, " x ", count, " ",
                         single_length * count, ")';\n")
@@ -84,21 +84,21 @@ getCommentStatements <- function(table_description, schema_name) {
 
 
 replacePlaceholders <- function() {
-  table_description <- etlutils::readExcelFileAsTableList('./R-kds2db/kds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
+  table_description <- etlutils::readExcelFileAsTableList('./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
   table_description$resource <- tolower(table_description$resource)
   table_names <- na.omit(table_description$resource)
 
   # Load sql template
   content <- getContentFromFile('./Postgres-amts_db/init/template/init-db_template.sql')
 
-  # replace placeholder for create table statements for schema kds2db
-  content <- gsub('<%CREATE_TABLE_STATEMENTS_KDS2DB_IN%>', createTableStatements(table_description, "kds2db_in"), content)
+  # replace placeholder for create table statements for schema cds2db
+  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in"), content)
 
-  # replace placeholder for grant statements for schema kds2db
-  content <- gsub('<%GRANT_STATEMENTS_KDS2DB_IN%>', getGrantStatements(table_names, "kds2db_in"), content)
+  # replace placeholder for grant statements for schema cds2db
+  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in"), content)
 
-  # replace placeholder for comment statements for schema kds2db
-  content <- gsub('<%COMMENT_STATEMENTS_KDS2DB_IN%>', getCommentStatements(table_description, "kds2db_in"), content)
+  # replace placeholder for comment statements for schema cds2db
+  content <- gsub('<%COMMENT_STATEMENTS_CDS2DB_IN%>', getCommentStatements(table_description, "cds2db_in"), content)
 
   # replace placeholder for create table statements for schema db
   content <- gsub('<%CREATE_TABLE_STATEMENTS_DB%>', createTableStatements(table_description, "db"), content)

@@ -33,12 +33,12 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
   }
 
   db_connection <- etlutils::dbConnect(
-    user = DB_KDS2DB_USER,
-    password = DB_KDS2DB_PASSWORD,
+    user = DB_CDS2DB_USER,
+    password = DB_CDS2DB_PASSWORD,
     dbname = DB_GENERAL_NAME,
     host = DB_GENERAL_HOST,
     port = DB_GENERAL_PORT,
-    schema = DB_KDS2DB_SCHEMA_IN
+    schema = DB_CDS2DB_SCHEMA_IN
   )
 
   db_table_names <- etlutils::dbListTables(db_connection)

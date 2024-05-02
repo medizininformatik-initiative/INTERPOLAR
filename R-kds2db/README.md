@@ -1,4 +1,4 @@
-# kds2db - ETL Prozess zur Ausleitung Kerndatensatz-konformer Daten (KDS) in eine Datenbank
+# cds2db - ETL Prozess zur Ausleitung Kerndatensatz-konformer Daten (KDS) in eine Datenbank
 
 Diese Implementierung beinhaltet ETL-Prozesses zur Überführung KDS-konformer Daten von einem FHIR-Server in eine Postgres-Datenbank.
 
@@ -6,7 +6,7 @@ Die Ausleitung der FHIR-Daten in die Datenbank sollte 1 mal täglich passieren. 
 
 ## Konfiguration
 
-Der ETL-Prozess kann über die Datei [kds2db_config.toml](kds2db_config.toml) konfiguriert werden. Alle Parameter sind in der Datei durch Kommentare beschrieben. Hier werden u.a. sowohl die logging-Parameter, als auch die Parameter zum Zugriff auf den FHIR-Server angegeben.
+Der ETL-Prozess kann über die Datei [cds2db_config.toml](cds2db_config.toml) konfiguriert werden. Alle Parameter sind in der Datei durch Kommentare beschrieben. Hier werden u.a. sowohl die logging-Parameter, als auch die Parameter zum Zugriff auf den FHIR-Server angegeben.
 
 ### Extraktion relevanter Patienten
 
@@ -29,4 +29,4 @@ Das R-Skript [StartRetrieval.R](StartRetrieval.R) startet das Retrieval für den
 
 ## Details der Implementierung
 
-Weitere Details siehe [README](./README.md) des R Packages kds2db.
+Weitere Details siehe [README](./README.md) des R Packages cds2db.
