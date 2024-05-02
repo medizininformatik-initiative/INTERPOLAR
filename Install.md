@@ -1,4 +1,4 @@
-# Installationsanleitung bzw. Anleitung zur Einrichtung der INTERPOLAR IT Tools
+# Installationsanleitung bzw. Anleitung zur Einrichtung der CDS tool chain
 
   1. Checkout des INTERPOLAR Repositories \
     ```git clone git@github.com:medizininformatik-initiative/INTERPOLAR.git```
