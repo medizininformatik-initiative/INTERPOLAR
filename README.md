@@ -21,7 +21,7 @@ docker-compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
 
 ### R-db2frontend
 
-Dieses R-Modul dient zur Übernahme von Daten aus eine Postgres-Datenbank in das Frontent (redcap).
+Dieses R-Modul dient zur Übernahme von Daten aus dem CDS_HUB (Postgres-Datenbank) in das Frontent (redcap).
 Damit dieses R-Script funktioniert, muss zuvor der Token für die REDCap-API in die Konfigurationsdatei R-db2frontend/db2frontend_config.toml eingetragen werden:
 ```toml
 # REDCap API token
@@ -40,7 +40,7 @@ Austauschbar, aber Referenz mit REDCap ...
 
 #### REDCap-app
 
-Dieses Verzeichnis enthält die REDCap Web-Anwendung inkl. Anweisungen zur Erzeugung der Leufzeitumgebung (Dockerfile). Weitere Anweisungen befinden sich in der [REDCap-app/Readme.md](./REDCap-app/Readme.md)
+Dieses Verzeichnis enthält die REDCap Web-Anwendung inkl. Anweisungen zur Erzeugung der Laufzeitumgebung (Dockerfile). Weitere Anweisungen befinden sich in der [REDCap-app/Readme.md](./REDCap-app/Readme.md)
 
 #### REDCap-db
 
@@ -48,7 +48,7 @@ Die REDCap-app benötigt eine Datenbank (mariadb), welche in diesem Verzeichnis 
 
 ## Installation
 
-Folgende Anweisungen müssen ausgeführt werden, um die MRP-Pipeline zu verwenden: [Install.md](Install.md)
+Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install.md](Install.md)
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
