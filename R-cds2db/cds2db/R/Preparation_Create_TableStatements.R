@@ -47,7 +47,7 @@ getGrantStatements <- function(table_names, schema_name) {
   grant_statements <- ''
   for (table_name in table_names) {
     # load grant template
-    grant <- getContentFromFile('./Postgres-amts_db/init/template/init-db_template_sub_grant.sql')
+    grant <- getContentFromFile('./Postgres-cds_hub/init/template/init-db_template_sub_grant.sql')
     # replace placeholders in grant template
     grant <- gsub('<%GRANT_SCHEMA_NAME%>', schema_name, grant)
     grant <- gsub('<%GRANT_TABLE_NAME%>', table_name, grant)
@@ -89,7 +89,7 @@ replacePlaceholders <- function() {
   table_names <- na.omit(table_description$resource)
 
   # Load sql template
-  content <- getContentFromFile('./Postgres-amts_db/init/template/init-db_template.sql')
+  content <- getContentFromFile('./Postgres-cds_hub/init/template/init-db_template.sql')
 
   # replace placeholder for create table statements for schema cds2db
   content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in"), content)
@@ -110,7 +110,7 @@ replacePlaceholders <- function() {
   content <- gsub('<%COMMENT_STATEMENTS_DB%>', getCommentStatements(table_description, "db"), content)
 
   # Write the modified content to the file
-  writeLines(content, './Postgres-amts_db/init/init-db.sql', useBytes = TRUE)
+  writeLines(content, './Postgres-cds_hub/init/init-db.sql', useBytes = TRUE)
 }
 
 #replacePlaceholders()

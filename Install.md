@@ -7,8 +7,8 @@
   1. Optionaler Schritt: Wenn Sie die aktuellste Entwickler-Version ausprobieren möchten, checken Sie den Branch 'release' aus. Ansonsten überspringen Sie diesen Schritt. \
     ```git checkout release```
   1. Konfigurationsdateien aus den Vorlagen (Templates) erstellen \
-     * _Postgres-amts_db/template_env_amts_db_admin.password_ nach _Postgres-amts_db/.env_amts_db_admin.password_ kopieren und ein Passwort-String einfügen. Dieses Passwort ist für den Admin-Nutzer der amts-Datenbank. \
-    ```cp Postgres-amts_db/template_env_amts_db_admin.password Postgres-amts_db/.env_amts_db_admin.password```
+     * _Postgres-cds_hub/template_env_cds_hub_db_admin.password_ nach _Postgres-cds_hub/.env_cds_hub_db_admin.password_ kopieren und ein Passwort-String einfügen. Dieses Passwort ist für den Admin-Nutzer der CDS_HUB-Datenbank. \
+    ```cp Postgres-cds_hub/template_env_cds_hub_db_admin.password Postgres-cds_hub/.env_cds_hub_db_admin.password```
      * _REDCap-db/template_env-redcap-db_ kopieren nach _REDCap-db/.env-redcap-db_ \
     ```cp REDCap-db/template_env-redcap-db REDCap-db/.env-redcap-db```
      * _REDCap-db/template_env_redcap_db.password_ kopieren nach _REDCap-db/.env_redcap_db.password_ und tragen Sie ein Passwort für den Nutzer der redcap Datenbank ein \
