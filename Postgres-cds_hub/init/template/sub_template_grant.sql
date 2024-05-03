@@ -1,4 +1,4 @@
---GRANT INSERT, SELECT ON TABLE <%GRANT_SCHEMA_NAME%>.<%GRANT_TABLE_NAME%> TO kds2db_user; -- after development phase
+--GRANT INSERT, SELECT ON TABLE <%GRANT_SCHEMA_NAME%>.<%GRANT_TABLE_NAME%> TO cds2db_user; -- after development phase
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE <%GRANT_SCHEMA_NAME%>.<%GRANT_TABLE_NAME%> TO kds2db_user; -- Additional authorizations for testing
 GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE <%GRANT_SCHEMA_NAME%>.<%GRANT_TABLE_NAME%> TO db_user; -- development phase
 GRANT TRIGGER ON <%GRANT_SCHEMA_NAME%>.<%GRANT_TABLE_NAME%> TO kds2db_user;
