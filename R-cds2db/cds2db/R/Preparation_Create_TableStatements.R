@@ -1,4 +1,12 @@
 
+getFullTableName <- function(table_name, table_name_suffix = "") {
+  if (nchar(table_name_suffix)) {
+    paste0(table_name, "_", table_name_suffix)
+  } else {
+    table_name
+  }
+}
+
 getTableStatmentEndRows <- function() {
   end_rows <- ''
   end_rows <- paste0(end_rows, "  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted\n")
@@ -8,7 +16,7 @@ getTableStatmentEndRows <- function() {
 }
 
 
-createTableStatements <- function(table_description, schema_name, table_name_suffix) {
+createTableStatements <- function(table_description, schema_name, table_name_suffix= "") {
   statements <- ''
   last_table_name <- NA
   for (row in 1:nrow(table_description)) {
@@ -18,8 +26,9 @@ createTableStatements <- function(table_description, schema_name, table_name_suf
         statements <- paste0(statements, getTableStatmentEndRows())
       }
       last_table_name <- table_name
-      statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS ", schema_name, ".", table_name, "_", table_name_suffix, " (\n")
-      statements <- paste0(statements, "  ", table_name, "_", table_name_suffix, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
+      full_table_name <- getFullTableName(table_name, table_name_suffix)
+      statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS ", schema_name, ".", full_table_name, " (\n")
+      statements <- paste0(statements, "  ", full_table_name, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
     }
     if (!all(is.na(table_description[row]))) {
       count <- as.integer(table_description$count[row])
@@ -43,15 +52,17 @@ getContentFromFile <- function(file_path) {
 }
 
 
-getGrantStatements <- function(table_names, schema_name) {
+getGrantStatements <- function(table_names, schema_name, table_name_suffix = "") {
   grant_statements <- ''
   for (table_name in table_names) {
+    full_table_name <- getFullTableName(table_name, table_name_suffix)
     # load grant template
-    grant <- getContentFromFile('./Postgres-cds_hub/init/template/init-db_template_sub_grant.sql')
+    grant <- getContentFromFile('./Postgres-cds_hub/init/template/sub_template_grant.sql')
     # replace placeholders in grant template
     grant <- gsub('<%GRANT_SCHEMA_NAME%>', schema_name, grant)
-    grant <- gsub('<%GRANT_TABLE_NAME%>', table_name, grant)
-    grant_statements <- paste0(grant_statements, grant, '\n\n\n')
+    grant <- gsub('<%GRANT_TABLE_NAME%>', full_table_name, grant)
+    #grant_statements <- paste0(grant_statements, grant, '\n\n\n')
+    grant_statements <- paste0(grant_statements, grant, '\n\n')
   }
   return(grant_statements)
 }
@@ -87,8 +98,12 @@ convert_10_cre_table_raw_cds2db_in <- function(table_description) {
   table_names <- na.omit(table_description$resource)
   # Load sql template
   content <- getContentFromFile('./Postgres-cds_hub/init/template/10_cre_table_raw_cds2db_in.sql')
+
   # replace placeholder for create table statements for schema cds2db
   content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in", 'raw'), content)
+  # # replace placeholder for grant statements for schema cds2db
+  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in", 'raw'), content)
+
   # Write the modified content to the file
   writeLines(content, './Postgres-cds_hub/init/10_cre_table_raw_cds2db_in.sql', useBytes = TRUE)
 }

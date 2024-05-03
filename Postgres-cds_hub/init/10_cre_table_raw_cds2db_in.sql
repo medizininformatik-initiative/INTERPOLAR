@@ -1252,9 +1252,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
 
 --SQL Role / Trigger in Schema cds2db_in
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.encounter_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.encounter_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.encounter_raw TO cds2db_user;
 ALTER TABLE cds2db_in.encounter_raw ALTER COLUMN encounter_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1263,7 +1263,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.encounter_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1271,13 +1271,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER encounter_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.encounter_raw
+  ON cds2db_in.encounter_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.encounter_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.encounter_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.patient_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.patient_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.patient_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.patient_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.patient_raw TO cds2db_user;
 ALTER TABLE cds2db_in.patient_raw ALTER COLUMN patient_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1286,7 +1286,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.patient_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1294,13 +1294,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER patient_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.patient_raw
+  ON cds2db_in.patient_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.patient_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.patient_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.condition_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.condition_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.condition_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.condition_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.condition_raw TO cds2db_user;
 ALTER TABLE cds2db_in.condition_raw ALTER COLUMN condition_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1309,7 +1309,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.condition_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1317,13 +1317,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER condition_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.condition_raw
+  ON cds2db_in.condition_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.condition_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.condition_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.medication_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medication_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.medication_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medication_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.medication_raw TO cds2db_user;
 ALTER TABLE cds2db_in.medication_raw ALTER COLUMN medication_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1332,7 +1332,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.medication_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1340,13 +1340,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER medication_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.medication_raw
+  ON cds2db_in.medication_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.medication_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.medication_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.medicationrequest_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medicationrequest_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.medicationrequest_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medicationrequest_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.medicationrequest_raw TO cds2db_user;
 ALTER TABLE cds2db_in.medicationrequest_raw ALTER COLUMN medicationrequest_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1355,7 +1355,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.medicationrequest_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1363,13 +1363,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER medicationrequest_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.medicationrequest_raw
+  ON cds2db_in.medicationrequest_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.medicationrequest_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.medicationrequest_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.medicationadministration_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medicationadministration_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.medicationadministration_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medicationadministration_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.medicationadministration_raw TO cds2db_user;
 ALTER TABLE cds2db_in.medicationadministration_raw ALTER COLUMN medicationadministration_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1378,7 +1378,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.medicationadministration_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1386,13 +1386,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER medicationadministration_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.medicationadministration_raw
+  ON cds2db_in.medicationadministration_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.medicationadministration_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.medicationadministration_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.medicationstatement_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medicationstatement_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.medicationstatement_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.medicationstatement_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.medicationstatement_raw TO cds2db_user;
 ALTER TABLE cds2db_in.medicationstatement_raw ALTER COLUMN medicationstatement_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1401,7 +1401,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.medicationstatement_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1409,13 +1409,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER medicationstatement_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.medicationstatement_raw
+  ON cds2db_in.medicationstatement_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.medicationstatement_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.medicationstatement_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.observation_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.observation_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.observation_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.observation_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.observation_raw TO cds2db_user;
 ALTER TABLE cds2db_in.observation_raw ALTER COLUMN observation_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1424,7 +1424,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.observation_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1432,13 +1432,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER observation_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.observation_raw
+  ON cds2db_in.observation_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.observation_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.observation_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.diagnosticreport_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.diagnosticreport_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.diagnosticreport_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.diagnosticreport_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.diagnosticreport_raw TO cds2db_user;
 ALTER TABLE cds2db_in.diagnosticreport_raw ALTER COLUMN diagnosticreport_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1447,7 +1447,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.diagnosticreport_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1455,13 +1455,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER diagnosticreport_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.diagnosticreport_raw
+  ON cds2db_in.diagnosticreport_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.diagnosticreport_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.diagnosticreport_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.servicerequest_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.servicerequest_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.servicerequest_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.servicerequest_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.servicerequest_raw TO cds2db_user;
 ALTER TABLE cds2db_in.servicerequest_raw ALTER COLUMN servicerequest_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1470,7 +1470,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.servicerequest_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1478,13 +1478,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER servicerequest_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.servicerequest_raw
+  ON cds2db_in.servicerequest_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.servicerequest_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.servicerequest_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.procedure_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.procedure_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.procedure_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.procedure_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.procedure_raw TO cds2db_user;
 ALTER TABLE cds2db_in.procedure_raw ALTER COLUMN procedure_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1493,7 +1493,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.procedure_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1501,13 +1501,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER procedure_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.procedure_raw
+  ON cds2db_in.procedure_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.procedure_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.procedure_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.consent_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.consent_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.consent_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.consent_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.consent_raw TO cds2db_user;
 ALTER TABLE cds2db_in.consent_raw ALTER COLUMN consent_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1516,7 +1516,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.consent_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1524,13 +1524,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER consent_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.consent_raw
+  ON cds2db_in.consent_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.consent_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.consent_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.location_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.location_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.location_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.location_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.location_raw TO cds2db_user;
 ALTER TABLE cds2db_in.location_raw ALTER COLUMN location_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1539,7 +1539,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.location_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1547,13 +1547,13 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER location_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.location_raw
+  ON cds2db_in.location_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.location_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.location_raw_tr_ins_fkt();
 
---GRANT INSERT, SELECT ON TABLE cds2db_in.pids_per_ward_raw TO cds2db_user; -- nach Entwicklungsphase
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward_raw TO cds2db_user; -- zum Testen weitere Berechtigungen
-GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.pids_per_ward_raw TO db_user; -- Entwicklungsphase
+--GRANT INSERT, SELECT ON TABLE cds2db_in.pids_per_ward_raw TO cds2db_user; -- after development phase
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward_raw TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.pids_per_ward_raw TO db_user; -- development phase
 GRANT TRIGGER ON cds2db_in.pids_per_ward_raw TO cds2db_user;
 ALTER TABLE cds2db_in.pids_per_ward_raw ALTER COLUMN pids_per_ward_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1562,7 +1562,7 @@ GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
 CREATE OR REPLACE FUNCTION cds2db_in.pids_per_ward_raw_tr_ins_fkt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
+    -- Enter the current time
     NEW.input_datetime := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -1570,9 +1570,10 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
   BEFORE INSERT
-  ON  cds2db_in.pids_per_ward_raw
+  ON cds2db_in.pids_per_ward_raw
   FOR EACH ROW
-  EXECUTE PROCEDURE  cds2db_in.pids_per_ward_raw_tr_ins_fkt();
+  EXECUTE PROCEDURE cds2db_in.pids_per_ward_raw_tr_ins_fkt();
+
 
 -- Comment on Table in Schema cds2db_in
 comment on column cds2db_in.encounter_raw.enc_id is 'id (70 x 1 70)';
