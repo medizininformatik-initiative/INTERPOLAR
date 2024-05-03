@@ -8,7 +8,7 @@ getTableStatmentEndRows <- function() {
 }
 
 
-createTableStatements <- function(table_description, schema_name) {
+createTableStatements <- function(table_description, schema_name, table_name_suffix) {
   statements <- ''
   last_table_name <- NA
   for (row in 1:nrow(table_description)) {
@@ -18,8 +18,8 @@ createTableStatements <- function(table_description, schema_name) {
         statements <- paste0(statements, getTableStatmentEndRows())
       }
       last_table_name <- table_name
-      statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS ", schema_name, ".", table_name, " (\n")
-      statements <- paste0(statements, "  ", table_name, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
+      statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS ", schema_name, ".", table_name, "_", table_name_suffix, " (\n")
+      statements <- paste0(statements, "  ", table_name, "_", table_name_suffix, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
     }
     if (!all(is.na(table_description[row]))) {
       count <- as.integer(table_description$count[row])
@@ -82,35 +82,51 @@ getCommentStatements <- function(table_description, schema_name) {
   return(comment)
 }
 
+convert_10_cre_table_raw_cds2db_in <- function(table_description) {
+  table_description$resource <- tolower(table_description$resource)
+  table_names <- na.omit(table_description$resource)
+  # Load sql template
+  content <- getContentFromFile('./Postgres-cds_hub/init/template/10_cre_table_raw_cds2db_in.sql')
+  # replace placeholder for create table statements for schema cds2db
+  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in", 'raw'), content)
+  # Write the modified content to the file
+  writeLines(content, './Postgres-cds_hub/init/10_cre_table_raw_cds2db_in.sql', useBytes = TRUE)
+}
+
+
 
 replacePlaceholders <- function() {
   table_description <- etlutils::readExcelFileAsTableList('./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
-  table_description$resource <- tolower(table_description$resource)
-  table_names <- na.omit(table_description$resource)
+  convert_10_cre_table_raw_cds2db_in(table_description)
 
-  # Load sql template
-  content <- getContentFromFile('./Postgres-cds_hub/init/template/init-db_template.sql')
 
-  # replace placeholder for create table statements for schema cds2db
-  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in"), content)
 
-  # replace placeholder for grant statements for schema cds2db
-  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in"), content)
-
-  # replace placeholder for comment statements for schema cds2db
-  content <- gsub('<%COMMENT_STATEMENTS_CDS2DB_IN%>', getCommentStatements(table_description, "cds2db_in"), content)
-
-  # replace placeholder for create table statements for schema db
-  content <- gsub('<%CREATE_TABLE_STATEMENTS_DB%>', createTableStatements(table_description, "db"), content)
-
-  # replace placeholder for grant statements for schema db
-  content <- gsub('<%GRANT_STATEMENTS_DB%>', getGrantStatements(table_names, "db"), content)
-
-  # replace placeholder for comment statements for schema db
-  content <- gsub('<%COMMENT_STATEMENTS_DB%>', getCommentStatements(table_description, "db"), content)
-
-  # Write the modified content to the file
-  writeLines(content, './Postgres-cds_hub/init/init-db.sql', useBytes = TRUE)
+  # table_description$resource <- tolower(table_description$resource)
+  # table_names <- na.omit(table_description$resource)
+  #
+  # # Load sql template
+  # content <- getContentFromFile('./Postgres-cds_hub/init/template/init-db_template.sql')
+  #
+  # # replace placeholder for create table statements for schema cds2db
+  # content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in"), content)
+  #
+  # # replace placeholder for grant statements for schema cds2db
+  # content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in"), content)
+  #
+  # # replace placeholder for comment statements for schema cds2db
+  # content <- gsub('<%COMMENT_STATEMENTS_CDS2DB_IN%>', getCommentStatements(table_description, "cds2db_in"), content)
+  #
+  # # replace placeholder for create table statements for schema db
+  # content <- gsub('<%CREATE_TABLE_STATEMENTS_DB%>', createTableStatements(table_description, "db"), content)
+  #
+  # # replace placeholder for grant statements for schema db
+  # content <- gsub('<%GRANT_STATEMENTS_DB%>', getGrantStatements(table_names, "db"), content)
+  #
+  # # replace placeholder for comment statements for schema db
+  # content <- gsub('<%COMMENT_STATEMENTS_DB%>', getCommentStatements(table_description, "db"), content)
+  #
+  # # Write the modified content to the file
+  # writeLines(content, './Postgres-cds_hub/init/init-db.sql', useBytes = TRUE)
 }
 
-#replacePlaceholders()
+replacePlaceholders()
