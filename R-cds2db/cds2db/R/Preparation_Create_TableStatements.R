@@ -68,7 +68,7 @@ getGrantStatements <- function(table_names, schema_name, table_name_suffix = "")
 }
 
 
-getCommentStatements <- function(table_description, schema_name) {
+getCommentStatements <- function(table_description, schema_name, table_name_suffix = "") {
   comment <- ''
   table_name <- NA
   for (row in 1:nrow(table_description)) {
@@ -83,9 +83,10 @@ getCommentStatements <- function(table_description, schema_name) {
       single_length <- as.integer(table_description$single_length[row])
       count <- as.integer(table_description$count[row])
       if (is.na(count)) count <- 1
+      full_table_name <- getFullTableName(table_name, table_name_suffix)
       # generates something like this:
       # comment on column cds2db_in.condition.con_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (70 x 18 1260)';
-      comment <- paste0(comment, "comment on column ", schema_name, ".", table_name, ".", table_description$column_name[row],
+      comment <- paste0(comment, "comment on column ", schema_name, ".", full_table_name, ".", table_description$column_name[row],
                         " is '", table_description$fhir_expression[row], " (", single_length, " x ", count, " ",
                         single_length * count, ")';\n")
     }
@@ -100,9 +101,11 @@ convert_10_cre_table_raw_cds2db_in <- function(table_description) {
   content <- getContentFromFile('./Postgres-cds_hub/init/template/10_cre_table_raw_cds2db_in.sql')
 
   # replace placeholder for create table statements for schema cds2db
-  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in", 'raw'), content)
+  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in", "raw"), content)
   # # replace placeholder for grant statements for schema cds2db
-  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in", 'raw'), content)
+  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in", "raw"), content)
+  # replace placeholder for comment statements for schema cds2db
+  content <- gsub('<%COMMENT_STATEMENTS_CDS2DB_IN%>', getCommentStatements(table_description, "cds2db_in", "raw"), content)
 
   # Write the modified content to the file
   writeLines(content, './Postgres-cds_hub/init/10_cre_table_raw_cds2db_in.sql', useBytes = TRUE)

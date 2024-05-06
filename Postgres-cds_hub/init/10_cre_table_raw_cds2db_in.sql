@@ -1251,7 +1251,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
 
 
 --SQL Role / Trigger in Schema cds2db_in
-
 --GRANT INSERT, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- after development phase
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT,SELECT, UPDATE, DELETE ON TABLE cds2db_in.encounter_raw TO db_user; -- development phase
@@ -2561,6 +2560,7 @@ comment on column cds2db_in.diagnosticreport_raw.diagrep_conclusioncode_text is 
 
 comment on column cds2db_in.servicerequest_raw.servreq_id is 'id (70 x 1 70)';
 comment on column cds2db_in.servicerequest_raw.servreq_encounter_id is 'encounter/reference (70 x 1 70)';
+comment on column cds2db_in.servicerequest_raw.servreq_patient_id is 'subject/reference (70 x 1 70)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_use is 'identifier/use (50 x 2 100)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_type_system is 'identifier/type/coding/system (70 x 6 420)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_type_version is 'identifier/type/coding/version (50 x 6 300)';
@@ -2739,4 +2739,5 @@ comment on column cds2db_in.location_raw.loc_alias is 'alias (30 x 3 90)';
 
 comment on column cds2db_in.pids_per_ward_raw.date_time is 'date_time (30 x 1 30)';
 comment on column cds2db_in.pids_per_ward_raw.ward_name is 'ward_name (30 x 1 30)';
-comment on column cds2db_in.pids_per_ward_raw.patient_id is 'patient_id (30 x 1 30)';
+comment on column cds2db_in.pids_per_ward_raw.patient_id is 'patient_id (70 x 1 70)';
+
