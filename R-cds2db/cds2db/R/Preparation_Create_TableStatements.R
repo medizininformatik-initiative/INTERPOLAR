@@ -15,6 +15,54 @@ getTableStatmentEndRows <- function() {
   end_rows <- paste0(end_rows, ");\n\n")
 }
 
+getCreateTableStatementColumnLine <- function(table_description_row, table_name_suffix= "") {
+  fhir_expression <- table_description_row$fhir_expression
+  column_type <- NA
+  # in the raw table all types are varchar
+  if (table_name_suffix != "raw") {
+    # map from fhir type to Postgres type
+    fhir_column_type <- table_description_row$type
+    if (fhir_column_type %in% "integer") {
+      column_type <- "int"
+    } else if (fhir_column_type %in% "decimal") {
+      column_type <- "numeric"
+    } else if (fhir_column_type %in% "boolean") {
+      column_type <- "boolean"
+    } else if (fhir_column_type %in% "datetime") {
+      column_type <- "timestamp"
+    } else if (fhir_column_type %in% "date") {
+      column_type <- "date"
+    } else if (fhir_column_type %in% "time") {
+      column_type <- "time"
+    }
+  }
+  column_type_with_length <- column_type
+  single_length <- as.integer(table_description_row$single_length)
+  # the count is needed only in the raw table
+  count <- as.integer(table_description_row$count)
+  # an empty count in the defnition means 1
+  if (is.na(count)) count <- 1
+  full_length <- single_length
+  # only the raw tables have list values in the same row (it's before the fhir_melt()
+  # step to split multiple values in single rows)
+  if (table_name_suffix == "raw") {
+    full_length  <- full_length * count
+  }
+  # if there is no type information -> set varchar = string
+  if (is.na(column_type)) {
+    column_type <- "varchar"
+  }
+  # only for string/varchar and numeric values add the column width
+  if (column_type %in% "varchar") {
+    column_type_with_length <- paste0(column_type, " (", full_length, ")")
+  } else if (column_type %in% "numeric") {
+    # decimal/numeric needs a length for the places before and after the decimal point -> set same
+    # value before and after decimal point
+    column_type_with_length <- paste0(column_type, " (", full_length, ", ", full_length, ")")
+  }
+  column_line <- paste0(table_description_row$column_name, " ", column_type_with_length, ",   -- ", fhir_expression, " (", single_length, " x ", count, " ", column_type, ")\n")
+  return(column_line)
+}
 
 createTableStatements <- function(table_description, schema_name, table_name_suffix= "") {
   statements <- ''
@@ -30,13 +78,9 @@ createTableStatements <- function(table_description, schema_name, table_name_suf
       statements <- paste0(statements, "CREATE TABLE IF NOT EXISTS ", schema_name, ".", full_table_name, " (\n")
       statements <- paste0(statements, "  ", full_table_name, "_id serial PRIMARY KEY not null, -- Primary key of the entity\n")
     }
-    if (!all(is.na(table_description[row]))) {
-      count <- as.integer(table_description$count[row])
-      if (is.na(count)) count <- 1
-      single_length <- as.integer(table_description$single_length[row])
-      full_length <- single_length * count
-      fhir_expression <- table_description$fhir_expression[row]
-      statements <- paste0(statements, "  ", table_description$column_name[row], " varchar (", full_length, "),   -- ", fhir_expression, " (", single_length, " x ", count, " varchar)\n")
+    table_description_row <- table_description[row]
+    if (!all(is.na(table_description_row))) {
+      statements <- paste0(statements, getCreateTableStatementColumnLine(table_description_row, table_name_suffix))
     }
 
   }
@@ -94,30 +138,28 @@ getCommentStatements <- function(table_description, schema_name, table_name_suff
   return(comment)
 }
 
-convert_10_cre_table_raw_cds2db_in <- function(table_description) {
+
+convert_create_tables_cds2db_in <- function(table_description, sql_filename, table_name_suffix = "") {
   table_description$resource <- tolower(table_description$resource)
   table_names <- na.omit(table_description$resource)
   # Load sql template
-  content <- getContentFromFile('./Postgres-cds_hub/init/template/10_cre_table_raw_cds2db_in.sql')
+  content <- getContentFromFile(paste0("./Postgres-cds_hub/init/template/", sql_filename))
 
   # replace placeholder for create table statements for schema cds2db
-  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in", "raw"), content)
+  content <- gsub('<%CREATE_TABLE_STATEMENTS_CDS2DB_IN%>', createTableStatements(table_description, "cds2db_in", table_name_suffix), content)
   # # replace placeholder for grant statements for schema cds2db
-  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in", "raw"), content)
+  content <- gsub('<%GRANT_STATEMENTS_CDS2DB_IN%>', getGrantStatements(table_names, "cds2db_in", table_name_suffix), content)
   # replace placeholder for comment statements for schema cds2db
-  content <- gsub('<%COMMENT_STATEMENTS_CDS2DB_IN%>', getCommentStatements(table_description, "cds2db_in", "raw"), content)
+  content <- gsub('<%COMMENT_STATEMENTS_CDS2DB_IN%>', getCommentStatements(table_description, "cds2db_in", table_name_suffix), content)
 
   # Write the modified content to the file
-  writeLines(content, './Postgres-cds_hub/init/10_cre_table_raw_cds2db_in.sql', useBytes = TRUE)
+  writeLines(content, paste0("./Postgres-cds_hub/init/", sql_filename), useBytes = TRUE)
 }
-
-
 
 replacePlaceholders <- function() {
   table_description <- etlutils::readExcelFileAsTableList('./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
-  convert_10_cre_table_raw_cds2db_in(table_description)
-
-
+  convert_create_tables_cds2db_in(table_description, "10_cre_table_raw_cds2db_in.sql", "raw")
+  convert_create_tables_cds2db_in(table_description, "16_cre_table_typ_cds2db_in.sql")
 
   # table_description$resource <- tolower(table_description$resource)
   # table_names <- na.omit(table_description$resource)
