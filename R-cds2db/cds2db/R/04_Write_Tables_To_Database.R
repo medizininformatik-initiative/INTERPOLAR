@@ -24,7 +24,6 @@
 #'   writeTablesToDatabase(my_tables, table_names = c("table1"), clear_before_insert = TRUE)
 #' }
 #'
-#' @export
 writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before_insert = FALSE) {
 
   # write all tables (table_names == NA) or only tables with the given names

@@ -10,21 +10,22 @@
 #'   and patient ID for each combination extracted from the provided list.
 #'
 #' @examples
-#' library(data.table)
-#' # Example: A list of patient IDs per ward
-#' patientIDsPerWard <- list(
-#'   Ward_A = c("PID_A001", "PID_A002", "PID_A003"),
-#'   Ward_B = c("PID_B001", "PID_B002"),
-#'   Ward_C = c("PID_C001", "PID_C002", "PID_C003", "PID_C004")
-#' )
+#' \dontrun{
+#'   library(data.table)
+#'   # Example: A list of patient IDs per ward
+#'   patientIDsPerWard <- list(
+#'     Ward_A = c("PID_A001", "PID_A002", "PID_A003"),
+#'     Ward_B = c("PID_B001", "PID_B002"),
+#'     Ward_C = c("PID_C001", "PID_C002", "PID_C003", "PID_C004")
+#'   )
 #'
-#' # Applying the function
-#' result_table <- createWardPatitentIDPerDateTable(patientIDsPerWard)
+#'   # Applying the function
+#'   result_table <- createWardPatitentIDPerDateTable(patientIDsPerWard)
 #'
-#' # Displaying the result
-#' print(result_table)
+#'   # Displaying the result
+#'   print(result_table)
+#' }
 #'
-#' @export
 createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
   date_time <- Sys.time()
   ward_names <- names(patientIDsPerWard)
@@ -128,7 +129,6 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   RData files using `polar_write_rdata`. The filenames are derived by converting the names of the
 #'   resources in the `resource_tables` list to lowercase.
 #'
-#' @export
 loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
   resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)

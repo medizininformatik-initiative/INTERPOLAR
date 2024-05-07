@@ -12,6 +12,7 @@
 #' @return A named list where each name-value pair corresponds to a pattern and its replacement string.
 #'
 #' @examples
+#' \dontrun{
 #' library(data.table)
 #' # Implementing the function with simulated data
 #' table_description_collapsed <- data.table(
@@ -22,10 +23,10 @@
 #' result <- extractReplacePatterns(table_description_collapsed)
 #' # Print the result
 #' print(result)
+#' }
 #'
 #' @seealso \code{\link[etlutils]{getFirstRowWithPatterns}}, \code{\link[etlutils]{isSimpleNotEmptyString}}
 #'
-#' @export
 extractReplacePatterns <- function(table_description_collapsed) {
   replace_patterns <- list()
   # find the row withe the table header for the replace patterns
@@ -101,15 +102,17 @@ addEmptyRowsBeforeNewResource <- function(table) {
 #' according to the rules defined by the expansion tables.
 #'
 #' @examples
+#' \dontrun{
 #' library(data.table)
 #'
 #' # Assuming `table_description_collapsed` and `expansion_tables` are predefined
-#' # table_description_collapsed <- data.table(...) # Define your initial table description
-#' # expansion_tables <- list(...) # Define your expansion tables
+#' table_description_collapsed <- data.table(...) # Define your initial table description
+#' expansion_tables <- list(...) # Define your expansion tables
 #'
 #' # Example function call
-#' # expanded_table <- expandTableDescriptionInternal(table_description_collapsed, expansion_tables)
-#' # print(expanded_table)
+#' expanded_table <- expandTableDescriptionInternal(table_description_collapsed, expansion_tables)
+#' print(expanded_table)
+#' }
 #'
 #' @seealso \code{\link{extractReplacePatterns}}, \code{\link[etlutils]{getFirstRowWithPatterns}},
 #' \code{\link[etlutils]{isSimpleNotEmptyString}}, \code{\link[etlutils]{getAfterLastSlash}},
@@ -230,11 +233,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
 #' as a side effect, utilizing other functions within the package to read the Excel file, extract relevant tables,
 #' and expand the table description according to predefined rules.
 #'
-#' @examples
-#' # Assuming the Excel file 'Table_Description_Definition.xlsx' exists in the appropriate directory
-#' # and contains the necessary table description and expansion tables:
-#' # expandTableDescriptionFromFile("Table_Description_Definition")
-#'
 #' @seealso \code{\link[etlutils]{readExcelFileAsTableList}}, \code{\link{expandTableDescription}}
 expandTableDescriptionFromFile <- function(table_description_collapsed_excel_simple_filename) {
   if (!grepl('.xlsx$', table_description_collapsed_excel_simple_filename)) {
@@ -281,10 +279,6 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
 #' of the column names in the expanded table description and may write the expanded table
 #' description to an Excel file.
 #'
-#' @examples
-#' expandTableDescription()
-#'
-#' @export
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
@@ -320,7 +314,6 @@ expandTableDescription <- function() {
 #'
 #' Error messages include specific solutions and notes to help address the identified issues.
 #'
-#' @export
 checkResult <- function(expanded_table_description) {
   isValid <- TRUE
 

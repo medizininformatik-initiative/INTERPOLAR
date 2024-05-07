@@ -12,7 +12,6 @@
 #' performed using the provided \code{convert_type_function}. The function assumes that there is
 #' a table description table containing columns: "resource", "column_name", and "type".
 #'
-#' @export
 convertType <- function(resource_tables, convert_columns, convert_type_function) {
   # Get table description
   table_description <- getTableDescriptionsTable(c("resource", "column_name", "type"))
@@ -59,7 +58,6 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #'
 #' @return This function modifies the input resource tables by converting the data types of columns.
 #'
-#' @export
 convertTypes <- function(resource_tables) {
   convertType(resource_tables, c("datetime"), etlutils::convertDateTimeFormat)
   convertType(resource_tables, c("date"), etlutils::convertDateFormat)
