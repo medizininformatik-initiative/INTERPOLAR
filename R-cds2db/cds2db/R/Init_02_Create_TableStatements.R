@@ -156,7 +156,7 @@ convert_create_tables_cds2db_in <- function(table_description, sql_filename, tab
   writeLines(content, paste0("./Postgres-cds_hub/init/", sql_filename), useBytes = TRUE)
 }
 
-replacePlaceholders <- function() {
+createDatabaseScriptsFromTemplates <- function() {
   table_description <- etlutils::readExcelFileAsTableList('./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
   convert_create_tables_cds2db_in(table_description, "10_cre_table_raw_cds2db_in.sql", "raw")
   convert_create_tables_cds2db_in(table_description, "16_cre_table_typ_cds2db_in.sql")
@@ -188,5 +188,3 @@ replacePlaceholders <- function() {
   # # Write the modified content to the file
   # writeLines(content, './Postgres-cds_hub/init/init-db.sql', useBytes = TRUE)
 }
-
-replacePlaceholders()
