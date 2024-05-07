@@ -14,7 +14,13 @@ rm(list = ls())
 library(etlutils)
 library(cds2db)
 
-retrieve()
+INITIALIZE <- FALSE
+
+if (INITIALIZE) {
+  cds2db::initTableDescriptionAndDatabaseScripts()
+} else {
+  cds2db::retrieve()
+}
 
 #' #'
 #' #' Loads all tables from subdirectory 'tables' of the last directory
