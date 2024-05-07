@@ -1254,6 +1254,7 @@ patient_id varchar (70),   -- patient_id (70 x 1 varchar)
 --GRANT INSERT, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- after development phase
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter_raw TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter_raw TO db_user; -- development phase
+
 GRANT TRIGGER ON cds2db_in.encounter_raw TO cds2db_user;
 ALTER TABLE cds2db_in.encounter_raw ALTER COLUMN encounter_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
