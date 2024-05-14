@@ -262,7 +262,7 @@ convert_template_create_table <- function(table_description, script_rights_descr
   # preapre table description -> table names must be in lower
   table_description$resource <- tolower(table_description$resource)
   # Load sql template
-  content <- loadTemplate("template_10-18_cre_table.sql")
+  content <- loadTemplate("template_10-16_cre_table.sql")
   # replace placeholder for target schema
   content <- gsub('<%TARGET_SCHEMA%>', rights_first_row$TARGET_SCHEMA, content)
   # replace placeholder for create table statements for schema TARGET_SCHEMA
