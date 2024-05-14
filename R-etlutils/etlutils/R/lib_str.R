@@ -197,3 +197,78 @@ replacePatternsInString <- function(patternsAndReplacements, string, ignore.case
 getPluralSuffix <- function(counts) {
   ifelse(counts == 1, '', 's')
 }
+
+#' Count Trailing Spaces in a String
+#'
+#' This function calculates the number of consecutive spaces at the end of a string.
+#' It iterates from the end of the string to the beginning and counts spaces until
+#' a non-space character is encountered.
+#'
+#' @param text A character string for which to count trailing spaces.
+#' @return An integer representing the number of trailing spaces.
+#' @examples
+#' countTrailingSpaces("Hello World   ")  # returns 3
+#' countTrailingSpaces("NoSpacesHere")    # returns 0
+#' @export
+
+countTrailingSpaces <- function(text) {
+  space_count <- 0
+  for (i in nchar(text):1) {
+    if (substr(text, i, i) == " ") {
+      space_count <- space_count + 1
+    } else {
+      break
+    }
+  }
+  return(space_count)
+}
+
+#' Find the Index of a Substring in a String
+#'
+#' This function searches for the first occurrence of a specified substring in a main string
+#' and returns its 1-based position. It treats the substring as fixed text, not a regular expression,
+#' which makes it suitable for substrings containing special characters.
+#'
+#' @param main_string The main string in which to search for the substring.
+#' @param fixed_substring The substring to find in the main string. It is treated as fixed text,
+#' so special characters are not interpreted as regular expression elements.
+#' @return Integer value of the substring's position if found, otherwise returns -1.
+#' @examples
+#' indexOfSubstring("Hello world", "world")  # returns 7
+#' indexOfSubstring("Sample text", "not found")  # returns -1
+#' @export
+indexOfSubstring <- function(main_string, fixed_substring) {
+  match_position <- regexpr(fixed_substring, main_string, fixed = TRUE)
+  if (match_position > 0) {
+    return(match_position)
+  }
+  return(-1)
+}
+
+#' Get All Whitespaces Before a Word in a String
+#'
+#' This function counts and returns all consecutive whitespaces located immediately before
+#' the first occurrence of a specified word in a string. The function uses `etlutils::indexOfSubstring`
+#' to find the starting index of the word and then counts backwards to capture the whitespaces.
+#'
+#' @param string The string in which to search for the word.
+#' @param word The word before which whitespaces are to be counted.
+#' @return A string containing only the whitespaces found before the word in the main string.
+#' @examples
+#' getWhitespacesBeforeWord("Hello    world", "world")  # returns "    "
+#' getWhitespacesBeforeWord("No space here", "space")   # returns ""
+#' @export
+getWhitespacesBeforeWord <- function(string, word) {
+  wordIndex <- etlutils::indexOfSubstring(string, word)
+  whitespaces <- ""
+  index <- wordIndex - 1
+  while (index > 0) {
+    if (substr(string, index, index) == " ") {
+      whitespaces <- paste0(whitespaces, " ")
+      index <- index - 1
+    } else {
+      break
+    }
+  }
+  return(whitespaces)
+}
