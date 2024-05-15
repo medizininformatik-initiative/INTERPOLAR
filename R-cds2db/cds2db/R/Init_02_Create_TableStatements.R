@@ -35,9 +35,9 @@ getRightsDefinitionColumnNames <- function() {
     "COPY_FUNC_SCRIPT_NAME",
     "COPY_FUNC_NAME",
     "SCHEMA_2",
-    "POSTFIX_2",
+    "TABLE_POSTFIX_2",
     "SCHEMA_3",
-    "POSTFIX_3")
+    "TABLE_POSTFIX_3")
 }
 
 #################################
