@@ -141,7 +141,7 @@ createTableStatements <- function(table_description, script_rights_description) 
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   statements <- ""
   last_full_tablename <- NA
-  sub_template_filename <- "template_sub_cre_table_create_table_statements.sql"
+  sub_template_filename <- "template_cre_table_sub_create_table_statements.sql"
   single_statement <- loadTemplate(sub_template_filename)
   row <- 1
   indentation <- NA
@@ -193,19 +193,19 @@ getGrantStatements <- function(table_description, script_rights_description) {
   grant_statements <- ''
   for (tablename in tablenames) {
     # load grant template
-    single_grant_statement <- loadTemplate("template_sub_cre_table_grant.sql")
+    single_grant_statement <- loadTemplate("template_cre_table_sub_grant.sql")
 
     sequence_name <- rights_first_row$SEQ_NAME
     grant_sub_alter_table_statement <- ""
     if (!is.na(sequence_name)) {
-      grant_sub_alter_table_statement <- loadTemplate("template_sub_cre_table_grant_alter_table.sql")
+      grant_sub_alter_table_statement <- loadTemplate("template_cre_table_sub_grant_alter_table.sql")
       grant_sub_alter_table_statement <- gsub("<%SEQ_NAME%>", sequence_name, grant_sub_alter_table_statement)
     }
-    single_grant_statement <- gsub("<%TEMPLATE_SUB_CRE_TABLE_GRANT_ALTER_TABLE%>", grant_sub_alter_table_statement, single_grant_statement)
+    single_grant_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_ALTER_TABLE%>", grant_sub_alter_table_statement, single_grant_statement)
 
     grant_sub_rights_statements <- ""
     for (i in seq_len(nrow(script_rights_description))) {
-      single_grant_sub_rights_statement <- loadTemplate("template_sub_cre_table_grant_rights.sql")
+      single_grant_sub_rights_statement <- loadTemplate("template_cre_table_sub_grant_rights.sql")
       single_grant_sub_rights_statement <- gsub("<%RIGHTS%>", script_rights_description[i]$RIGHTS, single_grant_sub_rights_statement)
       single_grant_sub_rights_statement <- gsub("<%GRANT_TARGET_USER%>", script_rights_description[i]$GRANT_TARGET_USER, single_grant_sub_rights_statement)
       grant_sub_rights_statements <- paste0(grant_sub_rights_statements, single_grant_sub_rights_statement)
@@ -213,7 +213,7 @@ getGrantStatements <- function(table_description, script_rights_description) {
         grant_sub_rights_statements <- paste0(grant_sub_rights_statements, "\n")
       }
     }
-    single_grant_statement <- gsub("<%TEMPLATE_SUB_CRE_TABLE_GRANT_RIGHTS%>", grant_sub_rights_statements, single_grant_statement)
+    single_grant_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_RIGHTS%>", grant_sub_rights_statements, single_grant_statement)
 
     # replace placeholders in grant template
     full_tablename <- getFullTableName(tablename, script_rights_description)
@@ -301,7 +301,7 @@ convert_template_create_table <- function(table_description, script_rights_descr
   # preapre table description -> table names must be in lower
   table_description$resource <- tolower(table_description$resource)
   # Load sql template
-  content <- loadTemplate("template_10-16_cre_table.sql")
+  content <- loadTemplate("template_cre_table.sql")
   # replace placeholder for target schema
   content <- gsub('<%OWNER_SCHEMA%>', rights_first_row$OWNER_SCHEMA, content)
   # replace placeholder for create table statements for schema OWNER_SCHEMA
