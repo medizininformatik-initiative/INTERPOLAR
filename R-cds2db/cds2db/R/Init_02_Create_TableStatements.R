@@ -317,7 +317,9 @@ convert_template_create_table <- function(table_description, script_rights_descr
 
 copyTemplate <- function(script_rights_description) {
   scriptname <- script_rights_description[1]$SCRIPTNAME
-
+  content <- loadTemplate(paste0("template_", scriptname))
+  # Write the unmodified content to the file
+  writeResultFile(scriptname, content)
 }
 
 createDatabaseScriptsFromTemplates <- function() {

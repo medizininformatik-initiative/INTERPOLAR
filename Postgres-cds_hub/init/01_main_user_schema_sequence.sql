@@ -38,7 +38,7 @@ COMMENT ON SCHEMA db_config IS 'Schema to store all configuration or organizatio
 COMMENT ON SCHEMA db_log IS 'Schema to log all imported FHIR data and relevant MRP-DB data - MRP-DB login/backup';
 COMMENT ON SCHEMA cds2db_in IS 'Interface schema for writing FHIR data to the MRP database - FHIR import interface';
 COMMENT ON SCHEMA cds2db_out IS 'Interface schema to provide information for the import of FHIR data as a filter - FHIR import interface';
-COMMENT ON SCHEMA db2dataprocessor_out IS 'Interface schema to provide data for calculations e.g. with R - QA / harmonization / MRP calculation';
+COMMENT ON SCHEMA db2dataprocessor_out IS 'Interface schema for providing data for calculations, e.g. with R - QA / harmonization / MRP calculation';
 COMMENT ON SCHEMA db2dataprocessor_in IS 'Interface schema to transfer the results of the calculations to the database - QA / harmonization / MRP calculation';
 COMMENT ON SCHEMA db2frontend_out IS 'Interface schema for frontend reading - FrontEnd';
 COMMENT ON SCHEMA db2frontend_in IS 'Interface schema for frontend writing - FrontEnd';
