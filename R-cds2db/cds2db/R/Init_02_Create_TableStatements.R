@@ -40,13 +40,34 @@ getRightsDefinitionColumnNames <- function() {
     "TABLE_POSTFIX_3")
 }
 
-#################################
-# Start of Conversion Functions #
-#################################
+#####################
+# General Functions #
+#####################
+
+stopOnNA <- function(table_line, column_name) {
+  if (is.na(table_line[[column_name]])) {
+    print(paste0("Error with missing value in column ", column_name, " in line"))
+    print(table_line)
+    stop()
+  }
+}
+
+stopOnMissingValue <- function(table_line, ...) { # ... = column names
+  for (column_name in c(...)) {
+    stopOnNA(table_line, column_name)
+  }
+}
 
 loadTemplate <- function(template_filename) {
   full_template_filename <- paste0(getTemplateDir(), template_filename)
   etlutils::getContentFromFile(full_template_filename)
+}
+
+copyTemplate <- function(script_rights_description) {
+  scriptname <- script_rights_description[1]$SCRIPTNAME
+  content <- loadTemplate(paste0("template_", scriptname))
+  # Write the unmodified content to the file
+  writeResultFile(scriptname, content)
 }
 
 getFullTableName <- function(tablename, script_rights_description) {
@@ -58,7 +79,11 @@ getFullTableName <- function(tablename, script_rights_description) {
   paste0(tablename_prefix, tablename, tablename_postfix)
 }
 
-parseColumnLineArguments <- function(table_description_row, ignore_types = TRUE) {
+########################
+# Convert Create Table #
+########################
+
+parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE) {
   column_line_arguments <- list()
 
   # if there is no type information -> set varchar = string
@@ -122,14 +147,14 @@ parseColumnLineArguments <- function(table_description_row, ignore_types = TRUE)
 
 getCreateTableStatementColumnLine <- function(table_description_row, ignore_types = TRUE) {
   # e.g.: medadm_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 = 420 varchar)
-  arguments <- parseColumnLineArguments(table_description_row, ignore_types)
+  arguments <- parseTableDescriptionRow(table_description_row, ignore_types)
   column_line <- paste0(table_description_row$column_name, " ", arguments$column_type_with_length, ",   -- ", arguments$comment, "\n")
   return(column_line)
 }
 
 getCreateCommentColumnLine <- function(schema_name, full_tablename, table_description_row, ignore_types = TRUE) {
   # e.g.: comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
-  arguments <- parseColumnLineArguments(table_description_row, ignore_types)
+  arguments <- parseTableDescriptionRow(table_description_row, ignore_types)
   comment_line <- paste0("comment on column ", schema_name, ".", full_tablename, ".",
                          table_description_row$column_name," is '",
                          table_description_row$fhir_expression, " ", arguments$comment, "';\n")
@@ -227,7 +252,6 @@ getGrantStatements <- function(table_description, script_rights_description) {
   return(grant_statements)
 }
 
-
 getCommentStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
@@ -257,23 +281,7 @@ getCommentStatements <- function(table_description, script_rights_description) {
   return(comments)
 }
 
-
-stopOnNA <- function(table_line, column_name) {
-  if (is.na(table_line[[column_name]])) {
-    print(paste0("Error with missing value in column ", column_name, " in line"))
-    print(table_line)
-    stop()
-  }
-}
-
-
-stopOnMissingValue <- function(table_line, ...) { # ... = column names
-  for (column_name in c(...)) {
-    stopOnNA(table_line, column_name)
-  }
-}
-
-convert_template_create_table <- function(table_description, script_rights_description) {
+convertTemplateCreateTable <- function(table_description, script_rights_description) {
 
   checkMissingValues <- function() {
     for (i in seq_len(nrow(script_rights_description))) {
@@ -315,12 +323,17 @@ convert_template_create_table <- function(table_description, script_rights_descr
   writeResultFile(rights_first_row$SCRIPTNAME, content)
 }
 
-copyTemplate <- function(script_rights_description) {
-  scriptname <- script_rights_description[1]$SCRIPTNAME
-  content <- loadTemplate(paste0("template_", scriptname))
-  # Write the unmodified content to the file
-  writeResultFile(scriptname, content)
+#######################
+# Convert Create View #
+#######################
+
+convertTemplateCreateView <- function(table_description, script_rights_description) {
+
 }
+
+########
+# Main #
+########
 
 createDatabaseScriptsFromTemplates <- function() {
   table_description <- loadTableDescriptionFile()
@@ -368,9 +381,9 @@ createDatabaseScriptsFromTemplates <- function() {
       message(scriptname)
       script_rights_description <- rights_description[script_min_row_index:i]
       if (isCreateTableScript(scriptname)) {
-        convert_template_create_table(table_description, script_rights_description)
+        convertTemplateCreateTable(table_description, script_rights_description)
       } else if (isCreateViewScript(scriptname)) {
-
+        convertTemplateCreateView(table_description, script_rights_description)
       } else {
         # simple copy script from template without any changes
         copyTemplate(script_rights_description)
