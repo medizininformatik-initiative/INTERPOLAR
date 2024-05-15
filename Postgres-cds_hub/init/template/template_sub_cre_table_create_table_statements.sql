@@ -1,6 +1,6 @@
--- Table "<%TABLE_NAME%>" in schema "<%TARGET_SCHEMA%>"
+-- Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 ----------------------------------------------------
-CREATE TABLE IF NOT EXISTS <%TARGET_SCHEMA%>.<%TABLE_NAME%> (
+CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%TABLE_NAME%>_id serial PRIMARY KEY not null, -- Primary key of the entity
   <%CREATE_TABLE_STATEMENT_COLUMNS%>
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted

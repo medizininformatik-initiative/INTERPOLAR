@@ -112,7 +112,7 @@ createTableStatements <- function(table_description, script_rights_description) 
       full_tablename <- getFullTableName(tablename, rights_first_row)
       if (!full_tablename %in% last_full_tablename) {
         last_full_tablename <- full_tablename
-        single_statement <- gsub("<%TARGET_SCHEMA%>", rights_first_row$TARGET_SCHEMA, single_statement)
+        single_statement <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, single_statement)
         single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
         column_line_statement <- ""
         row2 <- row
@@ -178,8 +178,8 @@ getGrantStatements <- function(table_description, script_rights_description) {
 
     # replace placeholders in grant template
     full_tablename <- getFullTableName(tablename, script_rights_description)
-    single_grant_statement <- gsub("<%TARGET_SCHEMA%>", rights_first_row$TARGET_SCHEMA, single_grant_statement)
-    single_grant_statement <- gsub("<%TARGET_USER%>", rights_first_row$TARGET_USER, single_grant_statement)
+    single_grant_statement <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, single_grant_statement)
+    single_grant_statement <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, single_grant_statement)
     single_grant_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_grant_statement)
 
 
@@ -207,7 +207,7 @@ getCommentStatements <- function(table_description, script_rights_description) {
       single_length <- as.integer(table_description_row$single_length)
       count <- as.integer(table_description_row$count)
       if (is.na(count)) count <- 1
-      schema_name <- rights_first_row$TARGET_SCHEMA
+      schema_name <- rights_first_row$OWNER_SCHEMA
       full_tablename <- getFullTableName(tablename, rights_first_row)
       comment <- getCreateCommentColumnLine(schema_name, full_tablename, table_description_row, ignore_types)
       # generates something like this:
@@ -242,8 +242,8 @@ convert_template_create_table <- function(table_description, script_rights_descr
         # check if all needed values are present in the first line
         stopOnMissingValue(rights_first_row,
                            rights_columns$SCRIPTNAME,
-                           rights_columns$TARGET_USER,
-                           rights_columns$TARGET_SCHEMA)
+                           rights_columns$OWNER_USER,
+                           rights_columns$OWNER_SCHEMA)
       }
       # all lines need this values:
       stopOnMissingValue(script_rights_description[i],
@@ -264,12 +264,12 @@ convert_template_create_table <- function(table_description, script_rights_descr
   # Load sql template
   content <- loadTemplate("template_10-16_cre_table.sql")
   # replace placeholder for target schema
-  content <- gsub('<%TARGET_SCHEMA%>', rights_first_row$TARGET_SCHEMA, content)
-  # replace placeholder for create table statements for schema TARGET_SCHEMA
+  content <- gsub('<%OWNER_SCHEMA%>', rights_first_row$OWNER_SCHEMA, content)
+  # replace placeholder for create table statements for schema OWNER_SCHEMA
   content <- gsub('<%CREATE_TABLE_STATEMENTS%>', createTableStatements(table_description, script_rights_description), content)
-  # replace placeholder for grant statements for schema TARGET_SCHEMA
+  # replace placeholder for grant statements for schema OWNER_SCHEMA
   content <- gsub('<%GRANT_STATEMENTS%>', getGrantStatements(table_description, script_rights_description), content)
-  # replace placeholder for comment statements for schema TARGET_SCHEMA
+  # replace placeholder for comment statements for schema OWNER_SCHEMA
   content <- gsub('<%COMMENT_STATEMENTS%>', getCommentStatements(table_description, script_rights_description), content)
 
   # Write the modified content to the file
@@ -277,25 +277,38 @@ convert_template_create_table <- function(table_description, script_rights_descr
 }
 
 createDatabaseScriptsFromTemplates <- function() {
-  table_description <- etlutils::readExcelFileAsTableList('./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx')[['table_description']]
+  table_description <- etlutils::readExcelFileAsTableList("./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx")[["table_description"]]
 
+  rights_description_file_name <- "./Postgres-cds_hub/init/template/user_schema_rights_definition.xlsx"
+  rights_description_sheet_name <- "rights_and_functions"
   # read the excel file with the rigths and copy functions definition and extract the specific table
-  rights_description <- etlutils::readExcelFileAsTableList('./Postgres-cds_hub/init/template/user_schema_rights_definition.xlsx')[['rights_and_functions']]
+  rights_description <- etlutils::readExcelFileAsTableList(rights_description_file_name)[[rights_description_sheet_name]]
+
   # this are *exactly* the names of the columns in the excel file
-  rights_description_columns <- etlutils::namedListByValue("SCRIPTNAME",
-                                                           "TEMPLATE",
-                                                           "TARGET_USER",
-                                                           "TARGET_SCHEMA",
-                                                           "TABLE_PREFIX",
-                                                           "TABLE_POSTFIX",
-                                                           "SEQ_NAME",
-                                                           "RIGHTS",
-                                                           "GRANT_TARGET_USER",
-                                                           "COPY_FUNC_SCRIPT_NAME",
-                                                           "COPY_FUNC_NAME",
-                                                           "COPY_FUNC_SOURCE_SCHEMA",
-                                                           "COPY_FUNC_SOURCE_TABLE_POSTFIX")
+  rights_description_columns <- etlutils::namedListByValue(
+    "SCRIPTNAME",
+    "TEMPLATE",
+    "OWNER_USER",
+    "OWNER_SCHEMA",
+    "TABLE_PREFIX",
+    "TABLE_POSTFIX",
+    "SEQ_NAME",
+    "RIGHTS",
+    "GRANT_TARGET_USER",
+    "COPY_FUNC_SCRIPT_NAME",
+    "COPY_FUNC_NAME",
+    "SCHEMA_2",
+    "POSTFIX_2",
+    "SCHEMA_3",
+    "POSTFIX_3")
+
   rights_description <- etlutils::removeTableHeader(rights_description, rights_description_columns)
+
+  if (!etlutils::isValidTable(rights_description)) {
+    stop(paste0("Could not find a row with the follwing entries in file '", rights_description_file_name, "' in sheet '", rights_description_sheet_name, "':\n",
+                paste0(rights_description_columns, collapse = ", ")))
+  }
+
   rights_description <- etlutils::removeRowsWithNAorEmpty(rights_description)
   rights_description <- etlutils::fillNAWithLastRowValue(rights_description, rights_description_columns$SCRIPTNAME)
 
