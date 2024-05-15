@@ -424,3 +424,26 @@ getLocalRdataFileInfo <- function(table_name) {
 existsLocalRdataFile <- function(table_name) {
   file.exists(getLocalRdataFileName(table_name))
 }
+
+#' Read Content from a File into a Single String
+#'
+#' This function reads the content of a file specified by the file path and
+#' concatenates all lines into a single string, with each line separated by a newline character.
+#' This is useful for processing file data that needs to be utilized as a continuous string.
+#'
+#' @param file_path The path to the file whose content is to be read.
+#' @return A single string containing all the lines from the file, concatenated together with newline
+#' characters between each line.
+#' @examples
+#' \dontrun{
+#'   content <- getContentFromFile("path/to/your/file.txt")
+#'   print(content)
+#' }
+#' @export
+getContentFromFile <- function(file_path) {
+  # read the content of the file
+  content <- readLines(file_path, warn = FALSE)
+  # append all single line strings to one large string
+  content <- paste0(content, collapse = '\n')
+  return(content)
+}

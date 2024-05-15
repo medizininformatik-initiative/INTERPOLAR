@@ -1,13 +1,52 @@
-getContentFromFile <- function(file_path) {
-  # read the content of the file
-  content <- readLines(file_path)
-  # append all single line strings to one large string
-  content <- paste0(content, collapse = '\n')
+######################################################
+# Static Definitions of Paths, File- and Columnnames #
+######################################################
+getDBScriptsTargetDir <- function() {"./Postgres-cds_hub/init/"}
+getTemplateDir <- function() {paste0(getDBScriptsTargetDir(), "template/")}
+getRightsDefinitionFileName <- function() {paste0(getTemplateDir(), "user_schema_rights_definition.xlsx")}
+getRightsDefinitionSheetName <- function() {"rights_and_functions"}
+writeResultFile <- function(scriptname, content) {
+  writeLines(content, paste0(getDBScriptsTargetDir(), scriptname), useBytes = TRUE)
+}
+#' Load Table Description Excel File
+#'
+#' This function loads a table description excel file
+#'
+#' @return A data table with table descriptions
+#'
+loadTableDescriptionFile <- function() {
+  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
+  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
+  return(table_description)
 }
 
+getRightsDefinitionColumnNames <- function() {
+  # these are *exactly* the names of the columns in the excel file
+  etlutils::namedListByValue(
+    "SCRIPTNAME",
+    "TEMPLATE",
+    "OWNER_USER",
+    "OWNER_SCHEMA",
+    "TABLE_PREFIX",
+    "TABLE_POSTFIX",
+    "SEQ_NAME",
+    "RIGHTS",
+    "GRANT_TARGET_USER",
+    "COPY_FUNC_SCRIPT_NAME",
+    "COPY_FUNC_NAME",
+    "SCHEMA_2",
+    "POSTFIX_2",
+    "SCHEMA_3",
+    "POSTFIX_3")
+}
+
+#################################
+# Start of Conversion Functions #
+#################################
+
 loadTemplate <- function(template_filename) {
-  full_template_filename <- paste0("./Postgres-cds_hub/init/template/", template_filename)
-  getContentFromFile(full_template_filename)
+  full_template_filename <- paste0(getTemplateDir(), template_filename)
+  etlutils::getContentFromFile(full_template_filename)
 }
 
 getFullTableName <- function(tablename, script_rights_description) {
@@ -273,34 +312,24 @@ convert_template_create_table <- function(table_description, script_rights_descr
   content <- gsub('<%COMMENT_STATEMENTS%>', getCommentStatements(table_description, script_rights_description), content)
 
   # Write the modified content to the file
-  writeLines(content, paste0("./Postgres-cds_hub/init/", paste0(rights_first_row$SCRIPTNAME)), useBytes = TRUE)
+  writeResultFile(rights_first_row$SCRIPTNAME, content)
+}
+
+copyTemplate <- function(script_rights_description) {
+  scriptname <- script_rights_description[1]$SCRIPTNAME
+
 }
 
 createDatabaseScriptsFromTemplates <- function() {
-  table_description <- etlutils::readExcelFileAsTableList("./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx")[["table_description"]]
+  table_description <- loadTableDescriptionFile()
 
-  rights_description_file_name <- "./Postgres-cds_hub/init/template/user_schema_rights_definition.xlsx"
-  rights_description_sheet_name <- "rights_and_functions"
+  rights_description_file_name <- getRightsDefinitionFileName()
+  rights_description_sheet_name <- getRightsDefinitionSheetName()
   # read the excel file with the rigths and copy functions definition and extract the specific table
   rights_description <- etlutils::readExcelFileAsTableList(rights_description_file_name)[[rights_description_sheet_name]]
 
   # this are *exactly* the names of the columns in the excel file
-  rights_description_columns <- etlutils::namedListByValue(
-    "SCRIPTNAME",
-    "TEMPLATE",
-    "OWNER_USER",
-    "OWNER_SCHEMA",
-    "TABLE_PREFIX",
-    "TABLE_POSTFIX",
-    "SEQ_NAME",
-    "RIGHTS",
-    "GRANT_TARGET_USER",
-    "COPY_FUNC_SCRIPT_NAME",
-    "COPY_FUNC_NAME",
-    "SCHEMA_2",
-    "POSTFIX_2",
-    "SCHEMA_3",
-    "POSTFIX_3")
+  rights_description_columns <- getRightsDefinitionColumnNames()
 
   rights_description <- etlutils::removeTableHeader(rights_description, rights_description_columns)
 
@@ -342,6 +371,7 @@ createDatabaseScriptsFromTemplates <- function() {
 
       } else {
         # simple copy script from template without any changes
+        copyTemplate(script_rights_description)
       }
       scriptname = next_scriptname
       script_min_row_index = i + 1
@@ -350,4 +380,4 @@ createDatabaseScriptsFromTemplates <- function() {
 
 }
 
-createDatabaseScriptsFromTemplates()
+#createDatabaseScriptsFromTemplates()
