@@ -79,6 +79,13 @@ getFullTableName <- function(tablename, script_rights_description) {
   paste0(tablename_prefix, tablename, tablename_postfix)
 }
 
+getFullTableName_2 <- function(tablename, script_rights_description) {
+  rights_first_row <- script_rights_description[1]
+  tablename_postfix <- rights_first_row$TABLE_POSTFIX_2
+  if (is.na(tablename_postfix)) tablename_postfix <- ""
+  paste0(tablename, tablename_postfix)
+}
+
 ########################
 # Convert Create Table #
 ########################
@@ -161,7 +168,7 @@ getCreateCommentColumnLine <- function(schema_name, full_tablename, table_descri
   return(comment_line)
 }
 
-createTableStatements <- function(table_description, script_rights_description) {
+getCreateTableStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   statements <- ""
@@ -176,7 +183,6 @@ createTableStatements <- function(table_description, script_rights_description) 
       full_tablename <- getFullTableName(tablename, rights_first_row)
       if (!full_tablename %in% last_full_tablename) {
         last_full_tablename <- full_tablename
-        single_statement <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, single_statement)
         single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
         column_line_statement <- ""
         row2 <- row
@@ -212,13 +218,13 @@ createTableStatements <- function(table_description, script_rights_description) 
   return(statements)
 }
 
-getGrantStatements <- function(table_description, script_rights_description) {
+getCreateTableGrantStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   tablenames <- unique(na.omit(table_description$resource))
-  grant_statements <- ''
+  statements <- ''
   for (tablename in tablenames) {
     # load grant template
-    single_grant_statement <- loadTemplate("template_cre_table_sub_grant.sql")
+    single_statement <- loadTemplate("template_cre_table_sub_grant.sql")
 
     sequence_name <- rights_first_row$SEQ_NAME
     grant_sub_alter_table_statement <- ""
@@ -226,7 +232,7 @@ getGrantStatements <- function(table_description, script_rights_description) {
       grant_sub_alter_table_statement <- loadTemplate("template_cre_table_sub_grant_alter_table.sql")
       grant_sub_alter_table_statement <- gsub("<%SEQ_NAME%>", sequence_name, grant_sub_alter_table_statement)
     }
-    single_grant_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_ALTER_TABLE%>", grant_sub_alter_table_statement, single_grant_statement)
+    single_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_ALTER_TABLE%>", grant_sub_alter_table_statement, single_statement)
 
     grant_sub_rights_statements <- ""
     for (i in seq_len(nrow(script_rights_description))) {
@@ -238,21 +244,20 @@ getGrantStatements <- function(table_description, script_rights_description) {
         grant_sub_rights_statements <- paste0(grant_sub_rights_statements, "\n")
       }
     }
-    single_grant_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_RIGHTS%>", grant_sub_rights_statements, single_grant_statement)
+    single_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_RIGHTS%>", grant_sub_rights_statements, single_statement)
 
     # replace placeholders in grant template
     full_tablename <- getFullTableName(tablename, script_rights_description)
-    single_grant_statement <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, single_grant_statement)
-    single_grant_statement <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, single_grant_statement)
-    single_grant_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_grant_statement)
+    single_statement <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, single_statement)
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
 
 
-    grant_statements <- paste0(grant_statements, single_grant_statement, "\n\n")
+    statements <- paste0(statements, single_statement, "\n\n")
   }
-  return(grant_statements)
+  return(statements)
 }
 
-getCommentStatements <- function(table_description, script_rights_description) {
+getCreateTableCommentStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   comments <- ''
@@ -284,10 +289,13 @@ getCommentStatements <- function(table_description, script_rights_description) {
 convertTemplateCreateTable <- function(table_description, script_rights_description) {
 
   checkMissingValues <- function() {
+    # create a named vector with equal names and values for the right description columns
+    # so we can use it instead of strings
+    rights_columns <- etlutils::namedListByValue(names(script_rights_description))
     for (i in seq_len(nrow(script_rights_description))) {
       if (i == 1) {
         # check if all needed values are present in the first line
-        stopOnMissingValue(rights_first_row,
+        stopOnMissingValue(script_rights_description[1],
                            rights_columns$SCRIPTNAME,
                            rights_columns$OWNER_USER,
                            rights_columns$OWNER_SCHEMA)
@@ -299,25 +307,19 @@ convertTemplateCreateTable <- function(table_description, script_rights_descript
     }
   }
 
-  rights_first_row <- script_rights_description[1]
-  # create a named vector with equal names and values for the right description columns
-  # so we can use it instead of strings
-  rights_columns <- etlutils::namedListByValue(names(script_rights_description))
-  # check if all needed values for the conversion are present (rights_first_row and rights_columns must be initialized here)
   checkMissingValues()
 
-  # preapre table description -> table names must be in lower
-  table_description$resource <- tolower(table_description$resource)
+  rights_first_row <- script_rights_description[1]
   # Load sql template
   content <- loadTemplate("template_cre_table.sql")
-  # replace placeholder for target schema
-  content <- gsub('<%OWNER_SCHEMA%>', rights_first_row$OWNER_SCHEMA, content)
   # replace placeholder for create table statements for schema OWNER_SCHEMA
-  content <- gsub('<%CREATE_TABLE_STATEMENTS%>', createTableStatements(table_description, script_rights_description), content)
+  content <- gsub('<%CREATE_TABLE_STATEMENTS%>', getCreateTableStatements(table_description, script_rights_description), content)
   # replace placeholder for grant statements for schema OWNER_SCHEMA
-  content <- gsub('<%GRANT_STATEMENTS%>', getGrantStatements(table_description, script_rights_description), content)
+  content <- gsub('<%GRANT_STATEMENTS%>', getCreateTableGrantStatements(table_description, script_rights_description), content)
   # replace placeholder for comment statements for schema OWNER_SCHEMA
-  content <- gsub('<%COMMENT_STATEMENTS%>', getCommentStatements(table_description, script_rights_description), content)
+  content <- gsub('<%COMMENT_STATEMENTS%>', getCreateTableCommentStatements(table_description, script_rights_description), content)
+  # replace placeholder for target schema as last
+  content <- gsub('<%OWNER_SCHEMA%>', rights_first_row$OWNER_SCHEMA, content)
 
   # Write the modified content to the file
   writeResultFile(rights_first_row$SCRIPTNAME, content)
@@ -327,8 +329,92 @@ convertTemplateCreateTable <- function(table_description, script_rights_descript
 # Convert Create View #
 #######################
 
+getCreateViewCreateOrReplaceViewStatements <- function(table_description, script_rights_description) {
+  rights_first_row <- script_rights_description[1]
+  tablenames <- unique(na.omit(table_description$resource))
+  statements <- ''
+  for (tablename in tablenames) {
+    full_tablename <- getFullTableName(tablename, script_rights_description)
+    full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
+    # load grant template
+    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%TABLE_NAME_2%>_id not in (select <%TABLE_NAME%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%>));
+    single_statement <- loadTemplate("template_cre_view_sub_create_or_replace_view.sql")
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+    single_statement <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, single_statement)
+    single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
+    single_statement <- gsub("<%SIMPLE_TABLENAME%>", tablename, single_statement)
+    statements <- paste0(statements, single_statement, "\n")
+  }
+  return(statements)
+}
+
+getCreateViewGrantStatements <- function(table_description, script_rights_description) {
+  rights_first_row <- script_rights_description[1]
+  tablenames <- unique(na.omit(table_description$resource))
+  statements <- ''
+  for (tablename in tablenames) {
+    # load grant template
+    # <%TEMPLATE_CRE_VIEW_SUB_GRANT_RIGHTS%>
+    # GRANT USAGE ON SCHEMA <%OWNER_SCHEMA%> TO <%GRANT_TARGET_USER%>;
+    single_statement <- loadTemplate("template_cre_view_sub_grant.sql")
+    grant_sub_rights_statements <- ""
+    for (i in seq_len(nrow(script_rights_description))) {
+      # GRANT <%RIGHTS%> ON TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> TO <%GRANT_TARGET_USER%>; -- Assign view to the user
+      single_grant_sub_rights_statement <- loadTemplate("template_cre_view_sub_grant_rights.sql")
+      single_grant_sub_rights_statement <- gsub("<%RIGHTS%>", script_rights_description[i]$RIGHTS, single_grant_sub_rights_statement)
+      single_grant_sub_rights_statement <- gsub("<%GRANT_TARGET_USER%>", script_rights_description[i]$GRANT_TARGET_USER, single_grant_sub_rights_statement)
+      grant_sub_rights_statements <- paste0(grant_sub_rights_statements, single_grant_sub_rights_statement)
+      if (i < nrow(script_rights_description)) {
+        grant_sub_rights_statements <- paste0(grant_sub_rights_statements, "\n")
+      }
+    }
+    single_statement <- gsub("<%TEMPLATE_CRE_VIEW_SUB_GRANT_RIGHTS%>", grant_sub_rights_statements, single_statement)
+
+    # replace placeholders in grant template
+    full_tablename <- getFullTableName(tablename, script_rights_description)
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+
+
+    statements <- paste0(statements, single_statement, "\n\n")
+  }
+  return(statements)
+}
+
 convertTemplateCreateView <- function(table_description, script_rights_description) {
 
+  checkMissingValues <- function() {
+    # create a named vector with equal names and values for the right description columns
+    # so we can use it instead of strings
+    rights_columns <- etlutils::namedListByValue(names(script_rights_description))
+    for (i in seq_len(nrow(script_rights_description))) {
+      if (i == 1) {
+        # check if all needed values are present in the first line
+        stopOnMissingValue(script_rights_description[1],
+                           rights_columns$SCRIPTNAME,
+                           rights_columns$OWNER_USER,
+                           rights_columns$OWNER_SCHEMA,
+                           rights_columns$TABLE_PREFIX,
+                           rights_columns$SCHEMA_2,
+                           rights_columns$TABLE_POSTFIX_2)
+      }
+      # all lines need this values:
+      stopOnMissingValue(script_rights_description[i],
+                         rights_columns$RIGHTS,
+                         rights_columns$GRANT_TRAGET_USER)
+    }
+  }
+
+  rights_first_row <- script_rights_description[1]
+  # Load sql template
+  content <- loadTemplate("template_cre_view.sql")
+  # replace placeholder for create or replace view
+  content <- gsub('<%TEMPLATE_CRE_VIEW_SUB_CREATE_OR_REPLACE_VIEW%>', getCreateViewCreateOrReplaceViewStatements(table_description, script_rights_description), content)
+  content <- gsub('<%TEMPLATE_CRE_VIEW_SUB_GRANT%>', getCreateViewGrantStatements(table_description, script_rights_description), content)
+  content <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, content)
+  content <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, content)
+
+  # Write the modified content to the file
+  writeResultFile(rights_first_row$SCRIPTNAME, content)
 }
 
 ########
@@ -337,6 +423,8 @@ convertTemplateCreateView <- function(table_description, script_rights_descripti
 
 createDatabaseScriptsFromTemplates <- function() {
   table_description <- loadTableDescriptionFile()
+  # preapre table description -> table names must be in lower
+  table_description$resource <- tolower(table_description$resource)
 
   rights_description_file_name <- getRightsDefinitionFileName()
   rights_description_sheet_name <- getRightsDefinitionSheetName()
@@ -349,8 +437,11 @@ createDatabaseScriptsFromTemplates <- function() {
   rights_description <- etlutils::removeTableHeader(rights_description, rights_description_columns)
 
   if (!etlutils::isValidTable(rights_description)) {
-    stop(paste0("Could not find a row with the follwing entries in file '", rights_description_file_name, "' in sheet '", rights_description_sheet_name, "':\n",
-                paste0(rights_description_columns, collapse = ", ")))
+    stop(paste0("Could not find a row with the follwing entries in file '",
+                rights_description_file_name, "' in sheet '", rights_description_sheet_name, "':\n",
+                paste0(rights_description_columns, collapse = ", "), "\n",
+                "Hint: If the column names are changed in the Excel file, then replace the same ",
+                "strings here in this R-script."))
   }
 
   rights_description <- etlutils::removeRowsWithNAorEmpty(rights_description)
