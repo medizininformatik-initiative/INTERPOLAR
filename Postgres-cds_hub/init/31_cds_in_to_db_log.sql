@@ -1,17 +1,17 @@
 ------------------------------
 -- Start encounter
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.encounter_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.encounter WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.encounter_raw target_record
+            FROM db_log.encounter target_record
             WHERE   target_record.enc_id = current_record.enc_id AND
                     target_record.enc_patient_id = current_record.enc_patient_id AND
                     target_record.enc_partof_id = current_record.enc_partof_id AND
@@ -87,7 +87,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.encounter_raw (
+                INSERT INTO db_log.encounter (
                     enc_id,
                     enc_patient_id,
                     enc_partof_id,
@@ -237,12 +237,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.encounter_raw
+                UPDATE cds2db_in.encounter
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE encounter_id = current_record.encounter_id;
 	           ELSE
-	              UPDATE db_log.encounter_raw
+	              UPDATE db_log.encounter
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE encounter_id = current_record.encounter_id;
@@ -252,25 +252,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END encounter
 -----------------------------
 
 
 ------------------------------
 -- Start patient
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.patient_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.patient WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.patient_raw target_record
+            FROM db_log.patient target_record
             WHERE   target_record.pat_id = current_record.pat_id AND
                     target_record.pat_identifier_use = current_record.pat_identifier_use AND
                     target_record.pat_identifier_type_system = current_record.pat_identifier_type_system AND
@@ -292,7 +292,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.patient_raw (
+                INSERT INTO db_log.patient (
                     pat_id,
                     pat_identifier_use,
                     pat_identifier_type_system,
@@ -334,12 +334,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.patient_raw
+                UPDATE cds2db_in.patient
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE patient_id = current_record.patient_id;
 	           ELSE
-	              UPDATE db_log.patient_raw
+	              UPDATE db_log.patient
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE patient_id = current_record.patient_id;
@@ -349,25 +349,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END patient
 -----------------------------
 
 
 ------------------------------
 -- Start condition
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.condition_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.condition WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.condition_raw target_record
+            FROM db_log.condition target_record
             WHERE   target_record.con_id = current_record.con_id AND
                     target_record.con_encounter_id = current_record.con_encounter_id AND
                     target_record.con_patient_id = current_record.con_patient_id AND
@@ -485,7 +485,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.condition_raw (
+                INSERT INTO db_log.condition (
                     con_id,
                     con_encounter_id,
                     con_patient_id,
@@ -719,12 +719,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.condition_raw
+                UPDATE cds2db_in.condition
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE condition_id = current_record.condition_id;
 	           ELSE
-	              UPDATE db_log.condition_raw
+	              UPDATE db_log.condition
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE condition_id = current_record.condition_id;
@@ -734,25 +734,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END condition
 -----------------------------
 
 
 ------------------------------
 -- Start medication
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.medication_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.medication WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.medication_raw target_record
+            FROM db_log.medication target_record
             WHERE   target_record.med_id = current_record.med_id AND
                     target_record.med_identifier_use = current_record.med_identifier_use AND
                     target_record.med_identifier_type_system = current_record.med_identifier_type_system AND
@@ -814,7 +814,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.medication_raw (
+                INSERT INTO db_log.medication (
                     med_id,
                     med_identifier_use,
                     med_identifier_type_system,
@@ -936,12 +936,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.medication_raw
+                UPDATE cds2db_in.medication
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE medication_id = current_record.medication_id;
 	           ELSE
-	              UPDATE db_log.medication_raw
+	              UPDATE db_log.medication
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE medication_id = current_record.medication_id;
@@ -951,25 +951,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END medication
 -----------------------------
 
 
 ------------------------------
 -- Start medicationrequest
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.medicationrequest_raw target_record
+            FROM db_log.medicationrequest target_record
             WHERE   target_record.medreq_id = current_record.medreq_id AND
                     target_record.medreq_encounter_id = current_record.medreq_encounter_id AND
                     target_record.medreq_patient_id = current_record.medreq_patient_id AND
@@ -1197,7 +1197,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.medicationrequest_raw (
+                INSERT INTO db_log.medicationrequest (
                     medreq_id,
                     medreq_encounter_id,
                     medreq_patient_id,
@@ -1651,12 +1651,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.medicationrequest_raw
+                UPDATE cds2db_in.medicationrequest
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE medicationrequest_id = current_record.medicationrequest_id;
 	           ELSE
-	              UPDATE db_log.medicationrequest_raw
+	              UPDATE db_log.medicationrequest
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE medicationrequest_id = current_record.medicationrequest_id;
@@ -1666,25 +1666,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END medicationrequest
 -----------------------------
 
 
 ------------------------------
 -- Start medicationadministration
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.medicationadministration_raw target_record
+            FROM db_log.medicationadministration target_record
             WHERE   target_record.medadm_id = current_record.medadm_id AND
                     target_record.medadm_encounter_id = current_record.medadm_encounter_id AND
                     target_record.medadm_patient_id = current_record.medadm_patient_id AND
@@ -1798,7 +1798,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.medicationadministration_raw (
+                INSERT INTO db_log.medicationadministration (
                     medadm_id,
                     medadm_encounter_id,
                     medadm_patient_id,
@@ -2024,12 +2024,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.medicationadministration_raw
+                UPDATE cds2db_in.medicationadministration
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE medicationadministration_id = current_record.medicationadministration_id;
 	           ELSE
-	              UPDATE db_log.medicationadministration_raw
+	              UPDATE db_log.medicationadministration
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE medicationadministration_id = current_record.medicationadministration_id;
@@ -2039,25 +2039,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END medicationadministration
 -----------------------------
 
 
 ------------------------------
 -- Start medicationstatement
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.medicationstatement_raw target_record
+            FROM db_log.medicationstatement target_record
             WHERE   target_record.medstat_id = current_record.medstat_id AND
                     target_record.medstat_identifier_use = current_record.medstat_identifier_use AND
                     target_record.medstat_identifier_type_system = current_record.medstat_identifier_type_system AND
@@ -2272,7 +2272,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.medicationstatement_raw (
+                INSERT INTO db_log.medicationstatement (
                     medstat_id,
                     medstat_identifier_use,
                     medstat_identifier_type_system,
@@ -2700,12 +2700,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.medicationstatement_raw
+                UPDATE cds2db_in.medicationstatement
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE medicationstatement_id = current_record.medicationstatement_id;
 	           ELSE
-	              UPDATE db_log.medicationstatement_raw
+	              UPDATE db_log.medicationstatement
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE medicationstatement_id = current_record.medicationstatement_id;
@@ -2715,25 +2715,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END medicationstatement
 -----------------------------
 
 
 ------------------------------
 -- Start observation
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.observation_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.observation WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.observation_raw target_record
+            FROM db_log.observation target_record
             WHERE   target_record.obs_id = current_record.obs_id AND
                     target_record.obs_encounter_id = current_record.obs_encounter_id AND
                     target_record.obs_patient_id = current_record.obs_patient_id AND
@@ -2869,7 +2869,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.observation_raw (
+                INSERT INTO db_log.observation (
                     obs_id,
                     obs_encounter_id,
                     obs_patient_id,
@@ -3139,12 +3139,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.observation_raw
+                UPDATE cds2db_in.observation
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE observation_id = current_record.observation_id;
 	           ELSE
-	              UPDATE db_log.observation_raw
+	              UPDATE db_log.observation
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE observation_id = current_record.observation_id;
@@ -3154,25 +3154,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END observation
 -----------------------------
 
 
 ------------------------------
 -- Start diagnosticreport
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.diagnosticreport_raw target_record
+            FROM db_log.diagnosticreport target_record
             WHERE   target_record.diagrep_id = current_record.diagrep_id AND
                     target_record.diagrep_encounter_id = current_record.diagrep_encounter_id AND
                     target_record.diagrep_patient_id = current_record.diagrep_patient_id AND
@@ -3221,7 +3221,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.diagnosticreport_raw (
+                INSERT INTO db_log.diagnosticreport (
                     diagrep_id,
                     diagrep_encounter_id,
                     diagrep_patient_id,
@@ -3317,12 +3317,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.diagnosticreport_raw
+                UPDATE cds2db_in.diagnosticreport
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE diagnosticreport_id = current_record.diagnosticreport_id;
 	           ELSE
-	              UPDATE db_log.diagnosticreport_raw
+	              UPDATE db_log.diagnosticreport
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE diagnosticreport_id = current_record.diagnosticreport_id;
@@ -3332,25 +3332,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END diagnosticreport
 -----------------------------
 
 
 ------------------------------
 -- Start servicerequest
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.servicerequest_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.servicerequest WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.servicerequest_raw target_record
+            FROM db_log.servicerequest target_record
             WHERE   target_record.servreq_id = current_record.servreq_id AND
                     target_record.servreq_encounter_id = current_record.servreq_encounter_id AND
                     target_record.servreq_patient_id = current_record.servreq_patient_id AND
@@ -3413,7 +3413,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.servicerequest_raw (
+                INSERT INTO db_log.servicerequest (
                     servreq_id,
                     servreq_encounter_id,
                     servreq_patient_id,
@@ -3537,12 +3537,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.servicerequest_raw
+                UPDATE cds2db_in.servicerequest
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE servicerequest_id = current_record.servicerequest_id;
 	           ELSE
-	              UPDATE db_log.servicerequest_raw
+	              UPDATE db_log.servicerequest
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE servicerequest_id = current_record.servicerequest_id;
@@ -3552,25 +3552,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END servicerequest
 -----------------------------
 
 
 ------------------------------
 -- Start procedure
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.procedure_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.procedure WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.procedure_raw target_record
+            FROM db_log.procedure target_record
             WHERE   target_record.proc_id = current_record.proc_id AND
                     target_record.proc_encounter_id = current_record.proc_encounter_id AND
                     target_record.proc_patient_id = current_record.proc_patient_id AND
@@ -3643,7 +3643,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.procedure_raw (
+                INSERT INTO db_log.procedure (
                     proc_id,
                     proc_encounter_id,
                     proc_patient_id,
@@ -3787,12 +3787,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.procedure_raw
+                UPDATE cds2db_in.procedure
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE procedure_id = current_record.procedure_id;
 	           ELSE
-	              UPDATE db_log.procedure_raw
+	              UPDATE db_log.procedure
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE procedure_id = current_record.procedure_id;
@@ -3802,25 +3802,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END procedure
 -----------------------------
 
 
 ------------------------------
 -- Start consent
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.consent_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.consent WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.consent_raw target_record
+            FROM db_log.consent target_record
             WHERE   target_record.cons_id = current_record.cons_id AND
                     target_record.cons_patient_id = current_record.cons_patient_id AND
                     target_record.cons_identifier_use = current_record.cons_identifier_use AND
@@ -3859,7 +3859,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.consent_raw (
+                INSERT INTO db_log.consent (
                     cons_id,
                     cons_patient_id,
                     cons_identifier_use,
@@ -3935,12 +3935,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.consent_raw
+                UPDATE cds2db_in.consent
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE consent_id = current_record.consent_id;
 	           ELSE
-	              UPDATE db_log.consent_raw
+	              UPDATE db_log.consent
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE consent_id = current_record.consent_id;
@@ -3950,25 +3950,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END consent
 -----------------------------
 
 
 ------------------------------
 -- Start location
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.location_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.location WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.location_raw target_record
+            FROM db_log.location target_record
             WHERE   target_record.loc_id = current_record.loc_id AND
                     target_record.loc_identifier_use = current_record.loc_identifier_use AND
                     target_record.loc_identifier_type_system = current_record.loc_identifier_type_system AND
@@ -3988,7 +3988,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.location_raw (
+                INSERT INTO db_log.location (
                     loc_id,
                     loc_identifier_use,
                     loc_identifier_type_system,
@@ -4026,12 +4026,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.location_raw
+                UPDATE cds2db_in.location
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE location_id = current_record.location_id;
 	           ELSE
-	              UPDATE db_log.location_raw
+	              UPDATE db_log.location
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE location_id = current_record.location_id;
@@ -4041,25 +4041,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END location
 -----------------------------
 
 
 ------------------------------
 -- Start pids_per_ward
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
+-- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
-            FROM db_log.pids_per_ward_raw target_record
+            FROM db_log.pids_per_ward target_record
             WHERE   target_record.date_time = current_record.date_time AND
                     target_record.ward_name = current_record.ward_name AND
                     target_record.patient_id = current_record.patient_id
@@ -4067,7 +4067,7 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.pids_per_ward_raw (
+                INSERT INTO db_log.pids_per_ward (
                     date_time,
                     ward_name,
                     patient_id,
@@ -4081,12 +4081,12 @@ BEGIN
                 );
 
                 -- Update the timestamp for the last check/insert
-                UPDATE cds2db_in.pids_per_ward_raw
+                UPDATE cds2db_in.pids_per_ward
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'DELETE after db_insert '||data_count::integer
                 WHERE pids_per_ward_id = current_record.pids_per_ward_id;
 	           ELSE
-	              UPDATE db_log.pids_per_ward_raw
+	              UPDATE db_log.pids_per_ward
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE pids_per_ward_id = current_record.pids_per_ward_id;
@@ -4096,7 +4096,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -- END pids_per_ward
 -----------------------------
 
