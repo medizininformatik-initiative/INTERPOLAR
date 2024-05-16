@@ -272,3 +272,49 @@ getWhitespacesBeforeWord <- function(string, word) {
   }
   return(whitespaces)
 }
+
+#' Count Characters from End to Last Newline in a String
+#'
+#' This function counts the number of characters from the end of a given string
+#' up to the last newline character (`\n`). If no newline character is present,
+#' it counts the characters from the end of the string to the beginning.
+#'
+#' @param text A character string to be processed.
+#' @return An integer representing the number of characters from the end of the
+#' string to the last newline character, or to the beginning of the string if
+#' no newline character is present.
+#' @examples
+#' countCharsFromEndToLastNewline("Hello\nWorld\n!")  # returns 1
+#' countCharsFromEndToLastNewline("HelloWorld")       # returns 10
+#' @export
+countCharsFromEndToLastNewline <- function(text) {
+  newline_pos <- gregexpr("\n", text, fixed = TRUE)[[1]]
+  if (newline_pos[1] == -1) {
+    return(nchar(text))  # No newline, count from end to beginning
+  } else {
+    last_newline_pos <- max(newline_pos)
+    return(nchar(text) - last_newline_pos)
+  }
+}
+
+#' Get Indentation of a Word in a Text
+#'
+#' This function calculates the indentation level of a specified word in a given text.
+#' It measures the number of characters from the last newline character (`\n`) up to the
+#' specified word. If there is no newline character before the word, it measures from the
+#' beginning of the text to the word. The function then returns a string consisting of spaces
+#' equal to the indentation level.
+#'
+#' @param text A character string to be processed.
+#' @param word A character string representing the word whose indentation level is to be measured.
+#' @return A character string consisting of spaces equal to the number of characters from the last
+#' newline character to the specified word, or from the beginning of the text if no newline character is present.
+#' @examples
+#' getWordIndentation("Hello\n  world", "world")  # returns "  "
+#' getWordIndentation("No newline here", "here")  # returns "              "
+#' @export
+getWordIndentation <- function(text, word) {
+  text_before_word <- substr(text, 1, regexpr(word, text, fixed = TRUE) - 1)
+  indentation <- etlutils::countCharsFromEndToLastNewline(text_before_word)
+  strrep(" ", indentation)
+}
