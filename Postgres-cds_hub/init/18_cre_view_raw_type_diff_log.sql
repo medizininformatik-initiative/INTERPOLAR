@@ -16,60 +16,60 @@ CREATE OR REPLACE VIEW cds2db_out.v_pids_per_ward AS (select * from cds2db_in.pi
 
 
 --SQL Role for Views in Schema cds2db_out
-GRANT SELECT ON TABLE cds2db_out.v_encounter TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_encounter TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_encounter TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_encounter TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_patient TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_patient TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_patient TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_patient TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_condition TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_condition TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_condition TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_condition TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_medication TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_medication TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_medication TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_medication TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_medicationrequest TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_medicationrequest TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_medicationrequest TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_medicationrequest TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_medicationadministration TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_medicationadministration TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_medicationadministration TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_medicationadministration TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_medicationstatement TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_medicationstatement TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_medicationstatement TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_medicationstatement TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_observation TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_observation TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_observation TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_observation TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_diagnosticreport TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_diagnosticreport TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_diagnosticreport TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_diagnosticreport TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_servicerequest TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_servicerequest TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_servicerequest TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_servicerequest TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_procedure TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_procedure TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_procedure TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_procedure TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_consent TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_consent TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_consent TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_consent TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_location TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_location TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_location TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_location TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward TO cds2db_user; -- Assign view to the user
-GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward TO db_user; -- Assign view to the user
+GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward TO cds2db_user;
+GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 
