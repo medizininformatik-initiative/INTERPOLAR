@@ -1,23 +1,14 @@
 ######################################################
 # Static Definitions of Paths, File- and Columnnames #
 ######################################################
+
 getDBScriptsTargetDir <- function() {"./Postgres-cds_hub/init/"}
 getTemplateDir <- function() {paste0(getDBScriptsTargetDir(), "template/")}
 getRightsDefinitionFileName <- function() {paste0(getTemplateDir(), "user_schema_rights_definition.xlsx")}
 getRightsDefinitionSheetName <- function() {"rights_and_functions"}
 writeResultFile <- function(scriptname, content) {
+  message(scriptname)
   writeLines(content, paste0(getDBScriptsTargetDir(), scriptname), useBytes = TRUE)
-}
-#' Load Table Description Excel File
-#'
-#' This function loads a table description excel file
-#'
-#' @return A data table with table descriptions
-#'
-loadTableDescriptionFile <- function() {
-  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
-  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[["table_description"]]
-  return(table_description)
 }
 
 getRightsDefinitionColumnNames <- function() {
@@ -166,15 +157,6 @@ getCreateTableStatementColumnLine <- function(table_description_row, ignore_type
   return(column_line)
 }
 
-getCreateCommentColumnLine <- function(schema_name, full_tablename, table_description_row, ignore_types = TRUE) {
-  # e.g.: comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
-  arguments <- parseTableDescriptionRow(table_description_row, ignore_types)
-  comment_line <- paste0("comment on column ", schema_name, ".", full_tablename, ".",
-                         table_description_row$column_name," is '",
-                         table_description_row$fhir_expression, " ", arguments$comment, "';\n")
-  return(comment_line)
-}
-
 getCreateTableStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
@@ -184,50 +166,31 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
   single_statement <- loadTemplate(sub_template_filename)
   row <- 1
   indentation <- NA
-  while (row <= nrow(table_description)) {
-    tablename <- table_description$resource[row]
-    if (!is.na(tablename)) {
-      full_tablename <- getFullTableName(tablename, rights_first_row)
-      if (!full_tablename %in% last_full_tablename) {
-        last_full_tablename <- full_tablename
-        single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
-        column_line_statement <- ""
-        row2 <- row
-        while (row2 <= nrow(table_description)) {
-          next_tablename <- table_description$resource[row2]
-          new_tablename_found <- !is.na(next_tablename) && next_tablename != tablename
-          if (!new_tablename_found) {
-            table_description_row <- table_description[row2]
-            if (!all(is.na(table_description_row))) {
-              statement_line <- getCreateTableStatementColumnLine(table_description_row, ignore_types)
-              if (is.na(indentation)) {
-                column_line_statement <- paste0(column_line_statement, statement_line)
-                indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
-              } else {
-                column_line_statement <- paste0(column_line_statement, indentation, statement_line)
-              }
-            }
-          }
-          reached_last_row <- row2 == nrow(table_description)
-          if (new_tablename_found || reached_last_row) {
-            single_statement <- gsub("<%CREATE_TABLE_STATEMENT_COLUMNS%>\n", column_line_statement, single_statement)
-            statements <- paste0(statements, single_statement, "\n\n")
-            single_statement <- loadTemplate(sub_template_filename)
-            row <- if (reached_last_row) Inf  else row2
-            indentation <- NA
-            row2 <- Inf
-          }
-          row2 <- row2 + 1
-        }
+  for (tablename in names(table_description)) {
+    full_tablename <- getFullTableName(tablename, rights_first_row)
+    single_table_description <- table_description[[tablename]]
+    single_statement <- loadTemplate(sub_template_filename)
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+    column_line_statement <- ""
+    for (row in 1:nrow(single_table_description)) {
+      table_description_row <- single_table_description[row]
+      statement_line <- getCreateTableStatementColumnLine(table_description_row, ignore_types)
+      if (is.na(indentation)) {
+        column_line_statement <- paste0(column_line_statement, statement_line)
+        indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
+      } else {
+        column_line_statement <- paste0(column_line_statement, indentation, statement_line)
       }
     }
+    single_statement <- gsub("<%CREATE_TABLE_STATEMENT_COLUMNS%>\n", column_line_statement, single_statement)
+    statements <- paste0(statements, single_statement, "\n\n")
   }
   return(statements)
 }
 
 getCreateTableGrantStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
-  tablenames <- unique(na.omit(table_description$resource))
+  tablenames <- names(table_description)
   statements <- ""
   for (tablename in tablenames) {
     # load grant template
@@ -268,33 +231,26 @@ getCreateTableCommentStatements <- function(table_description, script_rights_des
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   comments <- ""
-  tablename <- NA
-  for (row in 1:nrow(table_description)) {
-    table_description_row <- table_description[row]
-    if (!all(is.na(table_description_row))) {
-      new_tablename <- table_description_row$resource
-      if (!is.na(new_tablename)) {
-        if (!is.na(tablename)) {
-          comments <- paste0(comments, "\n")
-        }
-        tablename <- new_tablename
-      }
-      single_length <- as.integer(table_description_row$single_length)
-      count <- as.integer(table_description_row$count)
-      if (is.na(count)) count <- 1
-      schema_name <- rights_first_row$OWNER_SCHEMA
-      full_tablename <- getFullTableName(tablename, rights_first_row)
-      comment <- getCreateCommentColumnLine(schema_name, full_tablename, table_description_row, ignore_types)
-      # generates something like this:
-      # comment on column cds2db_in.condition.con_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (70 x 18 1260)';
-      comments <- paste0(comments, comment)
+  single_comment_template <- loadTemplate("template_cre_table_sub_comment.sql")
+  for (tablename in names(table_description)) {
+    full_tablename <- getFullTableName(tablename, rights_first_row)
+    single_table_description <- table_description[[tablename]]
+    single_table_comment <- gsub("<%TABLE_NAME%>", full_tablename, single_comment_template)
+    for (row in 1:nrow(single_table_description)) {
+      # e.g.: comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
+      table_description_row <- single_table_description[row]
+      single_comment <- gsub("<%COLUMN_NAME%>", table_description_row$column_name, single_table_comment)
+
+      arguments <- parseTableDescriptionRow(table_description_row, ignore_types)
+      single_comment <- gsub("<%COLUMN_COMMENT%>", arguments$comment, single_comment)
+      comments <- paste0(comments, single_comment, "\n")
     }
+    comments <- paste0(comments, "\n")
   }
   return(comments)
 }
 
 convertTemplateCreateTable <- function(table_description, script_rights_description) {
-
   checkMissingValues <- function() {
     # create a named vector with equal names and values for the right description columns
     # so we can use it instead of strings
@@ -336,33 +292,16 @@ convertTemplateCreateTable <- function(table_description, script_rights_descript
 # Convert Copy Function #
 #########################
 
-getCopyFunctionPlaceholderColumns <- function(tablename, table_description, indentation, placeholder) {
+getCopyFunctionPlaceholderColumns <- function(single_table_description, indentation, placeholder) {
   statements <- ""
-  tablename_found <- FALSE
   single_statement_template <- loadTemplate(placeholder)
-  for (i in 1:nrow(table_description)) {
-    table_description_row <- table_description[i]
-    if (!all(is.na(table_description_row))) {
-      row_tablename <- table_description_row$resource
-      if (!is.na(row_tablename)) {
-        if (tablename_found) {
-          if (!row_tablename %in% tablename) {
-            break
-          }
-        } else if (row_tablename %in% tablename) {
-          tablename_found <- TRUE
-        } else {
-          next
-        }
-      } else if (!tablename_found){
-        next
-      }
-      single_statement <- gsub("<%COLUMN_NAME%>", table_description_row$column_name, single_statement_template)
-      if (nchar(statements)) {
-        statements <- paste0(statements, indentation)
-      }
-      statements <- paste0(statements, single_statement, "\n")
+  for (i in 1:nrow(single_table_description)) {
+    table_description_row <- single_table_description[i]
+    single_statement <- gsub("<%COLUMN_NAME%>", table_description_row$column_name, single_statement_template)
+    if (nchar(statements)) {
+      statements <- paste0(statements, indentation)
     }
+    statements <- paste0(statements, single_statement, "\n")
   }
   # remove the last newline
   statements <- sub("\n$", "", statements)
@@ -388,7 +327,7 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
                        rights_columns$COPY_FUNC_NAME,
                        rights_columns$SCHEMA_2)
 
-    tablenames <- unique(na.omit(table_description$resource))
+    tablenames <- names(table_description)
     statements <- ""
     for (tablename in tablenames) {
       full_tablename <- getFullTableName(tablename, script_rights_description)
@@ -406,16 +345,17 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
       colum_placeholders <- c("<%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>",
                               "<%TEMPLATE_COPY_FUNCTION_SUB_COLUMNS%>",
                               "<%TEMPLATE_COPY_FUNCTION_SUB_CURRENT_RECORD_COLUMNS%>")
+
+      single_table_description <- table_description[[tablename]]
       for (placeholder in colum_placeholders) {
         indentation <- etlutils::getWordIndentation(single_statement, placeholder)
-        replacement <- getCopyFunctionPlaceholderColumns(tablename, table_description, indentation, placeholder)
+        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, indentation, placeholder)
         single_statement <- gsub(placeholder, replacement, single_statement)
       }
 
       statements <- paste0(statements, single_statement, "\n")
 
     }
-    message(copy_function_script_name)
     writeResultFile(copy_function_script_name, statements)
   }
 }
@@ -426,7 +366,7 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
 
 getCreateViewCreateOrReplaceViewStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
-  tablenames <- unique(na.omit(table_description$resource))
+  tablenames <- names(table_description)
   statements <- ""
   for (tablename in tablenames) {
     full_tablename <- getFullTableName(tablename, script_rights_description)
@@ -445,7 +385,7 @@ getCreateViewCreateOrReplaceViewStatements <- function(table_description, script
 
 getCreateViewGrantStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
-  tablenames <- unique(na.omit(table_description$resource))
+  tablenames <- names(table_description)
   statements <- ""
   for (tablename in tablenames) {
     # load grant template
@@ -516,11 +456,7 @@ convertTemplateCreateView <- function(table_description, script_rights_descripti
 # Main #
 ########
 
-createDatabaseScriptsFromTemplates <- function() {
-  table_description <- loadTableDescriptionFile()
-  # preapre table description -> table names must be in lower
-  table_description$resource <- tolower(table_description$resource)
-
+loadDatabaseRightsDescription <- function() {
   rights_description_file_name <- getRightsDefinitionFileName()
   rights_description_sheet_name <- getRightsDefinitionSheetName()
   # read the excel file with the rigths and copy functions definition and extract the specific table
@@ -541,6 +477,13 @@ createDatabaseScriptsFromTemplates <- function() {
 
   rights_description <- etlutils::removeRowsWithNAorEmpty(rights_description)
   rights_description <- etlutils::fillNAWithLastRowValue(rights_description, rights_description_columns$SCRIPTNAME)
+  return(rights_description)
+}
+
+
+createDatabaseScriptsFromTemplates <- function() {
+  table_description <- getTableDescriptionSplittedByResource()
+  rights_description <- loadDatabaseRightsDescription()
 
   isCreateTableScript <- function(script_name) {
     # accepts names like "12a_cre_table_raw_db_log.sql" or "01_cre_table"
@@ -552,19 +495,20 @@ createDatabaseScriptsFromTemplates <- function() {
     return(grepl("^[0-9]+[a-zA-Z]*_cre_view", script_name))
   }
 
+  scriptname_columnname <- getRightsDefinitionColumnNames()$SCRIPTNAME
+
   script_min_row_index <- 1 # set first row index as start
-  scriptname <- rights_description[1][[rights_description_columns$SCRIPTNAME]] # get first row scriptname
+  scriptname <- rights_description[1][[scriptname_columnname]] # get first row scriptname
   for (i in seq_len(nrow(rights_description))) {
     if (i == nrow(rights_description)) {
       i <- i + 1
       next_scriptname <- NA
     } else {
       row <- rights_description[i + 1]
-      next_scriptname <- row[[rights_description_columns$SCRIPTNAME]]
+      next_scriptname <- row[[scriptname_columnname]]
     }
 
     if (!scriptname %in% next_scriptname) {
-      message(scriptname)
       script_rights_description <- rights_description[script_min_row_index:i]
       if (isCreateTableScript(scriptname)) {
         convertTemplateCreateTable(table_description, script_rights_description)
@@ -582,4 +526,11 @@ createDatabaseScriptsFromTemplates <- function() {
 
 }
 
-#createDatabaseScriptsFromTemplates()
+#INIT_DATABASE_SCRIPTS <<- TRUE
+if (exists("INIT_DATABASE_SCRIPTS") && INIT_DATABASE_SCRIPTS) {
+  while(!grepl("/interpolar$", getwd())) {
+    setwd("..")
+  }
+  source("./R-cds2db/cds2db/R/Init_00.R")
+  createDatabaseScriptsFromTemplates()
+}
