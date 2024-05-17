@@ -161,16 +161,13 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   statements <- ""
-  last_full_tablename <- NA
-  sub_template_filename <- "template_cre_table_sub_create_table_statements.sql"
-  single_statement <- loadTemplate(sub_template_filename)
+  single_statement_template <- loadTemplate("template_cre_table_sub_create_table_statements.sql")
   row <- 1
   indentation <- NA
   for (tablename in names(table_description)) {
     full_tablename <- getFullTableName(tablename, rights_first_row)
     single_table_description <- table_description[[tablename]]
-    single_statement <- loadTemplate(sub_template_filename)
-    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement_template)
     column_line_statement <- ""
     for (row in 1:nrow(single_table_description)) {
       table_description_row <- single_table_description[row]
@@ -476,10 +473,9 @@ loadDatabaseRightsDescription <- function() {
   }
 
   rights_description <- etlutils::removeRowsWithNAorEmpty(rights_description)
-  rights_description <- etlutils::fillNAWithLastRowValue(rights_description, rights_description_columns$SCRIPTNAME)
+  rights_description <- etlutils::splitTableToList(rights_description, rights_description_columns$SCRIPTNAME)
   return(rights_description)
 }
-
 
 createDatabaseScriptsFromTemplates <- function() {
   table_description <- getTableDescriptionSplittedByResource()
@@ -496,37 +492,21 @@ createDatabaseScriptsFromTemplates <- function() {
   }
 
   scriptname_columnname <- getRightsDefinitionColumnNames()$SCRIPTNAME
-
-  script_min_row_index <- 1 # set first row index as start
-  scriptname <- rights_description[1][[scriptname_columnname]] # get first row scriptname
-  for (i in seq_len(nrow(rights_description))) {
-    if (i == nrow(rights_description)) {
-      i <- i + 1
-      next_scriptname <- NA
+  for (scriptname in names(rights_description)) {
+    script_rights_description <- rights_description[[scriptname]]
+    if (isCreateTableScript(scriptname)) {
+      convertTemplateCreateTable(table_description, script_rights_description)
+      convertTemplateCopyFunction(table_description, script_rights_description)
+    } else if (isCreateViewScript(scriptname)) {
+      convertTemplateCreateView(table_description, script_rights_description)
     } else {
-      row <- rights_description[i + 1]
-      next_scriptname <- row[[scriptname_columnname]]
-    }
-
-    if (!scriptname %in% next_scriptname) {
-      script_rights_description <- rights_description[script_min_row_index:i]
-      if (isCreateTableScript(scriptname)) {
-        convertTemplateCreateTable(table_description, script_rights_description)
-        convertTemplateCopyFunction(table_description, script_rights_description)
-      } else if (isCreateViewScript(scriptname)) {
-        convertTemplateCreateView(table_description, script_rights_description)
-      } else {
-        # simple copy script from template without any changes
-        copyTemplate(script_rights_description)
-      }
-      scriptname = next_scriptname
-      script_min_row_index = i + 1
+      # simple copy script from template without any changes
+      copyTemplate(script_rights_description)
     }
   }
-
 }
 
-#INIT_DATABASE_SCRIPTS <<- TRUE
+# INIT_DATABASE_SCRIPTS <<- TRUE
 if (exists("INIT_DATABASE_SCRIPTS") && INIT_DATABASE_SCRIPTS) {
   while(!grepl("/interpolar$", getwd())) {
     setwd("..")

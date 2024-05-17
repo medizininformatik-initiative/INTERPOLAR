@@ -910,3 +910,36 @@ fillNAWithLastRowValue <- function(dt, columns = NA) {
 
   return(dt)
 }
+
+#' Split a data.table into a List by a Specified Column
+#'
+#' This function splits a data.table into a list of data.tables based on the unique values in a
+#' specified column. Each list element contains the rows where the value in the specified column
+#' is the same.
+#'
+#' @param dt A data.table to be split.
+#' @param split_columnname A character string specifying the column name by which to split the
+#' data.table.
+#' @param fill_na_in_split_columnname A logical value indicating whether to fill NA values in the
+#' specified column with the last non-NA value. Default is TRUE.
+#' @return A list of data.tables, with each element containing the rows with the same value in the
+#' specified column. The names of the list elements are set to the unique values of the specified
+#' column.
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   SCRIPTNAME = c("A", "A", "B", "B", "C"),
+#'   VALUE = 1:5
+#' )
+#' result <- splitTableToList(dt, "SCRIPTNAME")
+#' print(result)
+#' @export
+splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = TRUE) {
+  if (fill_na_in_split_columnname) {
+    fillNAWithLastRowValue(dt, split_columnname)
+  }
+  list <- split(dt, by = split_columnname, keep.by = TRUE)
+  # set names for list elements
+  names(list) <- sapply(list, function(x) x[[split_columnname]][1])
+  return(list)
+}
