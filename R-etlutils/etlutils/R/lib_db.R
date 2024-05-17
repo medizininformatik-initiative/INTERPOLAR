@@ -115,21 +115,22 @@ dbCheckContent <- function(db_connection, table_name, table) {
   for (i in seq_along(column_widths$column_name)) {
     column_name <- column_widths$column_name[i]
     max_length <- column_widths$character_maximum_length[i]
-
-    # Check length of each value in the column
-    for (j in seq_len(nrow(table))) {
-      value <- as.character(table[[column_name]][j])
-      if (!is.na(value) && nchar(value) > max_length) {
-        # Add message text
-        cat_message <- paste0("In table '", table_name , "' value '", value, "' in column '", column_name, "' at row ", j, " is " , nchar(value), " but maximum length is ", max_length)
-        # Print error or info message for values exceeding maximum length
-        if (max_length <= 100) {
-          cat_error(paste0(cat_message, ". Please Fix it", "\n"))
-          STOP <- TRUE
-        } else {
-          cat_info(paste0(cat_message, ". Will be truncated. Please Check", "\n"))
-          # Truncate string to possible maximum length
-          table[j, (column_name) := substr(get(column_name), 1, max_length)]
+    if (!is.na(max_length)) { # only varchars have a valid (non NA) value
+      # Check length of each value in the column
+      for (j in seq_len(nrow(table))) {
+        value <- as.character(table[[column_name]][j])
+        if (!is.na(value) && nchar(value) > max_length) {
+          # Add message text
+          cat_message <- paste0("In table '", table_name , "' value '", value, "' in column '", column_name, "' at row ", j, " is " , nchar(value), " but maximum length is ", max_length)
+          # Print error or info message for values exceeding maximum length
+          if (max_length <= 100) {
+            cat_error(paste0(cat_message, ". Please Fix it", "\n"))
+            STOP <- TRUE
+          } else {
+            cat_info(paste0(cat_message, ". Will be truncated. Please Check", "\n"))
+            # Truncate string to possible maximum length
+            table[j, (column_name) := substr(get(column_name), 1, max_length)]
+          }
         }
       }
     }
