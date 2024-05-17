@@ -43,7 +43,7 @@ retrieve <- function() {
 
     # Load Table Description
     etlutils::runProcess(etlutils::run_in('Load Table Description', {
-      table_descriptions <- getTableDescriptions()
+      table_descriptions <- getFhircrackrTableDescriptions()
     }))
 
     # Download and crack resources by Patient IDs per ward
