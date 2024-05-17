@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   enc_diagnosis_use_code varchar (30),   -- diagnosis/use/coding/code (30 varchar)
   enc_diagnosis_use_display varchar (100),   -- diagnosis/use/coding/display (100 varchar)
   enc_diagnosis_use_text varchar (500),   -- diagnosis/use/text (500 varchar)
-  enc_diagnosis_rank int,   -- diagnosis/rank (2 int)
+  enc_diagnosis_rank int,   -- diagnosis/rank (3 int)
   enc_hospitalization_admitsource_system varchar (70),   -- hospitalization/admitSource/coding/system (70 varchar)
   enc_hospitalization_admitsource_version varchar (50),   -- hospitalization/admitSource/coding/version (50 varchar)
   enc_hospitalization_admitsource_code varchar (30),   -- hospitalization/admitSource/coding/code (30 varchar)
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   pat_name_family varchar (50),   -- name/family (50 varchar)
   pat_name_given varchar (30),   -- name/given (30 varchar)
   pat_gender varchar (10),   -- gender (10 varchar)
-  pat_birthdate date,   -- birthDate (30 date)
+  pat_birthdate date,   -- birthDate (33 date)
   pat_address_postalcode varchar (10),   -- address/postalCode (10 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
@@ -157,8 +157,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   con_bodysite_text varchar (500),   -- bodySite/text (500 varchar)
   con_onsetperiod_start timestamp,   -- onsetPeriod/start (30 timestamp)
   con_onsetperiod_end timestamp,   -- onsetPeriod/end (30 timestamp)
-  con_onsetdatetime timestamp,   -- onsetDateTime (30 timestamp)
-  con_abatementdatetime timestamp,   -- abatementDateTime (30 timestamp)
+  con_onsetdatetime timestamp,   -- onsetDateTime (33 timestamp)
+  con_abatementdatetime timestamp,   -- abatementDateTime (33 timestamp)
   con_abatementage_value numeric (10, 10),   -- abatementAge/value (10 numeric)
   con_abatementage_comparator varchar (3),   -- abatementAge/comparator (3 varchar)
   con_abatementage_unit varchar (30),   -- abatementAge/unit (30 varchar)
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   con_abatementrange_high_system varchar (70),   -- abatementRange/high/system (70 varchar)
   con_abatementrange_high_code varchar (30),   -- abatementRange/high/code (30 varchar)
   con_abatementstring varchar (300),   -- abatementString (300 varchar)
-  con_recordeddate timestamp,   -- recordedDate (30 timestamp)
+  con_recordeddate timestamp,   -- recordedDate (33 timestamp)
   con_recorder_id varchar (70),   -- recorder/reference (70 varchar)
   con_recorder_type varchar (30),   -- recorder/type (30 varchar)
   con_recorder_identifier_use varchar (30),   -- recorder/identifier/use (30 varchar)
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medreq_supportinginformation_identifier_type_display varchar (100),   -- supportingInformation/identifier/type/coding/display (100 varchar)
   medreq_supportinginformation_identifier_type_text varchar (500),   -- supportingInformation/identifier/type/text (500 varchar)
   medreq_supportinginformation_display varchar (100),   -- supportingInformation/display (100 varchar)
-  medreq_authoredon timestamp,   -- authoredOn (30 timestamp)
+  medreq_authoredon timestamp,   -- authoredOn (33 timestamp)
   medreq_requester_id varchar (70),   -- requester/reference (70 varchar)
   medreq_requester_type varchar (30),   -- requester/type (30 varchar)
   medreq_requester_identifier_use varchar (30),   -- requester/identifier/use (30 varchar)
@@ -572,7 +572,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medadm_supportinginformation_identifier_type_display varchar (100),   -- supportingInformation/identifier/type/coding/display (100 varchar)
   medadm_supportinginformation_identifier_type_text varchar (500),   -- supportingInformation/identifier/type/text (500 varchar)
   medadm_supportinginformation_display varchar (100),   -- supportingInformation/display (100 varchar)
-  medadm_effectivedatetime timestamp,   -- effectiveDateTime (30 timestamp)
+  medadm_effectivedatetime timestamp,   -- effectiveDateTime (33 timestamp)
   medadm_effectiveperiod_start timestamp,   -- effectivePeriod/start (30 timestamp)
   medadm_effectiveperiod_end timestamp,   -- effectivePeriod/end (30 timestamp)
   medadm_performer_function_system varchar (70),   -- performer/function/coding/system (70 varchar)
@@ -690,10 +690,10 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medstat_medicationcodeableconcept_code varchar (30),   -- medicationCodeableConcept/coding/code (30 varchar)
   medstat_medicationcodeableconcept_display varchar (100),   -- medicationCodeableConcept/coding/display (100 varchar)
   medstat_medicationcodeableconcept_text varchar (500),   -- medicationCodeableConcept/text (500 varchar)
-  medstat_effectivedatetime timestamp,   -- effectiveDateTime (30 timestamp)
+  medstat_effectivedatetime timestamp,   -- effectiveDateTime (33 timestamp)
   medstat_effectiveperiod_start timestamp,   -- effectivePeriod/start (30 timestamp)
   medstat_effectiveperiod_end timestamp,   -- effectivePeriod/end (30 timestamp)
-  medstat_dateasserted timestamp,   -- dateAsserted (30 timestamp)
+  medstat_dateasserted timestamp,   -- dateAsserted (33 timestamp)
   medstat_informationsource_id varchar (70),   -- informationSource/reference (70 varchar)
   medstat_informationsource_type varchar (30),   -- informationSource/type (30 varchar)
   medstat_informationsource_identifier_use varchar (30),   -- informationSource/identifier/use (30 varchar)
@@ -903,8 +903,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   obs_code_code varchar (30),   -- code/coding/code (30 varchar)
   obs_code_display varchar (100),   -- code/coding/display (100 varchar)
   obs_code_text varchar (500),   -- code/text (500 varchar)
-  obs_effectivedatetime timestamp,   -- effectiveDateTime (30 timestamp)
-  obs_issued timestamp,   -- issued (30 timestamp)
+  obs_effectivedatetime timestamp,   -- effectiveDateTime (33 timestamp)
+  obs_issued timestamp,   -- issued (33 timestamp)
   obs_valuerange_low_value numeric (10, 10),   -- valueRange/low/value (10 numeric)
   obs_valuerange_low_unit varchar (30),   -- valueRange/low/unit (30 varchar)
   obs_valuerange_low_system varchar (70),   -- valueRange/low/system (70 varchar)
@@ -1036,8 +1036,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagrep_code_code varchar (30),   -- code/coding/code (30 varchar)
   diagrep_code_display varchar (100),   -- code/coding/display (100 varchar)
   diagrep_code_text varchar (500),   -- code/text (500 varchar)
-  diagrep_effectivedatetime timestamp,   -- effectiveDateTime (30 timestamp)
-  diagrep_issued timestamp,   -- issued (30 timestamp)
+  diagrep_effectivedatetime timestamp,   -- effectiveDateTime (33 timestamp)
+  diagrep_issued timestamp,   -- issued (33 timestamp)
   diagrep_performer_id varchar (70),   -- performer/reference (70 varchar)
   diagrep_performer_type varchar (30),   -- performer/type (30 varchar)
   diagrep_performer_identifier_use varchar (30),   -- performer/identifier/use (30 varchar)
@@ -1096,7 +1096,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servreq_code_code varchar (30),   -- code/coding/code (30 varchar)
   servreq_code_display varchar (100),   -- code/coding/display (100 varchar)
   servreq_code_text varchar (500),   -- code/text (500 varchar)
-  servreq_authoredon timestamp,   -- authoredOn (30 timestamp)
+  servreq_authoredon timestamp,   -- authoredOn (33 timestamp)
   servreq_requester_id varchar (70),   -- requester/reference (70 varchar)
   servreq_requester_type varchar (30),   -- requester/type (30 varchar)
   servreq_requester_identifier_use varchar (30),   -- requester/identifier/use (30 varchar)
@@ -1168,7 +1168,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   proc_code_code varchar (30),   -- code/coding/code (30 varchar)
   proc_code_display varchar (100),   -- code/coding/display (100 varchar)
   proc_code_text varchar (500),   -- code/text (500 varchar)
-  proc_performeddatetime timestamp,   -- performedDateTime (30 timestamp)
+  proc_performeddatetime timestamp,   -- performedDateTime (33 timestamp)
   proc_performedperiod_start timestamp,   -- performedPeriod/start (30 timestamp)
   proc_performedperiod_end timestamp,   -- performedPeriod/end (30 timestamp)
   proc_reasoncode_system varchar (70),   -- reasonCode/coding/system (70 varchar)
@@ -1224,7 +1224,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   cons_scope_code varchar (30),   -- scope/coding/code (30 varchar)
   cons_scope_display varchar (100),   -- scope/coding/display (100 varchar)
   cons_scope_text varchar (500),   -- scope/text (500 varchar)
-  cons_datetime timestamp,   -- dateTime (30 timestamp)
+  cons_datetime timestamp,   -- dateTime (33 timestamp)
   cons_provision_type varchar (10),   -- provision/type (10 varchar)
   cons_provision_period_start timestamp,   -- provision/period/start (30 timestamp)
   cons_provision_period_end timestamp,   -- provision/period/end (30 timestamp)
@@ -1273,7 +1273,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
-    date_time timestamp,   -- date_time (30 timestamp)
+    date_time timestamp,   -- date_time (33 timestamp)
   ward_name varchar (30),   -- ward_name (30 varchar)
   patient_id varchar (70),   -- patient_id (70 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -1705,7 +1705,7 @@ comment on column cds2db_in.encounter.enc_diagnosis_use_version is 'diagnosis/us
 comment on column cds2db_in.encounter.enc_diagnosis_use_code is 'diagnosis/use/coding/code (30 varchar)';
 comment on column cds2db_in.encounter.enc_diagnosis_use_display is 'diagnosis/use/coding/display (100 varchar)';
 comment on column cds2db_in.encounter.enc_diagnosis_use_text is 'diagnosis/use/text (500 varchar)';
-comment on column cds2db_in.encounter.enc_diagnosis_rank is 'diagnosis/rank (2 int)';
+comment on column cds2db_in.encounter.enc_diagnosis_rank is 'diagnosis/rank (3 int)';
 comment on column cds2db_in.encounter.enc_hospitalization_admitsource_system is 'hospitalization/admitSource/coding/system (70 varchar)';
 comment on column cds2db_in.encounter.enc_hospitalization_admitsource_version is 'hospitalization/admitSource/coding/version (50 varchar)';
 comment on column cds2db_in.encounter.enc_hospitalization_admitsource_code is 'hospitalization/admitSource/coding/code (30 varchar)';
@@ -1756,7 +1756,7 @@ comment on column cds2db_in.patient.pat_name_text is 'name/text (250 varchar)';
 comment on column cds2db_in.patient.pat_name_family is 'name/family (50 varchar)';
 comment on column cds2db_in.patient.pat_name_given is 'name/given (30 varchar)';
 comment on column cds2db_in.patient.pat_gender is 'gender (10 varchar)';
-comment on column cds2db_in.patient.pat_birthdate is 'birthDate (30 date)';
+comment on column cds2db_in.patient.pat_birthdate is 'birthDate (33 date)';
 comment on column cds2db_in.patient.pat_address_postalcode is 'address/postalCode (10 varchar)';
 
 comment on column cds2db_in.condition.con_id is 'id (70 varchar)';
@@ -1804,8 +1804,8 @@ comment on column cds2db_in.condition.con_bodysite_display is 'bodySite/coding/d
 comment on column cds2db_in.condition.con_bodysite_text is 'bodySite/text (500 varchar)';
 comment on column cds2db_in.condition.con_onsetperiod_start is 'onsetPeriod/start (30 timestamp)';
 comment on column cds2db_in.condition.con_onsetperiod_end is 'onsetPeriod/end (30 timestamp)';
-comment on column cds2db_in.condition.con_onsetdatetime is 'onsetDateTime (30 timestamp)';
-comment on column cds2db_in.condition.con_abatementdatetime is 'abatementDateTime (30 timestamp)';
+comment on column cds2db_in.condition.con_onsetdatetime is 'onsetDateTime (33 timestamp)';
+comment on column cds2db_in.condition.con_abatementdatetime is 'abatementDateTime (33 timestamp)';
 comment on column cds2db_in.condition.con_abatementage_value is 'abatementAge/value (10 numeric)';
 comment on column cds2db_in.condition.con_abatementage_comparator is 'abatementAge/comparator (3 varchar)';
 comment on column cds2db_in.condition.con_abatementage_unit is 'abatementAge/unit (30 varchar)';
@@ -1822,7 +1822,7 @@ comment on column cds2db_in.condition.con_abatementrange_high_unit is 'abatement
 comment on column cds2db_in.condition.con_abatementrange_high_system is 'abatementRange/high/system (70 varchar)';
 comment on column cds2db_in.condition.con_abatementrange_high_code is 'abatementRange/high/code (30 varchar)';
 comment on column cds2db_in.condition.con_abatementstring is 'abatementString (300 varchar)';
-comment on column cds2db_in.condition.con_recordeddate is 'recordedDate (30 timestamp)';
+comment on column cds2db_in.condition.con_recordeddate is 'recordedDate (33 timestamp)';
 comment on column cds2db_in.condition.con_recorder_id is 'recorder/reference (70 varchar)';
 comment on column cds2db_in.condition.con_recorder_type is 'recorder/type (30 varchar)';
 comment on column cds2db_in.condition.con_recorder_identifier_use is 'recorder/identifier/use (30 varchar)';
@@ -1982,7 +1982,7 @@ comment on column cds2db_in.medicationrequest.medreq_supportinginformation_ident
 comment on column cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_display is 'supportingInformation/identifier/type/coding/display (100 varchar)';
 comment on column cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_text is 'supportingInformation/identifier/type/text (500 varchar)';
 comment on column cds2db_in.medicationrequest.medreq_supportinginformation_display is 'supportingInformation/display (100 varchar)';
-comment on column cds2db_in.medicationrequest.medreq_authoredon is 'authoredOn (30 timestamp)';
+comment on column cds2db_in.medicationrequest.medreq_authoredon is 'authoredOn (33 timestamp)';
 comment on column cds2db_in.medicationrequest.medreq_requester_id is 'requester/reference (70 varchar)';
 comment on column cds2db_in.medicationrequest.medreq_requester_type is 'requester/type (30 varchar)';
 comment on column cds2db_in.medicationrequest.medreq_requester_identifier_use is 'requester/identifier/use (30 varchar)';
@@ -2195,7 +2195,7 @@ comment on column cds2db_in.medicationadministration.medadm_supportinginformatio
 comment on column cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_display is 'supportingInformation/identifier/type/coding/display (100 varchar)';
 comment on column cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_text is 'supportingInformation/identifier/type/text (500 varchar)';
 comment on column cds2db_in.medicationadministration.medadm_supportinginformation_display is 'supportingInformation/display (100 varchar)';
-comment on column cds2db_in.medicationadministration.medadm_effectivedatetime is 'effectiveDateTime (30 timestamp)';
+comment on column cds2db_in.medicationadministration.medadm_effectivedatetime is 'effectiveDateTime (33 timestamp)';
 comment on column cds2db_in.medicationadministration.medadm_effectiveperiod_start is 'effectivePeriod/start (30 timestamp)';
 comment on column cds2db_in.medicationadministration.medadm_effectiveperiod_end is 'effectivePeriod/end (30 timestamp)';
 comment on column cds2db_in.medicationadministration.medadm_performer_function_system is 'performer/function/coding/system (70 varchar)';
@@ -2305,10 +2305,10 @@ comment on column cds2db_in.medicationstatement.medstat_medicationcodeableconcep
 comment on column cds2db_in.medicationstatement.medstat_medicationcodeableconcept_code is 'medicationCodeableConcept/coding/code (30 varchar)';
 comment on column cds2db_in.medicationstatement.medstat_medicationcodeableconcept_display is 'medicationCodeableConcept/coding/display (100 varchar)';
 comment on column cds2db_in.medicationstatement.medstat_medicationcodeableconcept_text is 'medicationCodeableConcept/text (500 varchar)';
-comment on column cds2db_in.medicationstatement.medstat_effectivedatetime is 'effectiveDateTime (30 timestamp)';
+comment on column cds2db_in.medicationstatement.medstat_effectivedatetime is 'effectiveDateTime (33 timestamp)';
 comment on column cds2db_in.medicationstatement.medstat_effectiveperiod_start is 'effectivePeriod/start (30 timestamp)';
 comment on column cds2db_in.medicationstatement.medstat_effectiveperiod_end is 'effectivePeriod/end (30 timestamp)';
-comment on column cds2db_in.medicationstatement.medstat_dateasserted is 'dateAsserted (30 timestamp)';
+comment on column cds2db_in.medicationstatement.medstat_dateasserted is 'dateAsserted (33 timestamp)';
 comment on column cds2db_in.medicationstatement.medstat_informationsource_id is 'informationSource/reference (70 varchar)';
 comment on column cds2db_in.medicationstatement.medstat_informationsource_type is 'informationSource/type (30 varchar)';
 comment on column cds2db_in.medicationstatement.medstat_informationsource_identifier_use is 'informationSource/identifier/use (30 varchar)';
@@ -2510,8 +2510,8 @@ comment on column cds2db_in.observation.obs_code_version is 'code/coding/version
 comment on column cds2db_in.observation.obs_code_code is 'code/coding/code (30 varchar)';
 comment on column cds2db_in.observation.obs_code_display is 'code/coding/display (100 varchar)';
 comment on column cds2db_in.observation.obs_code_text is 'code/text (500 varchar)';
-comment on column cds2db_in.observation.obs_effectivedatetime is 'effectiveDateTime (30 timestamp)';
-comment on column cds2db_in.observation.obs_issued is 'issued (30 timestamp)';
+comment on column cds2db_in.observation.obs_effectivedatetime is 'effectiveDateTime (33 timestamp)';
+comment on column cds2db_in.observation.obs_issued is 'issued (33 timestamp)';
 comment on column cds2db_in.observation.obs_valuerange_low_value is 'valueRange/low/value (10 numeric)';
 comment on column cds2db_in.observation.obs_valuerange_low_unit is 'valueRange/low/unit (30 varchar)';
 comment on column cds2db_in.observation.obs_valuerange_low_system is 'valueRange/low/system (70 varchar)';
@@ -2635,8 +2635,8 @@ comment on column cds2db_in.diagnosticreport.diagrep_code_version is 'code/codin
 comment on column cds2db_in.diagnosticreport.diagrep_code_code is 'code/coding/code (30 varchar)';
 comment on column cds2db_in.diagnosticreport.diagrep_code_display is 'code/coding/display (100 varchar)';
 comment on column cds2db_in.diagnosticreport.diagrep_code_text is 'code/text (500 varchar)';
-comment on column cds2db_in.diagnosticreport.diagrep_effectivedatetime is 'effectiveDateTime (30 timestamp)';
-comment on column cds2db_in.diagnosticreport.diagrep_issued is 'issued (30 timestamp)';
+comment on column cds2db_in.diagnosticreport.diagrep_effectivedatetime is 'effectiveDateTime (33 timestamp)';
+comment on column cds2db_in.diagnosticreport.diagrep_issued is 'issued (33 timestamp)';
 comment on column cds2db_in.diagnosticreport.diagrep_performer_id is 'performer/reference (70 varchar)';
 comment on column cds2db_in.diagnosticreport.diagrep_performer_type is 'performer/type (30 varchar)';
 comment on column cds2db_in.diagnosticreport.diagrep_performer_identifier_use is 'performer/identifier/use (30 varchar)';
@@ -2687,7 +2687,7 @@ comment on column cds2db_in.servicerequest.servreq_code_version is 'code/coding/
 comment on column cds2db_in.servicerequest.servreq_code_code is 'code/coding/code (30 varchar)';
 comment on column cds2db_in.servicerequest.servreq_code_display is 'code/coding/display (100 varchar)';
 comment on column cds2db_in.servicerequest.servreq_code_text is 'code/text (500 varchar)';
-comment on column cds2db_in.servicerequest.servreq_authoredon is 'authoredOn (30 timestamp)';
+comment on column cds2db_in.servicerequest.servreq_authoredon is 'authoredOn (33 timestamp)';
 comment on column cds2db_in.servicerequest.servreq_requester_id is 'requester/reference (70 varchar)';
 comment on column cds2db_in.servicerequest.servreq_requester_type is 'requester/type (30 varchar)';
 comment on column cds2db_in.servicerequest.servreq_requester_identifier_use is 'requester/identifier/use (30 varchar)';
@@ -2751,7 +2751,7 @@ comment on column cds2db_in.procedure.proc_code_version is 'code/coding/version 
 comment on column cds2db_in.procedure.proc_code_code is 'code/coding/code (30 varchar)';
 comment on column cds2db_in.procedure.proc_code_display is 'code/coding/display (100 varchar)';
 comment on column cds2db_in.procedure.proc_code_text is 'code/text (500 varchar)';
-comment on column cds2db_in.procedure.proc_performeddatetime is 'performedDateTime (30 timestamp)';
+comment on column cds2db_in.procedure.proc_performeddatetime is 'performedDateTime (33 timestamp)';
 comment on column cds2db_in.procedure.proc_performedperiod_start is 'performedPeriod/start (30 timestamp)';
 comment on column cds2db_in.procedure.proc_performedperiod_end is 'performedPeriod/end (30 timestamp)';
 comment on column cds2db_in.procedure.proc_reasoncode_system is 'reasonCode/coding/system (70 varchar)';
@@ -2799,7 +2799,7 @@ comment on column cds2db_in.consent.cons_scope_version is 'scope/coding/version 
 comment on column cds2db_in.consent.cons_scope_code is 'scope/coding/code (30 varchar)';
 comment on column cds2db_in.consent.cons_scope_display is 'scope/coding/display (100 varchar)';
 comment on column cds2db_in.consent.cons_scope_text is 'scope/text (500 varchar)';
-comment on column cds2db_in.consent.cons_datetime is 'dateTime (30 timestamp)';
+comment on column cds2db_in.consent.cons_datetime is 'dateTime (33 timestamp)';
 comment on column cds2db_in.consent.cons_provision_type is 'provision/type (10 varchar)';
 comment on column cds2db_in.consent.cons_provision_period_start is 'provision/period/start (30 timestamp)';
 comment on column cds2db_in.consent.cons_provision_period_end is 'provision/period/end (30 timestamp)';
@@ -2832,7 +2832,7 @@ comment on column cds2db_in.location.loc_name is 'name (50 varchar)';
 comment on column cds2db_in.location.loc_description is 'description (50 varchar)';
 comment on column cds2db_in.location.loc_alias is 'alias (30 varchar)';
 
-comment on column cds2db_in.pids_per_ward.date_time is 'date_time (30 timestamp)';
+comment on column cds2db_in.pids_per_ward.date_time is 'date_time (33 timestamp)';
 comment on column cds2db_in.pids_per_ward.ward_name is 'ward_name (30 varchar)';
 comment on column cds2db_in.pids_per_ward.patient_id is 'patient_id (70 varchar)';
 
