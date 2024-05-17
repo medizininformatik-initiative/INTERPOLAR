@@ -51,9 +51,10 @@ retrieve <- function() {
       resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, table_descriptions)
     }))
 
-    # Write resource tables to database
-    etlutils::runProcess(etlutils::run_in('Write resource tables to database', {
-      writeResourceTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+    # Write raw tables to database
+    etlutils::runProcess(etlutils::run_in('Write raw tables to database', {
+      names(resource_tables) = tolower(paste0(names(resource_tables), "_raw"))
+      writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
     }))
 
     # Convert Column Types in resource tables
