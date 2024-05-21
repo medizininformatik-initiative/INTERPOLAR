@@ -36,7 +36,8 @@
          ```
          docker-compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap < REDCap-db/init/10_redcap_install-tables.sql
          ```
-        * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten. Ist im unteren Bereich "CONGRATULATIONS!" zu lesen, können Sie die REDCap mit Klick auf [http://127.0.0.1:8082/redcap/](http://127.0.0.1:8082/redcap/) starten.
+        * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten. Dies kann zu einem späteren Zeitpunkt erfolgen. Ist im unteren Bereich "CONGRATULATIONS!" zu lesen, können Sie die REDCap mit Klick auf [http://127.0.0.1:8082/redcap/](http://127.0.0.1:8082/redcap/) starten.
+     * Hinweis: Diese Schritte müssen nur wiederholt werden, wenn eine neue REDCap Version zum Einsazt kommen soll. Das Update kann auch über die REDCap Weboberfläche im "Control Center" eingespielt werden.
   1. Das INTERPOLAR-Projekt in REDCap importieren:
      * Klicken Sie auf "New Project" (Menu-Leiste oben).
      * Geben Sie dem Projekt einen Titel, z.B. INTERPOLAR-dev
