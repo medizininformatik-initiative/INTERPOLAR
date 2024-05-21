@@ -71,6 +71,73 @@ dbListTables <- function(db_connection) {
   return(tables)
 }
 
+#' Check column widths of a table in a PostgreSQL database
+#'
+#' This function retrieves information about the column widths of a specified table
+#' in a PostgreSQL database using the information_schema.columns system view.
+#'
+#' @param db_connection A DBI connection object to the PostgreSQL database.
+#' @param table_name A character string specifying the name of the table to check.
+#' @param table A data frame representing the table to be checked.
+#'
+#' @details This function converts the table name to lowercase for PostgreSQL compatibility,
+#' then constructs a SQL query to retrieve the column widths (maximum length for VARCHAR columns)
+#' of the specified table from the information_schema.columns system view. It retrieves the
+#' column widths using \code{DBI::dbGetQuery()} and checks the lengths of the corresponding
+#' columns in the provided table. If any values exceed the maximum length, it prints an error
+#' message and returns FALSE. Otherwise, it returns TRUE indicating no violations were found.
+#'
+#' @return A logical value indicating whether the table content meets the length constraints.
+#'
+#' @export
+dbCheckContent <- function(db_connection, table_name, table) {
+  # Convert table name to lowercase for PostgreSQL compatibility
+  table_name <- tolower(table_name)
+
+  # Construct SQL query to retrieve column widths
+  sql_query <- paste0("SELECT column_name, character_maximum_length
+                     FROM information_schema.columns
+                     WHERE table_name = '", table_name, "'")
+
+  # Retrieve column widths
+  column_widths <- DBI::dbGetQuery(db_connection, sql_query)
+
+  # Remove duplicate column widths
+  column_widths <- unique(column_widths)
+
+  # Filter column_widths to keep only columns present in the data table
+  column_widths <- column_widths[column_widths$column_name %in% names(table), ]
+
+  # Initialize STOP flag
+  STOP <- FALSE
+
+  # Check length of each column in column_widths
+  for (i in seq_along(column_widths$column_name)) {
+    column_name <- column_widths$column_name[i]
+    max_length <- column_widths$character_maximum_length[i]
+    if (!is.na(max_length)) { # only varchars have a valid (non NA) value
+      # Check length of each value in the column
+      for (j in seq_len(nrow(table))) {
+        value <- as.character(table[[column_name]][j])
+        if (!is.na(value) && nchar(value) > max_length) {
+          # Add message text
+          cat_message <- paste0("In table '", table_name , "' value '", value, "' in column '", column_name, "' at row ", j, " is " , nchar(value), " but maximum length is ", max_length)
+          # Print error or info message for values exceeding maximum length
+          if (max_length <= 100) {
+            cat_error(paste0(cat_message, ". Please Fix it", "\n"))
+            STOP <- TRUE
+          } else {
+            cat_info(paste0(cat_message, ". Will be truncated. Please Check", "\n"))
+            # Truncate string to possible maximum length
+            table[j, (column_name) := substr(get(column_name), 1, max_length)]
+          }
+        }
+      }
+    }
+  }
+  if (STOP) stop()
+}
+
 #' Insert Rows into a PostgreSQL Table
 #'
 #' This function inserts rows from a `data.table` or `data.frame` into a specified table within a PostgreSQL database.

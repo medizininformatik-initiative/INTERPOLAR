@@ -1,0 +1,33 @@
+###################################################
+# General database settings for all users/schemes #
+###################################################
+
+DB_GENERAL_HOST = "cds_hub"
+DB_GENERAL_PORT = 5432
+DB_GENERAL_NAME = "cds_hub_db"
+
+##########################
+# CDS2DB module settings #
+##########################
+
+DB_CDS2DB_USER      = "cds2db_user"
+DB_CDS2DB_PASSWORD  = "cds2db"
+DB_CDS2DB_SCHEMA_IN = "cds2db_in"
+
+#################################
+# DataProcessor module settings #
+#################################
+
+DB_DATAPROCESSOR_USER      = "dataprocessor_user"
+DB_DATAPROCESSOR_PASSWORD  = "dataprocessor"
+DB_DATAPROCESSOR_SCHEMA_IN = "dataprocessor_in"
+DB_DATAPROCESSOR_SCHEMA_OUT = "dataprocessor_out"
+
+###############################
+# DB2Frontend module settings #
+###############################
+
+DB_DB2FRONTEND_USER      = "db2frontend_user"
+DB_DB2FRONTEND_PASSWORD  = "db2frontend"
+DB_DB2FRONTEND_SCHEMA_IN = "db2frontend_in"
+DB_DB2FRONTEND_SCHEMA_OUT = "db2frontend_out"
