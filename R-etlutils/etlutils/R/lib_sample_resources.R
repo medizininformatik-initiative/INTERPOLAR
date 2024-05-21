@@ -864,13 +864,21 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #' @export
 loadFHIRResourcesByOwnID <- function(ids, table_description) {
   resource <- table_description@resource@.Data
-  resource_table <- downloadAndCrackFHIRResourcesByPIDs(
-    resource = resource,
-    id_param_str = '_id',
-    ids = getAfterLastSlash(ids),
-    table_description = table_description,
-    verbose = VERBOSE
-  )
+  if (!rlang::is_empty(ids)) {
+    resource_table <- downloadAndCrackFHIRResourcesByPIDs(
+      resource = resource,
+      id_param_str = '_id',
+      ids = getAfterLastSlash(ids),
+      table_description = table_description,
+      verbose = VERBOSE
+    )
+  } else {
+    # if there are no IDs -> create an empt table with all needed columns as character columns
+    column_names <- table_description@cols@names
+    resource_table <- data.table(matrix(ncol = length(column_names), nrow = 0))
+    data.table::setnames(resource_table, column_names)
+    resource_table[, (column_names) := lapply(.SD, as.character), .SDcols = column_names]
+  }
   return(resource_table)
 }
 
