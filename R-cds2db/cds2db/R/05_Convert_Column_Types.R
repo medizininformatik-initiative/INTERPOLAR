@@ -1,3 +1,56 @@
+getUntypedRAWDataFromDatabase <- function() {
+
+  db_connection <- etlutils::dbConnect(
+    user = DB_CDS2DB_USER,
+    password = DB_CDS2DB_PASSWORD,
+    dbname = DB_GENERAL_NAME,
+    host = DB_GENERAL_HOST,
+    port = DB_GENERAL_PORT,
+    schema = DB_CDS2DB_SCHEMA_OUT
+  )
+
+  db_table_names <- etlutils::dbListTables(db_connection)
+  # Display the table names
+  print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
+  if (is.null(db_table_names)) {
+    warning("There are no tables found in database")
+  }
+
+  resource_tables <- list()
+  for (table_name in db_table_names) {
+    # the database tables here are tables of a View. Per convention their prefix is "v_" -> remove this prefix
+    resource_table_name <- sub("^v_", "", table_name)
+    resource_tables[[resource_table_name]] <- etlutils::dbReadTable(db_connection, table_name)
+  }
+  return(resource_tables)
+}
+
+joinMultiValuesInCrackedFHIRData <- function(resource_table, column_names_2_join) {
+  for (column_name in column_names_2_join) {
+    #join column values
+  }
+}
+
+joinPatientNamesIfPresent <- function(resource_tables, fhir_table_description) {
+  cols_2_join <- c("name/given", "name/prefix", "name/suffix")
+  fhir_cols_2_join <- c()
+  fhir_cols <- fhir_table_description@cols@.Data
+  for (i in seq_len(fhir_cols)) {
+    if (fhir_cols[i] %in% cols_2_join) {
+      fhir_cols_2_join[length(fhir_cols_2_join) + 1] <- fhir_table_description@cols@names[i]
+    }
+  }
+  if (length(fhir_cols_2_join)) {
+    joinMultiValuesInCrackedFHIRData(resource_tables[["patient"]], fhir_cols_2_join)
+  }
+}
+
+meltCrackedFHIRData <- function(resource_tables, brackets, column_sep) {
+  for (resource_table in resource_tables) {
+    # melt table
+  }
+}
+
 #' Convert columns of specific types in tables
 #'
 #' This function converts columns of specific types in tables using a given conversion function.
@@ -59,6 +112,11 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #' @return This function modifies the input resource tables by converting the data types of columns.
 #'
 convertTypes <- function(resource_tables) {
+
+  resource_tables <- getUntypedRAWDataFromDatabase()
+  joinPatientNamesIfPresent(resource_tables)
+  meltCrackedFHIRData(resource_tables, BRACKETS, SEP)
+
   convertType(resource_tables, c("datetime"), etlutils::convertDateTimeFormat)
   convertType(resource_tables, c("date"), etlutils::convertDateFormat)
   convertType(resource_tables, c("time"), etlutils::convertTimeFormat)
