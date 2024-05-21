@@ -1,0 +1,3 @@
+-- insert SQL from http://127.0.0.1:8082/redcap/install.php here and
+-- start import with:
+-- docker-compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap < ../../REDCap-db/init/redcap.sql 
