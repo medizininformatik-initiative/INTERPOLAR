@@ -3,10 +3,10 @@
 #' @details If a xpath expression returns more than 1 value (if it is a list of multiple values (e.g.
 #' list of codes and corresponding code systems), then all
 #'
-BRACKETS <- c('[', ']')
+BRACKETS <- c("[", "]")
 
 #' Brackets for the fhir table descriptions
-SEP      <- ' ~ '
+SEP      <- " ~ "
 
 #' Load Table Description Excel File
 #'
@@ -23,7 +23,7 @@ loadTableDescriptionFile <- function() {
 #' Get a table with the Table Descriptions for all fhir resources from Excel file
 #'
 #' This function reads the "Table_Description.xlsx" file from the "extdata" directory
-#' in the package and returns the data as a data frame.
+#' in the package and returns the data as a data table.
 #'
 #' @param columns column names which should be in the return table. If NA then no column
 #' will be removed.
@@ -76,7 +76,7 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
   }
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionsTable(c('resource', 'column_name', 'fhir_expression', 'reference_types'))
+    table_description_table <- getTableDescriptionsTable(c("resource", "column_name", "fhir_expression", "reference_types"))
   }
 
   # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects

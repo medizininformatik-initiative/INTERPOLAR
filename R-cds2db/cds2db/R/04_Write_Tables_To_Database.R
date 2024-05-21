@@ -44,7 +44,7 @@ writeTablesToDatabase <- function(tables, table_names = NA, clear_before_insert 
   # Display the table names
   print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
   if (is.null(db_table_names)) {
-    warning("There is no tables found in database")
+    warning("There are no tables found in database")
   }
 
   # write tables to DB
