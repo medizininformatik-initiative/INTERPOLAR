@@ -32,7 +32,7 @@
         * STEP 1) Kann übersprungen werden. Diese SQL-Anweisungen wurde bereits beim Initialisieren ausgeführt
         * STEP 2) Diese Anpassungen haben Sie schon vorgenommen und es sollte in gründer Schrift folgendes zu lesen sein: "Connection to the MySQL database 'redcap' was successful!"
         * STEP 3) Nehmen Sie ggf. _optional_ Änderungen vor. Klicken Sie anschließend auf "Generate SQL Install Script"
-        * STEP 4) Kopieren Sie den Inhalt des SQL-Scripts und fügen Sie ihn in die Datei [REDCap-db/init/10_redcap_install-tables.sql](REDCap-db/init/10_redcap_install-tables.sql) ein. Gehen Sie anschließend zurück zur Console. Ersetzen Sie in der nachfolgenden Befehlszeile "_<insert redcap db root pw here>_" durch das REDCap Datenbank root Passwort und starten sie den Befehl. Das REDCap Datenbank root Passwort finden Sie unter REDCap-db/.env_redcap_db_root.password.
+        * STEP 4) Kopieren Sie den Inhalt des SQL-Scripts und fügen Sie ihn in die Datei [REDCap-db/init/10_redcap_install-tables.sql](REDCap-db/init/10_redcap_install-tables.sql) ein. Gehen Sie anschließend zurück zur Console. Ersetzen Sie in der nachfolgenden Befehlszeile "_\<insert redcap db root pw here\>_" durch das REDCap Datenbank **_root_** Passwort und starten sie den Befehl. Das REDCap Datenbank root Passwort finden Sie unter REDCap-db/.env_redcap_db_root.password.
          ```
          docker-compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap < REDCap-db/init/10_redcap_install-tables.sql
          ```
