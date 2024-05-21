@@ -93,7 +93,8 @@ services:
       - "127.0.0.1:8089:80"
     environment:
       PGADMIN_DEFAULT_PASSWORD: "password"
-      PGADMIN_DEFAULT_EMAIL: a@b.cd
+      PGADMIN_DEFAULT_EMAIL: a@b.cda
+      PGADMIN_SERVER_JSON_FILE: pgadmin_cds_hub.json
     depends_on:
       - cds_hub
     networks:
@@ -101,6 +102,7 @@ services:
       - external
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin_cds_hub.json:/pgadmin4/pgadmin_cds_hub.json  
 
   # This section is no service, but for building the R-environment
   # to execute (manualy) R scripts for r-cds2db and r-db2frontend,
