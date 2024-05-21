@@ -197,3 +197,124 @@ replacePatternsInString <- function(patternsAndReplacements, string, ignore.case
 getPluralSuffix <- function(counts) {
   ifelse(counts == 1, '', 's')
 }
+
+#' Count Trailing Spaces in a String
+#'
+#' This function calculates the number of consecutive spaces at the end of a string.
+#' It iterates from the end of the string to the beginning and counts spaces until
+#' a non-space character is encountered.
+#'
+#' @param text A character string for which to count trailing spaces.
+#' @return An integer representing the number of trailing spaces.
+#' @examples
+#' countTrailingSpaces("Hello World   ")  # returns 3
+#' countTrailingSpaces("NoSpacesHere")    # returns 0
+#' @export
+
+countTrailingSpaces <- function(text) {
+  space_count <- 0
+  for (i in nchar(text):1) {
+    if (substr(text, i, i) == " ") {
+      space_count <- space_count + 1
+    } else {
+      break
+    }
+  }
+  return(space_count)
+}
+
+#' Find the Index of a Substring in a String
+#'
+#' This function searches for the first occurrence of a specified substring in a main string
+#' and returns its 1-based position. It treats the substring as fixed text, not a regular expression,
+#' which makes it suitable for substrings containing special characters.
+#'
+#' @param main_string The main string in which to search for the substring.
+#' @param fixed_substring The substring to find in the main string. It is treated as fixed text,
+#' so special characters are not interpreted as regular expression elements.
+#' @return Integer value of the substring's position if found, otherwise returns -1.
+#' @examples
+#' indexOfSubstring("Hello world", "world")  # returns 7
+#' indexOfSubstring("Sample text", "not found")  # returns -1
+#' @export
+indexOfSubstring <- function(main_string, fixed_substring) {
+  match_position <- regexpr(fixed_substring, main_string, fixed = TRUE)
+  if (match_position > 0) {
+    return(match_position)
+  }
+  return(-1)
+}
+
+#' Get All Whitespaces Before a Word in a String
+#'
+#' This function counts and returns all consecutive whitespaces located immediately before
+#' the first occurrence of a specified word in a string. The function uses `etlutils::indexOfSubstring`
+#' to find the starting index of the word and then counts backwards to capture the whitespaces.
+#'
+#' @param string The string in which to search for the word.
+#' @param word The word before which whitespaces are to be counted.
+#' @return A string containing only the whitespaces found before the word in the main string.
+#' @examples
+#' getWhitespacesBeforeWord("Hello    world", "world")  # returns "    "
+#' getWhitespacesBeforeWord("No space here", "space")   # returns ""
+#' @export
+getWhitespacesBeforeWord <- function(string, word) {
+  wordIndex <- etlutils::indexOfSubstring(string, word)
+  whitespaces <- ""
+  index <- wordIndex - 1
+  while (index > 0) {
+    if (substr(string, index, index) == " ") {
+      whitespaces <- paste0(whitespaces, " ")
+      index <- index - 1
+    } else {
+      break
+    }
+  }
+  return(whitespaces)
+}
+
+#' Count Characters from End to Last Newline in a String
+#'
+#' This function counts the number of characters from the end of a given string
+#' up to the last newline character (`\n`). If no newline character is present,
+#' it counts the characters from the end of the string to the beginning.
+#'
+#' @param text A character string to be processed.
+#' @return An integer representing the number of characters from the end of the
+#' string to the last newline character, or to the beginning of the string if
+#' no newline character is present.
+#' @examples
+#' countCharsFromEndToLastNewline("Hello\nWorld\n!")  # returns 1
+#' countCharsFromEndToLastNewline("HelloWorld")       # returns 10
+#' @export
+countCharsFromEndToLastNewline <- function(text) {
+  newline_pos <- gregexpr("\n", text, fixed = TRUE)[[1]]
+  if (newline_pos[1] == -1) {
+    return(nchar(text))  # No newline, count from end to beginning
+  } else {
+    last_newline_pos <- max(newline_pos)
+    return(nchar(text) - last_newline_pos)
+  }
+}
+
+#' Get Indentation of a Word in a Text
+#'
+#' This function calculates the indentation level of a specified word in a given text.
+#' It measures the number of characters from the last newline character (`\n`) up to the
+#' specified word. If there is no newline character before the word, it measures from the
+#' beginning of the text to the word. The function then returns a string consisting of spaces
+#' equal to the indentation level.
+#'
+#' @param text A character string to be processed.
+#' @param word A character string representing the word whose indentation level is to be measured.
+#' @return A character string consisting of spaces equal to the number of characters from the last
+#' newline character to the specified word, or from the beginning of the text if no newline character is present.
+#' @examples
+#' getWordIndentation("Hello\n  world", "world")  # returns "  "
+#' getWordIndentation("No newline here", "here")  # returns "              "
+#' @export
+getWordIndentation <- function(text, word) {
+  text_before_word <- substr(text, 1, regexpr(word, text, fixed = TRUE) - 1)
+  indentation <- etlutils::countCharsFromEndToLastNewline(text_before_word)
+  strrep(" ", indentation)
+}

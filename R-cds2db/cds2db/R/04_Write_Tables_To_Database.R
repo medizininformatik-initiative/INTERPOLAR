@@ -24,11 +24,10 @@
 #'   writeTablesToDatabase(my_tables, table_names = c("table1"), clear_before_insert = TRUE)
 #' }
 #'
-#' @export
-writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before_insert = FALSE) {
+writeTablesToDatabase <- function(tables, table_names = NA, clear_before_insert = FALSE) {
 
   # write all tables (table_names == NA) or only tables with the given names
-  if (is.na(table_names)) {
+  if (isSimpleNA(table_names)) {
     table_names <- names(tables)
   }
 
@@ -50,7 +49,7 @@ writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before
 
   # write tables to DB
   for (table_name in table_names) {
-    if (tolower(table_name) %in% db_table_names) {
+    if (table_name %in% db_table_names) {
       table <- tables[[table_name]]
       if (clear_before_insert) {
         etlutils::dbDeleteContent(db_connection, table_name)

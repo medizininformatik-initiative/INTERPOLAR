@@ -3,11 +3,9 @@
 #' @details If a xpath expression returns more than 1 value (if it is a list of multiple values (e.g.
 #' list of codes and corresponding code systems), then all
 #'
-#' @export
 BRACKETS <- c('[', ']')
 
 #' Brackets for the fhir table descriptions
-#' @export
 SEP      <- ' ~ '
 
 #' Load Table Description Excel File
@@ -16,7 +14,6 @@ SEP      <- ' ~ '
 #'
 #' @return A data table with table descriptions
 #'
-#' @export
 loadTableDescriptionFile <- function() {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
   table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
@@ -33,7 +30,6 @@ loadTableDescriptionFile <- function() {
 #'
 #' @return A data table with the table descriptions.
 #'
-#' @export
 getTableDescriptionsTable <- function(columns = NA) {
   table_description <- loadTableDescriptionFile()
   # remove all rows with NA in column 'fhir_expression'
@@ -63,7 +59,7 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   table_desc <- getTableDescriptions()
+#'   table_desc <- getFhircrackrTableDescriptions()
 #'   # Access the fhir_table_description() object for a specific resource group (e.g., "Encounter")
 #'   encounter_description <- table_desc[["Encounter"]]
 #' }
@@ -74,8 +70,7 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @importFrom fhircrackr fhir_table_description
 #'
 #' @keywords data manipulation
-#' @export
-getTableDescriptions <- function(table_description_table = NA) {
+getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   isPIDDependant <- function(table_description) {
     resource_name <- table_description@resource@.Data
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
@@ -116,4 +111,3 @@ getTableDescriptions <- function(table_description_table = NA) {
   # Returning the list of fhircrackr::fhir_table_description() objects
   return(list(pid_dependant = pid_dependant, pid_independant = pid_independant, reference_types = reference_types))
 }
-
