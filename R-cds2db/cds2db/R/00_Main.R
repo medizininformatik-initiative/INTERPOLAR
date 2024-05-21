@@ -53,8 +53,8 @@ retrieve <- function() {
 
     # Write raw tables to database
     etlutils::runProcess(etlutils::run_in('Write raw tables to database', {
-      names(resource_tables) = tolower(paste0(names(resource_tables), "_raw"))
-      writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+      table_names <- tolower(paste0(names(resource_tables), "_raw"))
+      writeTablesToDatabase(resource_tables, table_names)
     }))
 
     # Convert Column Types in resource tables
