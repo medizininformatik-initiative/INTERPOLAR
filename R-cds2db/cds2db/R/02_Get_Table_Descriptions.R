@@ -93,7 +93,7 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
       resource = resource_name,
       cols = cols_vector,
       sep = SEP,
-      brackets = NULL
+      brackets = BRACKETS
     )
     return(fhir_table_desc)
   })
