@@ -27,16 +27,16 @@
   ```
   7. Rufen Sie im Browser die REDCap Install-Seite auf: [http://127.0.0.1:8082/redcap/install.php](http://127.0.0.1:8082/redcap/install.php) (REDCap-URL)
      * Hinweis: _Sie können die REDCap-URL ggf. über einen Reverse-Proxy oder einen SSH-Tunnel auf dem Client-PC verfügbar machen._
-     * Sie sollten Install-Seite mit mehreren Schritten sehen:
+     * Sie sollten Install-Seite mit mehreren Schritten sehen:![image](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/1b442942-cac8-4378-acc6-446d61956f8d)
+
         * STEP 1) Kann übersprungen werden. Diese SQL-Anweisungen wurde bereits beim Initialisieren ausgeführt
         * STEP 2) Diese Anpassungen haben Sie schon vorgenommen und es sollte in gründer Schrift folgendes zu lesen sein: "Connection to the MySQL database 'redcap' was successful!"
         * STEP 3) Nehmen Sie ggf. _optional_ Änderungen vor. Klicken Sie anschließend auf "Generate SQL Install Script"
-        * STEP 4) Kopieren Sie den Inhalt des SQL-Scripts und fügen Sie ihn in die Datei [REDCap-db/init/10_redcap_install-tables.sql](REDCap-db/init/10_redcap_install-tables.sql) ein. Gehen Sie anschließend zurück zur Console und führen Sie folgendes aus. Das REDCap Datenbank root Passwort finden Sie unter REDCap-db/.env_redcap_db_root.password. Ersetzen Sie "<insert redcap db root pw here>" durch das root Passwort und starten sie den Befehl:
+        * STEP 4) Kopieren Sie den Inhalt des SQL-Scripts und fügen Sie ihn in die Datei [REDCap-db/init/10_redcap_install-tables.sql](REDCap-db/init/10_redcap_install-tables.sql) ein. Gehen Sie anschließend zurück zur Console. Ersetzen Sie in der nachfolgenden Befehlszeile "_<insert redcap db root pw here>_" durch das REDCap Datenbank root Passwort und starten sie den Befehl. Das REDCap Datenbank root Passwort finden Sie unter REDCap-db/.env_redcap_db_root.password.
          ```
-         docker-compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap 
-         < REDCap-db/init/10_redcap_install-tables.sql
+         docker-compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap < REDCap-db/init/10_redcap_install-tables.sql
          ```
-        * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten.
+        * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten. Ist im unteren Bereich "CONGRATULATIONS!" zu lesen, können Sie die REDCap mit Klick auf [http://127.0.0.1:8082/redcap/](http://127.0.0.1:8082/redcap/) starten.
   1. Das INTERPOLAR-Projekt in REDCap importieren:
      * Klicken Sie auf "New Project" (Menu-Leiste oben).
      * Geben Sie dem Projekt einen Titel, z.B. INTERPOLAR-dev
