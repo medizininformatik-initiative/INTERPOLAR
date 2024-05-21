@@ -252,7 +252,7 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
   if (!is.na(path_to_PID_list_file)) {
     etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
-      pidsPerWard <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
+      pids_per_ward <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
     })
   } else {
     etlutils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
@@ -269,8 +269,8 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data
       # now filter the encounters with the patterns and then extract the PIDs
-      pidsPerWard <- getPIDsPerWard(encounters, filter_patterns)
+      pids_per_ward <- getPIDsPerWard(encounters, filter_patterns)
     })
   }
-  return(pidsPerWard)
+  return(pids_per_ward)
 }
