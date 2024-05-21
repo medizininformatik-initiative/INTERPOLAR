@@ -13,6 +13,7 @@ DB_GENERAL_NAME = "cds_hub_db"
 DB_CDS2DB_USER      = "cds2db_user"
 DB_CDS2DB_PASSWORD  = "cds2db"
 DB_CDS2DB_SCHEMA_IN = "cds2db_in"
+DB_CDS2DB_SCHEMA_OUT = "cds2db_out"
 
 #################################
 # DataProcessor module settings #
