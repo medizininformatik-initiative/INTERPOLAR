@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_diagnosis_use_code varchar (630),   -- diagnosis/use/coding/code (30 x 21 = 630 varchar)
   enc_diagnosis_use_display varchar (2100),   -- diagnosis/use/coding/display (100 x 21 = 2100 varchar)
   enc_diagnosis_use_text varchar (3500),   -- diagnosis/use/text (500 x 7 = 3500 varchar)
-  enc_diagnosis_rank varchar (14),   -- diagnosis/rank (2 x 7 = 14 varchar)
+  enc_diagnosis_rank varchar (21),   -- diagnosis/rank (3 x 7 = 21 varchar)
   enc_hospitalization_admitsource_system varchar (70),   -- hospitalization/admitSource/coding/system (70 x 1 = 70 varchar)
   enc_hospitalization_admitsource_version varchar (50),   -- hospitalization/admitSource/coding/version (50 x 1 = 50 varchar)
   enc_hospitalization_admitsource_code varchar (30),   -- hospitalization/admitSource/coding/code (30 x 1 = 30 varchar)
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   pat_name_family varchar (100),   -- name/family (50 x 2 = 100 varchar)
   pat_name_given varchar (600),   -- name/given (30 x 20 = 600 varchar)
   pat_gender varchar (10),   -- gender (10 x 1 = 10 varchar)
-  pat_birthdate varchar (30),   -- birthDate (30 x 1 = 30 varchar)
+  pat_birthdate varchar (33),   -- birthDate (33 x 1 = 33 varchar)
   pat_address_postalcode varchar (30),   -- address/postalCode (10 x 3 = 30 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
@@ -157,8 +157,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_bodysite_text varchar (1500),   -- bodySite/text (500 x 3 = 1500 varchar)
   con_onsetperiod_start varchar (30),   -- onsetPeriod/start (30 x 1 = 30 varchar)
   con_onsetperiod_end varchar (30),   -- onsetPeriod/end (30 x 1 = 30 varchar)
-  con_onsetdatetime varchar (30),   -- onsetDateTime (30 x 1 = 30 varchar)
-  con_abatementdatetime varchar (30),   -- abatementDateTime (30 x 1 = 30 varchar)
+  con_onsetdatetime varchar (33),   -- onsetDateTime (33 x 1 = 33 varchar)
+  con_abatementdatetime varchar (33),   -- abatementDateTime (33 x 1 = 33 varchar)
   con_abatementage_value varchar (10),   -- abatementAge/value (10 x 1 = 10 varchar)
   con_abatementage_comparator varchar (3),   -- abatementAge/comparator (3 x 1 = 3 varchar)
   con_abatementage_unit varchar (30),   -- abatementAge/unit (30 x 1 = 30 varchar)
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_abatementrange_high_system varchar (70),   -- abatementRange/high/system (70 x 1 = 70 varchar)
   con_abatementrange_high_code varchar (30),   -- abatementRange/high/code (30 x 1 = 30 varchar)
   con_abatementstring varchar (300),   -- abatementString (300 x 1 = 300 varchar)
-  con_recordeddate varchar (30),   -- recordedDate (30 x 1 = 30 varchar)
+  con_recordeddate varchar (33),   -- recordedDate (33 x 1 = 33 varchar)
   con_recorder_id varchar (70),   -- recorder/reference (70 x 1 = 70 varchar)
   con_recorder_type varchar (30),   -- recorder/type (30 x 1 = 30 varchar)
   con_recorder_identifier_use varchar (30),   -- recorder/identifier/use (30 x 1 = 30 varchar)
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_supportinginformation_identifier_type_display varchar (600),   -- supportingInformation/identifier/type/coding/display (100 x 6 = 600 varchar)
   medreq_supportinginformation_identifier_type_text varchar (1000),   -- supportingInformation/identifier/type/text (500 x 2 = 1000 varchar)
   medreq_supportinginformation_display varchar (200),   -- supportingInformation/display (100 x 2 = 200 varchar)
-  medreq_authoredon varchar (30),   -- authoredOn (30 x 1 = 30 varchar)
+  medreq_authoredon varchar (33),   -- authoredOn (33 x 1 = 33 varchar)
   medreq_requester_id varchar (70),   -- requester/reference (70 x 1 = 70 varchar)
   medreq_requester_type varchar (30),   -- requester/type (30 x 1 = 30 varchar)
   medreq_requester_identifier_use varchar (30),   -- requester/identifier/use (30 x 1 = 30 varchar)
@@ -572,7 +572,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_supportinginformation_identifier_type_display varchar (600),   -- supportingInformation/identifier/type/coding/display (100 x 6 = 600 varchar)
   medadm_supportinginformation_identifier_type_text varchar (1000),   -- supportingInformation/identifier/type/text (500 x 2 = 1000 varchar)
   medadm_supportinginformation_display varchar (200),   -- supportingInformation/display (100 x 2 = 200 varchar)
-  medadm_effectivedatetime varchar (30),   -- effectiveDateTime (30 x 1 = 30 varchar)
+  medadm_effectivedatetime varchar (33),   -- effectiveDateTime (33 x 1 = 33 varchar)
   medadm_effectiveperiod_start varchar (30),   -- effectivePeriod/start (30 x 1 = 30 varchar)
   medadm_effectiveperiod_end varchar (30),   -- effectivePeriod/end (30 x 1 = 30 varchar)
   medadm_performer_function_system varchar (70),   -- performer/function/coding/system (70 x 1 = 70 varchar)
@@ -690,10 +690,10 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_medicationcodeableconcept_code varchar (30),   -- medicationCodeableConcept/coding/code (30 x 1 = 30 varchar)
   medstat_medicationcodeableconcept_display varchar (100),   -- medicationCodeableConcept/coding/display (100 x 1 = 100 varchar)
   medstat_medicationcodeableconcept_text varchar (500),   -- medicationCodeableConcept/text (500 x 1 = 500 varchar)
-  medstat_effectivedatetime varchar (30),   -- effectiveDateTime (30 x 1 = 30 varchar)
+  medstat_effectivedatetime varchar (33),   -- effectiveDateTime (33 x 1 = 33 varchar)
   medstat_effectiveperiod_start varchar (30),   -- effectivePeriod/start (30 x 1 = 30 varchar)
   medstat_effectiveperiod_end varchar (30),   -- effectivePeriod/end (30 x 1 = 30 varchar)
-  medstat_dateasserted varchar (30),   -- dateAsserted (30 x 1 = 30 varchar)
+  medstat_dateasserted varchar (33),   -- dateAsserted (33 x 1 = 33 varchar)
   medstat_informationsource_id varchar (70),   -- informationSource/reference (70 x 1 = 70 varchar)
   medstat_informationsource_type varchar (30),   -- informationSource/type (30 x 1 = 30 varchar)
   medstat_informationsource_identifier_use varchar (30),   -- informationSource/identifier/use (30 x 1 = 30 varchar)
@@ -903,8 +903,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_code_code varchar (30),   -- code/coding/code (30 x 1 = 30 varchar)
   obs_code_display varchar (100),   -- code/coding/display (100 x 1 = 100 varchar)
   obs_code_text varchar (500),   -- code/text (500 x 1 = 500 varchar)
-  obs_effectivedatetime varchar (30),   -- effectiveDateTime (30 x 1 = 30 varchar)
-  obs_issued varchar (30),   -- issued (30 x 1 = 30 varchar)
+  obs_effectivedatetime varchar (33),   -- effectiveDateTime (33 x 1 = 33 varchar)
+  obs_issued varchar (33),   -- issued (33 x 1 = 33 varchar)
   obs_valuerange_low_value varchar (20),   -- valueRange/low/value (10 x 2 = 20 varchar)
   obs_valuerange_low_unit varchar (60),   -- valueRange/low/unit (30 x 2 = 60 varchar)
   obs_valuerange_low_system varchar (140),   -- valueRange/low/system (70 x 2 = 140 varchar)
@@ -1036,8 +1036,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_code_code varchar (30),   -- code/coding/code (30 x 1 = 30 varchar)
   diagrep_code_display varchar (100),   -- code/coding/display (100 x 1 = 100 varchar)
   diagrep_code_text varchar (500),   -- code/text (500 x 1 = 500 varchar)
-  diagrep_effectivedatetime varchar (30),   -- effectiveDateTime (30 x 1 = 30 varchar)
-  diagrep_issued varchar (30),   -- issued (30 x 1 = 30 varchar)
+  diagrep_effectivedatetime varchar (33),   -- effectiveDateTime (33 x 1 = 33 varchar)
+  diagrep_issued varchar (33),   -- issued (33 x 1 = 33 varchar)
   diagrep_performer_id varchar (70),   -- performer/reference (70 x 1 = 70 varchar)
   diagrep_performer_type varchar (30),   -- performer/type (30 x 1 = 30 varchar)
   diagrep_performer_identifier_use varchar (30),   -- performer/identifier/use (30 x 1 = 30 varchar)
@@ -1096,7 +1096,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_code_code varchar (30),   -- code/coding/code (30 x 1 = 30 varchar)
   servreq_code_display varchar (100),   -- code/coding/display (100 x 1 = 100 varchar)
   servreq_code_text varchar (500),   -- code/text (500 x 1 = 500 varchar)
-  servreq_authoredon varchar (30),   -- authoredOn (30 x 1 = 30 varchar)
+  servreq_authoredon varchar (33),   -- authoredOn (33 x 1 = 33 varchar)
   servreq_requester_id varchar (70),   -- requester/reference (70 x 1 = 70 varchar)
   servreq_requester_type varchar (30),   -- requester/type (30 x 1 = 30 varchar)
   servreq_requester_identifier_use varchar (30),   -- requester/identifier/use (30 x 1 = 30 varchar)
@@ -1168,7 +1168,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_code_code varchar (30),   -- code/coding/code (30 x 1 = 30 varchar)
   proc_code_display varchar (100),   -- code/coding/display (100 x 1 = 100 varchar)
   proc_code_text varchar (500),   -- code/text (500 x 1 = 500 varchar)
-  proc_performeddatetime varchar (30),   -- performedDateTime (30 x 1 = 30 varchar)
+  proc_performeddatetime varchar (33),   -- performedDateTime (33 x 1 = 33 varchar)
   proc_performedperiod_start varchar (30),   -- performedPeriod/start (30 x 1 = 30 varchar)
   proc_performedperiod_end varchar (30),   -- performedPeriod/end (30 x 1 = 30 varchar)
   proc_reasoncode_system varchar (70),   -- reasonCode/coding/system (70 x 1 = 70 varchar)
@@ -1224,7 +1224,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   cons_scope_code varchar (30),   -- scope/coding/code (30 x 1 = 30 varchar)
   cons_scope_display varchar (100),   -- scope/coding/display (100 x 1 = 100 varchar)
   cons_scope_text varchar (500),   -- scope/text (500 x 1 = 500 varchar)
-  cons_datetime varchar (30),   -- dateTime (30 x 1 = 30 varchar)
+  cons_datetime varchar (33),   -- dateTime (33 x 1 = 33 varchar)
   cons_provision_type varchar (10),   -- provision/type (10 x 1 = 10 varchar)
   cons_provision_period_start varchar (30),   -- provision/period/start (30 x 1 = 30 varchar)
   cons_provision_period_end varchar (30),   -- provision/period/end (30 x 1 = 30 varchar)
@@ -1273,7 +1273,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   pids_per_ward_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    date_time varchar (30),   -- date_time (30 x 1 = 30 varchar)
+    date_time varchar (33),   -- date_time (33 x 1 = 33 varchar)
   ward_name varchar (30),   -- ward_name (30 x 1 = 30 varchar)
   patient_id varchar (70),   -- patient_id (70 x 1 = 70 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -1289,7 +1289,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
 
 -- Table "encounter_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.encounter_raw ALTER COLUMN encounter_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.encounter_raw ALTER COLUMN encounter_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.encounter_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1316,7 +1316,7 @@ CREATE OR REPLACE TRIGGER encounter_raw_tr_ins_tr
 
 -- Table "patient_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.patient_raw ALTER COLUMN patient_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.patient_raw ALTER COLUMN patient_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.patient_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1343,7 +1343,7 @@ CREATE OR REPLACE TRIGGER patient_raw_tr_ins_tr
 
 -- Table "condition_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.condition_raw ALTER COLUMN condition_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.condition_raw ALTER COLUMN condition_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.condition_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1370,7 +1370,7 @@ CREATE OR REPLACE TRIGGER condition_raw_tr_ins_tr
 
 -- Table "medication_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medication_raw ALTER COLUMN medication_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.medication_raw ALTER COLUMN medication_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.medication_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1397,7 +1397,7 @@ CREATE OR REPLACE TRIGGER medication_raw_tr_ins_tr
 
 -- Table "medicationrequest_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationrequest_raw ALTER COLUMN medicationrequest_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.medicationrequest_raw ALTER COLUMN medicationrequest_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.medicationrequest_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1424,7 +1424,7 @@ CREATE OR REPLACE TRIGGER medicationrequest_raw_tr_ins_tr
 
 -- Table "medicationadministration_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationadministration_raw ALTER COLUMN medicationadministration_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.medicationadministration_raw ALTER COLUMN medicationadministration_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.medicationadministration_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1451,7 +1451,7 @@ CREATE OR REPLACE TRIGGER medicationadministration_raw_tr_ins_tr
 
 -- Table "medicationstatement_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationstatement_raw ALTER COLUMN medicationstatement_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.medicationstatement_raw ALTER COLUMN medicationstatement_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.medicationstatement_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1478,7 +1478,7 @@ CREATE OR REPLACE TRIGGER medicationstatement_raw_tr_ins_tr
 
 -- Table "observation_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.observation_raw ALTER COLUMN observation_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.observation_raw ALTER COLUMN observation_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.observation_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1505,7 +1505,7 @@ CREATE OR REPLACE TRIGGER observation_raw_tr_ins_tr
 
 -- Table "diagnosticreport_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.diagnosticreport_raw ALTER COLUMN diagnosticreport_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.diagnosticreport_raw ALTER COLUMN diagnosticreport_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.diagnosticreport_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1532,7 +1532,7 @@ CREATE OR REPLACE TRIGGER diagnosticreport_raw_tr_ins_tr
 
 -- Table "servicerequest_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.servicerequest_raw ALTER COLUMN servicerequest_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.servicerequest_raw ALTER COLUMN servicerequest_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.servicerequest_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1559,7 +1559,7 @@ CREATE OR REPLACE TRIGGER servicerequest_raw_tr_ins_tr
 
 -- Table "procedure_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.procedure_raw ALTER COLUMN procedure_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.procedure_raw ALTER COLUMN procedure_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.procedure_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1586,7 +1586,7 @@ CREATE OR REPLACE TRIGGER procedure_raw_tr_ins_tr
 
 -- Table "consent_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.consent_raw ALTER COLUMN consent_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.consent_raw ALTER COLUMN consent_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.consent_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1613,7 +1613,7 @@ CREATE OR REPLACE TRIGGER consent_raw_tr_ins_tr
 
 -- Table "location_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.location_raw ALTER COLUMN location_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.location_raw ALTER COLUMN location_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.location_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1640,7 +1640,7 @@ CREATE OR REPLACE TRIGGER location_raw_tr_ins_tr
 
 -- Table "pids_per_ward_raw" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.pids_per_ward_raw ALTER COLUMN pids_per_ward_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq));
+ALTER TABLE cds2db_in.pids_per_ward_raw ALTER COLUMN pids_per_ward_raw_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
 
 GRANT TRIGGER ON cds2db_in.pids_per_ward_raw TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
@@ -1705,7 +1705,7 @@ comment on column cds2db_in.encounter_raw.enc_diagnosis_use_version is 'diagnosi
 comment on column cds2db_in.encounter_raw.enc_diagnosis_use_code is 'diagnosis/use/coding/code (30 x 21 = 630 varchar)';
 comment on column cds2db_in.encounter_raw.enc_diagnosis_use_display is 'diagnosis/use/coding/display (100 x 21 = 2100 varchar)';
 comment on column cds2db_in.encounter_raw.enc_diagnosis_use_text is 'diagnosis/use/text (500 x 7 = 3500 varchar)';
-comment on column cds2db_in.encounter_raw.enc_diagnosis_rank is 'diagnosis/rank (2 x 7 = 14 varchar)';
+comment on column cds2db_in.encounter_raw.enc_diagnosis_rank is 'diagnosis/rank (3 x 7 = 21 varchar)';
 comment on column cds2db_in.encounter_raw.enc_hospitalization_admitsource_system is 'hospitalization/admitSource/coding/system (70 x 1 = 70 varchar)';
 comment on column cds2db_in.encounter_raw.enc_hospitalization_admitsource_version is 'hospitalization/admitSource/coding/version (50 x 1 = 50 varchar)';
 comment on column cds2db_in.encounter_raw.enc_hospitalization_admitsource_code is 'hospitalization/admitSource/coding/code (30 x 1 = 30 varchar)';
@@ -1756,7 +1756,7 @@ comment on column cds2db_in.patient_raw.pat_name_text is 'name/text (250 x 2 = 5
 comment on column cds2db_in.patient_raw.pat_name_family is 'name/family (50 x 2 = 100 varchar)';
 comment on column cds2db_in.patient_raw.pat_name_given is 'name/given (30 x 20 = 600 varchar)';
 comment on column cds2db_in.patient_raw.pat_gender is 'gender (10 x 1 = 10 varchar)';
-comment on column cds2db_in.patient_raw.pat_birthdate is 'birthDate (30 x 1 = 30 varchar)';
+comment on column cds2db_in.patient_raw.pat_birthdate is 'birthDate (33 x 1 = 33 varchar)';
 comment on column cds2db_in.patient_raw.pat_address_postalcode is 'address/postalCode (10 x 3 = 30 varchar)';
 
 comment on column cds2db_in.condition_raw.con_id is 'id (70 x 1 = 70 varchar)';
@@ -1804,8 +1804,8 @@ comment on column cds2db_in.condition_raw.con_bodysite_display is 'bodySite/codi
 comment on column cds2db_in.condition_raw.con_bodysite_text is 'bodySite/text (500 x 3 = 1500 varchar)';
 comment on column cds2db_in.condition_raw.con_onsetperiod_start is 'onsetPeriod/start (30 x 1 = 30 varchar)';
 comment on column cds2db_in.condition_raw.con_onsetperiod_end is 'onsetPeriod/end (30 x 1 = 30 varchar)';
-comment on column cds2db_in.condition_raw.con_onsetdatetime is 'onsetDateTime (30 x 1 = 30 varchar)';
-comment on column cds2db_in.condition_raw.con_abatementdatetime is 'abatementDateTime (30 x 1 = 30 varchar)';
+comment on column cds2db_in.condition_raw.con_onsetdatetime is 'onsetDateTime (33 x 1 = 33 varchar)';
+comment on column cds2db_in.condition_raw.con_abatementdatetime is 'abatementDateTime (33 x 1 = 33 varchar)';
 comment on column cds2db_in.condition_raw.con_abatementage_value is 'abatementAge/value (10 x 1 = 10 varchar)';
 comment on column cds2db_in.condition_raw.con_abatementage_comparator is 'abatementAge/comparator (3 x 1 = 3 varchar)';
 comment on column cds2db_in.condition_raw.con_abatementage_unit is 'abatementAge/unit (30 x 1 = 30 varchar)';
@@ -1822,7 +1822,7 @@ comment on column cds2db_in.condition_raw.con_abatementrange_high_unit is 'abate
 comment on column cds2db_in.condition_raw.con_abatementrange_high_system is 'abatementRange/high/system (70 x 1 = 70 varchar)';
 comment on column cds2db_in.condition_raw.con_abatementrange_high_code is 'abatementRange/high/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.condition_raw.con_abatementstring is 'abatementString (300 x 1 = 300 varchar)';
-comment on column cds2db_in.condition_raw.con_recordeddate is 'recordedDate (30 x 1 = 30 varchar)';
+comment on column cds2db_in.condition_raw.con_recordeddate is 'recordedDate (33 x 1 = 33 varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_id is 'recorder/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_type is 'recorder/type (30 x 1 = 30 varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_identifier_use is 'recorder/identifier/use (30 x 1 = 30 varchar)';
@@ -1982,7 +1982,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_i
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_display is 'supportingInformation/identifier/type/coding/display (100 x 6 = 600 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_text is 'supportingInformation/identifier/type/text (500 x 2 = 1000 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_display is 'supportingInformation/display (100 x 2 = 200 varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_authoredon is 'authoredOn (30 x 1 = 30 varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_authoredon is 'authoredOn (33 x 1 = 33 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_requester_id is 'requester/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_requester_type is 'requester/type (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_requester_identifier_use is 'requester/identifier/use (30 x 1 = 30 varchar)';
@@ -2195,7 +2195,7 @@ comment on column cds2db_in.medicationadministration_raw.medadm_supportinginform
 comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_type_display is 'supportingInformation/identifier/type/coding/display (100 x 6 = 600 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_type_text is 'supportingInformation/identifier/type/text (500 x 2 = 1000 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_display is 'supportingInformation/display (100 x 2 = 200 varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_effectivedatetime is 'effectiveDateTime (30 x 1 = 30 varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_effectivedatetime is 'effectiveDateTime (33 x 1 = 33 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_effectiveperiod_start is 'effectivePeriod/start (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_effectiveperiod_end is 'effectivePeriod/end (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_performer_function_system is 'performer/function/coding/system (70 x 1 = 70 varchar)';
@@ -2305,10 +2305,10 @@ comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableco
 comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableconcept_code is 'medicationCodeableConcept/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableconcept_display is 'medicationCodeableConcept/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableconcept_text is 'medicationCodeableConcept/text (500 x 1 = 500 varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_effectivedatetime is 'effectiveDateTime (30 x 1 = 30 varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_effectivedatetime is 'effectiveDateTime (33 x 1 = 33 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_effectiveperiod_start is 'effectivePeriod/start (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_effectiveperiod_end is 'effectivePeriod/end (30 x 1 = 30 varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_dateasserted is 'dateAsserted (30 x 1 = 30 varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_dateasserted is 'dateAsserted (33 x 1 = 33 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_id is 'informationSource/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_type is 'informationSource/type (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_use is 'informationSource/identifier/use (30 x 1 = 30 varchar)';
@@ -2510,8 +2510,8 @@ comment on column cds2db_in.observation_raw.obs_code_version is 'code/coding/ver
 comment on column cds2db_in.observation_raw.obs_code_code is 'code/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.observation_raw.obs_code_display is 'code/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.observation_raw.obs_code_text is 'code/text (500 x 1 = 500 varchar)';
-comment on column cds2db_in.observation_raw.obs_effectivedatetime is 'effectiveDateTime (30 x 1 = 30 varchar)';
-comment on column cds2db_in.observation_raw.obs_issued is 'issued (30 x 1 = 30 varchar)';
+comment on column cds2db_in.observation_raw.obs_effectivedatetime is 'effectiveDateTime (33 x 1 = 33 varchar)';
+comment on column cds2db_in.observation_raw.obs_issued is 'issued (33 x 1 = 33 varchar)';
 comment on column cds2db_in.observation_raw.obs_valuerange_low_value is 'valueRange/low/value (10 x 2 = 20 varchar)';
 comment on column cds2db_in.observation_raw.obs_valuerange_low_unit is 'valueRange/low/unit (30 x 2 = 60 varchar)';
 comment on column cds2db_in.observation_raw.obs_valuerange_low_system is 'valueRange/low/system (70 x 2 = 140 varchar)';
@@ -2635,8 +2635,8 @@ comment on column cds2db_in.diagnosticreport_raw.diagrep_code_version is 'code/c
 comment on column cds2db_in.diagnosticreport_raw.diagrep_code_code is 'code/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_code_display is 'code/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_code_text is 'code/text (500 x 1 = 500 varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_effectivedatetime is 'effectiveDateTime (30 x 1 = 30 varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_issued is 'issued (30 x 1 = 30 varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_effectivedatetime is 'effectiveDateTime (33 x 1 = 33 varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_issued is 'issued (33 x 1 = 33 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_id is 'performer/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_type is 'performer/type (30 x 1 = 30 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_use is 'performer/identifier/use (30 x 1 = 30 varchar)';
@@ -2687,7 +2687,7 @@ comment on column cds2db_in.servicerequest_raw.servreq_code_version is 'code/cod
 comment on column cds2db_in.servicerequest_raw.servreq_code_code is 'code/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_code_display is 'code/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_code_text is 'code/text (500 x 1 = 500 varchar)';
-comment on column cds2db_in.servicerequest_raw.servreq_authoredon is 'authoredOn (30 x 1 = 30 varchar)';
+comment on column cds2db_in.servicerequest_raw.servreq_authoredon is 'authoredOn (33 x 1 = 33 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_id is 'requester/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_type is 'requester/type (30 x 1 = 30 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_identifier_use is 'requester/identifier/use (30 x 1 = 30 varchar)';
@@ -2751,7 +2751,7 @@ comment on column cds2db_in.procedure_raw.proc_code_version is 'code/coding/vers
 comment on column cds2db_in.procedure_raw.proc_code_code is 'code/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.procedure_raw.proc_code_display is 'code/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.procedure_raw.proc_code_text is 'code/text (500 x 1 = 500 varchar)';
-comment on column cds2db_in.procedure_raw.proc_performeddatetime is 'performedDateTime (30 x 1 = 30 varchar)';
+comment on column cds2db_in.procedure_raw.proc_performeddatetime is 'performedDateTime (33 x 1 = 33 varchar)';
 comment on column cds2db_in.procedure_raw.proc_performedperiod_start is 'performedPeriod/start (30 x 1 = 30 varchar)';
 comment on column cds2db_in.procedure_raw.proc_performedperiod_end is 'performedPeriod/end (30 x 1 = 30 varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasoncode_system is 'reasonCode/coding/system (70 x 1 = 70 varchar)';
@@ -2799,7 +2799,7 @@ comment on column cds2db_in.consent_raw.cons_scope_version is 'scope/coding/vers
 comment on column cds2db_in.consent_raw.cons_scope_code is 'scope/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.consent_raw.cons_scope_display is 'scope/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.consent_raw.cons_scope_text is 'scope/text (500 x 1 = 500 varchar)';
-comment on column cds2db_in.consent_raw.cons_datetime is 'dateTime (30 x 1 = 30 varchar)';
+comment on column cds2db_in.consent_raw.cons_datetime is 'dateTime (33 x 1 = 33 varchar)';
 comment on column cds2db_in.consent_raw.cons_provision_type is 'provision/type (10 x 1 = 10 varchar)';
 comment on column cds2db_in.consent_raw.cons_provision_period_start is 'provision/period/start (30 x 1 = 30 varchar)';
 comment on column cds2db_in.consent_raw.cons_provision_period_end is 'provision/period/end (30 x 1 = 30 varchar)';
@@ -2832,7 +2832,7 @@ comment on column cds2db_in.location_raw.loc_name is 'name (50 x 1 = 50 varchar)
 comment on column cds2db_in.location_raw.loc_description is 'description (50 x 1 = 50 varchar)';
 comment on column cds2db_in.location_raw.loc_alias is 'alias (30 x 3 = 90 varchar)';
 
-comment on column cds2db_in.pids_per_ward_raw.date_time is 'date_time (30 x 1 = 30 varchar)';
+comment on column cds2db_in.pids_per_ward_raw.date_time is 'date_time (33 x 1 = 33 varchar)';
 comment on column cds2db_in.pids_per_ward_raw.ward_name is 'ward_name (30 x 1 = 30 varchar)';
 comment on column cds2db_in.pids_per_ward_raw.patient_id is 'patient_id (70 x 1 = 70 varchar)';
 

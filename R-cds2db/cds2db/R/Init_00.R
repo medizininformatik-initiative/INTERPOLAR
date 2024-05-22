@@ -31,8 +31,7 @@ initTableDescriptionOnly <- function() {
 loadTableDescriptionFile <- function() {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
   table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[["table_description"]]
-  # remove all full NA rows
-  table_description <- table_description[rowSums(is.na(table_description)) != ncol(table_description)]
+  table_description <- etlutils::removeRowsWithNAorEmpty(table_description)
   return(table_description)
 }
 
@@ -47,36 +46,7 @@ loadTableDescriptionFile <- function() {
 #' @export
 getTableDescriptionSplittedByResource <- function() {
   table_description <- loadTableDescriptionFile()
-  table_description <- table_description[rowSums(is.na(table_description)) != ncol(table_description)]
-
-  splitted_table_description <- list()
-
   table_description[, resource := tolower(resource)]
-
-  row <- 1
-  last_tablename <- NA
-  while (row <= nrow(table_description)) {
-    tablename <- table_description$resource[row]
-    if (!is.na(tablename)) {
-      if (!tablename %in% last_tablename) {
-        last_tablename <- tablename
-        row2 <- row
-        while (row2 <= nrow(table_description)) {
-          next_tablename <- table_description$resource[row2]
-          new_tablename_found <- !is.na(next_tablename) && next_tablename != tablename
-          reached_last_row <- row2 == nrow(table_description)
-          if (new_tablename_found || reached_last_row) {
-            if (!reached_last_row) row2 <- row2 - 1
-            single_table_description <- table_description[row:row2]
-            single_table_description[, resource := resource[1]]
-            splitted_table_description[[tablename]] <- single_table_description
-            row <- if (reached_last_row) Inf  else row2 + 1
-            row2 <- Inf
-          }
-          row2 <- row2 + 1
-        }
-      }
-    }
-  }
-  return(splitted_table_description)
+  table_description <- etlutils::splitTableToList(table_description, "resource")
+  return(table_description)
 }

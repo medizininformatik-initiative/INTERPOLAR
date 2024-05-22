@@ -59,7 +59,7 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @examples
 #' \dontrun{
 #'   # Example usage:
-#'   table_desc <- getTableDescriptions()
+#'   table_desc <- getFhircrackrTableDescriptions()
 #'   # Access the fhir_table_description() object for a specific resource group (e.g., "Encounter")
 #'   encounter_description <- table_desc[["Encounter"]]
 #' }
@@ -70,7 +70,7 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @importFrom fhircrackr fhir_table_description
 #'
 #' @keywords data manipulation
-getTableDescriptions <- function(table_description_table = NA) {
+getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   isPIDDependant <- function(table_description) {
     resource_name <- table_description@resource@.Data
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
@@ -111,4 +111,3 @@ getTableDescriptions <- function(table_description_table = NA) {
   # Returning the list of fhircrackr::fhir_table_description() objects
   return(list(pid_dependant = pid_dependant, pid_independant = pid_independant, reference_types = reference_types))
 }
-

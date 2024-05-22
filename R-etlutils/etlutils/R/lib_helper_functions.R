@@ -113,7 +113,7 @@ isSimpleNotEmptyString <- function(s) {
 #' isError(numeric_result)
 #'
 #' @export
-isError <- function(obj) sum(class(obj) %in% "try-error") > 0
+isError <- function(obj) !isSimpleNA(obj) && sum(class(obj) %in% "try-error") > 0
 
 #'
 #' Tests the passed object for being not an error.
