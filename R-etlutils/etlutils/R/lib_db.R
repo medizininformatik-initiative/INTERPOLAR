@@ -204,7 +204,8 @@ dbDeleteContent <- function(db_connection, table_name) {
 #'
 #' @examples
 #' \dontrun{
-#'   con <- DBI::dbConnect(RPostgres::Postgres(), dbname = "your_database_name", host = "your_host", port = 5432, user = "your_username", password = "your_password")
+#'   con <- DBI::dbConnect(RPostgres::Postgres(), dbname = "your_database_name", host = "your_host",
+#'                         port = 5432, user = "your_username", password = "your_password")
 #'   dt <- dbReadTable(con, "YourTableName")
 #'   print(head(dt))
 #'   DBI::dbDisconnect(con)
