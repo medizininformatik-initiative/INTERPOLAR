@@ -43,12 +43,12 @@ retrieve <- function() {
 
     # Load Table Description
     etlutils::runProcess(etlutils::run_in('Load Table Description', {
-      table_descriptions <- getFhircrackrTableDescriptions()
+      fhir_table_descriptions <- getFhircrackrTableDescriptions()
     }))
 
     # Download and crack resources by Patient IDs per ward
     etlutils::runProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, table_descriptions)
+      resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, fhir_table_descriptions)
     }))
 
     # Write raw tables to database
@@ -61,7 +61,8 @@ retrieve <- function() {
 
     # Convert Column Types in resource tables
     etlutils::runProcess(etlutils::run_in('Convert Column Types in resource tables', {
-      convertTypes(resource_tables)
+      fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
+      convertTypes(resource_tables, fhir_table_descriptions)
     }))
 
   })
