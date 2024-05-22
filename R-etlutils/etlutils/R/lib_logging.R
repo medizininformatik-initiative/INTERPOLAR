@@ -183,7 +183,7 @@ runProcessInternal <- function(
     cat(paste0(message, ':', if (single_line) ' ' else paste0(colourise(text = ' RUNNING ...', fg = 'blue'), '\n')))
   }
 
-  err <- PROCESS_CLOCK$measure_process_time(
+  err <- getClock()$measure_process_time(
     message = message,
     process = process
   )
