@@ -1,5 +1,5 @@
 # Environment for saving the connections
-.log_env <- new.env()
+.lib_logging_env <- new.env()
 
 #' Start Logging to a File
 #'
@@ -17,7 +17,7 @@
 start_logging <- function(prefix) {
   log_filename <- fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt"))
   # Make sure that the environment does not have an open connection to this file
-  if (!is.null(.log_env[[log_filename]])) {
+  if (!is.null(.lib_logging_env[[log_filename]])) {
     warning("A log file is already open for '", log_filename, "'")
     return(invisible(NULL))
   }
@@ -26,8 +26,8 @@ start_logging <- function(prefix) {
   log_file <- file(log_filename, open = "wt")
   sink(log_file, append = TRUE, split = TRUE)
   sink(log_file, append = TRUE, type = "message")
-  .log_env[[log_filename]] <- log_file
-  .log_env[["log_filename"]] <- log_filename
+  .lib_logging_env[[log_filename]] <- log_file
+  .lib_logging_env[["log_filename"]] <- log_filename
   invisible(log_file)
 }
 
@@ -46,12 +46,12 @@ end_logging <- function() {
   sink(type = "message")
   sink()
 
-  log_filename <- .log_env[["log_filename"]]
-  log_file <- .log_env[[log_filename]]
+  log_filename <- .lib_logging_env[["log_filename"]]
+  log_file <- .lib_logging_env[[log_filename]]
   if (!is.null(log_file)) {
     close(log_file)
-    .log_env[[log_filename]] <- NULL
-    .log_env[["log_filename"]] <- NULL
+    .lib_logging_env[[log_filename]] <- NULL
+    .lib_logging_env[["log_filename"]] <- NULL
   }
   removeANSIEscapeSequences(log_filename)
 }
