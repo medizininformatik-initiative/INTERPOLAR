@@ -65,37 +65,41 @@ normalizeAllPOSIXctToUTC <- function(dt) {
 
 #' Convert Time Format
 #'
-#' This function converts the time format of a column in a data table.
+#' This function converts the time format of columns in a data table.
 #'
 #' @param dt A data table.
-#' @param column The name of the column whose time format needs to be converted.
+#' @param columns The name of the columns whose time format needs to be converted.
 #'
-#' @details This function takes a data table \code{dt} and the name of a column \code{column}
-#' as input. It converts the time format of the specified column using the following steps:
+#' @details This function takes a data table \code{dt} and the names of columns \code{columns}
+#' as input. It converts the time format for every single column of the specified columns using
+#' the following steps:
 #' - Parse the column values as POSIXct objects using \code{strptime}.
 #' - Format the POSIXct objects to the desired time format using \code{format}.
 #' - Update the column values in the data table with the formatted time values.
 #'
 #' @return This function modifies the input data table \code{dt} by converting the time format
-#' of the specified column.
+#' of the specified columns.
 #'
 #' @export
-convertTimeFormat <- function(dt, column) {
-  # Convert string in POSIXct object
-  dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "UTC"), .SDcols = column]
-  # Set date to '1970-01-01'
-  dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "UTC")]
+convertTimeFormat <- function(dt, columns) {
+  for (column in columns) {
+    # Convert string in POSIXct object
+    dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "UTC"), .SDcols = column]
+    # Set date to '1970-01-01'
+    dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "UTC")]
+  }
 }
 
 #' Convert Date Format
 #'
-#' This function converts the date format of a column in a data table.
+#' This function converts the date format of columns in a data table.
 #'
 #' @param dt A data table.
-#' @param column The name of the column whose date format needs to be converted.
+#' @param columns Vector with names of the columns whose date format needs to be converted.
 #'
-#' @details This function takes a data table \code{dt} and the name of a column \code{column}
-#' as input. It converts the date format of the specified column in the following steps:
+#' @details This function takes a data table \code{dt} and the names of columns \code{columns}
+#' as input. It converts the date format for every single column of the specified columns in
+#' the following steps:
 #' - Convert the column to character type.
 #' - Remove time information (if any) from the column values.
 #' - Replace '/' with '-' in the column values.
@@ -104,24 +108,26 @@ convertTimeFormat <- function(dt, column) {
 #' - Finally, convert the column to date type using \code{lubridate::as_date}.
 #'
 #' @return This function modifies the input data table \code{dt} by converting the date format
-#' of the specified column.
+#' of the specified columns.
 #'
 #' @export
-convertDateFormat <- function(dt, column) {
-  dt[, (column) := as.character(get(column))]
-  dt[, (column) := gsub('T.+$', '', get(column))]
-  dt[, (column) := gsub('/', '-', get(column))]
-  # Set a regular expression pattern for matching YYYY format
-  incomplete_date_pattern <- '^[0-9]{4}$'
-  years <- grepl(incomplete_date_pattern, dt[[column]])
-  dt[years, (column) := paste0(dt[years, get(column)], '-01-01')]
+convertDateFormat <- function(dt, columns) {
+  for (column in columns) {
+    dt[, (column) := as.character(get(column))]
+    dt[, (column) := gsub('T.+$', '', get(column))]
+    dt[, (column) := gsub('/', '-', get(column))]
+    # Set a regular expression pattern for matching YYYY format
+    incomplete_date_pattern <- '^[0-9]{4}$'
+    years <- grepl(incomplete_date_pattern, dt[[column]])
+    dt[years, (column) := paste0(dt[years, get(column)], '-01-01')]
 
-  # Set a regular expression pattern for matching YYYY-MM format
-  incomplete_date_pattern <- '^[0-9]{4}-[0-9]{2}$'
-  months <- grepl(incomplete_date_pattern, dt[[column]])
-  dt[months, (column) := paste0(dt[months, get(column)], '-01')]
+    # Set a regular expression pattern for matching YYYY-MM format
+    incomplete_date_pattern <- '^[0-9]{4}-[0-9]{2}$'
+    months <- grepl(incomplete_date_pattern, dt[[column]])
+    dt[months, (column) := paste0(dt[months, get(column)], '-01')]
 
-  dt[, (column) := lubridate::as_date(get(column))]
+    dt[, (column) := lubridate::as_date(get(column))]
+  }
 }
 
 #' Fix datetime format in specified columns
@@ -129,7 +135,7 @@ convertDateFormat <- function(dt, column) {
 #' This function fixes the date format in specified columns of a data table.
 #'
 #' @param dt A data table.
-#' @param column A character vector specifying the column to fix.
+#' @param columns A character vector specifying the columns to fix.
 #'
 #' @details This function expects a data table \code{dt} and a character vector
 #' \code{column} specifying the column to be fixed. It converts the values in
@@ -140,6 +146,8 @@ convertDateFormat <- function(dt, column) {
 #' fixing the date format in the specified column
 #'
 #' @export
-convertDateTimeFormat <- function(dt, column) {
-  dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
+convertDateTimeFormat <- function(dt, columns) {
+  for (column in columns) {
+    dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
+  }
 }

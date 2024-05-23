@@ -179,61 +179,67 @@ convertVerboseNumbers <- function(n) {
   n
 }
 
-#' Fix integer format in specified column
+#' Fix integer format in specified columns
 #'
-#' This function fixes the integer format in specified column of a data table.
+#' This function fixes the integer format in specified columns of a data table.
 #'
 #' @param dt A data table.
-#' @param column A character vector specifying the column to fix.
+#' @param columns A character vector specifying the columns to fix.
 #'
 #' @details This function expects a data table \code{dt} and a character vector
-#' \code{column} specifying the column to be fixed. It converts the values in
-#' the specified column to integers using \code{as.integer}.
+#' \code{columns} specifying the columns to be fixed. It converts the values in
+#' the specified columns to integers using \code{as.integer}.
 #'
 #' @return This function modifies the input data table \code{dt} in place by
-#' fixing the integer format in the specified column
+#' fixing the integer format in the specified columns
 #'
 #' @export
-convertIntegerFormat <- function(dt, column) {
-  dt[, (column) := as.integer((get(column)))]
+convertIntegerFormat <- function(dt, columns) {
+  for (column in columns) {
+    dt[, (column) := as.integer((get(column)))]
+  }
 }
 
-#' Fix decimal format in specified column
+#' Fix decimal format in specified columns
 #'
-#' This function fixes the decimal format in specified column of a data table.
+#' This function fixes the decimal format in specified columns of a data table.
 #'
 #' @param dt A data table.
-#' @param column A character vector specifying the column to fix.
+#' @param columns A character vector specifying the columns to fix.
 #'
 #' @details This function expects a data table \code{dt} and a character vector
-#' \code{column} specifying the column to be fixed. It converts the values in
-#' the specified column to numeric using \code{as.numeric}.
+#' \code{columns} specifying the columns to be fixed. It converts the values in
+#' the specified columns to numeric using \code{as.numeric}.
 #'
 #' @return This function modifies the input data table \code{dt} in place by
-#' fixing the decimal format in the specified column
+#' fixing the decimal format in the specified columns
 #'
 #' @export
-convertDecimalFormat <- function(dt, column) {
-  dt[, (column) := as.numeric(get(column))]
+convertDecimalFormat <- function(dt, columns) {
+  for (column in columns) {
+    dt[, (column) := as.numeric(get(column))]
+  }
 }
 
-#' Fix boolean format in specified column
+#' Fix boolean format in specified columns
 #'
-#' This function fixes the boolean format in specified column of a data table.
+#' This function fixes the boolean format in specified columns of a data table.
 #'
 #' @param dt A data table.
-#' @param column A character vector specifying the column to fix.
+#' @param columns A character vector specifying the columns to fix.
 #'
 #' @details This function expects a data table \code{dt} and a character vector
-#' \code{column} specifying the column to be fixed. It converts the values in
-#' the specified column to numeric, treating TRUE as 1 and FALSE as 0.
+#' \code{columns} specifying the columns to be fixed. It converts the values in
+#' the specified columns to numeric, treating TRUE as 1 and FALSE as 0.
 #'
 #' @return This function modifies the input data table \code{dt} in place by
-#' fixing the boolean format in the specified column
+#' fixing the boolean format in the specified columns
 #'
 #' @export
-convertBooleanFormat <- function(dt, column) {
-  dt[, (column) := as.logical(get(column))]
+convertBooleanFormat <- function(dt, columns) {
+  for (column in columns) {
+    dt[, (column) := as.logical(get(column))]
+  }
 }
 
 #' #'
