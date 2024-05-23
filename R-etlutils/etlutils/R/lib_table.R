@@ -938,8 +938,6 @@ splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname =
   if (fill_na_in_split_columnname) {
     fillNAWithLastRowValue(dt, split_columnname)
   }
-  list <- split(dt, by = split_columnname, keep.by = TRUE)
-  # set names for list elements
-  names(list) <- sapply(list, function(x) x[[split_columnname]][1])
-  return(list)
+  split(dt, by = split_columnname, keep.by = TRUE)
 }
+
