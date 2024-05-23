@@ -169,15 +169,22 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
     single_table_description <- table_description[[tablename]]
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement_template)
     column_line_statement <- ""
+    indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
+    # non RAW tables need an extra column for the ROW/Entry ID which they are originated (multiple
+    # typed ( = non RAW) rows can be created by one RAW table row (see fhir_melt)
+    if (!ignore_types) {
+      column_line_statement <- paste0(full_tablename, "_raw_id int, -- Primary key of the corresponding raw table\n")
+    }
+    first_row <- TRUE
     for (row in 1:nrow(single_table_description)) {
       table_description_row <- single_table_description[row]
       statement_line <- getCreateTableStatementColumnLine(table_description_row, ignore_types)
-      if (is.na(indentation)) {
+      if (ignore_types && first_row) {
         column_line_statement <- paste0(column_line_statement, statement_line)
-        indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
       } else {
         column_line_statement <- paste0(column_line_statement, indentation, statement_line)
       }
+      first_row <- FALSE
     }
     single_statement <- gsub("<%CREATE_TABLE_STATEMENT_COLUMNS%>\n", column_line_statement, single_statement)
     statements <- paste0(statements, single_statement, "\n\n")

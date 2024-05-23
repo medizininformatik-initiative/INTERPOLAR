@@ -6,6 +6,7 @@
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter (
   encounter_id serial PRIMARY KEY not null, -- Primary key of the entity
+  encounter_raw_id int, -- Primary key of the corresponding raw table
   enc_id varchar (70),   -- id (70 varchar)
   enc_patient_id varchar (70),   -- subject/reference (70 varchar)
   enc_partof_id varchar (70),   -- partOf/reference (70 varchar)
@@ -86,7 +87,8 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient (
   patient_id serial PRIMARY KEY not null, -- Primary key of the entity
-    pat_id varchar (70),   -- id (70 varchar)
+  patient_raw_id int, -- Primary key of the corresponding raw table
+  pat_id varchar (70),   -- id (70 varchar)
   pat_identifier_use varchar (50),   -- identifier/use (50 varchar)
   pat_identifier_type_system varchar (70),   -- identifier/type/coding/system (70 varchar)
   pat_identifier_type_version varchar (50),   -- identifier/type/coding/version (50 varchar)
@@ -112,7 +114,8 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition (
   condition_id serial PRIMARY KEY not null, -- Primary key of the entity
-    con_id varchar (70),   -- id (70 varchar)
+  condition_raw_id int, -- Primary key of the corresponding raw table
+  con_id varchar (70),   -- id (70 varchar)
   con_encounter_id varchar (70),   -- encounter/reference (70 varchar)
   con_patient_id varchar (70),   -- subject/reference (70 varchar)
   con_identifier_use varchar (50),   -- identifier/use (50 varchar)
@@ -234,7 +237,8 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication (
   medication_id serial PRIMARY KEY not null, -- Primary key of the entity
-    med_id varchar (70),   -- id (70 varchar)
+  medication_raw_id int, -- Primary key of the corresponding raw table
+  med_id varchar (70),   -- id (70 varchar)
   med_identifier_use varchar (50),   -- identifier/use (50 varchar)
   med_identifier_type_system varchar (70),   -- identifier/type/coding/system (70 varchar)
   med_identifier_type_version varchar (50),   -- identifier/type/coding/version (50 varchar)
@@ -300,7 +304,8 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   medicationrequest_id serial PRIMARY KEY not null, -- Primary key of the entity
-    medreq_id varchar (70),   -- id (70 varchar)
+  medicationrequest_raw_id int, -- Primary key of the corresponding raw table
+  medreq_id varchar (70),   -- id (70 varchar)
   medreq_encounter_id varchar (70),   -- encounter/reference (70 varchar)
   medreq_patient_id varchar (70),   -- subject/reference (70 varchar)
   medreq_identifier_use varchar (50),   -- identifier/use (50 varchar)
@@ -532,7 +537,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   medicationadministration_id serial PRIMARY KEY not null, -- Primary key of the entity
-    medadm_id varchar (70),   -- id (70 varchar)
+  medicationadministration_raw_id int, -- Primary key of the corresponding raw table
+  medadm_id varchar (70),   -- id (70 varchar)
   medadm_encounter_id varchar (70),   -- context/reference (70 varchar)
   medadm_patient_id varchar (70),   -- subject/reference (70 varchar)
   medadm_partof_id varchar (70),   -- partOf/reference (70 varchar)
@@ -650,7 +656,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   medicationstatement_id serial PRIMARY KEY not null, -- Primary key of the entity
-    medstat_id varchar (70),   -- id (70 varchar)
+  medicationstatement_raw_id int, -- Primary key of the corresponding raw table
+  medstat_id varchar (70),   -- id (70 varchar)
   medstat_identifier_use varchar (50),   -- identifier/use (50 varchar)
   medstat_identifier_type_system varchar (70),   -- identifier/type/coding/system (70 varchar)
   medstat_identifier_type_version varchar (50),   -- identifier/type/coding/version (50 varchar)
@@ -869,7 +876,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation (
   observation_id serial PRIMARY KEY not null, -- Primary key of the entity
-    obs_id varchar (70),   -- id (70 varchar)
+  observation_raw_id int, -- Primary key of the corresponding raw table
+  obs_id varchar (70),   -- id (70 varchar)
   obs_encounter_id varchar (70),   -- encounter/reference (70 varchar)
   obs_patient_id varchar (70),   -- subject/reference (70 varchar)
   obs_partof_id varchar (70),   -- partOf/reference (70 varchar)
@@ -1009,7 +1017,8 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   diagnosticreport_id serial PRIMARY KEY not null, -- Primary key of the entity
-    diagrep_id varchar (70),   -- id (70 varchar)
+  diagnosticreport_raw_id int, -- Primary key of the corresponding raw table
+  diagrep_id varchar (70),   -- id (70 varchar)
   diagrep_encounter_id varchar (70),   -- encounter/reference (70 varchar)
   diagrep_patient_id varchar (70),   -- subject/reference (70 varchar)
   diagrep_partof_id varchar (70),   -- partOf/reference (70 varchar)
@@ -1062,7 +1071,8 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
-    servreq_id varchar (70),   -- id (70 varchar)
+  servicerequest_raw_id int, -- Primary key of the corresponding raw table
+  servreq_id varchar (70),   -- id (70 varchar)
   servreq_encounter_id varchar (70),   -- encounter/reference (70 varchar)
   servreq_patient_id varchar (70),   -- subject/reference (70 varchar)
   servreq_identifier_use varchar (50),   -- identifier/use (50 varchar)
@@ -1129,7 +1139,8 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure (
   procedure_id serial PRIMARY KEY not null, -- Primary key of the entity
-    proc_id varchar (70),   -- id (70 varchar)
+  procedure_raw_id int, -- Primary key of the corresponding raw table
+  proc_id varchar (70),   -- id (70 varchar)
   proc_encounter_id varchar (70),   -- encounter/reference (70 varchar)
   proc_patient_id varchar (70),   -- subject/reference (70 varchar)
   proc_partof_id varchar (70),   -- partOf/reference (70 varchar)
@@ -1206,7 +1217,8 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent (
   consent_id serial PRIMARY KEY not null, -- Primary key of the entity
-    cons_id varchar (70),   -- id (70 varchar)
+  consent_raw_id int, -- Primary key of the corresponding raw table
+  cons_id varchar (70),   -- id (70 varchar)
   cons_patient_id varchar (70),   -- patient/reference (70 varchar)
   cons_identifier_use varchar (50),   -- identifier/use (50 varchar)
   cons_identifier_type_system varchar (70),   -- identifier/type/coding/system (70 varchar)
@@ -1249,7 +1261,8 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location (
   location_id serial PRIMARY KEY not null, -- Primary key of the entity
-    loc_id varchar (70),   -- id (70 varchar)
+  location_raw_id int, -- Primary key of the corresponding raw table
+  loc_id varchar (70),   -- id (70 varchar)
   loc_identifier_use varchar (50),   -- identifier/use (50 varchar)
   loc_identifier_type_system varchar (70),   -- identifier/type/coding/system (70 varchar)
   loc_identifier_type_version varchar (50),   -- identifier/type/coding/version (50 varchar)
@@ -1273,7 +1286,8 @@ CREATE TABLE IF NOT EXISTS db_log.location (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
-    date_time timestamp,   -- date_time (33 timestamp)
+  pids_per_ward_raw_id int, -- Primary key of the corresponding raw table
+  date_time timestamp,   -- date_time (33 timestamp)
   ward_name varchar (30),   -- ward_name (30 varchar)
   patient_id varchar (70),   -- patient_id (70 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -1289,7 +1303,7 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
 
 -- Table "encounter" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.encounter ALTER COLUMN encounter_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.encounter TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1317,7 +1331,7 @@ CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
 
 -- Table "patient" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.patient ALTER COLUMN patient_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.patient TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1345,7 +1359,7 @@ CREATE OR REPLACE TRIGGER patient_tr_ins_tr
 
 -- Table "condition" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.condition ALTER COLUMN condition_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.condition TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1373,7 +1387,7 @@ CREATE OR REPLACE TRIGGER condition_tr_ins_tr
 
 -- Table "medication" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.medication ALTER COLUMN medication_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medication TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1401,7 +1415,7 @@ CREATE OR REPLACE TRIGGER medication_tr_ins_tr
 
 -- Table "medicationrequest" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.medicationrequest ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationrequest TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1429,7 +1443,7 @@ CREATE OR REPLACE TRIGGER medicationrequest_tr_ins_tr
 
 -- Table "medicationadministration" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.medicationadministration ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationadministration TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1457,7 +1471,7 @@ CREATE OR REPLACE TRIGGER medicationadministration_tr_ins_tr
 
 -- Table "medicationstatement" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.medicationstatement ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationstatement TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1485,7 +1499,7 @@ CREATE OR REPLACE TRIGGER medicationstatement_tr_ins_tr
 
 -- Table "observation" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.observation ALTER COLUMN observation_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.observation TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1513,7 +1527,7 @@ CREATE OR REPLACE TRIGGER observation_tr_ins_tr
 
 -- Table "diagnosticreport" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.diagnosticreport ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.diagnosticreport TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1541,7 +1555,7 @@ CREATE OR REPLACE TRIGGER diagnosticreport_tr_ins_tr
 
 -- Table "servicerequest" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.servicerequest ALTER COLUMN servicerequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.servicerequest TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1569,7 +1583,7 @@ CREATE OR REPLACE TRIGGER servicerequest_tr_ins_tr
 
 -- Table "procedure" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.procedure ALTER COLUMN procedure_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.procedure TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1597,7 +1611,7 @@ CREATE OR REPLACE TRIGGER procedure_tr_ins_tr
 
 -- Table "consent" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.consent ALTER COLUMN consent_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.consent TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1625,7 +1639,7 @@ CREATE OR REPLACE TRIGGER consent_tr_ins_tr
 
 -- Table "location" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.location ALTER COLUMN location_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.location TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1653,7 +1667,7 @@ CREATE OR REPLACE TRIGGER location_tr_ins_tr
 
 -- Table "pids_per_ward" in schema "db_log"
 ----------------------------------------------------
-
+ALTER TABLE db_log.pids_per_ward ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.pids_per_ward TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
