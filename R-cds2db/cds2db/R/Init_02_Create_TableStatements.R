@@ -128,21 +128,25 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
 
   # only for string/varchar and numeric values add the column width
   if (column_type %in% "varchar") {
-    column_type_with_length <- paste0(column_type, " (", full_length, ")")
+    column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ")")))
   } else if (column_type %in% "numeric") {
     # decimal/numeric needs a length for the places before and after the decimal point -> set same
     # value before and after decimal point
-    column_type_with_length <- paste0(column_type, " (", full_length, ", ", full_length, ")")
+    column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ", ", full_length, ")")))
   } else {
     column_type_with_length <- column_type
   }
 
   fhir_expression <- table_description_row$fhir_expression
-  if (ignore_types) {
-    comment <- paste0(fhir_expression, " (", single_length, " x ", count, " = ", full_length, " ", column_type, ")")
+
+  if (IGNORE_DEFINED_COLUMN_WIDTHS) {
+    comment_length_and_type <- paste0(" (", column_type, ")")
+  } else if (ignore_types) {
+    comment_length_and_type <- paste0(" (", single_length, " x ", count, " = ", full_length, " ", column_type, ")")
   } else {
-    comment <- paste0(fhir_expression, " (", single_length, " ", column_type, ")")
+    comment_length_and_type <- paste0(" (", single_length, " ", column_type, ")")
   }
+  comment <- paste0(fhir_expression, comment_length_and_type)
 
   column_line_arguments[["comment"]] <- comment
   column_line_arguments[["column_type_with_length"]] <- column_type_with_length
