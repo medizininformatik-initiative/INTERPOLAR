@@ -55,14 +55,17 @@ retrieve <- function() {
     etlutils::runProcess(etlutils::run_in('Write raw tables to database', {
       table_names <- names(resource_tables)
       names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
-      writeTablesToDatabase(resource_tables)
+      writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
       names(resource_tables) <- table_names
     }))
 
     # Convert Column Types in resource tables
-    etlutils::runProcess(etlutils::run_in('Convert Column Types in resource tables', {
+    etlutils::runProcess(etlutils::run_in('Convert RAW tables to Typed tables', {
       fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
-      convertTypes(resource_tables, fhir_table_descriptions)
+      #browser()
+      resource_tables <- getUntypedRAWDataFromDatabase()
+      resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
+      browser()
     }))
 
   })

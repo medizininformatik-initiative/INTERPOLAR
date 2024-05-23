@@ -41,16 +41,15 @@ splitStringsByPrefix <- function(strings, column_sep) {
   split_strings <- strsplit(strings, paste0("\\", column_sep))
   # Group strings by their common prefixes using split
   grouped_strings <- split(strings, sapply(split_strings, function(x) paste(x[-length(x)], collapse = column_sep)))
-
   return(grouped_strings)
 }
 
 # Function for selecting columns with the most column name separators based on the content of brackets in the first row entry
-getColumnsWithMostDots <- function(melted_data, prefix, brackets, column_sep) {
+getColumnsWithMostDots <- function(melted_data, cols, brackets, column_sep) {
   # Extract columns with the specified prefix
-  cols <- grep(paste0("^", prefix, paste0("\\", column_sep)), names(melted_data), value = TRUE)
+  #cols <- grep(paste0("^", prefix, paste0("\\", column_sep)), names(melted_data), value = TRUE)
 
-  if (length(cols) > 0) {
+  if (length(cols)) {
 
     # Initialize a list to store the first non-NA row for each column
     first_non_na_rows <- vector("list", length(cols))
@@ -87,27 +86,31 @@ getColumnsWithMostDots <- function(melted_data, prefix, brackets, column_sep) {
 
     return(return_list)
   }
-  return(NULL)
+  return(NA)
 }
 
 # Function to check for brackets in the first row of each column
 checkPointInBrackets <- function(dt, brackets) {
-  # Check each column
-  result <- lapply(names(dt), function(col) {
-    # Extract the first value in the column
-    first_value <- dt[[col]][1]
-    # Check if brackets with a "." is present in the first value
-    has_brackets <- grepl(paste0("^\\", brackets[1], "\\d+\\..*\\", brackets[2]), first_value)
-    return(has_brackets)
-  })
-  # If no brackets with a "." is found in any column, return FALSE
-  return(any(unlist(result)))
+  for (row in seq_len(nrow(dt))) {
+    for (column_name in names(dt)) {
+      value <- dt[row, get(column_name)]
+      if (!etlutils::isSimpleNA(value)) {
+        if (grepl(paste0("^\\", brackets[1], "\\d+\\..*\\", brackets[2]), value)) {
+          return(TRUE)
+        }
+      }
+    }
+  }
+  return(FALSE)
 }
 
 # Function to count column separators in a string
 countStringSeperator <- function(string, column_sep) {
   matches <- gregexpr(paste0("\\", column_sep), string)
   num_dots <- length(matches[[1]])
+  if (length(matches) == 1 && matches[[1]][1] == -1) {
+    return(0)
+  }
   return(num_dots)
 }
 
@@ -130,68 +133,94 @@ getCommonPrefix <- function(list, column_sep) {
 }
 
 # Function to melt the table according to a given schema
-fhirMeltFull <- function(melted_data, brackets, sep, column_sep = "/") {
+fhirMeltFull <- function(melted_data, fhir_table_description, column_sep = "/") {
+
+  if (tolower(fhir_table_description@resource) %in% "patient") browser()
+
+  brackets <- fhir_table_description@brackets
+  sep <- fhir_table_description@sep
+  all_fhir_column_names <- fhir_table_description@cols@.Data
 
   # Determine the prefixes for each column
-  prefixes <- lapply(names(melted_data), function(col) {
-    # Extract the prefix until the first period for each column
-    prefix <- unlist(strsplit(col, paste0("\\", column_sep)))[1]
-    if (length(prefix) == 1) {
-      return(prefix)  # Return the prefix if it's length is 1
+  prefixes <- sapply(all_fhir_column_names, function(column_name) {
+    # melt only columns with type character
+    if (is.character(melted_data[[column_name]])) {
+      # Extract the prefix until the first period for each column
+      prefix <- unlist(strsplit(column_name, paste0("\\", column_sep)))[1]
+      if (length(prefix) == 1) {
+        return(prefix)  # Return the prefix if it's length is 1
+      }
     }
-    return(NULL)  # Return NULL if the prefix is not found
+    return(NA)  # Return NA if the prefix is not found (will be ignored/removed later)
   })
-  unique_prefixes <- unique(prefixes)  # Get unique prefixes
+  unique_prefixes <- na.omit(unique(prefixes))  # Get unique prefixes
 
   # Melt for all columns with a number in brackets
   repeat {
+    run_again <- FALSE
+    full_melted_prefixes = c()
     for (prefix in unique_prefixes) {
-      cols <- grep(paste0("^", prefix, paste0("\\", column_sep)), names(melted_data), value = TRUE)
-      if (length(cols) > 0) {
+      columns_with_prefix <- grep(paste0("^", prefix, "$|^", prefix, "\\", column_sep), all_fhir_column_names, value = TRUE)
+      if (length(columns_with_prefix)) {
         # Select columns with the most dots based on content within square brackets
-        result <- getColumnsWithMostDots(melted_data, prefix, brackets, column_sep)
-        max_cols <- result$max_dot_columns
-        # Split max_cols by common prefixes
-        max_cols <- splitStringsByPrefix(max_cols, column_sep)
-        # Count the number of dots in each string of the list
-        max_num_dots <- result$max_dots
+        result <- getColumnsWithMostDots(melted_data, columns_with_prefix, brackets, column_sep)
+        if (!etlutils::isSimpleNA(result)) {
+          max_dot_columns <- result$max_dot_columns
+          # Split max_dot_columns by common prefixes
+          max_dot_columns <- splitStringsByPrefix(max_dot_columns, column_sep)
+          # Count the number of dots in each string of the list
+          max_num_dots <- result$max_dots
 
-        if (max_num_dots) {
+          if (max_num_dots) {
+            run_again <- TRUE
+          } else {
+            full_melted_prefixes <- c(full_melted_prefixes, prefix)
+          }
           # Extract common prefix for each column name list
-          max_cols <- lapply(max_cols, getCommonPrefix, column_sep)
+          max_cols <- lapply(max_dot_columns, getCommonPrefix, column_sep)
           # Count the number of dots in each string of the list
           min_num_dots <- min(sapply(max_cols, countStringSeperator, column_sep))
           # Truncate column names in the list
-          max_cols <- lapply(max_cols, function(x) cutColumnNames(x, min_num_dots, column_sep))
-          cat(paste0("Melt: ", max_cols, "\n"))
+          max_cols <- unique(lapply(max_cols, function(x) cutColumnNames(x, min_num_dots, column_sep)))
+          cat(paste0("Melt: ", fhir_table_description@resource, " -> ", max_cols, "\n"))
           for (col in seq_along(max_cols)) {
             # Apply common columns function
-            cols <- grep(paste0("^", max_cols[[col]]), colnames(melted_data), value = TRUE)
+            columns_with_prefix <- grep(paste0("^", max_cols[[col]], "$|^", max_cols[[col]], "\\", column_sep), all_fhir_column_names, value = TRUE)
             # Melt the data based on selected columns
-            melted_data <- fhircrackr::fhir_melt(melted_data, columns = cols, brackets = brackets, sep = sep, all_columns = TRUE)
+            melted_data <- fhircrackr::fhir_melt(melted_data, columns = columns_with_prefix, brackets = brackets, sep = sep, all_columns = TRUE)
           }
         }
       }
     }
-    # Check for "[]" in the first row of each column
-    result <- checkPointInBrackets(melted_data, brackets)
-
-    if (!result) {
-      # Check which column names in the first row contain the string with "[]" and a single number
-      columns_with_number_in_brackets <- names(melted_data)[sapply(melted_data[1, .SD, .SDcols = names(melted_data)],
-                                                                   function(x) grepl(paste0("\\", brackets[1], "\\d+\\", brackets[2]), x))]
-      cat(paste0("Melt: ", columns_with_number_in_brackets, "\n"))
-      for (columns in seq_along(columns_with_number_in_brackets)) {
-        # melt for each column with a single number in brackets
-        melted_data <- fhircrackr::fhir_melt(melted_data, columns = columns_with_number_in_brackets[[columns]],
-                                             brackets = brackets, sep = sep, all_columns = TRUE)
-      }
-      # remove brackets
-      melted_data <- fhircrackr::fhir_rm_indices(melted_data, brackets)
-      # End the loop if no dots are left
+    if (!run_again) {
       break
     }
+    unique_prefixes <- setdiff(unique_prefixes, full_melted_prefixes)
   }
+
+    # Check for "[]" in the first row of each column
+    #result <- checkPointInBrackets(melted_data, brackets)
+
+    #if (!result) {
+      # Check which column names in the first row contain the string with "[]" and a single number
+      # columns_with_number_in_brackets <- names(melted_data)[sapply(melted_data[1, .SD, .SDcols = names(melted_data)],
+      #                                                              function(x) grepl(paste0("\\", brackets[1], "\\d+\\", brackets[2]), x))]
+      # cat(paste0("Melt: ", columns_with_number_in_brackets, "\n"))
+      # for (columns in seq_along(columns_with_number_in_brackets)) {
+      #   # melt for each column with a single number in brackets
+      #   melted_data <- fhircrackr::fhir_melt(melted_data, columns = columns_with_number_in_brackets[[columns]],
+      #                                        brackets = brackets, sep = sep, all_columns = TRUE)
+      # }
+      columns <- fhir_table_description@cols@.Data
+      #browser()
+      #melted_data <- fhircrackr::fhir_melt(melted_data, columns, brackets, sep, all_columns = TRUE)
+      # remove brackets
+      melted_data <- fhircrackr::fhir_rm_indices(melted_data, brackets, columns)
+      # End the loop if no dots are left
+  #    break
+  #  }
+  #}
+  browser()
   return(melted_data)
 }
 
@@ -223,23 +252,27 @@ getUntypedRAWDataFromDatabase <- function() {
   return(resource_tables)
 }
 
-joinPatientNamesIfPresent <- function(resource_tables, fhir_table_description) {
-  cols_2_join <- c("name/given", "name/prefix", "name/suffix")
-  fhir_cols_2_join <- c()
-  fhir_cols <- fhir_table_description@cols@.Data
-  for (i in seq_along(fhir_cols)) {
-    if (fhir_cols[i] %in% cols_2_join) {
-      fhir_cols_2_join[length(fhir_cols_2_join) + 1] <- fhir_table_description@cols@names[i]
+joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions) {
+  patient_fhir_table_description <- fhir_table_descriptions$Patient
+  if (!is.null(patient_fhir_table_description)) {
+    # These are constants! In all cases these columns must be joined and not melted if they are
+    # present in the table description of the patients.
+    patient_column_names_2_join <- c("name/given", "name/prefix", "name/suffix")
+    # get the columns which are really present in the current patients table description
+    patient_column_names_2_join <- intersect(patient_column_names_2_join, patient_fhir_table_description@cols@.Data)
+    if (length(patient_column_names_2_join)) {
+      resource_tables[["patient"]] <- joinMultiValuesInCrackedFHIRData(resource_tables[["patient"]], patient_column_names_2_join, SEP, BRACKETS)
     }
   }
-  if (length(fhir_cols_2_join)) {
-    joinMultiValuesInCrackedFHIRData(resource_tables[["patient"]], fhir_cols_2_join, SEP, BRACKETS)
-  }
+  return(resource_tables)
 }
 
-meltCrackedFHIRData <- function(resource_tables, BRACKETS, SEP) {
+meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions, BRACKETS, SEP) {
+  names(fhir_table_descriptions) <- tolower(names(fhir_table_descriptions))
   for (i in seq_along(resource_tables)) {
-    resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], BRACKETS, SEP)
+    resource_name <- names(resource_tables)[i]
+    fhir_table_description <- fhir_table_descriptions[[resource_name]]
+    resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
   }
   return(resource_tables)
 }
@@ -261,30 +294,12 @@ meltCrackedFHIRData <- function(resource_tables, BRACKETS, SEP) {
 convertType <- function(resource_tables, convert_columns, convert_type_function) {
   # Get table description
   table_description <- getTableDescriptionsTable(c("resource", "column_name", "type"))
-  # Remove all rows with NA or string in column 'type'
-  table_description <- table_description[!is.na(type)]
-  # Internal function for converting column types
-  convertDateInternal <- function() {
-    convert_columns <- table_description[type %in% convert_columns]
-    last_table_name <- NA
-    table_names <- convert_columns[["resource"]]
-    for (i in seq_len(nrow(convert_columns))) {
-      table_name <- convert_columns[["resource"]][i]
-      column_name <- convert_columns[["column_name"]][i]
-      if (table_name %in% last_table_name) {
-        datetime_columns <- c(datetime_columns, column_name)
-      } else {
-        datetime_columns <- c(column_name)
-      }
-      # Check if the table is present in resource_tables and perform conversion
-      if ((!is.null(resource_tables[[table_name]]) && !isSimpleNA(resource_tables[[table_name]])) && (!(table_name %in% last_table_name) || i == nrow(convert_columns))) {
-        convert_type_function(resource_tables[[table_name]], datetime_columns)
-        #cat("Converted column ", datetime_columns, " in table", table_name, "\n")
-        table_name <- last_table_name
-      }
-    }
+  # converting column types
+  convert_columns <- table_description[type %in% convert_columns]
+  convert_columns <- split(convert_columns, convert_columns$resource)
+  for (resource in names(convert_columns)) {
+    convert_type_function(resource_tables[[tolower(resource)]], convert_columns[[resource]]$column_name)
   }
-  convertDateInternal()
 }
 
 #' Convert Types
@@ -292,7 +307,8 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #' This function converts data types of columns in the provided resource tables.
 #'
 #' @param resource_tables A list of data tables representing resources.
-#' @param fhir_table_description The FHIR table description.
+#' @param fhir_table_descriptions A named list of all relevant FHIR table descriptions (named with
+#'                                resource name).
 #'
 #' @details This function takes a list of data tables \code{resource_tables} as input.
 #' It converts the data types of columns in these tables based on predefined mappings:
@@ -306,24 +322,40 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #' @return This function modifies the input resource tables by converting the data types of columns.
 #'
 convertTypes <- function(resource_tables, fhir_table_descriptions) {
+  # rename the database column names in style of something like 'con_identifier_code' back
+  # to 'identifier/code'. This we need for correct working of the following join and melt.
+  resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions, TRUE)
+resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
+  #resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
+  resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions, BRACKETS, SEP)
 
-  resource_tables <- getUntypedRAWDataFromDatabase()
-  fhir_table_description_patient <- fhir_table_descriptions$Patient
-  joinPatientNamesIfPresent(resource_tables, fhir_table_description_patient)
-  resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions)
-  meltCrackedFHIRData(resource_tables, BRACKETS, SEP)
-  browser()
+  # undo the tables renaming
+  resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions, FALSE)
 
-  convertType(resource_tables, c("datetime"), etlutils::convertDateTimeFormat)
-  convertType(resource_tables, c("date"), etlutils::convertDateFormat)
-  convertType(resource_tables, c("time"), etlutils::convertTimeFormat)
-  convertType(resource_tables, c("int"), etlutils::convertIntegerFormat)
-  convertType(resource_tables, c("decimal"), etlutils::convertDecimalFormat)
-  convertType(resource_tables, c("boolean"), etlutils::convertBooleanFormat)
+  convert_type2function <- c(
+    datetime = etlutils::convertDateTimeFormat,
+    date = etlutils::convertDateFormat,
+    time = etlutils::convertTimeFormat,
+    int = etlutils::convertIntegerFormat,
+    decimal = etlutils::convertDecimalFormat,
+    boolean = etlutils::convertBooleanFormat
+  )
+
+  for (i in seq_along(convert_type2function)) {
+    convertType(resource_tables, names(i), convert_type2function[i])
+  }
+#
+#   convertType(resource_tables, "datetime", etlutils::convertDateTimeFormat)
+#   convertType(resource_tables, "date", etlutils::convertDateFormat)
+#   convertType(resource_tables, "time", etlutils::convertTimeFormat)
+#   convertType(resource_tables, "int", etlutils::convertIntegerFormat)
+#   convertType(resource_tables, "decimal", etlutils::convertDecimalFormat)
+#   convertType(resource_tables, "boolean", etlutils::convertBooleanFormat)
 
   for (i in seq_along(resource_tables)) {
     polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
   }
+  return(resource_tables)
 }
 
 replaceColumnNames <- function(dt, old_names, new_names) {
@@ -335,13 +367,18 @@ replaceColumnNames <- function(dt, old_names, new_names) {
   return(dt)
 }
 
-replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions) {
+replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, names_to_.Data) {
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     table_description_index <- which(tolower(names(fhir_table_descriptions)) == resource_name)
     fhir_table_description <- fhir_table_descriptions[[table_description_index]]
-    old_names <- fhir_table_description@cols@names
-    new_names <- fhir_table_description@cols@.Data
+    if (names_to_.Data) {
+      old_names <- fhir_table_description@cols@names
+      new_names <- fhir_table_description@cols@.Data
+    } else {
+      old_names <- fhir_table_description@cols@.Data
+      new_names <- fhir_table_description@cols@names
+    }
     resource_tables[[i]] <- replaceColumnNames(resource_tables[[i]], old_names, new_names)
   }
   return(resource_tables)
