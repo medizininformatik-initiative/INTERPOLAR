@@ -67,8 +67,6 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @seealso
 #' \code{\link{getTableDescriptionsTable}}, \code{\link[fhircrackr]{fhir_table_description}}
 #'
-#' @importFrom fhircrackr fhir_table_description
-#'
 #' @keywords data manipulation
 getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   isPIDDependant <- function(table_description) {
