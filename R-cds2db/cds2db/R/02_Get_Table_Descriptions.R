@@ -109,3 +109,16 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   # Returning the list of fhircrackr::fhir_table_description() objects
   return(list(pid_dependant = pid_dependant, pid_independant = pid_independant, reference_types = reference_types))
 }
+
+#' Extract Table Descriptions List
+#'
+#' This function extracts table descriptions from a given list of FHIR table descriptions.
+#' It combines the `pid_dependant` and `pid_independant` elements into a single list.
+#'
+#' @param fhir_table_descriptions_grouped A list containing FHIR table descriptions
+#'        with `pid_dependant` and `pid_independant` elements.
+#' @return A list combining the `pid_dependant` and `pid_independant` elements.
+#' @export
+extractTableDescriptionsList <- function(fhir_table_descriptions_grouped) {
+  as.list(c(fhir_table_descriptions_grouped$pid_dependant, fhir_table_descriptions_grouped$pid_independant))
+}
