@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   patient_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    pat_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  pat_id varchar (70),   -- id (70 x 1 = 70 varchar)
   pat_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
   pat_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 = 420 varchar)
   pat_identifier_type_version varchar (300),   -- identifier/type/coding/version (50 x 6 = 300 varchar)
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   condition_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    con_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  con_id varchar (70),   -- id (70 x 1 = 70 varchar)
   con_encounter_id varchar (70),   -- encounter/reference (70 x 1 = 70 varchar)
   con_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   con_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   medication_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    med_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  med_id varchar (70),   -- id (70 x 1 = 70 varchar)
   med_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
   med_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 = 420 varchar)
   med_identifier_type_version varchar (300),   -- identifier/type/coding/version (50 x 6 = 300 varchar)
@@ -300,7 +300,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medicationrequest_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    medreq_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  medreq_id varchar (70),   -- id (70 x 1 = 70 varchar)
   medreq_encounter_id varchar (70),   -- encounter/reference (70 x 1 = 70 varchar)
   medreq_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   medreq_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
@@ -532,7 +532,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medicationadministration_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    medadm_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  medadm_id varchar (70),   -- id (70 x 1 = 70 varchar)
   medadm_encounter_id varchar (70),   -- context/reference (70 x 1 = 70 varchar)
   medadm_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   medadm_partof_id varchar (70),   -- partOf/reference (70 x 1 = 70 varchar)
@@ -650,7 +650,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medicationstatement_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    medstat_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  medstat_id varchar (70),   -- id (70 x 1 = 70 varchar)
   medstat_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
   medstat_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 = 420 varchar)
   medstat_identifier_type_version varchar (300),   -- identifier/type/coding/version (50 x 6 = 300 varchar)
@@ -869,7 +869,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   observation_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    obs_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  obs_id varchar (70),   -- id (70 x 1 = 70 varchar)
   obs_encounter_id varchar (70),   -- encounter/reference (70 x 1 = 70 varchar)
   obs_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   obs_partof_id varchar (70),   -- partOf/reference (70 x 1 = 70 varchar)
@@ -1009,7 +1009,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagnosticreport_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    diagrep_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  diagrep_id varchar (70),   -- id (70 x 1 = 70 varchar)
   diagrep_encounter_id varchar (70),   -- encounter/reference (70 x 1 = 70 varchar)
   diagrep_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   diagrep_partof_id varchar (70),   -- partOf/reference (70 x 1 = 70 varchar)
@@ -1062,7 +1062,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servicerequest_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    servreq_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  servreq_id varchar (70),   -- id (70 x 1 = 70 varchar)
   servreq_encounter_id varchar (70),   -- encounter/reference (70 x 1 = 70 varchar)
   servreq_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   servreq_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
@@ -1129,7 +1129,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   procedure_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    proc_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  proc_id varchar (70),   -- id (70 x 1 = 70 varchar)
   proc_encounter_id varchar (70),   -- encounter/reference (70 x 1 = 70 varchar)
   proc_patient_id varchar (70),   -- subject/reference (70 x 1 = 70 varchar)
   proc_partof_id varchar (70),   -- partOf/reference (70 x 1 = 70 varchar)
@@ -1206,7 +1206,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   consent_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    cons_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  cons_id varchar (70),   -- id (70 x 1 = 70 varchar)
   cons_patient_id varchar (70),   -- patient/reference (70 x 1 = 70 varchar)
   cons_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
   cons_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 = 420 varchar)
@@ -1249,7 +1249,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
   location_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    loc_id varchar (70),   -- id (70 x 1 = 70 varchar)
+  loc_id varchar (70),   -- id (70 x 1 = 70 varchar)
   loc_identifier_use varchar (100),   -- identifier/use (50 x 2 = 100 varchar)
   loc_identifier_type_system varchar (420),   -- identifier/type/coding/system (70 x 6 = 420 varchar)
   loc_identifier_type_version varchar (300),   -- identifier/type/coding/version (50 x 6 = 300 varchar)
@@ -1273,7 +1273,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   pids_per_ward_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
-    date_time varchar (33),   -- date_time (33 x 1 = 33 varchar)
+  date_time varchar (33),   -- date_time (33 x 1 = 33 varchar)
   ward_name varchar (30),   -- ward_name (30 x 1 = 30 varchar)
   patient_id varchar (70),   -- patient_id (70 x 1 = 70 varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -1669,6 +1669,7 @@ CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
 -- Comments on Tables in Schema "cds2db_in" --
 ------------------------------------------------------
 
+comment on column cds2db_in.encounter_raw.encounter_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.encounter_raw.enc_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.encounter_raw.enc_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.encounter_raw.enc_partof_id is 'partOf/reference (70 x 1 = 70 varchar)';
@@ -1740,7 +1741,11 @@ comment on column cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_co
 comment on column cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_display is 'serviceProvider/identifier/type/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_text is 'serviceProvider/identifier/type/text (500 x 1 = 500 varchar)';
 comment on column cds2db_in.encounter_raw.enc_serviceprovider_display is 'serviceProvider/display (100 x 1 = 100 varchar)';
+comment on column cds2db_in.encounter_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.encounter_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.encounter_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.patient_raw.patient_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.patient_raw.pat_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.patient_raw.pat_identifier_use is 'identifier/use (50 x 2 = 100 varchar)';
 comment on column cds2db_in.patient_raw.pat_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
@@ -1758,7 +1763,11 @@ comment on column cds2db_in.patient_raw.pat_name_given is 'name/given (30 x 20 =
 comment on column cds2db_in.patient_raw.pat_gender is 'gender (10 x 1 = 10 varchar)';
 comment on column cds2db_in.patient_raw.pat_birthdate is 'birthDate (33 x 1 = 33 varchar)';
 comment on column cds2db_in.patient_raw.pat_address_postalcode is 'address/postalCode (10 x 3 = 30 varchar)';
+comment on column cds2db_in.patient_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.patient_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.patient_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.condition_raw.condition_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.condition_raw.con_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.condition_raw.con_encounter_id is 'encounter/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.condition_raw.con_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -1872,7 +1881,11 @@ comment on column cds2db_in.condition_raw.con_note_authorreference_identifier_ty
 comment on column cds2db_in.condition_raw.con_note_authorreference_display is 'note/authorReference/display (100 x 6 = 600 varchar)';
 comment on column cds2db_in.condition_raw.con_note_time is 'note/time (30 x 2 = 60 varchar)';
 comment on column cds2db_in.condition_raw.con_note_text is 'note/text (5000 x 2 = 10000 varchar)';
+comment on column cds2db_in.condition_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.condition_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.condition_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.medication_raw.medication_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.medication_raw.med_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medication_raw.med_identifier_use is 'identifier/use (50 x 2 = 100 varchar)';
 comment on column cds2db_in.medication_raw.med_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
@@ -1930,7 +1943,11 @@ comment on column cds2db_in.medication_raw.med_ingredient_itemreference_identifi
 comment on column cds2db_in.medication_raw.med_ingredient_itemreference_identifier_type_text is 'ingredient/itemReference/identifier/type/text (500 x 15 = 7500 varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_itemreference_display is 'ingredient/itemReference/display (100 x 15 = 1500 varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_isactive is 'ingredient/isActive (10 x 15 = 150 varchar)';
+comment on column cds2db_in.medication_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.medication_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.medication_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.medicationrequest_raw.medicationrequest_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationrequest_raw.medreq_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_encounter_id is 'encounter/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -2154,7 +2171,11 @@ comment on column cds2db_in.medicationrequest_raw.medreq_substitution_reason_ver
 comment on column cds2db_in.medicationrequest_raw.medreq_substitution_reason_code is 'substitution/reason/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_substitution_reason_display is 'substitution/reason/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_substitution_reason_text is 'substitution/reason/text (500 x 1 = 500 varchar)';
+comment on column cds2db_in.medicationrequest_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.medicationrequest_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.medicationrequest_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.medicationadministration_raw.medicationadministration_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationadministration_raw.medadm_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_encounter_id is 'context/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -2264,7 +2285,11 @@ comment on column cds2db_in.medicationadministration_raw.medadm_dosage_ratequant
 comment on column cds2db_in.medicationadministration_raw.medadm_dosage_ratequantity_unit is 'dosage/rateQuantity/unit (30 x 1 = 30 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_dosage_ratequantity_system is 'dosage/rateQuantity/system (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_dosage_ratequantity_code is 'dosage/rateQuantity/code (30 x 1 = 30 varchar)';
+comment on column cds2db_in.medicationadministration_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.medicationadministration_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.medicationadministration_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.medicationstatement_raw.medicationstatement_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationstatement_raw.medstat_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_use is 'identifier/use (50 x 2 = 100 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
@@ -2475,7 +2500,11 @@ comment on column cds2db_in.medicationstatement_raw.medstat_dosage_maxdoseperlif
 comment on column cds2db_in.medicationstatement_raw.medstat_dosage_maxdoseperlifetime_unit is 'dosage/maxDosePerLifetime/unit (30 x 2 = 60 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_dosage_maxdoseperlifetime_system is 'dosage/maxDosePerLifetime/system (70 x 2 = 140 varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_dosage_maxdoseperlifetime_code is 'dosage/maxDosePerLifetime/code (30 x 2 = 60 varchar)';
+comment on column cds2db_in.medicationstatement_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.medicationstatement_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.medicationstatement_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.observation_raw.observation_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.observation_raw.obs_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.observation_raw.obs_encounter_id is 'encounter/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.observation_raw.obs_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -2607,7 +2636,11 @@ comment on column cds2db_in.observation_raw.obs_hasmember_identifier_type_code i
 comment on column cds2db_in.observation_raw.obs_hasmember_identifier_type_display is 'hasMember/identifier/type/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.observation_raw.obs_hasmember_identifier_type_text is 'hasMember/identifier/type/text (500 x 1 = 500 varchar)';
 comment on column cds2db_in.observation_raw.obs_hasmember_display is 'hasMember/display (100 x 1 = 100 varchar)';
+comment on column cds2db_in.observation_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.observation_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.observation_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.diagnosticreport_raw.diagnosticreport_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_encounter_id is 'encounter/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -2652,7 +2685,11 @@ comment on column cds2db_in.diagnosticreport_raw.diagrep_conclusioncode_version 
 comment on column cds2db_in.diagnosticreport_raw.diagrep_conclusioncode_code is 'conclusionCode/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_conclusioncode_display is 'conclusionCode/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_conclusioncode_text is 'conclusionCode/text (500 x 1 = 500 varchar)';
+comment on column cds2db_in.diagnosticreport_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.diagnosticreport_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.diagnosticreport_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.servicerequest_raw.servicerequest_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.servicerequest_raw.servreq_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_encounter_id is 'encounter/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -2711,7 +2748,11 @@ comment on column cds2db_in.servicerequest_raw.servreq_locationcode_version is '
 comment on column cds2db_in.servicerequest_raw.servreq_locationcode_code is 'locationCode/coding/code (30 x 1 = 30 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_locationcode_display is 'locationCode/coding/display (100 x 1 = 100 varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_locationcode_text is 'locationCode/text (500 x 1 = 500 varchar)';
+comment on column cds2db_in.servicerequest_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.servicerequest_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.servicerequest_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.procedure_raw.procedure_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.procedure_raw.proc_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.procedure_raw.proc_encounter_id is 'encounter/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.procedure_raw.proc_patient_id is 'subject/reference (70 x 1 = 70 varchar)';
@@ -2780,7 +2821,11 @@ comment on column cds2db_in.procedure_raw.proc_note_authorreference_identifier_t
 comment on column cds2db_in.procedure_raw.proc_note_authorreference_display is 'note/authorReference/display (100 x 6 = 600 varchar)';
 comment on column cds2db_in.procedure_raw.proc_note_time is 'note/time (30 x 2 = 60 varchar)';
 comment on column cds2db_in.procedure_raw.proc_note_text is 'note/text (5000 x 2 = 10000 varchar)';
+comment on column cds2db_in.procedure_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.procedure_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.procedure_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.consent_raw.consent_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.consent_raw.cons_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.consent_raw.cons_patient_id is 'patient/reference (70 x 1 = 70 varchar)';
 comment on column cds2db_in.consent_raw.cons_identifier_use is 'identifier/use (50 x 2 = 100 varchar)';
@@ -2815,7 +2860,11 @@ comment on column cds2db_in.consent_raw.cons_provision_code_display is 'provisio
 comment on column cds2db_in.consent_raw.cons_provision_code_text is 'provision/code/text (500 x 1 = 500 varchar)';
 comment on column cds2db_in.consent_raw.cons_provision_dataperiod_start is 'provision/dataPeriod/start (30 x 1 = 30 varchar)';
 comment on column cds2db_in.consent_raw.cons_provision_dataperiod_end is 'provision/dataPeriod/end (30 x 1 = 30 varchar)';
+comment on column cds2db_in.consent_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.consent_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.consent_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.location_raw.location_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.location_raw.loc_id is 'id (70 x 1 = 70 varchar)';
 comment on column cds2db_in.location_raw.loc_identifier_use is 'identifier/use (50 x 2 = 100 varchar)';
 comment on column cds2db_in.location_raw.loc_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
@@ -2831,9 +2880,16 @@ comment on column cds2db_in.location_raw.loc_status is 'status (30 x 1 = 30 varc
 comment on column cds2db_in.location_raw.loc_name is 'name (50 x 1 = 50 varchar)';
 comment on column cds2db_in.location_raw.loc_description is 'description (50 x 1 = 50 varchar)';
 comment on column cds2db_in.location_raw.loc_alias is 'alias (30 x 3 = 90 varchar)';
+comment on column cds2db_in.location_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.location_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.location_raw.current_dataset_status is 'Processing status of the data record';
 
+comment on column cds2db_in.pids_per_ward_raw.pids_per_ward_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.pids_per_ward_raw.date_time is 'date_time (33 x 1 = 33 varchar)';
 comment on column cds2db_in.pids_per_ward_raw.ward_name is 'ward_name (30 x 1 = 30 varchar)';
 comment on column cds2db_in.pids_per_ward_raw.patient_id is 'patient_id (70 x 1 = 70 varchar)';
+comment on column cds2db_in.pids_per_ward_raw.input_datetime is 'Time at which the data record is inserted';
+comment on column cds2db_in.pids_per_ward_raw.last_check_datetime is 'Time at which data record was last checked';
+comment on column cds2db_in.pids_per_ward_raw.current_dataset_status is 'Processing status of the data record';
 
 

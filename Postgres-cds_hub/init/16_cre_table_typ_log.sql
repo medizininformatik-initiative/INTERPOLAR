@@ -1697,6 +1697,8 @@ CREATE OR REPLACE TRIGGER pids_per_ward_tr_ins_tr
 -- Comments on Tables in Schema "db_log" --
 ------------------------------------------------------
 
+comment on column db_log.encounter.encounter_id is 'Primary key of the entity';
+comment on column db_log.encounter.encounter_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.encounter.enc_id is 'id (70 varchar)';
 comment on column db_log.encounter.enc_patient_id is 'subject/reference (70 varchar)';
 comment on column db_log.encounter.enc_partof_id is 'partOf/reference (70 varchar)';
@@ -1768,7 +1770,12 @@ comment on column db_log.encounter.enc_serviceprovider_identifier_type_code is '
 comment on column db_log.encounter.enc_serviceprovider_identifier_type_display is 'serviceProvider/identifier/type/coding/display (100 varchar)';
 comment on column db_log.encounter.enc_serviceprovider_identifier_type_text is 'serviceProvider/identifier/type/text (500 varchar)';
 comment on column db_log.encounter.enc_serviceprovider_display is 'serviceProvider/display (100 varchar)';
+comment on column db_log.encounter.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.encounter.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.encounter.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.patient.patient_id is 'Primary key of the entity';
+comment on column db_log.patient.patient_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.patient.pat_id is 'id (70 varchar)';
 comment on column db_log.patient.pat_identifier_use is 'identifier/use (50 varchar)';
 comment on column db_log.patient.pat_identifier_type_system is 'identifier/type/coding/system (70 varchar)';
@@ -1786,7 +1793,12 @@ comment on column db_log.patient.pat_name_given is 'name/given (30 varchar)';
 comment on column db_log.patient.pat_gender is 'gender (10 varchar)';
 comment on column db_log.patient.pat_birthdate is 'birthDate (33 date)';
 comment on column db_log.patient.pat_address_postalcode is 'address/postalCode (10 varchar)';
+comment on column db_log.patient.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.patient.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.patient.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.condition.condition_id is 'Primary key of the entity';
+comment on column db_log.condition.condition_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.condition.con_id is 'id (70 varchar)';
 comment on column db_log.condition.con_encounter_id is 'encounter/reference (70 varchar)';
 comment on column db_log.condition.con_patient_id is 'subject/reference (70 varchar)';
@@ -1900,7 +1912,12 @@ comment on column db_log.condition.con_note_authorreference_identifier_type_text
 comment on column db_log.condition.con_note_authorreference_display is 'note/authorReference/display (100 varchar)';
 comment on column db_log.condition.con_note_time is 'note/time (30 timestamp)';
 comment on column db_log.condition.con_note_text is 'note/text (5000 varchar)';
+comment on column db_log.condition.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.condition.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.condition.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.medication.medication_id is 'Primary key of the entity';
+comment on column db_log.medication.medication_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.medication.med_id is 'id (70 varchar)';
 comment on column db_log.medication.med_identifier_use is 'identifier/use (50 varchar)';
 comment on column db_log.medication.med_identifier_type_system is 'identifier/type/coding/system (70 varchar)';
@@ -1958,7 +1975,12 @@ comment on column db_log.medication.med_ingredient_itemreference_identifier_type
 comment on column db_log.medication.med_ingredient_itemreference_identifier_type_text is 'ingredient/itemReference/identifier/type/text (500 varchar)';
 comment on column db_log.medication.med_ingredient_itemreference_display is 'ingredient/itemReference/display (100 varchar)';
 comment on column db_log.medication.med_ingredient_isactive is 'ingredient/isActive (10 boolean)';
+comment on column db_log.medication.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.medication.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.medication.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.medicationrequest.medicationrequest_id is 'Primary key of the entity';
+comment on column db_log.medicationrequest.medicationrequest_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.medicationrequest.medreq_id is 'id (70 varchar)';
 comment on column db_log.medicationrequest.medreq_encounter_id is 'encounter/reference (70 varchar)';
 comment on column db_log.medicationrequest.medreq_patient_id is 'subject/reference (70 varchar)';
@@ -2182,7 +2204,12 @@ comment on column db_log.medicationrequest.medreq_substitution_reason_version is
 comment on column db_log.medicationrequest.medreq_substitution_reason_code is 'substitution/reason/coding/code (30 varchar)';
 comment on column db_log.medicationrequest.medreq_substitution_reason_display is 'substitution/reason/coding/display (100 varchar)';
 comment on column db_log.medicationrequest.medreq_substitution_reason_text is 'substitution/reason/text (500 varchar)';
+comment on column db_log.medicationrequest.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.medicationrequest.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.medicationrequest.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.medicationadministration.medicationadministration_id is 'Primary key of the entity';
+comment on column db_log.medicationadministration.medicationadministration_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.medicationadministration.medadm_id is 'id (70 varchar)';
 comment on column db_log.medicationadministration.medadm_encounter_id is 'context/reference (70 varchar)';
 comment on column db_log.medicationadministration.medadm_patient_id is 'subject/reference (70 varchar)';
@@ -2292,7 +2319,12 @@ comment on column db_log.medicationadministration.medadm_dosage_ratequantity_val
 comment on column db_log.medicationadministration.medadm_dosage_ratequantity_unit is 'dosage/rateQuantity/unit (30 varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_ratequantity_system is 'dosage/rateQuantity/system (70 varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_ratequantity_code is 'dosage/rateQuantity/code (30 varchar)';
+comment on column db_log.medicationadministration.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.medicationadministration.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.medicationadministration.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.medicationstatement.medicationstatement_id is 'Primary key of the entity';
+comment on column db_log.medicationstatement.medicationstatement_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.medicationstatement.medstat_id is 'id (70 varchar)';
 comment on column db_log.medicationstatement.medstat_identifier_use is 'identifier/use (50 varchar)';
 comment on column db_log.medicationstatement.medstat_identifier_type_system is 'identifier/type/coding/system (70 varchar)';
@@ -2503,7 +2535,12 @@ comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_v
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_unit is 'dosage/maxDosePerLifetime/unit (30 varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_system is 'dosage/maxDosePerLifetime/system (70 varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_code is 'dosage/maxDosePerLifetime/code (30 varchar)';
+comment on column db_log.medicationstatement.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.medicationstatement.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.medicationstatement.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.observation.observation_id is 'Primary key of the entity';
+comment on column db_log.observation.observation_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.observation.obs_id is 'id (70 varchar)';
 comment on column db_log.observation.obs_encounter_id is 'encounter/reference (70 varchar)';
 comment on column db_log.observation.obs_patient_id is 'subject/reference (70 varchar)';
@@ -2635,7 +2672,12 @@ comment on column db_log.observation.obs_hasmember_identifier_type_code is 'hasM
 comment on column db_log.observation.obs_hasmember_identifier_type_display is 'hasMember/identifier/type/coding/display (100 varchar)';
 comment on column db_log.observation.obs_hasmember_identifier_type_text is 'hasMember/identifier/type/text (500 varchar)';
 comment on column db_log.observation.obs_hasmember_display is 'hasMember/display (100 varchar)';
+comment on column db_log.observation.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.observation.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.observation.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.diagnosticreport.diagnosticreport_id is 'Primary key of the entity';
+comment on column db_log.diagnosticreport.diagnosticreport_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.diagnosticreport.diagrep_id is 'id (70 varchar)';
 comment on column db_log.diagnosticreport.diagrep_encounter_id is 'encounter/reference (70 varchar)';
 comment on column db_log.diagnosticreport.diagrep_patient_id is 'subject/reference (70 varchar)';
@@ -2680,7 +2722,12 @@ comment on column db_log.diagnosticreport.diagrep_conclusioncode_version is 'con
 comment on column db_log.diagnosticreport.diagrep_conclusioncode_code is 'conclusionCode/coding/code (30 varchar)';
 comment on column db_log.diagnosticreport.diagrep_conclusioncode_display is 'conclusionCode/coding/display (100 varchar)';
 comment on column db_log.diagnosticreport.diagrep_conclusioncode_text is 'conclusionCode/text (500 varchar)';
+comment on column db_log.diagnosticreport.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.diagnosticreport.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.diagnosticreport.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.servicerequest.servicerequest_id is 'Primary key of the entity';
+comment on column db_log.servicerequest.servicerequest_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.servicerequest.servreq_id is 'id (70 varchar)';
 comment on column db_log.servicerequest.servreq_encounter_id is 'encounter/reference (70 varchar)';
 comment on column db_log.servicerequest.servreq_patient_id is 'subject/reference (70 varchar)';
@@ -2739,7 +2786,12 @@ comment on column db_log.servicerequest.servreq_locationcode_version is 'locatio
 comment on column db_log.servicerequest.servreq_locationcode_code is 'locationCode/coding/code (30 varchar)';
 comment on column db_log.servicerequest.servreq_locationcode_display is 'locationCode/coding/display (100 varchar)';
 comment on column db_log.servicerequest.servreq_locationcode_text is 'locationCode/text (500 varchar)';
+comment on column db_log.servicerequest.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.servicerequest.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.servicerequest.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.procedure.procedure_id is 'Primary key of the entity';
+comment on column db_log.procedure.procedure_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.procedure.proc_id is 'id (70 varchar)';
 comment on column db_log.procedure.proc_encounter_id is 'encounter/reference (70 varchar)';
 comment on column db_log.procedure.proc_patient_id is 'subject/reference (70 varchar)';
@@ -2808,7 +2860,12 @@ comment on column db_log.procedure.proc_note_authorreference_identifier_type_tex
 comment on column db_log.procedure.proc_note_authorreference_display is 'note/authorReference/display (100 varchar)';
 comment on column db_log.procedure.proc_note_time is 'note/time (30 timestamp)';
 comment on column db_log.procedure.proc_note_text is 'note/text (5000 varchar)';
+comment on column db_log.procedure.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.procedure.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.procedure.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.consent.consent_id is 'Primary key of the entity';
+comment on column db_log.consent.consent_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.consent.cons_id is 'id (70 varchar)';
 comment on column db_log.consent.cons_patient_id is 'patient/reference (70 varchar)';
 comment on column db_log.consent.cons_identifier_use is 'identifier/use (50 varchar)';
@@ -2843,7 +2900,12 @@ comment on column db_log.consent.cons_provision_code_display is 'provision/code/
 comment on column db_log.consent.cons_provision_code_text is 'provision/code/text (500 varchar)';
 comment on column db_log.consent.cons_provision_dataperiod_start is 'provision/dataPeriod/start (30 timestamp)';
 comment on column db_log.consent.cons_provision_dataperiod_end is 'provision/dataPeriod/end (30 timestamp)';
+comment on column db_log.consent.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.consent.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.consent.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.location.location_id is 'Primary key of the entity';
+comment on column db_log.location.location_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.location.loc_id is 'id (70 varchar)';
 comment on column db_log.location.loc_identifier_use is 'identifier/use (50 varchar)';
 comment on column db_log.location.loc_identifier_type_system is 'identifier/type/coding/system (70 varchar)';
@@ -2859,9 +2921,17 @@ comment on column db_log.location.loc_status is 'status (30 varchar)';
 comment on column db_log.location.loc_name is 'name (50 varchar)';
 comment on column db_log.location.loc_description is 'description (50 varchar)';
 comment on column db_log.location.loc_alias is 'alias (30 varchar)';
+comment on column db_log.location.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.location.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.location.current_dataset_status is 'Processing status of the data record';
 
+comment on column db_log.pids_per_ward.pids_per_ward_id is 'Primary key of the entity';
+comment on column db_log.pids_per_ward.pids_per_ward_raw_id is 'Primary key of the corresponding raw table';
 comment on column db_log.pids_per_ward.date_time is 'date_time (33 timestamp)';
 comment on column db_log.pids_per_ward.ward_name is 'ward_name (30 varchar)';
 comment on column db_log.pids_per_ward.patient_id is 'patient_id (70 varchar)';
+comment on column db_log.pids_per_ward.input_datetime is 'Time at which the data record is inserted';
+comment on column db_log.pids_per_ward.last_check_datetime is 'Time at which data record was last checked';
+comment on column db_log.pids_per_ward.current_dataset_status is 'Processing status of the data record';
 
 

@@ -230,16 +230,23 @@ getCreateTableGrantStatements <- function(table_description, script_rights_descr
   }
   return(statements)
 }
-
 getCreateTableCommentStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   comments <- ""
-  single_comment_template <- loadTemplate("template_cre_table_sub_comment.sql")
+  table_comment_template <- loadTemplate("template_cre_table_sub_comment.sql")
+  single_comment_typed_raw_id_line_template <- if (ignore_types) "" else loadTemplate("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_TYPED_RAW_ID_LINE%>")
+  table_comment_template <- gsub("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_TYPED_RAW_ID_LINE%>", single_comment_typed_raw_id_line_template, table_comment_template)
+  # if the placeholder for typed tables was replaced by empty string (in raw tables) -> there is an
+  # empty line, which we remove now
+  table_comment_template <- gsub("\n\n", "\n", table_comment_template)
+
+  single_comment_line_template <- loadTemplate("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_SINGLE_LINE%>")
   for (tablename in names(table_description)) {
+    table_comment <- ""
     full_tablename <- getFullTableName(tablename, rights_first_row)
     single_table_description <- table_description[[tablename]]
-    single_table_comment <- gsub("<%TABLE_NAME%>", full_tablename, single_comment_template)
+    single_table_comment <- single_comment_line_template
     for (row in 1:nrow(single_table_description)) {
       # e.g.: comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
       table_description_row <- single_table_description[row]
@@ -247,9 +254,14 @@ getCreateTableCommentStatements <- function(table_description, script_rights_des
 
       arguments <- parseTableDescriptionRow(table_description_row, ignore_types)
       single_comment <- gsub("<%COLUMN_COMMENT%>", arguments$comment, single_comment)
-      comments <- paste0(comments, single_comment, "\n")
+      table_comment <- paste0(table_comment, single_comment)
+      if (row < nrow(single_table_description)) {
+        table_comment <- paste0(table_comment, "\n")
+      }
     }
-    comments <- paste0(comments, "\n")
+    table_comment <- gsub("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_SINGLE_LINE%>", table_comment, table_comment_template)
+    table_comment <- gsub("<%TABLE_NAME%>", full_tablename, table_comment)
+    comments <- paste0(comments, table_comment, "\n")
   }
   return(comments)
 }
