@@ -1,3 +1,7 @@
+# This is used to set whether the column widths specified in the TableDefinition Excel file are to
+# be taken into account (FALSE) or ignored (TRUE) when generating the database scripts.
+IGNORE_DEFINED_COLUMN_WIDTHS = TRUE
+
 ######################################################
 # Static Definitions of Paths, File- and Columnnames #
 ######################################################
