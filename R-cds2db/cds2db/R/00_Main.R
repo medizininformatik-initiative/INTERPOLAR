@@ -62,10 +62,9 @@ retrieve <- function() {
     # Convert Column Types in resource tables
     etlutils::runProcess(etlutils::run_in('Convert RAW tables to Typed tables', {
       fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
-      #browser()
       resource_tables <- getUntypedRAWDataFromDatabase()
       resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
-      browser()
+      writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
     }))
 
   })
