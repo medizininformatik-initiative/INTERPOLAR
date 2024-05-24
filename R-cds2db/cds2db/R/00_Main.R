@@ -55,7 +55,7 @@ retrieve <- function() {
     etlutils::runProcess(etlutils::run_in('Write raw tables to database', {
       table_names <- names(resource_tables)
       names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
-      writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
+      writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
       names(resource_tables) <- table_names
     }))
 
@@ -64,7 +64,7 @@ retrieve <- function() {
       fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
       resource_tables <- getUntypedRAWDataFromDatabase()
       resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
-      writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
+      writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
     }))
 
   })
