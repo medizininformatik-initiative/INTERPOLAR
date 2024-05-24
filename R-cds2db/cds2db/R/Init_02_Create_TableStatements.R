@@ -128,21 +128,25 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
 
   # only for string/varchar and numeric values add the column width
   if (column_type %in% "varchar") {
-    column_type_with_length <- paste0(column_type, " (", full_length, ")")
+    column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ")")))
   } else if (column_type %in% "numeric") {
     # decimal/numeric needs a length for the places before and after the decimal point -> set same
     # value before and after decimal point
-    column_type_with_length <- paste0(column_type, " (", full_length, ", ", full_length, ")")
+    column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ", ", full_length, ")")))
   } else {
     column_type_with_length <- column_type
   }
 
   fhir_expression <- table_description_row$fhir_expression
-  if (ignore_types) {
-    comment <- paste0(fhir_expression, " (", single_length, " x ", count, " = ", full_length, " ", column_type, ")")
+
+  if (IGNORE_DEFINED_COLUMN_WIDTHS) {
+    comment_length_and_type <- paste0(" (", column_type, ")")
+  } else if (ignore_types) {
+    comment_length_and_type <- paste0(" (", single_length, " x ", count, " = ", full_length, " ", column_type, ")")
   } else {
-    comment <- paste0(fhir_expression, " (", single_length, " ", column_type, ")")
+    comment_length_and_type <- paste0(" (", single_length, " ", column_type, ")")
   }
+  comment <- paste0(fhir_expression, comment_length_and_type)
 
   column_line_arguments[["comment"]] <- comment
   column_line_arguments[["column_type_with_length"]] <- column_type_with_length
@@ -169,15 +173,22 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
     single_table_description <- table_description[[tablename]]
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement_template)
     column_line_statement <- ""
+    indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
+    # non RAW tables need an extra column for the ROW/Entry ID which they are originated (multiple
+    # typed ( = non RAW) rows can be created by one RAW table row (see fhir_melt)
+    if (!ignore_types) {
+      column_line_statement <- paste0(full_tablename, "_raw_id int, -- Primary key of the corresponding raw table\n")
+    }
+    first_row <- TRUE
     for (row in 1:nrow(single_table_description)) {
       table_description_row <- single_table_description[row]
       statement_line <- getCreateTableStatementColumnLine(table_description_row, ignore_types)
-      if (is.na(indentation)) {
+      if (ignore_types && first_row) {
         column_line_statement <- paste0(column_line_statement, statement_line)
-        indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
       } else {
         column_line_statement <- paste0(column_line_statement, indentation, statement_line)
       }
+      first_row <- FALSE
     }
     single_statement <- gsub("<%CREATE_TABLE_STATEMENT_COLUMNS%>\n", column_line_statement, single_statement)
     statements <- paste0(statements, single_statement, "\n\n")
@@ -223,16 +234,23 @@ getCreateTableGrantStatements <- function(table_description, script_rights_descr
   }
   return(statements)
 }
-
 getCreateTableCommentStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
   comments <- ""
-  single_comment_template <- loadTemplate("template_cre_table_sub_comment.sql")
+  table_comment_template <- loadTemplate("template_cre_table_sub_comment.sql")
+  single_comment_typed_raw_id_line_template <- if (ignore_types) "" else loadTemplate("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_TYPED_RAW_ID_LINE%>")
+  table_comment_template <- gsub("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_TYPED_RAW_ID_LINE%>", single_comment_typed_raw_id_line_template, table_comment_template)
+  # if the placeholder for typed tables was replaced by empty string (in raw tables) -> there is an
+  # empty line, which we remove now
+  table_comment_template <- gsub("\n\n", "\n", table_comment_template)
+
+  single_comment_line_template <- loadTemplate("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_SINGLE_LINE%>")
   for (tablename in names(table_description)) {
+    table_comment <- ""
     full_tablename <- getFullTableName(tablename, rights_first_row)
     single_table_description <- table_description[[tablename]]
-    single_table_comment <- gsub("<%TABLE_NAME%>", full_tablename, single_comment_template)
+    single_table_comment <- single_comment_line_template
     for (row in 1:nrow(single_table_description)) {
       # e.g.: comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_system is 'identifier/type/coding/system (70 x 6 = 420 varchar)';
       table_description_row <- single_table_description[row]
@@ -240,9 +258,14 @@ getCreateTableCommentStatements <- function(table_description, script_rights_des
 
       arguments <- parseTableDescriptionRow(table_description_row, ignore_types)
       single_comment <- gsub("<%COLUMN_COMMENT%>", arguments$comment, single_comment)
-      comments <- paste0(comments, single_comment, "\n")
+      table_comment <- paste0(table_comment, single_comment)
+      if (row < nrow(single_table_description)) {
+        table_comment <- paste0(table_comment, "\n")
+      }
     }
-    comments <- paste0(comments, "\n")
+    table_comment <- gsub("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_SINGLE_LINE%>", table_comment, table_comment_template)
+    table_comment <- gsub("<%TABLE_NAME%>", full_tablename, table_comment)
+    comments <- paste0(comments, table_comment, "\n")
   }
   return(comments)
 }
