@@ -1,21 +1,40 @@
-# Function to remove extra brackets from specific columns in a data.table
-joinMultiValuesInCrackedFHIRData <- function(dt, columns, sep, brackets) {
-  for (col in columns) {
+#' Join and Clean Multi-Value Fields in an indexed Data Table
+#'
+#' This function processes specific columns in a data.table, removing extra brackets from multi-value fields and joining the values.
+#'
+#' @param dt A data.table containing the data to be processed.
+#' @param column_names A character vector of column names to be processed.
+#' @param sep A character string to split the multi-value fields.
+#' @param brackets A character vector of length 2, where the first element is the opening bracket and the second element is the closing bracket.
+#'
+#' @return The modified data.table with cleaned and joined multi-value fields.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(col1 = c("[1]a|[1]b|[2]c", "[1]d|[1]e", "[3]f|[3]g|[4]h"))
+#' column_names <- c("col1")
+#' sep <- "|"
+#' brackets <- c("[", "]")
+#' joinMultiValuesInCrackedFHIRData(dt, column_names, sep, brackets)
+#'
+#' @export
+joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
+  for (column_name in column_names) {
     for (i in 1:nrow(dt)) {
       # Check if the cell is not empty
-      if (length(dt[[col]][i])) {
+      if (length(dt[[column_name]][i])) {
         # Check if the cell starts with "["
-        if (grepl("^\\[", dt[[col]][i])) {
+        if (grepl("^\\[", dt[[column_name]][i])) {
           # Remove extra brackets and split the string by "|"
           split_string <- strsplit(gsub(paste0("\\", brackets[1], "\\d+\\", brackets[2]), "",
-                                        dt[[col]][i], perl = TRUE), sep, fixed = TRUE)[[1]]
+                                        dt[[column_name]][i], perl = TRUE), sep, fixed = TRUE)[[1]]
           # Initialize the index vector and previous index
           indices <- c()
           prev_index <- NULL
           # Iterate through the vector and find the first indices for each new pattern
           for (vec in seq_along(split_string)) {
             index <- as.numeric(gsub(paste0("\\", brackets[1], "|\\..*"), "", split_string[vec]))
-            if (is.null(prev_index) || index != prev_index) {
+            if (is.null(prev_index) || is.na(prev_index) || index != prev_index) {
               indices <- c(indices, vec)
               prev_index <- index
             }
@@ -25,7 +44,7 @@ joinMultiValuesInCrackedFHIRData <- function(dt, columns, sep, brackets) {
                                  gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
                                       split_string, perl = TRUE)), collapse = " ")
           # Replace the original cell value with the modified result
-          dt[[col]][i] <- result
+          dt[[column_name]][i] <- result
         }
       }
     }
