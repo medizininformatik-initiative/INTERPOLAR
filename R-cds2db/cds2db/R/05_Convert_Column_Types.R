@@ -52,7 +52,17 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
   return(dt)
 }
 
-# Function to melt the table according to a given schema
+#' Melt the Table According to a Given Schema
+#'
+#' This function melts the table according to a given schema.
+#'
+#' @param indexed_data_table A data.table containing the indexed data to be melted.
+#' @param fhir_table_description An object describing the schema of the FHIR table.
+#' @param column_name_separator A character string that separates the column names. Defaults to "/".
+#'
+#' @return A melted data.table.
+#'
+#' @export
 fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name_separator = "/") {
 
   getEscaped <- function(string) {
@@ -115,7 +125,13 @@ fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name
   return(melted_data)
 }
 
-
+#' Retrieve Untyped RAW Data from Database
+#'
+#' This function connects to a database, retrieves the table names, reads the tables, and returns
+#' the data as a list of data frames.
+#'
+#' @return A list of data frames where each data frame corresponds to a table from the database.
+#'
 getUntypedRAWDataFromDatabase <- function() {
 
   db_connection <- etlutils::dbConnect(
@@ -143,6 +159,16 @@ getUntypedRAWDataFromDatabase <- function() {
   return(resource_tables)
 }
 
+#' Join Unmeltable Multi-Entries in Resource Tables
+#'
+#' This function joins specific multi-entry columns in the patient resource table
+#' according to the provided FHIR table descriptions.
+#'
+#' @param resource_tables A list of data.tables containing the resource tables.
+#' @param fhir_table_descriptions A list of FHIR table description objects.
+#'
+#' @return A list of data.tables with joined multi-entry columns.
+#'
 joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions) {
   patient_fhir_table_description <- fhir_table_descriptions$Patient
   if (!is.null(patient_fhir_table_description)) {
@@ -158,6 +184,15 @@ joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions)
   return(resource_tables)
 }
 
+#' Melt Cracked FHIR Data
+#'
+#' This function melts cracked FHIR data in the resource tables according to the provided FHIR table descriptions.
+#'
+#' @param resource_tables A list of data.tables containing the resource tables.
+#' @param fhir_table_descriptions A list of FHIR table description objects.
+#'
+#' @return A list of melted data.tables.
+#'
 meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   names(fhir_table_descriptions) <- tolower(names(fhir_table_descriptions))
   for (i in seq_along(resource_tables)) {
@@ -243,6 +278,26 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   return(resource_tables)
 }
 
+#' Replace Column Names in a Data Table
+#'
+#' This function replaces old column names with new column names in a data.table.
+#' The columns are replaced by comparing the names, not by their index positions.
+#' The same indices of the old and new names vectors indicate the old and new names respectively.
+#'
+#' @param dt A data.table where the column names will be replaced.
+#' @param old_names A character vector of old column names.
+#' @param new_names A character vector of new column names.
+#'
+#' @return A data.table with updated column names.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(f = 9:11, b = 4:6, g = 7:9, a = 1:3)
+#' old_names <- c("a", "b")
+#' new_names <- c("x", "y")
+#' replaceColumnNames(dt, old_names, new_names)
+#'
+#' @export
 replaceColumnNames <- function(dt, old_names, new_names) {
   for (i in seq_along(old_names)) {
     old_name <- old_names[i]
@@ -252,6 +307,18 @@ replaceColumnNames <- function(dt, old_names, new_names) {
   return(dt)
 }
 
+#' Replace Column Names in Resource Tables
+#'
+#' This function replaces column names in the resource tables based on the provided FHIR table
+#' descriptions.
+#'
+#' @param resource_tables A list of data.tables containing the resource tables.
+#' @param fhir_table_descriptions A list of FHIR table description objects.
+#' @param names_to_.Data A logical value indicating the direction of the replacement.
+#' If TRUE, replace names with .Data; if FALSE, replace .Data with names.
+#'
+#' @return A list of data.tables with updated column names.
+#'
 replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, names_to_.Data) {
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
