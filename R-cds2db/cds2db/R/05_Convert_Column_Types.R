@@ -174,7 +174,7 @@ joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions)
   if (!is.null(patient_fhir_table_description)) {
     # These are constants! In all cases these columns must be joined and not melted if they are
     # present in the table description of the patients.
-    patient_column_names_2_join <- c("name/given", "name/prefix", "name/suffix")
+    patient_column_names_2_join <- c("name/given", "name/prefix", "name/suffix", "adress/line")
     # get the columns which are really present in the current patients table description
     patient_column_names_2_join <- intersect(patient_column_names_2_join, patient_fhir_table_description@cols@.Data)
     if (length(patient_column_names_2_join)) {
