@@ -130,40 +130,6 @@ fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name
   return(melted_data)
 }
 
-#' Retrieve Untyped RAW Data from Database
-#'
-#' This function connects to a database, retrieves the table names, reads the tables, and returns
-#' the data as a list of data frames.
-#'
-#' @return A list of data frames where each data frame corresponds to a table from the database.
-#'
-getUntypedRAWDataFromDatabase <- function() {
-
-  db_connection <- etlutils::dbConnect(
-    user = DB_CDS2DB_USER,
-    password = DB_CDS2DB_PASSWORD,
-    dbname = DB_GENERAL_NAME,
-    host = DB_GENERAL_HOST,
-    port = DB_GENERAL_PORT,
-    schema = DB_CDS2DB_SCHEMA_OUT
-  )
-
-  db_table_names <- etlutils::dbListTables(db_connection)
-  # Display the table names
-  print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
-  if (is.null(db_table_names)) {
-    warning("There are no tables found in database")
-  }
-
-  resource_tables <- list()
-  for (table_name in db_table_names) {
-    # the database tables here are tables of a View. Per convention their prefix is "v_" -> remove this prefix
-    resource_table_name <- sub("^v_", "", table_name)
-    resource_tables[[resource_table_name]] <- etlutils::dbReadTable(db_connection, table_name)
-  }
-  return(resource_tables)
-}
-
 #' Join Unmeltable Multi-Entries in Resource Tables
 #'
 #' This function joins specific multi-entry columns in the patient resource table

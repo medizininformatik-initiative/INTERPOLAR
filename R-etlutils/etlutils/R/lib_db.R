@@ -54,6 +54,7 @@ dbDisconnect <- function(db_connection) {
 #'
 #' @param db_connection A valid database connection object, typically created using `DBI::dbConnect`.
 #' This connection should already be established and active to successfully retrieve table names.
+#' @param log logical. If TRUE then all tables names will be printed to the console.
 #'
 #' @return Invisibly returns a character vector of table names. The function primarily prints
 #' these names using `utils::str()` for immediate inspection, which is useful for debugging or
@@ -61,14 +62,21 @@ dbDisconnect <- function(db_connection) {
 #'
 #' @seealso
 #' \code{\link[DBI]{dbConnect}} to learn about establishing database connections.
-#' \code{\link[DBI]{dbListTables}} for the underlying DBI function that this wrapper utilizes.
+#' \code{\link[DBI]{dbListTable}} for the underlying DBI function that this wrapper utilizes.
 #' \code{\link[utils]{str}} to explore the utility function used for displaying the table names.
 #'
 #' @export
-dbListTables <- function(db_connection) {
+dbListTableNames <- function(db_connection, log = TRUE) {
   # Get existing table names from the database connection
-  tables <- DBI::dbListTables(db_connection)
-  return(tables)
+  db_table_names <- DBI::dbListTables(db_connection)
+  if (log) {
+    # Display the table names
+    print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
+    if (is.null(db_table_names)) {
+      warning("There are no tables found in database")
+    }
+  }
+  return(db_table_names)
 }
 
 #' Check column widths of a table in a PostgreSQL database
