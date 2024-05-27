@@ -56,13 +56,13 @@ dbDisconnect <- function(db_connection) {
 #' This connection should already be established and active to successfully retrieve table names.
 #' @param log logical. If TRUE then all tables names will be printed to the console.
 #'
-#' @return Invisibly returns a character vector of table names. The function primarily prints
-#' these names using `utils::str()` for immediate inspection, which is useful for debugging or
-#' quick checks in an interactive R session.
+#' @return Returns a character vector of table names. The function primarily prints these names
+#' using `utils::str()` for immediate inspection, which is useful for debugging or quick checks in
+#' an interactive R session.
 #'
 #' @seealso
 #' \code{\link[DBI]{dbConnect}} to learn about establishing database connections.
-#' \code{\link[DBI]{dbListTable}} for the underlying DBI function that this wrapper utilizes.
+#' \code{\link[DBI]{dbListTables}} for the underlying DBI function that this wrapper utilizes.
 #' \code{\link[utils]{str}} to explore the utility function used for displaying the table names.
 #'
 #' @export
@@ -223,4 +223,132 @@ dbReadTable <- function(db_connection, table_name) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
   data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
+}
+
+#' Write Multiple Tables to Database
+#'
+#' This function writes multiple tables to a specified database schema. It can optionally clear
+#' existing content before inserting new data.
+#'
+#' @param tables A named list of data frames representing the tables to be written to the database.
+#' @param db_user A string representing the database user name.
+#' @param db_password A string representing the database user password.
+#' @param db_name A string representing the name of the database.
+#' @param db_host A string representing the database host.
+#' @param db_port An integer representing the port number to connect to the database.
+#' @param db_schema A string representing the database schema.
+#' @param clear_before_insert A logical value indicating whether to clear existing data in the
+#' tables before inserting new data. Default is FALSE.
+#'
+#' @return NULL. The function is used for its side effects of writing data to the database.
+#'
+#' @examples
+#' \dontrun{
+#' tables <- list(
+#'   table1 = data.frame(col1 = 1:3, col2 = letters[1:3]),
+#'   table2 = data.frame(col1 = 4:6, col2 = letters[4:6])
+#' )
+#' writeTablesTablesToDatabase(
+#'   tables,
+#'   db_user = "user",
+#'   db_password = "password",
+#'   db_name = "dbname",
+#'   db_host = "host",
+#'   db_port = 5432,
+#'   db_schema = "schema"
+#' )
+#' }
+#'
+#' @export
+writeTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host, db_port, db_schema, clear_before_insert = FALSE) {
+
+  db_connection <- dbConnect(
+    user = db_user,
+    password = db_password,
+    dbname = db_name,
+    host = db_host,
+    port = db_port,
+    schema = db_schema
+  )
+
+  table_names <- names(tables)
+  db_table_names <- dbListTableNames(db_connection)
+
+  # write tables to DB
+  for (table_name in table_names) {
+    if (table_name %in% db_table_names) {
+      table <- tables[[table_name]]
+      if (clear_before_insert) {
+        dbDeleteContent(db_connection, table_name)
+      }
+      # Check column widths of table content
+      dbCheckContent(db_connection, table_name, table)
+      # Add table content to DB
+      dbAddContent(db_connection, table_name, table)
+    } else {
+      warning(paste("Table", table_name, "not found in database"))
+    }
+  }
+  dbDisconnect(db_connection)
+}
+
+#' Read Multiple Tables from Database
+#'
+#' This function reads multiple tables from a specified database schema. If no table names are provided,
+#' it reads all available tables in the schema.
+#'
+#' @param db_user A string representing the database user name.
+#' @param db_password A string representing the database user password.
+#' @param db_name A string representing the name of the database.
+#' @param db_host A string representing the database host.
+#' @param db_port An integer representing the port number to connect to the database.
+#' @param db_schema A string representing the database schema.
+#' @param table_names A character vector of table names to read. If NA, all tables are read.
+#'
+#' @return A named list of data frames representing the tables read from the database.
+#'
+#' @examples
+#' \dontrun{
+#' tables <- readTablesFromDatabase(
+#'   db_user = "user",
+#'   db_password = "password",
+#'   db_name = "dbname",
+#'   db_host = "host",
+#'   db_port = 5432,
+#'   db_schema = "schema"
+#' )
+#' }
+#'
+#' @export
+readTablesFromDatabase <- function(db_user, db_password, db_name, db_host, db_port, db_schema, table_names = NA) {
+
+  db_connection <- dbConnect(
+    user = db_user,
+    password = db_password,
+    dbname = db_name,
+    host = db_host,
+    port = db_port,
+    schema = db_schema
+  )
+
+  db_table_names <- dbListTableNames(db_connection)
+  if (isSimpleNA(table_names)) {
+    table_names <- db_table_names
+  }
+
+  tables <- list()
+  for (table_name in table_names) {
+    # If the database tables here are tables of a View, then they have (per convention) the prefix
+    # "v_" -> add this prefix in this cases
+    if (!table_name %in% db_table_names) {
+      table_name <- paste0("v_", table_name)
+    }
+
+    if (grepl("^v_", table_name)) {
+      resource_table_name <- sub("^v_", "", table_name)
+    }
+    tables[[resource_table_name]] <- dbReadTable(db_connection, table_name)
+  }
+  dbDisconnect(db_connection)
+  return(tables)
 }

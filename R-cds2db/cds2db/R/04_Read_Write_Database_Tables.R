@@ -1,23 +1,3 @@
-#' Establish a Database Connection
-#'
-#' This function establishes a connection to a database using the provided schema name.
-#'
-#' @param schema_name A character string specifying the schema name for the database connection.
-#'
-#' @return A database connection object.
-#'
-getDBConnection <- function(schema_name) {
-  db_connection <- etlutils::dbConnect(
-    user = DB_CDS2DB_USER,
-    password = DB_CDS2DB_PASSWORD,
-    dbname = DB_GENERAL_NAME,
-    host = DB_GENERAL_HOST,
-    port = DB_GENERAL_PORT,
-    schema = schema_name
-  )
-  return(db_connection)
-}
-
 #' Write Data Tables to a Database
 #'
 #' This function takes a list of data.table objects and writes them to a specified database.
@@ -30,31 +10,15 @@ getDBConnection <- function(schema_name) {
 #' @param clear_before_insert A logical flag indicating whether to clear the table contents
 #'                            before inserting new data. Defaults to FALSE.
 writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
-
-  table_names <- names(tables)
-
-  db_connection <- getDBConnection(DB_CDS2DB_SCHEMA_IN)
-
-  db_table_names <- etlutils::dbListTableNames(db_connection)
-
-  # write tables to DB
-  for (table_name in table_names) {
-    if (table_name %in% db_table_names) {
-      table <- tables[[table_name]]
-      if (clear_before_insert) {
-        etlutils::dbDeleteContent(db_connection, table_name)
-      }
-      # Check column widths of table content
-      etlutils::dbCheckContent(db_connection, table_name, table)
-      # Add table content to DB
-      etlutils::dbAddContent(db_connection, table_name, table)
-    } else {
-      warning(paste("Table", table_name, "not found in database"))
-    }
-  }
-  etlutils::dbDisconnect(db_connection)
+  etlutils::writeTablesToDatabase(tables,
+                                  db_user = DB_CDS2DB_USER,
+                                  db_password = DB_CDS2DB_PASSWORD,
+                                  db_name = DB_GENERAL_NAME,
+                                  db_host = DB_GENERAL_HOST,
+                                  db_port = DB_GENERAL_PORT,
+                                  db_schema = DB_CDS2DB_SCHEMA_IN,
+                                  clear_before_insert = clear_before_insert)
 }
-
 
 #' Retrieve Untyped RAW Data from Database
 #'
@@ -63,19 +27,11 @@ writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
 #'
 #' @return A list of data frames where each data frame corresponds to a table from the database.
 #'
-getUntypedRAWDataFromDatabase <- function() {
-
-  db_connection <- getDBConnection(DB_CDS2DB_SCHEMA_OUT)
-
-  db_table_names <- etlutils::dbListTableNames(db_connection)
-
-  resource_tables <- list()
-  for (table_name in db_table_names) {
-    # the database tables here are tables of a View. Per convention their prefix is "v_" -> remove this prefix
-    resource_table_name <- sub("^v_", "", table_name)
-    resource_tables[[resource_table_name]] <- etlutils::dbReadTable(db_connection, table_name)
-  }
-  etlutils::dbDisconnect(db_connection)
-  return(resource_tables)
+readUntypedRAWDataFromDatabase <- function() {
+  etlutils::readTablesFromDatabase(db_user = DB_CDS2DB_USER,
+                                   db_password = DB_CDS2DB_PASSWORD,
+                                   db_name = DB_GENERAL_NAME,
+                                   db_host = DB_GENERAL_HOST,
+                                   db_port = DB_GENERAL_PORT,
+                                   db_schema = DB_CDS2DB_SCHEMA_OUT)
 }
-
