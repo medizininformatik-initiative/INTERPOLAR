@@ -11,13 +11,13 @@
 #'                            before inserting new data. Defaults to FALSE.
 writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
   etlutils::createConnectionAndWriteTablesToDatabase(tables,
-                                  db_user = DB_CDS2DB_USER,
-                                  db_password = DB_CDS2DB_PASSWORD,
-                                  db_name = DB_GENERAL_NAME,
-                                  db_host = DB_GENERAL_HOST,
-                                  db_port = DB_GENERAL_PORT,
-                                  db_schema = DB_CDS2DB_SCHEMA_IN,
-                                  clear_before_insert = clear_before_insert)
+                                                     dbname = DB_GENERAL_NAME,
+                                                     host = DB_GENERAL_HOST,
+                                                     port = DB_GENERAL_PORT,
+                                                     user = DB_CDS2DB_USER,
+                                                     password = DB_CDS2DB_PASSWORD,
+                                                     schema = DB_CDS2DB_SCHEMA_IN,
+                                                     clear_before_insert = clear_before_insert)
 }
 
 #' Retrieve Untyped RAW Data from Database
@@ -28,10 +28,10 @@ writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
 #' @return A list of data frames where each data frame corresponds to a table from the database.
 #'
 readUntypedRAWDataFromDatabase <- function() {
-  etlutils::createConnectionAndReadTablesFromDatabase(db_user = DB_CDS2DB_USER,
-                                   db_password = DB_CDS2DB_PASSWORD,
-                                   db_name = DB_GENERAL_NAME,
-                                   db_host = DB_GENERAL_HOST,
-                                   db_port = DB_GENERAL_PORT,
-                                   db_schema = DB_CDS2DB_SCHEMA_OUT)
+  etlutils::createConnectionAndReadTablesFromDatabase(dbname = DB_GENERAL_NAME,
+                                                      host = DB_GENERAL_HOST,
+                                                      port = DB_GENERAL_PORT,
+                                                      user = DB_CDS2DB_USER,
+                                                      password = DB_CDS2DB_PASSWORD,
+                                                      schema = DB_CDS2DB_SCHEMA_OUT)
 }

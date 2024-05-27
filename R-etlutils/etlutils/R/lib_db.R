@@ -4,25 +4,19 @@
 #' It configures the connection to use a specific schema and adjusts the `work_mem` setting to allow more memory for
 #' operations, enhancing performance for tasks that require more memory.
 #'
-#' @param user The username for the database connection.
-#' @param password The password for the database connection.
 #' @param dbname The name of the database.
 #' @param host The host address where the database is located.
 #' @param port The port number for the database connection.
+#' @param user The username for the database connection.
+#' @param password The password for the database connection.
 #' @param schema The schema under which the tables can be found. This sets the search path to the specified schema.
 #'
 #' @return A database connection object that is configured to use the specified schema and has an increased `work_mem`
 #' setting.
 #'
 #' @export
-dbConnect <- function(user, password, dbname, host, port, schema) {
-  db_connection <- DBI::dbConnect(RPostgres::Postgres(),
-                                  dbname = dbname,
-                                  host = host,
-                                  port = port,
-                                  user = user,
-                                  password = password,
-                                  options = paste0('-c search_path=', schema))
+dbConnect <- function(dbname, host, port, user, password, schema) {
+  db_connection <- DBI::dbConnect(RPostgres::Postgres(), dbname, host, port, user, password, options = paste0('-c search_path=', schema))
   # Increase memory allocation for this connection to improve performance for memory-intensive operations
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
   return(db_connection)
@@ -245,12 +239,12 @@ dbReadTable <- function(db_connection, table_name) {
 #' existing content before inserting new data.
 #'
 #' @param tables A named list of data frames representing the tables to be written to the database.
-#' @param db_user A string representing the database user name.
-#' @param db_password A string representing the database user password.
-#' @param db_name A string representing the name of the database.
-#' @param db_host A string representing the database host.
-#' @param db_port An integer representing the port number to connect to the database.
-#' @param db_schema A string representing the database schema.
+#' @param dbname A string representing the name of the database.
+#' @param host A string representing the database host.
+#' @param port An integer representing the port number to connect to the database.
+#' @param user A string representing the database user name.
+#' @param password A string representing the database user password.
+#' @param schema A string representing the database schema.
 #' @param clear_before_insert A logical value indicating whether to clear existing data in the
 #' tables before inserting new data. Default is FALSE.
 #'
@@ -264,25 +258,18 @@ dbReadTable <- function(db_connection, table_name) {
 #' )
 #' writeTablesTablesToDatabase(
 #'   tables,
-#'   db_user = "user",
-#'   db_password = "password",
-#'   db_name = "dbname",
-#'   db_host = "host",
-#'   db_port = 5432,
-#'   db_schema = "schema"
+#'   dbname = "dbname",
+#'   host = "host",
+#'   port = 5432,
+#'   user = "user",
+#'   password = "password",
+#'   schema = "schema"
 #' )
 #' }
 #'
 #' @export
-createConnectionAndWriteTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host, db_port, db_schema, clear_before_insert = FALSE) {
-  db_connection <- dbConnect(
-    user = db_user,
-    password = db_password,
-    dbname = db_name,
-    host = db_host,
-    port = db_port,
-    schema = db_schema
-  )
+createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, clear_before_insert = FALSE) {
+  db_connection <- dbConnect(dbname, host, port, user, password, schema)
   writeTablesToDatabase(tables, db_connection, clear_before_insert, TRUE)
 }
 
@@ -331,12 +318,12 @@ writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = F
 #' This function reads multiple tables from a specified database schema. If no table names are provided,
 #' it reads all available tables in the schema.
 #'
-#' @param db_user A string representing the database user name.
-#' @param db_password A string representing the database user password.
-#' @param db_name A string representing the name of the database.
-#' @param db_host A string representing the database host.
-#' @param db_port An integer representing the port number to connect to the database.
-#' @param db_schema A string representing the database schema.
+#' @param dbname A string representing the name of the database.
+#' @param host A string representing the database host.
+#' @param port An integer representing the port number to connect to the database.
+#' @param user A string representing the database user name.
+#' @param password A string representing the database user password.
+#' @param schema A string representing the database schema.
 #' @param table_names A character vector of table names to read. If NA, all tables are read.
 #'
 #' @return A named list of data frames representing the tables read from the database.
@@ -344,25 +331,18 @@ writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = F
 #' @examples
 #' \dontrun{
 #' tables <- readTablesFromDatabase(
-#'   db_user = "user",
-#'   db_password = "password",
-#'   db_name = "dbname",
-#'   db_host = "host",
-#'   db_port = 5432,
-#'   db_schema = "schema"
+#'   dbname = "dbname",
+#'   host = "host",
+#'   port = 5432,
+#'   user = "user",
+#'   password = "password",
+#'   schema = "schema"
 #' )
 #' }
 #'
 #' @export
-createConnectionAndReadTablesFromDatabase <- function(db_user, db_password, db_name, db_host, db_port, db_schema, table_names = NA) {
-  db_connection <- dbConnect(
-    user = db_user,
-    password = db_password,
-    dbname = db_name,
-    host = db_host,
-    port = db_port,
-    schema = db_schema
-  )
+createConnectionAndReadTablesFromDatabase <- function(dbname, host, port, user, password, schema, table_names = NA) {
+  db_connection <- dbConnect(dbname, host, port, user, password, schema)
   readTablesFromDatabase(db_connection, table_names, TRUE)
 }
 
