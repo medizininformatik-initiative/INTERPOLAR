@@ -110,7 +110,7 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
     if (fhir_column_type %in% "integer") {
       column_type <- "int"
     } else if (fhir_column_type %in% "decimal") {
-      column_type <- "numeric"
+      column_type <- "double precision"
     } else if (fhir_column_type %in% "boolean") {
       column_type <- "boolean"
     } else if (fhir_column_type %in% "datetime") {
@@ -139,10 +139,6 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
   # only for string/varchar and numeric values add the column width
   if (column_type %in% "varchar") {
     column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ")")))
-  } else if (column_type %in% "numeric") {
-    # decimal/numeric needs a length for the places before and after the decimal point -> set same
-    # value before and after decimal point
-    column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ", ", full_length, ")")))
   } else {
     column_type_with_length <- column_type
   }
