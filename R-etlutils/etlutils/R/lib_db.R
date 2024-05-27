@@ -199,6 +199,20 @@ dbDeleteContent <- function(db_connection, table_name) {
   DBI::dbExecute(db_connection, paste0('DELETE FROM ', table_name, ';'))
 }
 
+#' Execute a SQL Statement on a Database Connection
+#'
+#' This function executes a given SQL statement on a specified database connection.
+#'
+#' @param db_connection A database connection object.
+#' @param statement A string representing the SQL statement to be executed.
+#'
+#' @return The number of rows affected by the SQL statement.
+#'
+#' @export
+dbExecute <- function(db_connection, statement) {
+  DBI::dbExecute(db_connection, statement)
+}
+
 #' Read a Table from a PostgreSQL Database
 #'
 #' This function reads a table from a PostgreSQL database and returns it as a data table.
@@ -260,8 +274,7 @@ dbReadTable <- function(db_connection, table_name) {
 #' }
 #'
 #' @export
-writeTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host, db_port, db_schema, clear_before_insert = FALSE) {
-
+createConnectionAndWriteTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host, db_port, db_schema, clear_before_insert = FALSE) {
   db_connection <- dbConnect(
     user = db_user,
     password = db_password,
@@ -270,6 +283,25 @@ writeTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host
     port = db_port,
     schema = db_schema
   )
+  writeTablesToDatabase(tables, db_connection, clear_before_insert, TRUE)
+}
+
+#' Write Multiple Tables to Database
+#'
+#' This function writes multiple tables to a specified database schema. It can optionally clear
+#' existing content before inserting new data.
+#'
+#' @param tables A named list of data frames representing the tables to be written to the database.
+#' @param db_connection A database connection from where the tables should be read.
+#' @param clear_before_insert A logical value indicating whether to clear existing data in the
+#' tables before inserting new data. Default is FALSE.
+#' @param close_db_connection If TRUE the database connection will be closed at the end of the
+#'                            process. Default is FALSE.
+#'
+#' @return NULL. The function is used for its side effects of writing data to the database.
+#'
+#' @export
+writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = FALSE, close_db_connection = FALSE) {
 
   table_names <- names(tables)
   db_table_names <- dbListTableNames(db_connection)
@@ -289,7 +321,9 @@ writeTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host
       warning(paste("Table", table_name, "not found in database"))
     }
   }
-  dbDisconnect(db_connection)
+  if (close_db_connection) {
+    dbDisconnect(db_connection)
+  }
 }
 
 #' Read Multiple Tables from Database
@@ -320,8 +354,7 @@ writeTablesToDatabase <- function(tables, db_user, db_password, db_name, db_host
 #' }
 #'
 #' @export
-readTablesFromDatabase <- function(db_user, db_password, db_name, db_host, db_port, db_schema, table_names = NA) {
-
+createConnectionAndReadTablesFromDatabase <- function(db_user, db_password, db_name, db_host, db_port, db_schema, table_names = NA) {
   db_connection <- dbConnect(
     user = db_user,
     password = db_password,
@@ -330,6 +363,24 @@ readTablesFromDatabase <- function(db_user, db_password, db_name, db_host, db_po
     port = db_port,
     schema = db_schema
   )
+  readTablesFromDatabase(db_connection, table_names, TRUE)
+}
+
+#' Read Multiple Tables from Database
+#'
+#' This function reads multiple tables from a specified database connection. If no table names are
+#' provided, it reads all available tables in the schema.
+#'
+#' @param db_connection A database connection from where the tables should be read.
+#' @param table_names A character vector of table names to read. If NA(default), all tables are
+#' read.
+#' @param close_db_connection If TRUE the database connection will be closed at the end of the
+#' process. Default is FALSE.
+#'
+#' @return A named list of data frames representing the tables read from the database.
+#'
+#' @export
+readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_connection = FALSE) {
 
   db_table_names <- dbListTableNames(db_connection)
   if (isSimpleNA(table_names)) {

@@ -10,7 +10,7 @@
 #' @param clear_before_insert A logical flag indicating whether to clear the table contents
 #'                            before inserting new data. Defaults to FALSE.
 writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
-  etlutils::writeTablesToDatabase(tables,
+  etlutils::createConnectionAndWriteTablesToDatabase(tables,
                                   db_user = DB_CDS2DB_USER,
                                   db_password = DB_CDS2DB_PASSWORD,
                                   db_name = DB_GENERAL_NAME,
@@ -28,7 +28,7 @@ writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
 #' @return A list of data frames where each data frame corresponds to a table from the database.
 #'
 readUntypedRAWDataFromDatabase <- function() {
-  etlutils::readTablesFromDatabase(db_user = DB_CDS2DB_USER,
+  etlutils::createConnectionAndReadTablesFromDatabase(db_user = DB_CDS2DB_USER,
                                    db_password = DB_CDS2DB_PASSWORD,
                                    db_name = DB_GENERAL_NAME,
                                    db_host = DB_GENERAL_HOST,
