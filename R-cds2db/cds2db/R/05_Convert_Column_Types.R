@@ -20,14 +20,18 @@
 #' @export
 joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
   for (column_name in column_names) {
+    joinColumn <- dt[[column_name]]
+    if (length(joinColumn)) {
+      print(paste0("Join multi entries in ", column_name))
     for (i in 1:nrow(dt)) {
+        value <- joinColumn[i]
       # Check if the cell is not empty
-      if (length(dt[[column_name]][i])) {
+        if (!etlutils::isSimpleNA(value) && length(value)) {
         # Check if the cell starts with "["
-        if (grepl("^\\[", dt[[column_name]][i])) {
+          if (grepl("^\\[", value)) {
           # Remove extra brackets and split the string by "|"
           split_string <- strsplit(gsub(paste0("\\", brackets[1], "\\d+\\", brackets[2]), "",
-                                        dt[[column_name]][i], perl = TRUE), sep, fixed = TRUE)[[1]]
+                                          value, perl = TRUE), sep, fixed = TRUE)[[1]]
           # Initialize the index vector and previous index
           indices <- c()
           prev_index <- NULL
@@ -44,7 +48,8 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
                                  gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
                                       split_string, perl = TRUE)), collapse = " ")
           # Replace the original cell value with the modified result
-          dt[[column_name]][i] <- result
+            data.table::set(dt, i, column_name, result)
+          }
         }
       }
     }
@@ -259,8 +264,12 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   # the following commented codeline adds a second name to all patient names. So you can
   # 'test' the follwing join function
   #resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
+  etlutils::run_in_in("Join string multi entries in cracked FHIR data", {
   resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
+  })
+  etlutils::run_in_in("Melt cracked FHIR data", {
   resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
+  })
 
   # undo the tables renaming
   resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions, FALSE)
