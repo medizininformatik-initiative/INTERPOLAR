@@ -23,31 +23,31 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
     joinColumn <- dt[[column_name]]
     if (length(joinColumn)) {
       print(paste0("Join multi entries in ", column_name))
-    for (i in 1:nrow(dt)) {
+      for (i in 1:nrow(dt)) {
         value <- joinColumn[i]
-      # Check if the cell is not empty
+        # Check if the cell is not empty
         if (!etlutils::isSimpleNA(value) && length(value)) {
-        # Check if the cell starts with "["
+          # Check if the cell starts with "["
           if (grepl("^\\[", value)) {
-          # Remove extra brackets and split the string by "|"
-          split_string <- strsplit(gsub(paste0("\\", brackets[1], "\\d+\\", brackets[2]), "",
+            # Remove extra brackets and split the string by "|"
+            split_string <- strsplit(gsub(paste0("\\", brackets[1], "\\d+\\", brackets[2]), "",
                                           value, perl = TRUE), sep, fixed = TRUE)[[1]]
-          # Initialize the index vector and previous index
-          indices <- c()
-          prev_index <- NULL
-          # Iterate through the vector and find the first indices for each new pattern
-          for (vec in seq_along(split_string)) {
-            index <- as.numeric(gsub(paste0("\\", brackets[1], "|\\..*"), "", split_string[vec]))
-            if (is.null(prev_index) || is.na(prev_index) || index != prev_index) {
-              indices <- c(indices, vec)
-              prev_index <- index
+            # Initialize the index vector and previous index
+            indices <- c()
+            prev_index <- NULL
+            # Iterate through the vector and find the first indices for each new pattern
+            for (vec in seq_along(split_string)) {
+              index <- as.numeric(gsub(paste0("\\", brackets[1], "|\\..*"), "", split_string[vec]))
+              if (is.null(prev_index) || is.na(prev_index) || index != prev_index) {
+                indices <- c(indices, vec)
+                prev_index <- index
+              }
             }
-          }
-          # Remove "[]" for all subsequent elements except the first occurrence
-          result <- paste(ifelse(seq_along(split_string) %in% indices, split_string,
-                                 gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
-                                      split_string, perl = TRUE)), collapse = " ")
-          # Replace the original cell value with the modified result
+            # Remove "[]" for all subsequent elements except the first occurrence
+            result <- paste(ifelse(seq_along(split_string) %in% indices, split_string,
+                                   gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
+                                        split_string, perl = TRUE)), collapse = " ")
+            # Replace the original cell value with the modified result
             data.table::set(dt, i, column_name, result)
           }
         }
@@ -202,6 +202,7 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   names(fhir_table_descriptions) <- tolower(names(fhir_table_descriptions))
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
+    print(paste0("Melt table ", resource_name))
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
     resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
   }
@@ -265,10 +266,10 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   # 'test' the follwing join function
   #resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
   etlutils::run_in_in("Join string multi entries in cracked FHIR data", {
-  resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
+    resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
   })
   etlutils::run_in_in("Melt cracked FHIR data", {
-  resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
+    resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
   })
 
   # undo the tables renaming
