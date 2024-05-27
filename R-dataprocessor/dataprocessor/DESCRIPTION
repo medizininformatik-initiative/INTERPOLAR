@@ -12,7 +12,6 @@ RoxygenNote: 7.3.1
 Imports: 
     data.table,
     etlutils,
-    lubridate,
     methods,
     rlang
 Suggests: 
