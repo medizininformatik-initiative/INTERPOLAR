@@ -43,23 +43,28 @@ retrieve <- function() {
 
     # Load Table Description
     etlutils::runProcess(etlutils::run_in('Load Table Description', {
-      table_descriptions <- getFhircrackrTableDescriptions()
+      fhir_table_descriptions <- getFhircrackrTableDescriptions()
     }))
 
     # Download and crack resources by Patient IDs per ward
     etlutils::runProcess(etlutils::run_in('Download and crack resources by Patient IDs per ward', {
-      resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, table_descriptions)
+      resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, fhir_table_descriptions)
     }))
 
     # Write raw tables to database
     etlutils::runProcess(etlutils::run_in('Write raw tables to database', {
-      names(resource_tables) = tolower(paste0(names(resource_tables), "_raw"))
+      table_names <- names(resource_tables)
+      names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
       writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+      names(resource_tables) <- table_names
     }))
 
     # Convert Column Types in resource tables
-    etlutils::runProcess(etlutils::run_in('Convert Column Types in resource tables', {
-      convertTypes(resource_tables)
+    etlutils::runProcess(etlutils::run_in('Convert RAW tables to Typed tables', {
+      fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
+      resource_tables <- getUntypedRAWDataFromDatabase()
+      resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
+      writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
     }))
 
   })

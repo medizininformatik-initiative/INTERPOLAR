@@ -2,6 +2,12 @@
 # be taken into account (FALSE) or ignored (TRUE) when generating the database scripts.
 IGNORE_DEFINED_COLUMN_WIDTHS = TRUE
 
+# The Fhircrackr places the indices before each value in brackets, indicating where in the
+# structure of the resource a column value was located. In addition, a separator is inserted between
+# the list values (in our case length 3). The memory requirement for these indices and the separator
+# should not exceed 15 and must be added to each single_length in the RAW tables.
+RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH = 15
+
 ######################################################
 # Static Definitions of Paths, File- and Columnnames #
 ######################################################
@@ -104,7 +110,7 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
     if (fhir_column_type %in% "integer") {
       column_type <- "int"
     } else if (fhir_column_type %in% "decimal") {
-      column_type <- "numeric"
+      column_type <- "double precision"
     } else if (fhir_column_type %in% "boolean") {
       column_type <- "boolean"
     } else if (fhir_column_type %in% "datetime") {
@@ -127,16 +133,12 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
   # only the raw tables have list values in the same row (it's before the fhir_melt()
   # step to split multiple values in single rows)
   if (ignore_types) {
-    full_length  <- full_length * count
+    full_length  <- (full_length + RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH) * count
   }
 
   # only for string/varchar and numeric values add the column width
   if (column_type %in% "varchar") {
     column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ")")))
-  } else if (column_type %in% "numeric") {
-    # decimal/numeric needs a length for the places before and after the decimal point -> set same
-    # value before and after decimal point
-    column_type_with_length <- paste0(column_type, ifelse(IGNORE_DEFINED_COLUMN_WIDTHS, "",  paste0(" (", full_length, ", ", full_length, ")")))
   } else {
     column_type_with_length <- column_type
   }
@@ -146,7 +148,7 @@ parseTableDescriptionRow <- function(table_description_row, ignore_types = TRUE)
   if (IGNORE_DEFINED_COLUMN_WIDTHS) {
     comment_length_and_type <- paste0(" (", column_type, ")")
   } else if (ignore_types) {
-    comment_length_and_type <- paste0(" (", single_length, " x ", count, " = ", full_length, " ", column_type, ")")
+    comment_length_and_type <- paste0(" ( (", single_length, " + ", RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH, ") x ", count, " = ", full_length, " ", column_type, ")")
   } else {
     comment_length_and_type <- paste0(" (", single_length, " ", column_type, ")")
   }

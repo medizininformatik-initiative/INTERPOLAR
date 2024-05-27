@@ -1,3 +1,6 @@
+# Environment for saving the clock
+.lib_clock_env <- new.env()
+
 #' Make a duration human readable
 #'
 #' @param time_in_secs A number of length one.
@@ -317,7 +320,19 @@ Clock = setRefClass(
 #'
 #' @export
 createClock <- function(clock_variable_name = "PROCESS_CLOCK") {
-  assign(clock_variable_name, methods::new(Class = 'Clock'), envir = .GlobalEnv)
+  .lib_clock_env[[clock_variable_name]] <- methods::new(Class = 'Clock')
+}
+
+#' Get Clock Variable from Environment
+#'
+#' This function retrieves the value of a specified clock variable from the internal clock environment.
+#'
+#' @param clock_variable_name A character string specifying the name of the clock variable to retrieve.
+#'                            Defaults to "PROCESS_CLOCK".
+#' @return The value of the specified clock variable.
+#' @export
+getClock <- function(clock_variable_name = "PROCESS_CLOCK") {
+  .lib_clock_env[[clock_variable_name]]
 }
 
 #' Print Clock Variable
@@ -326,8 +341,7 @@ createClock <- function(clock_variable_name = "PROCESS_CLOCK") {
 #'
 #' @param clock_variable_name The name of the clock variable to print. Defaults to "PROCESS_CLOCK".
 #'
-#' @seealso get
 #' @export
 printClock <- function(clock_variable_name = "PROCESS_CLOCK") {
-  print(get(clock_variable_name))
+  print(.lib_clock_env[[clock_variable_name]])
 }

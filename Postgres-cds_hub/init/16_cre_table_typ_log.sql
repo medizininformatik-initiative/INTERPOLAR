@@ -162,18 +162,18 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
   con_onsetperiod_end timestamp,   -- onsetPeriod/end (timestamp)
   con_onsetdatetime timestamp,   -- onsetDateTime (timestamp)
   con_abatementdatetime timestamp,   -- abatementDateTime (timestamp)
-  con_abatementage_value numeric,   -- abatementAge/value (numeric)
+  con_abatementage_value double precision,   -- abatementAge/value (double precision)
   con_abatementage_comparator varchar,   -- abatementAge/comparator (varchar)
   con_abatementage_unit varchar,   -- abatementAge/unit (varchar)
   con_abatementage_system varchar,   -- abatementAge/system (varchar)
   con_abatementage_code varchar,   -- abatementAge/code (varchar)
   con_abatementperiod_start timestamp,   -- abatementPeriod/start (timestamp)
   con_abatementperiod_end timestamp,   -- abatementPeriod/end (timestamp)
-  con_abatementrange_low_value numeric,   -- abatementRange/low/value (numeric)
+  con_abatementrange_low_value double precision,   -- abatementRange/low/value (double precision)
   con_abatementrange_low_unit varchar,   -- abatementRange/low/unit (varchar)
   con_abatementrange_low_system varchar,   -- abatementRange/low/system (varchar)
   con_abatementrange_low_code varchar,   -- abatementRange/low/code (varchar)
-  con_abatementrange_high_value numeric,   -- abatementRange/high/value (numeric)
+  con_abatementrange_high_value double precision,   -- abatementRange/high/value (double precision)
   con_abatementrange_high_unit varchar,   -- abatementRange/high/unit (varchar)
   con_abatementrange_high_system varchar,   -- abatementRange/high/system (varchar)
   con_abatementrange_high_code varchar,   -- abatementRange/high/code (varchar)
@@ -260,22 +260,22 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
   med_form_code varchar,   -- form/coding/code (varchar)
   med_form_display varchar,   -- form/coding/display (varchar)
   med_form_text varchar,   -- form/text (varchar)
-  med_amount_numerator_value numeric,   -- amount/numerator/value (numeric)
+  med_amount_numerator_value double precision,   -- amount/numerator/value (double precision)
   med_amount_numerator_comparator varchar,   -- amount/numerator/comparator (varchar)
   med_amount_numerator_unit varchar,   -- amount/numerator/unit (varchar)
   med_amount_numerator_system varchar,   -- amount/numerator/system (varchar)
   med_amount_numerator_code varchar,   -- amount/numerator/code (varchar)
-  med_amount_denominator_value numeric,   -- amount/denominator/value (numeric)
+  med_amount_denominator_value double precision,   -- amount/denominator/value (double precision)
   med_amount_denominator_comparator varchar,   -- amount/denominator/comparator (varchar)
   med_amount_denominator_unit varchar,   -- amount/denominator/unit (varchar)
   med_amount_denominator_system varchar,   -- amount/denominator/system (varchar)
   med_amount_denominator_code varchar,   -- amount/denominator/code (varchar)
-  med_ingredient_strength_numerator_value numeric,   -- ingredient/strength/numerator/value (numeric)
+  med_ingredient_strength_numerator_value double precision,   -- ingredient/strength/numerator/value (double precision)
   med_ingredient_strength_numerator_comparator varchar,   -- ingredient/strength/numerator/comparator (varchar)
   med_ingredient_strength_numerator_unit varchar,   -- ingredient/strength/numerator/unit (varchar)
   med_ingredient_strength_numerator_system varchar,   -- ingredient/strength/numerator/system (varchar)
   med_ingredient_strength_numerator_code varchar,   -- ingredient/strength/numerator/code (varchar)
-  med_ingredient_strength_denominator_value numeric,   -- ingredient/strength/denominator/value (numeric)
+  med_ingredient_strength_denominator_value double precision,   -- ingredient/strength/denominator/value (double precision)
   med_ingredient_strength_denominator_comparator varchar,   -- ingredient/strength/denominator/comparator (varchar)
   med_ingredient_strength_denominator_unit varchar,   -- ingredient/strength/denominator/unit (varchar)
   med_ingredient_strength_denominator_system varchar,   -- ingredient/strength/denominator/system (varchar)
@@ -410,16 +410,16 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   medreq_doseinstruc_additionalinstruction_text varchar,   -- dosageInstruction/additionalInstruction/text (varchar)
   medreq_doseinstruc_patientinstruction varchar,   -- dosageInstruction/patientInstruction (varchar)
   medreq_doseinstruc_timing_event timestamp,   -- dosageInstruction/timing/event (timestamp)
-  medreq_doseinstruc_timing_repeat_boundsduration_value numeric,   -- dosageInstruction/timing/repeat/boundsDuration/value (numeric)
+  medreq_doseinstruc_timing_repeat_boundsduration_value double precision,   -- dosageInstruction/timing/repeat/boundsDuration/value (double precision)
   medreq_doseinstruc_timing_repeat_boundsduration_comparator varchar,   -- dosageInstruction/timing/repeat/boundsDuration/comparator (varchar)
   medreq_doseinstruc_timing_repeat_boundsduration_unit varchar,   -- dosageInstruction/timing/repeat/boundsDuration/unit (varchar)
   medreq_doseinstruc_timing_repeat_boundsduration_system varchar,   -- dosageInstruction/timing/repeat/boundsDuration/system (varchar)
   medreq_doseinstruc_timing_repeat_boundsduration_code varchar,   -- dosageInstruction/timing/repeat/boundsDuration/code (varchar)
-  medreq_doseinstruc_timing_repeat_boundsrange_low_value numeric,   -- dosageInstruction/timing/repeat/boundsRange/low/value (numeric)
+  medreq_doseinstruc_timing_repeat_boundsrange_low_value double precision,   -- dosageInstruction/timing/repeat/boundsRange/low/value (double precision)
   medreq_doseinstruc_timing_repeat_boundsrange_low_unit varchar,   -- dosageInstruction/timing/repeat/boundsRange/low/unit (varchar)
   medreq_doseinstruc_timing_repeat_boundsrange_low_system varchar,   -- dosageInstruction/timing/repeat/boundsRange/low/system (varchar)
   medreq_doseinstruc_timing_repeat_boundsrange_low_code varchar,   -- dosageInstruction/timing/repeat/boundsRange/low/code (varchar)
-  medreq_doseinstruc_timing_repeat_boundsrange_high_value numeric,   -- dosageInstruction/timing/repeat/boundsRange/high/value (numeric)
+  medreq_doseinstruc_timing_repeat_boundsrange_high_value double precision,   -- dosageInstruction/timing/repeat/boundsRange/high/value (double precision)
   medreq_doseinstruc_timing_repeat_boundsrange_high_unit varchar,   -- dosageInstruction/timing/repeat/boundsRange/high/unit (varchar)
   medreq_doseinstruc_timing_repeat_boundsrange_high_system varchar,   -- dosageInstruction/timing/repeat/boundsRange/high/system (varchar)
   medreq_doseinstruc_timing_repeat_boundsrange_high_code varchar,   -- dosageInstruction/timing/repeat/boundsRange/high/code (varchar)
@@ -427,13 +427,13 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   medreq_doseinstruc_timing_repeat_boundsperiod_end timestamp,   -- dosageInstruction/timing/repeat/boundsPeriod/end (timestamp)
   medreq_doseinstruc_timing_repeat_count int,   -- dosageInstruction/timing/repeat/count (int)
   medreq_doseinstruc_timing_repeat_countmax int,   -- dosageInstruction/timing/repeat/countMax (int)
-  medreq_doseinstruc_timing_repeat_duration numeric,   -- dosageInstruction/timing/repeat/duration (numeric)
-  medreq_doseinstruc_timing_repeat_durationmax numeric,   -- dosageInstruction/timing/repeat/durationMax (numeric)
+  medreq_doseinstruc_timing_repeat_duration double precision,   -- dosageInstruction/timing/repeat/duration (double precision)
+  medreq_doseinstruc_timing_repeat_durationmax double precision,   -- dosageInstruction/timing/repeat/durationMax (double precision)
   medreq_doseinstruc_timing_repeat_durationunit varchar,   -- dosageInstruction/timing/repeat/durationUnit (varchar)
   medreq_doseinstruc_timing_repeat_frequency int,   -- dosageInstruction/timing/repeat/frequency (int)
   medreq_doseinstruc_timing_repeat_frequencymax int,   -- dosageInstruction/timing/repeat/frequencyMax (int)
-  medreq_doseinstruc_timing_repeat_period numeric,   -- dosageInstruction/timing/repeat/period (numeric)
-  medreq_doseinstruc_timing_repeat_periodmax numeric,   -- dosageInstruction/timing/repeat/periodMax (numeric)
+  medreq_doseinstruc_timing_repeat_period double precision,   -- dosageInstruction/timing/repeat/period (double precision)
+  medreq_doseinstruc_timing_repeat_periodmax double precision,   -- dosageInstruction/timing/repeat/periodMax (double precision)
   medreq_doseinstruc_timing_repeat_periodunit varchar,   -- dosageInstruction/timing/repeat/periodUnit (varchar)
   medreq_doseinstruc_timing_repeat_dayofweek varchar,   -- dosageInstruction/timing/repeat/dayOfWeek (varchar)
   medreq_doseinstruc_timing_repeat_timeofday time,   -- dosageInstruction/timing/repeat/timeOfDay (time)
@@ -470,56 +470,56 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   medreq_doseinstruc_doseandrate_type_code varchar,   -- dosageInstruction/doseAndRate/type/coding/code (varchar)
   medreq_doseinstruc_doseandrate_type_display varchar,   -- dosageInstruction/doseAndRate/type/coding/display (varchar)
   medreq_doseinstruc_doseandrate_type_text varchar,   -- dosageInstruction/doseAndRate/type/text (varchar)
-  medreq_doseinstruc_doseandrate_doserange_low_value numeric,   -- dosageInstruction/doseAndRate/doseRange/low/value (numeric)
+  medreq_doseinstruc_doseandrate_doserange_low_value double precision,   -- dosageInstruction/doseAndRate/doseRange/low/value (double precision)
   medreq_doseinstruc_doseandrate_doserange_low_unit varchar,   -- dosageInstruction/doseAndRate/doseRange/low/unit (varchar)
   medreq_doseinstruc_doseandrate_doserange_low_system varchar,   -- dosageInstruction/doseAndRate/doseRange/low/system (varchar)
   medreq_doseinstruc_doseandrate_doserange_low_code varchar,   -- dosageInstruction/doseAndRate/doseRange/low/code (varchar)
-  medreq_doseinstruc_doseandrate_doserange_high_value numeric,   -- dosageInstruction/doseAndRate/doseRange/high/value (numeric)
+  medreq_doseinstruc_doseandrate_doserange_high_value double precision,   -- dosageInstruction/doseAndRate/doseRange/high/value (double precision)
   medreq_doseinstruc_doseandrate_doserange_high_unit varchar,   -- dosageInstruction/doseAndRate/doseRange/high/unit (varchar)
   medreq_doseinstruc_doseandrate_doserange_high_system varchar,   -- dosageInstruction/doseAndRate/doseRange/high/system (varchar)
   medreq_doseinstruc_doseandrate_doserange_high_code varchar,   -- dosageInstruction/doseAndRate/doseRange/high/code (varchar)
-  medreq_doseinstruc_doseandrate_dosequantity_value numeric,   -- dosageInstruction/doseAndRate/doseQuantity/value (numeric)
+  medreq_doseinstruc_doseandrate_dosequantity_value double precision,   -- dosageInstruction/doseAndRate/doseQuantity/value (double precision)
   medreq_doseinstruc_doseandrate_dosequantity_comparator varchar,   -- dosageInstruction/doseAndRate/doseQuantity/comparator (varchar)
   medreq_doseinstruc_doseandrate_dosequantity_unit varchar,   -- dosageInstruction/doseAndRate/doseQuantity/unit (varchar)
   medreq_doseinstruc_doseandrate_dosequantity_system varchar,   -- dosageInstruction/doseAndRate/doseQuantity/system (varchar)
   medreq_doseinstruc_doseandrate_dosequantity_code varchar,   -- dosageInstruction/doseAndRate/doseQuantity/code (varchar)
-  medreq_doseinstruc_doseandrate_rateratio_numerator_value numeric,   -- dosageInstruction/doseAndRate/rateRatio/numerator/value (numeric)
+  medreq_doseinstruc_doseandrate_rateratio_numerator_value double precision,   -- dosageInstruction/doseAndRate/rateRatio/numerator/value (double precision)
   medreq_doseinstruc_doseandrate_rateratio_numerator_comparator varchar,   -- dosageInstruction/doseAndRate/rateRatio/numerator/comparator (varchar)
   medreq_doseinstruc_doseandrate_rateratio_numerator_unit varchar,   -- dosageInstruction/doseAndRate/rateRatio/numerator/unit (varchar)
   medreq_doseinstruc_doseandrate_rateratio_numerator_system varchar,   -- dosageInstruction/doseAndRate/rateRatio/numerator/system (varchar)
   medreq_doseinstruc_doseandrate_rateratio_numerator_code varchar,   -- dosageInstruction/doseAndRate/rateRatio/numerator/code (varchar)
-  medreq_doseinstruc_doseandrate_rateratio_denominator_value numeric,   -- dosageInstruction/doseAndRate/rateRatio/denominator/value (numeric)
+  medreq_doseinstruc_doseandrate_rateratio_denominator_value double precision,   -- dosageInstruction/doseAndRate/rateRatio/denominator/value (double precision)
   medreq_doseinstruc_doseandrate_rateratio_denominator_comparator varchar,   -- dosageInstruction/doseAndRate/rateRatio/denominator/comparator (varchar)
   medreq_doseinstruc_doseandrate_rateratio_denominator_unit varchar,   -- dosageInstruction/doseAndRate/rateRatio/denominator/unit (varchar)
   medreq_doseinstruc_doseandrate_rateratio_denominator_system varchar,   -- dosageInstruction/doseAndRate/rateRatio/denominator/system (varchar)
   medreq_doseinstruc_doseandrate_rateratio_denominator_code varchar,   -- dosageInstruction/doseAndRate/rateRatio/denominator/code (varchar)
-  medreq_doseinstruc_doseandrate_raterange_low_value numeric,   -- dosageInstruction/doseAndRate/rateRange/low/value (numeric)
+  medreq_doseinstruc_doseandrate_raterange_low_value double precision,   -- dosageInstruction/doseAndRate/rateRange/low/value (double precision)
   medreq_doseinstruc_doseandrate_raterange_low_unit varchar,   -- dosageInstruction/doseAndRate/rateRange/low/unit (varchar)
   medreq_doseinstruc_doseandrate_raterange_low_system varchar,   -- dosageInstruction/doseAndRate/rateRange/low/system (varchar)
   medreq_doseinstruc_doseandrate_raterange_low_code varchar,   -- dosageInstruction/doseAndRate/rateRange/low/code (varchar)
-  medreq_doseinstruc_doseandrate_raterange_high_value numeric,   -- dosageInstruction/doseAndRate/rateRange/high/value (numeric)
+  medreq_doseinstruc_doseandrate_raterange_high_value double precision,   -- dosageInstruction/doseAndRate/rateRange/high/value (double precision)
   medreq_doseinstruc_doseandrate_raterange_high_unit varchar,   -- dosageInstruction/doseAndRate/rateRange/high/unit (varchar)
   medreq_doseinstruc_doseandrate_raterange_high_system varchar,   -- dosageInstruction/doseAndRate/rateRange/high/system (varchar)
   medreq_doseinstruc_doseandrate_raterange_high_code varchar,   -- dosageInstruction/doseAndRate/rateRange/high/code (varchar)
-  medreq_doseinstruc_doseandrate_ratequantity_value numeric,   -- dosageInstruction/doseAndRate/rateQuantity/value (numeric)
+  medreq_doseinstruc_doseandrate_ratequantity_value double precision,   -- dosageInstruction/doseAndRate/rateQuantity/value (double precision)
   medreq_doseinstruc_doseandrate_ratequantity_unit varchar,   -- dosageInstruction/doseAndRate/rateQuantity/unit (varchar)
   medreq_doseinstruc_doseandrate_ratequantity_system varchar,   -- dosageInstruction/doseAndRate/rateQuantity/system (varchar)
   medreq_doseinstruc_doseandrate_ratequantity_code varchar,   -- dosageInstruction/doseAndRate/rateQuantity/code (varchar)
-  medreq_doseinstruc_maxdoseperperiod_numerator_value numeric,   -- dosageInstruction/maxDosePerPeriod/numerator/value (numeric)
+  medreq_doseinstruc_maxdoseperperiod_numerator_value double precision,   -- dosageInstruction/maxDosePerPeriod/numerator/value (double precision)
   medreq_doseinstruc_maxdoseperperiod_numerator_comparator varchar,   -- dosageInstruction/maxDosePerPeriod/numerator/comparator (varchar)
   medreq_doseinstruc_maxdoseperperiod_numerator_unit varchar,   -- dosageInstruction/maxDosePerPeriod/numerator/unit (varchar)
   medreq_doseinstruc_maxdoseperperiod_numerator_system varchar,   -- dosageInstruction/maxDosePerPeriod/numerator/system (varchar)
   medreq_doseinstruc_maxdoseperperiod_numerator_code varchar,   -- dosageInstruction/maxDosePerPeriod/numerator/code (varchar)
-  medreq_doseinstruc_maxdoseperperiod_denominator_value numeric,   -- dosageInstruction/maxDosePerPeriod/denominator/value (numeric)
+  medreq_doseinstruc_maxdoseperperiod_denominator_value double precision,   -- dosageInstruction/maxDosePerPeriod/denominator/value (double precision)
   medreq_doseinstruc_maxdoseperperiod_denominator_comparator varchar,   -- dosageInstruction/maxDosePerPeriod/denominator/comparator (varchar)
   medreq_doseinstruc_maxdoseperperiod_denominator_unit varchar,   -- dosageInstruction/maxDosePerPeriod/denominator/unit (varchar)
   medreq_doseinstruc_maxdoseperperiod_denominator_system varchar,   -- dosageInstruction/maxDosePerPeriod/denominator/system (varchar)
   medreq_doseinstruc_maxdoseperperiod_denominator_code varchar,   -- dosageInstruction/maxDosePerPeriod/denominator/code (varchar)
-  medreq_doseinstruc_maxdoseperadministration_value numeric,   -- dosageInstruction/maxDosePerAdministration/value (numeric)
+  medreq_doseinstruc_maxdoseperadministration_value double precision,   -- dosageInstruction/maxDosePerAdministration/value (double precision)
   medreq_doseinstruc_maxdoseperadministration_unit varchar,   -- dosageInstruction/maxDosePerAdministration/unit (varchar)
   medreq_doseinstruc_maxdoseperadministration_system varchar,   -- dosageInstruction/maxDosePerAdministration/system (varchar)
   medreq_doseinstruc_maxdoseperadministration_code varchar,   -- dosageInstruction/maxDosePerAdministration/code (varchar)
-  medreq_doseinstruc_maxdoseperlifetime_value numeric,   -- dosageInstruction/maxDosePerLifetime/value (numeric)
+  medreq_doseinstruc_maxdoseperlifetime_value double precision,   -- dosageInstruction/maxDosePerLifetime/value (double precision)
   medreq_doseinstruc_maxdoseperlifetime_unit varchar,   -- dosageInstruction/maxDosePerLifetime/unit (varchar)
   medreq_doseinstruc_maxdoseperlifetime_system varchar,   -- dosageInstruction/maxDosePerLifetime/system (varchar)
   medreq_doseinstruc_maxdoseperlifetime_code varchar,   -- dosageInstruction/maxDosePerLifetime/code (varchar)
@@ -629,21 +629,21 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   medadm_dosage_method_code varchar,   -- dosage/method/coding/code (varchar)
   medadm_dosage_method_display varchar,   -- dosage/method/coding/display (varchar)
   medadm_dosage_method_text varchar,   -- dosage/method/text (varchar)
-  medadm_dosage_dose_value numeric,   -- dosage/dose/value (numeric)
+  medadm_dosage_dose_value double precision,   -- dosage/dose/value (double precision)
   medadm_dosage_dose_unit varchar,   -- dosage/dose/unit (varchar)
   medadm_dosage_dose_system varchar,   -- dosage/dose/system (varchar)
   medadm_dosage_dose_code varchar,   -- dosage/dose/code (varchar)
-  medadm_dosage_rateratio_numerator_value numeric,   -- dosage/rateRatio/numerator/value (numeric)
+  medadm_dosage_rateratio_numerator_value double precision,   -- dosage/rateRatio/numerator/value (double precision)
   medadm_dosage_rateratio_numerator_comparator varchar,   -- dosage/rateRatio/numerator/comparator (varchar)
   medadm_dosage_rateratio_numerator_unit varchar,   -- dosage/rateRatio/numerator/unit (varchar)
   medadm_dosage_rateratio_numerator_system varchar,   -- dosage/rateRatio/numerator/system (varchar)
   medadm_dosage_rateratio_numerator_code varchar,   -- dosage/rateRatio/numerator/code (varchar)
-  medadm_dosage_rateratio_denominator_value numeric,   -- dosage/rateRatio/denominator/value (numeric)
+  medadm_dosage_rateratio_denominator_value double precision,   -- dosage/rateRatio/denominator/value (double precision)
   medadm_dosage_rateratio_denominator_comparator varchar,   -- dosage/rateRatio/denominator/comparator (varchar)
   medadm_dosage_rateratio_denominator_unit varchar,   -- dosage/rateRatio/denominator/unit (varchar)
   medadm_dosage_rateratio_denominator_system varchar,   -- dosage/rateRatio/denominator/system (varchar)
   medadm_dosage_rateratio_denominator_code varchar,   -- dosage/rateRatio/denominator/code (varchar)
-  medadm_dosage_ratequantity_value numeric,   -- dosage/rateQuantity/value (numeric)
+  medadm_dosage_ratequantity_value double precision,   -- dosage/rateQuantity/value (double precision)
   medadm_dosage_ratequantity_unit varchar,   -- dosage/rateQuantity/unit (varchar)
   medadm_dosage_ratequantity_system varchar,   -- dosage/rateQuantity/system (varchar)
   medadm_dosage_ratequantity_code varchar,   -- dosage/rateQuantity/code (varchar)
@@ -754,16 +754,16 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   medstat_dosage_additionalinstruction_text varchar,   -- dosage/additionalInstruction/text (varchar)
   medstat_dosage_patientinstruction varchar,   -- dosage/patientInstruction (varchar)
   medstat_dosage_timing_event timestamp,   -- dosage/timing/event (timestamp)
-  medstat_dosage_timing_repeat_boundsduration_value numeric,   -- dosage/timing/repeat/boundsDuration/value (numeric)
+  medstat_dosage_timing_repeat_boundsduration_value double precision,   -- dosage/timing/repeat/boundsDuration/value (double precision)
   medstat_dosage_timing_repeat_boundsduration_comparator varchar,   -- dosage/timing/repeat/boundsDuration/comparator (varchar)
   medstat_dosage_timing_repeat_boundsduration_unit varchar,   -- dosage/timing/repeat/boundsDuration/unit (varchar)
   medstat_dosage_timing_repeat_boundsduration_system varchar,   -- dosage/timing/repeat/boundsDuration/system (varchar)
   medstat_dosage_timing_repeat_boundsduration_code varchar,   -- dosage/timing/repeat/boundsDuration/code (varchar)
-  medstat_dosage_timing_repeat_boundsrange_low_value numeric,   -- dosage/timing/repeat/boundsRange/low/value (numeric)
+  medstat_dosage_timing_repeat_boundsrange_low_value double precision,   -- dosage/timing/repeat/boundsRange/low/value (double precision)
   medstat_dosage_timing_repeat_boundsrange_low_unit varchar,   -- dosage/timing/repeat/boundsRange/low/unit (varchar)
   medstat_dosage_timing_repeat_boundsrange_low_system varchar,   -- dosage/timing/repeat/boundsRange/low/system (varchar)
   medstat_dosage_timing_repeat_boundsrange_low_code varchar,   -- dosage/timing/repeat/boundsRange/low/code (varchar)
-  medstat_dosage_timing_repeat_boundsrange_high_value numeric,   -- dosage/timing/repeat/boundsRange/high/value (numeric)
+  medstat_dosage_timing_repeat_boundsrange_high_value double precision,   -- dosage/timing/repeat/boundsRange/high/value (double precision)
   medstat_dosage_timing_repeat_boundsrange_high_unit varchar,   -- dosage/timing/repeat/boundsRange/high/unit (varchar)
   medstat_dosage_timing_repeat_boundsrange_high_system varchar,   -- dosage/timing/repeat/boundsRange/high/system (varchar)
   medstat_dosage_timing_repeat_boundsrange_high_code varchar,   -- dosage/timing/repeat/boundsRange/high/code (varchar)
@@ -771,13 +771,13 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   medstat_dosage_timing_repeat_boundsperiod_end timestamp,   -- dosage/timing/repeat/boundsPeriod/end (timestamp)
   medstat_dosage_timing_repeat_count int,   -- dosage/timing/repeat/count (int)
   medstat_dosage_timing_repeat_countmax int,   -- dosage/timing/repeat/countMax (int)
-  medstat_dosage_timing_repeat_duration numeric,   -- dosage/timing/repeat/duration (numeric)
-  medstat_dosage_timing_repeat_durationmax numeric,   -- dosage/timing/repeat/durationMax (numeric)
+  medstat_dosage_timing_repeat_duration double precision,   -- dosage/timing/repeat/duration (double precision)
+  medstat_dosage_timing_repeat_durationmax double precision,   -- dosage/timing/repeat/durationMax (double precision)
   medstat_dosage_timing_repeat_durationunit varchar,   -- dosage/timing/repeat/durationUnit (varchar)
   medstat_dosage_timing_repeat_frequency int,   -- dosage/timing/repeat/frequency (int)
   medstat_dosage_timing_repeat_frequencymax int,   -- dosage/timing/repeat/frequencyMax (int)
-  medstat_dosage_timing_repeat_period numeric,   -- dosage/timing/repeat/period (numeric)
-  medstat_dosage_timing_repeat_periodmax numeric,   -- dosage/timing/repeat/periodMax (numeric)
+  medstat_dosage_timing_repeat_period double precision,   -- dosage/timing/repeat/period (double precision)
+  medstat_dosage_timing_repeat_periodmax double precision,   -- dosage/timing/repeat/periodMax (double precision)
   medstat_dosage_timing_repeat_periodunit varchar,   -- dosage/timing/repeat/periodUnit (varchar)
   medstat_dosage_timing_repeat_dayofweek varchar,   -- dosage/timing/repeat/dayOfWeek (varchar)
   medstat_dosage_timing_repeat_timeofday time,   -- dosage/timing/repeat/timeOfDay (time)
@@ -814,56 +814,56 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   medstat_dosage_doseandrate_type_code varchar,   -- dosage/doseAndRate/type/coding/code (varchar)
   medstat_dosage_doseandrate_type_display varchar,   -- dosage/doseAndRate/type/coding/display (varchar)
   medstat_dosage_doseandrate_type_text varchar,   -- dosage/doseAndRate/type/text (varchar)
-  medstat_dosage_doseandrate_doserange_low_value numeric,   -- dosage/doseAndRate/doseRange/low/value (numeric)
+  medstat_dosage_doseandrate_doserange_low_value double precision,   -- dosage/doseAndRate/doseRange/low/value (double precision)
   medstat_dosage_doseandrate_doserange_low_unit varchar,   -- dosage/doseAndRate/doseRange/low/unit (varchar)
   medstat_dosage_doseandrate_doserange_low_system varchar,   -- dosage/doseAndRate/doseRange/low/system (varchar)
   medstat_dosage_doseandrate_doserange_low_code varchar,   -- dosage/doseAndRate/doseRange/low/code (varchar)
-  medstat_dosage_doseandrate_doserange_high_value numeric,   -- dosage/doseAndRate/doseRange/high/value (numeric)
+  medstat_dosage_doseandrate_doserange_high_value double precision,   -- dosage/doseAndRate/doseRange/high/value (double precision)
   medstat_dosage_doseandrate_doserange_high_unit varchar,   -- dosage/doseAndRate/doseRange/high/unit (varchar)
   medstat_dosage_doseandrate_doserange_high_system varchar,   -- dosage/doseAndRate/doseRange/high/system (varchar)
   medstat_dosage_doseandrate_doserange_high_code varchar,   -- dosage/doseAndRate/doseRange/high/code (varchar)
-  medstat_dosage_doseandrate_dosequantity_value numeric,   -- dosage/doseAndRate/doseQuantity/value (numeric)
+  medstat_dosage_doseandrate_dosequantity_value double precision,   -- dosage/doseAndRate/doseQuantity/value (double precision)
   medstat_dosage_doseandrate_dosequantity_comparator varchar,   -- dosage/doseAndRate/doseQuantity/comparator (varchar)
   medstat_dosage_doseandrate_dosequantity_unit varchar,   -- dosage/doseAndRate/doseQuantity/unit (varchar)
   medstat_dosage_doseandrate_dosequantity_system varchar,   -- dosage/doseAndRate/doseQuantity/system (varchar)
   medstat_dosage_doseandrate_dosequantity_code varchar,   -- dosage/doseAndRate/doseQuantity/code (varchar)
-  medstat_dosage_doseandrate_rateratio_numerator_value numeric,   -- dosage/doseAndRate/rateRatio/numerator/value (numeric)
+  medstat_dosage_doseandrate_rateratio_numerator_value double precision,   -- dosage/doseAndRate/rateRatio/numerator/value (double precision)
   medstat_dosage_doseandrate_rateratio_numerator_comparator varchar,   -- dosage/doseAndRate/rateRatio/numerator/comparator (varchar)
   medstat_dosage_doseandrate_rateratio_numerator_unit varchar,   -- dosage/doseAndRate/rateRatio/numerator/unit (varchar)
   medstat_dosage_doseandrate_rateratio_numerator_system varchar,   -- dosage/doseAndRate/rateRatio/numerator/system (varchar)
   medstat_dosage_doseandrate_rateratio_numerator_code varchar,   -- dosage/doseAndRate/rateRatio/numerator/code (varchar)
-  medstat_dosage_doseandrate_rateratio_denominator_value numeric,   -- dosage/doseAndRate/rateRatio/denominator/value (numeric)
+  medstat_dosage_doseandrate_rateratio_denominator_value double precision,   -- dosage/doseAndRate/rateRatio/denominator/value (double precision)
   medstat_dosage_doseandrate_rateratio_denominator_comparator varchar,   -- dosage/doseAndRate/rateRatio/denominator/comparator (varchar)
   medstat_dosage_doseandrate_rateratio_denominator_unit varchar,   -- dosage/doseAndRate/rateRatio/denominator/unit (varchar)
   medstat_dosage_doseandrate_rateratio_denominator_system varchar,   -- dosage/doseAndRate/rateRatio/denominator/system (varchar)
   medstat_dosage_doseandrate_rateratio_denominator_code varchar,   -- dosage/doseAndRate/rateRatio/denominator/code (varchar)
-  medstat_dosage_doseandrate_raterange_low_value numeric,   -- dosage/doseAndRate/rateRange/low/value (numeric)
+  medstat_dosage_doseandrate_raterange_low_value double precision,   -- dosage/doseAndRate/rateRange/low/value (double precision)
   medstat_dosage_doseandrate_raterange_low_unit varchar,   -- dosage/doseAndRate/rateRange/low/unit (varchar)
   medstat_dosage_doseandrate_raterange_low_system varchar,   -- dosage/doseAndRate/rateRange/low/system (varchar)
   medstat_dosage_doseandrate_raterange_low_code varchar,   -- dosage/doseAndRate/rateRange/low/code (varchar)
-  medstat_dosage_doseandrate_raterange_high_value numeric,   -- dosage/doseAndRate/rateRange/high/value (numeric)
+  medstat_dosage_doseandrate_raterange_high_value double precision,   -- dosage/doseAndRate/rateRange/high/value (double precision)
   medstat_dosage_doseandrate_raterange_high_unit varchar,   -- dosage/doseAndRate/rateRange/high/unit (varchar)
   medstat_dosage_doseandrate_raterange_high_system varchar,   -- dosage/doseAndRate/rateRange/high/system (varchar)
   medstat_dosage_doseandrate_raterange_high_code varchar,   -- dosage/doseAndRate/rateRange/high/code (varchar)
-  medstat_dosage_doseandrate_ratequantity_value numeric,   -- dosage/doseAndRate/rateQuantity/value (numeric)
+  medstat_dosage_doseandrate_ratequantity_value double precision,   -- dosage/doseAndRate/rateQuantity/value (double precision)
   medstat_dosage_doseandrate_ratequantity_unit varchar,   -- dosage/doseAndRate/rateQuantity/unit (varchar)
   medstat_dosage_doseandrate_ratequantity_system varchar,   -- dosage/doseAndRate/rateQuantity/system (varchar)
   medstat_dosage_doseandrate_ratequantity_code varchar,   -- dosage/doseAndRate/rateQuantity/code (varchar)
-  medstat_dosage_maxdoseperperiod_numerator_value numeric,   -- dosage/maxDosePerPeriod/numerator/value (numeric)
+  medstat_dosage_maxdoseperperiod_numerator_value double precision,   -- dosage/maxDosePerPeriod/numerator/value (double precision)
   medstat_dosage_maxdoseperperiod_numerator_comparator varchar,   -- dosage/maxDosePerPeriod/numerator/comparator (varchar)
   medstat_dosage_maxdoseperperiod_numerator_unit varchar,   -- dosage/maxDosePerPeriod/numerator/unit (varchar)
   medstat_dosage_maxdoseperperiod_numerator_system varchar,   -- dosage/maxDosePerPeriod/numerator/system (varchar)
   medstat_dosage_maxdoseperperiod_numerator_code varchar,   -- dosage/maxDosePerPeriod/numerator/code (varchar)
-  medstat_dosage_maxdoseperperiod_denominator_value numeric,   -- dosage/maxDosePerPeriod/denominator/value (numeric)
+  medstat_dosage_maxdoseperperiod_denominator_value double precision,   -- dosage/maxDosePerPeriod/denominator/value (double precision)
   medstat_dosage_maxdoseperperiod_denominator_comparator varchar,   -- dosage/maxDosePerPeriod/denominator/comparator (varchar)
   medstat_dosage_maxdoseperperiod_denominator_unit varchar,   -- dosage/maxDosePerPeriod/denominator/unit (varchar)
   medstat_dosage_maxdoseperperiod_denominator_system varchar,   -- dosage/maxDosePerPeriod/denominator/system (varchar)
   medstat_dosage_maxdoseperperiod_denominator_code varchar,   -- dosage/maxDosePerPeriod/denominator/code (varchar)
-  medstat_dosage_maxdoseperadministration_value numeric,   -- dosage/maxDosePerAdministration/value (numeric)
+  medstat_dosage_maxdoseperadministration_value double precision,   -- dosage/maxDosePerAdministration/value (double precision)
   medstat_dosage_maxdoseperadministration_unit varchar,   -- dosage/maxDosePerAdministration/unit (varchar)
   medstat_dosage_maxdoseperadministration_system varchar,   -- dosage/maxDosePerAdministration/system (varchar)
   medstat_dosage_maxdoseperadministration_code varchar,   -- dosage/maxDosePerAdministration/code (varchar)
-  medstat_dosage_maxdoseperlifetime_value numeric,   -- dosage/maxDosePerLifetime/value (numeric)
+  medstat_dosage_maxdoseperlifetime_value double precision,   -- dosage/maxDosePerLifetime/value (double precision)
   medstat_dosage_maxdoseperlifetime_unit varchar,   -- dosage/maxDosePerLifetime/unit (varchar)
   medstat_dosage_maxdoseperlifetime_system varchar,   -- dosage/maxDosePerLifetime/system (varchar)
   medstat_dosage_maxdoseperlifetime_code varchar,   -- dosage/maxDosePerLifetime/code (varchar)
@@ -913,25 +913,25 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   obs_code_text varchar,   -- code/text (varchar)
   obs_effectivedatetime timestamp,   -- effectiveDateTime (timestamp)
   obs_issued timestamp,   -- issued (timestamp)
-  obs_valuerange_low_value numeric,   -- valueRange/low/value (numeric)
+  obs_valuerange_low_value double precision,   -- valueRange/low/value (double precision)
   obs_valuerange_low_unit varchar,   -- valueRange/low/unit (varchar)
   obs_valuerange_low_system varchar,   -- valueRange/low/system (varchar)
   obs_valuerange_low_code varchar,   -- valueRange/low/code (varchar)
-  obs_valuerange_high_value numeric,   -- valueRange/high/value (numeric)
+  obs_valuerange_high_value double precision,   -- valueRange/high/value (double precision)
   obs_valuerange_high_unit varchar,   -- valueRange/high/unit (varchar)
   obs_valuerange_high_system varchar,   -- valueRange/high/system (varchar)
   obs_valuerange_high_code varchar,   -- valueRange/high/code (varchar)
-  obs_valueratio_numerator_value numeric,   -- valueRatio/numerator/value (numeric)
+  obs_valueratio_numerator_value double precision,   -- valueRatio/numerator/value (double precision)
   obs_valueratio_numerator_comparator varchar,   -- valueRatio/numerator/comparator (varchar)
   obs_valueratio_numerator_unit varchar,   -- valueRatio/numerator/unit (varchar)
   obs_valueratio_numerator_system varchar,   -- valueRatio/numerator/system (varchar)
   obs_valueratio_numerator_code varchar,   -- valueRatio/numerator/code (varchar)
-  obs_valueratio_denominator_value numeric,   -- valueRatio/denominator/value (numeric)
+  obs_valueratio_denominator_value double precision,   -- valueRatio/denominator/value (double precision)
   obs_valueratio_denominator_comparator varchar,   -- valueRatio/denominator/comparator (varchar)
   obs_valueratio_denominator_unit varchar,   -- valueRatio/denominator/unit (varchar)
   obs_valueratio_denominator_system varchar,   -- valueRatio/denominator/system (varchar)
   obs_valueratio_denominator_code varchar,   -- valueRatio/denominator/code (varchar)
-  obs_valuequantity_value numeric,   -- valueQuantity/value (numeric)
+  obs_valuequantity_value double precision,   -- valueQuantity/value (double precision)
   obs_valuequantity_comparator varchar,   -- valueQuantity/comparator (varchar)
   obs_valuequantity_unit varchar,   -- valueQuantity/unit (varchar)
   obs_valuequantity_system varchar,   -- valueQuantity/system (varchar)
@@ -972,11 +972,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   obs_performer_identifier_type_display varchar,   -- performer/identifier/type/coding/display (varchar)
   obs_performer_identifier_type_text varchar,   -- performer/identifier/type/text (varchar)
   obs_performer_display varchar,   -- performer/display (varchar)
-  obs_referencerange_low_value numeric,   -- referenceRange/low/value (numeric)
+  obs_referencerange_low_value double precision,   -- referenceRange/low/value (double precision)
   obs_referencerange_low_unit varchar,   -- referenceRange/low/unit (varchar)
   obs_referencerange_low_system varchar,   -- referenceRange/low/system (varchar)
   obs_referencerange_low_code varchar,   -- referenceRange/low/code (varchar)
-  obs_referencerange_high_value numeric,   -- referenceRange/high/value (numeric)
+  obs_referencerange_high_value double precision,   -- referenceRange/high/value (double precision)
   obs_referencerange_high_unit varchar,   -- referenceRange/high/unit (varchar)
   obs_referencerange_high_system varchar,   -- referenceRange/high/system (varchar)
   obs_referencerange_high_code varchar,   -- referenceRange/high/code (varchar)
@@ -990,11 +990,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   obs_referencerange_appliesto_code varchar,   -- referenceRange/appliesTo/coding/code (varchar)
   obs_referencerange_appliesto_display varchar,   -- referenceRange/appliesTo/coding/display (varchar)
   obs_referencerange_appliesto_text varchar,   -- referenceRange/appliesTo/text (varchar)
-  obs_referencerange_age_low_value numeric,   -- referenceRange/age/low/value (numeric)
+  obs_referencerange_age_low_value double precision,   -- referenceRange/age/low/value (double precision)
   obs_referencerange_age_low_unit varchar,   -- referenceRange/age/low/unit (varchar)
   obs_referencerange_age_low_system varchar,   -- referenceRange/age/low/system (varchar)
   obs_referencerange_age_low_code varchar,   -- referenceRange/age/low/code (varchar)
-  obs_referencerange_age_high_value numeric,   -- referenceRange/age/high/value (numeric)
+  obs_referencerange_age_high_value double precision,   -- referenceRange/age/high/value (double precision)
   obs_referencerange_age_high_unit varchar,   -- referenceRange/age/high/unit (varchar)
   obs_referencerange_age_high_system varchar,   -- referenceRange/age/high/system (varchar)
   obs_referencerange_age_high_code varchar,   -- referenceRange/age/high/code (varchar)
@@ -1846,18 +1846,18 @@ comment on column db_log.condition.con_onsetperiod_start is 'onsetPeriod/start (
 comment on column db_log.condition.con_onsetperiod_end is 'onsetPeriod/end (timestamp)';
 comment on column db_log.condition.con_onsetdatetime is 'onsetDateTime (timestamp)';
 comment on column db_log.condition.con_abatementdatetime is 'abatementDateTime (timestamp)';
-comment on column db_log.condition.con_abatementage_value is 'abatementAge/value (numeric)';
+comment on column db_log.condition.con_abatementage_value is 'abatementAge/value (double precision)';
 comment on column db_log.condition.con_abatementage_comparator is 'abatementAge/comparator (varchar)';
 comment on column db_log.condition.con_abatementage_unit is 'abatementAge/unit (varchar)';
 comment on column db_log.condition.con_abatementage_system is 'abatementAge/system (varchar)';
 comment on column db_log.condition.con_abatementage_code is 'abatementAge/code (varchar)';
 comment on column db_log.condition.con_abatementperiod_start is 'abatementPeriod/start (timestamp)';
 comment on column db_log.condition.con_abatementperiod_end is 'abatementPeriod/end (timestamp)';
-comment on column db_log.condition.con_abatementrange_low_value is 'abatementRange/low/value (numeric)';
+comment on column db_log.condition.con_abatementrange_low_value is 'abatementRange/low/value (double precision)';
 comment on column db_log.condition.con_abatementrange_low_unit is 'abatementRange/low/unit (varchar)';
 comment on column db_log.condition.con_abatementrange_low_system is 'abatementRange/low/system (varchar)';
 comment on column db_log.condition.con_abatementrange_low_code is 'abatementRange/low/code (varchar)';
-comment on column db_log.condition.con_abatementrange_high_value is 'abatementRange/high/value (numeric)';
+comment on column db_log.condition.con_abatementrange_high_value is 'abatementRange/high/value (double precision)';
 comment on column db_log.condition.con_abatementrange_high_unit is 'abatementRange/high/unit (varchar)';
 comment on column db_log.condition.con_abatementrange_high_system is 'abatementRange/high/system (varchar)';
 comment on column db_log.condition.con_abatementrange_high_code is 'abatementRange/high/code (varchar)';
@@ -1940,22 +1940,22 @@ comment on column db_log.medication.med_form_version is 'form/coding/version (va
 comment on column db_log.medication.med_form_code is 'form/coding/code (varchar)';
 comment on column db_log.medication.med_form_display is 'form/coding/display (varchar)';
 comment on column db_log.medication.med_form_text is 'form/text (varchar)';
-comment on column db_log.medication.med_amount_numerator_value is 'amount/numerator/value (numeric)';
+comment on column db_log.medication.med_amount_numerator_value is 'amount/numerator/value (double precision)';
 comment on column db_log.medication.med_amount_numerator_comparator is 'amount/numerator/comparator (varchar)';
 comment on column db_log.medication.med_amount_numerator_unit is 'amount/numerator/unit (varchar)';
 comment on column db_log.medication.med_amount_numerator_system is 'amount/numerator/system (varchar)';
 comment on column db_log.medication.med_amount_numerator_code is 'amount/numerator/code (varchar)';
-comment on column db_log.medication.med_amount_denominator_value is 'amount/denominator/value (numeric)';
+comment on column db_log.medication.med_amount_denominator_value is 'amount/denominator/value (double precision)';
 comment on column db_log.medication.med_amount_denominator_comparator is 'amount/denominator/comparator (varchar)';
 comment on column db_log.medication.med_amount_denominator_unit is 'amount/denominator/unit (varchar)';
 comment on column db_log.medication.med_amount_denominator_system is 'amount/denominator/system (varchar)';
 comment on column db_log.medication.med_amount_denominator_code is 'amount/denominator/code (varchar)';
-comment on column db_log.medication.med_ingredient_strength_numerator_value is 'ingredient/strength/numerator/value (numeric)';
+comment on column db_log.medication.med_ingredient_strength_numerator_value is 'ingredient/strength/numerator/value (double precision)';
 comment on column db_log.medication.med_ingredient_strength_numerator_comparator is 'ingredient/strength/numerator/comparator (varchar)';
 comment on column db_log.medication.med_ingredient_strength_numerator_unit is 'ingredient/strength/numerator/unit (varchar)';
 comment on column db_log.medication.med_ingredient_strength_numerator_system is 'ingredient/strength/numerator/system (varchar)';
 comment on column db_log.medication.med_ingredient_strength_numerator_code is 'ingredient/strength/numerator/code (varchar)';
-comment on column db_log.medication.med_ingredient_strength_denominator_value is 'ingredient/strength/denominator/value (numeric)';
+comment on column db_log.medication.med_ingredient_strength_denominator_value is 'ingredient/strength/denominator/value (double precision)';
 comment on column db_log.medication.med_ingredient_strength_denominator_comparator is 'ingredient/strength/denominator/comparator (varchar)';
 comment on column db_log.medication.med_ingredient_strength_denominator_unit is 'ingredient/strength/denominator/unit (varchar)';
 comment on column db_log.medication.med_ingredient_strength_denominator_system is 'ingredient/strength/denominator/system (varchar)';
@@ -2086,16 +2086,16 @@ comment on column db_log.medicationrequest.medreq_doseinstruc_additionalinstruct
 comment on column db_log.medicationrequest.medreq_doseinstruc_additionalinstruction_text is 'dosageInstruction/additionalInstruction/text (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_patientinstruction is 'dosageInstruction/patientInstruction (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_event is 'dosageInstruction/timing/event (timestamp)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_value is 'dosageInstruction/timing/repeat/boundsDuration/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_value is 'dosageInstruction/timing/repeat/boundsDuration/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_comparator is 'dosageInstruction/timing/repeat/boundsDuration/comparator (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_unit is 'dosageInstruction/timing/repeat/boundsDuration/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_system is 'dosageInstruction/timing/repeat/boundsDuration/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_code is 'dosageInstruction/timing/repeat/boundsDuration/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_value is 'dosageInstruction/timing/repeat/boundsRange/low/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_value is 'dosageInstruction/timing/repeat/boundsRange/low/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_unit is 'dosageInstruction/timing/repeat/boundsRange/low/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_system is 'dosageInstruction/timing/repeat/boundsRange/low/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_code is 'dosageInstruction/timing/repeat/boundsRange/low/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_value is 'dosageInstruction/timing/repeat/boundsRange/high/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_value is 'dosageInstruction/timing/repeat/boundsRange/high/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_unit is 'dosageInstruction/timing/repeat/boundsRange/high/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_system is 'dosageInstruction/timing/repeat/boundsRange/high/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_code is 'dosageInstruction/timing/repeat/boundsRange/high/code (varchar)';
@@ -2103,13 +2103,13 @@ comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boun
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsperiod_end is 'dosageInstruction/timing/repeat/boundsPeriod/end (timestamp)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_count is 'dosageInstruction/timing/repeat/count (int)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_countmax is 'dosageInstruction/timing/repeat/countMax (int)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_duration is 'dosageInstruction/timing/repeat/duration (numeric)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_durationmax is 'dosageInstruction/timing/repeat/durationMax (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_duration is 'dosageInstruction/timing/repeat/duration (double precision)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_durationmax is 'dosageInstruction/timing/repeat/durationMax (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_durationunit is 'dosageInstruction/timing/repeat/durationUnit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_frequency is 'dosageInstruction/timing/repeat/frequency (int)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_frequencymax is 'dosageInstruction/timing/repeat/frequencyMax (int)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_period is 'dosageInstruction/timing/repeat/period (numeric)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_periodmax is 'dosageInstruction/timing/repeat/periodMax (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_period is 'dosageInstruction/timing/repeat/period (double precision)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_periodmax is 'dosageInstruction/timing/repeat/periodMax (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_periodunit is 'dosageInstruction/timing/repeat/periodUnit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_dayofweek is 'dosageInstruction/timing/repeat/dayOfWeek (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_timing_repeat_timeofday is 'dosageInstruction/timing/repeat/timeOfDay (time)';
@@ -2146,56 +2146,56 @@ comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_v
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_code is 'dosageInstruction/doseAndRate/type/coding/code (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_display is 'dosageInstruction/doseAndRate/type/coding/display (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_text is 'dosageInstruction/doseAndRate/type/text (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_value is 'dosageInstruction/doseAndRate/doseRange/low/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_value is 'dosageInstruction/doseAndRate/doseRange/low/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_unit is 'dosageInstruction/doseAndRate/doseRange/low/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_system is 'dosageInstruction/doseAndRate/doseRange/low/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_code is 'dosageInstruction/doseAndRate/doseRange/low/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_value is 'dosageInstruction/doseAndRate/doseRange/high/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_value is 'dosageInstruction/doseAndRate/doseRange/high/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_unit is 'dosageInstruction/doseAndRate/doseRange/high/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_system is 'dosageInstruction/doseAndRate/doseRange/high/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_code is 'dosageInstruction/doseAndRate/doseRange/high/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_value is 'dosageInstruction/doseAndRate/doseQuantity/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_value is 'dosageInstruction/doseAndRate/doseQuantity/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_comparator is 'dosageInstruction/doseAndRate/doseQuantity/comparator (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_unit is 'dosageInstruction/doseAndRate/doseQuantity/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_system is 'dosageInstruction/doseAndRate/doseQuantity/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_code is 'dosageInstruction/doseAndRate/doseQuantity/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_value is 'dosageInstruction/doseAndRate/rateRatio/numerator/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_value is 'dosageInstruction/doseAndRate/rateRatio/numerator/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator is 'dosageInstruction/doseAndRate/rateRatio/numerator/comparator (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_unit is 'dosageInstruction/doseAndRate/rateRatio/numerator/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_system is 'dosageInstruction/doseAndRate/rateRatio/numerator/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_code is 'dosageInstruction/doseAndRate/rateRatio/numerator/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_value is 'dosageInstruction/doseAndRate/rateRatio/denominator/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_value is 'dosageInstruction/doseAndRate/rateRatio/denominator/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator is 'dosageInstruction/doseAndRate/rateRatio/denominator/comparator (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_unit is 'dosageInstruction/doseAndRate/rateRatio/denominator/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_system is 'dosageInstruction/doseAndRate/rateRatio/denominator/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_code is 'dosageInstruction/doseAndRate/rateRatio/denominator/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_value is 'dosageInstruction/doseAndRate/rateRange/low/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_value is 'dosageInstruction/doseAndRate/rateRange/low/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_unit is 'dosageInstruction/doseAndRate/rateRange/low/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_system is 'dosageInstruction/doseAndRate/rateRange/low/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_code is 'dosageInstruction/doseAndRate/rateRange/low/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_value is 'dosageInstruction/doseAndRate/rateRange/high/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_value is 'dosageInstruction/doseAndRate/rateRange/high/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_unit is 'dosageInstruction/doseAndRate/rateRange/high/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_system is 'dosageInstruction/doseAndRate/rateRange/high/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_code is 'dosageInstruction/doseAndRate/rateRange/high/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_value is 'dosageInstruction/doseAndRate/rateQuantity/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_value is 'dosageInstruction/doseAndRate/rateQuantity/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_unit is 'dosageInstruction/doseAndRate/rateQuantity/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_system is 'dosageInstruction/doseAndRate/rateQuantity/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_code is 'dosageInstruction/doseAndRate/rateQuantity/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_value is 'dosageInstruction/maxDosePerPeriod/numerator/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_value is 'dosageInstruction/maxDosePerPeriod/numerator/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_comparator is 'dosageInstruction/maxDosePerPeriod/numerator/comparator (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_unit is 'dosageInstruction/maxDosePerPeriod/numerator/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_system is 'dosageInstruction/maxDosePerPeriod/numerator/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_code is 'dosageInstruction/maxDosePerPeriod/numerator/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_value is 'dosageInstruction/maxDosePerPeriod/denominator/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_value is 'dosageInstruction/maxDosePerPeriod/denominator/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_comparator is 'dosageInstruction/maxDosePerPeriod/denominator/comparator (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_unit is 'dosageInstruction/maxDosePerPeriod/denominator/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_system is 'dosageInstruction/maxDosePerPeriod/denominator/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_code is 'dosageInstruction/maxDosePerPeriod/denominator/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_value is 'dosageInstruction/maxDosePerAdministration/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_value is 'dosageInstruction/maxDosePerAdministration/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_unit is 'dosageInstruction/maxDosePerAdministration/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_system is 'dosageInstruction/maxDosePerAdministration/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_code is 'dosageInstruction/maxDosePerAdministration/code (varchar)';
-comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_value is 'dosageInstruction/maxDosePerLifetime/value (numeric)';
+comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_value is 'dosageInstruction/maxDosePerLifetime/value (double precision)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_unit is 'dosageInstruction/maxDosePerLifetime/unit (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_system is 'dosageInstruction/maxDosePerLifetime/system (varchar)';
 comment on column db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_code is 'dosageInstruction/maxDosePerLifetime/code (varchar)';
@@ -2301,21 +2301,21 @@ comment on column db_log.medicationadministration.medadm_dosage_method_version i
 comment on column db_log.medicationadministration.medadm_dosage_method_code is 'dosage/method/coding/code (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_method_display is 'dosage/method/coding/display (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_method_text is 'dosage/method/text (varchar)';
-comment on column db_log.medicationadministration.medadm_dosage_dose_value is 'dosage/dose/value (numeric)';
+comment on column db_log.medicationadministration.medadm_dosage_dose_value is 'dosage/dose/value (double precision)';
 comment on column db_log.medicationadministration.medadm_dosage_dose_unit is 'dosage/dose/unit (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_dose_system is 'dosage/dose/system (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_dose_code is 'dosage/dose/code (varchar)';
-comment on column db_log.medicationadministration.medadm_dosage_rateratio_numerator_value is 'dosage/rateRatio/numerator/value (numeric)';
+comment on column db_log.medicationadministration.medadm_dosage_rateratio_numerator_value is 'dosage/rateRatio/numerator/value (double precision)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_numerator_comparator is 'dosage/rateRatio/numerator/comparator (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_numerator_unit is 'dosage/rateRatio/numerator/unit (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_numerator_system is 'dosage/rateRatio/numerator/system (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_numerator_code is 'dosage/rateRatio/numerator/code (varchar)';
-comment on column db_log.medicationadministration.medadm_dosage_rateratio_denominator_value is 'dosage/rateRatio/denominator/value (numeric)';
+comment on column db_log.medicationadministration.medadm_dosage_rateratio_denominator_value is 'dosage/rateRatio/denominator/value (double precision)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_denominator_comparator is 'dosage/rateRatio/denominator/comparator (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_denominator_unit is 'dosage/rateRatio/denominator/unit (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_denominator_system is 'dosage/rateRatio/denominator/system (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_rateratio_denominator_code is 'dosage/rateRatio/denominator/code (varchar)';
-comment on column db_log.medicationadministration.medadm_dosage_ratequantity_value is 'dosage/rateQuantity/value (numeric)';
+comment on column db_log.medicationadministration.medadm_dosage_ratequantity_value is 'dosage/rateQuantity/value (double precision)';
 comment on column db_log.medicationadministration.medadm_dosage_ratequantity_unit is 'dosage/rateQuantity/unit (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_ratequantity_system is 'dosage/rateQuantity/system (varchar)';
 comment on column db_log.medicationadministration.medadm_dosage_ratequantity_code is 'dosage/rateQuantity/code (varchar)';
@@ -2422,16 +2422,16 @@ comment on column db_log.medicationstatement.medstat_dosage_additionalinstructio
 comment on column db_log.medicationstatement.medstat_dosage_additionalinstruction_text is 'dosage/additionalInstruction/text (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_patientinstruction is 'dosage/patientInstruction (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_event is 'dosage/timing/event (timestamp)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_value is 'dosage/timing/repeat/boundsDuration/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_value is 'dosage/timing/repeat/boundsDuration/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_comparator is 'dosage/timing/repeat/boundsDuration/comparator (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_unit is 'dosage/timing/repeat/boundsDuration/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_system is 'dosage/timing/repeat/boundsDuration/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_code is 'dosage/timing/repeat/boundsDuration/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_value is 'dosage/timing/repeat/boundsRange/low/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_value is 'dosage/timing/repeat/boundsRange/low/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_unit is 'dosage/timing/repeat/boundsRange/low/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_system is 'dosage/timing/repeat/boundsRange/low/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_code is 'dosage/timing/repeat/boundsRange/low/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_value is 'dosage/timing/repeat/boundsRange/high/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_value is 'dosage/timing/repeat/boundsRange/high/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_unit is 'dosage/timing/repeat/boundsRange/high/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_system is 'dosage/timing/repeat/boundsRange/high/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_code is 'dosage/timing/repeat/boundsRange/high/code (varchar)';
@@ -2439,13 +2439,13 @@ comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_bounds
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_boundsperiod_end is 'dosage/timing/repeat/boundsPeriod/end (timestamp)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_count is 'dosage/timing/repeat/count (int)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_countmax is 'dosage/timing/repeat/countMax (int)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_duration is 'dosage/timing/repeat/duration (numeric)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_durationmax is 'dosage/timing/repeat/durationMax (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_duration is 'dosage/timing/repeat/duration (double precision)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_durationmax is 'dosage/timing/repeat/durationMax (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_durationunit is 'dosage/timing/repeat/durationUnit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_frequency is 'dosage/timing/repeat/frequency (int)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_frequencymax is 'dosage/timing/repeat/frequencyMax (int)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_period is 'dosage/timing/repeat/period (numeric)';
-comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_periodmax is 'dosage/timing/repeat/periodMax (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_period is 'dosage/timing/repeat/period (double precision)';
+comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_periodmax is 'dosage/timing/repeat/periodMax (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_periodunit is 'dosage/timing/repeat/periodUnit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_dayofweek is 'dosage/timing/repeat/dayOfWeek (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_timing_repeat_timeofday is 'dosage/timing/repeat/timeOfDay (time)';
@@ -2482,56 +2482,56 @@ comment on column db_log.medicationstatement.medstat_dosage_doseandrate_type_ver
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_type_code is 'dosage/doseAndRate/type/coding/code (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_type_display is 'dosage/doseAndRate/type/coding/display (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_type_text is 'dosage/doseAndRate/type/text (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_value is 'dosage/doseAndRate/doseRange/low/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_value is 'dosage/doseAndRate/doseRange/low/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_unit is 'dosage/doseAndRate/doseRange/low/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_system is 'dosage/doseAndRate/doseRange/low/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_code is 'dosage/doseAndRate/doseRange/low/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_value is 'dosage/doseAndRate/doseRange/high/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_value is 'dosage/doseAndRate/doseRange/high/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_unit is 'dosage/doseAndRate/doseRange/high/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_system is 'dosage/doseAndRate/doseRange/high/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_code is 'dosage/doseAndRate/doseRange/high/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_value is 'dosage/doseAndRate/doseQuantity/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_value is 'dosage/doseAndRate/doseQuantity/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_comparator is 'dosage/doseAndRate/doseQuantity/comparator (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_unit is 'dosage/doseAndRate/doseQuantity/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_system is 'dosage/doseAndRate/doseQuantity/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_code is 'dosage/doseAndRate/doseQuantity/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_value is 'dosage/doseAndRate/rateRatio/numerator/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_value is 'dosage/doseAndRate/rateRatio/numerator/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_comparator is 'dosage/doseAndRate/rateRatio/numerator/comparator (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_unit is 'dosage/doseAndRate/rateRatio/numerator/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_system is 'dosage/doseAndRate/rateRatio/numerator/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_code is 'dosage/doseAndRate/rateRatio/numerator/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_value is 'dosage/doseAndRate/rateRatio/denominator/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_value is 'dosage/doseAndRate/rateRatio/denominator/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_comparator is 'dosage/doseAndRate/rateRatio/denominator/comparator (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_unit is 'dosage/doseAndRate/rateRatio/denominator/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_system is 'dosage/doseAndRate/rateRatio/denominator/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_code is 'dosage/doseAndRate/rateRatio/denominator/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_value is 'dosage/doseAndRate/rateRange/low/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_value is 'dosage/doseAndRate/rateRange/low/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_unit is 'dosage/doseAndRate/rateRange/low/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_system is 'dosage/doseAndRate/rateRange/low/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_code is 'dosage/doseAndRate/rateRange/low/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_value is 'dosage/doseAndRate/rateRange/high/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_value is 'dosage/doseAndRate/rateRange/high/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_unit is 'dosage/doseAndRate/rateRange/high/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_system is 'dosage/doseAndRate/rateRange/high/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_code is 'dosage/doseAndRate/rateRange/high/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_value is 'dosage/doseAndRate/rateQuantity/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_value is 'dosage/doseAndRate/rateQuantity/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_unit is 'dosage/doseAndRate/rateQuantity/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_system is 'dosage/doseAndRate/rateQuantity/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_code is 'dosage/doseAndRate/rateQuantity/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_value is 'dosage/maxDosePerPeriod/numerator/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_value is 'dosage/maxDosePerPeriod/numerator/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_comparator is 'dosage/maxDosePerPeriod/numerator/comparator (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_unit is 'dosage/maxDosePerPeriod/numerator/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_system is 'dosage/maxDosePerPeriod/numerator/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_code is 'dosage/maxDosePerPeriod/numerator/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_value is 'dosage/maxDosePerPeriod/denominator/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_value is 'dosage/maxDosePerPeriod/denominator/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_comparator is 'dosage/maxDosePerPeriod/denominator/comparator (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_unit is 'dosage/maxDosePerPeriod/denominator/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_system is 'dosage/maxDosePerPeriod/denominator/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_code is 'dosage/maxDosePerPeriod/denominator/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_maxdoseperadministration_value is 'dosage/maxDosePerAdministration/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_maxdoseperadministration_value is 'dosage/maxDosePerAdministration/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperadministration_unit is 'dosage/maxDosePerAdministration/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperadministration_system is 'dosage/maxDosePerAdministration/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperadministration_code is 'dosage/maxDosePerAdministration/code (varchar)';
-comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_value is 'dosage/maxDosePerLifetime/value (numeric)';
+comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_value is 'dosage/maxDosePerLifetime/value (double precision)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_unit is 'dosage/maxDosePerLifetime/unit (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_system is 'dosage/maxDosePerLifetime/system (varchar)';
 comment on column db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_code is 'dosage/maxDosePerLifetime/code (varchar)';
@@ -2577,25 +2577,25 @@ comment on column db_log.observation.obs_code_display is 'code/coding/display (v
 comment on column db_log.observation.obs_code_text is 'code/text (varchar)';
 comment on column db_log.observation.obs_effectivedatetime is 'effectiveDateTime (timestamp)';
 comment on column db_log.observation.obs_issued is 'issued (timestamp)';
-comment on column db_log.observation.obs_valuerange_low_value is 'valueRange/low/value (numeric)';
+comment on column db_log.observation.obs_valuerange_low_value is 'valueRange/low/value (double precision)';
 comment on column db_log.observation.obs_valuerange_low_unit is 'valueRange/low/unit (varchar)';
 comment on column db_log.observation.obs_valuerange_low_system is 'valueRange/low/system (varchar)';
 comment on column db_log.observation.obs_valuerange_low_code is 'valueRange/low/code (varchar)';
-comment on column db_log.observation.obs_valuerange_high_value is 'valueRange/high/value (numeric)';
+comment on column db_log.observation.obs_valuerange_high_value is 'valueRange/high/value (double precision)';
 comment on column db_log.observation.obs_valuerange_high_unit is 'valueRange/high/unit (varchar)';
 comment on column db_log.observation.obs_valuerange_high_system is 'valueRange/high/system (varchar)';
 comment on column db_log.observation.obs_valuerange_high_code is 'valueRange/high/code (varchar)';
-comment on column db_log.observation.obs_valueratio_numerator_value is 'valueRatio/numerator/value (numeric)';
+comment on column db_log.observation.obs_valueratio_numerator_value is 'valueRatio/numerator/value (double precision)';
 comment on column db_log.observation.obs_valueratio_numerator_comparator is 'valueRatio/numerator/comparator (varchar)';
 comment on column db_log.observation.obs_valueratio_numerator_unit is 'valueRatio/numerator/unit (varchar)';
 comment on column db_log.observation.obs_valueratio_numerator_system is 'valueRatio/numerator/system (varchar)';
 comment on column db_log.observation.obs_valueratio_numerator_code is 'valueRatio/numerator/code (varchar)';
-comment on column db_log.observation.obs_valueratio_denominator_value is 'valueRatio/denominator/value (numeric)';
+comment on column db_log.observation.obs_valueratio_denominator_value is 'valueRatio/denominator/value (double precision)';
 comment on column db_log.observation.obs_valueratio_denominator_comparator is 'valueRatio/denominator/comparator (varchar)';
 comment on column db_log.observation.obs_valueratio_denominator_unit is 'valueRatio/denominator/unit (varchar)';
 comment on column db_log.observation.obs_valueratio_denominator_system is 'valueRatio/denominator/system (varchar)';
 comment on column db_log.observation.obs_valueratio_denominator_code is 'valueRatio/denominator/code (varchar)';
-comment on column db_log.observation.obs_valuequantity_value is 'valueQuantity/value (numeric)';
+comment on column db_log.observation.obs_valuequantity_value is 'valueQuantity/value (double precision)';
 comment on column db_log.observation.obs_valuequantity_comparator is 'valueQuantity/comparator (varchar)';
 comment on column db_log.observation.obs_valuequantity_unit is 'valueQuantity/unit (varchar)';
 comment on column db_log.observation.obs_valuequantity_system is 'valueQuantity/system (varchar)';
@@ -2636,11 +2636,11 @@ comment on column db_log.observation.obs_performer_identifier_type_code is 'perf
 comment on column db_log.observation.obs_performer_identifier_type_display is 'performer/identifier/type/coding/display (varchar)';
 comment on column db_log.observation.obs_performer_identifier_type_text is 'performer/identifier/type/text (varchar)';
 comment on column db_log.observation.obs_performer_display is 'performer/display (varchar)';
-comment on column db_log.observation.obs_referencerange_low_value is 'referenceRange/low/value (numeric)';
+comment on column db_log.observation.obs_referencerange_low_value is 'referenceRange/low/value (double precision)';
 comment on column db_log.observation.obs_referencerange_low_unit is 'referenceRange/low/unit (varchar)';
 comment on column db_log.observation.obs_referencerange_low_system is 'referenceRange/low/system (varchar)';
 comment on column db_log.observation.obs_referencerange_low_code is 'referenceRange/low/code (varchar)';
-comment on column db_log.observation.obs_referencerange_high_value is 'referenceRange/high/value (numeric)';
+comment on column db_log.observation.obs_referencerange_high_value is 'referenceRange/high/value (double precision)';
 comment on column db_log.observation.obs_referencerange_high_unit is 'referenceRange/high/unit (varchar)';
 comment on column db_log.observation.obs_referencerange_high_system is 'referenceRange/high/system (varchar)';
 comment on column db_log.observation.obs_referencerange_high_code is 'referenceRange/high/code (varchar)';
@@ -2654,11 +2654,11 @@ comment on column db_log.observation.obs_referencerange_appliesto_version is 're
 comment on column db_log.observation.obs_referencerange_appliesto_code is 'referenceRange/appliesTo/coding/code (varchar)';
 comment on column db_log.observation.obs_referencerange_appliesto_display is 'referenceRange/appliesTo/coding/display (varchar)';
 comment on column db_log.observation.obs_referencerange_appliesto_text is 'referenceRange/appliesTo/text (varchar)';
-comment on column db_log.observation.obs_referencerange_age_low_value is 'referenceRange/age/low/value (numeric)';
+comment on column db_log.observation.obs_referencerange_age_low_value is 'referenceRange/age/low/value (double precision)';
 comment on column db_log.observation.obs_referencerange_age_low_unit is 'referenceRange/age/low/unit (varchar)';
 comment on column db_log.observation.obs_referencerange_age_low_system is 'referenceRange/age/low/system (varchar)';
 comment on column db_log.observation.obs_referencerange_age_low_code is 'referenceRange/age/low/code (varchar)';
-comment on column db_log.observation.obs_referencerange_age_high_value is 'referenceRange/age/high/value (numeric)';
+comment on column db_log.observation.obs_referencerange_age_high_value is 'referenceRange/age/high/value (double precision)';
 comment on column db_log.observation.obs_referencerange_age_high_unit is 'referenceRange/age/high/unit (varchar)';
 comment on column db_log.observation.obs_referencerange_age_high_system is 'referenceRange/age/high/system (varchar)';
 comment on column db_log.observation.obs_referencerange_age_high_code is 'referenceRange/age/high/code (varchar)';

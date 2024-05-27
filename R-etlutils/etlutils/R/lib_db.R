@@ -190,3 +190,29 @@ dbDeleteContent <- function(db_connection, table_name) {
   table_name <- tolower(table_name)
   DBI::dbExecute(db_connection, paste0('DELETE FROM ', table_name, ';'))
 }
+
+#' Read a Table from a PostgreSQL Database
+#'
+#' This function reads a table from a PostgreSQL database and returns it as a data table.
+#' PostgreSQL only accepts lower case table names, so the table name is converted to lower case.
+#'
+#' @param db_connection A DBI connection object to the PostgreSQL database.
+#' @param table_name A character string specifying the name of the table to read.
+#'        The table name will be converted to lower case.
+#'
+#' @return A data table containing the contents of the specified table.
+#'
+#' @examples
+#' \dontrun{
+#'   con <- DBI::dbConnect(RPostgres::Postgres(), dbname = "your_database_name", host = "your_host",
+#'                         port = 5432, user = "your_username", password = "your_password")
+#'   dt <- dbReadTable(con, "YourTableName")
+#'   print(head(dt))
+#'   DBI::dbDisconnect(con)
+#' }
+#' @export
+dbReadTable <- function(db_connection, table_name) {
+  # Postgres only accepts lower case names -> convert them hard here
+  table_name <- tolower(table_name)
+  data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
+}

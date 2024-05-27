@@ -52,9 +52,6 @@ limitAvailableCoreNumber <- function(ncores) {
 #'
 #' This function refreshes the FHIR token if it is defined.
 #'
-#' @details
-#' If the FHIR_TOKEN is defined, the function attempts to refresh it using the \code{refreshFHIRToken} function.
-#'
 #' @export
 refreshFHIRToken <- function() {
 
@@ -408,11 +405,11 @@ logRequest <- function(verbose, resource_name, bundles) {
 #' @return A data.table containing the cracked FHIR resource data.
 #' @export
 downloadAndCrackFHIRResources <- function(
-    request           = REQUEST_ENCOUNTER,
-    table_description = TABLE_DESCRIPTION$Encounter,
+    request,
+    table_description,
     bundles_at_once   = 20,
     verbose           = 1,
-    bundles_left      = MAX_ENCOUNTER_BUNDLES,
+    bundles_left      = Inf,
     max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
     log_errors        = 'enc_error.xml'
 ) {
@@ -864,13 +861,21 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #' @export
 loadFHIRResourcesByOwnID <- function(ids, table_description) {
   resource <- table_description@resource@.Data
-  resource_table <- downloadAndCrackFHIRResourcesByPIDs(
-    resource = resource,
-    id_param_str = '_id',
-    ids = getAfterLastSlash(ids),
-    table_description = table_description,
-    verbose = VERBOSE
-  )
+  if (!rlang::is_empty(ids)) {
+    resource_table <- downloadAndCrackFHIRResourcesByPIDs(
+      resource = resource,
+      id_param_str = '_id',
+      ids = getAfterLastSlash(ids),
+      table_description = table_description,
+      verbose = VERBOSE
+    )
+  } else {
+    # if there are no IDs -> create an empt table with all needed columns as character columns
+    column_names <- table_description@cols@names
+    resource_table <- data.table(matrix(ncol = length(column_names), nrow = 0))
+    data.table::setnames(resource_table, column_names)
+    resource_table[, (column_names) := lapply(.SD, as.character), .SDcols = column_names]
+  }
   return(resource_table)
 }
 

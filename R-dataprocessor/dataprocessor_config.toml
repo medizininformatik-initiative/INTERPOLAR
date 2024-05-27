@@ -29,6 +29,8 @@ MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30
 
 [mrp_definition_files]
 
+# General hint: if one of the filenames is not set or emtpy string, then the mrp-calculation for this
+#               problem will not be executed.
 # Name of the Excel file with the MRP definitions in the 'inst/extdata' directory without extension
 MRP_DEFINITION_FILE_DRUG_DISEASE = "Drug-Disease_290124_ATC24_bereinigt"
 

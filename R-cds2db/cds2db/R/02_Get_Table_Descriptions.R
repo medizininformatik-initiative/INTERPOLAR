@@ -3,10 +3,10 @@
 #' @details If a xpath expression returns more than 1 value (if it is a list of multiple values (e.g.
 #' list of codes and corresponding code systems), then all
 #'
-BRACKETS <- c('[', ']')
+BRACKETS <- c("[", "]")
 
 #' Brackets for the fhir table descriptions
-SEP      <- ' ~ '
+SEP      <- " ~ "
 
 #' Load Table Description Excel File
 #'
@@ -23,7 +23,7 @@ loadTableDescriptionFile <- function() {
 #' Get a table with the Table Descriptions for all fhir resources from Excel file
 #'
 #' This function reads the "Table_Description.xlsx" file from the "extdata" directory
-#' in the package and returns the data as a data frame.
+#' in the package and returns the data as a data table.
 #'
 #' @param columns column names which should be in the return table. If NA then no column
 #' will be removed.
@@ -67,8 +67,6 @@ getTableDescriptionsTable <- function(columns = NA) {
 #' @seealso
 #' \code{\link{getTableDescriptionsTable}}, \code{\link[fhircrackr]{fhir_table_description}}
 #'
-#' @importFrom fhircrackr fhir_table_description
-#'
 #' @keywords data manipulation
 getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   isPIDDependant <- function(table_description) {
@@ -76,7 +74,7 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
   }
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionsTable(c('resource', 'column_name', 'fhir_expression', 'reference_types'))
+    table_description_table <- getTableDescriptionsTable(c("resource", "column_name", "fhir_expression", "reference_types"))
   }
 
   # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects
@@ -93,7 +91,7 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
       resource = resource_name,
       cols = cols_vector,
       sep = SEP,
-      brackets = NULL
+      brackets = BRACKETS
     )
     return(fhir_table_desc)
   })
@@ -110,4 +108,17 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   reference_types <- table_description_table[!is.na(reference_types)]
   # Returning the list of fhircrackr::fhir_table_description() objects
   return(list(pid_dependant = pid_dependant, pid_independant = pid_independant, reference_types = reference_types))
+}
+
+#' Extract Table Descriptions List
+#'
+#' This function extracts table descriptions from a given list of FHIR table descriptions.
+#' It combines the `pid_dependant` and `pid_independant` elements into a single list.
+#'
+#' @param fhir_table_descriptions_grouped A list containing FHIR table descriptions
+#'        with `pid_dependant` and `pid_independant` elements.
+#' @return A list combining the `pid_dependant` and `pid_independant` elements.
+#' @export
+extractTableDescriptionsList <- function(fhir_table_descriptions_grouped) {
+  as.list(c(fhir_table_descriptions_grouped$pid_dependant, fhir_table_descriptions_grouped$pid_independant))
 }

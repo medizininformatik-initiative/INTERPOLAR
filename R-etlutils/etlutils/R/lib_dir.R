@@ -167,7 +167,7 @@ combineBundlePaths <- function(path) {
 #' @param clock A `Clock` object. Defaults to the global environment `Clock` object `clock_`.
 #'
 #' @export
-savePerformance <- function(filename_without_extension = "Performance_informations", clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
+savePerformance <- function(filename_without_extension = "Performance_informations", clock = getClock()) {
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }

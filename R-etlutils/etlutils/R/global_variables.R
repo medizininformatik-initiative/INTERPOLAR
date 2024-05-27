@@ -9,6 +9,6 @@ utils::globalVariables(c("PERIOD_END", "PERIOD_START", "RESOURCES_TO_DOWNLOAD", 
 # global variables for directory
 utils::globalVariables(c("PROJECT_NAME", "SUB_PROJECTS_DIRS", "PROJECT_TIME_STAMP"))
 # global variables for logging
-utils::globalVariables(c("PROCESS_CLOCK", "VERBOSE", "DEBUG", "VERSIONS"))
+utils::globalVariables(c("VERBOSE", "DEBUG", "VERSIONS"))
 # global variables for other functionalities
 #utils::globalVariables(c("ENC_RES_MERGE", "MEDICATION_RESOURCE"))
