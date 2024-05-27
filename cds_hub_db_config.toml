@@ -19,10 +19,10 @@ DB_CDS2DB_SCHEMA_OUT = "cds2db_out"
 # DataProcessor module settings #
 #################################
 
-DB_DATAPROCESSOR_USER      = "dataprocessor_user"
-DB_DATAPROCESSOR_PASSWORD  = "dataprocessor"
-DB_DATAPROCESSOR_SCHEMA_IN = "dataprocessor_in"
-DB_DATAPROCESSOR_SCHEMA_OUT = "dataprocessor_out"
+DB_DATAPROCESSOR_USER      = "db2dataprocessor_user"
+DB_DATAPROCESSOR_PASSWORD  = "db2dataprocessor"
+DB_DATAPROCESSOR_SCHEMA_IN = "db2dataprocessor_in"
+DB_DATAPROCESSOR_SCHEMA_OUT = "db2dataprocessor_out"
 
 ###############################
 # DB2Frontend module settings #
