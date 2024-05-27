@@ -40,7 +40,8 @@ dataprocessor <- function() {
   etlutils::start_logging('retrieval-total')
 
   etlutils::START__()
-  etlutils::run_out('Run Retrieve', {
+
+  etlutils::run_out('Run Dataprocessor', {
 
     # steps to do:
     # correcting laboratory codes, units and values
@@ -48,7 +49,7 @@ dataprocessor <- function() {
     # MRP calculation
 
     # Initialization
-    etlutils::startProcess(etlutils::run_in('Initialization', {
+    etlutils::runProcess(etlutils::run_in('Initialization', {
       init()
     }))
 
@@ -58,11 +59,6 @@ dataprocessor <- function() {
     # }))
 
   })
-  etlutils::printClock()
-  warnings()
-  etlutils::END__()
-  ###
-  # Save all console logs
-  ###
-  etlutils::end_logging()
+
+  etlutils::finalize()
 }
