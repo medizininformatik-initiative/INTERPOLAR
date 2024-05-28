@@ -16,7 +16,13 @@
 #'
 #' @export
 dbConnect <- function(dbname, host, port, user, password, schema) {
-  db_connection <- DBI::dbConnect(RPostgres::Postgres(), dbname, host, port, user, password, options = paste0('-c search_path=', schema))
+  db_connection <- DBI::dbConnect(RPostgres::Postgres(),
+                                  dbname = dbname,
+                                  host = host,
+                                  port = port,
+                                  user = user,
+                                  password = password,
+                                  options = paste0('-c search_path=', schema))
   # Increase memory allocation for this connection to improve performance for memory-intensive operations
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
   return(db_connection)
