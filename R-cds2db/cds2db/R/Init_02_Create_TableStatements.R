@@ -359,7 +359,7 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
       full_tablename <- getFullTableName(tablename, script_rights_description)
       full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
 
-      single_statement <- loadTemplate("template_copy_function.sql")
+      single_statement <- loadTemplate("template_copy_function_sub_single_table.sql")
 
       single_statement <- gsub("<%COPY_FUNC_NAME%>", rights_first_row$COPY_FUNC_NAME, single_statement)
       single_statement <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, single_statement)
@@ -382,7 +382,9 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
       statements <- paste0(statements, single_statement, "\n")
 
     }
-    writeResultFile(copy_function_script_name, statements)
+    full_copy_function <- loadTemplate("template_copy_function.sql")
+    full_copy_function <- gsub("<%TEMPLATE_COPY_FUNCTION_SUB_SINGLE_TABLE%>", statements, full_copy_function)
+    writeResultFile(copy_function_script_name, full_copy_function)
   }
 }
 
