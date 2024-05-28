@@ -1,4 +1,4 @@
---Create View für Typet Tables für Dataprocessor in Schema db2dataprocessor_out
+--Create View for typed tables for schema db2dataprocessor_out
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_encounter_all_data as (SELECT * from db_log.encounter);
 GRANT SELECT ON  db2dataprocessor_out.v_encounter_all_data TO db2dataprocessor_user;
