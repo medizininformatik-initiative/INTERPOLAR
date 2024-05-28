@@ -248,25 +248,7 @@ BEGIN
                 WHERE encounter_id = current_record.encounter_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END encounter
------------------------------
-
-
-------------------------------
--- Start patient
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.patient_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -345,25 +327,7 @@ BEGIN
                 WHERE patient_id = current_record.patient_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END patient
------------------------------
-
-
-------------------------------
--- Start condition
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.condition_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -730,25 +694,7 @@ BEGIN
                 WHERE condition_id = current_record.condition_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END condition
------------------------------
-
-
-------------------------------
--- Start medication
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.medication_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -947,25 +893,7 @@ BEGIN
                 WHERE medication_id = current_record.medication_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END medication
------------------------------
-
-
-------------------------------
--- Start medicationrequest
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -1662,25 +1590,7 @@ BEGIN
                 WHERE medicationrequest_id = current_record.medicationrequest_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END medicationrequest
------------------------------
-
-
-------------------------------
--- Start medicationadministration
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -2035,25 +1945,7 @@ BEGIN
                 WHERE medicationadministration_id = current_record.medicationadministration_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END medicationadministration
------------------------------
-
-
-------------------------------
--- Start medicationstatement
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -2711,25 +2603,7 @@ BEGIN
                 WHERE medicationstatement_id = current_record.medicationstatement_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END medicationstatement
------------------------------
-
-
-------------------------------
--- Start observation
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.observation_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -3150,25 +3024,7 @@ BEGIN
                 WHERE observation_id = current_record.observation_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END observation
------------------------------
-
-
-------------------------------
--- Start diagnosticreport
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -3328,25 +3184,7 @@ BEGIN
                 WHERE diagnosticreport_id = current_record.diagnosticreport_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END diagnosticreport
------------------------------
-
-
-------------------------------
--- Start servicerequest
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -3548,25 +3386,7 @@ BEGIN
                 WHERE servicerequest_id = current_record.servicerequest_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END servicerequest
------------------------------
-
-
-------------------------------
--- Start procedure
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.procedure_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -3798,25 +3618,7 @@ BEGIN
                 WHERE procedure_id = current_record.procedure_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END procedure
------------------------------
-
-
-------------------------------
--- Start consent
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.consent_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -3946,25 +3748,7 @@ BEGIN
                 WHERE consent_id = current_record.consent_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END consent
------------------------------
-
-
-------------------------------
--- Start location
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.location_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -4037,25 +3821,7 @@ BEGIN
                 WHERE location_id = current_record.location_id;
             END IF;
     END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
--- END location
------------------------------
-
-
-------------------------------
--- Start pids_per_ward
-CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
-RETURNS VOID AS $$
-DECLARE
-    record_count INT;
-    current_record record;
-    data_count integer;
-BEGIN
--- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward_raw WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count

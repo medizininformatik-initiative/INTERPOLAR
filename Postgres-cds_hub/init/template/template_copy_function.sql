@@ -1,5 +1,4 @@
 ------------------------------
--- Start <%SIMPLE_TABLE_NAME%>
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
 RETURNS VOID AS $$
 DECLARE
@@ -8,6 +7,8 @@ DECLARE
     data_count integer;
 BEGIN
 -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
+-- Start <%SIMPLE_TABLE_NAME%>
+-- Copy Table: SIMPLE_TABLE_NAME
     FOR current_record IN (SELECT * FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
             SELECT count(1) INTO data_count
@@ -38,12 +39,12 @@ BEGIN
                 WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
             END IF;
     END LOOP;
+-- END <%SIMPLE_TABLE_NAME%>
 END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
 SELECT cron.schedule('*/10 * * * *', 'SELECT db.<%COPY_FUNC_NAME%>();');
--- END <%SIMPLE_TABLE_NAME%>
 -----------------------------
 
 
