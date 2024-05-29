@@ -56,36 +56,3 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_pids_per_ward_all_data as (SELECT 
 GRANT SELECT ON  db2dataprocessor_out.v_pids_per_ward_all_data TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

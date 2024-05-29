@@ -443,30 +443,29 @@ getCreateViewGrantStatements <- function(table_description, script_rights_descri
   return(statements)
 }
 
-convertTemplateCreateView <- function(table_description, script_rights_description) {
-
-  checkMissingValues <- function() {
-    # create a named vector with equal names and values for the right description columns
-    # so we can use it instead of strings
-    rights_columns <- etlutils::namedListByValue(names(script_rights_description))
-    for (i in seq_len(nrow(script_rights_description))) {
-      if (i == 1) {
-        # check if all needed values are present in the first line
-        stopOnMissingValue(script_rights_description[1],
-                           rights_columns$SCRIPTNAME,
-                           rights_columns$OWNER_USER,
-                           rights_columns$OWNER_SCHEMA,
-                           rights_columns$TABLE_PREFIX,
-                           rights_columns$SCHEMA_2,
-                           rights_columns$TABLE_POSTFIX_2)
-      }
-      # all lines need this values:
-      stopOnMissingValue(script_rights_description[i],
-                         rights_columns$RIGHTS,
-                         rights_columns$GRANT_TRAGET_USER)
+checkMissingValuesForCreateView <- function(script_rights_description) {
+  # create a named vector with equal names and values for the right description columns
+  # so we can use it instead of strings
+  rights_columns <- etlutils::namedListByValue(names(script_rights_description))
+  for (i in seq_len(nrow(script_rights_description))) {
+    if (i == 1) {
+      # check if all needed values are present in the first line
+      stopOnMissingValue(script_rights_description[1],
+                         rights_columns$SCRIPTNAME,
+                         rights_columns$OWNER_USER,
+                         rights_columns$OWNER_SCHEMA,
+                         rights_columns$TABLE_PREFIX,
+                         rights_columns$SCHEMA_2)
     }
+    # all lines need this values:
+    stopOnMissingValue(script_rights_description[i],
+                       rights_columns$RIGHTS,
+                       rights_columns$GRANT_TRAGET_USER)
   }
+}
 
+convertTemplateCreateView <- function(table_description, script_rights_description) {
+  checkMissingValuesForCreateView(script_rights_description)
   rights_first_row <- script_rights_description[1]
   # Load sql template
   content <- loadTemplate("template_cre_view.sql")
@@ -479,6 +478,47 @@ convertTemplateCreateView <- function(table_description, script_rights_descripti
   # Write the modified content to the file
   writeResultFile(rights_first_row$SCRIPTNAME, content)
 }
+
+######################################################
+# Convert Create View2 (dataprocessor -> all tables) #
+######################################################
+
+getCreateView2SingleTableStatements <- function(table_description, script_rights_description) {
+  rights_first_row <- script_rights_description[1]
+  tablenames <- names(table_description)
+  statements <- ""
+  for (tablename in tablenames) {
+    full_tablename <- getFullTableName(tablename, script_rights_description)
+    full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
+    # load grant template
+    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%TABLE_NAME_2%>_id not in (select <%TABLE_NAME%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%>));
+    single_statement <- loadTemplate("<%TEMPLATE_CRE_VIEW2_SUB_SINGLE_TABLE%>")
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+    single_statement <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, single_statement)
+    single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
+    single_statement <- gsub("<%SIMPLE_TABLENAME%>", tablename, single_statement)
+    statements <- paste0(statements, single_statement, "\n")
+  }
+  return(statements)
+}
+
+convertTemplateCreateView2 <- function(table_description, script_rights_description) {
+  checkMissingValuesForCreateView(script_rights_description)
+  rights_first_row <- script_rights_description[1]
+  # Load sql template
+  content <- loadTemplate("template_cre_view2.sql")
+
+  # replace placeholder for create or replace view
+  content <- gsub("<%TEMPLATE_CRE_VIEW2_SUB_SINGLE_TABLE%>", getCreateView2SingleTableStatements(table_description, script_rights_description), content)
+  content <- gsub("<%TEMPLATE_CRE_VIEW_SUB_GRANT%>", getCreateViewGrantStatements(table_description, script_rights_description), content)
+  content <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, content)
+  content <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, content)
+
+  # Write the modified content to the file
+  writeResultFile(rights_first_row$SCRIPTNAME, content)
+}
+
+
 
 ########
 # Main #
@@ -512,28 +552,25 @@ createDatabaseScriptsFromTemplates <- function() {
   table_description <- getTableDescriptionSplittedByResource()
   rights_description <- loadDatabaseRightsDescription()
 
-  isCreateTableScript <- function(script_name) {
-    # accepts names like "12a_cre_table_raw_db_log.sql" or "01_cre_table"
-    return(grepl("^[0-9]+[a-zA-Z]*_cre_table", script_name))
-  }
-
-  isCreateViewScript <- function(script_name) {
-    # accepts names like "12a_cre_view_raw_db_log.sql" or "01_cre_view"
-    return(grepl("^[0-9]+[a-zA-Z]*_cre_view", script_name))
-  }
-
-  scriptname_columnname <- getRightsDefinitionColumnNames()$SCRIPTNAME
+  rights_definition_column_names <- getRightsDefinitionColumnNames()
   for (scriptname in names(rights_description)) {
     script_rights_description <- rights_description[[scriptname]]
-    if (isCreateTableScript(scriptname)) {
+    template <- script_rights_description[1]$TEMPLATE
+    copy_function <- script_rights_description[1]$COPY_FUNC_SCRIPT_NAME
+    if (template %in% "template_cre_table.sql") {
       convertTemplateCreateTable(table_description, script_rights_description)
-      convertTemplateCopyFunction(table_description, script_rights_description)
-    } else if (isCreateViewScript(scriptname)) {
+    } else if (template %in% "template_cre_view.sql") {
       convertTemplateCreateView(table_description, script_rights_description)
+    } else if (template %in% "template_cre_view2.sql") {
+      convertTemplateCreateView2(table_description, script_rights_description)
     } else {
       # simple copy script from template without any changes
       copyTemplate(script_rights_description)
     }
+    if (!is.na(copy_function)) {
+      convertTemplateCopyFunction(table_description, script_rights_description)
+    }
+
   }
 }
 
