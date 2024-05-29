@@ -3891,7 +3891,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
+SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -----------------------------
 
 
