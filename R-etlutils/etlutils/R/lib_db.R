@@ -219,6 +219,25 @@ dbExecute <- function(db_connection, statement, log = TRUE) {
   DBI::dbExecute(db_connection, statement)
 }
 
+#' Execute a SQL Query on a Database Connection
+#'
+#' This function executes a given SQL query on a specified database connection.
+#'
+#' @param db_connection A database connection object.
+#' @param statement A string representing the SQL query to be executed.
+#' @param log logical value indicating whether the statement should be logged to the console.
+#' Default is TRUE.
+#'
+#' @return The result of the SQL query.
+#'
+#' @export
+dbGetQuery <- function(db_connection, statement, log = TRUE) {
+  if (log) {
+    cat(statement)
+  }
+  DBI::dbGetQuery(db_connection, statement)
+}
+
 #' Read a Table from a PostgreSQL Database
 #'
 #' This function reads a table from a PostgreSQL database and returns it as a data table.
