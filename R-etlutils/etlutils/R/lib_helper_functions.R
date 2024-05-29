@@ -156,11 +156,7 @@ isDebug <- function() exists('DEBUG') && DEBUG
 #' @return err
 #' @export
 checkError <- function(err, expr_ok = {cat_ok()}, expr_err = {cat_error()}) {
-  if (!inherits(err, 'try-error')) {
-    expr_ok
-  } else {
-    expr_err
-  }
+  if (isError(err)) expr_err else expr_ok
 }
 
 #' Convert Numbers to Verbose Number Representations
