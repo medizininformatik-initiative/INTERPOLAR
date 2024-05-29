@@ -1,12 +1,12 @@
 ------------------------------
-CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
+CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
     record_count INT;
     current_record record;
     data_count integer;
 BEGIN
-    -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
+    -- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
     -- Start encounter
     FOR current_record IN (SELECT * FROM cds2db_in.encounter WHERE current_dataset_status NOT LIKE 'DELETE after%')
         LOOP
@@ -3891,7 +3891,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/10 * * * *', 'SELECT db.<%COPY_FUNC_NAME%>();');
+SELECT cron.schedule('*/10 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -----------------------------
 
 
