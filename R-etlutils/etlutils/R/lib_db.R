@@ -16,6 +16,7 @@
 #'
 #' @export
 dbConnect <- function(dbname, host, port, user, password, schema) {
+  cat(paste0("Try to connect with: \n   dbname=", dbname, "\n   host=", host, "\n   port=", port, "\n   user=", user, "\n   password=", password, "\n   schema=", schema))
   db_connection <- DBI::dbConnect(RPostgres::Postgres(),
                                   dbname = dbname,
                                   host = host,
@@ -54,7 +55,7 @@ dbDisconnect <- function(db_connection) {
 #'
 #' @param db_connection A valid database connection object, typically created using `DBI::dbConnect`.
 #' This connection should already be established and active to successfully retrieve table names.
-#' @param log logical. If TRUE then all tables names will be printed to the console.
+#' @param log logical. If TRUE then all tables names will be printed to the console. Default is TRUE.
 #'
 #' @return Returns a character vector of table names. The function primarily prints these names
 #' using `utils::str()` for immediate inspection, which is useful for debugging or quick checks in
@@ -205,11 +206,16 @@ dbDeleteContent <- function(db_connection, table_name) {
 #'
 #' @param db_connection A database connection object.
 #' @param statement A string representing the SQL statement to be executed.
+#' @param log logical value indicating whether the statement should be logged to the console.
+#' Default is TRUE.
 #'
 #' @return The number of rows affected by the SQL statement.
 #'
 #' @export
-dbExecute <- function(db_connection, statement) {
+dbExecute <- function(db_connection, statement, log = TRUE) {
+  if (log) {
+    cat(statement)
+  }
   DBI::dbExecute(db_connection, statement)
 }
 
