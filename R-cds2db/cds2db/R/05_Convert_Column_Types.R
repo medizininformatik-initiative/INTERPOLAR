@@ -155,6 +155,33 @@ joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions)
   return(resource_tables)
 }
 
+#' Check if Data Table is Indexed
+#'
+#' This function checks if a data table contains indexed columns based on a specified pattern in the
+#' `fhir_table_description` object. It returns `TRUE` if any character column contains values matching the
+#' index pattern, otherwise `FALSE`.
+#'
+#' @param dt A `data.table` object to be checked.
+#' @param fhir_table_description An object containing the table description, including the brackets used for indexing.
+#'
+#' @return A logical value indicating whether the data table is indexed (`TRUE`) or not (`FALSE`).
+#'
+isIndexedTable <- function(dt, fhir_table_description) {
+  brackets <- fhir_table_description@brackets
+  indices_pattern <- paste0("^\\", brackets[1], ".*\\", brackets[2])
+  for (col in seq_len(ncol(dt))) {
+    if (is.character(dt[[col]])) {
+      for (row in seq_len(nrow(dt))) {
+        value <- dt[[col]][row]
+        if (grepl(indices_pattern, value)) {
+          return(TRUE)
+        }
+      }
+    }
+  }
+  return(FALSE)
+}
+
 #' Melt Cracked FHIR Data
 #'
 #' This function melts cracked FHIR data in the resource tables according to the provided FHIR table descriptions.
@@ -168,9 +195,11 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   names(fhir_table_descriptions) <- tolower(names(fhir_table_descriptions))
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
-    print(paste0("Melt table ", resource_name))
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
-    resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
+    if (isIndexedTable(resource_tables[[i]], fhir_table_description)) {
+      print(paste0("Melt table ", resource_name))
+      resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
+    }
   }
   return(resource_tables)
 }
