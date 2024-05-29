@@ -318,3 +318,21 @@ getWordIndentation <- function(text, word) {
   indentation <- etlutils::countCharsFromEndToLastNewline(text_before_word)
   strrep(" ", indentation)
 }
+
+#' Get Print String of an Object
+#'
+#' This function captures the output of the `print` function for a given object and returns it as a single string.
+#'
+#' @param object The object to be printed.
+#'
+#' @return A string containing the printed representation of the object.
+#'
+#' @examples
+#' df <- data.frame(a = 1:5, b = letters[1:5])
+#' print_string <- getPrintString(df)
+#' cat(print_string)
+#'
+#' @export
+getPrintString <- function(object) {
+  paste(capture.output(print(object)), collapse = "\n")
+}
