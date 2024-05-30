@@ -46,20 +46,87 @@ copyDB2Redcap <- function() {
   #get data from patient view / tabelle, schema _out
   initConstants()
 
+  #prepare REDCap import dataframe
+  dataFromDB <- data.frame(matrix(ncol = 32, nrow = 0))
+
+  #provide column names
+  colnames(dataFromDB) <- c('record_id','redcap_repeat_instrument','redcap_repeat_instance','pat_id','pat_name',
+                    'pat_vorname','pat_gebdat','pat_geschlecht','pat_complete',
+                    'fall_id','fall_studienphase','fall_station','fall_aufn_dat','fall_aufn_diag',
+                    'fall_gewicht_akt','fall_gewicht_akt_einheit','fall_groesse','fall_groesse_einheit',
+                    'fall_status','fall_ent_dat','fall_complete')
+
   #establish connection to db
   dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
                    DB_GENERAL_PORT, DB_DB2FRONTEND_SCHEMA_OUT)
 
 
-  #get relevant columns
-  new_data <- DBI::dbGetQuery(dbcon, "SELECT record_id,pat_id,pat_name,pat_vorname,pat_ak_alter,
-                              pat_gschlcht FROM patient")
+  #get relevant columns for Patient and Fall (Phase 1a of INTERPOLAR)
+  dataFromDB <- DBI::dbGetQuery(dbcon, "SELECT record_id,t2.redcap_repeat_instrument,t2.redcap_repeat_instance,
+                                pat_id,pat_name,pat_vorname,pat_gebdat,pat_geschlecht,pat_complete,
+                                fall_id,fall_studienphase,fall_station,fall_aufn_dat,fall_aufn_diag,
+                                fall_gewicht_akt,fall_gewicht_akt_einheit,fall_groesse_cm,fall_groesse_einheit,
+                                fall_status,fall_ent_dat,fall_complete
+                              FROM v_patient t1, v_fall t2 where t1.patient_fe_id=t2.fall_fe_id")
 
   #connect to REDCap project
   redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
   #send data to REDCap
-  redcapAPI::importRecords(redcapcon, data = new_data, logfile = "log.txt")
+  redcapAPI::importRecords(redcapcon, data = dataFromDB, logfile = "log.txt")
+
+  #disconnect from db
+  DBI::dbDisconnect(dbcon)
+}
+
+#' Copy REDCap Content to Database
+#'
+#' This function retrieves data from an existing REDCap project and imports this data into
+#' the table in a database (defined in the schema `_in`).
+#' It establishes a connection to the REDCap project using API credentials and fetches relevant
+#' patient, case, medication analysis and MRP data,
+#' then connects a PostgreSQL database  to  import the data into it.
+#'
+#' Note: Database and REDCap connection details (e.g., credentials, table names) are
+#' required to be predefined or passed as arguments (not included in this example for
+#' security reasons).
+#'
+#' @return Invisible. The function is called for its side effects: exporting data
+#' out of REDCap and does not return a value.
+#'
+#' @examples
+#' # Before using this function, ensure that variables `dbname`, `dbhost`, `dbport`,
+#' # `dbfrontenduser`, `dbfrontendpassword`, `dbfrontendoptionsout`, `url`, and `token`
+#' # are correctly set up with your database and REDCap project details.
+#' # This is a placeholder example and won't run without proper setup:
+#' # copyRedcap2DB()
+#'
+copyRedcap2DB <- function() {
+  #get data from patient view / tabelle, schema _out
+  initConstants()
+
+  #connect to REDCap project
+  redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+
+  #get data from REDCap
+  #redcapAPI::importRecords(redcapcon, data = datenVonDB, logfile = "log.txt")
+  fromRD<-redcapAPI::exportRecordsTyped(rcon)
+  #hier weeiteere.......
+  rc_pat<-redcapAPI::exportRecordsTyped(rcon,forms="patient")
+  rc_fall<-redcapAPI::exportRecordsTyped(rcon,forms="fall")
+  rc_medana<-redcapAPI::exportRecordsTyped(rcon,forms="medikationsanalyse")
+  rc_mrp<-redcapAPI::exportRecordsTyped(rcon,forms="mrpdokumentation_validierung")
+
+  #establish connection to db
+  dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
+                               DB_GENERAL_PORT, DB_DB2FRONTEND_SCHEMA_IN)
+
+
+  #write to relevant tables
+  DBI::dbAppendTable(dbcon,"patient_fe",rc_pat)
+  DBI::dbAppendTable(dbcon,"fall_fe",rc_fall)
+  DBI::dbAppendTable(dbcon,"medikationsanalyse_fe",rc_medana)
+  DBI::dbAppendTable(dbcon,"mrpdokumentation_validierung_fe",rc_mrp)
 
   #disconnect from db
   DBI::dbDisconnect(dbcon)
