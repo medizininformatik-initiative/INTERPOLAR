@@ -16,7 +16,7 @@
 #'
 #' @export
 dbConnect <- function(dbname, host, port, user, password, schema) {
-  cat(paste0("Try to connect with: \n   dbname=", dbname, "\n   host=", host, "\n   port=", port, "\n   user=", user, "\n   password=", password, "\n   schema=", schema))
+  cat(paste0("Try to connect with: \n   dbname=", dbname, "\n   host=", host, "\n   port=", port, "\n   user=", user, "\n   password=", password, "\n   schema=", schema, "\n"))
   db_connection <- DBI::dbConnect(RPostgres::Postgres(),
                                   dbname = dbname,
                                   host = host,
