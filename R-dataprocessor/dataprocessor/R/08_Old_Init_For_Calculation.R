@@ -1,3 +1,68 @@
+#####################################################################################
+### HIER STEHT ZUERST DER INHALT DER dataprocessor_config.toml DATEI, DER FÜR DEN ###
+### UNTEREN CODE RELEVANT IST                                                     ###
+#####################################################################################
+
+
+# # Number of days to look into the future when searching for MRPs. If missing, default is 30.
+# MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30
+#
+# [mrp_definition_files]
+#
+# # General hint: if one of the filenames is not set or emtpy string, then the mrp-calculation for this
+# #               problem will not be executed.
+# # Name of the Excel file with the MRP definitions in the 'inst/extdata' directory without extension
+# MRP_DEFINITION_FILE_DRUG_DISEASE = "Drug-Disease_290124_ATC24_bereinigt"
+#
+#
+# # Actually, only MedicationRequest should be used here, as it contains the prescription, the start time and the dosing
+# # schedule. However, you can also use a different medication resource for testing purposes, even if the meaning is not
+# # actually correct.
+# [used_medication_request_resource]
+#
+# # Description of the follwing variables:
+# #                                  MEDICATION_REQUEST_RESOURCE: Medication Resource Name (as in FHIR)
+# #  MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME: Name of the column with the encounter reference
+# # MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME: Name of the column with the Medication reference
+# #            MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME: Name of the column with the time stamp when the
+# #                                                               administrationof the medication should start or takes
+# #                                                               place once
+# #         MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME: Name of the column with the time stamp when the repeated
+# #                                                               administration of the medication should begin
+# #           MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME: Name of the column with the time stamp when the repeated
+# #                                                               administration of the medication should end
+#
+# #MEDICATION_REQUEST_RESOURCE = "MedicationRequest"
+# #MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id"
+# #MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id"
+# #MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event"
+# #MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start"
+# #MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end"
+#
+# MEDICATION_REQUEST_RESOURCE = "MedicationAdministration"
+# MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medadm_encounter_id"
+# MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medadm_medicationreference_id"
+# MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medadm_effectivedatetime"
+# MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medadm_effectiveperiod_start"
+# MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medadm_effectiveperiod_end"
+#
+# #MEDICATION_REQUEST_RESOURCE = "MedicationStatement"
+# #MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medstat_encounter_id"
+# #MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medstat_medicationreference_id"
+# #MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medstat_effectivedatetime"
+# #MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medstat_effectiveperiod_start"
+# #MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medstat_effectiveperiod_end"
+#
+
+#########################################################################
+### ENDE DES INHALTS DER dataprocessor_config.toml DATEI, DER FÜR DEN ###
+### UNTEREN CODE RELEVANT IST                                         ###
+#########################################################################
+
+
+# Ab hier kommt der eigentliche R Code
+
+
 #' #' Load tables from RData files
 #' #'
 #' #' This function loads tables from RData files located in the specified directory.
