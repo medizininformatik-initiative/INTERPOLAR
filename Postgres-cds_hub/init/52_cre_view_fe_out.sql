@@ -1,4 +1,4 @@
---Create SQL View not Typed Datasets in Schema db2frontend_out
+--Create SQL View not Typed Datasets in Schema db2frontend_out direct from DataProc
 CREATE OR REPLACE VIEW db2frontend_out.v_patient AS (select * from db2dataprocessor_in.patient_fe);
 CREATE OR REPLACE VIEW db2frontend_out.v_fall AS (select * from db2dataprocessor_in.fall_fe);
 CREATE OR REPLACE VIEW db2frontend_out.v_medikationsanalyse AS (select * from db2dataprocessor_in.medikationsanalyse_fe);

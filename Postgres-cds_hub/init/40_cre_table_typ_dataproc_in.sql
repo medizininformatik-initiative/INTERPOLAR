@@ -1,13 +1,15 @@
 --Create SQL Table in Schema db2dataprocessor_in
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
 patient_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-record_id varchar (200),   -- Record ID (200 x 1 varchar)
-pat_id varchar (200),   -- Patient-identifier (200 x 1 varchar)
-pat_name varchar (200),   -- Patientenname (200 x 1 varchar)
-pat_vorname varchar (200),   -- Patientenvorname (200 x 1 varchar)
-pat_gebdat varchar (200),   -- Geburtsdatum (200 x 1 varchar)
-pat_aktuell_alter varchar (200),   -- <div class=rich-text-field-label><p>aktuelles Patientenalter (Jahre)</p></div> (200 x 1 varchar)
-pat_geschlecht numeric (10),   -- 0, nicht bekannt | 1, weiblich | 2, männlich | 3, diversGeschlecht (10 x 1 numeric)
+record_id varchar, -- Record ID RedCap
+patient_id_pk int, -- Datenbank-PK ID des Patienten (intern)
+pat_id varchar, -- Patient-identifier
+pat_name varchar, -- Patientenname
+pat_vorname varchar, -- Patientenvorname
+pat_gebdat date, -- Geburtsdatum
+pat_aktuell_alter double precision, -- <div class=rich-text-field-label><p>aktuelles Patientenalter (Jahre)</p></div>
+pat_geschlecht varchar, -- Geschlecht (wie in FHIR)
+patient_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
@@ -15,24 +17,31 @@ current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Da
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
 fall_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-fall_id varchar (200),   -- Fall-ID (200 x 1 varchar)
-fall_studienphase numeric (10),   -- 1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P)<div class=rich-text-field-label><p><span style=color: #e03e2d;>Studienphase (wird wenn produktiv versteckt sein)</span></p></div> (10 x 1 numeric)
-fall_station numeric (10),   -- 1, Station 1 | 2, Station 2 | 3, Station 3Station (10 x 1 numeric)
-fall_aufn_dat varchar (200),   -- Aufnahmedatum (200 x 1 varchar)
-fall_aufn_diag varchar (1000),   -- <div class=rich-text-field-label><p><span style=color: #e03e2d;>Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div> (1000 x 1 varchar)
-fall_gewicht_kg_aktuell varchar (500),   -- aktuelles Gewicht (Kg) (500 x 1 varchar)
-fall_groesse_cm varchar (230),   -- Größe (cm) (230 x 1 varchar)
-fall_bmi varchar (200),   -- BMI (200 x 1 varchar)
-fall_nieren_insuf_chron numeric (10),   -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (10 x 1 numeric)
-fall_nieren_insuf_ausmass numeric (10),   -- 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class=rich-text-field-label><p>aktuelles Ausmaß</p></div> (10 x 1 numeric)
-fall_nieren_insuf_dialysev numeric (10),   -- 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (10 x 1 numeric)
-fall_leber_insuf numeric (10),   -- 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (10 x 1 numeric)
-fall_leber_insuf_ausmass numeric (10),   -- 1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß (10 x 1 numeric)
-fall_schwanger_mo numeric (10),   -- 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9<div class=rich-text-field-label><p><span style=color: #000000;>Schwangerschaftsmonat</span></p></div> (10 x 1 numeric)
-fall_op_geplant numeric (10),   -- 1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant? (10 x 1 numeric)
-fall_op_dat varchar (200),   -- Operationsdatum (200 x 1 varchar)
-fall_status numeric (10),   -- 1, aktuell / neu | 2, nicht relevant | 3, verlegt<div class=rich-text-field-label><p><span style=color: #e03e2d;><span style=color: #000000;>Fallstatus:</span><br></span></p></div> (10 x 1 numeric)
-fall_ent_dat varchar (200),   -- Entlassdatum (200 x 1 varchar)
+fall_id varchar, -- Fall-ID RedCap
+fall_id_pk int, -- Datenbank-PK ID des Falls (intern)
+patient_id_fk int, -- Datenbank-FK ID des Patienten (intern)
+redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
+redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
+fall_studienphase varchar, -- Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) )
+fall_station varchar, -- Station wie vom DIZ Definiert
+fall_aufn_dat date, -- Aufnahmedatum
+fall_aufn_diag varchar, -- <div class=rich-text-field-label><p><span style=color: #e03e2d;>Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div>
+fall_gewicht_aktuell double precision, -- aktuelles Gewicht (Kg)
+fall_gewicht_aktl_einheit double precision, -- 
+fall_groesse double precision, -- Größe (cm)
+fall_groesse_einheit double precision, -- 
+fall_bmi double precision, -- BMI
+fall_nieren_insuf_chron varchar, -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz
+fall_nieren_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class=rich-text-field-label><p>aktuelles Ausmaß</p></div>
+fall_nieren_insuf_dialysev varchar, -- 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren
+fall_leber_insuf varchar, -- 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz
+fall_leber_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß
+fall_schwanger_mo varchar, -- 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9<div class=rich-text-field-label><p><span style=color: #000000;>Schwangerschaftsmonat</span></p></div>
+fall_op_geplant varchar, -- 1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant?
+fall_op_dat date, -- Operationsdatum
+fall_status varchar, -- 
+fall_ent_dat date, -- Entlassdatum
+fall_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
@@ -40,12 +49,18 @@ current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Da
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
 medikationsanalyse_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-meda_dat varchar (200),   -- Datum der Medikationsanalyse (200 x 1 varchar)
-meda_typ numeric (10),   -- 1, Typ 1: Einfache | 2, Typ 2a: Erweiterte | 3, Typ 2b: Erweiterte | 4, Typ 3: Umfassende MedikationsanalyseTyp der Medikationsanalyse (10 x 1 numeric)
-meda_risiko_pat numeric (10),   -- 1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (10 x 1 numeric)
-meda_aufwand_zeit numeric (10),   -- 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (10 x 1 numeric)
-meda_aufwand_zeit_and varchar (200),   -- wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten.  (200 x 1 varchar)
-meda_notiz varchar (1000),   -- Notizfeld (1000 x 1 varchar)
+meda_id_pk int, -- Datenbank-PK ID der Medikationsanalyse (intern)
+fall_id_fk int, -- Datenbank-FK ID des Falls (intern)
+redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
+redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
+meda_dat date, -- Datum der Medikationsanalyse
+meda_typ varchar, -- Typ der Medikationsanalyse
+meda_risiko_pat varchar, -- 1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient
+meda_ma_thueberw varchar, -- Medikationsanalyse / Therapieüberwachung in 24-48h
+meda_aufwand_zeit varchar, -- 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min]
+meda_aufwand_zeit_and int, -- wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten. 
+meda_notiz varchar, -- Notizfeld
+medikationsanalyse_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
@@ -53,41 +68,99 @@ current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Da
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
 mrpdokumentation_validierung_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-mrp_entd_dat varchar (200),   -- Datum des MRP (200 x 1 varchar)"
-mrp_kurzbeschr varchar (1000),   -- Kurzbeschreibung des MRPs (1000 x 1 varchar)
-mrp_entd_algorithmisch numeric (10),   -- 1, Ja | 0, NeinMRP vom INTERPOLAR-Algorithmus entdeckt? (10 x 1 numeric)
-mrp_hinweisgeber numeric (10),   -- 1, Apotheker*in (Station) | 2, Apotheker*in (UnitDose) | 3, Arzt / Ärztin | 4, Pflege | 5, Patient*in / Angehörige*r | 6, unbekannt | 7, andereHinweisgeber auf das MRP (10 x 1 numeric)
-mrp_gewissheit numeric (10),   -- 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigtSicherheit des detektierten MRP (10 x 1 numeric)
-mrp_gewiss_grund_abl numeric (10),   -- 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, SonstigesGrund für nicht Bestätigung (10 x 1 numeric)
-mrp_gewiss_grund_abl_sonst varchar (200),   -- Bitte näher beschreiben (200 x 1 varchar)
-mrp_wirkstoff numeric (10),   -- 1, Ja | 0, NeinWirkstoff betroffen? (10 x 1 numeric)
-mrp_atc1 numeric (10),   -- 7298, J05AF06 - Abacavir | 7299, H05AA04 - Abaloparatid | 7300, P03AX07 - Abametapir | 7301, L02BX01 - Abarelix | 7302, L04AA24 - Abatacept | 7303, B01AC13 - Abciximab | 7304, L01EF03 - Abemaciclib | 7305, L04AA22 - Abetimus | 7306, S01LA07 - Abicipar peg1. Medikament ATC / Name: (10 x 1 numeric)
-mrp_atc2 numeric (10),   -- 7298, J05AF06 - Abacavir | 7299, H05AA04 - Abaloparatid | 7300, P03AX07 - Abametapir | 7301, L02BX01 - Abarelix | 7302, L04AA24 - Abatacept | 7303, B01AC13 - Abciximab | 7304, L01EF03 - Abemaciclib | 7305, L04AA22 - Abetimus | 7306, S01LA07 - Abicipar peg2. Medikament ATC / Name (10 x 1 numeric)
-mrp_atc3 numeric (10),   -- 7298, J05AF06 - Abacavir | 7299, H05AA04 - Abaloparatid | 7300, P03AX07 - Abametapir | 7301, L02BX01 - Abarelix | 7302, L04AA24 - Abatacept | 7303, B01AC13 - Abciximab | 7304, L01EF03 - Abemaciclib | 7305, L04AA22 - Abetimus | 7306, S01LA07 - Abicipar peg3. Medikament ATC / Name (10 x 1 numeric)
-mrp_med_prod numeric (10),   -- 1, Ja | 0, NeinMedizinprodukt betroffen? (10 x 1 numeric)
-mrp_med_prod_sonst varchar (200),   -- Sonstigespräparat (200 x 1 varchar)
-mrp_dokup_fehler varchar (200),   -- <div class="rich-text-field-label"><p>Frage / <span style="font-weight: normal;">Fehlerbeschreibung </span></p> <p><span style="font-weight: normal;">[mrp_kurzbeschr]</span></p></div> (200 x 1 varchar)
-mrp_dokup_intervention varchar (200),   -- <div class="rich-text-field-label"><p>Intervention / <span style="font-weight: normal;">Vorschlag zur Fehlervermeldung</span></p></div> (200 x 1 varchar)
-mrp_pi_grund_am numeric (10),   -- 1, (Klare) Indikation nicht (mehr) gegeben (MF) | 2, Verordnung/Dokumentation unvollständig/fehlerhaft (MF) | 3, Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) | 4, Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) | 5, Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) | 6, Übertragungsfehler (MF) | 7, Substitution aut idem/aut simile (MF) | 11, (Klare) Indikation, aber kein Medikament angeordnet (MF) | 12, Stellfehler (MF) | 13, Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) | 14, Doppelverordnung (MF)<div class="rich-text-field-label"><p style="text-align: left;">AM: Arzneimittel</p></div> (10 x 1 numeric)
-mrp_pi_grund_anw numeric (10),   -- 1, Applikation (Dauer) (MF) | 2, Inkompatibilität oder falsche Zubereitung (MF) | 3, Applikation (Art) (MF) | 4, Anfrage zur Administration/KompatibilitätANW: Anwendung (10 x 1 numeric)
-mrp_pigrund_d numeric (10),   -- 1, Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) | 2, (Fehlerhafte) Dosis (MF) | 3, (Fehlende) Dosisanpassung (Organfunktion) (MF) | 4, (Fehlerhaftes) Dosisinterval (MF)D: Dosis (10 x 1 numeric)
-mrp_pigrund_and numeric (10),   -- 1, Interaktion (MF) | 2, Kontraindikation (MF) | 3, Nebenwirkungen (10 x 1 numeric)
-mrp_ip_klasse numeric (10),   -- 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis)MRP-Klasse (INTERPOLAR) (10 x 1 numeric)
-mrp_ip_klasse_disease varchar (200),   -- Disease (200 x 1 varchar)
-mrp_ip_klasse_labor varchar (200),   -- Labor (200 x 1 varchar)
-mrp_pigrund_s numeric (10),   -- 1, Beratung/Auswahl eines Arzneistoffs | 2, Beratung/Auswahl zur Dosierung eines Arzneistoffs | 3, Beschaffung/Kosten | 4, Keine Pause von AM, die prä-OP pausiert werden müssen (MF) | 5, Schulung/Beratung eines PatientenS: sonstiges (10 x 1 numeric)
-mrp_massn_am numeric (10),   -- 1, Anweisung für die Applikation geben | 2, Arzneimittel ändern | 3, Arzneimittel stoppen/pausieren | 4, Arzneimittel neu ansetzen | 5, Dosierung ändern | 6, Formulierung ändern | 7, Hilfe bei Beschaffung | 8, Information an Arzt/Pflege | 9, Information an Patient | 10, TDM oder Laborkontrolle emfohlen<div class="rich-text-field-label"><p>AM: Arzneimittel</p></div> (10 x 1 numeric)
-mrp_massn_orga numeric (10),   -- 1, Aushändigung einer Information/eines Medikationsplans | 2, CIRS-/AMK-Meldung | 3, Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers | 4, Etablierung einer Doppelkontrolle | 5, Lieferantenwechsel | 6, Optimierung der internen und externene Kommunikation | 7, Prozessoptimierung/Etablierung einer SOP/VA | 8, Sensibilisierung/Schulung<div class="rich-text-field-label"><p>ORGA: Organisatorisch</p></div> (10 x 1 numeric)
-mrp_notiz varchar (1000),   -- Notiz (1000 x 1 varchar)
-mrp_dokup_hand_emp_akz numeric (10),   -- 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4, Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöstHandlungsempfehlung akzeptiert? (10 x 1 numeric)
-mrp_wiedervorlage numeric (10),   -- 1, Ja | 0, NeinMRP Wiedervorlage (10 x 1 numeric)
-mrp_abschluss_dat varchar (200),   --  (200 x 1 varchar)
+mrp_id_pk int, -- Datenbank-PK ID des MRPs (intern)
+meda_id_fk int, -- Datenbank-FK ID der Medikationsanalyse (intern)
+redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
+redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
+mrp_entd_dat date, -- Datum des MRP
+mrp_kurzbeschr varchar, -- Kurzbeschreibung des MRPs
+mrp_entd_algorithmisch varchar, -- MRP vom INTERPOLAR-Algorithmus entdeckt?
+mrp_hinweisgeber varchar, -- Hinweisgeber auf das MRP
+mrp_gewissheit varchar, -- Sicherheit des detektierten MRP
+mrp_gewiss_grund_abl varchar, -- Grund für nicht Bestätigung
+mrp_gewiss_grund_abl_sonst varchar, -- Bitte näher beschreiben
+mrp_wirkstoff varchar, -- Wirkstoff betroffen?
+mrp_atc1 varchar, -- 1. Medikament ATC / Name:
+mrp_atc2 varchar, -- 2. Medikament ATC / Name
+mrp_atc3 varchar, -- 3. Medikament ATC / Name
+mrp_med_prod varchar, -- Medizinprodukt betroffen?
+mrp_med_prod_sonst varchar, -- Sonstigespräparat
+mrp_dokup_fehler varchar, -- <div class=rich-text-field-label><p>Frage / <span style=font-weight: normal;>Fehlerbeschreibung </span></p> <p><span style=font-weight: normal;>[mrp_kurzbeschr]</span></p></div>
+mrp_dokup_intervention varchar, -- <div class=rich-text-field-label><p>Intervention / <span style=font-weight: normal;>Vorschlag zur Fehlervermeldung</span></p></div>
+mrp_pigrund varchar, -- PI-Grund
+mrp_ip_klasse varchar, -- MRP-Klasse (INTERPOLAR)
+mrp_ip_klasse_disease varchar, -- Disease
+mrp_ip_klasse_labor varchar, -- Labor
+mrp_massn_am varchar, -- <div class=rich-text-field-label><p>AM: Arzneimittel</p></div>
+mrp_massn_orga varchar, -- <div class=rich-text-field-label><p>ORGA: Organisatorisch</p></div>
+mrp_notiz varchar, -- Notiz
+mrp_dokup_hand_emp_akz varchar, -- Handlungsempfehlung akzeptiert?
+mrp_merp varchar, -- NCC MERP Score
+mrp_wiedervorlage varchar, -- MRP Wiedervorlage
+mrpdokumentation_validierung_complete varchar, -- Frontend Complete-Status
+input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
+last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
+current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+);
+
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
+risikofaktor_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+rskfk_id_pk int, -- Datenbank-PK ID des Risikofaktors (intern)
+patient_id_fk int, -- Datenbank-FK ID des zugehörigen Patienten (intern)
+rskfk_gerhemmer varchar, -- Ger.hemmer
+rskfk_tah varchar, -- TAH
+rskfk_immunsupp varchar, -- Immunsupp.
+rskfk_tumorth varchar, -- Tumorth.
+rskfk_opiat varchar, -- Opiat
+rskfk_atcn varchar, -- ATC N
+rskfk_ait varchar, -- AIT
+rskfk_anzam varchar, -- Anz AM
+rskfk_priscus varchar, -- PRISCUS
+rskfk_qtc varchar, -- QTc
+rskfk_meld varchar, -- MELD
+rskfk_dialyse varchar, -- Dialyse
+rskfk_entern varchar, -- ent. Ern.
+rskfkt_anz_rskamklassen varchar, -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0
+risikofaktor_complete varchar, -- Frontend Complete-Status
+input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
+last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
+current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+);
+
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
+trigger_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+trg_id_pk int, -- Datenbank-PK ID des Triggers (intern)
+patient_id_fk int, -- Datenbank-FK ID des zugehörigen Patienten (intern)
+trg_ast varchar, -- <div class=rich-text-field-label><p>AST<span style=font-weight: normal; font-size: 12pt;>↑</span></p></div>
+trg_alt varchar, -- ALT↑
+trg_crp varchar, -- CRP↑
+trg_leuk_penie varchar, -- Leuko↓
+trg_leuk_ose varchar, -- Leuko↑
+trg_thrmb_penie varchar, -- Thrombo↓
+trg_aptt varchar, -- aPTT
+trg_hyp_haem varchar, -- Hb↓
+trg_hypo_glyk varchar, -- Glc↓
+trg_hyper_glyk varchar, -- Glc↑
+trg_hyper_bilirbnm varchar, -- Bili↑
+trg_ck varchar, -- CK↑
+trg_hypo_serablmn varchar, -- Alb↓
+trg_hypo_nat varchar, -- Na+↓
+trg_hyper_nat varchar, -- Na+↑
+trg_hyper_kal varchar, -- K+↓
+trg_hypo_kal varchar, -- K+↑
+trg_inr_ern varchar, -- INR Antikoag↓
+trg_inr_erh varchar, -- INR ↑
+trg_inr_erh_antikoa varchar, -- INR Antikoag↑
+trg_krea varchar, -- Krea↑
+trg_egfr varchar, -- eGFR<30
+trigger_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 --SQL Role / Trigger in Schema db2dataprocessor_in
+GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO cds2db_user;
@@ -114,6 +187,7 @@ CREATE OR REPLACE TRIGGER patient_fe_tr_ins_tr
   FOR EACH ROW
   EXECUTE PROCEDURE  db2dataprocessor_in.patient_fe_tr_ins_fkt();
 
+GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO cds2db_user;
@@ -140,6 +214,7 @@ CREATE OR REPLACE TRIGGER fall_fe_tr_ins_tr
   FOR EACH ROW
   EXECUTE PROCEDURE  db2dataprocessor_in.fall_fe_tr_ins_fkt();
 
+GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO cds2db_user;
@@ -166,6 +241,7 @@ CREATE OR REPLACE TRIGGER medikationsanalyse_fe_tr_ins_tr
   FOR EACH ROW
   EXECUTE PROCEDURE  db2dataprocessor_in.medikationsanalyse_fe_tr_ins_fkt();
 
+GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO cds2db_user;
@@ -192,67 +268,181 @@ CREATE OR REPLACE TRIGGER mrpdokumentation_validierung_fe_tr_ins_tr
   FOR EACH ROW
   EXECUTE PROCEDURE  db2dataprocessor_in.mrpdokumentation_validierung_fe_tr_ins_fkt();
 
+GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_user;
+GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO cds2db_user;
+GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+
+CREATE OR REPLACE FUNCTION db2dataprocessor_in.risikofaktor_fe_tr_ins_fkt()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Eintragen des aktuellen Zeitpunkts
+    IF NEW.input_datetime IS NULL THEN
+        NEW.input_datetime := CURRENT_TIMESTAMP;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER risikofaktor_fe_tr_ins_tr
+  BEFORE INSERT
+  ON  db2dataprocessor_in.risikofaktor_fe
+  FOR EACH ROW
+  EXECUTE PROCEDURE  db2dataprocessor_in.risikofaktor_fe_tr_ins_fkt();
+
+GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_user;
+GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO cds2db_user;
+GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+
+CREATE OR REPLACE FUNCTION db2dataprocessor_in.trigger_fe_tr_ins_fkt()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Eintragen des aktuellen Zeitpunkts
+    IF NEW.input_datetime IS NULL THEN
+        NEW.input_datetime := CURRENT_TIMESTAMP;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
+  BEFORE INSERT
+  ON  db2dataprocessor_in.trigger_fe
+  FOR EACH ROW
+  EXECUTE PROCEDURE  db2dataprocessor_in.trigger_fe_tr_ins_fkt();
+
 -- Comment on Table in Schema db2dataprocessor_in
-comment on column db2dataprocessor_in.patient_fe.record_id is 'Record ID (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.patient_fe.pat_id is 'Patient-identifier (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.patient_fe.pat_name is 'Patientenname (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.patient_fe.pat_vorname is 'Patientenvorname (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.patient_fe.pat_gebdat is 'Geburtsdatum (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.patient_fe.pat_aktuell_alter is '<div class="rich-text-field-label"><p>aktuelles Patientenalter (Jahre)</p></div> (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.patient_fe.pat_geschlecht is '0, nicht bekannt | 1, weiblich | 2, männlich | 3, diversGeschlecht (10 x 1 10 - numeric)';
+comment on column db2dataprocessor_in.patient_fe.record_id is 'Record ID RedCap';
+comment on column db2dataprocessor_in.patient_fe.patient_id_pk is 'Datenbank-PK ID des Patienten (intern)';
+comment on column db2dataprocessor_in.patient_fe.pat_id is 'Patient-identifier';
+comment on column db2dataprocessor_in.patient_fe.pat_name is 'Patientenname';
+comment on column db2dataprocessor_in.patient_fe.pat_vorname is 'Patientenvorname';
+comment on column db2dataprocessor_in.patient_fe.pat_gebdat is 'Geburtsdatum';
+comment on column db2dataprocessor_in.patient_fe.pat_aktuell_alter is '<div class="rich-text-field-label"><p>aktuelles Patientenalter (Jahre)</p></div>';
+comment on column db2dataprocessor_in.patient_fe.pat_geschlecht is 'Geschlecht (wie in FHIR)';
+comment on column db2dataprocessor_in.patient_fe.patient_complete is 'Frontend Complete-Status';
 
-comment on column db2dataprocessor_in.fall_fe.fall_id is 'Fall-ID (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_studienphase is '1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P)<div class="rich-text-field-label"><p><span style="color: #e03e2d;">Studienphase (wird wenn produktiv versteckt sein)</span></p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_station is '1, Station 1 | 2, Station 2 | 3, Station 3Station (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_aufn_dat is 'Aufnahmedatum (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_aufn_diag is '<div class="rich-text-field-label"><p><span style="color: #e03e2d;">Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div> (1000 x 1 1000 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_gewicht_kg_aktuell is 'aktuelles Gewicht (Kg) (500 x 1 500 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_groesse_cm is 'Größe (cm) (230 x 1 230 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_bmi is 'BMI (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_nieren_insuf_chron is '1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_nieren_insuf_ausmass is '1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class="rich-text-field-label"><p>aktuelles Ausmaß</p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_nieren_insuf_dialysev is '1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_leber_insuf is '1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_leber_insuf_ausmass is '1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_schwanger_mo is '0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9<div class="rich-text-field-label"><p><span style="color: #000000;">Schwangerschaftsmonat</span></p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_op_geplant is '1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant? (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_op_dat is 'Operationsdatum (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_status is '1, aktuell / neu | 2, nicht relevant | 3, verlegt<div class="rich-text-field-label"><p><span style="color: #e03e2d;"><span style="color: #000000;">Fallstatus:</span><br></span></p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.fall_fe.fall_ent_dat is 'Entlassdatum (200 x 1 200 - varchar)';
+comment on column db2dataprocessor_in.fall_fe.fall_id is 'Fall-ID RedCap';
+comment on column db2dataprocessor_in.fall_fe.fall_id_pk is 'Datenbank-PK ID des Falls (intern)';
+comment on column db2dataprocessor_in.fall_fe.patient_id_fk is 'Datenbank-FK ID des Patienten (intern)';
+comment on column db2dataprocessor_in.fall_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
+comment on column db2dataprocessor_in.fall_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
+comment on column db2dataprocessor_in.fall_fe.fall_studienphase is 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) )';
+comment on column db2dataprocessor_in.fall_fe.fall_station is 'Station wie vom DIZ Definiert';
+comment on column db2dataprocessor_in.fall_fe.fall_aufn_dat is 'Aufnahmedatum';
+comment on column db2dataprocessor_in.fall_fe.fall_aufn_diag is '<div class="rich-text-field-label"><p><span style="color: #e03e2d;">Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div>';
+comment on column db2dataprocessor_in.fall_fe.fall_gewicht_aktuell is 'aktuelles Gewicht (Kg)';
+comment on column db2dataprocessor_in.fall_fe.fall_gewicht_aktl_einheit is '';
+comment on column db2dataprocessor_in.fall_fe.fall_groesse is 'Größe (cm)';
+comment on column db2dataprocessor_in.fall_fe.fall_groesse_einheit is '';
+comment on column db2dataprocessor_in.fall_fe.fall_bmi is 'BMI';
+comment on column db2dataprocessor_in.fall_fe.fall_nieren_insuf_chron is '1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz';
+comment on column db2dataprocessor_in.fall_fe.fall_nieren_insuf_ausmass is '1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class="rich-text-field-label"><p>aktuelles Ausmaß</p></div>';
+comment on column db2dataprocessor_in.fall_fe.fall_nieren_insuf_dialysev is '1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren';
+comment on column db2dataprocessor_in.fall_fe.fall_leber_insuf is '1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz';
+comment on column db2dataprocessor_in.fall_fe.fall_leber_insuf_ausmass is '1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß';
+comment on column db2dataprocessor_in.fall_fe.fall_schwanger_mo is '0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9<div class="rich-text-field-label"><p><span style="color: #000000;">Schwangerschaftsmonat</span></p></div>';
+comment on column db2dataprocessor_in.fall_fe.fall_op_geplant is '1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant?';
+comment on column db2dataprocessor_in.fall_fe.fall_op_dat is 'Operationsdatum';
+comment on column db2dataprocessor_in.fall_fe.fall_status is '';
+comment on column db2dataprocessor_in.fall_fe.fall_ent_dat is 'Entlassdatum';
+comment on column db2dataprocessor_in.fall_fe.fall_complete is 'Frontend Complete-Status';
 
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_dat is 'Datum der Medikationsanalyse (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_typ is '1, Typ 1: Einfache | 2, Typ 2a: Erweiterte | 3, Typ 2b: Erweiterte | 4, Typ 3: Umfassende MedikationsanalyseTyp der Medikationsanalyse (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat is '1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_aufwand_zeit is '0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_aufwand_zeit_and is 'wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten.  (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_notiz is 'Notizfeld (1000 x 1 1000 - varchar)';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_id_pk is 'Datenbank-PK ID der Medikationsanalyse (intern)';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.fall_id_fk is 'Datenbank-FK ID des Falls (intern)';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_dat is 'Datum der Medikationsanalyse';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_typ is 'Typ der Medikationsanalyse';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat is '1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw is 'Medikationsanalyse / Therapieüberwachung in 24-48h';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_aufwand_zeit is '0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min]';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_aufwand_zeit_and is 'wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten. ';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_notiz is 'Notizfeld';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.medikationsanalyse_complete is 'Frontend Complete-Status';
 
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_entd_dat is 'Datum des MRP (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_kurzbeschr is 'Kurzbeschreibung des MRPs (1000 x 1 1000 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch is '1, Ja | 0, NeinMRP vom INTERPOLAR-Algorithmus entdeckt? (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber is '1, Apotheker*in (Station) | 2, Apotheker*in (UnitDose) | 3, Arzt / Ärztin | 4, Pflege | 5, Patient*in / Angehörige*r | 6, unbekannt | 7, andereHinweisgeber auf das MRP (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit is '1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigtSicherheit des detektierten MRP (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl is '1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, SonstigesGrund für nicht Bestätigung (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst is 'Bitte näher beschreiben (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wirkstoff is '1, Ja | 0, NeinWirkstoff betroffen? (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc1 is '7298, J05AF06 - Abacavir | 7299, H05AA04 - Abaloparatid | 7300, P03AX07 - Abametapir | 7301, L02BX01 - Abarelix | 7302, L04AA24 - Abatacept | 7303, B01AC13 - Abciximab | 7304, L01EF03 - Abemaciclib | 7305, L04AA22 - Abetimus | 7306, S01LA07 - Abicipar peg1. Medikament ATC / Name: (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc2 is '7298, J05AF06 - Abacavir | 7299, H05AA04 - Abaloparatid | 7300, P03AX07 - Abametapir | 7301, L02BX01 - Abarelix | 7302, L04AA24 - Abatacept | 7303, B01AC13 - Abciximab | 7304, L01EF03 - Abemaciclib | 7305, L04AA22 - Abetimus | 7306, S01LA07 - Abicipar peg2. Medikament ATC / Name (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc3 is '7298, J05AF06 - Abacavir | 7299, H05AA04 - Abaloparatid | 7300, P03AX07 - Abametapir | 7301, L02BX01 - Abarelix | 7302, L04AA24 - Abatacept | 7303, B01AC13 - Abciximab | 7304, L01EF03 - Abemaciclib | 7305, L04AA22 - Abetimus | 7306, S01LA07 - Abicipar peg3. Medikament ATC / Name (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod is '1, Ja | 0, NeinMedizinprodukt betroffen? (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst is 'Sonstigespräparat (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler is '<div class="rich-text-field-label"><p>Frage / <span style="font-weight: normal;">Fehlerbeschreibung </span></p> <p><span style="font-weight: normal;">[mrp_kurzbeschr]</span></p></div> (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_intervention is '<div class="rich-text-field-label"><p>Intervention / <span style="font-weight: normal;">Vorschlag zur Fehlervermeldung</span></p></div> (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pi_grund_am is '1, (Klare) Indikation nicht (mehr) gegeben (MF) | 2, Verordnung/Dokumentation unvollständig/fehlerhaft (MF) | 3, Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) | 4, Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) | 5, Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) | 6, Übertragungsfehler (MF) | 7, Substitution aut idem/aut simile (MF) | 11, (Klare) Indikation, aber kein Medikament angeordnet (MF) | 12, Stellfehler (MF) | 13, Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) | 14, Doppelverordnung (MF)<div class="rich-text-field-label"><p style="text-align: left;">AM: Arzneimittel</p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pi_grund_anw is '1, Applikation (Dauer) (MF) | 2, Inkompatibilität oder falsche Zubereitung (MF) | 3, Applikation (Art) (MF) | 4, Anfrage zur Administration/KompatibilitätANW: Anwendung (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund_d is '1, Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) | 2, (Fehlerhafte) Dosis (MF) | 3, (Fehlende) Dosisanpassung (Organfunktion) (MF) | 4, (Fehlerhaftes) Dosisinterval (MF)D: Dosis (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund_and is '1, Interaktion (MF) | 2, Kontraindikation (MF) | 3, Nebenwirkungen (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse is '1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis)MRP-Klasse (INTERPOLAR) (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease is 'Disease (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor is 'Labor (200 x 1 200 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund_s is '1, Beratung/Auswahl eines Arzneistoffs | 2, Beratung/Auswahl zur Dosierung eines Arzneistoffs | 3, Beschaffung/Kosten | 4, Keine Pause von AM, die prä-OP pausiert werden müssen (MF) | 5, Schulung/Beratung eines PatientenS: sonstiges (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am is '1, Anweisung für die Applikation geben | 2, Arzneimittel ändern | 3, Arzneimittel stoppen/pausieren | 4, Arzneimittel neu ansetzen | 5, Dosierung ändern | 6, Formulierung ändern | 7, Hilfe bei Beschaffung | 8, Information an Arzt/Pflege | 9, Information an Patient | 10, TDM oder Laborkontrolle emfohlen<div class="rich-text-field-label"><p>AM: Arzneimittel</p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga is '1, Aushändigung einer Information/eines Medikationsplans | 2, CIRS-/AMK-Meldung | 3, Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers | 4, Etablierung einer Doppelkontrolle | 5, Lieferantenwechsel | 6, Optimierung der internen und externene Kommunikation | 7, Prozessoptimierung/Etablierung einer SOP/VA | 8, Sensibilisierung/Schulung<div class="rich-text-field-label"><p>ORGA: Organisatorisch</p></div> (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_notiz is 'Notiz (1000 x 1 1000 - varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is '1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4, Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöstHandlungsempfehlung akzeptiert? (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wiedervorlage is '1, Ja | 0, NeinMRP Wiedervorlage (10 x 1 10 - numeric)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_abschluss_dat is ' (200 x 1 200 - varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_id_pk is 'Datenbank-PK ID des MRPs (intern)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.meda_id_fk is 'Datenbank-FK ID der Medikationsanalyse (intern)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_entd_dat is 'Datum des MRP';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_kurzbeschr is 'Kurzbeschreibung des MRPs';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch is 'MRP vom INTERPOLAR-Algorithmus entdeckt?';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber is 'Hinweisgeber auf das MRP';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit is 'Sicherheit des detektierten MRP';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl is 'Grund für nicht Bestätigung';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst is 'Bitte näher beschreiben';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wirkstoff is 'Wirkstoff betroffen?';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc1 is '1. Medikament ATC / Name:';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc2 is '2. Medikament ATC / Name';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc3 is '3. Medikament ATC / Name';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod is 'Medizinprodukt betroffen?';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst is 'Sonstigespräparat';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler is '<div class="rich-text-field-label"><p>Frage / <span style="font-weight: normal;">Fehlerbeschreibung </span></p> <p><span style="font-weight: normal;">[mrp_kurzbeschr]</span></p></div>';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_intervention is '<div class="rich-text-field-label"><p>Intervention / <span style="font-weight: normal;">Vorschlag zur Fehlervermeldung</span></p></div>';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund is 'PI-Grund';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse is 'MRP-Klasse (INTERPOLAR)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease is 'Disease';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor is 'Labor';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am is '<div class="rich-text-field-label"><p>AM: Arzneimittel</p></div>';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga is '<div class="rich-text-field-label"><p>ORGA: Organisatorisch</p></div>';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_notiz is 'Notiz';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is 'Handlungsempfehlung akzeptiert?';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP Score';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wiedervorlage is 'MRP Wiedervorlage';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status';
+
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_id_pk is 'Datenbank-PK ID des Risikofaktors (intern)';
+comment on column db2dataprocessor_in.risikofaktor_fe.patient_id_fk is 'Datenbank-FK ID des zugehörigen Patienten (intern)';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_gerhemmer is 'Ger.hemmer';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_tah is 'TAH';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_immunsupp is 'Immunsupp.';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_tumorth is 'Tumorth.';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_opiat is 'Opiat';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_atcn is 'ATC N';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_ait is 'AIT';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_anzam is 'Anz AM';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_priscus is 'PRISCUS';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_qtc is 'QTc';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_meld is 'MELD';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_dialyse is 'Dialyse';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_entern is 'ent. Ern.';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfkt_anz_rskamklassen is 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0';
+comment on column db2dataprocessor_in.risikofaktor_fe.risikofaktor_complete is 'Frontend Complete-Status';
+
+comment on column db2dataprocessor_in.trigger_fe.trg_id_pk is 'Datenbank-PK ID des Triggers (intern)';
+comment on column db2dataprocessor_in.trigger_fe.patient_id_fk is 'Datenbank-FK ID des zugehörigen Patienten (intern)';
+comment on column db2dataprocessor_in.trigger_fe.trg_ast is '<div class="rich-text-field-label"><p>AST<span style="font-weight: normal; font-size: 12pt;">↑</span></p></div>';
+comment on column db2dataprocessor_in.trigger_fe.trg_alt is 'ALT↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_crp is 'CRP↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_leuk_penie is 'Leuko↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_leuk_ose is 'Leuko↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_thrmb_penie is 'Thrombo↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_aptt is 'aPTT';
+comment on column db2dataprocessor_in.trigger_fe.trg_hyp_haem is 'Hb↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_hypo_glyk is 'Glc↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_hyper_glyk is 'Glc↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_hyper_bilirbnm is 'Bili↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_ck is 'CK↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_hypo_serablmn is 'Alb↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_hypo_nat is 'Na+↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_hyper_nat is 'Na+↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_hyper_kal is 'K+↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_hypo_kal is 'K+↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_inr_ern is 'INR Antikoag↓';
+comment on column db2dataprocessor_in.trigger_fe.trg_inr_erh is 'INR ↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_inr_erh_antikoa is 'INR Antikoag↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_krea is 'Krea↑';
+comment on column db2dataprocessor_in.trigger_fe.trg_egfr is 'eGFR<30';
+comment on column db2dataprocessor_in.trigger_fe.trigger_complete is 'Frontend Complete-Status';
