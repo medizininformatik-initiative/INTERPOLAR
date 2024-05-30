@@ -24,6 +24,8 @@ VERBOSE               = 10 # Retrieval / analysis verbose level
 # (true)
 USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
+# Maximum of saved cds2db result folders in outputLocal and outputGlobal
+MAX_DIR_COUNT = 5
 
 [database]
 
