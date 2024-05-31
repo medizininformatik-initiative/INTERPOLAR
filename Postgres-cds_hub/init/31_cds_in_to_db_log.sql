@@ -12,7 +12,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.encounter target_record
-            WHERE   target_record.enc_id = current_record.enc_id AND
+            WHERE   target_record.encounter_raw_id = current_record.encounter_raw_id AND
+                    target_record.enc_id = current_record.enc_id AND
                     target_record.enc_patient_id = current_record.enc_patient_id AND
                     target_record.enc_partof_id = current_record.enc_partof_id AND
                     target_record.enc_identifier_use = current_record.enc_identifier_use AND
@@ -88,6 +89,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.encounter (
+                    encounter_raw_id,
                     enc_id,
                     enc_patient_id,
                     enc_partof_id,
@@ -162,6 +164,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.encounter_raw_id,
                     current_record.enc_id,
                     current_record.enc_patient_id,
                     current_record.enc_partof_id,
@@ -255,7 +258,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.patient target_record
-            WHERE   target_record.pat_id = current_record.pat_id AND
+            WHERE   target_record.patient_raw_id = current_record.patient_raw_id AND
+                    target_record.pat_id = current_record.pat_id AND
                     target_record.pat_identifier_use = current_record.pat_identifier_use AND
                     target_record.pat_identifier_type_system = current_record.pat_identifier_type_system AND
                     target_record.pat_identifier_type_version = current_record.pat_identifier_type_version AND
@@ -277,6 +281,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.patient (
+                    patient_raw_id,
                     pat_id,
                     pat_identifier_use,
                     pat_identifier_type_system,
@@ -297,6 +302,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.patient_raw_id,
                     current_record.pat_id,
                     current_record.pat_identifier_use,
                     current_record.pat_identifier_type_system,
@@ -336,7 +342,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.condition target_record
-            WHERE   target_record.con_id = current_record.con_id AND
+            WHERE   target_record.condition_raw_id = current_record.condition_raw_id AND
+                    target_record.con_id = current_record.con_id AND
                     target_record.con_encounter_id = current_record.con_encounter_id AND
                     target_record.con_patient_id = current_record.con_patient_id AND
                     target_record.con_identifier_use = current_record.con_identifier_use AND
@@ -454,6 +461,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.condition (
+                    condition_raw_id,
                     con_id,
                     con_encounter_id,
                     con_patient_id,
@@ -570,6 +578,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.condition_raw_id,
                     current_record.con_id,
                     current_record.con_encounter_id,
                     current_record.con_patient_id,
@@ -705,7 +714,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.medication target_record
-            WHERE   target_record.med_id = current_record.med_id AND
+            WHERE   target_record.medication_raw_id = current_record.medication_raw_id AND
+                    target_record.med_id = current_record.med_id AND
                     target_record.med_identifier_use = current_record.med_identifier_use AND
                     target_record.med_identifier_type_system = current_record.med_identifier_type_system AND
                     target_record.med_identifier_type_version = current_record.med_identifier_type_version AND
@@ -767,6 +777,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.medication (
+                    medication_raw_id,
                     med_id,
                     med_identifier_use,
                     med_identifier_type_system,
@@ -827,6 +838,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.medication_raw_id,
                     current_record.med_id,
                     current_record.med_identifier_use,
                     current_record.med_identifier_type_system,
@@ -906,7 +918,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.medicationrequest target_record
-            WHERE   target_record.medreq_id = current_record.medreq_id AND
+            WHERE   target_record.medicationrequest_raw_id = current_record.medicationrequest_raw_id AND
+                    target_record.medreq_id = current_record.medreq_id AND
                     target_record.medreq_encounter_id = current_record.medreq_encounter_id AND
                     target_record.medreq_patient_id = current_record.medreq_patient_id AND
                     target_record.medreq_identifier_use = current_record.medreq_identifier_use AND
@@ -1134,6 +1147,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.medicationrequest (
+                    medicationrequest_raw_id,
                     medreq_id,
                     medreq_encounter_id,
                     medreq_patient_id,
@@ -1360,6 +1374,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.medicationrequest_raw_id,
                     current_record.medreq_id,
                     current_record.medreq_encounter_id,
                     current_record.medreq_patient_id,
@@ -1605,7 +1620,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.medicationadministration target_record
-            WHERE   target_record.medadm_id = current_record.medadm_id AND
+            WHERE   target_record.medicationadministration_raw_id = current_record.medicationadministration_raw_id AND
+                    target_record.medadm_id = current_record.medadm_id AND
                     target_record.medadm_encounter_id = current_record.medadm_encounter_id AND
                     target_record.medadm_patient_id = current_record.medadm_patient_id AND
                     target_record.medadm_partof_id = current_record.medadm_partof_id AND
@@ -1719,6 +1735,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.medicationadministration (
+                    medicationadministration_raw_id,
                     medadm_id,
                     medadm_encounter_id,
                     medadm_patient_id,
@@ -1831,6 +1848,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.medicationadministration_raw_id,
                     current_record.medadm_id,
                     current_record.medadm_encounter_id,
                     current_record.medadm_patient_id,
@@ -1962,7 +1980,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.medicationstatement target_record
-            WHERE   target_record.medstat_id = current_record.medstat_id AND
+            WHERE   target_record.medicationstatement_raw_id = current_record.medicationstatement_raw_id AND
+                    target_record.medstat_id = current_record.medstat_id AND
                     target_record.medstat_identifier_use = current_record.medstat_identifier_use AND
                     target_record.medstat_identifier_type_system = current_record.medstat_identifier_type_system AND
                     target_record.medstat_identifier_type_version = current_record.medstat_identifier_type_version AND
@@ -2177,6 +2196,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.medicationstatement (
+                    medicationstatement_raw_id,
                     medstat_id,
                     medstat_identifier_use,
                     medstat_identifier_type_system,
@@ -2390,6 +2410,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.medicationstatement_raw_id,
                     current_record.medstat_id,
                     current_record.medstat_identifier_use,
                     current_record.medstat_identifier_type_system,
@@ -2622,7 +2643,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.observation target_record
-            WHERE   target_record.obs_id = current_record.obs_id AND
+            WHERE   target_record.observation_raw_id = current_record.observation_raw_id AND
+                    target_record.obs_id = current_record.obs_id AND
                     target_record.obs_encounter_id = current_record.obs_encounter_id AND
                     target_record.obs_patient_id = current_record.obs_patient_id AND
                     target_record.obs_partof_id = current_record.obs_partof_id AND
@@ -2758,6 +2780,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.observation (
+                    observation_raw_id,
                     obs_id,
                     obs_encounter_id,
                     obs_patient_id,
@@ -2892,6 +2915,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.observation_raw_id,
                     current_record.obs_id,
                     current_record.obs_encounter_id,
                     current_record.obs_patient_id,
@@ -3045,7 +3069,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.diagnosticreport target_record
-            WHERE   target_record.diagrep_id = current_record.diagrep_id AND
+            WHERE   target_record.diagnosticreport_raw_id = current_record.diagnosticreport_raw_id AND
+                    target_record.diagrep_id = current_record.diagrep_id AND
                     target_record.diagrep_encounter_id = current_record.diagrep_encounter_id AND
                     target_record.diagrep_patient_id = current_record.diagrep_patient_id AND
                     target_record.diagrep_partof_id = current_record.diagrep_partof_id AND
@@ -3094,6 +3119,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.diagnosticreport (
+                    diagnosticreport_raw_id,
                     diagrep_id,
                     diagrep_encounter_id,
                     diagrep_patient_id,
@@ -3141,6 +3167,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.diagnosticreport_raw_id,
                     current_record.diagrep_id,
                     current_record.diagrep_encounter_id,
                     current_record.diagrep_patient_id,
@@ -3207,7 +3234,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.servicerequest target_record
-            WHERE   target_record.servreq_id = current_record.servreq_id AND
+            WHERE   target_record.servicerequest_raw_id = current_record.servicerequest_raw_id AND
+                    target_record.servreq_id = current_record.servreq_id AND
                     target_record.servreq_encounter_id = current_record.servreq_encounter_id AND
                     target_record.servreq_patient_id = current_record.servreq_patient_id AND
                     target_record.servreq_identifier_use = current_record.servreq_identifier_use AND
@@ -3270,6 +3298,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.servicerequest (
+                    servicerequest_raw_id,
                     servreq_id,
                     servreq_encounter_id,
                     servreq_patient_id,
@@ -3331,6 +3360,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.servicerequest_raw_id,
                     current_record.servreq_id,
                     current_record.servreq_encounter_id,
                     current_record.servreq_patient_id,
@@ -3411,7 +3441,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.procedure target_record
-            WHERE   target_record.proc_id = current_record.proc_id AND
+            WHERE   target_record.procedure_raw_id = current_record.procedure_raw_id AND
+                    target_record.proc_id = current_record.proc_id AND
                     target_record.proc_encounter_id = current_record.proc_encounter_id AND
                     target_record.proc_patient_id = current_record.proc_patient_id AND
                     target_record.proc_partof_id = current_record.proc_partof_id AND
@@ -3484,6 +3515,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.procedure (
+                    procedure_raw_id,
                     proc_id,
                     proc_encounter_id,
                     proc_patient_id,
@@ -3555,6 +3587,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.procedure_raw_id,
                     current_record.proc_id,
                     current_record.proc_encounter_id,
                     current_record.proc_patient_id,
@@ -3645,7 +3678,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.consent target_record
-            WHERE   target_record.cons_id = current_record.cons_id AND
+            WHERE   target_record.consent_raw_id = current_record.consent_raw_id AND
+                    target_record.cons_id = current_record.cons_id AND
                     target_record.cons_patient_id = current_record.cons_patient_id AND
                     target_record.cons_identifier_use = current_record.cons_identifier_use AND
                     target_record.cons_identifier_type_system = current_record.cons_identifier_type_system AND
@@ -3684,6 +3718,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.consent (
+                    consent_raw_id,
                     cons_id,
                     cons_patient_id,
                     cons_identifier_use,
@@ -3721,6 +3756,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.consent_raw_id,
                     current_record.cons_id,
                     current_record.cons_patient_id,
                     current_record.cons_identifier_use,
@@ -3777,7 +3813,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.location target_record
-            WHERE   target_record.loc_id = current_record.loc_id AND
+            WHERE   target_record.location_raw_id = current_record.location_raw_id AND
+                    target_record.loc_id = current_record.loc_id AND
                     target_record.loc_identifier_use = current_record.loc_identifier_use AND
                     target_record.loc_identifier_type_system = current_record.loc_identifier_type_system AND
                     target_record.loc_identifier_type_version = current_record.loc_identifier_type_version AND
@@ -3797,6 +3834,7 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.location (
+                    location_raw_id,
                     loc_id,
                     loc_identifier_use,
                     loc_identifier_type_system,
@@ -3815,6 +3853,7 @@ BEGIN
                     input_datetime
                 )
                 VALUES (
+                    current_record.location_raw_id,
                     current_record.loc_id,
                     current_record.loc_identifier_use,
                     current_record.loc_identifier_type_system,
@@ -3852,7 +3891,8 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.pids_per_ward target_record
-            WHERE   target_record.date_time = current_record.date_time AND
+            WHERE   target_record.pids_per_ward_raw_id = current_record.pids_per_ward_raw_id AND
+                    target_record.date_time = current_record.date_time AND
                     target_record.ward_name = current_record.ward_name AND
                     target_record.patient_id = current_record.patient_id
                   ;
@@ -3860,12 +3900,14 @@ BEGIN
             IF data_count = 0
             THEN
                 INSERT INTO db_log.pids_per_ward (
+                    pids_per_ward_raw_id,
                     date_time,
                     ward_name,
                     patient_id,
                     input_datetime
                 )
                 VALUES (
+                    current_record.pids_per_ward_raw_id,
                     current_record.date_time,
                     current_record.ward_name,
                     current_record.patient_id,

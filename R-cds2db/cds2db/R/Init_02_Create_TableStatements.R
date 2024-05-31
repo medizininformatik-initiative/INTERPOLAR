@@ -318,12 +318,22 @@ convertTemplateCreateTable <- function(table_description, script_rights_descript
 # Convert Copy Function #
 #########################
 
-getCopyFunctionPlaceholderColumns <- function(single_table_description, indentation, placeholder) {
+getCopyFunctionPlaceholderColumns <- function(single_table_description, tablename, indentation, placeholder, ignore_types = TRUE) {
   statements <- ""
   single_statement_template <- loadTemplate(placeholder)
-  for (i in 1:nrow(single_table_description)) {
+  for (i in 0:nrow(single_table_description)) {
     table_description_row <- single_table_description[i]
-    single_statement <- gsub("<%COLUMN_NAME%>", table_description_row$column_name, single_statement_template)
+    if (i == 0) {
+      if (!ignore_types) {
+        column_name <- paste0(tablename, "_raw_id")
+      } else {
+        next
+      }
+    } else {
+      column_name <- table_description_row$column_name
+    }
+
+    single_statement <- gsub("<%COLUMN_NAME%>", column_name, single_statement_template)
     if (nchar(statements)) {
       statements <- paste0(statements, indentation)
     }
@@ -353,6 +363,7 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
                        rights_columns$COPY_FUNC_NAME,
                        rights_columns$SCHEMA_2)
 
+    ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
     tablenames <- names(table_description)
     statements <- ""
     for (tablename in tablenames) {
@@ -372,7 +383,7 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
       single_table_description <- table_description[[tablename]]
       for (placeholder in colum_placeholders) {
         indentation <- etlutils::getWordIndentation(single_statement, placeholder)
-        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, indentation, placeholder)
+        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, tablename, indentation, placeholder, ignore_types)
         single_statement <- gsub(placeholder, replacement, single_statement)
       }
 
