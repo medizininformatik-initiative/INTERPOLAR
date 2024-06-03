@@ -233,9 +233,9 @@ dbExecute <- function(db_connection, statement, log = TRUE) {
 #' @export
 dbGetQuery <- function(db_connection, statement, log = TRUE) {
   if (log) {
-    cat(statement)
+    cat(statement, "\n")
   }
-  DBI::dbGetQuery(db_connection, statement)
+  data.table::as.data.table(DBI::dbGetQuery(db_connection, statement))
 }
 
 #' Read a Table from a PostgreSQL Database
