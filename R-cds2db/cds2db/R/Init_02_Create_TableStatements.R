@@ -235,6 +235,7 @@ getCreateTableGrantStatements <- function(table_description, script_rights_descr
     full_tablename <- getFullTableName(tablename, script_rights_description)
     single_statement <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, single_statement)
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+    single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
 
 
     statements <- paste0(statements, single_statement, "\n\n")

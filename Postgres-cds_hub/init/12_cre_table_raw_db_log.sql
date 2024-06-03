@@ -1289,7 +1289,7 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
 
 -- Table "encounter_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.encounter_raw ALTER COLUMN encounter_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.encounter_raw ALTER COLUMN encounter_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.encounter_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1316,7 +1316,7 @@ CREATE OR REPLACE TRIGGER encounter_raw_tr_ins_tr
 
 -- Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.patient_raw ALTER COLUMN patient_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.patient_raw ALTER COLUMN patient_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.patient_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1343,7 +1343,7 @@ CREATE OR REPLACE TRIGGER patient_raw_tr_ins_tr
 
 -- Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.condition_raw ALTER COLUMN condition_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.condition_raw ALTER COLUMN condition_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.condition_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1370,7 +1370,7 @@ CREATE OR REPLACE TRIGGER condition_raw_tr_ins_tr
 
 -- Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medication_raw ALTER COLUMN medication_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medication_raw ALTER COLUMN medication_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medication_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1397,7 +1397,7 @@ CREATE OR REPLACE TRIGGER medication_raw_tr_ins_tr
 
 -- Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationrequest_raw ALTER COLUMN medicationrequest_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationrequest_raw ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationrequest_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1424,7 +1424,7 @@ CREATE OR REPLACE TRIGGER medicationrequest_raw_tr_ins_tr
 
 -- Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationadministration_raw ALTER COLUMN medicationadministration_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationadministration_raw ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationadministration_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1451,7 +1451,7 @@ CREATE OR REPLACE TRIGGER medicationadministration_raw_tr_ins_tr
 
 -- Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationstatement_raw ALTER COLUMN medicationstatement_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationstatement_raw ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationstatement_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1478,7 +1478,7 @@ CREATE OR REPLACE TRIGGER medicationstatement_raw_tr_ins_tr
 
 -- Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.observation_raw ALTER COLUMN observation_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.observation_raw ALTER COLUMN observation_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.observation_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1505,7 +1505,7 @@ CREATE OR REPLACE TRIGGER observation_raw_tr_ins_tr
 
 -- Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.diagnosticreport_raw ALTER COLUMN diagnosticreport_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.diagnosticreport_raw ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.diagnosticreport_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1532,7 +1532,7 @@ CREATE OR REPLACE TRIGGER diagnosticreport_raw_tr_ins_tr
 
 -- Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.servicerequest_raw ALTER COLUMN servicerequest_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.servicerequest_raw ALTER COLUMN servicerequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.servicerequest_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1559,7 +1559,7 @@ CREATE OR REPLACE TRIGGER servicerequest_raw_tr_ins_tr
 
 -- Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.procedure_raw ALTER COLUMN procedure_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.procedure_raw ALTER COLUMN procedure_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.procedure_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1586,7 +1586,7 @@ CREATE OR REPLACE TRIGGER procedure_raw_tr_ins_tr
 
 -- Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.consent_raw ALTER COLUMN consent_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.consent_raw ALTER COLUMN consent_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.consent_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1613,7 +1613,7 @@ CREATE OR REPLACE TRIGGER consent_raw_tr_ins_tr
 
 -- Table "location_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.location_raw ALTER COLUMN location_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.location_raw ALTER COLUMN location_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.location_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1640,7 +1640,7 @@ CREATE OR REPLACE TRIGGER location_raw_tr_ins_tr
 
 -- Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.pids_per_ward_raw ALTER COLUMN pids_per_ward_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.pids_per_ward_raw ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.pids_per_ward_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
