@@ -3,6 +3,7 @@
 export(END__)
 export(START__)
 export(addCharlsonScore)
+export(addEmptyRows)
 export(addParamToFHIRRequest)
 export(addTableRow)
 export(catByVerbose)

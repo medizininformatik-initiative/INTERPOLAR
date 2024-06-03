@@ -17,7 +17,6 @@ isSimpleNA <- function(x) {
   is.atomic(x) && length(x) == 1 && is.na(x)
 }
 
-#'
 #' Check if a value is a simple true value (TRUE) or not zero (0).
 #'
 #' This function evaluates whether the input value is an atomic element, has a length of 1,
@@ -46,7 +45,6 @@ isSimpleTrueOrNot0 <- function(x) {
   is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && x
 }
 
-#'
 #' Check if a value is a simple false value (FALSE) or zero (0).
 #'
 #' This function evaluates whether the input value is an atomic element, has a length of 1,
