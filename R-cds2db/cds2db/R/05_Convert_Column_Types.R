@@ -6,50 +6,46 @@
 #' @param column_names A character vector of column names to be processed.
 #' @param sep A character string to split the multi-value fields.
 #' @param brackets A character vector of length 2, where the first element is the opening bracket and the second element is the closing bracket.
+#' @param collapse A character string specifying the separator used to collapse the joined values. Default is a space (" ").
 #'
 #' @return The modified data.table with cleaned and joined multi-value fields.
 #'
 #' @examples
 #' library(data.table)
-#' dt <- data.table(col1 = c("[1]a|[1]b|[2]c", "[1]d|[1]e", "[3]f|[3]g|[4]h"))
-#' column_names <- c("col1")
+#' dt <- data.table(name.given = c("[1.1]Marie|[1.2]Anne|[1.3]Lea|[2.1]Marie2|[2.2]Anne2|[2.3]Lea2",
+#' "[1]Kai|[2]Ingo", "[1.1]Mark|[1.3]Ben|[2.2]Tim"))
+#' column_names <- c("name.given")
 #' sep <- "|"
 #' brackets <- c("[", "]")
 #' joinMultiValuesInCrackedFHIRData(dt, column_names, sep, brackets)
 #'
 #' @export
-joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
+joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, collapse = " ") {
   for (column_name in column_names) {
-    joinColumn <- dt[[column_name]]
-    if (length(joinColumn)) {
-      print(paste0("Join multi entries in ", column_name))
-      for (i in 1:nrow(dt)) {
-        value <- joinColumn[i]
-        # Check if the cell is not empty
-        if (!etlutils::isSimpleNA(value) && length(value)) {
-          # Check if the cell starts with "["
-          if (grepl("^\\[", value)) {
-            # Remove extra brackets and split the string by "|"
-            split_string <- strsplit(gsub(paste0("\\", brackets[1], "\\d+\\", brackets[2]), "",
-                                          value, perl = TRUE), sep, fixed = TRUE)[[1]]
-            # Initialize the index vector and previous index
-            indices <- c()
-            prev_index <- NULL
-            # Iterate through the vector and find the first indices for each new pattern
-            for (vec in seq_along(split_string)) {
-              index <- as.numeric(gsub(paste0("\\", brackets[1], "|\\..*"), "", split_string[vec]))
-              if (is.null(prev_index) || is.na(prev_index) || index != prev_index) {
-                indices <- c(indices, vec)
-                prev_index <- index
-              }
+    for (i in 1:nrow(dt)) {
+      # Check if the cell is not empty
+      if (length(dt[[column_name]][i])) {
+        # Check if the cell starts with sep
+        if (grepl("^\\[", dt[[column_name]][i])) {
+          #split the string by sep
+          split_string <- strsplit(dt[[column_name]][i], sep, fixed = TRUE)[[1]]
+          # Initialize the index vector and previous index
+          indices <- c()
+          prev_index <- NULL
+          # Iterate through the vector and find the first indices for each new pattern
+          for (vec in seq_along(split_string)) {
+            index <- as.numeric(stringr::str_extract(split_string[vec], paste0("(?<=\\", brackets[1], ")\\d")))
+            if (is.null(prev_index) || is.na(prev_index) || index != prev_index) {
+              indices <- c(indices, vec)
+              prev_index <- index
             }
-            # Remove "[]" for all subsequent elements except the first occurrence
-            result <- paste(ifelse(seq_along(split_string) %in% indices, split_string,
-                                   gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
-                                        split_string, perl = TRUE)), collapse = " ")
-            # Replace the original cell value with the modified result
-            data.table::set(dt, i, column_name, result)
           }
+          # Remove brackets for all subsequent elements except the first occurrence an collapse values
+          result <- paste(ifelse(seq_along(split_string) %in% indices, split_string,
+                                 gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
+                                      split_string, perl = TRUE)), collapse = " ")
+          # Replace the original cell value with the modified result
+          dt[[column_name]][i] <- result
         }
       }
     }
