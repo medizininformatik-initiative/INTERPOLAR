@@ -313,6 +313,7 @@ BEGIN
                   target_record.enc_serviceprovider_identifier_type_display = current_record.enc_serviceprovider_identifier_type_display AND
                   target_record.enc_serviceprovider_identifier_type_text = current_record.enc_serviceprovider_identifier_type_text AND
                   target_record.enc_serviceprovider_display = current_record.enc_serviceprovider_display
+                ;
             END IF;
     END LOOP;
     -- END encounter
@@ -407,6 +408,7 @@ BEGIN
                   target_record.pat_gender = current_record.pat_gender AND
                   target_record.pat_birthdate = current_record.pat_birthdate AND
                   target_record.pat_address_postalcode = current_record.pat_address_postalcode
+                ;
             END IF;
     END LOOP;
     -- END patient
@@ -885,6 +887,7 @@ BEGIN
                   target_record.con_note_authorreference_display = current_record.con_note_authorreference_display AND
                   target_record.con_note_time = current_record.con_note_time AND
                   target_record.con_note_text = current_record.con_note_text
+                ;
             END IF;
     END LOOP;
     -- END condition
@@ -1139,6 +1142,7 @@ BEGIN
                   target_record.med_ingredient_itemreference_identifier_type_text = current_record.med_ingredient_itemreference_identifier_type_text AND
                   target_record.med_ingredient_itemreference_display = current_record.med_ingredient_itemreference_display AND
                   target_record.med_ingredient_isactive = current_record.med_ingredient_isactive
+                ;
             END IF;
     END LOOP;
     -- END medication
@@ -2057,6 +2061,7 @@ BEGIN
                   target_record.medreq_substitution_reason_code = current_record.medreq_substitution_reason_code AND
                   target_record.medreq_substitution_reason_display = current_record.medreq_substitution_reason_display AND
                   target_record.medreq_substitution_reason_text = current_record.medreq_substitution_reason_text
+                ;
             END IF;
     END LOOP;
     -- END medicationrequest
@@ -2519,6 +2524,7 @@ BEGIN
                   target_record.medadm_dosage_ratequantity_unit = current_record.medadm_dosage_ratequantity_unit AND
                   target_record.medadm_dosage_ratequantity_system = current_record.medadm_dosage_ratequantity_system AND
                   target_record.medadm_dosage_ratequantity_code = current_record.medadm_dosage_ratequantity_code
+                ;
             END IF;
     END LOOP;
     -- END medicationadministration
@@ -3385,6 +3391,7 @@ BEGIN
                   target_record.medstat_dosage_maxdoseperlifetime_unit = current_record.medstat_dosage_maxdoseperlifetime_unit AND
                   target_record.medstat_dosage_maxdoseperlifetime_system = current_record.medstat_dosage_maxdoseperlifetime_system AND
                   target_record.medstat_dosage_maxdoseperlifetime_code = current_record.medstat_dosage_maxdoseperlifetime_code
+                ;
             END IF;
     END LOOP;
     -- END medicationstatement
@@ -3935,6 +3942,7 @@ BEGIN
                   target_record.obs_hasmember_identifier_type_display = current_record.obs_hasmember_identifier_type_display AND
                   target_record.obs_hasmember_identifier_type_text = current_record.obs_hasmember_identifier_type_text AND
                   target_record.obs_hasmember_display = current_record.obs_hasmember_display
+                ;
             END IF;
     END LOOP;
     -- END observation
@@ -4137,6 +4145,7 @@ BEGIN
                   target_record.diagrep_conclusioncode_code = current_record.diagrep_conclusioncode_code AND
                   target_record.diagrep_conclusioncode_display = current_record.diagrep_conclusioncode_display AND
                   target_record.diagrep_conclusioncode_text = current_record.diagrep_conclusioncode_text
+                ;
             END IF;
     END LOOP;
     -- END diagnosticreport
@@ -4395,6 +4404,7 @@ BEGIN
                   target_record.servreq_locationcode_code = current_record.servreq_locationcode_code AND
                   target_record.servreq_locationcode_display = current_record.servreq_locationcode_display AND
                   target_record.servreq_locationcode_text = current_record.servreq_locationcode_text
+                ;
             END IF;
     END LOOP;
     -- END servicerequest
@@ -4693,6 +4703,7 @@ BEGIN
                   target_record.proc_note_authorreference_display = current_record.proc_note_authorreference_display AND
                   target_record.proc_note_time = current_record.proc_note_time AND
                   target_record.proc_note_text = current_record.proc_note_text
+                ;
             END IF;
     END LOOP;
     -- END procedure
@@ -4855,6 +4866,7 @@ BEGIN
                   target_record.cons_provision_code_text = current_record.cons_provision_code_text AND
                   target_record.cons_provision_dataperiod_start = current_record.cons_provision_dataperiod_start AND
                   target_record.cons_provision_dataperiod_end = current_record.cons_provision_dataperiod_end
+                ;
             END IF;
     END LOOP;
     -- END consent
@@ -4941,6 +4953,7 @@ BEGIN
                   target_record.loc_name = current_record.loc_name AND
                   target_record.loc_description = current_record.loc_description AND
                   target_record.loc_alias = current_record.loc_alias
+                ;
             END IF;
     END LOOP;
     -- END location
@@ -4979,6 +4992,7 @@ BEGIN
                 WHERE target_record.date_time = current_record.date_time AND
                   target_record.ward_name = current_record.ward_name AND
                   target_record.patient_id = current_record.patient_id
+                ;
             END IF;
     END LOOP;
     -- END pids_per_ward

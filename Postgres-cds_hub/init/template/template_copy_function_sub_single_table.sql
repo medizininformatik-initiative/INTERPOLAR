@@ -24,6 +24,7 @@
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE <%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>
+                ;
             END IF;
     END LOOP;
     -- END <%SIMPLE_TABLE_NAME%>
