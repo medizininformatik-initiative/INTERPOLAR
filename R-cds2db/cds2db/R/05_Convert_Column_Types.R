@@ -279,35 +279,6 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   return(resource_tables)
 }
 
-#' Replace Column Names in a Data Table
-#'
-#' This function replaces old column names with new column names in a data.table.
-#' The columns are replaced by comparing the names, not by their index positions.
-#' The same indices of the old and new names vectors indicate the old and new names respectively.
-#'
-#' @param dt A data.table where the column names will be replaced.
-#' @param old_names A character vector of old column names.
-#' @param new_names A character vector of new column names.
-#'
-#' @return A data.table with updated column names.
-#'
-#' @examples
-#' library(data.table)
-#' dt <- data.table(f = 9:11, b = 4:6, g = 7:9, a = 1:3)
-#' old_names <- c("a", "b")
-#' new_names <- c("x", "y")
-#' replaceColumnNames(dt, old_names, new_names)
-#'
-#' @export
-replaceColumnNames <- function(dt, old_names, new_names) {
-  for (i in seq_along(old_names)) {
-    old_name <- old_names[i]
-    new_name <- new_names[i]
-    names(dt)[which(names(dt) == old_name)] <- new_name
-  }
-  return(dt)
-}
-
 #' Replace Column Names in Resource Tables
 #'
 #' This function replaces column names in the resource tables based on the provided FHIR table
@@ -332,7 +303,7 @@ replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, n
       old_names <- fhir_table_description@cols@.Data
       new_names <- fhir_table_description@cols@names
     }
-    resource_tables[[i]] <- replaceColumnNames(resource_tables[[i]], old_names, new_names)
+    resource_tables[[i]] <- data.table::setnames(resource_tables[[i]], old_names, new_names)
   }
   return(resource_tables)
 }
