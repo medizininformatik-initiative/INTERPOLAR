@@ -416,12 +416,13 @@ getCreateViewCreateOrReplaceViewStatements <- function(table_description, script
     full_tablename <- getFullTableName(tablename, script_rights_description)
     full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
     # load grant template
-    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%TABLE_NAME_2%>_id not in (select <%TABLE_NAME%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%>));
+    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%SIMPLE_TABLENAME%>_id not in (select <%TABLE_NAME_2%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%> union select <%TABLE_NAME_2%>_id from <%SCHEMA_3%>.<%SIMPLE_TABLENAME%>));
     single_statement <- loadTemplate("template_cre_view_sub_create_or_replace_view.sql")
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
     single_statement <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, single_statement)
     single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
     single_statement <- gsub("<%SIMPLE_TABLENAME%>", tablename, single_statement)
+    single_statement <- gsub("<%SCHEMA_3%>", rights_first_row$SCHEMA_3, single_statement)
     statements <- paste0(statements, single_statement, "\n")
   }
   return(statements)
