@@ -5,7 +5,7 @@
 -- Table "encounter_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
-  encounter_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  encounter_id serial PRIMARY KEY not null, -- Primary key of the entity
   enc_id varchar,   -- id (varchar)
   enc_patient_id varchar,   -- subject/reference (varchar)
   enc_partof_id varchar,   -- partOf/reference (varchar)
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
 -- Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient_raw (
-  patient_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  patient_id serial PRIMARY KEY not null, -- Primary key of the entity
   pat_id varchar,   -- id (varchar)
   pat_identifier_use varchar,   -- identifier/use (varchar)
   pat_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
 -- Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition_raw (
-  condition_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  condition_id serial PRIMARY KEY not null, -- Primary key of the entity
   con_id varchar,   -- id (varchar)
   con_encounter_id varchar,   -- encounter/reference (varchar)
   con_patient_id varchar,   -- subject/reference (varchar)
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
 -- Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication_raw (
-  medication_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medication_id serial PRIMARY KEY not null, -- Primary key of the entity
   med_id varchar,   -- id (varchar)
   med_identifier_use varchar,   -- identifier/use (varchar)
   med_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -299,7 +299,7 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
 -- Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
-  medicationrequest_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationrequest_id serial PRIMARY KEY not null, -- Primary key of the entity
   medreq_id varchar,   -- id (varchar)
   medreq_encounter_id varchar,   -- encounter/reference (varchar)
   medreq_patient_id varchar,   -- subject/reference (varchar)
@@ -531,7 +531,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
 -- Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
-  medicationadministration_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationadministration_id serial PRIMARY KEY not null, -- Primary key of the entity
   medadm_id varchar,   -- id (varchar)
   medadm_encounter_id varchar,   -- context/reference (varchar)
   medadm_patient_id varchar,   -- subject/reference (varchar)
@@ -649,7 +649,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
 -- Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
-  medicationstatement_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationstatement_id serial PRIMARY KEY not null, -- Primary key of the entity
   medstat_id varchar,   -- id (varchar)
   medstat_identifier_use varchar,   -- identifier/use (varchar)
   medstat_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -868,7 +868,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
 -- Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation_raw (
-  observation_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  observation_id serial PRIMARY KEY not null, -- Primary key of the entity
   obs_id varchar,   -- id (varchar)
   obs_encounter_id varchar,   -- encounter/reference (varchar)
   obs_patient_id varchar,   -- subject/reference (varchar)
@@ -1008,7 +1008,7 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
 -- Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
-  diagnosticreport_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  diagnosticreport_id serial PRIMARY KEY not null, -- Primary key of the entity
   diagrep_id varchar,   -- id (varchar)
   diagrep_encounter_id varchar,   -- encounter/reference (varchar)
   diagrep_patient_id varchar,   -- subject/reference (varchar)
@@ -1061,7 +1061,7 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
 -- Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
-  servicerequest_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
   servreq_id varchar,   -- id (varchar)
   servreq_encounter_id varchar,   -- encounter/reference (varchar)
   servreq_patient_id varchar,   -- subject/reference (varchar)
@@ -1128,7 +1128,7 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
 -- Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
-  procedure_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  procedure_id serial PRIMARY KEY not null, -- Primary key of the entity
   proc_id varchar,   -- id (varchar)
   proc_encounter_id varchar,   -- encounter/reference (varchar)
   proc_patient_id varchar,   -- subject/reference (varchar)
@@ -1205,7 +1205,7 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
 -- Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent_raw (
-  consent_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  consent_id serial PRIMARY KEY not null, -- Primary key of the entity
   cons_id varchar,   -- id (varchar)
   cons_patient_id varchar,   -- patient/reference (varchar)
   cons_identifier_use varchar,   -- identifier/use (varchar)
@@ -1248,7 +1248,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
 -- Table "location_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location_raw (
-  location_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  location_id serial PRIMARY KEY not null, -- Primary key of the entity
   loc_id varchar,   -- id (varchar)
   loc_identifier_use varchar,   -- identifier/use (varchar)
   loc_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -1272,7 +1272,7 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
 -- Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
-  pids_per_ward_raw_id serial PRIMARY KEY not null, -- Primary key of the entity
+  pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
   date_time varchar,   -- date_time (varchar)
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
@@ -1289,7 +1289,7 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
 
 -- Table "encounter_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.encounter_raw ALTER COLUMN encounter_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.encounter_raw ALTER COLUMN encounter_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.encounter_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1316,7 +1316,7 @@ CREATE OR REPLACE TRIGGER encounter_raw_tr_ins_tr
 
 -- Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.patient_raw ALTER COLUMN patient_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.patient_raw ALTER COLUMN patient_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.patient_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1343,7 +1343,7 @@ CREATE OR REPLACE TRIGGER patient_raw_tr_ins_tr
 
 -- Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.condition_raw ALTER COLUMN condition_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.condition_raw ALTER COLUMN condition_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.condition_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1370,7 +1370,7 @@ CREATE OR REPLACE TRIGGER condition_raw_tr_ins_tr
 
 -- Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medication_raw ALTER COLUMN medication_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medication_raw ALTER COLUMN medication_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medication_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1397,7 +1397,7 @@ CREATE OR REPLACE TRIGGER medication_raw_tr_ins_tr
 
 -- Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationrequest_raw ALTER COLUMN medicationrequest_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationrequest_raw ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationrequest_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1424,7 +1424,7 @@ CREATE OR REPLACE TRIGGER medicationrequest_raw_tr_ins_tr
 
 -- Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationadministration_raw ALTER COLUMN medicationadministration_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationadministration_raw ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationadministration_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1451,7 +1451,7 @@ CREATE OR REPLACE TRIGGER medicationadministration_raw_tr_ins_tr
 
 -- Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationstatement_raw ALTER COLUMN medicationstatement_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationstatement_raw ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.medicationstatement_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1478,7 +1478,7 @@ CREATE OR REPLACE TRIGGER medicationstatement_raw_tr_ins_tr
 
 -- Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.observation_raw ALTER COLUMN observation_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.observation_raw ALTER COLUMN observation_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.observation_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1505,7 +1505,7 @@ CREATE OR REPLACE TRIGGER observation_raw_tr_ins_tr
 
 -- Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.diagnosticreport_raw ALTER COLUMN diagnosticreport_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.diagnosticreport_raw ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.diagnosticreport_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1532,7 +1532,7 @@ CREATE OR REPLACE TRIGGER diagnosticreport_raw_tr_ins_tr
 
 -- Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.servicerequest_raw ALTER COLUMN servicerequest_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.servicerequest_raw ALTER COLUMN servicerequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.servicerequest_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1559,7 +1559,7 @@ CREATE OR REPLACE TRIGGER servicerequest_raw_tr_ins_tr
 
 -- Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.procedure_raw ALTER COLUMN procedure_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.procedure_raw ALTER COLUMN procedure_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.procedure_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1586,7 +1586,7 @@ CREATE OR REPLACE TRIGGER procedure_raw_tr_ins_tr
 
 -- Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.consent_raw ALTER COLUMN consent_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.consent_raw ALTER COLUMN consent_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.consent_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1613,7 +1613,7 @@ CREATE OR REPLACE TRIGGER consent_raw_tr_ins_tr
 
 -- Table "location_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.location_raw ALTER COLUMN location_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.location_raw ALTER COLUMN location_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.location_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1640,7 +1640,7 @@ CREATE OR REPLACE TRIGGER location_raw_tr_ins_tr
 
 -- Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.pids_per_ward_raw ALTER COLUMN pids_per_ward_raw_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.pids_per_ward_raw ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('db_log.db_log_seq'));
 
 GRANT TRIGGER ON db_log.pids_per_ward_raw TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
@@ -1669,7 +1669,7 @@ CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
 -- Comments on Tables in Schema "db_log" --
 ------------------------------------------------------
 
-comment on column db_log.encounter_raw.encounter_raw_id is 'Primary key of the entity';
+comment on column db_log.encounter_raw.encounter_id is 'Primary key of the entity';
 comment on column db_log.encounter_raw.enc_id is 'id (varchar)';
 comment on column db_log.encounter_raw.enc_patient_id is 'subject/reference (varchar)';
 comment on column db_log.encounter_raw.enc_partof_id is 'partOf/reference (varchar)';
@@ -1745,7 +1745,7 @@ comment on column db_log.encounter_raw.input_datetime is 'Time at which the data
 comment on column db_log.encounter_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.encounter_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.patient_raw.patient_raw_id is 'Primary key of the entity';
+comment on column db_log.patient_raw.patient_id is 'Primary key of the entity';
 comment on column db_log.patient_raw.pat_id is 'id (varchar)';
 comment on column db_log.patient_raw.pat_identifier_use is 'identifier/use (varchar)';
 comment on column db_log.patient_raw.pat_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -1767,7 +1767,7 @@ comment on column db_log.patient_raw.input_datetime is 'Time at which the data r
 comment on column db_log.patient_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.patient_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.condition_raw.condition_raw_id is 'Primary key of the entity';
+comment on column db_log.condition_raw.condition_id is 'Primary key of the entity';
 comment on column db_log.condition_raw.con_id is 'id (varchar)';
 comment on column db_log.condition_raw.con_encounter_id is 'encounter/reference (varchar)';
 comment on column db_log.condition_raw.con_patient_id is 'subject/reference (varchar)';
@@ -1885,7 +1885,7 @@ comment on column db_log.condition_raw.input_datetime is 'Time at which the data
 comment on column db_log.condition_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.condition_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.medication_raw.medication_raw_id is 'Primary key of the entity';
+comment on column db_log.medication_raw.medication_id is 'Primary key of the entity';
 comment on column db_log.medication_raw.med_id is 'id (varchar)';
 comment on column db_log.medication_raw.med_identifier_use is 'identifier/use (varchar)';
 comment on column db_log.medication_raw.med_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -1947,7 +1947,7 @@ comment on column db_log.medication_raw.input_datetime is 'Time at which the dat
 comment on column db_log.medication_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.medication_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.medicationrequest_raw.medicationrequest_raw_id is 'Primary key of the entity';
+comment on column db_log.medicationrequest_raw.medicationrequest_id is 'Primary key of the entity';
 comment on column db_log.medicationrequest_raw.medreq_id is 'id (varchar)';
 comment on column db_log.medicationrequest_raw.medreq_encounter_id is 'encounter/reference (varchar)';
 comment on column db_log.medicationrequest_raw.medreq_patient_id is 'subject/reference (varchar)';
@@ -2175,7 +2175,7 @@ comment on column db_log.medicationrequest_raw.input_datetime is 'Time at which 
 comment on column db_log.medicationrequest_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.medicationrequest_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.medicationadministration_raw.medicationadministration_raw_id is 'Primary key of the entity';
+comment on column db_log.medicationadministration_raw.medicationadministration_id is 'Primary key of the entity';
 comment on column db_log.medicationadministration_raw.medadm_id is 'id (varchar)';
 comment on column db_log.medicationadministration_raw.medadm_encounter_id is 'context/reference (varchar)';
 comment on column db_log.medicationadministration_raw.medadm_patient_id is 'subject/reference (varchar)';
@@ -2289,7 +2289,7 @@ comment on column db_log.medicationadministration_raw.input_datetime is 'Time at
 comment on column db_log.medicationadministration_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.medicationadministration_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.medicationstatement_raw.medicationstatement_raw_id is 'Primary key of the entity';
+comment on column db_log.medicationstatement_raw.medicationstatement_id is 'Primary key of the entity';
 comment on column db_log.medicationstatement_raw.medstat_id is 'id (varchar)';
 comment on column db_log.medicationstatement_raw.medstat_identifier_use is 'identifier/use (varchar)';
 comment on column db_log.medicationstatement_raw.medstat_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -2504,7 +2504,7 @@ comment on column db_log.medicationstatement_raw.input_datetime is 'Time at whic
 comment on column db_log.medicationstatement_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.medicationstatement_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.observation_raw.observation_raw_id is 'Primary key of the entity';
+comment on column db_log.observation_raw.observation_id is 'Primary key of the entity';
 comment on column db_log.observation_raw.obs_id is 'id (varchar)';
 comment on column db_log.observation_raw.obs_encounter_id is 'encounter/reference (varchar)';
 comment on column db_log.observation_raw.obs_patient_id is 'subject/reference (varchar)';
@@ -2640,7 +2640,7 @@ comment on column db_log.observation_raw.input_datetime is 'Time at which the da
 comment on column db_log.observation_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.observation_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.diagnosticreport_raw.diagnosticreport_raw_id is 'Primary key of the entity';
+comment on column db_log.diagnosticreport_raw.diagnosticreport_id is 'Primary key of the entity';
 comment on column db_log.diagnosticreport_raw.diagrep_id is 'id (varchar)';
 comment on column db_log.diagnosticreport_raw.diagrep_encounter_id is 'encounter/reference (varchar)';
 comment on column db_log.diagnosticreport_raw.diagrep_patient_id is 'subject/reference (varchar)';
@@ -2689,7 +2689,7 @@ comment on column db_log.diagnosticreport_raw.input_datetime is 'Time at which t
 comment on column db_log.diagnosticreport_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.diagnosticreport_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.servicerequest_raw.servicerequest_raw_id is 'Primary key of the entity';
+comment on column db_log.servicerequest_raw.servicerequest_id is 'Primary key of the entity';
 comment on column db_log.servicerequest_raw.servreq_id is 'id (varchar)';
 comment on column db_log.servicerequest_raw.servreq_encounter_id is 'encounter/reference (varchar)';
 comment on column db_log.servicerequest_raw.servreq_patient_id is 'subject/reference (varchar)';
@@ -2752,7 +2752,7 @@ comment on column db_log.servicerequest_raw.input_datetime is 'Time at which the
 comment on column db_log.servicerequest_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.servicerequest_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.procedure_raw.procedure_raw_id is 'Primary key of the entity';
+comment on column db_log.procedure_raw.procedure_id is 'Primary key of the entity';
 comment on column db_log.procedure_raw.proc_id is 'id (varchar)';
 comment on column db_log.procedure_raw.proc_encounter_id is 'encounter/reference (varchar)';
 comment on column db_log.procedure_raw.proc_patient_id is 'subject/reference (varchar)';
@@ -2825,7 +2825,7 @@ comment on column db_log.procedure_raw.input_datetime is 'Time at which the data
 comment on column db_log.procedure_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.procedure_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.consent_raw.consent_raw_id is 'Primary key of the entity';
+comment on column db_log.consent_raw.consent_id is 'Primary key of the entity';
 comment on column db_log.consent_raw.cons_id is 'id (varchar)';
 comment on column db_log.consent_raw.cons_patient_id is 'patient/reference (varchar)';
 comment on column db_log.consent_raw.cons_identifier_use is 'identifier/use (varchar)';
@@ -2864,7 +2864,7 @@ comment on column db_log.consent_raw.input_datetime is 'Time at which the data r
 comment on column db_log.consent_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.consent_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.location_raw.location_raw_id is 'Primary key of the entity';
+comment on column db_log.location_raw.location_id is 'Primary key of the entity';
 comment on column db_log.location_raw.loc_id is 'id (varchar)';
 comment on column db_log.location_raw.loc_identifier_use is 'identifier/use (varchar)';
 comment on column db_log.location_raw.loc_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -2884,7 +2884,7 @@ comment on column db_log.location_raw.input_datetime is 'Time at which the data 
 comment on column db_log.location_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column db_log.location_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column db_log.pids_per_ward_raw.pids_per_ward_raw_id is 'Primary key of the entity';
+comment on column db_log.pids_per_ward_raw.pids_per_ward_id is 'Primary key of the entity';
 comment on column db_log.pids_per_ward_raw.date_time is 'date_time (varchar)';
 comment on column db_log.pids_per_ward_raw.ward_name is 'ward_name (varchar)';
 comment on column db_log.pids_per_ward_raw.patient_id is 'patient_id (varchar)';
