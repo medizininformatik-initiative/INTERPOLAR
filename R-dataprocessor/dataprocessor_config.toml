@@ -27,6 +27,12 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 MAX_DIR_COUNT = 5
 
+[analyse]
+# Activate this date to run the analysis for a spectific date. If it is not set, then time now will
+# be taken.
+CURRENT_DATETIME = "2019-01-02 08:01:00"
+
+
 [database]
 
 PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"

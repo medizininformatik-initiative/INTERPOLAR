@@ -43,15 +43,14 @@ dataprocessor <- function() {
 
   etlutils::run_out('Run Dataprocessor', {
 
+    etlutils::runProcess(etlutils::run_in('Create Frontend Tables for Patient and Encounter', {
+      createFrontendTables()
+    }))
+
     # steps to do:
     # correcting laboratory codes, units and values
     # ...
     # MRP calculation
-
-    # Initialization
-    etlutils::runProcess(etlutils::run_in('Initialization', {
-      init()
-    }))
 
     # # Calculate Drug Disease MPRS
     # etlutils::runProcess(etlutils::run_in('Calculate Drug Disease MRPs', {
