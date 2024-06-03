@@ -1669,7 +1669,7 @@ CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
 -- Comments on Tables in Schema "cds2db_in" --
 ------------------------------------------------------
 
-comment on column cds2db_in.encounter_raw.encounter_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.encounter_raw.encounter_id is 'Primary key of the entity';
 comment on column cds2db_in.encounter_raw.enc_id is 'id (varchar)';
 comment on column cds2db_in.encounter_raw.enc_patient_id is 'subject/reference (varchar)';
 comment on column cds2db_in.encounter_raw.enc_partof_id is 'partOf/reference (varchar)';
@@ -1745,7 +1745,7 @@ comment on column cds2db_in.encounter_raw.input_datetime is 'Time at which the d
 comment on column cds2db_in.encounter_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.encounter_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.patient_raw.patient_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.patient_raw.patient_id is 'Primary key of the entity';
 comment on column cds2db_in.patient_raw.pat_id is 'id (varchar)';
 comment on column cds2db_in.patient_raw.pat_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.patient_raw.pat_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -1767,7 +1767,7 @@ comment on column cds2db_in.patient_raw.input_datetime is 'Time at which the dat
 comment on column cds2db_in.patient_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.patient_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.condition_raw.condition_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.condition_raw.condition_id is 'Primary key of the entity';
 comment on column cds2db_in.condition_raw.con_id is 'id (varchar)';
 comment on column cds2db_in.condition_raw.con_encounter_id is 'encounter/reference (varchar)';
 comment on column cds2db_in.condition_raw.con_patient_id is 'subject/reference (varchar)';
@@ -1885,7 +1885,7 @@ comment on column cds2db_in.condition_raw.input_datetime is 'Time at which the d
 comment on column cds2db_in.condition_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.condition_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.medication_raw.medication_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.medication_raw.medication_id is 'Primary key of the entity';
 comment on column cds2db_in.medication_raw.med_id is 'id (varchar)';
 comment on column cds2db_in.medication_raw.med_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.medication_raw.med_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -1947,7 +1947,7 @@ comment on column cds2db_in.medication_raw.input_datetime is 'Time at which the 
 comment on column cds2db_in.medication_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.medication_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.medicationrequest_raw.medicationrequest_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.medicationrequest_raw.medicationrequest_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationrequest_raw.medreq_id is 'id (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_encounter_id is 'encounter/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_patient_id is 'subject/reference (varchar)';
@@ -2175,7 +2175,7 @@ comment on column cds2db_in.medicationrequest_raw.input_datetime is 'Time at whi
 comment on column cds2db_in.medicationrequest_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.medicationrequest_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.medicationadministration_raw.medicationadministration_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.medicationadministration_raw.medicationadministration_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationadministration_raw.medadm_id is 'id (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_encounter_id is 'context/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_patient_id is 'subject/reference (varchar)';
@@ -2289,7 +2289,7 @@ comment on column cds2db_in.medicationadministration_raw.input_datetime is 'Time
 comment on column cds2db_in.medicationadministration_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.medicationadministration_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.medicationstatement_raw.medicationstatement_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.medicationstatement_raw.medicationstatement_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationstatement_raw.medstat_id is 'id (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -2504,7 +2504,7 @@ comment on column cds2db_in.medicationstatement_raw.input_datetime is 'Time at w
 comment on column cds2db_in.medicationstatement_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.medicationstatement_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.observation_raw.observation_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.observation_raw.observation_id is 'Primary key of the entity';
 comment on column cds2db_in.observation_raw.obs_id is 'id (varchar)';
 comment on column cds2db_in.observation_raw.obs_encounter_id is 'encounter/reference (varchar)';
 comment on column cds2db_in.observation_raw.obs_patient_id is 'subject/reference (varchar)';
@@ -2640,7 +2640,7 @@ comment on column cds2db_in.observation_raw.input_datetime is 'Time at which the
 comment on column cds2db_in.observation_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.observation_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.diagnosticreport_raw.diagnosticreport_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.diagnosticreport_raw.diagnosticreport_id is 'Primary key of the entity';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_id is 'id (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_encounter_id is 'encounter/reference (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_patient_id is 'subject/reference (varchar)';
@@ -2689,7 +2689,7 @@ comment on column cds2db_in.diagnosticreport_raw.input_datetime is 'Time at whic
 comment on column cds2db_in.diagnosticreport_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.diagnosticreport_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.servicerequest_raw.servicerequest_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.servicerequest_raw.servicerequest_id is 'Primary key of the entity';
 comment on column cds2db_in.servicerequest_raw.servreq_id is 'id (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_encounter_id is 'encounter/reference (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_patient_id is 'subject/reference (varchar)';
@@ -2752,7 +2752,7 @@ comment on column cds2db_in.servicerequest_raw.input_datetime is 'Time at which 
 comment on column cds2db_in.servicerequest_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.servicerequest_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.procedure_raw.procedure_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.procedure_raw.procedure_id is 'Primary key of the entity';
 comment on column cds2db_in.procedure_raw.proc_id is 'id (varchar)';
 comment on column cds2db_in.procedure_raw.proc_encounter_id is 'encounter/reference (varchar)';
 comment on column cds2db_in.procedure_raw.proc_patient_id is 'subject/reference (varchar)';
@@ -2825,7 +2825,7 @@ comment on column cds2db_in.procedure_raw.input_datetime is 'Time at which the d
 comment on column cds2db_in.procedure_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.procedure_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.consent_raw.consent_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.consent_raw.consent_id is 'Primary key of the entity';
 comment on column cds2db_in.consent_raw.cons_id is 'id (varchar)';
 comment on column cds2db_in.consent_raw.cons_patient_id is 'patient/reference (varchar)';
 comment on column cds2db_in.consent_raw.cons_identifier_use is 'identifier/use (varchar)';
@@ -2864,7 +2864,7 @@ comment on column cds2db_in.consent_raw.input_datetime is 'Time at which the dat
 comment on column cds2db_in.consent_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.consent_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.location_raw.location_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.location_raw.location_id is 'Primary key of the entity';
 comment on column cds2db_in.location_raw.loc_id is 'id (varchar)';
 comment on column cds2db_in.location_raw.loc_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.location_raw.loc_identifier_type_system is 'identifier/type/coding/system (varchar)';
@@ -2884,7 +2884,7 @@ comment on column cds2db_in.location_raw.input_datetime is 'Time at which the da
 comment on column cds2db_in.location_raw.last_check_datetime is 'Time at which data record was last checked';
 comment on column cds2db_in.location_raw.current_dataset_status is 'Processing status of the data record';
 
-comment on column cds2db_in.pids_per_ward_raw.pids_per_ward_raw_id is 'Primary key of the entity';
+comment on column cds2db_in.pids_per_ward_raw.pids_per_ward_id is 'Primary key of the entity';
 comment on column cds2db_in.pids_per_ward_raw.date_time is 'date_time (varchar)';
 comment on column cds2db_in.pids_per_ward_raw.ward_name is 'ward_name (varchar)';
 comment on column cds2db_in.pids_per_ward_raw.patient_id is 'patient_id (varchar)';

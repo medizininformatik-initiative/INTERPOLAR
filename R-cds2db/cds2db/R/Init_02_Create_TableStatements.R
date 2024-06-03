@@ -237,11 +237,11 @@ getCreateTableGrantStatements <- function(table_description, script_rights_descr
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
     single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
 
-
     statements <- paste0(statements, single_statement, "\n\n")
   }
   return(statements)
 }
+
 getCreateTableCommentStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
@@ -273,6 +273,8 @@ getCreateTableCommentStatements <- function(table_description, script_rights_des
     }
     table_comment <- gsub("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_SINGLE_LINE%>", table_comment, table_comment_template)
     table_comment <- gsub("<%TABLE_NAME%>", full_tablename, table_comment)
+    table_comment <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, table_comment)
+
     comments <- paste0(comments, table_comment, "\n")
   }
   return(comments)
