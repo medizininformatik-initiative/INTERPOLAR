@@ -184,7 +184,7 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
     # non RAW tables need an extra column for the ROW/Entry ID which they are originated (multiple
     # typed ( = non RAW) rows can be created by one RAW table row (see fhir_melt)
     if (!ignore_types) {
-      column_line_statement <- paste0(full_tablename, "_raw_id int, -- Primary key of the corresponding raw table\n")
+      column_line_statement <- paste0(full_tablename, "_raw_id int NOT NULL, -- Primary key of the corresponding raw table\n")
     }
     first_row <- TRUE
     for (row in 1:nrow(single_table_description)) {
