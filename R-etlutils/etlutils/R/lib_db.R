@@ -343,6 +343,33 @@ writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = F
   }
 }
 
+#' Write a Data Table to a Database
+#'
+#' This function writes a single data.table to a specified database. If the table name is not
+#' provided, the function uses the name of the data.table variable. The user can choose to clear
+#' existing table contents before writing new data by setting `clear_before_insert` to TRUE.
+#'
+#' @param table A data.table object to be written to the database.
+#' @param db_connection A database connection to which the table should be written.
+#' @param table_name A character string representing the name of the table in the database. If not provided,
+#'                   the name of the data.table variable is used.
+#' @param clear_before_insert A logical flag indicating whether to clear the table contents
+#'                            before inserting new data. Defaults to FALSE.
+#' @param close_db_connection If TRUE, the database connection will be closed at the end of the
+#'                            process. Default is FALSE.
+#'
+#' @return NULL. The function is used for its side effects of writing data to the database.
+#'
+#' @export
+writeTableToDatabase <- function(table, db_connection, table_name = NA, clear_before_insert = FALSE, close_db_connection = FALSE) {
+  if (is.na(table_name)) {
+    table_name <- as.character(sys.call()[2]) # get the table variable name
+  }
+  tables <- list(table)
+  names(tables) <- table_name
+  writeTablesToDatabase(tables, db_connection, clear_before_insert, close_db_connection)
+}
+
 #' Read Multiple Tables from Database
 #'
 #' This function reads multiple tables from a specified database schema. If no table names are provided,
