@@ -377,14 +377,15 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
       single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
       single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
 
-      colum_placeholders <- c("<%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>",
+      column_placeholders <- c("<%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>",
                               "<%TEMPLATE_COPY_FUNCTION_SUB_COLUMNS%>",
                               "<%TEMPLATE_COPY_FUNCTION_SUB_CURRENT_RECORD_COLUMNS%>")
 
       single_table_description <- table_description[[tablename]]
-      for (placeholder in colum_placeholders) {
+      for (i in 1:length(column_placeholders)) {
+        placeholder <- column_placeholders[i]
         indentation <- etlutils::getWordIndentation(single_statement, placeholder)
-        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, tablename, indentation, placeholder, ignore_types)
+        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, tablename, indentation, placeholder, ignore_types || i == 1)
         single_statement <- gsub(placeholder, replacement, single_statement)
       }
 
