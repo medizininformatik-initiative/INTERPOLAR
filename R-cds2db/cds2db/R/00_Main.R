@@ -61,11 +61,11 @@ retrieve <- function() {
 
     # Convert Column Types in resource tables
     etlutils::runProcess(etlutils::run_in('Load untyped RAW tables from database', {
-      fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
       resource_tables <- readUntypedRAWDataFromDatabase()
     }))
 
     etlutils::runProcess(etlutils::run_in('Convert RAW tables to typed tables', {
+      fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
       resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
     }))
 
