@@ -68,9 +68,13 @@ getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
+extractIDsFromReferences <- function(references) {
+  etlutils::getAfterLastSlash(references)
+}
+
 getQueryList <- function(collection, remove_ref_type = FALSE) {
   if (remove_ref_type) {
-    collection <- etlutils::getAfterLastSlash(collection)
+    collection <- extractIDsFromReferences(collection)
   }
   paste0("'", collection, "'", collapse = ", ")
 }
@@ -140,10 +144,6 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids, log = T
   }
   enc_id_column <- getPIDColumn(resource_name)
   runQuery(resource_name, enc_id_column, enc_ids, log)
-}
-
-extractIDsFromReferences <- function(references) {
-  etlutils::getAfterLastSlash(references)
 }
 
 createFrontendTables <- function() {
