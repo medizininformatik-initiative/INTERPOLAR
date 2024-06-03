@@ -178,6 +178,7 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
     full_tablename <- getFullTableName(tablename, rights_first_row)
     single_table_description <- table_description[[tablename]]
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement_template)
+    single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
     column_line_statement <- ""
     indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
     # non RAW tables need an extra column for the ROW/Entry ID which they are originated (multiple
