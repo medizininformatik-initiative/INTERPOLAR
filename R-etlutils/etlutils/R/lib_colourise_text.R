@@ -106,6 +106,7 @@ colourise <- function(text, fg = "dark gray", bg = NULL) {
 #'
 #' @export
 cat_colourised <- function(msg, fg = NULL, bg = NULL) {
+  if (!grepl("\\n$", msg)) msg <- paste0(msg, "\n")
   cat(colourise(text = msg, fg = fg, bg = bg))
   return(msg)
 }

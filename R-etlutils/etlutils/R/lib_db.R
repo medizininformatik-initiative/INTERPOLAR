@@ -214,7 +214,7 @@ dbDeleteContent <- function(db_connection, table_name) {
 #' @export
 dbExecute <- function(db_connection, statement, log = TRUE) {
   if (log) {
-    cat(statement)
+    cat(statement, "\n")
   }
   DBI::dbExecute(db_connection, statement)
 }
@@ -320,7 +320,6 @@ createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port,
 #'
 #' @export
 writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = FALSE, close_db_connection = FALSE) {
-
   table_names <- names(tables)
   db_table_names <- dbListTableNames(db_connection)
 
