@@ -274,6 +274,13 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   convertType(resource_tables, "boolean", etlutils::convertBooleanFormat)
 
   for (i in seq_along(resource_tables)) {
+
+    # rename the id column from the raw tables from tablename_id to tablename_raw_id
+    tablename <- tolower(names(resource_tables)[i])
+    pattern <- paste0("^", tablename, "_id$")
+    raw_id_column <- grep(pattern, colnames(resource_tables[[i]])) # should be only 1 column
+    colnames(resource_tables[[i]])[raw_id_column] <- paste0(tablename, "_raw_id")
+
     polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
   }
   return(resource_tables)
