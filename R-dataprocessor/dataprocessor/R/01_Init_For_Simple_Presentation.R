@@ -187,7 +187,7 @@ createFrontendTables <- function() {
   }
 
   createEncounterFrontendTable <- function(pids_per_ward) {
-    encounter_frontend_table <- data.table(
+    enc_frontend_table <- data.table(
       fall_id = character(),
       fall_studienphase = character(),
       fall_station = character(),
@@ -201,11 +201,9 @@ createFrontendTables <- function() {
       fall_ent_dat = as.POSIXct(character())
     )
 
-    pids <- pids_per_ward$patient_id
-
     # load Encounters for all PIDs
     query_date <- getQueryDatetime()
-    query_ids <- getQueryList(pids)
+    query_ids <- getQueryList(pids_per_ward$patient_id)
     query <- paste0("SELECT * FROM db2dataprocessor_out.v_encounter_all_data\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
                     "  enc_partof_id IS NOT NULL AND\n",
@@ -220,7 +218,8 @@ createFrontendTables <- function() {
                     "  WHERE con_id IN (", query_ids, ")\n")
     conditions <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
 
-    for (pid in pids) {
+    for (pid_index in seq_len(nrow(pids_per_ward))) {
+      pid <- pids_per_ward$patient_id[pid_index]
       pid_encounters <- encounters[enc_patient_id == pid]
 
       # check possible errors
@@ -240,21 +239,34 @@ createFrontendTables <- function() {
       # highlighted here.
       pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
 
-      start_index <- nrow(encounter_frontend_table)
-      encounter_frontend_table <- etlutils::addEmptyRows(encounter_frontend_table, length(unique_encounter_IDs))
+      start_index <- nrow(enc_frontend_table)
+      enc_frontend_table <- etlutils::addEmptyRows(enc_frontend_table, length(unique_encounter_IDs))
 
       for (i in 1:length(pid_encounters)) {
         target_index <- start_index + i
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        data.table::set(encounter_frontend_table, target_index, 'fall_id', pid_encounters[[i]]$enc_id[1])
-        data.table::set(encounter_frontend_table, target_index, 'fall_aufn_dat', pid_encounters[[i]]$enc_period_start[1])
-        data.table::set(encounter_frontend_table, target_index, 'fall_ent_dat',pid_encounters[[i]]$enc_period_end[1])
-        data.table::set(encounter_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])
+        data.table::set(enc_frontend_table, target_index, 'fall_id', pid_encounters[[i]]$enc_id[1])
+        data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', pid_encounters[[i]]$enc_period_start[1])
+        data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',pid_encounters[[i]]$enc_period_end[1])
+        data.table::set(enc_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])
+
+        # extract ward name from pids_per_ward table
+        data.table::set(enc_frontend_table, target_index, 'fall_station', pids_per_ward$ward_name[pid_index])
+
+        # Extract the admission diagnosis
+        admission_diagnoses <- pid_encounters[[i]][enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
+        admission_diagnoses <- unique(admission_diagnoses)
+        admission_diagnoses <- extractIDsFromReferences(admission_diagnoses)
+        admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
+        admission_diagnoses <- unique(admission_diagnoses$con_code_text)
+        admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
+        data.table::set(enc_frontend_table, target_index, 'fall_aufn_diag', admission_diagnoses)
       }
     }
-    return(encounter_frontend_table)
+
+    return(enc_frontend_table)
   }
 
   pids_per_ward <- loadAllDataWithLastTimestampFromDB("pids_per_ward")
