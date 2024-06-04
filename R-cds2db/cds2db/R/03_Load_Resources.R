@@ -27,11 +27,9 @@
 #' }
 #'
 createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
-  date_time <- as.character(Sys.time()) # here we create the raw table -> all data are varchars/strings
   ward_names <- names(patientIDsPerWard)
   patient_ids <- unlist(patientIDsPerWard)
   wardPatitentIDPerDate <- data.table::data.table(
-    date_time = rep(date_time, length(patient_ids)),
     ward_name = rep(ward_names, lengths(patientIDsPerWard)),
     patient_id = patient_ids
   )
