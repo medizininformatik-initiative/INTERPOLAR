@@ -45,7 +45,6 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     }
   }
   converted_filter_patterns
-
 }
 
 #' Get FHIR table description based on filter patterns.
@@ -94,6 +93,11 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #' requiring all subconditions to be met for the condition to be satisfied.
 #'
 filterResources <- function(resources, filter_patterns) {
+
+  # nothing todo
+  if (!length(filter_patterns)) {
+    return(resources)
+  }
 
   # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
   resources[, Filter_Column_Keep := FALSE]
