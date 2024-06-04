@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%SIMPLE_TABLENAME%>_id not in (select <%TABLE_NAME_2%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%>));

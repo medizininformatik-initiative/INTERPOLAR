@@ -400,7 +400,8 @@ combineDataTables <- function(dt_list) {
 #' a data.table where rows containing NA or empty values in the specified columns are removed.
 #'
 #' @param dt A data.table to process.
-#' @param columns_to_check A character vector of column names to check for NA or empty values.
+#' @param columns_to_check A character vector of column names to check for NA or empty values. If NA
+#'                         then all columns will be checked.
 #'
 #' @return A modified data.table with rows removed based on the specified condition.
 #'
@@ -431,15 +432,17 @@ combineDataTables <- function(dt_list) {
 #' # Names of columns to check
 #' columns_to_check <- c("Column1", "Column3")
 #' # Remove rows with NA or empty values in specified columns
-#' result_data <- removeRowsWithNAorEmpty(my_data, columns_to_check)
+#' result_data <- removeRowsWithNAorEmpty(my_data)
 #' print(result_data)
-
 #'
 #' @export
-removeRowsWithNAorEmpty <- function(dt, columns_to_check) {
+removeRowsWithNAorEmpty <- function(dt, columns_to_check = NA) {
   # Check if the provided data.table is empty
   if (nrow(dt) == 0) {
     return(dt)
+  }
+  if (isSimpleNA(columns_to_check)) {
+    columns_to_check <- names(dt)
   }
   # Check the condition for each row in the data.table
   rows_to_remove <- apply(dt[, ..columns_to_check, with = FALSE], 1, function(row) {
@@ -775,10 +778,10 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
 #' setDT(mtcars)
 #'
 #' # Print summary for the mtcars table
-#' print_table_summary(table = mtcars, table_name = 'mtcars')
+#' printTable_summary(table = mtcars, table_name = 'mtcars')
 #'
 #' @export
-print_table_summary <- function(table, table_name = '') {
+printTable_summary <- function(table, table_name = '') {
   dt <- data.table::as.data.table(
     cbind(
       class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
@@ -790,7 +793,7 @@ print_table_summary <- function(table, table_name = '') {
   )
   if (0 < nrow(dt)) {
     cat(
-      frame_string(
+      createFrameString(
         text = paste0(
           'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n',
           dataTableAsCharacter(
@@ -809,7 +812,7 @@ print_table_summary <- function(table, table_name = '') {
     )
   } else {
     cat(
-      frame_string(
+      createFrameString(
         text = paste0(
           'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n'
         ),
@@ -873,3 +876,68 @@ complete_table <- function(table, table_description) {
   d <- data.table::rbindlist(list(empty_table, table), fill = TRUE, use.names = TRUE)
   d[, lapply(.SD, function(x) methods::as(x, 'character'))]
 }
+
+#' Fill NA Values with Last Observed Value in Specified Columns of a data.table
+#'
+#' This function fills NA values in a data.table by carrying forward the last observed value.
+#' If an NA value is found, it is replaced by the most recent non-NA value in the column.
+#' If the first value in a column is NA, it remains NA.
+#'
+#' @param dt A data.table object in which NA values need to be filled.
+#' @param columns A vector of column names to be processed. If NA (default), all columns are processed.
+#' @return A data.table with NA values filled.
+#' @examples
+#' library(data.table)
+#' dt <- data.table(A = c(1, NA, NA, 4, 5), B = c("x", NA, "z", NA, NA))
+#' fillNAWithLastRowValue(dt)
+#' fillNAWithLastRowValue(dt, columns = "B")
+#' @export
+fillNAWithLastRowValue <- function(dt, columns = NA) {
+  # if columns parameter is NA -> take all columns
+  if (is.na(columns)) {
+    columns <- names(dt)
+  }
+
+  # fill NA values
+  dt[, (columns) := lapply(.SD, function(x) {
+    for (i in 2:length(x)) {
+      if (is.na(x[i])) {
+        x[i] <- x[i-1]
+      }
+    }
+    return(x)
+  }), .SDcols = columns]
+
+  return(dt)
+}
+
+#' Split a data.table into a List by a Specified Column
+#'
+#' This function splits a data.table into a list of data.tables based on the unique values in a
+#' specified column. Each list element contains the rows where the value in the specified column
+#' is the same.
+#'
+#' @param dt A data.table to be split.
+#' @param split_columnname A character string specifying the column name by which to split the
+#' data.table.
+#' @param fill_na_in_split_columnname A logical value indicating whether to fill NA values in the
+#' specified column with the last non-NA value. Default is TRUE.
+#' @return A list of data.tables, with each element containing the rows with the same value in the
+#' specified column. The names of the list elements are set to the unique values of the specified
+#' column.
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   SCRIPTNAME = c("A", "A", "B", "B", "C"),
+#'   VALUE = 1:5
+#' )
+#' result <- splitTableToList(dt, "SCRIPTNAME")
+#' print(result)
+#' @export
+splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = TRUE) {
+  if (fill_na_in_split_columnname) {
+    fillNAWithLastRowValue(dt, split_columnname)
+  }
+  split(dt, by = split_columnname, keep.by = TRUE)
+}
+

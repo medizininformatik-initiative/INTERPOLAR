@@ -36,6 +36,70 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
   )
 }
 
+#' Rename a Directory with Creation Timestamp If It Exists
+#'
+#' This function checks if a specified directory exists. If it does, the directory is renamed
+#' by appending its creation time to its original name, optionally prefixed by a given string.
+#' Also, this function deletes the oldest directories in the specified outer directory
+#' if the count of directories exceeds the specified limit.
+#'
+#' @param dir The directory path to check and rename.
+#' @param MAX_DIR_COUNT An optional maximum count of directories.
+#'        If the count of directories exceeds this value, the oldest directories will be deleted.
+#'        Default is NA, meaning no deletion is performed.
+#' @param timeStampPrefix An optional string to prefix to the creation time in the new name.
+#'        Default is an empty string.
+#'
+#' @details If the directory exists, the function retrieves its creation time, formats it to
+#' replace spaces with underscores and colons with dashes, and then constructs a new directory
+#' name by appending this timestamp to the original directory name with an optional prefix.
+#' Finally, it renames the directory to this new name.
+#'
+#' If the `MAX_DIR_COUNT` parameter is provided and the count of directories in the outer directory
+#' exceeds this value, the function will delete the oldest directories until the count matches
+#' the specified limit. The deletion is performed in ascending order based on the creation time
+#' embedded in the directory names.
+#'
+#' @return Returns the new directory name if the directory exists and was renamed, or `NA`
+#' if the directory does not exist or no action was taken.
+#'
+#' @export
+renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStampPrefix = "") {
+  newName <- NA
+  if (dir.exists(dir)) {
+    dirCreationTime <- file.info(dir)$ctime
+    dirCreationTime <- as.POSIXct(dirCreationTime, tz = "GMT")  # Convert to POSIXct
+    dirCreationTime <- format(dirCreationTime, "%Y-%m-%d_%H-%M-%S")  # Format without milliseconds
+    dirCreationTime <- gsub(" ", "_", dirCreationTime)
+    dirCreationTime <- gsub(":", "-", dirCreationTime)
+    newName <- paste0(dir, timeStampPrefix, "_", dirCreationTime)
+    file.rename(dir, newName)
+
+    # Extract outer directory
+    outer_dir <- sub("/.*", "", dir)
+    # Extract inner directory
+    inner_dir <- sub(".*/", "", dir)
+    # Specific Files in outer dir
+    files <- list.files(outer_dir, inner_dir)
+    # Number of files in outer dir
+    num_files <- length(files)
+    if (num_files > MAX_DIR_COUNT && !is.na(MAX_DIR_COUNT)) {
+      # Sort files (oldest first)
+      sorted_files <- sort(files)
+      # Calculate number of files to delete
+      num_files_to_delete <- num_files - MAX_DIR_COUNT
+      # Delete the oldest files
+      for (i in 1:num_files_to_delete) {
+        # Create full path to the file to be deleted
+        dir_path <- file.path(outer_dir, sorted_files[i])
+        # Delete paths
+        unlink(dir_path, recursive = TRUE)
+      }
+    }
+  }
+  return(newName)
+}
+
 #'
 #' This function is used by the framework itself
 #'
@@ -45,16 +109,15 @@ get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stam
 #' @export
 create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
-
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
+  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
-
   for (rd in SUB_PROJECTS_DIRS$local_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
 }
-
 
 #' Return the path to the log directory of the specific sub project
 #'
@@ -63,10 +126,9 @@ create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
 #' @return A character of length one containing the path to the sub project specific log directory.
 #'
 #' @export
-polar_path_to_log_directory <- function(project_name = PROJECT_NAME) {
+returnPathToLogDir <- function(project_name = PROJECT_NAME) {
   fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log")
 }
-
 
 #' Return the combined paths of the log directory of the specific sub project and a new path
 #'
@@ -75,21 +137,18 @@ polar_path_to_log_directory <- function(project_name = PROJECT_NAME) {
 #' @return A character of length one containing the path to add to the sub project specific log directory.
 #'
 #' @export
-polar_add_to_log_path <- function(path) {
-  fhircrackr::pastep(polar_path_to_log_directory(), path)
+combineLogPaths <- function(path) {
+  fhircrackr::pastep(returnPathToLogDir(), path)
 }
-
-
 
 #' Return the path to the bundles directory of the specific sub project
 #'
 #' @return A character of length one containing the path to the sub project specific log directory.
 #'
 #' @export
-polar_path_to_bundles_directory <- function() {
+returnPathToBundlesDir <- function() {
   fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "bundles")
 }
-
 
 #' Return the combined paths of the bundles directory of the specific sub project and a new path
 #'
@@ -98,107 +157,17 @@ polar_path_to_bundles_directory <- function() {
 #' @return A character of length one containing the path to add to the sub project specific bundles directory.
 #'
 #' @export
-polar_add_to_bundles_path <- function(path) {
-  fhircrackr::pastep(polar_path_to_bundles_directory(), path)
+combineBundlePaths <- function(path) {
+  fhircrackr::pastep(returnPathToBundlesDir(), path)
 }
 
-
-
-#' Return the path to the tables directory of the specific sub project
-#'
-#' @return A character of length one containing the path to the sub project specific log directory.
-#'
-#' @export
-polar_path_to_tables_directory <- function() {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
-}
-
-
-#' Return the combined paths of the tables directory of the specific sub project and a new path
-#'
-#' @param path the sub directory or file name to add
-#'
-#' @return A character of length one containing the path to add to the sub project specific tables directory.
-#'
-#' @export
-polar_add_to_tables_path <- function(path) {
-  fhircrackr::pastep(polar_path_to_tables_directory(), path)
-}
-
-
-#' Load a single Bundle
-#'
-#' polar_load('bundle.xml')
-#'
-#' @param path the path to load from
-#'
-#' @return A fhir_bundle as XML
-#' @importFrom fhircrackr fhir_bundle_xml
-#' @importFrom xml2 read_xml
-#' @export
-polar_load_bundle <- function(path) {
-  fhircrackr::fhir_bundle_xml(bundle = xml2::read_xml(x = path, encoding = 'utf-8'))
-}
-
-
-#' Save Bundle
-##
-#' bndls <- fhircrackr::fhir_search("http://vonk.fire.ly/R4/Patient?gender=male", max_bundles = 1)
-#' polar_save_bundles(bndls)
-#'
-#' @param bundles A fhir_bundle_list containing the bundles to store to the sub project related bundles directory.
-#'
-#' @return Nothing
-#' @importFrom fhircrackr fhir_save
-#' @export
-polar_save_bundles <- function(bundles) {
-  bundles_name <- deparse(substitute(bundles))
-  fhircrackr::fhir_save(bundles = bundles, directory = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "bundles", bundles_name))
-}
-
-
-#' Save a Request without url and endpoint in the *public* `requests` directory to which was created for the specific subproject.
-#'
-#' (request <- fhircrackr::fhir_url(
-#'   url        = "http://vonk.fire.ly/R4",
-#'   resource   = "Patient",
-#'   parameters = c(
-#'   "gender" = "female",
-#'   "_count" = "10"
-#' )))
-#' polar_save_request(request = request, filename_without_extension = "my_request")
-#'
-#' @param request A character of length one holding the fhir search request with url and endpoint.
-#' @param filename_without_extension A character of length one.
-#'
-#' @return Nothing.
-#'
-#' @export
-polar_save_request <- function(request, filename_without_extension) {
-  utils::write.table(data.table::data.table(request = request), file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "requests", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
-}
-
-
-###
-# save_performance into the sub project related request directory. Don't use it by yourself!
-###
 #' Save a Clock history in the *public* `performance` directory to which was created for the specific subproject.
-#'
-#' clock_$reset()
-#' clock_$measure_process_time("Some Process", {for(i in 1:1000)function(n)mean(cos(1:n))})
-#' clock_
-#' polar_save_performance(filename_without_extension = "some_process")
-#' my_clock <- clock()
-#' my_clock$measure_process_time("Some different Process", {for(i in 1:1000)function(n)mean(cos(1:n))})
-#' my_clock
-#' save_performance(filename_without_extension = "some_differen_process", clock = my_clock)
 #'
 #' @param filename_without_extension A character vector of length one.
 #' @param clock A `Clock` object. Defaults to the global environment `Clock` object `clock_`.
 #'
-#' @return Nothing.
 #' @export
-save_performance <- function(filename_without_extension, clock = if (is.null(PROCESS_CLOCK)) NULL else PROCESS_CLOCK) {
+savePerformance <- function(filename_without_extension = "Performance_informations", clock = getClock()) {
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
@@ -218,7 +187,6 @@ save_performance <- function(filename_without_extension, clock = if (is.null(PRO
 polar_save_error <- function(err, filename_without_extension) {
   cat(err, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log", filename_without_extension, ext = ".txt"), sep = "\n")
 }
-
 
 ###
 # save a data.frame/data.table as tsv into the sub project related tables directory
@@ -280,7 +248,7 @@ polar_save_table_as_rdata <- function(table, table_name = NA) {
   if (is.na(table_name)) {
     table_name <- as.character(sys.call()[2]) # get the table variable name
   }
-  save(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData'))
+  save(table, file = getLocalRdataFileName(table_name))
 }
 
 #' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
@@ -414,4 +382,68 @@ polar_save_result_table_as_csv_local <- function(table, filename_without_extensi
 #' @export
 polar_save_result_as_rdata <- function(..., filename_without_extension) {
   save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "results", filename_without_extension, ext = ".RData"))
+}
+
+#' Get the filename for an RData file corresponding to a table
+#'
+#' This function constructs the filename for an RData file corresponding to the specified table.
+#'
+#' @param table_name The name of the table.
+#' @return A character string representing the filename for the RData file.
+#'
+#' @export
+getLocalRdataFileName <- function(table_name) {
+  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData')
+}
+
+#' Get file information for an RData file
+#'
+#' This function retrieves information about an RData file corresponding to the specified table.
+#'
+#' @param table_name The name of the table.
+#' @return A list containing file information such as size, permissions, and timestamps.
+#'
+#' @export
+getLocalRdataFileInfo <- function(table_name) {
+  table_name <- getLocalRdataFileName(table_name)
+  file_info <- list()
+  if (file.exists(table_name)) {
+    file_info <- file.info(table_name)
+  }
+  return(file_info)
+}
+
+#' Check if an RData file exists locally
+#'
+#' This function checks if an RData file corresponding to the specified table exists locally.
+#'
+#' @param table_name The name of the table.
+#' @return TRUE if the RData file exists locally, otherwise FALSE.
+#'
+#' @export
+existsLocalRdataFile <- function(table_name) {
+  file.exists(getLocalRdataFileName(table_name))
+}
+
+#' Read Content from a File into a Single String
+#'
+#' This function reads the content of a file specified by the file path and
+#' concatenates all lines into a single string, with each line separated by a newline character.
+#' This is useful for processing file data that needs to be utilized as a continuous string.
+#'
+#' @param file_path The path to the file whose content is to be read.
+#' @return A single string containing all the lines from the file, concatenated together with newline
+#' characters between each line.
+#' @examples
+#' \dontrun{
+#'   content <- getContentFromFile("path/to/your/file.txt")
+#'   print(content)
+#' }
+#' @export
+getContentFromFile <- function(file_path) {
+  # read the content of the file
+  content <- readLines(file_path, warn = FALSE)
+  # append all single line strings to one large string
+  content <- paste0(content, collapse = '\n')
+  return(content)
 }

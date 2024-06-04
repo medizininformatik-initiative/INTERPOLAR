@@ -178,85 +178,86 @@ test_that("replacePatternsInString returns the original string when no matches a
   expect_equal(result, "hello world!")
 })
 
-###########################
-# convertDateInformation  #
-###########################
-#' @importFrom lubridate today
+#########################
+# convertIntegerFormat  #
+#########################
 
-test_that("convertDateInformation converts date representations correctly", {
-  # Test case 1: YYYY format
-  date_column_YYYY <- c("2022", "1990", "1980")
-  result_YYYY <- convertDateInformation(date_column_YYYY)
-  expect_equal(result_YYYY, lubridate::as_date(c("2022-01-01", "1990-01-01", "1980-01-01")))
+test_that("convertIntegerFormat function works correctly", {
+  # Test case 1: Valid integer conversion
+  dt <- data.table(column1 = c("1", "2", "3", "4"),
+                   column2 = c(NA, "6", "", "8"))
+  convertIntegerFormat(dt, "column1")
+  convertIntegerFormat(dt, "column2")
+  expect_equal(as.integer(dt$column1), c(1, 2, 3, 4))
+  expect_equal(as.integer(dt$column2), c(NA, 6, NA, 8))
 
-  # Test case 2: YYYY-MM format
-  date_column_YYYY_MM <- c("2022-12", "1990-05", "1980-11")
-  result_YYYY_MM <- convertDateInformation(date_column_YYYY_MM)
-  expect_equal(result_YYYY_MM, lubridate::as_date(c("2022-12-01", "1990-05-01", "1980-11-01")))
+  # Test case 2: Empty input, should not throw an error
+  dt <- data.table(column1 = character(0),
+                   column2 = character(0))
+  convertIntegerFormat(dt, "column1")
+  convertIntegerFormat(dt, "column2")
+  expect_equal(nrow(dt), 0)
 
-  # Test case 3: Date with time, should be cleaned
-  date_column_with_time <- c("2022-12-01T15:30:00", "1990-05-01T08:45:00")
-  result_with_time <- convertDateInformation(date_column_with_time)
-  expect_equal(result_with_time, lubridate::as_date(c("2022-12-01", "1990-05-01")))
-
-  # Test case 4: Date with '/' separator, should be replaced with '-'
-  date_column_slash_separator <- c("2022/12/01", "1990/05/01")
-  result_slash_separator <- convertDateInformation(date_column_slash_separator)
-  expect_equal(result_slash_separator, lubridate::as_date(c("2022-12-01", "1990-05-01")))
-})
-
-##################
-# fixDateFormat  #
-##################
-
-test_that("fixDateFormat fixes uncommon date formats", {
-  # Erstellen Sie einen Beispiel-Datensatz
-  dt <- data.table::data.table(
-    date1 = c("2022", "1990-05", "1980-11"),
-    date2 = c("2022-12", "1990-05", "1980-11"),
-    value = c(1, 2, 3)
-  )
-
-  # Testen Sie die Funktion mit der Zeit beizubehalten
-  fixDateFormat(dt, c("date1", "date2"), preserve_time = TRUE)
-
-  # Erwartete Ergebnisse für date1_timespec und date2_timespec
-  expected_time_cols <- data.table::data.table(
-    date1_timespec = c("00:00:00", "00:00:00", "00:00:00"),
-    date2_timespec = c("00:00:00", "00:00:00", "00:00:00")
-  )
-
-  # Überprüfen Sie, ob die Zeit-Spalten korrekt hinzugefügt wurden
-  expect_equal(dt[, .(date1_timespec, date2_timespec)], expected_time_cols)
-
-  # Erwartete Ergebnisse für date1 und date2
-  expected_date_cols <- data.table::data.table(
-    date1 = as.Date(c("2022-01-01", "1990-05-01", "1980-11-01")),
-    date2 = as.Date(c("2022-12-01", "1990-05-01", "1980-11-01")),
-    value = c(1, 2, 3)
-  )
-
-  # Überprüfen Sie, ob die Datum-Spalten korrekt hinzugefügt wurden
-  expect_equal(dt[, .(date1, date2, value)], expected_date_cols)
+  # Test case 3: NA input, should not throw an error
+  dt <- data.table(column1 = NA_character_,
+                   column2 = NA_character_)
+  convertIntegerFormat(dt, "column1")
+  convertIntegerFormat(dt, "column2")
+  expect_equal(nrow(dt), 1)
 })
 
 #########################
-# convertTimeToPOSIXct  #
+# convertDecimalFormat  #
 #########################
 
-test_that("convertTimeToPOSIXct converts polar time representations to POSIXct", {
-  # Test case 1: Valid time representation
-  time_column_valid <- c("12:30:45", "08:15:00", "23:59:59")
-  result_valid <- convertTimeToPOSIXct(time_column_valid)
-  expect_equal(result_valid, c("12:30:45", "08:15:00", "23:59:59"))
+test_that("convertDecimalFormat converts strings to decimals", {
+  # Test case 1: Valid decimal conversion
+  dt <- data.table(column1 = c("1.5", "2.3", NA, "4"),
+                   column2 = c("1", "6.2", "", "8.9"))
+  convertDecimalFormat(dt, "column1")
+  convertDecimalFormat(dt, "column2")
+  expect_equal(as.numeric(dt$column1), c(1.5, 2.3, NA, 4))
+  expect_equal(as.numeric(dt$column2), c(1, 6.2, NA, 8.9))
 
-  # Test case 2: NA input, should return NA
-  time_column_na <- c(NA, NA, NA)
-  result_na <- convertTimeToPOSIXct(time_column_na)
-  expect_equal(result_na, c(NA_character_, NA_character_, NA_character_))
+  # Test case 2: Empty input, should not throw an error
+  dt <- data.table(column1 = character(0),
+                   column2 = character(0))
+  convertDecimalFormat(dt, "column1")
+  convertDecimalFormat(dt, "column2")
+  expect_equal(nrow(dt), 0)
 
-  # Test case 3: Empty string input, should throw an error
-  time_column_empty <- c("", NA, "")
-  result_na <- convertTimeToPOSIXct(time_column_empty)
-  expect_equal(result_na, c(NA_character_, NA_character_, NA_character_))
+  # Test case 3: NA input, should not throw an error
+  dt <- data.table(column1 = NA_character_,
+                   column2 = NA_character_)
+  convertDecimalFormat(dt, "column1")
+  convertDecimalFormat(dt, "column2")
+  expect_equal(nrow(dt), 1)
+})
+
+#########################
+# convertBooleanFormat  #
+#########################
+
+test_that("convertBooleanFormat converts strings to boolean values", {
+  # Test case 1: Valid boolean conversion
+  dt <- data.table(column1 = c("TRUE", "FALSE", "TRUE", NA),
+                   column2 = c("NA", "TRUE", "", "FALSE"))
+  convertBooleanFormat(dt, "column1")
+  convertBooleanFormat(dt, "column2")
+  expect_equal(as.logical(dt$column1), c(TRUE, FALSE, TRUE, NA))
+  expect_equal(as.logical(dt$column2), c(NA, TRUE, NA, FALSE))
+
+  # Test case 2: Empty input, should not throw an error
+  dt <- data.table(column1 = character(0),
+                   column2 = character(0))
+  convertBooleanFormat(dt, "column1")
+  convertBooleanFormat(dt, "column2")
+  expect_equal(nrow(dt), 0)
+
+  # Test case 3: NA input, should not throw an error
+  dt <- data.table(column1 = NA_character_,
+                   column2 = NA_character_)
+  convertBooleanFormat(dt, "column1")
+  convertBooleanFormat(dt, "column2")
+  expect_equal(nrow(dt), 1)
 })
