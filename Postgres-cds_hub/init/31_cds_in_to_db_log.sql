@@ -241,7 +241,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.encounter WHERE encounter_id = current_record.encounter_id;
             ELSE
-	            UPDATE db_log.encounter
+	            UPDATE db_log.encounter target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
@@ -392,7 +392,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.patient WHERE patient_id = current_record.patient_id;
             ELSE
-	            UPDATE db_log.patient
+	            UPDATE db_log.patient target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
@@ -777,7 +777,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.condition WHERE condition_id = current_record.condition_id;
             ELSE
-	            UPDATE db_log.condition
+	            UPDATE db_log.condition target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
@@ -1090,7 +1090,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.medication WHERE medication_id = current_record.medication_id;
             ELSE
-	            UPDATE db_log.medication
+	            UPDATE db_log.medication target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
@@ -1845,7 +1845,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.medicationrequest WHERE medicationrequest_id = current_record.medicationrequest_id;
             ELSE
-	            UPDATE db_log.medicationrequest
+	            UPDATE db_log.medicationrequest target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
@@ -2424,7 +2424,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.medicationadministration WHERE medicationadministration_id = current_record.medicationadministration_id;
             ELSE
-	            UPDATE db_log.medicationadministration
+	            UPDATE db_log.medicationadministration target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
@@ -3192,7 +3192,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.medicationstatement WHERE medicationstatement_id = current_record.medicationstatement_id;
             ELSE
-	            UPDATE db_log.medicationstatement
+	            UPDATE db_log.medicationstatement target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
@@ -3824,7 +3824,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.observation WHERE observation_id = current_record.observation_id;
             ELSE
-	            UPDATE db_log.observation
+	            UPDATE db_log.observation target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
@@ -4116,7 +4116,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.diagnosticreport WHERE diagnosticreport_id = current_record.diagnosticreport_id;
             ELSE
-	            UPDATE db_log.diagnosticreport
+	            UPDATE db_log.diagnosticreport target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
@@ -4363,7 +4363,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.servicerequest WHERE servicerequest_id = current_record.servicerequest_id;
             ELSE
-	            UPDATE db_log.servicerequest
+	            UPDATE db_log.servicerequest target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
@@ -4654,7 +4654,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.procedure WHERE procedure_id = current_record.procedure_id;
             ELSE
-	            UPDATE db_log.procedure
+	            UPDATE db_log.procedure target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
@@ -4853,7 +4853,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.consent WHERE consent_id = current_record.consent_id;
             ELSE
-	            UPDATE db_log.consent
+	            UPDATE db_log.consent target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
@@ -4961,7 +4961,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.location WHERE location_id = current_record.location_id;
             ELSE
-	            UPDATE db_log.location
+	            UPDATE db_log.location target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
@@ -5011,7 +5011,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM cds2db_in.pids_per_ward WHERE pids_per_ward_id = current_record.pids_per_ward_id;
             ELSE
-	            UPDATE db_log.pids_per_ward
+	            UPDATE db_log.pids_per_ward target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
