@@ -1287,7 +1287,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
-  date_time timestamp,   -- date_time (timestamp)
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -2913,7 +2912,6 @@ comment on column cds2db_in.location.current_dataset_status is 'Processing statu
 
 comment on column cds2db_in.pids_per_ward.pids_per_ward_id is 'Primary key of the entity';
 comment on column cds2db_in.pids_per_ward.pids_per_ward_raw_id is 'Primary key of the corresponding raw table';
-comment on column cds2db_in.pids_per_ward.date_time is 'date_time (timestamp)';
 comment on column cds2db_in.pids_per_ward.ward_name is 'ward_name (varchar)';
 comment on column cds2db_in.pids_per_ward.patient_id is 'patient_id (varchar)';
 comment on column cds2db_in.pids_per_ward.input_datetime is 'Time at which the data record is inserted';

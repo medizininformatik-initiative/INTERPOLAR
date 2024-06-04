@@ -4989,8 +4989,7 @@ BEGIN
         LOOP
             SELECT count(1) INTO data_count
             FROM db_log.pids_per_ward target_record
-            WHERE COALESCE(target_record.date_time::text,'#NULL#') = COALESCE(current_record.date_time::text,'#NULL#') AND
-                  COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
+            WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                   COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                   ;
 
@@ -4998,14 +4997,12 @@ BEGIN
             THEN
                 INSERT INTO db_log.pids_per_ward (
                     pids_per_ward_raw_id,
-                    date_time,
                     ward_name,
                     patient_id,
                     input_datetime
                 )
                 VALUES (
                     current_record.pids_per_ward_raw_id,
-                    current_record.date_time,
                     current_record.ward_name,
                     current_record.patient_id,
                     current_record.input_datetime
@@ -5017,8 +5014,7 @@ BEGIN
 	            UPDATE db_log.pids_per_ward
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
-                WHERE COALESCE(target_record.date_time::text,'#NULL#') = COALESCE(current_record.date_time::text,'#NULL#') AND
-                  COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
+                WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                   COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                 ;
             END IF;
