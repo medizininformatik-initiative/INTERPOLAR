@@ -80,7 +80,7 @@ getQueryList <- function(collection, remove_ref_type = FALSE) {
 }
 
 parseQueryList <- function(list_string, split = " ") {
-  splitted <- unlist(strsplit(OBSERVATION_BODY_WEIGHT_CODE, split))
+  splitted <- unlist(strsplit(list_string, split))
   getQueryList(splitted)
 }
 
@@ -202,6 +202,7 @@ createFrontendTables <- function() {
       fall_gewicht_aktl_einheit = character(),
       fall_groesse = numeric(),
       fall_groesse_einheit = character(),
+      fall_bmi = numeric(),
       fall_status = character(),
       fall_ent_dat = as.POSIXct(character())
     )
@@ -273,30 +274,39 @@ createFrontendTables <- function() {
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_diag', admission_diagnoses)
 
-        # Extract the observations for weigth
-        query <- paste0("SELECT * FROM v_observation_all_data\n",
-        "  WHERE obs_encounter_id = 'Encounter/", encounter_id, "' AND\n",
-        "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODES), ") AND\n",
-        "        obs_code_system = '", OBSERVATION_BODY_WEIGHT_SYSTEM, "' AND\n",
-        "        obs_effectivedatetime < '", query_date, "'\n")
-        weight_observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
-        # we found no Observations with the direct encounter link so identify potencial
-        # Observations by time overlap with the encounter period start and current date
-        if (!nrow(weight_observations)) {
+        getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
+          # Extract the observations for weigth
           query <- paste0("SELECT * FROM v_observation_all_data\n",
-                          "  WHERE obs_patient_id = '", pid, "' AND\n",
-                          "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODES), ") AND\n",
-                          "        obs_code_system = '", OBSERVATION_BODY_WEIGHT_SYSTEM, "' AND\n",
-                          "        obs_effectivedatetime > '", encounter_start, "' AND\n",
+                          "  WHERE obs_encounter_id = 'Encounter/", encounter_id, "' AND\n",
+                          "        obs_code_code IN (", parseQueryList(codes), ") AND\n",
+                          "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_date, "'\n")
-          weight_observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+          observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+          # we found no Observations with the direct encounter link so identify potencial
+          # Observations by time overlap with the encounter period start and current date
+          if (!nrow(observations)) {
+            query <- paste0("SELECT * FROM v_observation_all_data\n",
+                            "  WHERE obs_patient_id = '", pid, "' AND\n",
+                            "        obs_code_code IN (", parseQueryList(codes), ") AND\n",
+                            "        obs_code_system = '", system, "' AND\n",
+                            "        obs_effectivedatetime > '", encounter_start, "' AND\n",
+                            "        obs_effectivedatetime < '", query_date, "'\n")
+            observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+          }
+          if (nrow(observations)) {
+            # take the very frist Observation with the latest date (should be only 1 but sure is sure)
+            observations <- observations[obs_effectivedatetime == max(obs_effectivedatetime)][1]
+            data.table::set(enc_frontend_table, target_index, target_column_value, observations$obs_valuequantity_value)
+            if (!is.na(target_column_unit)) {
+              data.table::set(enc_frontend_table, target_index, target_column_unit, observations$obs_valuequantity_code)
+            }
+          }
         }
-        if (nrow(weight_observations)) {
-          # take the very frist Observation with the latest date (should be only 1 but sure is sure)
-          weight_observations <- weight_observations[obs_effectivedatetime == max(obs_effectivedatetime)][1]
-          data.table::set(enc_frontend_table, target_index, 'fall_gewicht_aktuell', weight_observations$obs_valuequantity_value)
-          data.table::set(enc_frontend_table, target_index, 'fall_gewicht_aktl_einheit', weight_observations$obs_valuequantity_code)
-        }
+
+        getObservation(OBSERVATION_BODY_WEIGHT_CODES, OBSERVATION_BODY_WEIGHT_SYSTEM, "fall_gewicht_aktuell", "fall_gewicht_aktl_einheit")
+        getObservation(OBSERVATION_BODY_HEIGHT_CODES, OBSERVATION_BODY_HEIGHT_SYSTEM, "fall_groesse", "fall_groesse_einheit")
+        getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
+
       }
     }
     return(enc_frontend_table)
