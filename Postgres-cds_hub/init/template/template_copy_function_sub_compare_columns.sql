@@ -1,1 +1,1 @@
-COALESCE(target_record.<%COLUMN_NAME%>,'#NULL#') = COALESCE(current_record.<%COLUMN_NAME%>,'#NULL#') AND
+COALESCE(target_record.<%COLUMN_NAME%>::text,'#NULL#') = COALESCE(current_record.<%COLUMN_NAME%>::text,'#NULL#') AND
