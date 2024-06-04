@@ -276,7 +276,7 @@ createFrontendTables <- function() {
         # Extract the observations for weigth
         query <- paste0("SELECT * FROM v_observation_all_data\n",
         "  WHERE obs_encounter_id = 'Encounter/", encounter_id, "' AND\n",
-        "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODE), ") AND\n",
+        "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODES), ") AND\n",
         "        obs_code_system = '", OBSERVATION_BODY_WEIGHT_SYSTEM, "' AND\n",
         "        obs_effectivedatetime < '", query_date, "'\n")
         weight_observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
@@ -285,7 +285,7 @@ createFrontendTables <- function() {
         if (!nrow(weight_observations)) {
           query <- paste0("SELECT * FROM v_observation_all_data\n",
                           "  WHERE obs_patient_id = '", pid, "' AND\n",
-                          "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODE), ") AND\n",
+                          "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODES), ") AND\n",
                           "        obs_code_system = '", OBSERVATION_BODY_WEIGHT_SYSTEM, "' AND\n",
                           "        obs_effectivedatetime > '", encounter_start, "' AND\n",
                           "        obs_effectivedatetime < '", query_date, "'\n")
