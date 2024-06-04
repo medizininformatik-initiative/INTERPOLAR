@@ -206,7 +206,7 @@ createFrontendTables <- function() {
     query_ids <- getQueryList(pids_per_ward$patient_id)
     query <- paste0("SELECT * FROM db2dataprocessor_out.v_encounter_all_data\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
-                    "  enc_partof_id IS NOT NULL AND\n",
+                    "  enc_partof_id IS NULL AND\n",
                     "  (enc_period_end IS NULL OR enc_period_end > '", query_date, "') AND\n",
                     "  enc_period_start <= '", query_date, "'\n")
     encounters <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
