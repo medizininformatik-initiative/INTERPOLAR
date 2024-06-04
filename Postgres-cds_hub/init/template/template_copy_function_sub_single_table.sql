@@ -20,7 +20,7 @@
                 -- Delete importet datasets
                 DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
             ELSE
-	            UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%>
+	            UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE <%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>
