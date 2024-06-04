@@ -178,12 +178,13 @@ getCreateTableStatements <- function(table_description, script_rights_descriptio
     full_tablename <- getFullTableName(tablename, rights_first_row)
     single_table_description <- table_description[[tablename]]
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement_template)
+    single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
     column_line_statement <- ""
     indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%CREATE_TABLE_STATEMENT_COLUMNS%>")
     # non RAW tables need an extra column for the ROW/Entry ID which they are originated (multiple
     # typed ( = non RAW) rows can be created by one RAW table row (see fhir_melt)
     if (!ignore_types) {
-      column_line_statement <- paste0(full_tablename, "_raw_id int, -- Primary key of the corresponding raw table\n")
+      column_line_statement <- paste0(full_tablename, "_raw_id int NOT NULL, -- Primary key of the corresponding raw table\n")
     }
     first_row <- TRUE
     for (row in 1:nrow(single_table_description)) {
@@ -234,12 +235,13 @@ getCreateTableGrantStatements <- function(table_description, script_rights_descr
     full_tablename <- getFullTableName(tablename, script_rights_description)
     single_statement <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, single_statement)
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
-
+    single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
 
     statements <- paste0(statements, single_statement, "\n\n")
   }
   return(statements)
 }
+
 getCreateTableCommentStatements <- function(table_description, script_rights_description) {
   rights_first_row <- script_rights_description[1]
   ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
@@ -271,6 +273,8 @@ getCreateTableCommentStatements <- function(table_description, script_rights_des
     }
     table_comment <- gsub("<%TEMPLATE_CRE_TABLE_SUB_COMMENT_SINGLE_LINE%>", table_comment, table_comment_template)
     table_comment <- gsub("<%TABLE_NAME%>", full_tablename, table_comment)
+    table_comment <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, table_comment)
+
     comments <- paste0(comments, table_comment, "\n")
   }
   return(comments)
@@ -318,12 +322,22 @@ convertTemplateCreateTable <- function(table_description, script_rights_descript
 # Convert Copy Function #
 #########################
 
-getCopyFunctionPlaceholderColumns <- function(single_table_description, indentation, placeholder) {
+getCopyFunctionPlaceholderColumns <- function(single_table_description, tablename, indentation, placeholder, ignore_types = TRUE) {
   statements <- ""
   single_statement_template <- loadTemplate(placeholder)
-  for (i in 1:nrow(single_table_description)) {
+  for (i in 0:nrow(single_table_description)) {
     table_description_row <- single_table_description[i]
-    single_statement <- gsub("<%COLUMN_NAME%>", table_description_row$column_name, single_statement_template)
+    if (i == 0) {
+      if (!ignore_types) {
+        column_name <- paste0(tablename, "_raw_id")
+      } else {
+        next
+      }
+    } else {
+      column_name <- table_description_row$column_name
+    }
+
+    single_statement <- gsub("<%COLUMN_NAME%>", column_name, single_statement_template)
     if (nchar(statements)) {
       statements <- paste0(statements, indentation)
     }
@@ -353,36 +367,40 @@ convertTemplateCopyFunction <- function(table_description, script_rights_descrip
                        rights_columns$COPY_FUNC_NAME,
                        rights_columns$SCHEMA_2)
 
+    ignore_types <- rights_first_row$TABLE_POSTFIX %in% "_raw"
     tablenames <- names(table_description)
     statements <- ""
     for (tablename in tablenames) {
       full_tablename <- getFullTableName(tablename, script_rights_description)
       full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
 
-      single_statement <- loadTemplate("template_copy_function.sql")
+      single_statement <- loadTemplate("template_copy_function_sub_single_table.sql")
 
-      single_statement <- gsub("<%COPY_FUNC_NAME%>", rights_first_row$COPY_FUNC_NAME, single_statement)
-      single_statement <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, single_statement)
-      single_statement <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, single_statement)
       single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
       single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
       single_statement <- gsub("<%SIMPLE_TABLE_NAME%>", tablename, single_statement)
 
-      colum_placeholders <- c("<%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>",
+      column_placeholders <- c("<%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>",
                               "<%TEMPLATE_COPY_FUNCTION_SUB_COLUMNS%>",
                               "<%TEMPLATE_COPY_FUNCTION_SUB_CURRENT_RECORD_COLUMNS%>")
 
       single_table_description <- table_description[[tablename]]
-      for (placeholder in colum_placeholders) {
+      for (i in 1:length(column_placeholders)) {
+        placeholder <- column_placeholders[i]
         indentation <- etlutils::getWordIndentation(single_statement, placeholder)
-        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, indentation, placeholder)
+        replacement <- getCopyFunctionPlaceholderColumns(single_table_description, tablename, indentation, placeholder, ignore_types || i == 1)
         single_statement <- gsub(placeholder, replacement, single_statement)
       }
 
       statements <- paste0(statements, single_statement, "\n")
 
     }
-    writeResultFile(copy_function_script_name, statements)
+    full_copy_function <- loadTemplate("template_copy_function.sql")
+    full_copy_function <- gsub("<%TEMPLATE_COPY_FUNCTION_SUB_SINGLE_TABLE%>", statements, full_copy_function)
+    full_copy_function <- gsub("<%COPY_FUNC_NAME%>", rights_first_row$COPY_FUNC_NAME, full_copy_function)
+    full_copy_function <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, full_copy_function)
+    full_copy_function <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, full_copy_function)
+    writeResultFile(copy_function_script_name, full_copy_function)
   }
 }
 
@@ -398,12 +416,13 @@ getCreateViewCreateOrReplaceViewStatements <- function(table_description, script
     full_tablename <- getFullTableName(tablename, script_rights_description)
     full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
     # load grant template
-    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%TABLE_NAME_2%>_id not in (select <%TABLE_NAME%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%>));
+    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS ( SELECT DISTINCT m.* FROM (SELECT * FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> UNION SELECT * FROM <%SCHEMA_3%>.<%TABLE_NAME_2%>) m WHERE m.<%SIMPLE_TABLENAME%>_id NOT IN (SELECT <%TABLE_NAME_2%>_id FROM <%SCHEMA_2%>.<%SIMPLE_TABLENAME%> UNION SELECT <%TABLE_NAME_2%>_id FROM <%SCHEMA_3%>.<%SIMPLE_TABLENAME%>));
     single_statement <- loadTemplate("template_cre_view_sub_create_or_replace_view.sql")
     single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
     single_statement <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, single_statement)
     single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
     single_statement <- gsub("<%SIMPLE_TABLENAME%>", tablename, single_statement)
+    single_statement <- gsub("<%SCHEMA_3%>", rights_first_row$SCHEMA_3, single_statement)
     statements <- paste0(statements, single_statement, "\n")
   }
   return(statements)
@@ -441,30 +460,29 @@ getCreateViewGrantStatements <- function(table_description, script_rights_descri
   return(statements)
 }
 
-convertTemplateCreateView <- function(table_description, script_rights_description) {
-
-  checkMissingValues <- function() {
-    # create a named vector with equal names and values for the right description columns
-    # so we can use it instead of strings
-    rights_columns <- etlutils::namedListByValue(names(script_rights_description))
-    for (i in seq_len(nrow(script_rights_description))) {
-      if (i == 1) {
-        # check if all needed values are present in the first line
-        stopOnMissingValue(script_rights_description[1],
-                           rights_columns$SCRIPTNAME,
-                           rights_columns$OWNER_USER,
-                           rights_columns$OWNER_SCHEMA,
-                           rights_columns$TABLE_PREFIX,
-                           rights_columns$SCHEMA_2,
-                           rights_columns$TABLE_POSTFIX_2)
-      }
-      # all lines need this values:
-      stopOnMissingValue(script_rights_description[i],
-                         rights_columns$RIGHTS,
-                         rights_columns$GRANT_TRAGET_USER)
+checkMissingValuesForCreateView <- function(script_rights_description) {
+  # create a named vector with equal names and values for the right description columns
+  # so we can use it instead of strings
+  rights_columns <- etlutils::namedListByValue(names(script_rights_description))
+  for (i in seq_len(nrow(script_rights_description))) {
+    if (i == 1) {
+      # check if all needed values are present in the first line
+      stopOnMissingValue(script_rights_description[1],
+                         rights_columns$SCRIPTNAME,
+                         rights_columns$OWNER_USER,
+                         rights_columns$OWNER_SCHEMA,
+                         rights_columns$TABLE_PREFIX,
+                         rights_columns$SCHEMA_2)
     }
+    # all lines need this values:
+    stopOnMissingValue(script_rights_description[i],
+                       rights_columns$RIGHTS,
+                       rights_columns$GRANT_TRAGET_USER)
   }
+}
 
+convertTemplateCreateView <- function(table_description, script_rights_description) {
+  checkMissingValuesForCreateView(script_rights_description)
   rights_first_row <- script_rights_description[1]
   # Load sql template
   content <- loadTemplate("template_cre_view.sql")
@@ -477,6 +495,47 @@ convertTemplateCreateView <- function(table_description, script_rights_descripti
   # Write the modified content to the file
   writeResultFile(rights_first_row$SCRIPTNAME, content)
 }
+
+######################################################
+# Convert Create View2 (dataprocessor -> all tables) #
+######################################################
+
+getCreateView2SingleTableStatements <- function(table_description, script_rights_description) {
+  rights_first_row <- script_rights_description[1]
+  tablenames <- names(table_description)
+  statements <- ""
+  for (tablename in tablenames) {
+    full_tablename <- getFullTableName(tablename, script_rights_description)
+    full_tablename_2 <- getFullTableName_2(tablename, script_rights_description)
+    # load grant template
+    # CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (select * from <%SCHEMA_2%>.<%TABLE_NAME_2%> where <%TABLE_NAME_2%>_id not in (select <%TABLE_NAME%>_id from <%SCHEMA_2%>.<%SIMPLE_TABLENAME%>));
+    single_statement <- loadTemplate("<%TEMPLATE_CRE_VIEW2_SUB_SINGLE_TABLE%>")
+    single_statement <- gsub("<%TABLE_NAME%>", full_tablename, single_statement)
+    single_statement <- gsub("<%SCHEMA_2%>", rights_first_row$SCHEMA_2, single_statement)
+    single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
+    single_statement <- gsub("<%SIMPLE_TABLENAME%>", tablename, single_statement)
+    statements <- paste0(statements, single_statement, "\n")
+  }
+  return(statements)
+}
+
+convertTemplateCreateView2 <- function(table_description, script_rights_description) {
+  checkMissingValuesForCreateView(script_rights_description)
+  rights_first_row <- script_rights_description[1]
+  # Load sql template
+  content <- loadTemplate("template_cre_view2.sql")
+
+  # replace placeholder for create or replace view
+  content <- gsub("<%TEMPLATE_CRE_VIEW2_SUB_SINGLE_TABLE%>", getCreateView2SingleTableStatements(table_description, script_rights_description), content)
+  content <- gsub("<%TEMPLATE_CRE_VIEW_SUB_GRANT%>", getCreateViewGrantStatements(table_description, script_rights_description), content)
+  content <- gsub("<%OWNER_SCHEMA%>", rights_first_row$OWNER_SCHEMA, content)
+  content <- gsub("<%OWNER_USER%>", rights_first_row$OWNER_USER, content)
+
+  # Write the modified content to the file
+  writeResultFile(rights_first_row$SCRIPTNAME, content)
+}
+
+
 
 ########
 # Main #
@@ -510,28 +569,25 @@ createDatabaseScriptsFromTemplates <- function() {
   table_description <- getTableDescriptionSplittedByResource()
   rights_description <- loadDatabaseRightsDescription()
 
-  isCreateTableScript <- function(script_name) {
-    # accepts names like "12a_cre_table_raw_db_log.sql" or "01_cre_table"
-    return(grepl("^[0-9]+[a-zA-Z]*_cre_table", script_name))
-  }
-
-  isCreateViewScript <- function(script_name) {
-    # accepts names like "12a_cre_view_raw_db_log.sql" or "01_cre_view"
-    return(grepl("^[0-9]+[a-zA-Z]*_cre_view", script_name))
-  }
-
-  scriptname_columnname <- getRightsDefinitionColumnNames()$SCRIPTNAME
+  rights_definition_column_names <- getRightsDefinitionColumnNames()
   for (scriptname in names(rights_description)) {
     script_rights_description <- rights_description[[scriptname]]
-    if (isCreateTableScript(scriptname)) {
+    template <- script_rights_description[1]$TEMPLATE
+    copy_function <- script_rights_description[1]$COPY_FUNC_SCRIPT_NAME
+    if (template %in% "template_cre_table.sql") {
       convertTemplateCreateTable(table_description, script_rights_description)
-      convertTemplateCopyFunction(table_description, script_rights_description)
-    } else if (isCreateViewScript(scriptname)) {
+    } else if (template %in% "template_cre_view.sql") {
       convertTemplateCreateView(table_description, script_rights_description)
+    } else if (template %in% "template_cre_view2.sql") {
+      convertTemplateCreateView2(table_description, script_rights_description)
     } else {
       # simple copy script from template without any changes
       copyTemplate(script_rights_description)
     }
+    if (!is.na(copy_function)) {
+      convertTemplateCopyFunction(table_description, script_rights_description)
+    }
+
   }
 }
 

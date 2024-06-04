@@ -6,7 +6,7 @@
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   encounter_id serial PRIMARY KEY not null, -- Primary key of the entity
-  encounter_raw_id int, -- Primary key of the corresponding raw table
+  encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   enc_id varchar,   -- id (varchar)
   enc_patient_id varchar,   -- subject/reference (varchar)
   enc_partof_id varchar,   -- partOf/reference (varchar)
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   patient_id serial PRIMARY KEY not null, -- Primary key of the entity
-  patient_raw_id int, -- Primary key of the corresponding raw table
+  patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   pat_id varchar,   -- id (varchar)
   pat_identifier_use varchar,   -- identifier/use (varchar)
   pat_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   condition_id serial PRIMARY KEY not null, -- Primary key of the entity
-  condition_raw_id int, -- Primary key of the corresponding raw table
+  condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   con_id varchar,   -- id (varchar)
   con_encounter_id varchar,   -- encounter/reference (varchar)
   con_patient_id varchar,   -- subject/reference (varchar)
@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   medication_id serial PRIMARY KEY not null, -- Primary key of the entity
-  medication_raw_id int, -- Primary key of the corresponding raw table
+  medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   med_id varchar,   -- id (varchar)
   med_identifier_use varchar,   -- identifier/use (varchar)
   med_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -304,7 +304,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medicationrequest_id serial PRIMARY KEY not null, -- Primary key of the entity
-  medicationrequest_raw_id int, -- Primary key of the corresponding raw table
+  medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medreq_id varchar,   -- id (varchar)
   medreq_encounter_id varchar,   -- encounter/reference (varchar)
   medreq_patient_id varchar,   -- subject/reference (varchar)
@@ -537,7 +537,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medicationadministration_id serial PRIMARY KEY not null, -- Primary key of the entity
-  medicationadministration_raw_id int, -- Primary key of the corresponding raw table
+  medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medadm_id varchar,   -- id (varchar)
   medadm_encounter_id varchar,   -- context/reference (varchar)
   medadm_patient_id varchar,   -- subject/reference (varchar)
@@ -656,7 +656,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medicationstatement_id serial PRIMARY KEY not null, -- Primary key of the entity
-  medicationstatement_raw_id int, -- Primary key of the corresponding raw table
+  medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medstat_id varchar,   -- id (varchar)
   medstat_identifier_use varchar,   -- identifier/use (varchar)
   medstat_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -876,7 +876,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   observation_id serial PRIMARY KEY not null, -- Primary key of the entity
-  observation_raw_id int, -- Primary key of the corresponding raw table
+  observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   obs_id varchar,   -- id (varchar)
   obs_encounter_id varchar,   -- encounter/reference (varchar)
   obs_patient_id varchar,   -- subject/reference (varchar)
@@ -1017,7 +1017,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagnosticreport_id serial PRIMARY KEY not null, -- Primary key of the entity
-  diagnosticreport_raw_id int, -- Primary key of the corresponding raw table
+  diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   diagrep_id varchar,   -- id (varchar)
   diagrep_encounter_id varchar,   -- encounter/reference (varchar)
   diagrep_patient_id varchar,   -- subject/reference (varchar)
@@ -1071,7 +1071,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
-  servicerequest_raw_id int, -- Primary key of the corresponding raw table
+  servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   servreq_id varchar,   -- id (varchar)
   servreq_encounter_id varchar,   -- encounter/reference (varchar)
   servreq_patient_id varchar,   -- subject/reference (varchar)
@@ -1139,7 +1139,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   procedure_id serial PRIMARY KEY not null, -- Primary key of the entity
-  procedure_raw_id int, -- Primary key of the corresponding raw table
+  procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   proc_id varchar,   -- id (varchar)
   proc_encounter_id varchar,   -- encounter/reference (varchar)
   proc_patient_id varchar,   -- subject/reference (varchar)
@@ -1217,7 +1217,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   consent_id serial PRIMARY KEY not null, -- Primary key of the entity
-  consent_raw_id int, -- Primary key of the corresponding raw table
+  consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   cons_id varchar,   -- id (varchar)
   cons_patient_id varchar,   -- patient/reference (varchar)
   cons_identifier_use varchar,   -- identifier/use (varchar)
@@ -1261,7 +1261,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
   location_id serial PRIMARY KEY not null, -- Primary key of the entity
-  location_raw_id int, -- Primary key of the corresponding raw table
+  location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   loc_id varchar,   -- id (varchar)
   loc_identifier_use varchar,   -- identifier/use (varchar)
   loc_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
@@ -1286,8 +1286,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
-  pids_per_ward_raw_id int, -- Primary key of the corresponding raw table
-  date_time timestamp,   -- date_time (timestamp)
+  pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -2913,7 +2912,6 @@ comment on column cds2db_in.location.current_dataset_status is 'Processing statu
 
 comment on column cds2db_in.pids_per_ward.pids_per_ward_id is 'Primary key of the entity';
 comment on column cds2db_in.pids_per_ward.pids_per_ward_raw_id is 'Primary key of the corresponding raw table';
-comment on column cds2db_in.pids_per_ward.date_time is 'date_time (timestamp)';
 comment on column cds2db_in.pids_per_ward.ward_name is 'ward_name (varchar)';
 comment on column cds2db_in.pids_per_ward.patient_id is 'patient_id (varchar)';
 comment on column cds2db_in.pids_per_ward.input_datetime is 'Time at which the data record is inserted';
