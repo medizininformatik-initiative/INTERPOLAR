@@ -1273,7 +1273,6 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
   pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
-  date_time varchar,   -- date_time (varchar)
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
@@ -2885,7 +2884,6 @@ comment on column db_log.location_raw.last_check_datetime is 'Time at which data
 comment on column db_log.location_raw.current_dataset_status is 'Processing status of the data record';
 
 comment on column db_log.pids_per_ward_raw.pids_per_ward_id is 'Primary key of the entity';
-comment on column db_log.pids_per_ward_raw.date_time is 'date_time (varchar)';
 comment on column db_log.pids_per_ward_raw.ward_name is 'ward_name (varchar)';
 comment on column db_log.pids_per_ward_raw.patient_id is 'patient_id (varchar)';
 comment on column db_log.pids_per_ward_raw.input_datetime is 'Time at which the data record is inserted';
