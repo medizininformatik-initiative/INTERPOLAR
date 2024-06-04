@@ -210,7 +210,7 @@ initEncounterPeriodToDownload <- function() {
     }
     days_in_past <- days_in_past * 24 * 3600 # this value must be subtracted from a date (days in seconds)
     if (exists('DEBUG_PERIOD_START')) {
-      PERIOD_START <<- as.Date(DEBUG_PERIOD_START) - days_in_past
+      PERIOD_START <<- as.Date(as.POSIXct(DEBUG_PERIOD_START) - days_in_past)
     } else {
       PERIOD_START <<- as.Date(Sys.time() - days_in_past)
     }
