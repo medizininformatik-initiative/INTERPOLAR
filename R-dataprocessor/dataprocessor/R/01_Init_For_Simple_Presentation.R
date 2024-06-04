@@ -79,6 +79,11 @@ getQueryList <- function(collection, remove_ref_type = FALSE) {
   paste0("'", collection, "'", collapse = ", ")
 }
 
+parseQueryList <- function(list_string, split = " ") {
+  splitted <- unlist(strsplit(OBSERVATION_BODY_WEIGHT_CODE, split))
+  getQueryList(splitted)
+}
+
 ####################################################
 # Load Resources by ID (= own ID or PID or Enc ID) #
 ####################################################
@@ -244,12 +249,16 @@ createFrontendTables <- function() {
 
       for (i in 1:length(pid_encounters)) {
         target_index <- start_index + i
+
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        data.table::set(enc_frontend_table, target_index, 'fall_id', pid_encounters[[i]]$enc_id[1])
-        data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', pid_encounters[[i]]$enc_period_start[1])
-        data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',pid_encounters[[i]]$enc_period_end[1])
+        encounter_id <- pid_encounters[[i]]$enc_id[1]
+        encounter_start <- pid_encounters[[i]]$enc_period_start[1]
+        encounter_end <- pid_encounters[[i]]$enc_period_end[1]
+        data.table::set(enc_frontend_table, target_index, 'fall_id', encounter_id)
+        data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', encounter_start)
+        data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',encounter_end)
         data.table::set(enc_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])
 
         # extract ward name from pids_per_ward table
@@ -263,9 +272,33 @@ createFrontendTables <- function() {
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_diag', admission_diagnoses)
+
+        # Extract the observations for weigth
+        query <- paste0("SELECT * FROM v_observation_all_data\n",
+        "  WHERE obs_encounter_id = 'Encounter/", encounter_id, "' AND\n",
+        "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODE), ") AND\n",
+        "        obs_code_system = '", OBSERVATION_BODY_WEIGHT_SYSTEM, "' AND\n",
+        "        obs_effectivedatetime < '", query_date, "'\n")
+        weight_observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+        # we found no Observations with the direct encounter link so identify potencial
+        # Observations by time overlap with the encounter period start and current date
+        if (!nrow(weight_observations)) {
+          query <- paste0("SELECT * FROM v_observation_all_data\n",
+                          "  WHERE obs_patient_id = '", pid, "' AND\n",
+                          "        obs_code_code IN (", parseQueryList(OBSERVATION_BODY_WEIGHT_CODE), ") AND\n",
+                          "        obs_code_system = '", OBSERVATION_BODY_WEIGHT_SYSTEM, "' AND\n",
+                          "        obs_effectivedatetime > '", encounter_start, "' AND\n",
+                          "        obs_effectivedatetime < '", query_date, "'\n")
+          weight_observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+        }
+        if (nrow(weight_observations)) {
+          # take the very frist Observation with the latest date (should be only 1 but sure is sure)
+          weight_observations <- weight_observations[obs_effectivedatetime == max(obs_effectivedatetime)][1]
+          data.table::set(enc_frontend_table, target_index, 'fall_gewicht_aktuell', weight_observations$obs_valuequantity_value)
+          data.table::set(enc_frontend_table, target_index, 'fall_gewicht_aktl_einheit', weight_observations$obs_valuequantity_code)
+        }
       }
     }
-
     return(enc_frontend_table)
   }
 
