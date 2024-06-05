@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   enc_serviceprovider_display varchar,   -- serviceProvider/display (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "patient_raw" in schema "db_log"
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   pat_address_postalcode varchar,   -- address/postalCode (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "condition_raw" in schema "db_log"
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   con_note_text varchar,   -- note/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medication_raw" in schema "db_log"
@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   med_ingredient_isactive varchar,   -- ingredient/isActive (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medicationrequest_raw" in schema "db_log"
@@ -525,7 +525,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medreq_substitution_reason_text varchar,   -- substitution/reason/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medicationadministration_raw" in schema "db_log"
@@ -643,7 +643,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medadm_dosage_ratequantity_code varchar,   -- dosage/rateQuantity/code (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medicationstatement_raw" in schema "db_log"
@@ -862,7 +862,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   medstat_dosage_maxdoseperlifetime_code varchar,   -- dosage/maxDosePerLifetime/code (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "observation_raw" in schema "db_log"
@@ -1002,7 +1002,7 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   obs_hasmember_display varchar,   -- hasMember/display (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "diagnosticreport_raw" in schema "db_log"
@@ -1055,7 +1055,7 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagrep_conclusioncode_text varchar,   -- conclusionCode/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "servicerequest_raw" in schema "db_log"
@@ -1122,7 +1122,7 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servreq_locationcode_text varchar,   -- locationCode/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "procedure_raw" in schema "db_log"
@@ -1199,7 +1199,7 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   proc_note_text varchar,   -- note/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "consent_raw" in schema "db_log"
@@ -1242,7 +1242,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   cons_provision_dataperiod_end varchar,   -- provision/dataPeriod/end (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "location_raw" in schema "db_log"
@@ -1266,7 +1266,7 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
   loc_alias varchar,   -- alias (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "pids_per_ward_raw" in schema "db_log"
@@ -1277,7 +1277,7 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
   patient_id varchar,   -- patient_id (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 
