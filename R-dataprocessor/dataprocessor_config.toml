@@ -30,7 +30,7 @@ MAX_DIR_COUNT = 5
 [analyse]
 # Activate this date to run the analysis for a spectific date. If it is not set, then time now will
 # be taken.
-CURRENT_DATETIME = "2019-01-02 08:01:00"
+#CURRENT_DATETIME = "2020-07-31 22:25:00"
 
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
 OBSERVATION_BODY_WEIGHT_CODES  = "3142-7 29463-7"
