@@ -166,7 +166,7 @@
 #'       return(result_mrps)
 #'     }
 #'
-#'     etlutils::run_in_in("Check if drug_disease_mrp_definition must be expanded", {
+#'     etlutils::runLevel3("Check if drug_disease_mrp_definition must be expanded", {
 #'       # Check if drug_disease_mrp_definition must be expanded
 #'       # set must_expand to FALSE
 #'       must_expand <- FALSE
@@ -185,7 +185,7 @@
 #'       }
 #'     })
 #'
-#'     etlutils::run_in_in("Expand drug_disease_mrp_definition", {
+#'     etlutils::runLevel3("Expand drug_disease_mrp_definition", {
 #'       if (must_expand) {
 #'         # read drug-disease-mrp excel as table list
 #'         drug_disease_mrp_definition <- readExcelFileAsTableListFromExtData(MRP_DEFINITION_FILE_DRUG_DISEASE)[["Drug_Disease_Pairs"]]
@@ -198,13 +198,13 @@
 #'       }
 #'     })
 #'
-#'     etlutils::run_in_in("Load expanded drug_disease_mrp_definition from file", {
+#'     etlutils::runLevel3("Load expanded drug_disease_mrp_definition from file", {
 #'       if (!exists("drug_disease_mrp_definition_expanded")) {
 #'         drug_disease_mrp_definition_expanded <- etlutils::polar_read_rdata("drug_disease_mrp_definition_expanded")
 #'       }
 #'     })
 #'
-#'     etlutils::run_in_in("Calculate Drug Disease MRPs internal", {
+#'     etlutils::runLevel3("Calculate Drug Disease MRPs internal", {
 #'       calculateMRPsInternal(drug_disease_mrp_definition_expanded)
 #'     })
 #'

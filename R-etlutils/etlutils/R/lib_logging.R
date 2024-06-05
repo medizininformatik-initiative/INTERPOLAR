@@ -216,7 +216,7 @@ runProcessInternal <- function(
 #' @param process A function representing the outer script to be executed.
 #'
 #' @export
-run_out <- function(message, process) {
+runLevel1 <- function(message, process) {
   run(
     message = message,
     process = process,
@@ -232,7 +232,7 @@ run_out <- function(message, process) {
 #' @param process A function representing the inner script to be executed.
 #'
 #' @export
-run_in <- function(message, process) {
+runLevel2 <- function(message, process) {
   run(
     message = message,
     process = process,
@@ -248,7 +248,7 @@ run_in <- function(message, process) {
 #' @param process A function representing the inner script info to be executed.
 #'
 #' @export
-run_in_in <- function(message, process) {
+runLevel3 <- function(message, process) {
   run(
     message = message,
     process = process,
@@ -264,7 +264,7 @@ run_in_in <- function(message, process) {
 #' @param process A function representing the inner script info to be executed.
 #'
 #' @export
-run_in_in_ignore_error <- function(message, process) {
+runLevel3IgnoreError <- function(message, process) {
   run(
     message = message,
     process = process,
@@ -302,7 +302,7 @@ run <- function(message, process, verbose, throw_exception = TRUE) {
 #' @param process A function representing the outer script to be executed.
 #'
 #' @export
-runs_out <- function(message, process) {
+runLevel1line <- function(message, process) {
   runs(
     message = message,
     process = process,
@@ -319,7 +319,7 @@ runs_out <- function(message, process) {
 #' @param process A function representing the inner script to be executed.
 #'
 #' @export
-runs_in <- function(message, process) {
+runLevel2line <- function(message, process) {
   runs(
     message = message,
     process = process,
@@ -336,7 +336,7 @@ runs_in <- function(message, process) {
 #' @param process A function representing the inner script info to be executed.
 #'
 #' @export
-runs_in_in <- function(message, process) {
+runLevel3line <- function(message, process) {
   runs(
     message = message,
     process = process,

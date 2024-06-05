@@ -259,10 +259,10 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   # the following commented codeline adds a second name to all patient names. So you can
   # 'test' the follwing join function
   #resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
-  etlutils::run_in_in("Join string multi entries in cracked FHIR data", {
+  etlutils::runLevel3("Join string multi entries in cracked FHIR data", {
     resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
   })
-  etlutils::run_in_in("Melt cracked FHIR data", {
+  etlutils::runLevel3("Melt cracked FHIR data", {
     resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
   })
 

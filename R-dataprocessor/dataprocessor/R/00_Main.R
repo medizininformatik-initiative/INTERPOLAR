@@ -41,9 +41,9 @@ dataprocessor <- function() {
 
   etlutils::printBlockHeader()
 
-  etlutils::run_out('Run Dataprocessor', {
+  etlutils::runLevel1('Run Dataprocessor', {
 
-    etlutils::runProcess(etlutils::run_in('Create Frontend Tables for Patient and Encounter', {
+    etlutils::runProcess(etlutils::runLevel2('Create Frontend Tables for Patient and Encounter', {
       createFrontendTables()
     }))
 
@@ -53,7 +53,7 @@ dataprocessor <- function() {
     # MRP calculation
 
     # # Calculate Drug Disease MPRS
-    # etlutils::runProcess(etlutils::run_in('Calculate Drug Disease MRPs', {
+    # etlutils::runProcess(etlutils::runLevel2('Calculate Drug Disease MRPs', {
     #   calculateDrugDiseaseMRPs()
     # }))
 

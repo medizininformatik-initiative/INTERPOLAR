@@ -255,11 +255,11 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 #'
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
   if (!is.na(path_to_PID_list_file)) {
-    etlutils::run_in_in(paste('Get Patient IDs by file', path_to_PID_list_file), {
+    etlutils::runLevel3(paste('Get Patient IDs by file', path_to_PID_list_file), {
       pids_per_ward <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
     })
   } else {
-    etlutils::run_in_in('Get Patient IDs by Encounters from FHIR Server', {
+    etlutils::runLevel3('Get Patient IDs by Encounters from FHIR Server', {
       initEncounterPeriodToDownload()
       filter_patterns <- convertFilterPatterns()
       # the subject reference is needed in every case to extract them if the encounter matches the pattern

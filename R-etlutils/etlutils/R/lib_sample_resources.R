@@ -78,7 +78,7 @@ refreshFHIRToken <- function() {
 
   # refresh token, if defined
   if (FHIR_TOKEN != '') {
-    run_in_in_ignore_error('Refresh FHIR_TOKEN', {
+    runLevel3IgnoreError('Refresh FHIR_TOKEN', {
       FHIR_TOKEN <- refreshFHIRTokenInternal()
     })
   }
