@@ -1,4 +1,3 @@
-------------------------------
 CREATE OR REPLACE FUNCTION db.copy_fe_fe_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
@@ -469,7 +468,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- CopyJob FrontEnd-Data Dataproc_in 2 DB_log
-SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_fe_fe_iin_to_db_log();');
+SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_fe_fe_in_to_db_log();');
 -----------------------------
 
