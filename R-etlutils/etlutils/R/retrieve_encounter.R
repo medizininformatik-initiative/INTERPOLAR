@@ -40,7 +40,7 @@ get_encounters <- function(table_description) {
     })
 
     run_in_in_ignore_error('Send Test Request', {
-      test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE - VL_70_DOWNLOAD), silent = TRUE)
+      test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE), silent = TRUE)
     })
 
     #
@@ -101,7 +101,7 @@ get_encounters <- function(table_description) {
         table_description = table_description,
         bundles_at_once   = BUNDLES_AT_ONCE,
         log_errors        = 'enc_error.xml',
-        verbose           = VERBOSE - VL_70_DOWNLOAD
+        verbose           = VERBOSE
       )
     })
 
