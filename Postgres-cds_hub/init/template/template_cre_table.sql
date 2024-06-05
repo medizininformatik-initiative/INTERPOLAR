@@ -11,5 +11,10 @@
 ------------------------------------------------------
 -- Comments on Tables in Schema "<%OWNER_SCHEMA%>" --
 ------------------------------------------------------
+-- Output off
+\o /dev/null
 
 <%COMMENT_STATEMENTS%>
+
+-- Output on
+\o
