@@ -51,10 +51,10 @@ copyDB2Redcap <- function() {
 
   #provide column names
   colnames(dataFromDB) <- c('record_id','redcap_repeat_instrument','redcap_repeat_instance','pat_id','pat_name',
-                    'pat_vorname','pat_gebdat','pat_geschlecht','patient_complete','patient_id_pk',
+                    'pat_vorname','pat_gebdat','pat_geschlecht','patient_complete','patient_fe_id',
                     'fall_id','fall_studienphase','fall_station','fall_aufn_dat','fall_aufn_diag',
                     'fall_gewicht_aktuell','fall_gewicht_aktl_einheit','fall_groesse','fall_groesse_einheit',
-                    'fall_status','fall_ent_dat','fall_complete','fall_id_pk','patient_id_fk')
+                    'fall_status','fall_ent_dat','fall_complete','fall_fe_id','patient_id_fk')
 
   #establish connection to db
   dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
@@ -63,9 +63,9 @@ copyDB2Redcap <- function() {
 
   #get relevant columns for Patient and Fall (Phase 1a of INTERPOLAR)
   dataFromDB <- DBI::dbGetQuery(dbcon, "pat_id,pat_name,pat_vorname,pat_gebdat,pat_geschlecht,patient_complete,
-                                patient_id_pk,fall_id,fall_studienphase,fall_station,fall_aufn_dat,fall_aufn_diag,
+                                patient_fe_id,fall_id,fall_studienphase,fall_station,fall_aufn_dat,fall_aufn_diag,
                                 fall_gewicht_aktuell,fall_gewicht_aktl_einheit,fall_groesse,fall_groesse_einheit,
-                                fall_status,fall_ent_dat,fall_complete,fall_id_pk,patient_id_fk
+                                fall_status,fall_ent_dat,fall_complete,fall_fe_id,patient_id_fk
                               FROM v_patient t1, v_fall t2 where t1.patient_fe_id=t2.fall_fe_id")
 
   #connect to REDCap project
