@@ -12,7 +12,7 @@ pat_geschlecht varchar, -- Geschlecht (wie in FHIR)
 patient_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
-current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
@@ -44,7 +44,7 @@ fall_ent_dat date, -- Entlassdatum
 fall_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
-current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
@@ -63,7 +63,7 @@ meda_notiz varchar, -- Notizfeld
 medikationsanalyse_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
-current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
@@ -100,7 +100,7 @@ mrp_wiedervorlage varchar, -- MRP Wiedervorlage
 mrpdokumentation_validierung_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
-current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
@@ -124,7 +124,7 @@ rskfkt_anz_rskamklassen varchar, -- Aggregation der Felder 27-33: Anzahl der Fel
 risikofaktor_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
-current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
@@ -156,19 +156,17 @@ trg_egfr varchar, -- eGFR<30
 trigger_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
-current_dataset_status varchar(50) DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
 
 --SQL Role / Trigger in Schema db2dataprocessor_in
 GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_user;
-GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO cds2db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.patient_fe TO db2dataprocessor_user;
-ALTER TABLE db2dataprocessor_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
-GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.patient_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -190,12 +188,10 @@ CREATE OR REPLACE TRIGGER patient_fe_tr_ins_tr
 GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_user;
-GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO cds2db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
-ALTER TABLE db2dataprocessor_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
-GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.fall_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -217,12 +213,10 @@ CREATE OR REPLACE TRIGGER fall_fe_tr_ins_tr
 GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_user;
-GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO cds2db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user;
-ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
-GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.medikationsanalyse_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -244,12 +238,10 @@ CREATE OR REPLACE TRIGGER medikationsanalyse_fe_tr_ins_tr
 GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_user;
-GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO cds2db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
-ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
-GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.mrpdokumentation_validierung_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -271,12 +263,10 @@ CREATE OR REPLACE TRIGGER mrpdokumentation_validierung_fe_tr_ins_tr
 GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_user;
-GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO cds2db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
-ALTER TABLE db2dataprocessor_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
-GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.risikofaktor_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -298,12 +288,10 @@ CREATE OR REPLACE TRIGGER risikofaktor_fe_tr_ins_tr
 GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_user;
-GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO cds2db_user;
 GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
-ALTER TABLE db2dataprocessor_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
-GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
+ALTER TABLE db2dataprocessor_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.trigger_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
