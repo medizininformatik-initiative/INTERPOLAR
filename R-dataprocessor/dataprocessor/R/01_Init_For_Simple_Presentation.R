@@ -210,19 +210,22 @@ createFrontendTables <- function() {
     # load Encounters for all PIDs
     query_date <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
-    query <- paste0("SELECT * FROM db2dataprocessor_out.v_encounter_all_data\n",
+    db_read_connection <- getDatabaseReadConnection()
+    table_name <- getFirstTableWithNamePart(db_read_connection, "encounter_all")
+    query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
                     "  enc_partof_id IS NULL AND\n",
                     "  (enc_period_end IS NULL OR enc_period_end > '", query_date, "') AND\n",
                     "  enc_period_start <= '", query_date, "'\n")
-    encounters <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+    encounters <- etlutils::dbGetQuery(db_read_connection, query)
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
     query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
-    query <- paste0("SELECT * FROM db2dataprocessor_out.v_condition_all_data\n",
+    table_name <- getFirstTableWithNamePart(db_read_connection, "condition_all")
+    query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
-    conditions <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+    conditions <- etlutils::dbGetQuery(db_read_connection, query)
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
       pid <- pids_per_ward$patient_id[pid_index]
@@ -275,19 +278,21 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_diag', admission_diagnoses)
 
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
-          # Extract the observations for weigth
-          query <- paste0("SELECT * FROM v_observation_all_data\n",
+          codes <- parseQueryList(codes)
+          table_name <- getFirstTableWithNamePart(db_read_connection, "observation_all")
+          # Extract the Observations by direct encounter references
+          query <- paste0("SELECT * FROM ", table_name, "\n",
                           "  WHERE obs_encounter_id = 'Encounter/", encounter_id, "' AND\n",
-                          "        obs_code_code IN (", parseQueryList(codes), ") AND\n",
+                          "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_date, "'\n")
           observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
           if (!nrow(observations)) {
-            query <- paste0("SELECT * FROM v_observation_all_data\n",
+            query <- paste0("SELECT * FROM ", table_name, "\n",
                             "  WHERE obs_patient_id = '", pid, "' AND\n",
-                            "        obs_code_code IN (", parseQueryList(codes), ") AND\n",
+                            "        obs_code_code IN (", codes, ") AND\n",
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", encounter_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_date, "'\n")
