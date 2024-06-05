@@ -194,7 +194,10 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
     if (isIndexedTable(resource_tables[[i]], fhir_table_description)) {
       print(paste0("Melt table ", resource_name))
+      nrow_before_melt <- nrow(resource_tables[[i]])
       resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
+      nrow_after_melt <- nrow(resource_tables[[i]])
+      print(paste("Resource table", resource_name, nrow_before_melt, "rows to", nrow_after_melt, "rows."))
     }
   }
   return(resource_tables)
