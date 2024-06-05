@@ -16,9 +16,9 @@
 #' saved as RData files.
 #'
 #' @export
-get_encounters <- function(table_description) {
+getEncounters <- function(table_description) {
 
-  run_in(toupper('get_encounters'), {
+  run_in(toupper('getEncounters'), {
 
     #refresh token, if defined
     refreshFHIRToken()
@@ -40,7 +40,7 @@ get_encounters <- function(table_description) {
     })
 
     run_in_in_ignore_error('Send Test Request', {
-      test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE), silent = TRUE)
+      test_bundles <- try(executeFHIRSearchVariation(request = request, verbose = VERBOSE), silent = TRUE)
     })
 
     #
@@ -76,7 +76,7 @@ get_encounters <- function(table_description) {
       }
 
       catByVerbose('Request')
-      catByVerbose(styled_string(request, fg = 2, underline = TRUE))
+      catByVerbose(formatStringStyle(request, fg = 2, underline = TRUE))
       if (succ) {
         catByVerbose('returned', total, 'available Encounters.')
         catByVerbose('Will download Encounters using parameters "sa" and "eb"')
@@ -178,7 +178,7 @@ get_encounters <- function(table_description) {
     # runs_in_in('Check Size of Encounters Table', {
     #   if (nrow(table_enc) < 1) {
     #     STOP <<- 1
-    #     cat(styled_string('Encounter Table table_enc is empty.\nTherefore no Analysis could be made. Stop execution here.\n', fg = 1, bold = TRUE))
+    #     cat(formatStringStyle('Encounter Table table_enc is empty.\nTherefore no Analysis could be made. Stop execution here.\n', fg = 1, bold = TRUE))
     #     stop('Encounter Table table_enc is empty. Therefore no Analysis could be made. Stop execution here.')
     #   }
     # })
@@ -234,7 +234,7 @@ get_encounters <- function(table_description) {
     #
     #   if (NROW(table_enc_missing_patID)) {
     #     warning(nrow(table_enc_missing_patID)," Encounter does not provide a patient reference ID. Please check table_enc_missing_patID.RData")
-    #     polar_write_rdata(table_enc_missing_patID)
+    #     writeRData(table_enc_missing_patID)
     #   }
     #   rm(table_enc_missing_patID)
     # })
@@ -252,12 +252,12 @@ get_encounters <- function(table_description) {
     # # some stats
     # run_in_in('Update \'tab.resource.used\' Table', {
     #   tab.resource.used[name == 'Encounter', value := length(unique(table_enc$Enc.Enc.ID))]
-    #   polar_write_rdata(tab.resource.used)
+    #   writeRData(tab.resource.used)
     #   rm(tab.resource.used)
     # })
 
     runs_in_in('Save and Delete Encounters Table', {
-      polar_write_rdata(table_enc, 'pid_source_encounter_unfiltered')
+      writeRData(table_enc, 'pid_source_encounter_unfiltered')
     })
 
     table_enc

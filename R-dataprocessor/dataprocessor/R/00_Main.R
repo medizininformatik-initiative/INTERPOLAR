@@ -27,7 +27,7 @@ dataprocessor <- function() {
   PROJECT_NAME <<- 'dataprocessor'
   ###
 
-  etlutils::create_dirs(PROJECT_NAME)
+  etlutils::createDIRS(PROJECT_NAME)
 
   ###
   # Create globally used process_clock
@@ -37,9 +37,9 @@ dataprocessor <- function() {
   ###
   # log all console outputs and save them at the end
   ###
-  etlutils::start_logging('retrieval-total')
+  etlutils::startLogging('retrieval-total')
 
-  etlutils::START__()
+  etlutils::printBlockHeader()
 
   etlutils::run_out('Run Dataprocessor', {
 

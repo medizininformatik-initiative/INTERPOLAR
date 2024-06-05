@@ -237,7 +237,7 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
     ward_encounters <- filterResources(encounters, ward_filter_patterns)
-    polar_write_rdata(ward_encounters, 'pid_source_encounter_filtered')
+    writeRData(ward_encounters, 'pid_source_encounter_filtered')
     pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
   }
@@ -268,7 +268,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
       filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
       # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
       # additional paths above
-      encounters <- etlutils::get_encounters(filter_enc_table_description)
+      encounters <- etlutils::getEncounters(filter_enc_table_description)
       # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data

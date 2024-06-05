@@ -11,7 +11,7 @@
 #' @return A named list containing directory names for global and local project outputs.
 #'
 #' @export
-get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
+getProjectDirNames <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
 
   PROJECT_NAME <<- project_name
   PROJECT_TIME_STAMP <<- project_time_stamp
@@ -107,8 +107,8 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #' @param showWarnings logical; should the warnings on failure be shown?
 #'
 #' @export
-create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
-  SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
+createDIRS <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
+  SUB_PROJECTS_DIRS <<- getProjectDirNames(project_name)
   renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
   renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
@@ -254,7 +254,7 @@ polar_save_table_as_rdata <- function(table, table_name = NA) {
 #' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
 #'
 #' a <- 1
-#' polar_write_rdata(a)
+#' writeRData(a)
 #'
 #' @param object the table to write
 #' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
@@ -264,7 +264,7 @@ polar_save_table_as_rdata <- function(table, table_name = NA) {
 #' @return Nothing.
 #'
 #' @export
-polar_write_rdata <- function(object = table, filename_without_extension = NA, project_sub_dir = NA) {
+writeRData <- function(object = table, filename_without_extension = NA, project_sub_dir = NA) {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
@@ -279,7 +279,7 @@ polar_write_rdata <- function(object = table, filename_without_extension = NA, p
 
 #' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
 #'
-#' a <- polar_read_rdata('a')
+#' a <- ReadRData('a')
 #'
 #' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
 #' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
@@ -288,7 +288,7 @@ polar_write_rdata <- function(object = table, filename_without_extension = NA, p
 #' @return the object
 #'
 #' @export
-polar_read_rdata <- function(filename_without_extension, project_sub_dir = NA) {
+ReadRData <- function(filename_without_extension, project_sub_dir = NA) {
   # default project_sub_dir is NA -> load tables from outputLocal/tables
   if (is.na(project_sub_dir)) {
     project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")

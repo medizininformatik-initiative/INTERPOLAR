@@ -284,7 +284,7 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
     raw_id_column <- grep(pattern, colnames(resource_tables[[i]])) # should be only 1 column
     colnames(resource_tables[[i]])[raw_id_column] <- paste0(tablename, "_raw_id")
 
-    polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
+    writeRData(resource_tables[[i]], tolower(names(resource_tables)[i]))
   }
   return(resource_tables)
 }

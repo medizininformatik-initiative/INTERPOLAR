@@ -14,7 +14,7 @@
 #' The log file is stored in the log directory, and each log entry is appended to the existing file.
 #'
 #' @export
-start_logging <- function(prefix) {
+startLogging <- function(prefix) {
   log_filename <- fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt"))
   # Make sure that the environment does not have an open connection to this file
   if (!is.null(.lib_logging_env[[log_filename]])) {
@@ -38,11 +38,11 @@ start_logging <- function(prefix) {
 #' @return NULL
 #'
 #' @details
-#' The function stops the redirection of console output and messages to the log file initiated by \code{start_logging}.
+#' The function stops the redirection of console output and messages to the log file initiated by \code{startLogging}.
 #' It closes the log file, ensuring that no further entries are appended to it.
 #'
 #' @export
-end_logging <- function() {
+endLogging <- function() {
   sink(type = "message")
   sink()
 
@@ -53,10 +53,10 @@ end_logging <- function() {
     .lib_logging_env[[log_filename]] <- NULL
     .lib_logging_env[["log_filename"]] <- NULL
   }
-  removeANSIEscapeSequences(log_filename)
+  removeAnsiEscapeSequences(log_filename)
 }
 
-#' START__
+#' printBlockHeader
 #' @description Print Header of Block
 #'
 #' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
@@ -65,14 +65,14 @@ end_logging <- function() {
 #' @return NULL
 #'
 #' @export
-START__ <- function(verbose = VERBOSE - 4, len = 104) {
+printBlockHeader <- function(verbose = VERBOSE - 4, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
   if (0 < verbose) {
     cat(paste0(
       # print a bold underlined line of len spaces
-      styled_string(paste0(rep(' ', len), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
+      formatStringStyle(paste0(rep(' ', len), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
       '\n',
-      styled_string('START', fg = 7, bold = TRUE),
+      formatStringStyle('START', fg = 7, bold = TRUE),
       '\n'
     ))
   }
@@ -86,14 +86,14 @@ START__ <- function(verbose = VERBOSE - 4, len = 104) {
 #' @return NULL
 #'
 #' @export
-END__ <- function(verbose = VERBOSE - 4, len = 104) {
+printBlockFooter <- function(verbose = VERBOSE - 4, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
   if (0 < verbose) {
     cat(paste0(
       # print bold underlined word END
-      styled_string('END', fg = 7, bold = TRUE, underline = TRUE),
+      formatStringStyle('END', fg = 7, bold = TRUE, underline = TRUE),
       # fill up to length len with bold unerlined spaces
-      styled_string(paste0(rep(' ', len - 3), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
+      formatStringStyle(paste0(rep(' ', len - 3), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
       '\n'
     ))
   }
@@ -106,15 +106,15 @@ END__ <- function(verbose = VERBOSE - 4, len = 104) {
 #' @param process The function representing the process to be executed.
 #' @return None (prints clock information and handles errors)
 #'
-#' @seealso START__, printClock, END__, stopOnError
+#' @seealso printBlockHeader, printClock, printBlockFooter, stopOnError
 #'
 #' @export
 runProcess <- function(process) {
-  START__()
+  printBlockHeader()
   err <- try(process, silent = TRUE)
   printClock()
   warnings()
-  END__()
+  printBlockFooter()
   stopOnError(err)
 }
 
@@ -125,11 +125,11 @@ finalize <- function() {
   printClock()
   warnings()
   savePerformance()
-  END__()
+  printBlockFooter()
   ###
   # Save all console logs
   ###
-  end_logging()
+  endLogging()
 }
 
 #' Stop execution with Error message
@@ -141,7 +141,7 @@ finalize <- function() {
 #' @export
 stopWithError <- function(...) {
   # do not change the paste(c(...), collapse = "") to paste0 !!! The result is not the same!
-  err <- try(stop(cat_red(paste(c(...), collapse = ""))), silent = TRUE)
+  err <- try(stop(catColorRed(paste(c(...), collapse = ""))), silent = TRUE)
   stopOnError(err)
 }
 
@@ -194,11 +194,11 @@ runProcessInternal <- function(
     checkError(
       err = err,
       expr_ok = {
-        if (single_line) cat_ok() else cat_colourised('OK\n', fg = 'light blue')
+        if (single_line) catOkMessage() else catColourised('OK\n', fg = 'light blue')
         err
       },
       expr_err = {
-        cat_error()
+        catErrorMessage()
         if (throw_exception) {
           stop(err)
         }
@@ -379,7 +379,7 @@ runs <- function(message, process, verbose) {
 #'       extended sequences.
 #'
 #' @export
-removeANSIEscapeSequences <- function(filename) {
+removeAnsiEscapeSequences <- function(filename) {
   # Now remove ANSI escape sequences:
   file <- file(filename, open = "rt")
   # Read the content of the log file
@@ -431,7 +431,7 @@ catByVerbose <- function(...) {
 #'
 #' @export
 createFrameString <- function(
-    text = styled_string('\nHello !!!\n\n\nIs\nthere\n\nA N Y O N E\n\nout\nthere\n???\n '),
+    text = formatStringStyle('\nHello !!!\n\n\nIs\nthere\n\nA N Y O N E\n\nout\nthere\n???\n '),
     pos  = c('left', 'center', 'right')[1],
     edge = ' ',
     hori = '-',
