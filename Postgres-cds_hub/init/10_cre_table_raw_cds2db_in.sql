@@ -1667,6 +1667,8 @@ CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
 ------------------------------------------------------
 -- Comments on Tables in Schema "cds2db_in" --
 ------------------------------------------------------
+-- Output off
+\o /dev/null
 
 comment on column cds2db_in.encounter_raw.encounter_id is 'Primary key of the entity';
 comment on column cds2db_in.encounter_raw.enc_id is 'id (varchar)';
@@ -2891,3 +2893,6 @@ comment on column cds2db_in.pids_per_ward_raw.last_check_datetime is 'Time at wh
 comment on column cds2db_in.pids_per_ward_raw.current_dataset_status is 'Processing status of the data record';
 
 
+
+-- Output on
+\o

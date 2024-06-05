@@ -1695,6 +1695,8 @@ CREATE OR REPLACE TRIGGER pids_per_ward_tr_ins_tr
 ------------------------------------------------------
 -- Comments on Tables in Schema "db_log" --
 ------------------------------------------------------
+-- Output off
+\o /dev/null
 
 comment on column db_log.encounter.encounter_id is 'Primary key of the entity';
 comment on column db_log.encounter.encounter_raw_id is 'Primary key of the corresponding raw table';
@@ -2933,3 +2935,6 @@ comment on column db_log.pids_per_ward.last_check_datetime is 'Time at which dat
 comment on column db_log.pids_per_ward.current_dataset_status is 'Processing status of the data record';
 
 
+
+-- Output on
+\o
