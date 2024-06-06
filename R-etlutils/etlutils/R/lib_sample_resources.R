@@ -78,7 +78,7 @@ refreshFHIRToken <- function() {
 
   # refresh token, if defined
   if (FHIR_TOKEN != '') {
-    run_in_in_ignore_error('Refresh FHIR_TOKEN', {
+    runLevel3IgnoreError('Refresh FHIR_TOKEN', {
       FHIR_TOKEN <- refreshFHIRTokenInternal()
     })
   }
@@ -156,7 +156,7 @@ getResourcesCounts <- function(endpoint, resource, parameters = NULL, verbose = 
   as.numeric(# return as number
     xml2::xml_attr(# get attribute "value" of found xml tag "total"
       xml2::xml_find_first(# find first occurrence of tag "total"
-        polar_fhir_search(# get resources count
+        executeFHIRSearchVariation(# get resources count
           fhircrackr::fhir_url(
             url = endpoint,
             resource = resource,
@@ -198,7 +198,7 @@ getResourcesIDs <- function(endpoint, resource, parameters = NULL, verbose = 0) 
     )
   }
   bundles <- try(
-    polar_fhir_search(
+    executeFHIRSearchVariation(
       url <- fhircrackr::fhir_url(
         url = endpoint,
         resource = resource,
@@ -300,7 +300,7 @@ getResourcesByIDs <- function(
       # create request with list of resource ids to get from server
       url_ <- fhircrackr::fhir_url(endpoint, resource, pasteFHIRSearchParams(paste0(id_param_str, "=", ids_$str), addParamToFHIRRequest(parameters)))
       # get bundle
-      bnd_ <- polar_fhir_search(request = url_, verbose = verbose)
+      bnd_ <- executeFHIRSearchVariation(request = url_, verbose = verbose)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
         print (bnd_)
       }
@@ -317,7 +317,7 @@ getResourcesByIDs <- function(
   getResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     parameters_list <- list(paste0(ids, collapse = ","), COUNT_PER_BUNDLE) # add all ids
     names(parameters_list) <- c(id_param_str, '_count') # name arguments
-    polar_fhir_search(
+    executeFHIRSearchVariation(
       request = fhircrackr::fhir_url(# get resources
         url      = endpoint,
         resource = resource,
@@ -473,7 +473,7 @@ downloadAndCrackFHIRResources <- function(
           if (!is.null(element)) {# if there is a element
             if (n == 'request') {# if name of pkg is 'request'
               if (inherits(element, 'fhir_url')) {# if the element itself is a fhir request
-                bundles <- try(polar_fhir_search( # try to download resources
+                bundles <- try(executeFHIRSearchVariation( # try to download resources
                   request     = element,
                   verbose     = verbose,
                   log_errors  = log_errors,
@@ -482,7 +482,7 @@ downloadAndCrackFHIRResources <- function(
                 if (inherits(bundles, 'try-error')) {# if download fails return error stored in variable bundle
                   if (0 < verbose) {
                     cat(
-                      styled_string(
+                      formatStringStyle(
                         'Bundles for the following IDs could not be downloaded:',
                         element,
                         "Request with error:",
@@ -494,7 +494,7 @@ downloadAndCrackFHIRResources <- function(
                       '\n',
                       pkg$ids
                     )
-                    cat(styled_string('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
+                    cat(formatStringStyle('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
                   }
                 } else {# if download was successful
                   logRequest(verbose, resource_name, bundles)
@@ -535,8 +535,8 @@ downloadAndCrackFHIRResources <- function(
       } else {# otherwise we have to repeat
         succ <- FALSE
         if (0 < verbose) {
-          cat_red(pkg$request)
-          cat_red(paste0('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
+          catColorRed(pkg$request)
+          catColorRed(paste0('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
         }
         Sys.sleep(WAIT_TIMES[[trial]]) # wait longer and longer between requests
         pkg$request <- curr_request # and again
@@ -546,7 +546,7 @@ downloadAndCrackFHIRResources <- function(
 
     if (max_trials < trial) {# if we' reached've done to many trials
       if (0 < verbose)
-        cat_red('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
+        catColorRed('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
       succesfully <- FALSE
       break; # stop while loop
     } else if (succ) {# if trial <= max_trials
@@ -594,7 +594,7 @@ downloadAndCrackFHIRResources <- function(
   }
   if (!succesfully) {
     if (0 < verbose)
-      cat_red('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
+      catColorRed('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
   }
   # complete tables with missing column
   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
@@ -636,7 +636,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     url_enc = TRUE
   )
   bndls <- try(
-    polar_fhir_search(
+    executeFHIRSearchVariation(
       request    = request,
       log_errors = paste0(resource, 'Availability-Test-error.xml'),
       verbose    = verbose
@@ -648,14 +648,14 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 
   total <- if (isError(bndls)) {
     if (verbose) {
-      cat(styled_string('\nAvailability-Check failed.', fg = 1), '\n')
+      cat(formatStringStyle('\nAvailability-Check failed.', fg = 1), '\n')
     }
     0
   } else {
     as.numeric(xml2::xml_attr(xml2::xml_find_all(bndls[[1]], '//total'), 'value'))
   }
   if (total < 1) {
-    if (verbose) cat_warning(paste0('Warning: No ', resource, 's found on FHIR Server. Return empty Table. Please note!\n'))
+    if (verbose) catWarningMessage(paste0('Warning: No ', resource, 's found on FHIR Server. Return empty Table. Please note!\n'))
     return(NA)
   }
 
@@ -670,9 +670,9 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
   if (1 < verbose) {
     cat(paste0(
       'OS:    ',
-      styled_string(os, bold = TRUE),
+      formatStringStyle(os, bold = TRUE),
       '\nCores: ',
-      styled_string(ncores, bold = TRUE),
+      formatStringStyle(ncores, bold = TRUE),
       '\n'
     ))
   }
@@ -766,7 +766,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
               if (inherits(bundles, 'try-error')) {
                 if (0 < verbose) {
                   cat(
-                    styled_string(
+                    formatStringStyle(
                       'Bundles for the following IDs could not be downloaded:',
                       element,
                       "Request with error:",
@@ -778,7 +778,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                     '\n',
                     pkg$ids
                   )
-                  cat(styled_string('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
+                  cat(formatStringStyle('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
                 }
                 Sys.sleep(WAIT_TIMES[[trial]])
                 trial <- trial + 1
@@ -790,7 +790,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
             if (max_trials < trial) {
               if (0 < verbose) {
                 cat(
-                  styled_string(
+                  formatStringStyle(
                     trial,
                     convertVerboseNumbers(trial),
                     'attempt to Download Bundle failed. Bundle is lost. ',
@@ -934,7 +934,7 @@ loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
       if (nrow(resource_table)) {
         printAllTables(resource_table, resource)
       } else {
-        cat_info(paste("Info: No", resource, "resources found for the given Patient IDs.\n"))
+        catInfoMessage(paste("Info: No", resource, "resources found for the given Patient IDs.\n"))
       }
     }
   }

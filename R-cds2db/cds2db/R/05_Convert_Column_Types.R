@@ -11,6 +11,7 @@
 #' @return The modified data.table with cleaned and joined multi-value fields.
 #'
 #' @examples
+#' \dontrun{
 #' library(data.table)
 #' dt <- data.table(name.given = c("[1.1]Marie|[1.2]Anne|[1.3]Lea|[2.1]Marie2|[2.2]Anne2|[2.3]Lea2",
 #' "[1]Kai|[2]Ingo", "[1.1]Mark|[1.3]Ben|[2.2]Tim"))
@@ -18,8 +19,8 @@
 #' sep <- "|"
 #' brackets <- c("[", "]")
 #' joinMultiValuesInCrackedFHIRData(dt, column_names, sep, brackets)
+#' }
 #'
-#' @export
 joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, collapse = " ") {
   for (column_name in column_names) {
     for (i in 1:nrow(dt)) {
@@ -63,7 +64,6 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, co
 #'
 #' @return A melted data.table.
 #'
-#' @export
 fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name_separator = "/") {
 
   getEscaped <- function(string) {
@@ -259,10 +259,10 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   # the following commented codeline adds a second name to all patient names. So you can
   # 'test' the follwing join function
   #resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
-  etlutils::run_in_in("Join string multi entries in cracked FHIR data", {
+  etlutils::runLevel3("Join string multi entries in cracked FHIR data", {
     resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
   })
-  etlutils::run_in_in("Melt cracked FHIR data", {
+  etlutils::runLevel3("Melt cracked FHIR data", {
     resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
   })
 
@@ -284,7 +284,7 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
     raw_id_column <- grep(pattern, colnames(resource_tables[[i]])) # should be only 1 column
     colnames(resource_tables[[i]])[raw_id_column] <- paste0(tablename, "_raw_id")
 
-    polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
+    writeRData(resource_tables[[i]], tolower(names(resource_tables)[i]))
   }
   return(resource_tables)
 }

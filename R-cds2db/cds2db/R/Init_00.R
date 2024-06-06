@@ -43,7 +43,7 @@ loadTableDescriptionFile <- function() {
 #' resource.
 #'
 #' @return A list of data tables, each containing the table description for a specific resource.
-#' @export
+#'
 getTableDescriptionSplittedByResource <- function() {
   table_description <- loadTableDescriptionFile()
   table_description[, resource := tolower(resource)]

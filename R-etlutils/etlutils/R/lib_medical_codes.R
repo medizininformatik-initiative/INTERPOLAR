@@ -35,7 +35,7 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
 
   if (minyear < 0 || maxyear < 0) {
     icd_codes <- NULL
-    cat_info(paste0("ICD-Code: ", icd3, " is not valid. Please check!"))
+    catInfoMessage(paste0("ICD-Code: ", icd3, " is not valid. Please check!"))
     return()
   }
 

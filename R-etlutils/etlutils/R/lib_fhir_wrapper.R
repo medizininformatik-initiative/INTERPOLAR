@@ -22,7 +22,7 @@
 #' This can be used to avoid choking a weak server with too many requests to quickly. Defaults to zero.
 #' @return A fhir_bundle_list when save_to_disc = NULL (the default), else NULL.
 #' @export
-polar_fhir_search <- function(
+executeFHIRSearchVariation <- function(
   request                = fhircrackr::fhir_current_request(),
   body                   = NULL,
   max_bundles            = MAX_ENCOUNTER_BUNDLES,

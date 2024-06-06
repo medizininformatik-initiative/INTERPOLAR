@@ -16,9 +16,9 @@
 #' saved as RData files.
 #'
 #' @export
-get_encounters <- function(table_description) {
+getEncounters <- function(table_description) {
 
-  run_in(toupper('get_encounters'), {
+  runLevel2(toupper('getEncounters'), {
 
     #refresh token, if defined
     refreshFHIRToken()
@@ -29,7 +29,7 @@ get_encounters <- function(table_description) {
     #for date restriction, identify the specification required in endpoint
     # do we need {sa, eb} or {ge, le}
     #
-    runs_in_in('Create Test Request for Search Parameter \'sa\' and \'eb\'', {
+    runLevel3Line('Create Test Request for Search Parameter \'sa\' and \'eb\'', {
       request <- fhircrackr::fhir_url(FHIR_SERVER_ENDPOINT, 'Encounter',
                                       parameters = c(
                                         'date' = paste0('sa', PERIOD_START),
@@ -39,15 +39,15 @@ get_encounters <- function(table_description) {
       )
     })
 
-    run_in_in_ignore_error('Send Test Request', {
-      test_bundles <- try(polar_fhir_search(request = request, verbose = VERBOSE), silent = TRUE)
+    runLevel3IgnoreError('Send Test Request', {
+      test_bundles <- try(executeFHIRSearchVariation(request = request, verbose = VERBOSE), silent = TRUE)
     })
 
     #
     # determine, whether date restrictions must be specified with
     #  {sa, eb} or {ge, le}
     #
-    run_in_in('Check Response', {
+    runLevel3('Check Response', {
 
       params <- if (
         succ <- !inherits(test_bundles, 'try-error') &&
@@ -76,7 +76,7 @@ get_encounters <- function(table_description) {
       }
 
       catByVerbose('Request')
-      catByVerbose(styled_string(request, fg = 2, underline = TRUE))
+      catByVerbose(formatStringStyle(request, fg = 2, underline = TRUE))
       if (succ) {
         catByVerbose('returned', total, 'available Encounters.')
         catByVerbose('Will download Encounters using parameters "sa" and "eb"')
@@ -89,7 +89,7 @@ get_encounters <- function(table_description) {
       op.end <- gsub("^([a-z]+).*", "\\1", params[2])
     })
 
-    run_in_in('Download and Crack Encounters', {
+    runLevel3('Download and Crack Encounters', {
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,
         resource   = 'Encounter',
@@ -105,14 +105,14 @@ get_encounters <- function(table_description) {
       )
     })
 
-    runs_in_in('change column classes', {
+    runLevel3Line('change column classes', {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
     printAllTables(table_enc)
 
     # TODO: das hier muss wahrscheinlich für alle Resourcen nochmal getan werden, die wir dann endgültig vom FHIR-Server herunterladen
-    # runs_in_in('Fix Dates in Encounter Table', {
+    # runLevel3Line('Fix Dates in Encounter Table', {
     #   # splits the provided dates into day and time columns, if data is available
     #   # converts fhir dates to R dates
     #   # fix the column class to date()
@@ -128,7 +128,7 @@ get_encounters <- function(table_description) {
     #
     # # generate generic pat.id and fall.no, that will be used during retrieval and analysis
     # #  ensures the ID-class numeric()
-    # runs_in_in('Add \'fall.no\' and \'pat.id\' to Encounter Table', {
+    # runLevel3Line('Add \'fall.no\' and \'pat.id\' to Encounter Table', {
     #   table_enc[
     #     ,pat.id  := as.numeric(as.factor(Enc.Pat.ID))
     #   ][
@@ -141,7 +141,7 @@ get_encounters <- function(table_description) {
     #
     # # if available, simplify the evaluation of Enc.Hospitalization.Code
     # #  TODO: tolower() must be removed, if any DIC provides these data correctly
-    # runs_in_in('Convert hospitalization code to upper case', {
+    # runLevel3Line('Convert hospitalization code to upper case', {
     #   if (any(colnames(table_enc) == "Enc.Hospitalization.Code")) {
     #     table_enc[, Enc.Hospitalization.Code := toupper(Enc.Hospitalization.Code)]
     #   }
@@ -156,7 +156,7 @@ get_encounters <- function(table_description) {
     # #
     # # in addition, encounters are removed, where start or end dates are missing
     # #
-    # runs_in_in('Filter for Encounter Period', {
+    # runLevel3Line('Filter for Encounter Period', {
     #   table_enc <- table_enc[
     #     !is.na(Enc.Period.Start)                      &
     #     !is.na(Enc.Period.End)                        &
@@ -169,27 +169,27 @@ get_encounters <- function(table_description) {
     # # we want to analyse inpatient encounters only
     # #   inpatient can be provided by a variety of values
     # #
-    # runs_in_in('Filter to inpatient encounter only', {
+    # runLevel3Line('Filter to inpatient encounter only', {
     #   #simplifier MII suggest IMP only
     #   table_enc <- table_enc[grep("station|IMP|inpatient|emer|ACUTE|NONAC", Enc.Class.Code, ignore.case = TRUE)]
     # })
     #
     # # no encounter found? stop here
-    # runs_in_in('Check Size of Encounters Table', {
+    # runLevel3Line('Check Size of Encounters Table', {
     #   if (nrow(table_enc) < 1) {
     #     STOP <<- 1
-    #     cat(styled_string('Encounter Table table_enc is empty.\nTherefore no Analysis could be made. Stop execution here.\n', fg = 1, bold = TRUE))
+    #     cat(formatStringStyle('Encounter Table table_enc is empty.\nTherefore no Analysis could be made. Stop execution here.\n', fg = 1, bold = TRUE))
     #     stop('Encounter Table table_enc is empty. Therefore no Analysis could be made. Stop execution here.')
     #   }
     # })
     #
     # #Exclusion criterion
-    # runs_in_in('Check for Time Direction Violating Encounters and mark them', {
+    # runLevel3Line('Check for Time Direction Violating Encounters and mark them', {
     #   table_enc[,Exclusion.TimeOrderViolation := Enc.Period.End.Datetime < Enc.Period.Start.Datetime]
     # })
     #
     # #Exclusion criterion
-    # runs_in_in('Check for Time Overlapping Encounters and mark them', {
+    # runLevel3Line('Check for Time Overlapping Encounters and mark them', {
     #
     #   tab.pat.fall <- table_enc[Exclusion.TimeOrderViolation == FALSE, .(
     #     "pat.id"  = pat.id,
@@ -221,20 +221,20 @@ get_encounters <- function(table_description) {
     #   rm (tab.pat.fall)
     # })
     #
-    # runs_in_in('Extract Reference IDs', {
+    # runLevel3Line('Extract Reference IDs', {
     #   table_enc <- polar_extract_reference_id(reference = table_enc)
     # })
     #
     # #data absent reasons
     # # TODO: should this removal be registerd as inclusion/exclusion criterion?
-    # runs_in_in('Remove Encounter with missing patient reference ID\'s', {
+    # runLevel3Line('Remove Encounter with missing patient reference ID\'s', {
     #
     #   table_enc_missing_patID <- table_enc[is.na(Enc.Pat.ID), ]
     #   table_enc               <- table_enc[!is.na(Enc.Pat.ID), ]
     #
     #   if (NROW(table_enc_missing_patID)) {
     #     warning(nrow(table_enc_missing_patID)," Encounter does not provide a patient reference ID. Please check table_enc_missing_patID.RData")
-    #     polar_write_rdata(table_enc_missing_patID)
+    #     writeRData(table_enc_missing_patID)
     #   }
     #   rm(table_enc_missing_patID)
     # })
@@ -243,21 +243,21 @@ get_encounters <- function(table_description) {
     # # in further requests on other resources, we try to restrict the download request to
     # #  patients registered with the encounters from POLAR period
     # #
-    # runs_in_in('Collect Patients Reference ID\'s', {
+    # runLevel3Line('Collect Patients Reference ID\'s', {
     #   patient_refs_ids <- unique(table_enc[Exclusion.TimeOrderViolation == FALSE & Exclusion.TimeOverlap == FALSE, Enc.Pat.ID])
     # })
     #
     # printTable(table_enc)
     #
     # # some stats
-    # run_in_in('Update \'tab.resource.used\' Table', {
+    # runLevel3('Update \'tab.resource.used\' Table', {
     #   tab.resource.used[name == 'Encounter', value := length(unique(table_enc$Enc.Enc.ID))]
-    #   polar_write_rdata(tab.resource.used)
+    #   writeRData(tab.resource.used)
     #   rm(tab.resource.used)
     # })
 
-    runs_in_in('Save and Delete Encounters Table', {
-      polar_write_rdata(table_enc, 'pid_source_encounter_unfiltered')
+    runLevel3Line('Save and Delete Encounters Table', {
+      writeRData(table_enc, 'pid_source_encounter_unfiltered')
     })
 
     table_enc

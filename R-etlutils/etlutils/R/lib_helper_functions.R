@@ -153,7 +153,7 @@ isDebug <- function() exists('DEBUG') && DEBUG
 #'
 #' @return err
 #' @export
-checkError <- function(err, expr_ok = {cat_ok()}, expr_err = {cat_error()}) {
+checkError <- function(err, expr_ok = {catOkMessage()}, expr_err = {catErrorMessage()}) {
   if (isError(err)) expr_err else expr_ok
 }
 

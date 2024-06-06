@@ -84,7 +84,7 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
   # table_descriptions$reference_types can be a comma or whitespace separated list like
   # "MedicationStatement, MedicationAdministration". We need the all unique diffrerent
   # resource names in this column
-  reference_types <- unique(etlutils::extract_words(table_descriptions$reference_types$reference_types))
+  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$reference_types))
   for (reference_type in reference_types) {
     referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
     if (!is.null(referenced_table_description)) {
@@ -124,14 +124,14 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   and independent of patient IDs, respectively.
 #'
 #' @details The function iterates through all resources loaded in both steps and saves them as
-#'   RData files using `polar_write_rdata`. The filenames are derived by converting the names of the
+#'   RData files using `writeRData`. The filenames are derived by converting the names of the
 #'   resources in the `resource_tables` list to lowercase.
 #'
 loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
   resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   for (i in seq_along(resource_tables)) {
-    polar_write_rdata(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
+    writeRData(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }
   return(resource_tables)
 }

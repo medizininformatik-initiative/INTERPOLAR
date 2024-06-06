@@ -7,9 +7,9 @@
 #' @return A character vector containing the extracted words.
 #' @examples
 #' input_string <- "Here are some words, separated, by, commas, and spaces"
-#' extract_words(input_string)
+#' extractWords(input_string)
 #' @export
-extract_words <- function(input_string) {
+extractWords <- function(input_string) {
   # Replace commas with spaces for uniform separation
   unified_string <- gsub(",", " ", input_string)
 

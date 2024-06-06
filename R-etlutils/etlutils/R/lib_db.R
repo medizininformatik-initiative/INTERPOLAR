@@ -133,10 +133,10 @@ dbCheckContent <- function(db_connection, table_name, table) {
           cat_message <- paste0("In table '", table_name , "' value '", value, "' in column '", column_name, "' at row ", j, " is " , nchar(value), " but maximum length is ", max_length)
           # Print error or info message for values exceeding maximum length
           if (max_length <= 100) {
-            cat_error(paste0(cat_message, ". Please Fix it", "\n"))
+            catErrorMessage(paste0(cat_message, ". Please Fix it", "\n"))
             STOP <- TRUE
           } else {
-            cat_info(paste0(cat_message, ". Will be truncated. Please Check", "\n"))
+            catInfoMessage(paste0(cat_message, ". Will be truncated. Please Check", "\n"))
             # Truncate string to possible maximum length
             table[j, (column_name) := substr(get(column_name), 1, max_length)]
           }

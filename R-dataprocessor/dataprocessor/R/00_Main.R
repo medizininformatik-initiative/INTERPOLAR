@@ -27,7 +27,7 @@ dataprocessor <- function() {
   PROJECT_NAME <<- 'dataprocessor'
   ###
 
-  etlutils::create_dirs(PROJECT_NAME)
+  etlutils::createDIRS(PROJECT_NAME)
 
   ###
   # Create globally used process_clock
@@ -37,13 +37,13 @@ dataprocessor <- function() {
   ###
   # log all console outputs and save them at the end
   ###
-  etlutils::start_logging('retrieval-total')
+  etlutils::startLogging('retrieval-total')
 
-  etlutils::START__()
+  etlutils::logBlockHeader()
 
-  etlutils::run_out('Run Dataprocessor', {
+  etlutils::runLevel1('Run Dataprocessor', {
 
-    etlutils::runProcess(etlutils::run_in('Create Frontend Tables for Patient and Encounter', {
+    etlutils::runProcess(etlutils::runLevel2('Create Frontend Tables for Patient and Encounter', {
       createFrontendTables()
     }))
 
@@ -53,7 +53,7 @@ dataprocessor <- function() {
     # MRP calculation
 
     # # Calculate Drug Disease MPRS
-    # etlutils::runProcess(etlutils::run_in('Calculate Drug Disease MRPs', {
+    # etlutils::runProcess(etlutils::runLevel2('Calculate Drug Disease MRPs', {
     #   calculateDrugDiseaseMRPs()
     # }))
 

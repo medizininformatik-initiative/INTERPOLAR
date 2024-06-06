@@ -11,7 +11,7 @@
 #' @return A named list containing directory names for global and local project outputs.
 #'
 #' @export
-get_project_dir_names <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
+getProjectDirNames <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
 
   PROJECT_NAME <<- project_name
   PROJECT_TIME_STAMP <<- project_time_stamp
@@ -107,8 +107,8 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #' @param showWarnings logical; should the warnings on failure be shown?
 #'
 #' @export
-create_dirs <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
-  SUB_PROJECTS_DIRS <<- get_project_dir_names(project_name)
+createDIRS <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
+  SUB_PROJECTS_DIRS <<- getProjectDirNames(project_name)
   renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
   renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
@@ -172,89 +172,10 @@ savePerformance <- function(filename_without_extension = "Performance_informatio
   clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
 
-###
-# save error into the sub project related log directory
-###
-#' Save an Error Message in the *private* `log` directory to which was created for the specific subproject.
-#'
-#' polar_save_error(err = "Housten! We have a Problem!", filename_without_extension = "big_problem")
-#'
-#' @param err A character of length one. The error message.
-#' @param filename_without_extension A character of length one.
-#'
-#' @return Nothing.
-#' @export
-polar_save_error <- function(err, filename_without_extension) {
-  cat(err, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log", filename_without_extension, ext = ".txt"), sep = "\n")
-}
-
-###
-# save a data.frame/data.table as tsv into the sub project related tables directory
-###
-#' Save a Table/Data.Frame as .csv in the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' d <- data.frame(x=1:10, y=rnorm(10))
-#' polar_save_table_as_csv(table = d)
-#'
-#' @param table A data.frame/data.table object.
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param sep the field separator string. Values within each row of x are separated by this string.
-#'
-#' @return Nothing.
-#' @export
-polar_save_table_as_csv <- function(table, filename_without_extension = NA, sep = ";") {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-  }
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = ".csv"), sep = sep, quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
-}
-
-
-###
-# save a data.frame/data.table as tsv into the sub project related tables directory
-###
-#' Save a Table/Data.Frame as .tsv in the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' d <- data.frame(x=1:10, y=rnorm(10))
-#' polar_save_table_as_tsv(table = d)
-#'
-#' @param table A data.frame/data.table object.
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#'
-#' @return Nothing.
-#' @export
-polar_save_table_as_tsv <- function(table, filename_without_extension = NA) {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-  }
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = ".tsv"), sep = "\t", quote = FALSE, dec = ".", row.names = FALSE, col.names = TRUE)
-}
-
-
-###
-# save a data.frame/data.table as tsv into the sub project related tables directory
-###
-#' Save a Table/Data.Frame as .tsv in the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' d <- data.frame(x=1:10, y=rnorm(10))
-#' polar_save_table_as_tsv(table = d)
-#'
-#' @param table A data.frame/data.table object.
-#' @param table_name If the default NA is not changed then the name is the name of the table variable.
-#'
-#' @return Nothing.
-#' @export
-polar_save_table_as_rdata <- function(table, table_name = NA) {
-  if (is.na(table_name)) {
-    table_name <- as.character(sys.call()[2]) # get the table variable name
-  }
-  save(table, file = getLocalRdataFileName(table_name))
-}
-
 #' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
 #'
 #' a <- 1
-#' polar_write_rdata(a)
+#' writeRData(a)
 #'
 #' @param object the table to write
 #' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
@@ -264,7 +185,7 @@ polar_save_table_as_rdata <- function(table, table_name = NA) {
 #' @return Nothing.
 #'
 #' @export
-polar_write_rdata <- function(object = table, filename_without_extension = NA, project_sub_dir = NA) {
+writeRData <- function(object = table, filename_without_extension = NA, project_sub_dir = NA) {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
@@ -279,7 +200,7 @@ polar_write_rdata <- function(object = table, filename_without_extension = NA, p
 
 #' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
 #'
-#' a <- polar_read_rdata('a')
+#' a <- ReadRData('a')
 #'
 #' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
 #' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
@@ -288,7 +209,7 @@ polar_write_rdata <- function(object = table, filename_without_extension = NA, p
 #' @return the object
 #'
 #' @export
-polar_read_rdata <- function(filename_without_extension, project_sub_dir = NA) {
+ReadRData <- function(filename_without_extension, project_sub_dir = NA) {
   # default project_sub_dir is NA -> load tables from outputLocal/tables
   if (is.na(project_sub_dir)) {
     project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
@@ -313,75 +234,6 @@ polar_read_rdata <- function(filename_without_extension, project_sub_dir = NA) {
     }
   }
   data
-}
-
-#' Save all given data as .RData in the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' d1 <- data.frame(x=1:10, y=rnorm(10))
-#' d2 <- data.frame(x=1:10, y=runif(10))
-#' polar_save_rdata(d1, d2)
-#'
-#' @param ... A collection of variables to store.
-#'
-#' @return Nothing.
-#' @export
-polar_save_rdata <- function(...) {
-  save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, 'tables', 'tables.RData'))
-}
-
-#' Save a Result Table of an ***ANALYSIS-SCTIPT*** in the *public* `results` directory to which was created for the specific subproject.
-#'
-#' @param table the table to save
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param extension the file name extension (default is ".txt")
-#' @param sep the field separator string. Values within each row of x are separated by this string.
-#' @param dec the string to use for decimal points in numeric or complex columns: must be a single character
-#' @param collapse If there are any list columns then all list items will be pasted with this delimiter to one string
-#' and the class of the column will be changed to character. Default is ' ~ '.
-#' @param row.names either a logical value indicating whether the row names of x are to be written along with x, or a
-#' character vector of row names to be written.
-#'
-#' @return Nothing.
-#' @export
-polar_save_result_table_as_csv <- function(table, filename_without_extension = NA, extension = ".txt", sep = "\t", dec = ".", collapse = ' ~ ', row.names = FALSE) {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-  }
-  convertListColumnsToString(table, separator = collapse) # converts all list to strings
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "results", filename_without_extension, ext = extension), sep = sep, quote = FALSE, dec = dec, row.names = row.names, col.names = TRUE)
-}
-
-#' Save a Result Table of an ***ANALYSIS-SCTIPT*** in the *local* `tables` directory to which was created for the specific subproject.
-#'
-#' @param table the table to save
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param extension the file name extension (default is ".txt")
-#' @param sep the field separator string. Values within each row of x are separated by this string.
-#' @param dec the string to use for decimal points in numeric or complex columns: must be a single character
-#' @param collapse If there are any list columns then all list items will be pasted with this delimiter to one string
-#' and the class of the column will be changed to character. Default is ' ~ '.
-#' @param row.names either a logical value indicating whether the row names of x are to be written along with x, or a
-#' character vector of row names to be written.
-#'
-#' @return Nothing.
-#' @export
-polar_save_result_table_as_csv_local <- function(table, filename_without_extension = NA, extension = ".txt", sep = "\t", dec = ".", collapse = ' ~ ', row.names = FALSE) {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-  }
-  convertListColumnsToString(table, separator = collapse) # converts all list to strings
-  utils::write.table(table, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = extension), sep = sep, quote = FALSE, dec = dec, row.names = row.names, col.names = TRUE)
-}
-
-#' Save a Result of an ***ANALYSIS-SCTIPT*** in the *public* `results` directory to which was created for the specific subproject.
-#'
-#' @param ... A list of data.
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#'
-#' @return Nothing.
-#' @export
-polar_save_result_as_rdata <- function(..., filename_without_extension) {
-  save(..., file = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "results", filename_without_extension, ext = ".RData"))
 }
 
 #' Get the filename for an RData file corresponding to a table
