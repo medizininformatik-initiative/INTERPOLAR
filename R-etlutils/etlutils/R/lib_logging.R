@@ -56,45 +56,39 @@ endLogging <- function() {
   removeAnsiEscapeSequences(log_filename)
 }
 
-#' printBlockHeader
-#' @description Print Header of Block
+#' Logs a Header for the Whole Process
+#'
+#' @description Log Header of Block
 #'
 #' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
-#' @param len An integer of length 1, the length of the underline.
-#'
-#' @return NULL
+#' @param len An integer of for the length of the underline.
 #'
 #' @export
-printBlockHeader <- function(verbose = VERBOSE - 4, len = 104) {
+logBlockHeader <- function(verbose = VERBOSE, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
-  if (0 < verbose) {
+  if (!verbose) {
     cat(paste0(
       # print a bold underlined line of len spaces
-      formatStringStyle(paste0(rep(' ', len), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
-      '\n',
-      formatStringStyle('START', fg = 7, bold = TRUE),
-      '\n'
+      formatStringStyle(paste0(rep(" ", len), collapse = ""), fg = 7, bold = TRUE, underline = TRUE), "\n",
+      formatStringStyle("START", fg = 7, bold = TRUE), "\n"
     ))
   }
 }
 
-#' Print Footer of a Block
+#' Logs a Footer for the Whole Process
 #'
 #' @param verbose An integer of length 1, the verbose level. If verb is 0, no output will be produced.
-#' @param len An integer of length 1, the length of the underline.
-#'
-#' @return NULL
+#' @param len An integer for the length of the underline.
 #'
 #' @export
-printBlockFooter <- function(verbose = VERBOSE - 4, len = 104) {
+logBlockFooter <- function(verbose = VERBOSE, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
-  if (0 < verbose) {
+  if (!verbose) {
     cat(paste0(
       # print bold underlined word END
-      formatStringStyle('END', fg = 7, bold = TRUE, underline = TRUE),
+      formatStringStyle("END", fg = 7, bold = TRUE, underline = TRUE),
       # fill up to length len with bold unerlined spaces
-      formatStringStyle(paste0(rep(' ', len - 3), collapse = ''), fg = 7, bold = TRUE, underline = TRUE),
-      '\n'
+      formatStringStyle(paste0(rep(" ", len - 3), collapse = ""), fg = 7, bold = TRUE, underline = TRUE),"\n"
     ))
   }
 }
@@ -106,15 +100,15 @@ printBlockFooter <- function(verbose = VERBOSE - 4, len = 104) {
 #' @param process The function representing the process to be executed.
 #' @return None (prints clock information and handles errors)
 #'
-#' @seealso printBlockHeader, printClock, printBlockFooter, stopOnError
+#' @seealso logBlockHeader, printClock, logBlockFooter, stopOnError
 #'
 #' @export
 runProcess <- function(process) {
-  printBlockHeader()
+  logBlockHeader()
   err <- try(process, silent = TRUE)
   printClock()
   warnings()
-  printBlockFooter()
+  logBlockFooter()
   stopOnError(err)
 }
 
@@ -125,7 +119,7 @@ finalize <- function() {
   printClock()
   warnings()
   savePerformance()
-  printBlockFooter()
+  logBlockFooter()
   ###
   # Save all console logs
   ###
@@ -373,10 +367,6 @@ runs <- function(message, process, verbose) {
 #'
 #' @return This function does not return a value but writes directly to the file, overwriting the
 #'         content with the cleaned text.
-#'
-#' @note This function uses regular expressions (regex) to remove the escape sequences. The regex
-#'       used is designed to handle common ANSI sequences and may not capture all specialized or
-#'       extended sequences.
 #'
 #' @export
 removeAnsiEscapeSequences <- function(filename) {

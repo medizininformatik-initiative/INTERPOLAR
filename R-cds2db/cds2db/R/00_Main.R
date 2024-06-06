@@ -32,7 +32,7 @@ retrieve <- function() {
   ###
   etlutils::startLogging('retrieval-total')
 
-  etlutils::printBlockHeader()
+  etlutils::logBlockHeader()
 
   etlutils::runLevel1('Run Retrieve', {
 
