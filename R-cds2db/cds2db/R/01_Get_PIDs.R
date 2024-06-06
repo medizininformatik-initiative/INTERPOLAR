@@ -45,7 +45,6 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     }
   }
   converted_filter_patterns
-
 }
 
 #' Get FHIR table description based on filter patterns.
@@ -94,6 +93,11 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #' requiring all subconditions to be met for the condition to be satisfied.
 #'
 filterResources <- function(resources, filter_patterns) {
+
+  # nothing todo
+  if (!length(filter_patterns)) {
+    return(resources)
+  }
 
   # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
   resources[, Filter_Column_Keep := FALSE]
@@ -206,7 +210,7 @@ initEncounterPeriodToDownload <- function() {
     }
     days_in_past <- days_in_past * 24 * 3600 # this value must be subtracted from a date (days in seconds)
     if (exists('DEBUG_PERIOD_START')) {
-      PERIOD_START <<- as.Date(DEBUG_PERIOD_START) - days_in_past
+      PERIOD_START <<- as.Date(as.POSIXct(DEBUG_PERIOD_START) - days_in_past)
     } else {
       PERIOD_START <<- as.Date(Sys.time() - days_in_past)
     }

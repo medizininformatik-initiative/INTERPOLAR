@@ -140,7 +140,9 @@ finalize <- function() {
 #'
 #' @export
 stopWithError <- function(...) {
-  stop(cat_red(paste(c(...))))
+  # do not change the paste(c(...), collapse = "") to paste0 !!! The result is not the same!
+  err <- try(stop(cat_red(paste(c(...), collapse = ""))), silent = TRUE)
+  stopOnError(err)
 }
 
 #' Stop on Error

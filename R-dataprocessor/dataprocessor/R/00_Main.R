@@ -40,29 +40,24 @@ dataprocessor <- function() {
   etlutils::start_logging('retrieval-total')
 
   etlutils::START__()
-  etlutils::run_out('Run Retrieve', {
+
+  etlutils::run_out('Run Dataprocessor', {
+
+    etlutils::runProcess(etlutils::run_in('Create Frontend Tables for Patient and Encounter', {
+      createFrontendTables()
+    }))
 
     # steps to do:
     # correcting laboratory codes, units and values
     # ...
     # MRP calculation
 
-    # Initialization
-    etlutils::startProcess(etlutils::run_in('Initialization', {
-      init()
-    }))
-
-    # Calculate Drug Disease MPRS
-    etlutils::startProcess(etlutils::run_in('Calculate Drug Disease MRPs', {
-      calculateDrugDiseaseMRPs()
-    }))
+    # # Calculate Drug Disease MPRS
+    # etlutils::runProcess(etlutils::run_in('Calculate Drug Disease MRPs', {
+    #   calculateDrugDiseaseMRPs()
+    # }))
 
   })
-  etlutils::printClock()
-  warnings()
-  etlutils::END__()
-  ###
-  # Save all console logs
-  ###
-  etlutils::end_logging()
+
+  etlutils::finalize()
 }

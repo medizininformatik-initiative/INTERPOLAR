@@ -58,6 +58,33 @@ addTableRow <- function(dt, ...) {
   )
 }
 
+#' Add Empty Rows to a Data Table
+#'
+#' This function adds a specified number of empty rows to a given data.table.
+#' The empty rows have the same structure as the original data.table but contain NA values.
+#'
+#' @param dt A data.table to which empty rows will be added.
+#' @param num_rows An integer specifying the number of empty rows to add.
+#'
+#' @return A data.table with the specified number of empty rows added.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(id = 1:3, value = c(10, 20, 30))
+#' dt_extended <- addEmptyRows(dt, 2)
+#' print(dt_extended)
+#'
+#' @export
+addEmptyRows <- function(dt, num_rows) {
+  # Create an empty data.table with the same structure as dt
+  empty_dt <- dt[0][rep(NA_integer_, num_rows)]
+
+  # Add the empty rows to dt
+  dt_extended <- rbind(dt, empty_dt)
+
+  return(dt_extended)
+}
+
 #'
 #' Convert a list into a matrix with specified column count and fill value.
 #'

@@ -17,7 +17,6 @@ isSimpleNA <- function(x) {
   is.atomic(x) && length(x) == 1 && is.na(x)
 }
 
-#'
 #' Check if a value is a simple true value (TRUE) or not zero (0).
 #'
 #' This function evaluates whether the input value is an atomic element, has a length of 1,
@@ -46,7 +45,6 @@ isSimpleTrueOrNot0 <- function(x) {
   is.atomic(x) && length(x) == 1 && !is.na(x) && !is.character(x) && x
 }
 
-#'
 #' Check if a value is a simple false value (FALSE) or zero (0).
 #'
 #' This function evaluates whether the input value is an atomic element, has a length of 1,
@@ -156,11 +154,7 @@ isDebug <- function() exists('DEBUG') && DEBUG
 #' @return err
 #' @export
 checkError <- function(err, expr_ok = {cat_ok()}, expr_err = {cat_error()}) {
-  if (!inherits(err, 'try-error')) {
-    expr_ok
-  } else {
-    expr_err
-  }
+  if (isError(err)) expr_err else expr_ok
 }
 
 #' Convert Numbers to Verbose Number Representations

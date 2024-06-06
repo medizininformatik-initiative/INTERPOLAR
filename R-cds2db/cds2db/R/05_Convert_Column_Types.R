@@ -6,40 +6,41 @@
 #' @param column_names A character vector of column names to be processed.
 #' @param sep A character string to split the multi-value fields.
 #' @param brackets A character vector of length 2, where the first element is the opening bracket and the second element is the closing bracket.
+#' @param collapse A character string specifying the separator used to collapse the joined values. Default is a space (" ").
 #'
 #' @return The modified data.table with cleaned and joined multi-value fields.
 #'
 #' @examples
 #' library(data.table)
-#' dt <- data.table(col1 = c("[1]a|[1]b|[2]c", "[1]d|[1]e", "[3]f|[3]g|[4]h"))
-#' column_names <- c("col1")
+#' dt <- data.table(name.given = c("[1.1]Marie|[1.2]Anne|[1.3]Lea|[2.1]Marie2|[2.2]Anne2|[2.3]Lea2",
+#' "[1]Kai|[2]Ingo", "[1.1]Mark|[1.3]Ben|[2.2]Tim"))
+#' column_names <- c("name.given")
 #' sep <- "|"
 #' brackets <- c("[", "]")
 #' joinMultiValuesInCrackedFHIRData(dt, column_names, sep, brackets)
 #'
 #' @export
-joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets) {
+joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, collapse = " ") {
   for (column_name in column_names) {
     for (i in 1:nrow(dt)) {
       # Check if the cell is not empty
       if (length(dt[[column_name]][i])) {
-        # Check if the cell starts with "["
+        # Check if the cell starts with sep
         if (grepl("^\\[", dt[[column_name]][i])) {
-          # Remove extra brackets and split the string by "|"
-          split_string <- strsplit(gsub(paste0("\\", brackets[1], "\\d+\\", brackets[2]), "",
-                                        dt[[column_name]][i], perl = TRUE), sep, fixed = TRUE)[[1]]
+          #split the string by sep
+          split_string <- strsplit(dt[[column_name]][i], sep, fixed = TRUE)[[1]]
           # Initialize the index vector and previous index
           indices <- c()
           prev_index <- NULL
           # Iterate through the vector and find the first indices for each new pattern
           for (vec in seq_along(split_string)) {
-            index <- as.numeric(gsub(paste0("\\", brackets[1], "|\\..*"), "", split_string[vec]))
+            index <- as.numeric(stringr::str_extract(split_string[vec], paste0("(?<=\\", brackets[1], ")\\d")))
             if (is.null(prev_index) || is.na(prev_index) || index != prev_index) {
               indices <- c(indices, vec)
               prev_index <- index
             }
           }
-          # Remove "[]" for all subsequent elements except the first occurrence
+          # Remove brackets for all subsequent elements except the first occurrence an collapse values
           result <- paste(ifelse(seq_along(split_string) %in% indices, split_string,
                                  gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
                                       split_string, perl = TRUE)), collapse = " ")
@@ -125,40 +126,6 @@ fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name
   return(melted_data)
 }
 
-#' Retrieve Untyped RAW Data from Database
-#'
-#' This function connects to a database, retrieves the table names, reads the tables, and returns
-#' the data as a list of data frames.
-#'
-#' @return A list of data frames where each data frame corresponds to a table from the database.
-#'
-getUntypedRAWDataFromDatabase <- function() {
-
-  db_connection <- etlutils::dbConnect(
-    user = DB_CDS2DB_USER,
-    password = DB_CDS2DB_PASSWORD,
-    dbname = DB_GENERAL_NAME,
-    host = DB_GENERAL_HOST,
-    port = DB_GENERAL_PORT,
-    schema = DB_CDS2DB_SCHEMA_OUT
-  )
-
-  db_table_names <- etlutils::dbListTables(db_connection)
-  # Display the table names
-  print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
-  if (is.null(db_table_names)) {
-    warning("There are no tables found in database")
-  }
-
-  resource_tables <- list()
-  for (table_name in db_table_names) {
-    # the database tables here are tables of a View. Per convention their prefix is "v_" -> remove this prefix
-    resource_table_name <- sub("^v_", "", table_name)
-    resource_tables[[resource_table_name]] <- etlutils::dbReadTable(db_connection, table_name)
-  }
-  return(resource_tables)
-}
-
 #' Join Unmeltable Multi-Entries in Resource Tables
 #'
 #' This function joins specific multi-entry columns in the patient resource table
@@ -184,6 +151,33 @@ joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions)
   return(resource_tables)
 }
 
+#' Check if Data Table is Indexed
+#'
+#' This function checks if a data table contains indexed columns based on a specified pattern in the
+#' `fhir_table_description` object. It returns `TRUE` if any character column contains values matching the
+#' index pattern, otherwise `FALSE`.
+#'
+#' @param dt A `data.table` object to be checked.
+#' @param fhir_table_description An object containing the table description, including the brackets used for indexing.
+#'
+#' @return A logical value indicating whether the data table is indexed (`TRUE`) or not (`FALSE`).
+#'
+isIndexedTable <- function(dt, fhir_table_description) {
+  brackets <- fhir_table_description@brackets
+  indices_pattern <- paste0("^\\", brackets[1], ".*\\", brackets[2])
+  for (col in seq_len(ncol(dt))) {
+    if (is.character(dt[[col]])) {
+      for (row in seq_len(nrow(dt))) {
+        value <- dt[[col]][row]
+        if (grepl(indices_pattern, value)) {
+          return(TRUE)
+        }
+      }
+    }
+  }
+  return(FALSE)
+}
+
 #' Melt Cracked FHIR Data
 #'
 #' This function melts cracked FHIR data in the resource tables according to the provided FHIR table descriptions.
@@ -198,7 +192,13 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
-    resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
+    if (isIndexedTable(resource_tables[[i]], fhir_table_description)) {
+      print(paste0("Melt table ", resource_name))
+      nrow_before_melt <- nrow(resource_tables[[i]])
+      resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
+      nrow_after_melt <- nrow(resource_tables[[i]])
+      print(paste("Resource table", resource_name, nrow_before_melt, "rows to", nrow_after_melt, "rows."))
+    }
   }
   return(resource_tables)
 }
@@ -259,8 +259,12 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   # the following commented codeline adds a second name to all patient names. So you can
   # 'test' the follwing join function
   #resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
-  resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
-  resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
+  etlutils::run_in_in("Join string multi entries in cracked FHIR data", {
+    resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
+  })
+  etlutils::run_in_in("Melt cracked FHIR data", {
+    resource_tables <- meltCrackedFHIRData(resource_tables, fhir_table_descriptions)
+  })
 
   # undo the tables renaming
   resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions, FALSE)
@@ -273,38 +277,16 @@ convertTypes <- function(resource_tables, fhir_table_descriptions) {
   convertType(resource_tables, "boolean", etlutils::convertBooleanFormat)
 
   for (i in seq_along(resource_tables)) {
+
+    # rename the id column from the raw tables from tablename_id to tablename_raw_id
+    tablename <- tolower(names(resource_tables)[i])
+    pattern <- paste0("^", tablename, "_id$")
+    raw_id_column <- grep(pattern, colnames(resource_tables[[i]])) # should be only 1 column
+    colnames(resource_tables[[i]])[raw_id_column] <- paste0(tablename, "_raw_id")
+
     polar_write_rdata(resource_tables[[i]], tolower(names(resource_tables)[i]))
   }
   return(resource_tables)
-}
-
-#' Replace Column Names in a Data Table
-#'
-#' This function replaces old column names with new column names in a data.table.
-#' The columns are replaced by comparing the names, not by their index positions.
-#' The same indices of the old and new names vectors indicate the old and new names respectively.
-#'
-#' @param dt A data.table where the column names will be replaced.
-#' @param old_names A character vector of old column names.
-#' @param new_names A character vector of new column names.
-#'
-#' @return A data.table with updated column names.
-#'
-#' @examples
-#' library(data.table)
-#' dt <- data.table(f = 9:11, b = 4:6, g = 7:9, a = 1:3)
-#' old_names <- c("a", "b")
-#' new_names <- c("x", "y")
-#' replaceColumnNames(dt, old_names, new_names)
-#'
-#' @export
-replaceColumnNames <- function(dt, old_names, new_names) {
-  for (i in seq_along(old_names)) {
-    old_name <- old_names[i]
-    new_name <- new_names[i]
-    names(dt)[which(names(dt) == old_name)] <- new_name
-  }
-  return(dt)
 }
 
 #' Replace Column Names in Resource Tables
@@ -331,7 +313,7 @@ replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, n
       old_names <- fhir_table_description@cols@.Data
       new_names <- fhir_table_description@cols@names
     }
-    resource_tables[[i]] <- replaceColumnNames(resource_tables[[i]], old_names, new_names)
+    resource_tables[[i]] <- data.table::setnames(resource_tables[[i]], old_names, new_names)
   }
   return(resource_tables)
 }
