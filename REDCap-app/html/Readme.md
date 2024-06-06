@@ -39,10 +39,11 @@
         * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten. Dies kann zu einem späteren Zeitpunkt erfolgen. Ist im unteren Bereich "CONGRATULATIONS!" zu lesen, können Sie die REDCap mit Klick auf [http://127.0.0.1:8082/redcap/](http://127.0.0.1:8082/redcap/) starten.
      * Hinweis: Diese Schritte müssen nur wiederholt werden, wenn eine neue REDCap Version zum Einsazt kommen soll. Das Update kann auch über die REDCap Weboberfläche im "Control Center" eingespielt werden.
   1. Das INTERPOLAR-Projekt in REDCap importieren:
-     * Klicken Sie auf "New Project" (Menu-Leiste oben).
-     * Geben Sie dem Projekt einen Titel, z.B. INTERPOLAR-dev
-     * Wählen Sie bei "Project's purpose" aus: "Practice / Just for fun"
-     * wählen Sie bei "Project creation option" &rarr; "Upload a REDCap project XML file" und importieren Sie diese aus dem Ordner _REDCap-app/INTERPOLARDev*.xml_. Rufen Sie den Browser nicht auf dem Computer auf, auf dem docker-compose ausgeführt ist, könenn Sie sich die Datei _[INTERPOLARDev*.xml](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/REDCap-app/INTERPOLARDev_2024-02-15_1502.REDCap.xml)_ aus dem GitHub-Repo herunterladen.
+     * Die INTERPOLAR REDCap Projekt Datei ist in INTERPOLAR erarbeitet worden und steht im MII SharePoint Ordner [Release v0.2.x](https://tmfev.sharepoint.com/:f:/r/sites/tmf/mi-i/Modul3Projekte/INTERPOLAR/5_Referenzarchitektur/eDataCapture/Release%20v0.2.x?csf=1&web=1&e=7bycOQ) verfügbar. Bitte laden Sie sich die Datei "INTERPOLARDev_*.**REDCap.xml**" herunter.
+     * Wechseln Sie im Browser zur REDCap Weboberfläche und klicken Sie auf "New Project" (Menu-Leiste oben).
+     * Geben Sie dem Projekt einen Titel, z.B. INTERPOLAR-1a
+     * Wählen Sie bei "Project's purpose" aus: "Quality Improvement"
+     * wählen Sie bei "Project creation option" &rarr; "Upload a REDCap project XML file" und importieren Sie die zuvor vom MII SharePoint heruntergeladene REDCap Projektdatei "INTERPOLARDev_*.REDCap.xml".
      * Klicken Sie auf "Create Project"
      * Unter "My Projects" einscheint nun das angelegte Projekt.
      ![REDCap-Projekt importieren](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/0bfc855c-8586-4c82-8d58-84615ccb1a8f)
