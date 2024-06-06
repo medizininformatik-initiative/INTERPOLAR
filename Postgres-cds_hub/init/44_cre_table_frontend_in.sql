@@ -27,9 +27,9 @@ fall_station varchar, -- Station wie vom DIZ Definiert
 fall_aufn_dat date, -- Aufnahmedatum
 fall_aufn_diag varchar, -- <div class=rich-text-field-label><p><span style=color: #e03e2d;>Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div>
 fall_gewicht_aktuell double precision, -- aktuelles Gewicht (Kg)
-fall_gewicht_aktl_einheit double precision, -- 
+fall_gewicht_aktl_einheit varchar, -- 
 fall_groesse double precision, -- Größe (cm)
-fall_groesse_einheit double precision, -- 
+fall_groesse_einheit varchar, -- 
 fall_bmi double precision, -- BMI
 fall_nieren_insuf_chron varchar, -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz
 fall_nieren_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class=rich-text-field-label><p>aktuelles Ausmaß</p></div>
@@ -160,36 +160,14 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 
-GRANT SELECT ON TABLE db2frontend_in.patient_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.patient_fe TO db2frontend_user;
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.patient_fe TO db_user;
-GRANT SELECT ON TABLE db2frontend_in.patient_fe TO db_log_user;
-GRANT TRIGGER ON db2frontend_in.patient_fe TO db2frontend_user;
-GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-
-CREATE OR REPLACE FUNCTION db2frontend_in.patient_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Eintragen des aktuellen Zeitpunkts
-    IF NEW.input_datetime IS NULL THEN
-        NEW.input_datetime := CURRENT_TIMESTAMP;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER patient_fe_tr_ins_tr
-  BEFORE INSERT
-  ON  db2frontend_in.patient_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE  db2frontend_in.patient_fe_tr_ins_fkt();
-
 --SQL Role / Trigger in Schema db2frontend_in
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.patient_fe TO db2frontend_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.patient_fe TO db_user;
 GRANT SELECT ON TABLE db2frontend_in.patient_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.patient_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+ALTER TABLE db2frontend_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
+GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.patient_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -213,6 +191,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.fall_fe TO db_user;
 GRANT SELECT ON TABLE db2frontend_in.fall_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.fall_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+ALTER TABLE db2frontend_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
+GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.fall_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -236,6 +216,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.medikationsanalyse_
 GRANT SELECT ON TABLE db2frontend_in.medikationsanalyse_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.medikationsanalyse_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+ALTER TABLE db2frontend_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
+GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.medikationsanalyse_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -259,6 +241,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.mrpdokumentation_va
 GRANT SELECT ON TABLE db2frontend_in.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.mrpdokumentation_validierung_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
+GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.mrpdokumentation_validierung_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -282,6 +266,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.risikofaktor_fe TO 
 GRANT SELECT ON TABLE db2frontend_in.risikofaktor_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.risikofaktor_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+ALTER TABLE db2frontend_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
+GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.risikofaktor_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -305,6 +291,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.trigger_fe TO db_us
 GRANT SELECT ON TABLE db2frontend_in.trigger_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.trigger_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+ALTER TABLE db2frontend_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
+GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.trigger_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$

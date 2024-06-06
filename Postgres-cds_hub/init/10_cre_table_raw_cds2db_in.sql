@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_serviceprovider_display varchar,   -- serviceProvider/display (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "patient_raw" in schema "cds2db_in"
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   pat_address_postalcode varchar,   -- address/postalCode (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "condition_raw" in schema "cds2db_in"
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_note_text varchar,   -- note/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medication_raw" in schema "cds2db_in"
@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   med_ingredient_isactive varchar,   -- ingredient/isActive (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medicationrequest_raw" in schema "cds2db_in"
@@ -525,7 +525,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_substitution_reason_text varchar,   -- substitution/reason/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medicationadministration_raw" in schema "cds2db_in"
@@ -643,7 +643,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_dosage_ratequantity_code varchar,   -- dosage/rateQuantity/code (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "medicationstatement_raw" in schema "cds2db_in"
@@ -862,7 +862,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_dosage_maxdoseperlifetime_code varchar,   -- dosage/maxDosePerLifetime/code (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "observation_raw" in schema "cds2db_in"
@@ -1002,7 +1002,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_hasmember_display varchar,   -- hasMember/display (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "diagnosticreport_raw" in schema "cds2db_in"
@@ -1055,7 +1055,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_conclusioncode_text varchar,   -- conclusionCode/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "servicerequest_raw" in schema "cds2db_in"
@@ -1122,7 +1122,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_locationcode_text varchar,   -- locationCode/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "procedure_raw" in schema "cds2db_in"
@@ -1199,7 +1199,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_note_text varchar,   -- note/text (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "consent_raw" in schema "cds2db_in"
@@ -1242,7 +1242,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   cons_provision_dataperiod_end varchar,   -- provision/dataPeriod/end (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "location_raw" in schema "cds2db_in"
@@ -1266,7 +1266,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
   loc_alias varchar,   -- alias (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 -- Table "pids_per_ward_raw" in schema "cds2db_in"
@@ -1277,7 +1277,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   patient_id varchar,   -- patient_id (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar(50) DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
 );
 
 
@@ -1667,6 +1667,8 @@ CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
 ------------------------------------------------------
 -- Comments on Tables in Schema "cds2db_in" --
 ------------------------------------------------------
+-- Output off
+\o /dev/null
 
 comment on column cds2db_in.encounter_raw.encounter_id is 'Primary key of the entity';
 comment on column cds2db_in.encounter_raw.enc_id is 'id (varchar)';
@@ -2891,3 +2893,6 @@ comment on column cds2db_in.pids_per_ward_raw.last_check_datetime is 'Time at wh
 comment on column cds2db_in.pids_per_ward_raw.current_dataset_status is 'Processing status of the data record';
 
 
+
+-- Output on
+\o

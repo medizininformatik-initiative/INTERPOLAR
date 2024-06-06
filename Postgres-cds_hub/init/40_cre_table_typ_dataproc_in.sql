@@ -27,9 +27,9 @@ fall_station varchar, -- Station wie vom DIZ Definiert
 fall_aufn_dat date, -- Aufnahmedatum
 fall_aufn_diag varchar, -- <div class=rich-text-field-label><p><span style=color: #e03e2d;>Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div>
 fall_gewicht_aktuell double precision, -- aktuelles Gewicht (Kg)
-fall_gewicht_aktl_einheit double precision, -- 
+fall_gewicht_aktl_einheit varchar, -- 
 fall_groesse double precision, -- Größe (cm)
-fall_groesse_einheit double precision, -- 
+fall_groesse_einheit varchar, -- 
 fall_bmi double precision, -- BMI
 fall_nieren_insuf_chron varchar, -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz
 fall_nieren_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class=rich-text-field-label><p>aktuelles Ausmaß</p></div>
@@ -167,6 +167,7 @@ GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.patient_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 ALTER TABLE db2dataprocessor_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.patient_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -192,6 +193,7 @@ GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 ALTER TABLE db2dataprocessor_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.fall_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -217,6 +219,7 @@ GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.medikationsanalyse_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -242,6 +245,7 @@ GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_
 GRANT TRIGGER ON db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.mrpdokumentation_validierung_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -267,6 +271,7 @@ GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 ALTER TABLE db2dataprocessor_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.risikofaktor_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -292,6 +297,7 @@ GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_log_user;
 GRANT TRIGGER ON db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 ALTER TABLE db2dataprocessor_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db2dataprocessor_in.db2dataprocessor_in_seq'));
+GRANT USAGE ON db2dataprocessor_in.db2dataprocessor_in_seq TO db2dataprocessor_user;
 
 CREATE OR REPLACE FUNCTION db2dataprocessor_in.trigger_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -309,6 +315,9 @@ CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
   ON  db2dataprocessor_in.trigger_fe
   FOR EACH ROW
   EXECUTE PROCEDURE  db2dataprocessor_in.trigger_fe_tr_ins_fkt();
+
+
+
 
 -- Comment on Table in Schema db2dataprocessor_in
 comment on column db2dataprocessor_in.patient_fe.record_id is 'Record ID RedCap';

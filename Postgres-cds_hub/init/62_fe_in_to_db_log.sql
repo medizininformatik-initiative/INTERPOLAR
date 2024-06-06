@@ -1,4 +1,3 @@
-------------------------------
 CREATE OR REPLACE FUNCTION db.copy_fe_fe_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
@@ -6,10 +5,11 @@ DECLARE
     current_record record;
     data_count integer;
 BEGIN
-    -- Copy Functionname: copy_fe_fe_in_to_db_log - From: db2frontend_in -> To: db_log
+    -- Copy Functionname: copy_fe_fe_iin_to_db_log - From: db2frontend_in -> To: db_log
     -- Start patient_fe
     FOR current_record IN (SELECT * FROM db2frontend_in.patient_fe)
         LOOP
+        BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.patient_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -54,7 +54,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM db2frontend_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
             ELSE
-	            UPDATE db_log.patient_fe_raw target_record
+	        UPDATE db_log.patient_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -67,13 +67,24 @@ BEGIN
                         COALESCE(target_record.pat_geschlecht::text,'#NULL#') = COALESCE(current_record.pat_geschlecht::text,'#NULL#') AND
                         COALESCE(target_record.patient_complete::text,'#NULL#') = COALESCE(current_record.patient_complete::text,'#NULL#')
                 ;
+
+                -- Delete updatet datasets
+                DELETE FROM db2frontend_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
             END IF;
+        EXCEPTION
+            WHEN OTHERS THEN
+                UPDATE db2frontend_in.patient_fe
+                SET last_check_datetime = CURRENT_TIMESTAMP
+                , current_dataset_status = 'ERROR func: copy_fe_fe_iin_to_db_log Msg:'||error_message
+                WHERE patient_fe_id = current_record.patient_fe_id;
+        END;
     END LOOP;
     -- END patient_fe
 
     -- Start fall_fe
     FOR current_record IN (SELECT * FROM db2frontend_in.fall_fe)
         LOOP
+        BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.fall_fe target_record
             WHERE   COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
@@ -166,7 +177,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM db2frontend_in.fall_fe WHERE fall_fe_id = current_record.fall_fe_id;
             ELSE
-	            UPDATE db_log.fall_fe target_record
+	        UPDATE db_log.fall_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
@@ -195,13 +206,24 @@ BEGIN
                         COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
                         COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
                 ;
+
+                -- Delete updatet datasets
+                DELETE FROM db2frontend_in.fall_fe WHERE fall_fe_id = current_record.fall_fe_id;
             END IF;
+        EXCEPTION
+            WHEN OTHERS THEN
+                UPDATE db2frontend_in.fall_fe
+                SET last_check_datetime = CURRENT_TIMESTAMP
+                , current_dataset_status = 'ERROR func: copy_fe_fe_iin_to_db_log Msg:'||error_message
+                WHERE fall_fe_id = current_record.fall_fe_id;
+        END;
     END LOOP;
     -- END fall_fe
 
     -- Start medikationsanalyse_fe
     FOR current_record IN (SELECT * FROM db2frontend_in.medikationsanalyse_fe)
         LOOP
+        BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.medikationsanalyse_fe target_record
             WHERE   COALESCE(target_record.meda_id_pk::text,'#NULL#') = COALESCE(current_record.meda_id_pk::text,'#NULL#') AND
@@ -255,7 +277,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM db2frontend_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
             ELSE
-	            UPDATE db_log.medikationsanalyse_fe target_record
+	        UPDATE db_log.medikationsanalyse_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.meda_id_pk::text,'#NULL#') = COALESCE(current_record.meda_id_pk::text,'#NULL#') AND
@@ -271,13 +293,24 @@ BEGIN
                         COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
                         COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
                 ;
+
+                -- Delete updatet datasets
+                DELETE FROM db2frontend_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
             END IF;
+        EXCEPTION
+            WHEN OTHERS THEN
+                UPDATE db2frontend_in.medikationsanalyse_fe
+                SET last_check_datetime = CURRENT_TIMESTAMP
+                , current_dataset_status = 'ERROR func: copy_fe_fe_iin_to_db_log Msg:'||error_message
+                WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
+        END;
     END LOOP;
     -- END medikationsanalyse_fe
 
     -- Start mrpdokumentation_validierung_fe
     FOR current_record IN (SELECT * FROM db2frontend_in.mrpdokumentation_validierung_fe)
         LOOP
+        BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.mrpdokumentation_validierung_fe target_record
             WHERE   COALESCE(target_record.mrp_id_pk::text,'#NULL#') = COALESCE(current_record.mrp_id_pk::text,'#NULL#') AND
@@ -385,7 +418,7 @@ BEGIN
                 -- Delete importet datasets
                 DELETE FROM db2frontend_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
             ELSE
-	            UPDATE db_log.mrpdokumentation_validierung_fe target_record
+	        UPDATE db_log.mrpdokumentation_validierung_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.mrp_id_pk::text,'#NULL#') = COALESCE(current_record.mrp_id_pk::text,'#NULL#') AND
@@ -419,14 +452,24 @@ BEGIN
                         COALESCE(target_record.mrp_wiedervorlage::text,'#NULL#') = COALESCE(current_record.mrp_wiedervorlage::text,'#NULL#') AND
                         COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                 ;
+
+                -- Delete updatet datasets
+                DELETE FROM db2frontend_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
             END IF;
+        EXCEPTION
+            WHEN OTHERS THEN
+                UPDATE db2frontend_in.mrpdokumentation_validierung_fe
+                SET last_check_datetime = CURRENT_TIMESTAMP
+                , current_dataset_status = 'ERROR func: copy_fe_fe_iin_to_db_log Msg:'||error_message
+                WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
+        END;
     END LOOP;
     -- END mrpdokumentation_validierung_fe
 END;
 $$ LANGUAGE plpgsql;
 
--- CopyJob FrontEnd-Data from Frontend 2 DB_log
+
+-- CopyJob FrontEnd-Data Dataproc_in 2 DB_log
 SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_fe_fe_in_to_db_log();');
 -----------------------------
-
 

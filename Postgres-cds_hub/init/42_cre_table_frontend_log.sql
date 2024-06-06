@@ -27,9 +27,9 @@ fall_station varchar, -- Station wie vom DIZ Definiert
 fall_aufn_dat date, -- Aufnahmedatum
 fall_aufn_diag varchar, -- <div class=rich-text-field-label><p><span style=color: #e03e2d;>Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div>
 fall_gewicht_aktuell double precision, -- aktuelles Gewicht (Kg)
-fall_gewicht_aktl_einheit double precision, -- 
+fall_gewicht_aktl_einheit varchar, -- 
 fall_groesse double precision, -- Größe (cm)
-fall_groesse_einheit double precision, -- 
+fall_groesse_einheit varchar, -- 
 fall_bmi double precision, -- BMI
 fall_nieren_insuf_chron varchar, -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz
 fall_nieren_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class=rich-text-field-label><p>aktuelles Ausmaß</p></div>
@@ -167,6 +167,7 @@ GRANT SELECT ON TABLE db_log.patient_fe TO db_log_user;
 GRANT TRIGGER ON db_log.patient_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 ALTER TABLE db_log.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db_log.db_log_seq'));
+GRANT USAGE ON db_log.db_log_seq TO db_log_user;
 
 CREATE OR REPLACE FUNCTION db_log.patient_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -192,6 +193,7 @@ GRANT SELECT ON TABLE db_log.fall_fe TO db_log_user;
 GRANT TRIGGER ON db_log.fall_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 ALTER TABLE db_log.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db_log.db_log_seq'));
+GRANT USAGE ON db_log.db_log_seq TO db_log_user;
 
 CREATE OR REPLACE FUNCTION db_log.fall_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -217,6 +219,7 @@ GRANT SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user;
 GRANT TRIGGER ON db_log.medikationsanalyse_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 ALTER TABLE db_log.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db_log.db_log_seq'));
+GRANT USAGE ON db_log.db_log_seq TO db_log_user;
 
 CREATE OR REPLACE FUNCTION db_log.medikationsanalyse_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -242,6 +245,7 @@ GRANT SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT TRIGGER ON db_log.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 ALTER TABLE db_log.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db_log.db_log_seq'));
+GRANT USAGE ON db_log.db_log_seq TO db_log_user;
 
 CREATE OR REPLACE FUNCTION db_log.mrpdokumentation_validierung_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -267,6 +271,7 @@ GRANT SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user;
 GRANT TRIGGER ON db_log.risikofaktor_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 ALTER TABLE db_log.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db_log.db_log_seq'));
+GRANT USAGE ON db_log.db_log_seq TO db_log_user;
 
 CREATE OR REPLACE FUNCTION db_log.risikofaktor_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -292,6 +297,7 @@ GRANT SELECT ON TABLE db_log.trigger_fe TO db_log_user;
 GRANT TRIGGER ON db_log.trigger_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 ALTER TABLE db_log.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db_log.db_log_seq'));
+GRANT USAGE ON db_log.db_log_seq TO db_log_user;
 
 CREATE OR REPLACE FUNCTION db_log.trigger_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
