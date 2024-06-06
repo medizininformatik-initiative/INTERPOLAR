@@ -233,14 +233,14 @@ createFrontendTables <- function() {
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
-        etlutils::cat_error(paste0("No encounter found for PID ", pid))
+        etlutils::catErrorMessage(paste0("No encounter found for PID ", pid))
         next
       }
 
       unique_encounter_IDs <- unique(pid_encounters$enc_id)
       # if there are errors in the data then there can be more than one encounter
       if (length(unique_encounter_IDs) > 1) {
-        etlutils::cat_error(paste0("Multiple encounters found for PID ", pid, "\n",
+        etlutils::catErrorMessage(paste0("Multiple encounters found for PID ", pid, "\n",
                                    "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
