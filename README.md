@@ -8,6 +8,12 @@ Dieses Repository enthält Module der KDS (Kerndatensatz) Pipeline zur Verarbeit
 
 Hier werden alle verwendeten Module aufgelistet. Detailliertere Beschreibungen befinden sich im jeweiligen Modul-Ordner.
 
+### Postgres-cds_hub
+
+Dieser Ordner enthält die CDS-HUB DB (cds_hub_db).
+Eine Beschreibung befindet sich unter [Postgres-cds_hub/DB_description.md](./Postgres-cds_hub/DB_description.md). \
+Eine Beschreibung, wie der Zugriff erfolgt befindet sich unter [Postgres-cds_hub/Readme.md](./Postgres-cds_hub/Readme.md) .
+
 ### R-etlutils
 
 Dieser Ordner ist eine Sammlung von R Funktionen, die von allen R-Modulen des Gesamtprojektes gemeinsam genutzt werden.
