@@ -9,3 +9,4 @@ library(etlutils)
 library(db2frontend)
 
 copyDB2Redcap()
+copyRedcap2DB()
