@@ -29,7 +29,7 @@ getEncounters <- function(table_description) {
     #for date restriction, identify the specification required in endpoint
     # do we need {sa, eb} or {ge, le}
     #
-    runLevel3line('Create Test Request for Search Parameter \'sa\' and \'eb\'', {
+    runLevel3Line('Create Test Request for Search Parameter \'sa\' and \'eb\'', {
       request <- fhircrackr::fhir_url(FHIR_SERVER_ENDPOINT, 'Encounter',
                                       parameters = c(
                                         'date' = paste0('sa', PERIOD_START),
@@ -105,14 +105,14 @@ getEncounters <- function(table_description) {
       )
     })
 
-    runLevel3line('change column classes', {
+    runLevel3Line('change column classes', {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
     printAllTables(table_enc)
 
     # TODO: das hier muss wahrscheinlich für alle Resourcen nochmal getan werden, die wir dann endgültig vom FHIR-Server herunterladen
-    # runLevel3line('Fix Dates in Encounter Table', {
+    # runLevel3Line('Fix Dates in Encounter Table', {
     #   # splits the provided dates into day and time columns, if data is available
     #   # converts fhir dates to R dates
     #   # fix the column class to date()
@@ -128,7 +128,7 @@ getEncounters <- function(table_description) {
     #
     # # generate generic pat.id and fall.no, that will be used during retrieval and analysis
     # #  ensures the ID-class numeric()
-    # runLevel3line('Add \'fall.no\' and \'pat.id\' to Encounter Table', {
+    # runLevel3Line('Add \'fall.no\' and \'pat.id\' to Encounter Table', {
     #   table_enc[
     #     ,pat.id  := as.numeric(as.factor(Enc.Pat.ID))
     #   ][
@@ -141,7 +141,7 @@ getEncounters <- function(table_description) {
     #
     # # if available, simplify the evaluation of Enc.Hospitalization.Code
     # #  TODO: tolower() must be removed, if any DIC provides these data correctly
-    # runLevel3line('Convert hospitalization code to upper case', {
+    # runLevel3Line('Convert hospitalization code to upper case', {
     #   if (any(colnames(table_enc) == "Enc.Hospitalization.Code")) {
     #     table_enc[, Enc.Hospitalization.Code := toupper(Enc.Hospitalization.Code)]
     #   }
@@ -156,7 +156,7 @@ getEncounters <- function(table_description) {
     # #
     # # in addition, encounters are removed, where start or end dates are missing
     # #
-    # runLevel3line('Filter for Encounter Period', {
+    # runLevel3Line('Filter for Encounter Period', {
     #   table_enc <- table_enc[
     #     !is.na(Enc.Period.Start)                      &
     #     !is.na(Enc.Period.End)                        &
@@ -169,13 +169,13 @@ getEncounters <- function(table_description) {
     # # we want to analyse inpatient encounters only
     # #   inpatient can be provided by a variety of values
     # #
-    # runLevel3line('Filter to inpatient encounter only', {
+    # runLevel3Line('Filter to inpatient encounter only', {
     #   #simplifier MII suggest IMP only
     #   table_enc <- table_enc[grep("station|IMP|inpatient|emer|ACUTE|NONAC", Enc.Class.Code, ignore.case = TRUE)]
     # })
     #
     # # no encounter found? stop here
-    # runLevel3line('Check Size of Encounters Table', {
+    # runLevel3Line('Check Size of Encounters Table', {
     #   if (nrow(table_enc) < 1) {
     #     STOP <<- 1
     #     cat(formatStringStyle('Encounter Table table_enc is empty.\nTherefore no Analysis could be made. Stop execution here.\n', fg = 1, bold = TRUE))
@@ -184,12 +184,12 @@ getEncounters <- function(table_description) {
     # })
     #
     # #Exclusion criterion
-    # runLevel3line('Check for Time Direction Violating Encounters and mark them', {
+    # runLevel3Line('Check for Time Direction Violating Encounters and mark them', {
     #   table_enc[,Exclusion.TimeOrderViolation := Enc.Period.End.Datetime < Enc.Period.Start.Datetime]
     # })
     #
     # #Exclusion criterion
-    # runLevel3line('Check for Time Overlapping Encounters and mark them', {
+    # runLevel3Line('Check for Time Overlapping Encounters and mark them', {
     #
     #   tab.pat.fall <- table_enc[Exclusion.TimeOrderViolation == FALSE, .(
     #     "pat.id"  = pat.id,
@@ -221,13 +221,13 @@ getEncounters <- function(table_description) {
     #   rm (tab.pat.fall)
     # })
     #
-    # runLevel3line('Extract Reference IDs', {
+    # runLevel3Line('Extract Reference IDs', {
     #   table_enc <- polar_extract_reference_id(reference = table_enc)
     # })
     #
     # #data absent reasons
     # # TODO: should this removal be registerd as inclusion/exclusion criterion?
-    # runLevel3line('Remove Encounter with missing patient reference ID\'s', {
+    # runLevel3Line('Remove Encounter with missing patient reference ID\'s', {
     #
     #   table_enc_missing_patID <- table_enc[is.na(Enc.Pat.ID), ]
     #   table_enc               <- table_enc[!is.na(Enc.Pat.ID), ]
@@ -243,7 +243,7 @@ getEncounters <- function(table_description) {
     # # in further requests on other resources, we try to restrict the download request to
     # #  patients registered with the encounters from POLAR period
     # #
-    # runLevel3line('Collect Patients Reference ID\'s', {
+    # runLevel3Line('Collect Patients Reference ID\'s', {
     #   patient_refs_ids <- unique(table_enc[Exclusion.TimeOrderViolation == FALSE & Exclusion.TimeOverlap == FALSE, Enc.Pat.ID])
     # })
     #
@@ -256,7 +256,7 @@ getEncounters <- function(table_description) {
     #   rm(tab.resource.used)
     # })
 
-    runLevel3line('Save and Delete Encounters Table', {
+    runLevel3Line('Save and Delete Encounters Table', {
       writeRData(table_enc, 'pid_source_encounter_unfiltered')
     })
 

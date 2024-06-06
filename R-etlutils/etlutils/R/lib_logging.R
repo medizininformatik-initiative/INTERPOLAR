@@ -302,7 +302,7 @@ run <- function(message, process, verbose, throw_exception = TRUE) {
 #' @param process A function representing the outer script to be executed.
 #'
 #' @export
-runLevel1line <- function(message, process) {
+runLevel1Line <- function(message, process) {
   runs(
     message = message,
     process = process,
@@ -319,7 +319,7 @@ runLevel1line <- function(message, process) {
 #' @param process A function representing the inner script to be executed.
 #'
 #' @export
-runLevel2line <- function(message, process) {
+runLevel2Line <- function(message, process) {
   runs(
     message = message,
     process = process,
@@ -336,7 +336,7 @@ runLevel2line <- function(message, process) {
 #' @param process A function representing the inner script info to be executed.
 #'
 #' @export
-runLevel3line <- function(message, process) {
+runLevel3Line <- function(message, process) {
   runs(
     message = message,
     process = process,
