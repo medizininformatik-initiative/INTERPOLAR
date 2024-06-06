@@ -22,7 +22,6 @@ Imports:
     DBI,
     fhircrackr,
     httr,
-    ICD10gm,
     lubridate,
     methods,
     openxlsx,
