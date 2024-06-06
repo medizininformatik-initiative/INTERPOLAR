@@ -85,7 +85,7 @@ services:
 
   # Web-administration of cds_hub__db (optional)
   pgadmin:
-    image: dpage/pgadmin4:7.2
+    image: elestio/pgadmin
     restart: unless-stopped
     ports:
       - "127.0.0.1:8089:80"
