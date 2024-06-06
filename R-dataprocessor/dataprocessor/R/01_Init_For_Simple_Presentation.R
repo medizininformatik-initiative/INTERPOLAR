@@ -364,7 +364,6 @@ resource_to_abbreviation <- list(
 #'
 #' @return A character string containing the abbreviation for the specified resource name.
 #'
-#' @export
 getResourceAbbreviation <- function(resource_name) {
   resource_name <- tolower(resource_name)
   resource_to_abbreviation[[resource_name]]

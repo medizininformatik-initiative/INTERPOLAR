@@ -11,6 +11,7 @@
 #' @return The modified data.table with cleaned and joined multi-value fields.
 #'
 #' @examples
+#' \dontrun{
 #' library(data.table)
 #' dt <- data.table(name.given = c("[1.1]Marie|[1.2]Anne|[1.3]Lea|[2.1]Marie2|[2.2]Anne2|[2.3]Lea2",
 #' "[1]Kai|[2]Ingo", "[1.1]Mark|[1.3]Ben|[2.2]Tim"))
@@ -18,8 +19,8 @@
 #' sep <- "|"
 #' brackets <- c("[", "]")
 #' joinMultiValuesInCrackedFHIRData(dt, column_names, sep, brackets)
+#' }
 #'
-#' @export
 joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, collapse = " ") {
   for (column_name in column_names) {
     for (i in 1:nrow(dt)) {
@@ -63,7 +64,6 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, co
 #'
 #' @return A melted data.table.
 #'
-#' @export
 fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name_separator = "/") {
 
   getEscaped <- function(string) {
