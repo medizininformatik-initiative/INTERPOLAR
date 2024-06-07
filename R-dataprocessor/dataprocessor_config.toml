@@ -27,10 +27,15 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 MAX_DIR_COUNT = 5
 
-[analyse]
+[debug]
+###################
+# FOR DEBUG ONLY: #
+###################
 # Activate this date to run the analysis for a spectific date. If it is not set, then time now will
 # be taken.
-#CURRENT_DATETIME = "2020-07-31 22:25:00"
+#DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
+
+[analyse]
 
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
 OBSERVATION_BODY_WEIGHT_CODES  = "3142-7 29463-7"
