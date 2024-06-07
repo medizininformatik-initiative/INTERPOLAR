@@ -268,7 +268,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
       filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
       # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
       # additional paths above
-      encounters <- etlutils::getEncounters(filter_enc_table_description)
+      encounters <- etlutils::getEncounters(filter_enc_table_description, MAX_ENCOUNTER_BUNDLES)
       # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data

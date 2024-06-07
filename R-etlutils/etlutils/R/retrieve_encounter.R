@@ -5,6 +5,7 @@
 #'
 #' @param table_description the fhir crackr table description with the columns definition
 #' of the returned table.
+#' @param max_bundles Maximum number of bundles to download from FHIR server.
 #'
 #' @details
 #' The function handles the download of encounter data, filtering based on date ranges,
@@ -16,7 +17,7 @@
 #' saved as RData files.
 #'
 #' @export
-getEncounters <- function(table_description) {
+getEncounters <- function(table_description, max_bundles) {
 
   runLevel2(toupper('getEncounters'), {
 
@@ -40,7 +41,7 @@ getEncounters <- function(table_description) {
     })
 
     runLevel3IgnoreError('Send Test Request', {
-      test_bundles <- try(executeFHIRSearchVariation(request = request, verbose = VERBOSE), silent = TRUE)
+      test_bundles <- try(executeFHIRSearchVariation(request = request, max_bundles = max_bundles, verbose = VERBOSE), silent = TRUE)
     })
 
     #

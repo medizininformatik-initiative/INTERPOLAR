@@ -20,7 +20,7 @@ retrieve <- function() {
   PROJECT_NAME <<- 'cds2db'
   ###
 
-  etlutils::createDIRS(PROJECT_NAME)
+  etlutils::createDIRS(PROJECT_NAME, MAX_DIR_COUNT)
 
   ###
   # Create globally used process_clock

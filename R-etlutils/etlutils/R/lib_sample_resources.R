@@ -150,6 +150,7 @@ pasteFHIRSearchParams <- function(parameters = NULL, parameters2add = NULL, add_
 #' @param resource The name of the FHIR resource to retrieve.
 #' @param ids A vector of identifiers for the FHIR resources.
 #' @param id_param_str The parameter string for specifying the resource IDs (default is '_id').
+#' @param max_bundles Maximum number of bundles to download from FHIR server.
 #' @param parameters Additional parameters for the FHIR resource query (optional).
 #' @param verbose The level of verbosity for logging (default is 0).
 #'
@@ -160,10 +161,12 @@ getResourcesByIDs <- function(
     resource,
     ids,
     id_param_str = '_id',
+    max_bundles,
     parameters   = addParamToFHIRRequest(c()),
     verbose      = 0
 ) {
-  getResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
+
+  getResourcesByIDs_get <- function(endpoint, resource, ids, max_bundles, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
     collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_LEN - RES_LEN) {
       if (length(ids) < 1) {# if there are no more ids to stringify
@@ -205,7 +208,7 @@ getResourcesByIDs <- function(
       # create request with list of resource ids to get from server
       url_ <- fhircrackr::fhir_url(endpoint, resource, pasteFHIRSearchParams(paste0(id_param_str, "=", ids_$str), addParamToFHIRRequest(parameters)))
       # get bundle
-      bnd_ <- executeFHIRSearchVariation(request = url_, verbose = verbose)
+      bnd_ <- executeFHIRSearchVariation(request = url_, max_bundles, verbose = verbose)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
         print (bnd_)
       }
@@ -219,7 +222,8 @@ getResourcesByIDs <- function(
     }
     fhircrackr::fhir_bundle_list(bundles) # return bundles list as fhir_crackr class bundle_list
   }
-  getResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
+
+  getResourcesByIDs_post <- function(endpoint, resource, ids, max_bundles, parameters = NULL, verbose = 1) {
     parameters_list <- list(paste0(ids, collapse = ","), COUNT_PER_BUNDLE) # add all ids
     names(parameters_list) <- c(id_param_str, '_count') # name arguments
     executeFHIRSearchVariation(
@@ -235,6 +239,7 @@ getResourcesByIDs <- function(
         ),
         type    = "application/x-www-form-urlencoded"
       ),
+      max_bundles = max_bundles,
       verbose = verbose
     )
   }
@@ -242,22 +247,24 @@ getResourcesByIDs <- function(
   # if getting resources via post fails, the try to get them via get
   bundles <- try(
     getResourcesByIDs_post(
-      endpoint   = endpoint,
-      resource   = resource,
-      ids        = ids,
-      parameters = parameters,
-      verbose    = verbose - 1
+      endpoint    = endpoint,
+      resource    = resource,
+      ids         = ids,
+      max_bundles = max_bundles,
+      parameters  = parameters,
+      verbose     = verbose - 1
     )
   )
 
   if (inherits(bundles, "try-error")) {
     if (0 < verbose) cat("Getting Bundles via POST failed. Try to get them via GET.\n")
     bundles <- getResourcesByIDs_get(
-      endpoint   = endpoint,
-      resource   = resource,
-      ids        = ids,
-      parameters = parameters,
-      verbose    = verbose - 1)
+      endpoint    = endpoint,
+      resource    = resource,
+      ids         = ids,
+      max_bundles = max_bundles,
+      parameters  = parameters,
+      verbose     = verbose - 1)
   } else {
     if (0 < verbose) cat("Getting Bundles via POST succeded.\n")
   }
@@ -303,7 +310,7 @@ logRequest <- function(verbose, resource_name, bundles) {
 #' @param table_description The description of the expected table structure for the resource.
 #' @param bundles_at_once The maximum number of bundles to process in a single iteration.
 #' @param verbose An integer specifying the verbosity level.
-#' @param bundles_left The total number of bundles to download and process.
+#' @param max_bundles The total or maximum number of bundles to download and process.
 #' @param max_cores The maximum number of CPU cores to use for parallel processing.
 #' @param log_errors The file name for logging errors during the process.
 #'
@@ -314,7 +321,7 @@ downloadAndCrackFHIRResources <- function(
     table_description,
     bundles_at_once   = 20,
     verbose           = 1,
-    bundles_left      = Inf,
+    max_bundles       = Inf,
     max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
     log_errors        = 'enc_error.xml'
 ) {
@@ -322,15 +329,15 @@ downloadAndCrackFHIRResources <- function(
   WAIT_TIMES <- DELAY_REQ ** (0 : 7) # try 8 times and wait DELAY_REQ^loop seconds
   max_trials <- length(WAIT_TIMES) # 8
 
-  if (bundles_left < 1) {# if no bundle to download
+  if (max_bundles < 1) {# if no bundle to download
     stop(
       paste0(
-        'bundles_left needs to be positive. bundles_left is ', bundles_left, '. Stop execution here.'
+        'max_bundles needs to be positive. max_bundles is ', max_bundles, '. Stop execution here.'
       )
     )
   }
-  if (bundles_left < bundles_at_once) {# bundles_at_once cannot be greater than bundles_left
-    bundles_at_once <- bundles_left
+  if (max_bundles < bundles_at_once) {# bundles_at_once cannot be greater than max_bundles
+    bundles_at_once <- max_bundles
   }
 
   # in case of relative URL in next_link
@@ -458,8 +465,8 @@ downloadAndCrackFHIRResources <- function(
       pkg$bundles <- pkg$request # remember pkg request contains here a fhir_bundle_list
       if (!is.null(pkg$request) && inherits(pkg$request, 'fhir_bundle_list')) {# if it is so
         unserialized_bundle <- fhircrackr::fhir_unserialize(pkg$request) # unserialize the bundles
-        bundles_left <- bundles_left - length(unserialized_bundle)
-        if (0 < bundles_left) {# if there are bundle left
+        max_bundles <- max_bundles - length(unserialized_bundle)
+        if (0 < max_bundles) {# if there are bundle left
           pkg$request <- # create next request from next link found in bundle
             if (0 < length(unserialized_bundle) && 0 < length(unserialized_bundle[length(unserialized_bundle)][[1]]@next_link)) {
               next_link <- unserialized_bundle[length(unserialized_bundle)][[1]]@next_link
@@ -487,8 +494,8 @@ downloadAndCrackFHIRResources <- function(
               NULL
             }
 
-          if (bundles_left < bundles_at_once) {
-            bundles_at_once <- bundles_left
+          if (max_bundles < bundles_at_once) {
+            bundles_at_once <- max_bundles
           }
         } else {# if no bundles left
           pkg$request <- NULL
@@ -515,6 +522,7 @@ downloadAndCrackFHIRResources <- function(
 #' @param table_description A table description object specifying the structure of the resulting data table.
 #' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
 #' @param id_param_str Additional parameter string for constructing the FHIR request URL.
+#' @param max_bundles Maximum number of bundles to download from FHIR server.
 #' @param verbose Verbosity level (default: VERBOSE)
 #'
 #' @return A data.table containing the cracked FHIR resources.
@@ -525,6 +533,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     table_description,
     ids_at_once       = IDS_AT_ONCE,
     id_param_str,
+    max_bundles,
     verbose = VERBOSE
 ) {
   WAIT_TIMES <- 2 ** (0 : 7)
@@ -542,9 +551,10 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
   )
   bndls <- try(
     executeFHIRSearchVariation(
-      request    = request,
-      log_errors = paste0(resource, 'Availability-Test-error.xml'),
-      verbose    = verbose
+      request     = request,
+      max_bundles = max_bundles,
+      log_errors  = paste0(resource, 'Availability-Test-error.xml'),
+      verbose     = verbose
     )
   )
   if (VL_90_FHIR_RESPONSE <= VERBOSE) {
@@ -581,8 +591,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
       '\n'
     ))
   }
-  mb <- MAX_ENCOUNTER_BUNDLES # for later restoring
-  MAX_ENCOUNTER_BUNDLES <<- Inf
+
   run <- 0
   tables <- list()
   pkg <- list()
@@ -665,6 +674,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 resource     = resource,
                 ids          = element,
                 id_param_str = id_param_str,
+                max_bundles  = max_bundles,
                 parameters   = NULL,
                 verbose      = verbose
               ))
@@ -742,7 +752,6 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 
     run <- run + 1
   }
-  MAX_ENCOUNTER_BUNDLES <<- mb
   complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
@@ -759,20 +768,23 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #' are to be found. This object must have a specific structure, including a resource slot that
 #' contains the URL or identifier needed for downloading the resources.
 #'
+#' @param max_bundles Maximum number of bundles to download from FHIR server.
+#'
 #' @return Returns a table of the downloaded resources, processed and cracked open according to the
 #' specifications in `table_description`. The exact structure of the returned table depends on the
 #' `table_description` parameter and the data processing within `downloadAndCrackFHIRResourcesByPIDs`.
 #'
 #' @export
-loadFHIRResourcesByOwnID <- function(ids, table_description) {
+loadFHIRResourcesByOwnID <- function(ids, table_description, max_bundles) {
   resource <- table_description@resource@.Data
   if (!rlang::is_empty(ids)) {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
-      resource = resource,
-      id_param_str = '_id',
-      ids = getAfterLastSlash(ids),
+      resource          = resource,
+      ids               = getAfterLastSlash(ids),
       table_description = table_description,
-      verbose = VERBOSE
+      id_param_str      = '_id',
+      max_bundles       = max_bundles,
+      verbose           = VERBOSE
     )
   } else {
     # if there are no IDs -> create an empt table with all needed columns as character columns
@@ -796,23 +808,25 @@ loadFHIRResourcesByOwnID <- function(ids, table_description) {
 #' @param table_description An object describing the table where the resources are to be found.
 #' This object must have a specific structure, including a resource slot that contains the URL or
 #' identifier needed for downloading the resources.
+#' @param max_bundles Maximum number of bundles to download from FHIR server.
 #'
 #' @return Returns a table of the downloaded resources, processed according to the specifications
 #' in `table_description`. The function handles different types of resources by adapting the ID
 #' parameter string based on the resource type, ensuring correct processing.
 #'
 #' @export
-loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
+loadFHIRResourcesByPID <- function(patient_IDs, table_description, max_bundles) {
   resource <- table_description@resource@.Data
   if (resource == "Patient") {
     resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description)
   } else {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
-      resource = resource,
-      id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
-      ids = patient_IDs,
+      resource          = resource,
+      id_param_str      = ifelse(resource == 'Consent', 'patient', 'subject'),
+      ids               = patient_IDs,
       table_description = table_description,
-      verbose = VERBOSE
+      max_bundles       = max_bundles,
+      verbose           = VERBOSE
     )
   }
   return(resource_table)
