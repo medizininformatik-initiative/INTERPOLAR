@@ -18,8 +18,18 @@ initTableDescriptionAndDatabaseScripts <- function() {
 #' the FHIR resources into tables and is the basis for the database tables.
 #'
 #' @export
-initTableDescriptionOnly <- function() {
+initTableDescription <- function() {
   expandTableDescription()
+}
+
+#' Creates all Database Scrpts
+#'
+#' The prerequisite is that the Table_Description_Definition Excel file is available in the
+#' 'inst/extdata' directory.
+#'
+#' @export
+initDatabaseScripts <- function() {
+  createDatabaseScriptsFromTemplates()
 }
 
 #' Load Table Description Excel File
