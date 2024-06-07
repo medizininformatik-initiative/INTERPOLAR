@@ -41,6 +41,7 @@ initDatabaseScripts <- function() {
 loadTableDescriptionFile <- function() {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
   table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[["table_description"]]
+  table_description <- etlutils::removeTableHeader(table_description, c("resource", "column_name", "fhir_expression"))
   table_description <- etlutils::removeRowsWithNAorEmpty(table_description)
   return(table_description)
 }
