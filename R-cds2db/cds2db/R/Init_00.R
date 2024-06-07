@@ -18,8 +18,18 @@ initTableDescriptionAndDatabaseScripts <- function() {
 #' the FHIR resources into tables and is the basis for the database tables.
 #'
 #' @export
-initTableDescriptionOnly <- function() {
+initTableDescription <- function() {
   expandTableDescription()
+}
+
+#' Creates all Database Scrpts
+#'
+#' The prerequisite is that the Table_Description_Definition Excel file is available in the
+#' 'inst/extdata' directory.
+#'
+#' @export
+initDatabaseScripts <- function() {
+  createDatabaseScriptsFromTemplates()
 }
 
 #' Load Table Description Excel File
@@ -31,6 +41,7 @@ initTableDescriptionOnly <- function() {
 loadTableDescriptionFile <- function() {
   table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
   table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[["table_description"]]
+  table_description <- etlutils::removeTableHeader(table_description, c("resource", "column_name", "fhir_expression"))
   table_description <- etlutils::removeRowsWithNAorEmpty(table_description)
   return(table_description)
 }

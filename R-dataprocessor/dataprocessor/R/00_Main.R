@@ -47,16 +47,6 @@ dataprocessor <- function() {
       createFrontendTables()
     }))
 
-    # steps to do:
-    # correcting laboratory codes, units and values
-    # ...
-    # MRP calculation
-
-    # # Calculate Drug Disease MPRS
-    # etlutils::runProcess(etlutils::runLevel2('Calculate Drug Disease MRPs', {
-    #   calculateDrugDiseaseMRPs()
-    # }))
-
   })
 
   etlutils::finalize()

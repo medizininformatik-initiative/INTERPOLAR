@@ -2,6 +2,8 @@
 # Project Definition for cds2db ETL process #
 #############################################
 
+[general]
+
 ###
 # VERBOSE LEVELS
 ###
@@ -26,6 +28,7 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 MAX_DIR_COUNT = 5
+
 
 [retrieve]
 
@@ -74,6 +77,8 @@ INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 30
 # to include the entire period since the last start (preferably at least 1 day more).
 USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS = 2
 
+
+[retrieve.debug]
 ###################
 # FOR DEBUG ONLY: #
 ###################

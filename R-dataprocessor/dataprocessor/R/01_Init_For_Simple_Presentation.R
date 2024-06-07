@@ -1,6 +1,15 @@
 # Environment for saving the db_connnections
 .db_connections_env <- new.env()
 
+#' Get Database Connection
+#'
+#' This function retrieves a database connection for the specified schema.
+#' If a connection for the schema does not already exist, it creates a new one.
+#'
+#' @param schema_name The name of the database schema for which to get the connection.
+#'
+#' @return A database connection object.
+#'
 getDatabaseConnection <- function(schema_name) {
   connection_env_identifier <- as.character(sys.call()[2]) # get the schema variable name
   db_connection <- .db_connections_env[[connection_env_identifier]]
@@ -16,9 +25,29 @@ getDatabaseConnection <- function(schema_name) {
   return(db_connection)
 }
 
+#' Get Database Read Connection
+#'
+#' This function retrieves a read-only database connection for the default schema.
+#' It is a wrapper around the `getDatabaseConnection` function.
+#'
+#' @return A database connection object for the default read schema.
+#'
 getDatabaseReadConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_SCHEMA_OUT)
+
+#' Get Database Write Connection
+#'
+#' This function retrieves a write-enabled database connection for the default schema.
+#' It is a wrapper around the \code{getDatabaseConnection} function.
+#'
+#' @return A database connection object for the default write schema.
+#'
 getDatabaseWriteConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_SCHEMA_IN)
 
+#' Close All Database Connections
+#'
+#' This function closes all active database connections stored in the global connection environment.
+#' It iterates through all the connection objects in the environment, disconnects them, and removes them from the environment.
+#'
 closeAllDatabaseConnections <- function() {
   for (db_connection_variable_name in ls(.db_connections_env)) {
     db_connection <- get(db_connection_variable_name, envir = .db_connections_env)
@@ -27,12 +56,34 @@ closeAllDatabaseConnections <- function() {
   }
 }
 
+#' Get Tables with Name Part
+#'
+#' This function retrieves the names of tables in a database connection that contain a specific part in their name.
+#' The search is case-insensitive.
+#'
+#' @param db_connection A database connection object.
+#' @param name_part A string representing the part of the table name to search for.
+#'
+#' @return A character vector containing the names of the tables that match the specified name part.
+#'
 getTablesWithNamePart <- function(db_connection, name_part) {
   name_part <- tolower(name_part)
   table_names <- etlutils::dbListTableNames(db_connection, FALSE)
   return(grep(name_part, table_names, fixed = TRUE, value = TRUE))
 }
 
+#' Get First Table with Name Part
+#'
+#' This function retrieves the first table name in a database connection that contains a specific part in its name.
+#' If there are multiple tables that match the name part, an error is thrown. If no tables match, an error is thrown
+#' depending on the `stop_on_empty_result` parameter.
+#'
+#' @param db_connection A database connection object.
+#' @param name_part A string representing the part of the table name to search for.
+#' @param stop_on_empty_result A logical value indicating whether to stop with an error if no tables match the name part.
+#'        Default is \code{TRUE}.
+#' @return A character string representing the first table name that matches the specified name part, if exactly one match is found.
+#'
 getFirstTableWithNamePart <- function(db_connection, name_part, stop_on_empty_result = TRUE) {
   table_names <- getTablesWithNamePart(db_connection, name_part)
   if (length(table_names) == 1) {
@@ -48,6 +99,14 @@ getFirstTableWithNamePart <- function(db_connection, name_part, stop_on_empty_re
   }
 }
 
+#' Load All Data with Last Timestamp from Database
+#'
+#' This function loads all data from a database table that has the most recent timestamp.
+#' It constructs a SQL query to fetch records where the timestamp is the latest in the table.
+#'
+#' @param table_name_part A string representing part of the table name to search for.
+#' @return A data frame containing the records with the most recent timestamp from the specified table.
+#'
 loadAllDataWithLastTimestampFromDB <- function(table_name_part) {
   db_connection_read <- getDatabaseReadConnection()
   table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
@@ -57,6 +116,13 @@ loadAllDataWithLastTimestampFromDB <- function(table_name_part) {
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
+#' Get Current Datetime
+#'
+#' This function returns the current datetime. If the global variable `CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' Otherwise, it returns the current system time.
+#'
+#' @return A POSIXct object representing the current datetime or the value of `CURRENT_DATETIME` if it exists.
+#'
 getCurrentDatetime <- function() {
   if (exists("CURRENT_DATETIME")) {
     return(as.POSIXct(CURRENT_DATETIME))
@@ -64,14 +130,38 @@ getCurrentDatetime <- function() {
   return(as.POSIXct(Sys.time()))
 }
 
+#' Get Query Datetime
+#'
+#' This function returns the current datetime formatted for SQL queries.
+#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
+#'
+#' @return A character string representing the current datetime formatted for SQL queries.
+#'
 getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
+#' Extract IDs from References
+#'
+#' This function extracts IDs from a vector of references by getting the substring after the last slash in each reference.
+#'
+#' @param references A character vector of references from which to extract IDs.
+#' @return A character vector containing the extracted IDs.
+#'
 extractIDsFromReferences <- function(references) {
   etlutils::getAfterLastSlash(references)
 }
 
+#' Get Query List
+#'
+#' This function takes a collection and optionally removes reference types
+#' to create a query list. It concatenates the elements of the collection
+#' into a single string, each enclosed in single quotes and separated by commas.
+#'
+#' @param collection The collection from which to create the query list.
+#' @param remove_ref_type Logical indicating whether to remove reference types.
+#' Default is \code{FALSE}.
+#'
 getQueryList <- function(collection, remove_ref_type = FALSE) {
   if (remove_ref_type) {
     collection <- extractIDsFromReferences(collection)
@@ -79,6 +169,17 @@ getQueryList <- function(collection, remove_ref_type = FALSE) {
   paste0("'", collection, "'", collapse = ", ")
 }
 
+#' Parse Query List
+#'
+#' This function takes a query list string and splits it based on a specified delimiter
+#' to create a vector of elements. It utilizes the \code{getQueryList} function to
+#' create the vector.
+#'
+#' @param list_string The query list string to parse.
+#' @param split The delimiter used to split the query list string. Default is a space.
+#'
+#' @return A vector containing the parsed elements from the query list string.
+#'
 parseQueryList <- function(list_string, split = " ") {
   splitted <- unlist(strsplit(list_string, split))
   getQueryList(splitted)
@@ -88,6 +189,17 @@ parseQueryList <- function(list_string, split = " ") {
 # Load Resources by ID (= own ID or PID or Enc ID) #
 ####################################################
 
+#' Get Load Resources Last Status From Database Query
+#'
+#' This function constructs a SQL statement to retrieve the last status of load resources
+#' from a specified table in the database. It utilizes various helper functions to
+#' determine the table name, ID column, and apply optional filtering conditions.
+#'
+#' @param resource_name The name of the resource for which to retrieve the last status.
+#' @param filter Additional filtering conditions to apply to the query. Default is an empty string.
+#'
+#' @return A character string representing the SQL query.
+#'
 getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
   table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
@@ -105,6 +217,19 @@ getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
   return(statement)
 }
 
+#' Generate a filter statement for a SQL query.
+#'
+#' This function generates a filter statement to be used in a SQL query based on the
+#' provided filter column and filter column values. It quotes each value and collapses
+#' them into a comma-separated string. If the filter column is the resource ID column,
+#' it adjusts the filter column values accordingly to handle references.
+#'
+#' @param resource_name The name of the resource table.
+#' @param filter_column The column on which to apply the filter.
+#' @param filter_column_values A vector of values to filter on.
+#'
+#' @return A character string representing the filter statement for the SQL query.
+#'
 getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
   resource_id_column <- getIDColumn(resource_name)
   if (filter_column == resource_id_column) {
@@ -117,6 +242,18 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
   return(filter_line)
 }
 
+#' Execute a SQL query to retrieve data from the database.
+#'
+#' This function constructs and executes a SQL query to retrieve data from the database
+#' based on the provided resource name, filter column, and IDs. It utilizes helper functions
+#' to generate the filter statement and the main query statement.
+#'
+#' @param resource_name The name of the resource table.
+#' @param filter_column The column on which to apply the filter.
+#' @param ids A vector of IDs to filter on.
+#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#' @return A data frame containing the results of the SQL query.
+#'
 runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
   statement <- getLoadResourcesLastStatusFromDBQuery(resource_name, filter)
@@ -124,17 +261,52 @@ runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
   etlutils::dbGetQuery(db_connection_read, statement, log)
 }
 
+#' Retrieve the last status of load resources from the database.
+#'
+#' This function executes a SQL query to retrieve the last status of load resources
+#' from the database, based on the provided resource name. It utilizes a helper function
+#' to construct the query statement.
+#'
+#' @param resource_name The name of the resource table.
+#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#'
+#' @return A data frame containing the last status of load resources.
+#'
 loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
   statement <- getLoadResourcesLastStatusFromDBQuery(resource_name, filter = "")
   db_connection_read <- getDatabaseReadConnection()
   etlutils::dbGetQuery(db_connection_read, statement, log)
 }
 
+#' Retrieve the last status of load resources from the database by their own IDs.
+#'
+#' This function retrieves the last status of load resources from the database
+#' based on their own IDs. It constructs and executes a SQL query using the provided
+#' resource name and IDs, leveraging a helper function.
+#'
+#' @param resource_name The name of the resource table.
+#' @param ids A vector of IDs to retrieve the last status for.
+#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#'
+#' @return A data frame containing the last status of load resources.
+#'
 loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids, log = TRUE) {
   id_column <- getIDColumn(resource_name)
   runQuery(resource_name, id_column, ids, log)
 }
 
+#' Retrieve the last status of load resources from the database by PID.
+#'
+#' This function retrieves the last status of load resources from the database
+#' based on Patient ID (PID) if the resource is patient-related; otherwise, it
+#' retrieves based on the provided PID column name. It constructs and executes
+#' a SQL query using the provided resource name and PID(s), leveraging helper functions.
+#'
+#' @param resource_name The name of the resource table.
+#' @param pids A vector of Patient IDs (PIDs) or related IDs to retrieve the last status for.
+#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#' @return A data frame containing the last status of load resources.
+#'
 loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids, log = TRUE) {
   if (tolower(resource_name) %in% "patient") {
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, pids, log))
@@ -143,6 +315,21 @@ loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids, log = TRUE) 
   runQuery(resource_name, pid_column, pids, log)
 }
 
+#' Load Resources Last Status By Encounter ID From Database
+#'
+#' Retrieve the last status of load resources from the database by Encounter ID.
+#'
+#' This function retrieves the last status of load resources from the database
+#' based on Encounter ID if the resource is encounter-related; otherwise, it
+#' retrieves based on the provided Encounter ID column name. It constructs and
+#' executes a SQL query using the provided resource name and Encounter ID(s),
+#' leveraging helper functions.
+#'
+#' @param resource_name The name of the resource table.
+#' @param enc_ids A vector of Encounter IDs to retrieve the last status for.
+#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#' @return A data frame containing the last status of load resources.
+#'
 loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids, log = TRUE) {
   if (tolower(resource_name) %in% "encounter") {
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, enc_ids, log))
@@ -151,8 +338,25 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids, log = T
   runQuery(resource_name, enc_id_column, enc_ids, log)
 }
 
+#' This function creates frontend tables for displaying patient and encounter information.
+#'
+#' The function retrieves data from the database regarding patient and encounter information
+#' and constructs frontend tables suitable for display in a user interface. It first loads
+#' patient and encounter data per ward from the database. Then it constructs the patient
+#' frontend table, which contains patient information such as ID, name, date of birth, and gender.
+#' Subsequently, it constructs the encounter frontend table, which includes information about
+#' patient encounters such as ID, admission date, discharge date, diagnosis, weight, height, BMI,
+#' and status.
+#'
+#' The patient frontend table is then written to the database table "patient_fe", and the
+#' encounter frontend table is written to the database table "fall_fe". If no data is available
+#' for processing, an error message is generated and the function stops execution.
+#'
 createFrontendTables <- function() {
 
+  # This function constructs an error or warning message with optional additional
+  # information such as related tables and database connection details. It can be
+  # used to provide more context when reporting errors or warnings.
   getErrorOrWarningMessage <- function(text, tables = NA, db_connection = getDatabaseReadConnection()) {
     tables <- if (!etlutils::isSimpleNA(tables)) sapply(tables, function(table_name_part) getFirstTableWithNamePart(db_connection, table_name_part)) else NA
     tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
@@ -161,6 +365,9 @@ createFrontendTables <- function() {
     return(text)
   }
 
+  # This function creates a table for frontend display containing patient information
+  # based on the provided patient IDs per ward. It retrieves patient information from
+  # the database and constructs the frontend table.
   createPatientFrontendTable <- function(pids_per_ward) {
     # if there are the same pids multiple in the pids per ward table (same patient on different
     # wards or multiple in the same ward, then the result will contain this patient multiple times
@@ -172,6 +379,7 @@ createFrontendTables <- function() {
 
     pids_count <- length(pids)
 
+    # Initialize an empty data table to store patient information
     patient_frontend_table <- data.table(
       pat_id = rep(NA_character_, times = pids_count),
       pat_name = NA_character_,
@@ -180,6 +388,7 @@ createFrontendTables <- function() {
       pat_geschlecht = NA_character_
     )
 
+    # Iterate over each unique patient ID to populate the frontend table
     for (i in seq_len(pids_count)) {
       patient <- patients[pat_id %in% pids[i]]
       patient_frontend_table$pat_id[i] <- patient$pat_id
@@ -191,7 +400,11 @@ createFrontendTables <- function() {
     return(patient_frontend_table)
   }
 
+  # This function creates a table for frontend display containing encounter information
+  # based on the provided patient IDs per ward. It retrieves encounter information from
+  # the database and constructs the frontend table.
   createEncounterFrontendTable <- function(pids_per_ward) {
+    # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
       fall_id = character(),
       fall_studienphase = character(),
@@ -237,6 +450,7 @@ createFrontendTables <- function() {
         next
       }
 
+      # Extract unique encounter IDs for the current patient
       unique_encounter_IDs <- unique(pid_encounters$enc_id)
       # if there are errors in the data then there can be more than one encounter
       if (length(unique_encounter_IDs) > 1) {
@@ -248,9 +462,11 @@ createFrontendTables <- function() {
       # highlighted here.
       pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
 
+      # Initialize start index for adding rows to the frontend table
       start_index <- nrow(enc_frontend_table)
       enc_frontend_table <- etlutils::addEmptyRows(enc_frontend_table, length(unique_encounter_IDs))
 
+      # Iterate over each encounter for the current patient
       for (i in 1:length(pid_encounters)) {
         target_index <- start_index + i
 
@@ -265,7 +481,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',encounter_end)
         data.table::set(enc_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])
 
-        # extract ward name from pids_per_ward table
+        # Extract ward name from pids_per_ward table
         data.table::set(enc_frontend_table, target_index, 'fall_station', pids_per_ward$ward_name[pid_index])
 
         # Extract the admission diagnosis
@@ -277,6 +493,7 @@ createFrontendTables <- function() {
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_diag', admission_diagnoses)
 
+        # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
           codes <- parseQueryList(codes)
           table_name <- getFirstTableWithNamePart(db_read_connection, "observation_all")
@@ -326,20 +543,24 @@ createFrontendTables <- function() {
     etlutils::stopWithError(message)
   }
 
+  # Create frontend table for patients
   patient_frontend_table <- createPatientFrontendTable(pids_per_ward)
+  # Write patient frontend table to the database
   etlutils::writeTableToDatabase(patient_frontend_table,
                                  getDatabaseWriteConnection(),
                                  table_name = "patient_fe",
                                  clear_before_insert = TRUE)
 
+  # Create frontend table for encounters
   encounter_frontend_table <- createEncounterFrontendTable(pids_per_ward)
+  # Write encounter frontend table to the database
   etlutils::writeTableToDatabase(encounter_frontend_table,
                                  getDatabaseWriteConnection(),
                                  table_name = "fall_fe",
                                  clear_before_insert = TRUE)
 }
 
-# Liste mit Ressourcenkürzel, wird später aus der Datenbank ausgelesen
+# List with resource abbreviations
 resource_to_abbreviation <- list(
   condition = "con",
   consent = "cons",
