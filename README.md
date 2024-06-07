@@ -39,7 +39,7 @@ Das Input-Repo wird in zukünftigen Releases für den Zugriff auf Algorithmen zu
 
 ### DB2Frontend
 
-Dieses R-Modul befindet sich im Ordner [R-db2frontend](./R-db2frontend) und dient der Übernahme von Daten aus dem CDS_HUB (Postgres-Datenbank) in das Frontent (redcap) und vom im Frontend erfassten Daten in den CDS_HUB. 
+Dieses R-Modul befindet sich im Ordner [R-db2frontend](./R-db2frontend) und dient der Synchronisation von Daten zwischen CDS_HUB (Postgres-Datenbank) und Frontent (redcap). 
 
 ### Frontend (REDCap)
 
@@ -60,6 +60,17 @@ Dieser Ordner ist eine Sammlung von R Funktionen, die von den R-Modulen (CDS2DB,
 
 Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install.md](Install.md)
 
+## Verwendung
+
+Ein typischer Ablauf sieht wie folgt aus:
+
+ 1. CDS2DB ausführen (Schritt 1 und 2 in der Grafik oben)
+ 1. DataProcessor ausführen (Schritt 3 und 4 in der Grafik oben)
+ 1. DB2Frontend ausführen (Schritt 5 und 6 in der Grafik oben)
+ 1. Frontend aufrufen und dokumentieren
+ 1. DB2Frontend ausführen (Schritt 7 und 8 in der Grafik oben)
+
+Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) auszuführen. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
+
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
-
