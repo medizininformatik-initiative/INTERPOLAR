@@ -111,6 +111,8 @@ services:
       dockerfile: Dockerfile_R
     working_dir: /src
     restart: "no"
+    environment:
+      TZ: Europe/Berlin
     volumes:
       - ./R-cds2db/outputLocal:/src/R-cds2db/outputLocal
       - ./R-cds2db/outputGlobal:/src/R-cds2db/outputGlobal
