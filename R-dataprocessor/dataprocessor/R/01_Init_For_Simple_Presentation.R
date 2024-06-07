@@ -118,14 +118,14 @@ loadAllDataWithLastTimestampFromDB <- function(table_name_part) {
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `CURRENT_DATETIME` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
 #'
 getCurrentDatetime <- function() {
-  if (exists("CURRENT_DATETIME")) {
-    return(as.POSIXct(CURRENT_DATETIME))
+  if (exists("DEBUG_CURRENT_DATETIME")) {
+    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
   }
   return(as.POSIXct(Sys.time()))
 }
