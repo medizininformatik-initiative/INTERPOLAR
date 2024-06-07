@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
 fall_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
 fall_id varchar, -- Fall-ID RedCap
 fall_id_pk int, -- Datenbank-PK ID des Falls (intern)
+fall_pat_id varchar, -- Patienten_ID
 patient_id_fk int, -- Datenbank-FK ID des Patienten (intern)
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
 redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung

@@ -407,6 +407,7 @@ createFrontendTables <- function() {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
       fall_id = character(),
+      fall_pat_id = character(),
       fall_studienphase = character(),
       fall_station = character(),
       fall_aufn_dat = as.POSIXct(character()),
@@ -477,6 +478,7 @@ createFrontendTables <- function() {
         encounter_start <- pid_encounters[[i]]$enc_period_start[1]
         encounter_end <- pid_encounters[[i]]$enc_period_end[1]
         data.table::set(enc_frontend_table, target_index, 'fall_id', encounter_id)
+        data.table::set(enc_frontend_table, target_index, 'fall_pat_id', extractIDsFromReferences(pid))
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', encounter_start)
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',encounter_end)
         data.table::set(enc_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])

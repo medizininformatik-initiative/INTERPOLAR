@@ -64,13 +64,13 @@ copyDB2Redcap <- function() {
                                password = DB_DB2FRONTEND_PASSWORD,
                                schema = DB_DB2FRONTEND_SCHEMA_OUT)
 
-
   #get relevant columns for Patient and Fall (Phase 1a of INTERPOLAR)
-  dataFromDB <- DBI::dbGetQuery(dbcon, "pat_id,pat_name,pat_vorname,pat_gebdat,pat_geschlecht,patient_complete,
-                                patient_fe_id,fall_id,fall_studienphase,fall_station,fall_aufn_dat,fall_aufn_diag,
-                                fall_gewicht_aktuell,fall_gewicht_aktl_einheit,fall_groesse,fall_groesse_einheit,
-                                fall_status,fall_ent_dat,fall_complete,fall_fe_id,patient_id_fk
-                              FROM v_patient t1, v_fall t2 where t1.patient_fe_id=t2.fall_fe_id")
+  dataFromDB <- DBI::dbGetQuery(dbcon,
+      "SELECT pat_id, pat_name, pat_vorname, pat_gebdat, pat_geschlecht, patient_complete,
+       patient_fe_id, fall_id, fall_studienphase, fall_station, fall_aufn_dat,fall_aufn_diag,
+       fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit,
+       fall_status, fall_ent_dat, fall_complete, fall_fe_id,patient_id_fk
+       FROM v_patient t1, v_fall t2 where t1.pat_id = t2.fall_pat_id")
 
   #connect to REDCap project
   redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
