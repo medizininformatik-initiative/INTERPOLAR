@@ -26,6 +26,11 @@ Bei dieser Variante muss das DIZ eine Textdatei erzeugen, die folgende Form hat:
 ## Ausführung des Moduls
 
 Das R-Skript [StartRetrieval.R](StartRetrieval.R) startet das Retrieval für den ETL-Prozess.
+Dieses kann an der Console manuell über den folgenden Befehl ausgeführt werden:
+
+```console
+docker-compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
+```
 
 ## Details der Implementierung
 
