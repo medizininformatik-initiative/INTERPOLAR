@@ -91,6 +91,7 @@ BEGIN
             WHERE   COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
                     COALESCE(target_record.fall_id_pk::text,'#NULL#') = COALESCE(current_record.fall_id_pk::text,'#NULL#') AND
                     COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
+                    COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                     COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
@@ -121,6 +122,7 @@ BEGIN
                         fall_fe_id,
                         fall_id,
                         fall_id_pk,
+			fall_pat_id,
                         patient_id_fk,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
@@ -149,6 +151,7 @@ BEGIN
                 VALUES (current_record.fall_fe_id,
                         current_record.fall_id,
                         current_record.fall_id_pk,
+			currenr_record.fall_pat_id,
                         current_record.patient_id_fk,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
@@ -184,6 +187,7 @@ BEGIN
                 WHERE 	COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
                         COALESCE(target_record.fall_id_pk::text,'#NULL#') = COALESCE(current_record.fall_id_pk::text,'#NULL#') AND
                         COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
+                        COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                         COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
