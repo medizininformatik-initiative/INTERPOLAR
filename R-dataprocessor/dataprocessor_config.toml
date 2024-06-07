@@ -17,11 +17,12 @@
 # VL_90_FHIR_RESPONSE       = 9
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
-# Set true if every sourcing of the 00_Main file should create result directories in the otuputGlobal and otuputLocal
-# directores with a timestamp suffix. If false then every run will write in the same subdirectory without a timestamp.
-# The default behaviour should write in subdirectories with only the project name (false) or in or in a subdirectory
-# with the project name and the suffix '_timestamp'.
-# (true)
+# Set true if every sourcing of the 00_Main file should create result
+# directories in the otuputGlobal and otuputLocal directores with a timestamp
+# suffix. If false then every run will write in the same subdirectory without
+# a timestamp. The default behaviour should write in subdirectories with only
+# the project name (false) or in or in a subdirectory with the project name
+# and the suffix '_timestamp'. (true)
 USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
@@ -31,12 +32,16 @@ MAX_DIR_COUNT = 5
 ###################
 # FOR DEBUG ONLY: #
 ###################
-# Activate this date to run the analysis for a spectific date. If it is not set, then time now will
-# be taken.
+# Activate this date to run the analysis for a spectific date. If it is not set,
+# then time now will be taken.
+# This date must match the data in the database. Only Encounters whose start
+# date is before this date and whose end date is not set or is after this date
+# are loaded from the database.
 #DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
 
 [analyse]
-
+# The codes for height, weight and BMI can be customised here. If several codes
+# can occur, these must be entered in the respective list separated by spaces.
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
 OBSERVATION_BODY_WEIGHT_CODES  = "3142-7 29463-7"
 OBSERVATION_BODY_HEIGHT_SYSTEM = "http://loinc.org"
