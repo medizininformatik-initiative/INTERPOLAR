@@ -248,35 +248,6 @@ getLocalRdataFileName <- function(table_name) {
   fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData')
 }
 
-#' Get file information for an RData file
-#'
-#' This function retrieves information about an RData file corresponding to the specified table.
-#'
-#' @param table_name The name of the table.
-#' @return A list containing file information such as size, permissions, and timestamps.
-#'
-#' @export
-getLocalRdataFileInfo <- function(table_name) {
-  table_name <- getLocalRdataFileName(table_name)
-  file_info <- list()
-  if (file.exists(table_name)) {
-    file_info <- file.info(table_name)
-  }
-  return(file_info)
-}
-
-#' Check if an RData file exists locally
-#'
-#' This function checks if an RData file corresponding to the specified table exists locally.
-#'
-#' @param table_name The name of the table.
-#' @return TRUE if the RData file exists locally, otherwise FALSE.
-#'
-#' @export
-existsLocalRdataFile <- function(table_name) {
-  file.exists(getLocalRdataFileName(table_name))
-}
-
 #' Read Content from a File into a Single String
 #'
 #' This function reads the content of a file specified by the file path and
