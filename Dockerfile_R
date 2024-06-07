@@ -45,6 +45,14 @@ RUN R CMD build R-db2frontend/db2frontend
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-db2frontend/db2frontend
 
 
+# DataProcessor
+
+COPY R-dataprocessor R-dataprocessor
+
+RUN R CMD build R-dataprocessor/dataprocessor
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-dataprocessor/dataprocessor
+
 # cleanup
 
 RUN apt-get autoremove && apt-get clean
