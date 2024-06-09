@@ -47,6 +47,10 @@ dataprocessor <- function() {
       createFrontendTables()
     }))
 
+    etlutils::runProcess(etlutils::runLevel2('Close database connections', {
+      closeAllDatabaseConnections()
+    }))
+
   })
 
   etlutils::finalize()
