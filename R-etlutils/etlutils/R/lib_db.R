@@ -47,6 +47,23 @@ dbDisconnect <- function(db_connection) {
   DBI::dbDisconnect(db_connection)
 }
 
+#' Check Database Connection Validity
+#'
+#' This function serves as a wrapper around `DBI::dbIsValid`, providing a simplified
+#' interface for checking if a database connection is still open. It ensures that
+#' the connection is properly validated.
+#'
+#' @param db_connection A valid database connection object created by `DBI::dbConnect` or
+#' a similar DBI connection function. This connection will be checked for validity by this function.
+#'
+#' @return A logical value: `TRUE` if the connection is valid (open), otherwise `FALSE`.
+#'
+#' @seealso \code{\link[DBI]{dbIsValid}} for the underlying DBI function.
+#' @export
+dbIsValid <- function(db_connection) {
+  DBI::dbIsValid(db_connection)
+}
+
 #' List Table Names in a Database
 #'
 #' Retrieves and displays the list of existing table names in a database connection. This function
