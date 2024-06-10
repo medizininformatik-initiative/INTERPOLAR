@@ -1,9 +1,8 @@
 --Create SQL Table in Schema db_log
 CREATE TABLE IF NOT EXISTS db_log.patient_fe (
 patient_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-record_id varchar, -- Record ID RedCap
-patient_id_pk int, -- Datenbank-PK ID des Patienten (intern)
-pat_id varchar, -- Patient-identifier
+record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+pat_id varchar, -- Patient-identifier FHIR Daten
 pat_name varchar, -- Patientenname
 pat_vorname varchar, -- Patientenvorname
 pat_gebdat date, -- Geburtsdatum
@@ -17,10 +16,10 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 
 CREATE TABLE IF NOT EXISTS db_log.fall_fe (
 fall_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-fall_id varchar, -- Fall-ID RedCap
-fall_id_pk int, -- Datenbank-PK ID des Falls (intern)
-fall_pat_id varchar, -- Patienten_ID
-patient_id_fk int, -- Datenbank-FK ID des Patienten (intern)
+fall_id varchar, -- Fall-ID RedCap FHIR Daten
+fall_pat_id varchar, -- Patienten-ID zu dem Fall gehört (Patient:pat_id)
+patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
+record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
 redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
 fall_studienphase varchar, -- Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) )
@@ -50,8 +49,9 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 
 CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
 medikationsanalyse_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-meda_id_pk int, -- Datenbank-PK ID der Medikationsanalyse (intern)
-fall_id_fk int, -- Datenbank-FK ID des Falls (intern)
+record_id int, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+fall_id_fk int, -- Datenbank-FK des Falls (Patient: fall_fe_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat]
+meda_fall_id varchar, -- Fall-ID zu dem Medikationsanalyse gehört (Fall:fall_id)
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
 redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
 meda_dat date, -- Datum der Medikationsanalyse
@@ -69,8 +69,8 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 
 CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
 mrpdokumentation_validierung_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-mrp_id_pk int, -- Datenbank-PK ID des MRPs (intern)
-meda_id_fk int, -- Datenbank-FK ID der Medikationsanalyse (intern)
+record_id int, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+meda_id_fk int, -- Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag)
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
 redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
 mrp_entd_dat date, -- Datum des MRP
@@ -106,8 +106,8 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 
 CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
 risikofaktor_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-rskfk_id_pk int, -- Datenbank-PK ID des Risikofaktors (intern)
-patient_id_fk int, -- Datenbank-FK ID des zugehörigen Patienten (intern)
+patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
+record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 rskfk_gerhemmer varchar, -- Ger.hemmer
 rskfk_tah varchar, -- TAH
 rskfk_immunsupp varchar, -- Immunsupp.
@@ -130,8 +130,8 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 
 CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
 trigger_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-trg_id_pk int, -- Datenbank-PK ID des Triggers (intern)
-patient_id_fk int, -- Datenbank-FK ID des zugehörigen Patienten (intern)
+patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
+record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 trg_ast varchar, -- <div class=rich-text-field-label><p>AST<span style=font-weight: normal; font-size: 12pt;>↑</span></p></div>
 trg_alt varchar, -- ALT↑
 trg_crp varchar, -- CRP↑
@@ -159,6 +159,7 @@ input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an d
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
+
 
 --SQL Role / Trigger in Schema db_log
 GRANT SELECT ON TABLE db_log.patient_fe TO db2frontend_user; -- Kurzstrecke für Test zu FrontEnd
@@ -318,9 +319,8 @@ CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
   EXECUTE PROCEDURE  db_log.trigger_fe_tr_ins_fkt();
 
 -- Comment on Table in Schema db_log
-comment on column db_log.patient_fe.record_id is 'Record ID RedCap';
-comment on column db_log.patient_fe.patient_id_pk is 'Datenbank-PK ID des Patienten (intern)';
-comment on column db_log.patient_fe.pat_id is 'Patient-identifier';
+comment on column db_log.patient_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
+comment on column db_log.patient_fe.pat_id is 'Patient-identifier FHIR Daten';
 comment on column db_log.patient_fe.pat_name is 'Patientenname';
 comment on column db_log.patient_fe.pat_vorname is 'Patientenvorname';
 comment on column db_log.patient_fe.pat_gebdat is 'Geburtsdatum';
@@ -328,9 +328,10 @@ comment on column db_log.patient_fe.pat_aktuell_alter is '<div class="rich-text-
 comment on column db_log.patient_fe.pat_geschlecht is 'Geschlecht (wie in FHIR)';
 comment on column db_log.patient_fe.patient_complete is 'Frontend Complete-Status';
 
-comment on column db_log.fall_fe.fall_id is 'Fall-ID RedCap';
-comment on column db_log.fall_fe.fall_id_pk is 'Datenbank-PK ID des Falls (intern)';
-comment on column db_log.fall_fe.patient_id_fk is 'Datenbank-FK ID des Patienten (intern)';
+comment on column db_log.fall_fe.fall_id is 'Fall-ID RedCap FHIR Daten';
+comment on column db_log.fall_fe.fall_pat_id is 'Patienten-ID zu dem Fall gehört (Patient:pat_id)';
+comment on column db_log.fall_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)';
+comment on column db_log.fall_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
 comment on column db_log.fall_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
 comment on column db_log.fall_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
 comment on column db_log.fall_fe.fall_studienphase is 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) )';
@@ -354,8 +355,9 @@ comment on column db_log.fall_fe.fall_status is '';
 comment on column db_log.fall_fe.fall_ent_dat is 'Entlassdatum';
 comment on column db_log.fall_fe.fall_complete is 'Frontend Complete-Status';
 
-comment on column db_log.medikationsanalyse_fe.meda_id_pk is 'Datenbank-PK ID der Medikationsanalyse (intern)';
-comment on column db_log.medikationsanalyse_fe.fall_id_fk is 'Datenbank-FK ID des Falls (intern)';
+comment on column db_log.medikationsanalyse_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
+comment on column db_log.medikationsanalyse_fe.fall_id_fk is 'Datenbank-FK des Falls (Patient: fall_fe_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat]';
+comment on column db_log.medikationsanalyse_fe.meda_fall_id is 'Fall-ID zu dem Medikationsanalyse gehört (Fall:fall_id)';
 comment on column db_log.medikationsanalyse_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
 comment on column db_log.medikationsanalyse_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
 comment on column db_log.medikationsanalyse_fe.meda_dat is 'Datum der Medikationsanalyse';
@@ -367,8 +369,8 @@ comment on column db_log.medikationsanalyse_fe.meda_aufwand_zeit_and is 'wie lan
 comment on column db_log.medikationsanalyse_fe.meda_notiz is 'Notizfeld';
 comment on column db_log.medikationsanalyse_fe.medikationsanalyse_complete is 'Frontend Complete-Status';
 
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_id_pk is 'Datenbank-PK ID des MRPs (intern)';
-comment on column db_log.mrpdokumentation_validierung_fe.meda_id_fk is 'Datenbank-FK ID der Medikationsanalyse (intern)';
+comment on column db_log.mrpdokumentation_validierung_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
+comment on column db_log.mrpdokumentation_validierung_fe.meda_id_fk is 'Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag)';
 comment on column db_log.mrpdokumentation_validierung_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
 comment on column db_log.mrpdokumentation_validierung_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
 comment on column db_log.mrpdokumentation_validierung_fe.mrp_entd_dat is 'Datum des MRP';
@@ -398,8 +400,8 @@ comment on column db_log.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP S
 comment on column db_log.mrpdokumentation_validierung_fe.mrp_wiedervorlage is 'MRP Wiedervorlage';
 comment on column db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status';
 
-comment on column db_log.risikofaktor_fe.rskfk_id_pk is 'Datenbank-PK ID des Risikofaktors (intern)';
-comment on column db_log.risikofaktor_fe.patient_id_fk is 'Datenbank-FK ID des zugehörigen Patienten (intern)';
+comment on column db_log.risikofaktor_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)';
+comment on column db_log.risikofaktor_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
 comment on column db_log.risikofaktor_fe.rskfk_gerhemmer is 'Ger.hemmer';
 comment on column db_log.risikofaktor_fe.rskfk_tah is 'TAH';
 comment on column db_log.risikofaktor_fe.rskfk_immunsupp is 'Immunsupp.';
@@ -416,8 +418,8 @@ comment on column db_log.risikofaktor_fe.rskfk_entern is 'ent. Ern.';
 comment on column db_log.risikofaktor_fe.rskfkt_anz_rskamklassen is 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0';
 comment on column db_log.risikofaktor_fe.risikofaktor_complete is 'Frontend Complete-Status';
 
-comment on column db_log.trigger_fe.trg_id_pk is 'Datenbank-PK ID des Triggers (intern)';
-comment on column db_log.trigger_fe.patient_id_fk is 'Datenbank-FK ID des zugehörigen Patienten (intern)';
+comment on column db_log.trigger_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)';
+comment on column db_log.trigger_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
 comment on column db_log.trigger_fe.trg_ast is '<div class="rich-text-field-label"><p>AST<span style="font-weight: normal; font-size: 12pt;">↑</span></p></div>';
 comment on column db_log.trigger_fe.trg_alt is 'ALT↑';
 comment on column db_log.trigger_fe.trg_crp is 'CRP↑';
