@@ -5,7 +5,7 @@
 -- Table "encounter" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter (
-  encounter_id serial PRIMARY KEY not null, -- Primary key of the entity
+  encounter_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   enc_id varchar,   -- id (varchar)
   enc_patient_id varchar,   -- subject/reference (varchar)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
 -- Table "patient" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient (
-  patient_id serial PRIMARY KEY not null, -- Primary key of the entity
+  patient_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   pat_id varchar,   -- id (varchar)
   pat_identifier_use varchar,   -- identifier/use (varchar)
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
 -- Table "condition" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition (
-  condition_id serial PRIMARY KEY not null, -- Primary key of the entity
+  condition_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   con_id varchar,   -- id (varchar)
   con_encounter_id varchar,   -- encounter/reference (varchar)
@@ -236,7 +236,7 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
 -- Table "medication" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication (
-  medication_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medication_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   med_id varchar,   -- id (varchar)
   med_identifier_use varchar,   -- identifier/use (varchar)
@@ -303,7 +303,7 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
 -- Table "medicationrequest" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
-  medicationrequest_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationrequest_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medreq_id varchar,   -- id (varchar)
   medreq_encounter_id varchar,   -- encounter/reference (varchar)
@@ -536,7 +536,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
 -- Table "medicationadministration" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
-  medicationadministration_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationadministration_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medadm_id varchar,   -- id (varchar)
   medadm_encounter_id varchar,   -- context/reference (varchar)
@@ -655,7 +655,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
 -- Table "medicationstatement" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
-  medicationstatement_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationstatement_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medstat_id varchar,   -- id (varchar)
   medstat_identifier_use varchar,   -- identifier/use (varchar)
@@ -875,7 +875,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
 -- Table "observation" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation (
-  observation_id serial PRIMARY KEY not null, -- Primary key of the entity
+  observation_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   obs_id varchar,   -- id (varchar)
   obs_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1016,7 +1016,7 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
 -- Table "diagnosticreport" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
-  diagnosticreport_id serial PRIMARY KEY not null, -- Primary key of the entity
+  diagnosticreport_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   diagrep_id varchar,   -- id (varchar)
   diagrep_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1070,7 +1070,7 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
 -- Table "servicerequest" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest (
-  servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
+  servicerequest_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   servreq_id varchar,   -- id (varchar)
   servreq_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1138,7 +1138,7 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
 -- Table "procedure" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure (
-  procedure_id serial PRIMARY KEY not null, -- Primary key of the entity
+  procedure_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   proc_id varchar,   -- id (varchar)
   proc_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1216,7 +1216,7 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
 -- Table "consent" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent (
-  consent_id serial PRIMARY KEY not null, -- Primary key of the entity
+  consent_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   cons_id varchar,   -- id (varchar)
   cons_patient_id varchar,   -- patient/reference (varchar)
@@ -1260,7 +1260,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
 -- Table "location" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location (
-  location_id serial PRIMARY KEY not null, -- Primary key of the entity
+  location_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   loc_id varchar,   -- id (varchar)
   loc_identifier_use varchar,   -- identifier/use (varchar)
@@ -1285,7 +1285,7 @@ CREATE TABLE IF NOT EXISTS db_log.location (
 -- Table "pids_per_ward" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
-  pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
+  pids_per_ward_id int, -- Primärschlüssel der Entität - in diesem Schema bereits gefüll - Historie über Zeitstempel
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
