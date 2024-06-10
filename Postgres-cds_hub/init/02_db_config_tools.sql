@@ -7,3 +7,9 @@ select command, count(1) anzahl
 from cron.job_run_details m group by command order by 3 desc;
 
 GRANT SELECT ON db_config.v_cron_jobs TO db_user;
+
+-- Cronjpob der immer um Mitternacht alle erfolgreichen cronjob-logs löscht, die älter als 3 Tage sind
+SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details 
+WHERE status='succeeded' and end_time < now() - interval '7 days'$$);
+
+
