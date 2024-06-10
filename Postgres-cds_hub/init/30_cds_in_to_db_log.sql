@@ -323,7 +323,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.encounter_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE encounter_id = current_record.encounter_id;
             END;
     END LOOP;
@@ -428,7 +428,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.patient_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE patient_id = current_record.patient_id;
             END;
     END LOOP;
@@ -917,7 +917,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.condition_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE condition_id = current_record.condition_id;
             END;
     END LOOP;
@@ -1182,7 +1182,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medication_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE medication_id = current_record.medication_id;
             END;
     END LOOP;
@@ -2111,7 +2111,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationrequest_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE medicationrequest_id = current_record.medicationrequest_id;
             END;
     END LOOP;
@@ -2584,7 +2584,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationadministration_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE medicationadministration_id = current_record.medicationadministration_id;
             END;
     END LOOP;
@@ -3461,7 +3461,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationstatement_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE medicationstatement_id = current_record.medicationstatement_id;
             END;
     END LOOP;
@@ -4022,7 +4022,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.observation_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE observation_id = current_record.observation_id;
             END;
     END LOOP;
@@ -4235,7 +4235,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.diagnosticreport_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE diagnosticreport_id = current_record.diagnosticreport_id;
             END;
     END LOOP;
@@ -4504,7 +4504,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.servicerequest_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE servicerequest_id = current_record.servicerequest_id;
             END;
     END LOOP;
@@ -4813,7 +4813,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.procedure_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE procedure_id = current_record.procedure_id;
             END;
     END LOOP;
@@ -4986,7 +4986,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.consent_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE consent_id = current_record.consent_id;
             END;
     END LOOP;
@@ -5083,7 +5083,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.location_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE location_id = current_record.location_id;
             END;
     END LOOP;
@@ -5128,7 +5128,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.pids_per_ward_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log Msg:'--||error_message
                     WHERE pids_per_ward_id = current_record.pids_per_ward_id;
             END;
     END LOOP;
