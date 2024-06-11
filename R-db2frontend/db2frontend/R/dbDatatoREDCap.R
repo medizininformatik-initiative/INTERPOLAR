@@ -99,6 +99,7 @@ copyDB2Redcap <- function() {
 #' # This is a placeholder example and won't run without proper setup:
 #' # copyRedcap2DB()
 #'
+#' @export
 copyRedcap2DB <- function() {
   #get data from patient view / tabelle, schema _out
   initConstants()
