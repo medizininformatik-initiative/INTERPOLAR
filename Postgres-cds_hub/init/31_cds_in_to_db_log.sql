@@ -85,10 +85,11 @@ BEGIN
                       COALESCE(target_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') AND
                       COALESCE(target_record.enc_serviceprovider_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_display::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.encounter (
+                        encounter_id,
                         encounter_raw_id,
                         enc_id,
                         enc_patient_id,
@@ -164,6 +165,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.encounter_id,
                         current_record.encounter_raw_id,
                         current_record.enc_id,
                         current_record.enc_patient_id,
@@ -238,7 +240,7 @@ BEGIN
                         current_record.enc_serviceprovider_display,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.encounter WHERE encounter_id = current_record.encounter_id;
                 ELSE
@@ -317,7 +319,7 @@ BEGIN
                       COALESCE(target_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') AND
                       COALESCE(target_record.enc_serviceprovider_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_display::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.encounter WHERE encounter_id = current_record.encounter_id;
                 END IF;
@@ -325,7 +327,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.encounter
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE encounter_id = current_record.encounter_id;
             END;
     END LOOP;
@@ -354,10 +356,11 @@ BEGIN
                       COALESCE(target_record.pat_birthdate::text,'#NULL#') = COALESCE(current_record.pat_birthdate::text,'#NULL#') AND
                       COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.patient (
+                        patient_id,
                         patient_raw_id,
                         pat_id,
                         pat_identifier_use,
@@ -379,6 +382,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.patient_id,
                         current_record.patient_raw_id,
                         current_record.pat_id,
                         current_record.pat_identifier_use,
@@ -399,7 +403,7 @@ BEGIN
                         current_record.pat_address_postalcode,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.patient WHERE patient_id = current_record.patient_id;
                 ELSE
@@ -424,7 +428,7 @@ BEGIN
                       COALESCE(target_record.pat_birthdate::text,'#NULL#') = COALESCE(current_record.pat_birthdate::text,'#NULL#') AND
                       COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.patient WHERE patient_id = current_record.patient_id;
                 END IF;
@@ -432,7 +436,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.patient
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE patient_id = current_record.patient_id;
             END;
     END LOOP;
@@ -557,10 +561,11 @@ BEGIN
                       COALESCE(target_record.con_note_time::text,'#NULL#') = COALESCE(current_record.con_note_time::text,'#NULL#') AND
                       COALESCE(target_record.con_note_text::text,'#NULL#') = COALESCE(current_record.con_note_text::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.condition (
+                        condition_id,
                         condition_raw_id,
                         con_id,
                         con_encounter_id,
@@ -678,6 +683,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.condition_id,
                         current_record.condition_raw_id,
                         current_record.con_id,
                         current_record.con_encounter_id,
@@ -794,7 +800,7 @@ BEGIN
                         current_record.con_note_text,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.condition WHERE condition_id = current_record.condition_id;
                 ELSE
@@ -915,7 +921,7 @@ BEGIN
                       COALESCE(target_record.con_note_time::text,'#NULL#') = COALESCE(current_record.con_note_time::text,'#NULL#') AND
                       COALESCE(target_record.con_note_text::text,'#NULL#') = COALESCE(current_record.con_note_text::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.condition WHERE condition_id = current_record.condition_id;
                 END IF;
@@ -923,7 +929,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.condition
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE condition_id = current_record.condition_id;
             END;
     END LOOP;
@@ -992,10 +998,11 @@ BEGIN
                       COALESCE(target_record.med_ingredient_itemreference_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_display::text,'#NULL#') AND
                       COALESCE(target_record.med_ingredient_isactive::text,'#NULL#') = COALESCE(current_record.med_ingredient_isactive::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medication (
+                        medication_id,
                         medication_raw_id,
                         med_id,
                         med_identifier_use,
@@ -1057,6 +1064,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.medication_id,
                         current_record.medication_raw_id,
                         current_record.med_id,
                         current_record.med_identifier_use,
@@ -1117,7 +1125,7 @@ BEGIN
                         current_record.med_ingredient_isactive,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.medication WHERE medication_id = current_record.medication_id;
                 ELSE
@@ -1182,7 +1190,7 @@ BEGIN
                       COALESCE(target_record.med_ingredient_itemreference_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_display::text,'#NULL#') AND
                       COALESCE(target_record.med_ingredient_isactive::text,'#NULL#') = COALESCE(current_record.med_ingredient_isactive::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.medication WHERE medication_id = current_record.medication_id;
                 END IF;
@@ -1190,7 +1198,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medication
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE medication_id = current_record.medication_id;
             END;
     END LOOP;
@@ -1425,10 +1433,11 @@ BEGIN
                       COALESCE(target_record.medreq_substitution_reason_display::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_display::text,'#NULL#') AND
                       COALESCE(target_record.medreq_substitution_reason_text::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_text::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationrequest (
+                        medicationrequest_id,
                         medicationrequest_raw_id,
                         medreq_id,
                         medreq_encounter_id,
@@ -1656,6 +1665,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.medicationrequest_id,
                         current_record.medicationrequest_raw_id,
                         current_record.medreq_id,
                         current_record.medreq_encounter_id,
@@ -1882,7 +1892,7 @@ BEGIN
                         current_record.medreq_substitution_reason_text,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.medicationrequest WHERE medicationrequest_id = current_record.medicationrequest_id;
                 ELSE
@@ -2113,7 +2123,7 @@ BEGIN
                       COALESCE(target_record.medreq_substitution_reason_display::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_display::text,'#NULL#') AND
                       COALESCE(target_record.medreq_substitution_reason_text::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_text::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.medicationrequest WHERE medicationrequest_id = current_record.medicationrequest_id;
                 END IF;
@@ -2121,7 +2131,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationrequest
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE medicationrequest_id = current_record.medicationrequest_id;
             END;
     END LOOP;
@@ -2242,10 +2252,11 @@ BEGIN
                       COALESCE(target_record.medadm_dosage_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_system::text,'#NULL#') AND
                       COALESCE(target_record.medadm_dosage_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_code::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationadministration (
+                        medicationadministration_id,
                         medicationadministration_raw_id,
                         medadm_id,
                         medadm_encounter_id,
@@ -2359,6 +2370,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.medicationadministration_id,
                         current_record.medicationadministration_raw_id,
                         current_record.medadm_id,
                         current_record.medadm_encounter_id,
@@ -2471,7 +2483,7 @@ BEGIN
                         current_record.medadm_dosage_ratequantity_code,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.medicationadministration WHERE medicationadministration_id = current_record.medicationadministration_id;
                 ELSE
@@ -2588,7 +2600,7 @@ BEGIN
                       COALESCE(target_record.medadm_dosage_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_system::text,'#NULL#') AND
                       COALESCE(target_record.medadm_dosage_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_code::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.medicationadministration WHERE medicationadministration_id = current_record.medicationadministration_id;
                 END IF;
@@ -2596,7 +2608,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationadministration
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE medicationadministration_id = current_record.medicationadministration_id;
             END;
     END LOOP;
@@ -2818,10 +2830,11 @@ BEGIN
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') AND
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationstatement (
+                        medicationstatement_id,
                         medicationstatement_raw_id,
                         medstat_id,
                         medstat_identifier_use,
@@ -3036,6 +3049,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.medicationstatement_id,
                         current_record.medicationstatement_raw_id,
                         current_record.medstat_id,
                         current_record.medstat_identifier_use,
@@ -3249,7 +3263,7 @@ BEGIN
                         current_record.medstat_dosage_maxdoseperlifetime_code,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.medicationstatement WHERE medicationstatement_id = current_record.medicationstatement_id;
                 ELSE
@@ -3467,7 +3481,7 @@ BEGIN
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') AND
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.medicationstatement WHERE medicationstatement_id = current_record.medicationstatement_id;
                 END IF;
@@ -3475,7 +3489,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationstatement
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE medicationstatement_id = current_record.medicationstatement_id;
             END;
     END LOOP;
@@ -3618,10 +3632,11 @@ BEGIN
                       COALESCE(target_record.obs_hasmember_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_text::text,'#NULL#') AND
                       COALESCE(target_record.obs_hasmember_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_display::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.observation (
+                        observation_id,
                         observation_raw_id,
                         obs_id,
                         obs_encounter_id,
@@ -3757,6 +3772,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.observation_id,
                         current_record.observation_raw_id,
                         current_record.obs_id,
                         current_record.obs_encounter_id,
@@ -3891,7 +3907,7 @@ BEGIN
                         current_record.obs_hasmember_display,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.observation WHERE observation_id = current_record.observation_id;
                 ELSE
@@ -4030,7 +4046,7 @@ BEGIN
                       COALESCE(target_record.obs_hasmember_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_text::text,'#NULL#') AND
                       COALESCE(target_record.obs_hasmember_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_display::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.observation WHERE observation_id = current_record.observation_id;
                 END IF;
@@ -4038,7 +4054,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.observation
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE observation_id = current_record.observation_id;
             END;
     END LOOP;
@@ -4094,10 +4110,11 @@ BEGIN
                       COALESCE(target_record.diagrep_conclusioncode_display::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_display::text,'#NULL#') AND
                       COALESCE(target_record.diagrep_conclusioncode_text::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_text::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.diagnosticreport (
+                        diagnosticreport_id,
                         diagnosticreport_raw_id,
                         diagrep_id,
                         diagrep_encounter_id,
@@ -4146,6 +4163,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.diagnosticreport_id,
                         current_record.diagnosticreport_raw_id,
                         current_record.diagrep_id,
                         current_record.diagrep_encounter_id,
@@ -4193,7 +4211,7 @@ BEGIN
                         current_record.diagrep_conclusioncode_text,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.diagnosticreport WHERE diagnosticreport_id = current_record.diagnosticreport_id;
                 ELSE
@@ -4245,7 +4263,7 @@ BEGIN
                       COALESCE(target_record.diagrep_conclusioncode_display::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_display::text,'#NULL#') AND
                       COALESCE(target_record.diagrep_conclusioncode_text::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_text::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.diagnosticreport WHERE diagnosticreport_id = current_record.diagnosticreport_id;
                 END IF;
@@ -4253,7 +4271,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.diagnosticreport
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE diagnosticreport_id = current_record.diagnosticreport_id;
             END;
     END LOOP;
@@ -4323,10 +4341,11 @@ BEGIN
                       COALESCE(target_record.servreq_locationcode_display::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_display::text,'#NULL#') AND
                       COALESCE(target_record.servreq_locationcode_text::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_text::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.servicerequest (
+                        servicerequest_id,
                         servicerequest_raw_id,
                         servreq_id,
                         servreq_encounter_id,
@@ -4389,6 +4408,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.servicerequest_id,
                         current_record.servicerequest_raw_id,
                         current_record.servreq_id,
                         current_record.servreq_encounter_id,
@@ -4450,7 +4470,7 @@ BEGIN
                         current_record.servreq_locationcode_text,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.servicerequest WHERE servicerequest_id = current_record.servicerequest_id;
                 ELSE
@@ -4516,7 +4536,7 @@ BEGIN
                       COALESCE(target_record.servreq_locationcode_display::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_display::text,'#NULL#') AND
                       COALESCE(target_record.servreq_locationcode_text::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_text::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.servicerequest WHERE servicerequest_id = current_record.servicerequest_id;
                 END IF;
@@ -4524,7 +4544,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.servicerequest
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE servicerequest_id = current_record.servicerequest_id;
             END;
     END LOOP;
@@ -4604,10 +4624,11 @@ BEGIN
                       COALESCE(target_record.proc_note_time::text,'#NULL#') = COALESCE(current_record.proc_note_time::text,'#NULL#') AND
                       COALESCE(target_record.proc_note_text::text,'#NULL#') = COALESCE(current_record.proc_note_text::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.procedure (
+                        procedure_id,
                         procedure_raw_id,
                         proc_id,
                         proc_encounter_id,
@@ -4680,6 +4701,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.procedure_id,
                         current_record.procedure_raw_id,
                         current_record.proc_id,
                         current_record.proc_encounter_id,
@@ -4751,7 +4773,7 @@ BEGIN
                         current_record.proc_note_text,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.procedure WHERE procedure_id = current_record.procedure_id;
                 ELSE
@@ -4827,7 +4849,7 @@ BEGIN
                       COALESCE(target_record.proc_note_time::text,'#NULL#') = COALESCE(current_record.proc_note_time::text,'#NULL#') AND
                       COALESCE(target_record.proc_note_text::text,'#NULL#') = COALESCE(current_record.proc_note_text::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.procedure WHERE procedure_id = current_record.procedure_id;
                 END IF;
@@ -4835,7 +4857,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.procedure
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE procedure_id = current_record.procedure_id;
             END;
     END LOOP;
@@ -4881,10 +4903,11 @@ BEGIN
                       COALESCE(target_record.cons_provision_dataperiod_start::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_start::text,'#NULL#') AND
                       COALESCE(target_record.cons_provision_dataperiod_end::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_end::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.consent (
+                        consent_id,
                         consent_raw_id,
                         cons_id,
                         cons_patient_id,
@@ -4923,6 +4946,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.consent_id,
                         current_record.consent_raw_id,
                         current_record.cons_id,
                         current_record.cons_patient_id,
@@ -4960,7 +4984,7 @@ BEGIN
                         current_record.cons_provision_dataperiod_end,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.consent WHERE consent_id = current_record.consent_id;
                 ELSE
@@ -5002,7 +5026,7 @@ BEGIN
                       COALESCE(target_record.cons_provision_dataperiod_start::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_start::text,'#NULL#') AND
                       COALESCE(target_record.cons_provision_dataperiod_end::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_end::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.consent WHERE consent_id = current_record.consent_id;
                 END IF;
@@ -5010,7 +5034,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.consent
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE consent_id = current_record.consent_id;
             END;
     END LOOP;
@@ -5037,10 +5061,11 @@ BEGIN
                       COALESCE(target_record.loc_description::text,'#NULL#') = COALESCE(current_record.loc_description::text,'#NULL#') AND
                       COALESCE(target_record.loc_alias::text,'#NULL#') = COALESCE(current_record.loc_alias::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.location (
+                        location_id,
                         location_raw_id,
                         loc_id,
                         loc_identifier_use,
@@ -5060,6 +5085,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
+                        current_record.location_id,
                         current_record.location_raw_id,
                         current_record.loc_id,
                         current_record.loc_identifier_use,
@@ -5078,7 +5104,7 @@ BEGIN
                         current_record.loc_alias,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.location WHERE location_id = current_record.location_id;
                 ELSE
@@ -5101,7 +5127,7 @@ BEGIN
                       COALESCE(target_record.loc_description::text,'#NULL#') = COALESCE(current_record.loc_description::text,'#NULL#') AND
                       COALESCE(target_record.loc_alias::text,'#NULL#') = COALESCE(current_record.loc_alias::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.location WHERE location_id = current_record.location_id;
                 END IF;
@@ -5109,7 +5135,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.location
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE location_id = current_record.location_id;
             END;
     END LOOP;
@@ -5123,22 +5149,24 @@ BEGIN
                 WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                       COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.pids_per_ward (
+                        pids_per_ward_id,
                         pids_per_ward_raw_id,
                         ward_name,
                         patient_id,
                         input_datetime
                     )
                     VALUES (
+                        current_record.pids_per_ward_id,
                         current_record.pids_per_ward_raw_id,
                         current_record.ward_name,
                         current_record.patient_id,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM cds2db_in.pids_per_ward WHERE pids_per_ward_id = current_record.pids_per_ward_id;
                 ELSE
@@ -5148,7 +5176,7 @@ BEGIN
                     WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                       COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM cds2db_in.pids_per_ward WHERE pids_per_ward_id = current_record.pids_per_ward_id;
                 END IF;
@@ -5156,7 +5184,7 @@ BEGIN
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.pids_per_ward
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log Msg:'--||error_message
+                    , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     WHERE pids_per_ward_id = current_record.pids_per_ward_id;
             END;
     END LOOP;
