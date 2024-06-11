@@ -34,7 +34,7 @@
                 WHEN OTHERS THEN
                     UPDATE <%SCHEMA_2%>.<%TABLE_NAME_2%>
                     SET last_check_datetime = CURRENT_TIMESTAMP
-                    , current_dataset_status = 'ERROR func: <%COPY_FUNC_NAME%> Msg:'||error_message
+                    , current_dataset_status = 'ERROR func: <%COPY_FUNC_NAME%>'
                     WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
             END;
     END LOOP;
