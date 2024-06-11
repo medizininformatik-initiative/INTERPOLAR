@@ -241,6 +241,9 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
     pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
   }
+  pids_per_ward$`Station 1` <- pids_per_ward$`Station 1`[!grepl("WP", pids_per_ward$`Station 1`)]
+  pids_per_ward$`Station 2` <- pids_per_ward$`Station 2`[!grepl("WP", pids_per_ward$`Station 2`)]
+  pids_per_ward$`Station 3` <- pids_per_ward$`Station 3`[!grepl("WP", pids_per_ward$`Station 3`)]
   return(pids_per_ward)
 }
 
