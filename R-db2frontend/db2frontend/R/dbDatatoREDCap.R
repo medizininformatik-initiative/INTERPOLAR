@@ -114,7 +114,7 @@ copyRedcap2DB <- function() {
   rc_mrp<-redcapAPI::exportRecordsTyped(rcon,forms="mrpdokumentation_validierung")
 
   #establish connection to db
-  ddbcon <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
+  dbcon <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
                                 host = DB_GENERAL_HOST,
                                 port = DB_GENERAL_PORT,
                                 user = DB_DB2FRONTEND_USER,
