@@ -10,10 +10,12 @@
                 IF data_count = 0
                 THEN
                     INSERT INTO <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
+                        <%TABLE_NAME%>_id,
                         <%TEMPLATE_COPY_FUNCTION_SUB_COLUMNS%>,
                         input_datetime
                     )
                     VALUES (
+                        current_record.<%TABLE_NAME%>_id,
                         <%TEMPLATE_COPY_FUNCTION_SUB_CURRENT_RECORD_COLUMNS%>,
                         current_record.input_datetime
                     );
