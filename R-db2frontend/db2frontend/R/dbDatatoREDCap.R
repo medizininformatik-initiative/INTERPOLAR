@@ -105,7 +105,7 @@ copyRedcap2DB <- function() {
   initConstants()
 
   #connect to REDCap project
-  redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+  rcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
   #get data from REDCap
   rc_pat<-redcapAPI::exportRecordsTyped(rcon,forms="patient")
