@@ -423,6 +423,12 @@ getCreateViewCreateOrReplaceViewStatements <- function(table_description, script
     single_statement <- gsub("<%TABLE_NAME_2%>", full_tablename_2, single_statement)
     single_statement <- gsub("<%SIMPLE_TABLENAME%>", tablename, single_statement)
     single_statement <- gsub("<%SCHEMA_3%>", rights_first_row$SCHEMA_3, single_statement)
+
+    indentation <- etlutils::getWhitespacesBeforeWord(single_statement, "<%TABLE_COLUMNS%>")
+    collapse <- paste0(",\n", indentation)
+    column_names <- paste0(table_description[[tablename]]$column_name, collapse =  collapse)
+    single_statement <- gsub("<%TABLE_COLUMNS%>", column_names, single_statement)
+
     statements <- paste0(statements, single_statement, "\n")
   }
   return(statements)
