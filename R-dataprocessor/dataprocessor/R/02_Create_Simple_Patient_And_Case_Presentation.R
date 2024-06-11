@@ -265,10 +265,10 @@ createFrontendTables <- function() {
     return(text)
   }
 
-  # This function creates a table for frontend display containing patient information
-  # based on the provided patient IDs per ward. It retrieves patient information from
-  # the database and constructs the frontend table.
-  createPatientFrontendTable <- function(pids_per_ward) {
+  # This functions loads the last version of a patient.
+  # NOTE: THIS IS ALWAYS THE VERY LAST VERSION. THE current_date IS CURRENTLY IGNORED HERE.
+  # If there will be
+  getPatientsFromDatabase <- function(pids_per_ward) {
     # if there are the same pids multiple in the pids per ward table (same patient on different
     # wards or multiple in the same ward, then the result will contain this patient multiple times
     # too! This error has to be fixed by the DIZ at the beginning of the process (preventing same
@@ -276,7 +276,16 @@ createFrontendTables <- function() {
     pids <- unique(pids_per_ward$patient_id)
     pids <- extractIDsFromReferences(pids)
     patients <- loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
+    return(patients)
+  }
 
+
+  # This function creates a table for frontend display containing patient information
+  # based on the provided patient IDs per ward. It retrieves patient information from
+  # the database and constructs the frontend table.
+  createPatientFrontendTable <- function(patients) {
+
+    pids <- unique(patients$pat_id)
     pids_count <- length(pids)
 
     # Initialize an empty data table to store patient information
@@ -307,11 +316,14 @@ createFrontendTables <- function() {
   # This function creates a table for frontend display containing encounter information
   # based on the provided patient IDs per ward. It retrieves encounter information from
   # the database and constructs the frontend table.
-  createEncounterFrontendTable <- function(pids_per_ward) {
+  createEncounterFrontendTable <- function(pids_per_ward, patients) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
-      fall_id = character(),
-      fall_pat_id = character(),
+      fall_id	= character(), # v_encounter_all - enc_id
+      fall_fe_id	= character(), # v_encounter_all - encounter_id
+      fall_pat_id	= character(), # v_patient_all - pat_id
+      patient_id_fk	= character(), # v_patient_all - patient_id
+      record_id	= character(), # v_patient_all - patient_id
       fall_studienphase = character(),
       fall_station = character(),
       fall_aufn_dat = as.POSIXct(character()),
@@ -346,12 +358,13 @@ createFrontendTables <- function() {
     conditions <- etlutils::dbGetQuery(db_read_connection, query)
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
+
       pid <- pids_per_ward$patient_id[pid_index]
       pid_encounters <- encounters[enc_patient_id == pid]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
-        etlutils::catErrorMessage(paste0("No encounter found for PID ", pid))
+        etlutils::catErrorMessage(paste0("No Encounter found for PID ", pid))
         next
       }
 
@@ -359,7 +372,7 @@ createFrontendTables <- function() {
       unique_encounter_IDs <- unique(pid_encounters$enc_id)
       # if there are errors in the data then there can be more than one encounter
       if (length(unique_encounter_IDs) > 1) {
-        etlutils::catErrorMessage(paste0("Multiple encounters found for PID ", pid, "\n",
+        etlutils::catErrorMessage(paste0("Multiple Encounters found for PID ", pid, "\n",
                                    "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
@@ -367,9 +380,25 @@ createFrontendTables <- function() {
       # highlighted here.
       pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
 
+      pid_patient <- patients[pat_id == extractIDsFromReferences(pid)]
+
+      # check possible errors
+      if (!nrow(pid_patient)) { # no Patient resource found for PID
+        etlutils::catErrorMessage(paste0("No Patient resources found for PID ", pid))
+        next
+      }
+
+      if (nrow(pid_patient) > 1) {
+        etlutils::catErrorMessage(paste0("Multiple Patient resources found for PID ", pid, " in database\n",
+                                         "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
+      }
+
+      # make sure that it is a single patient resource by choosing the last of the potencial list
+      pid_patient <- pid_patient[nrow(pid_patient)]
+
       # Initialize start index for adding rows to the frontend table
       start_index <- nrow(enc_frontend_table)
-      enc_frontend_table <- etlutils::addEmptyRows(enc_frontend_table, length(unique_encounter_IDs))
+      enc_frontend_table <- etlutils::addEmptyRows(enc_frontend_table, length(unique_encounter_IDs), "end")
 
       # Iterate over each encounter for the current patient
       for (i in 1:length(pid_encounters)) {
@@ -378,13 +407,16 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        encounter_id <- pid_encounters[[i]]$enc_id[1]
-        encounter_start <- pid_encounters[[i]]$enc_period_start[1]
-        encounter_end <- pid_encounters[[i]]$enc_period_end[1]
-        data.table::set(enc_frontend_table, target_index, 'fall_id', encounter_id)
-        data.table::set(enc_frontend_table, target_index, 'fall_pat_id', extractIDsFromReferences(pid))
-        data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', encounter_start)
-        data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',encounter_end)
+        enc_id <- pid_encounters[[i]]$enc_id[1]
+        enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
+        enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
+        data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
+        data.table::set(enc_frontend_table, target_index, 'fall_fe_id', pid_encounters[[i]]$encounter_id[1])
+        data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
+        data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, 'record_id', pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
+        data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
         data.table::set(enc_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])
 
         # Extract ward name from pids_per_ward table
@@ -405,7 +437,7 @@ createFrontendTables <- function() {
           table_name <- getFirstTableWithNamePart(db_read_connection, "observation_all")
           # Extract the Observations by direct encounter references
           query <- paste0("SELECT * FROM ", table_name, "\n",
-                          "  WHERE obs_encounter_id = 'Encounter/", encounter_id, "' AND\n",
+                          "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_date, "'\n")
@@ -417,7 +449,7 @@ createFrontendTables <- function() {
                             "  WHERE obs_patient_id = '", pid, "' AND\n",
                             "        obs_code_code IN (", codes, ") AND\n",
                             "        obs_code_system = '", system, "' AND\n",
-                            "        obs_effectivedatetime > '", encounter_start, "' AND\n",
+                            "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_date, "'\n")
             observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
           }
@@ -449,8 +481,11 @@ createFrontendTables <- function() {
     etlutils::stopWithError(message)
   }
 
+  # Load the Patient resources from database
+  patients_from_database <- getPatientsFromDatabase(pids_per_ward)
+
   # Create frontend table for patients
-  patient_frontend_table <- createPatientFrontendTable(pids_per_ward)
+  patient_frontend_table <- createPatientFrontendTable(patients_from_database)
   # Write patient frontend table to the database
   etlutils::writeTableToDatabase(patient_frontend_table,
                                  getDatabaseWriteConnection(),
@@ -458,7 +493,7 @@ createFrontendTables <- function() {
                                  clear_before_insert = TRUE)
 
   # Create frontend table for encounters
-  encounter_frontend_table <- createEncounterFrontendTable(pids_per_ward)
+  encounter_frontend_table <- createEncounterFrontendTable(pids_per_ward, patients_from_database)
   # Write encounter frontend table to the database
   etlutils::writeTableToDatabase(encounter_frontend_table,
                                  getDatabaseWriteConnection(),
