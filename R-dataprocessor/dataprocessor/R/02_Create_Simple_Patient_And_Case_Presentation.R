@@ -101,6 +101,7 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
+  # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
   table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
@@ -132,7 +133,7 @@ getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
 getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
   resource_id_column <- getIDColumn(resource_name)
   if (filter_column == resource_id_column) {
-    # remove reosurce name and the slash if the IDs are references and not pure IDs
+    # remove resource name and the slash if the IDs are references and not pure IDs
     filter_column_values <- gsub(paste0("^", resource_name, "/"), "", filter_column_values)
   }
   # quote every pid and collapse the vector comma separated
@@ -280,7 +281,9 @@ createFrontendTables <- function() {
 
     # Initialize an empty data table to store patient information
     patient_frontend_table <- data.table(
-      pat_id = rep(NA_character_, times = pids_count),
+      record_id = rep(NA_character_, times = pids_count), # v_patient_all - patient_id
+      patient_fe_id = NA_character_, # v_patient_all - patient_id
+      pat_id = NA_character_, # v_patient_all - pat_id
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
@@ -290,6 +293,8 @@ createFrontendTables <- function() {
     # Iterate over each unique patient ID to populate the frontend table
     for (i in seq_len(pids_count)) {
       patient <- patients[pat_id %in% pids[i]]
+      patient_frontend_table$record_id[i] <- patient$patient_id
+      patient_frontend_table$patient_fe_id[i] <- patient$patient_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
