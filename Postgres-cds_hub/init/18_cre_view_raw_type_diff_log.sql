@@ -1,6 +1,8 @@
+
 --Create SQL View not Typed Datasets in Schema cds2db_out
 CREATE OR REPLACE VIEW cds2db_out.v_encounter AS (
    SELECT DISTINCT
+      min(encounter_id) encounter_id,
       enc_id,
       enc_patient_id,
       enc_partof_id,
@@ -74,10 +76,83 @@ CREATE OR REPLACE VIEW cds2db_out.v_encounter AS (
       enc_serviceprovider_display
    FROM (SELECT * FROM db_log.encounter_raw UNION SELECT * FROM cds2db_in.encounter_raw) m
    WHERE m.encounter_id NOT IN (SELECT encounter_raw_id FROM db_log.encounter UNION SELECT encounter_raw_id FROM cds2db_in.encounter)
+   GROUP BY
+      enc_id,
+      enc_patient_id,
+      enc_partof_id,
+      enc_identifier_use,
+      enc_identifier_type_system,
+      enc_identifier_type_version,
+      enc_identifier_type_code,
+      enc_identifier_type_display,
+      enc_identifier_type_text,
+      enc_identifier_system,
+      enc_identifier_value,
+      enc_identifier_start,
+      enc_identifier_end,
+      enc_status,
+      enc_class_system,
+      enc_class_version,
+      enc_class_code,
+      enc_class_display,
+      enc_type_system,
+      enc_type_version,
+      enc_type_code,
+      enc_type_display,
+      enc_type_text,
+      enc_servicetype_system,
+      enc_servicetype_version,
+      enc_servicetype_code,
+      enc_servicetype_display,
+      enc_servicetype_text,
+      enc_period_start,
+      enc_period_end,
+      enc_diagnosis_condition_id,
+      enc_diagnosis_use_system,
+      enc_diagnosis_use_version,
+      enc_diagnosis_use_code,
+      enc_diagnosis_use_display,
+      enc_diagnosis_use_text,
+      enc_diagnosis_rank,
+      enc_hospitalization_admitsource_system,
+      enc_hospitalization_admitsource_version,
+      enc_hospitalization_admitsource_code,
+      enc_hospitalization_admitsource_display,
+      enc_hospitalization_admitsource_text,
+      enc_hospitalization_dischargedisposition_system,
+      enc_hospitalization_dischargedisposition_version,
+      enc_hospitalization_dischargedisposition_code,
+      enc_hospitalization_dischargedisposition_display,
+      enc_hospitalization_dischargedisposition_text,
+      enc_location_id,
+      enc_location_type,
+      enc_location_identifier_use,
+      enc_location_identifier_type_system,
+      enc_location_identifier_type_version,
+      enc_location_identifier_type_code,
+      enc_location_identifier_type_display,
+      enc_location_identifier_type_text,
+      enc_location_display,
+      enc_location_status,
+      enc_location_physicaltype_system,
+      enc_location_physicaltype_version,
+      enc_location_physicaltype_code,
+      enc_location_physicaltype_display,
+      enc_location_physicaltype_text,
+      enc_serviceprovider_id,
+      enc_serviceprovider_type,
+      enc_serviceprovider_identifier_use,
+      enc_serviceprovider_identifier_type_system,
+      enc_serviceprovider_identifier_type_version,
+      enc_serviceprovider_identifier_type_code,
+      enc_serviceprovider_identifier_type_display,
+      enc_serviceprovider_identifier_type_text,
+      enc_serviceprovider_display  
 );
 
 CREATE OR REPLACE VIEW cds2db_out.v_patient AS (
    SELECT DISTINCT
+      min(patient_id) patient_id,
       pat_id,
       pat_identifier_use,
       pat_identifier_type_system,
@@ -97,6 +172,24 @@ CREATE OR REPLACE VIEW cds2db_out.v_patient AS (
       pat_address_postalcode
    FROM (SELECT * FROM db_log.patient_raw UNION SELECT * FROM cds2db_in.patient_raw) m
    WHERE m.patient_id NOT IN (SELECT patient_raw_id FROM db_log.patient UNION SELECT patient_raw_id FROM cds2db_in.patient)
+   GROUP BY
+      pat_id,
+      pat_identifier_use,
+      pat_identifier_type_system,
+      pat_identifier_type_version,
+      pat_identifier_type_code,
+      pat_identifier_type_display,
+      pat_identifier_type_text,
+      pat_identifier_system,
+      pat_identifier_value,
+      pat_identifier_start,
+      pat_identifier_end,
+      pat_name_text,
+      pat_name_family,
+      pat_name_given,
+      pat_gender,
+      pat_birthdate,
+      pat_address_postalcode
 );
 
 CREATE OR REPLACE VIEW cds2db_out.v_condition AS (
@@ -1293,5 +1386,3 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward TO cds2db_user;
 GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
-
-
