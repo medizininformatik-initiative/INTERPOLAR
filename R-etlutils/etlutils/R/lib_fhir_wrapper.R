@@ -22,7 +22,7 @@
 #' This can be used to avoid choking a weak server with too many requests to quickly. Defaults to zero.
 #' @return A fhir_bundle_list when save_to_disc = NULL (the default), else NULL.
 #' @export
-polar_fhir_search <- function(
+executeFHIRSearchVariation <- function(
   request                = fhircrackr::fhir_current_request(),
   body                   = NULL,
   max_bundles            = MAX_ENCOUNTER_BUNDLES,
@@ -43,8 +43,8 @@ polar_fhir_search <- function(
       max_bundles            = max_bundles,
       verbose                = verbose,
       delay_between_attempts = delay_between_attempts,
-      log_errors             = if (!is.null(log_errors)) polar_add_to_log_path(log_errors),
-      save_to_disc           = if (!is.null(save_to_disc)) polar_add_to_bundles_path(save_to_disc),
+      log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
+      save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
   } else if (!is.null(FHIR_SERVER_USER) && !is.null(FHIR_SERVER_PASS) && FHIR_SERVER_USER != "" && FHIR_SERVER_PASS != "") {
@@ -57,8 +57,8 @@ polar_fhir_search <- function(
       max_bundles            = max_bundles,
       verbose                = verbose,
       delay_between_attempts = delay_between_attempts,
-      log_errors             = if (!is.null(log_errors)) polar_add_to_log_path(log_errors),
-      save_to_disc           = if (!is.null(save_to_disc)) polar_add_to_bundles_path(save_to_disc),
+      log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
+      save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
   } else {
@@ -69,8 +69,8 @@ polar_fhir_search <- function(
       max_bundles            = max_bundles,
       verbose                = verbose,
       delay_between_attempts = delay_between_attempts,
-      log_errors             = if (!is.null(log_errors)) polar_add_to_log_path(log_errors),
-      save_to_disc           = if (!is.null(save_to_disc)) polar_add_to_bundles_path(save_to_disc),
+      log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
+      save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
   }

@@ -1,11 +1,18 @@
 FROM rocker/r-ver:4.3.2
 
+# Select cran mirror
+
+RUN echo 'options(repos = c(CRAN = "https://ftp.fau.de/cran/"))' >>"${R_HOME}/etc/Rprofile.site"
+
+
 # etlutils
 
 RUN apt-get update \
-    && apt-get install -y libssl-dev libcurl4-openssl-dev libpq-dev
+    && apt-get install -y libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev
 
-RUN /rocker_scripts/bin/install2.r fhircrackr memuse openxlsx RcppTOML DBI lubridate RPostgres
+RUN /rocker_scripts/bin/install2.r memuse openxlsx RcppTOML DBI lubridate RPostgres ICD10gm data.table httr RcppTOML rlang stringr
+RUN /rocker_scripts/bin/install2.r xml2
+RUN /rocker_scripts/bin/install2.r fhircrackr
 
 WORKDIR /src
 
@@ -16,13 +23,13 @@ RUN R CMD build R-etlutils/etlutils
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-etlutils/etlutils
 
 
-# kds2db
+# cds2db
 
-COPY R-kds2db R-kds2db
+COPY R-cds2db R-cds2db
 
-RUN R CMD build R-kds2db/kds2db
+RUN R CMD build R-cds2db/cds2db
 
-RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-kds2db/kds2db
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cds2db/cds2db
 
 
 # db2frontend
@@ -37,6 +44,14 @@ RUN R CMD build R-db2frontend/db2frontend
 
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-db2frontend/db2frontend
 
+
+# DataProcessor
+
+COPY R-dataprocessor R-dataprocessor
+
+RUN R CMD build R-dataprocessor/dataprocessor
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-dataprocessor/dataprocessor
 
 # cleanup
 

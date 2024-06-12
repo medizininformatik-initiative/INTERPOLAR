@@ -1,5 +1,3 @@
-version: '3.2'
-
 services:
 
   # FHIR Server for testing/simulating
@@ -27,16 +25,16 @@ services:
   redcap_db:
     image: mariadb:11
     restart: unless-stopped
-    env_file: ${PWD}/REDCap-db/.env-redcap-db
+    env_file: ./REDCap-db/.env-redcap-db
     secrets:
       - redcap_db_root.password
       - redcap_db.password
     networks:
       - internal
     volumes:
-      - ${PWD}/REDCap-db/mariadb.cnf:/etc/mysql/mariadb.cnf
+      - ./REDCap-db/mariadb.cnf:/etc/mysql/mariadb.cnf
       - redcap-db-data:/var/lib/mysql
-      - ${PWD}/REDCap-db/init:/docker-entrypoint-initdb.d
+      - ./REDCap-db/init:/docker-entrypoint-initdb.d
       #- ./.my.cnf:/root/.my.cnf
     #command: --default-authentication-plugin=mysql_native_password
 
@@ -59,12 +57,12 @@ services:
       - ./REDCap-app/log/:/var/log/
 
 
-  # Database (postgres) for medical safety (AMTS) information
-  amts_db:
-    build: ./Postgres-amts_db/build
+  # Database (postgres) for CDS_HUB
+  cds_hub:
+    build: ./Postgres-cds_hub/build
     restart: unless-stopped
     #    healthcheck:
-    # test: [ "CMD-SHELL", "pg_isready -U postgres -d amts_db" ]
+    # test: [ "CMD-SHELL", "pg_isready -U postgres -d cds_hub" ]
     # interval: 10s
     # timeout: 5s
     # retries: 5
@@ -72,38 +70,40 @@ services:
       - "15432:5432"
     environment:
       TZ: Europe/Berlin
-      POSTGRES_PASSWORD_FILE: /run/secrets/amts_db_admin.password
-      POSTGRES_USER: amts_db_admin
-      POSTGRES_DB: amts_db
+      POSTGRES_PASSWORD_FILE: /run/secrets/cds_hub_db_admin.password
+      POSTGRES_USER: cds_hub_db_admin
+      POSTGRES_DB: cds_hub_db
     command: "-c config_file=/etc/postgresql.conf"
     secrets:
-      - amts_db_admin.password
+      - cds_hub_db_admin.password
     networks:
       - internal
     volumes:
-      - db-data:/var/lib/postgresql/data
-      - ${PWD}/Postgres-amts_db/postgresql.conf:/etc/postgresql.conf
-      - ${PWD}/Postgres-amts_db/init/:/docker-entrypoint-initdb.d/
+      - cds_hub_db-data:/var/lib/postgresql/data
+      - ./Postgres-cds_hub/postgresql.conf:/etc/postgresql.conf
+      - ./Postgres-cds_hub/init/:/docker-entrypoint-initdb.d/
 
-  # Web-administration of amts_db (optional)
+  # Web-administration of cds_hub__db (optional)
   pgadmin:
-    image: dpage/pgadmin4:7.2
+    image: elestio/pgadmin
     restart: unless-stopped
     ports:
       - "127.0.0.1:8089:80"
     environment:
       PGADMIN_DEFAULT_PASSWORD: "password"
-      PGADMIN_DEFAULT_EMAIL: a@b.cd
+      PGADMIN_DEFAULT_EMAIL: a@b.cda
+      PGADMIN_SERVER_JSON_FILE: pgadmin_cds_hub.json
     depends_on:
-      - amts_db
+      - cds_hub
     networks:
       - internal
       - external
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin_cds_hub.json:/pgadmin4/pgadmin_cds_hub.json  
 
   # This section is no service, but for building the R-environment
-  # to execute (manualy) R scripts for r-kds2db and r-db2frontend,
+  # to execute (manualy) R scripts for r-cds2db and r-db2frontend,
   # e.g. StartRetrieval.R
   r-env:
     build:
@@ -111,14 +111,16 @@ services:
       dockerfile: Dockerfile_R
     working_dir: /src
     restart: "no"
+    environment:
+      TZ: Europe/Berlin
     volumes:
-      - ./R-kds2db/outputLocal:/src/R-kds2db/outputLocal
-      - ./R-kds2db/outputGlobal:/src/R-kds2db/outputGlobal
-      - ./R-kds2db/kds2db_config.toml:/src/R-kds2db/kds2db_config.toml
+      - ./R-cds2db/outputLocal:/src/R-cds2db/outputLocal
+      - ./R-cds2db/outputGlobal:/src/R-cds2db/outputGlobal
+      - ./R-cds2db/cds2db_config.toml:/src/R-cds2db/cds2db_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
-      - ./amts_db_config.toml:/src/amts_db_config.toml
+      - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
     depends_on:
-      - amts_db
+      - cds_hub
       - redcap
       - redcap_db
     networks:
@@ -133,8 +135,8 @@ networks:
     driver: bridge
 
 secrets:
-  amts_db_admin.password:
-    file: ./Postgres-amts_db/.env_amts_db_admin.password
+  cds_hub_db_admin.password:
+    file: ./Postgres-cds_hub/.env_cds_hub_db_admin.password
   redcap_db_root.password:
     file: ./REDCap-db/.env_redcap_db_root.password
   redcap_db.password:
@@ -144,6 +146,6 @@ volumes:
     redcap-db-data:
     blaze-data-DIC:
     blaze-data-IP:
-    db-data:
+    cds_hub_db-data:
     pgadmin-data:
 

@@ -1,3 +1,6 @@
+# Environment for saving the clock
+.lib_clock_env <- new.env()
+
 #' Make a duration human readable
 #'
 #' @param time_in_secs A number of length one.
@@ -263,14 +266,14 @@ Clock = setRefClass(
       last_row <- max(which(.history$state == 'RUNNING'))
       # add end time, error and state to this row
       .history[last_row, 'end'] <<- now_
-      .history[last_row, 'error'] <<- if (inherits(err, 'try-error')) cat_red(err) else ''
+      .history[last_row, 'error'] <<- if (inherits(err, 'try-error')) err else ''
       .history[last_row, 'state'] <<- if (inherits(err, 'try-error')) 'ERROR' else 'OK'
       # if 0 < verbose print some messages
       if (0 < verbose) {
         cat(paste0('finish   ', message, ': ', .history[last_row, end], '\n'))
         cat(paste0('duration ', message, ': ', .history[last_row, end] - .history[last_row, start], 's\n'))
       }
-      # resore digits
+      # restore digits
       options(digits = digits)
       # return result or error
       err
@@ -305,30 +308,40 @@ Clock = setRefClass(
   )
 )
 
-#' Create a Clock
+#' Create a Clock Object
 #'
-#' @return a Clock
+#' This function creates a clock object and assigns it to the global environment under the specified variable name.
 #'
-#' @examples
-#' my_clock <- createClock()
-#' my_clock$measure_process_time('Process A', {Sys.sleep(1)})
-#' # show raw data
-#' my_clock$complete()
-#' # reset clock
-#' my_clock$reset()
-#' # show clock
-#' my_clock$show() # the same as my_clock or print(my_clock)
-#' ### save time measurements as tsv
-#' # my_clock$write('my_clock')
-#' ### save time measurements as csv
-#' # my_clock$write(
-#' #   filename_without_extension = 'my_clock',
-#' #   sep = ',',
-#' #   ext = 'csv',
-#' #   hide_errors = FALSE
-#' # )
+#' @param clock_variable_name The name of the variable to which the clock object will be assigned. Default is "PROCESS_CLOCK".
+#'
+#' @details The function creates a clock object using the `methods::new()` function with the class "Clock" and assigns it to the global environment.
+#'
+#' @return The clock object is assigned to the global environment under the specified variable name.
 #'
 #' @export
-createClock <- function() {
-  methods::new(Class = 'Clock')
+createClock <- function(clock_variable_name = "PROCESS_CLOCK") {
+  .lib_clock_env[[clock_variable_name]] <- methods::new(Class = 'Clock')
+}
+
+#' Get Clock Variable from Environment
+#'
+#' This function retrieves the value of a specified clock variable from the internal clock environment.
+#'
+#' @param clock_variable_name A character string specifying the name of the clock variable to retrieve.
+#'                            Defaults to "PROCESS_CLOCK".
+#' @return The value of the specified clock variable.
+#' @export
+getClock <- function(clock_variable_name = "PROCESS_CLOCK") {
+  .lib_clock_env[[clock_variable_name]]
+}
+
+#' Print Clock Variable
+#'
+#' This function prints the value of a clock variable based on the provided name.
+#'
+#' @param clock_variable_name The name of the clock variable to print. Defaults to "PROCESS_CLOCK".
+#'
+#' @export
+printClock <- function(clock_variable_name = "PROCESS_CLOCK") {
+  print(.lib_clock_env[[clock_variable_name]])
 }
