@@ -64,7 +64,7 @@ copyDB2Redcap <- function() {
        patient_complete FROM v_patient")
 
   FallFromDB <- DBI::dbGetQuery(dbcon,
-       "SELECT record_id, redcap_repeat_instrument, redcap_repeat_instance, patient_id_fk, fall_fe_id, fall_pat_id, fall_id,
+       "SELECT record_id, redcap_repeat_instrument, redcap_repeat_instance, patient_id_fk, fall_typ_id, fall_fe_id, fall_pat_id, fall_id,
        fall_studienphase, fall_station, fall_aufn_dat, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit,
        fall_groesse, fall_groesse_einheit, fall_status, fall_ent_dat, fall_complete FROM v_fall")
 
