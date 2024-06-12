@@ -13,5 +13,5 @@ Den API Token finden Sie im importierten REDCap-Projekt unter: Abschnitt "Applic
 
 Anschließen können Sie die in der CDS_HUB_DB für das Frontend verfügbaren Werte übernehmen:
 ```console
-docker-compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
+docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
 ```

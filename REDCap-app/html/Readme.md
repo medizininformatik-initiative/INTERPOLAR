@@ -8,24 +8,24 @@
      * _REDCap-app/html/redcap/temp_
      * _REDCap-app/html/redcap/modules_
      * _REDCap-app/html/redcapdocs_ \
-  ``` chmod ugo+rwx redcap/temp redcap/modules redcapdocs ```
+    ``` chmod ugo+rwx redcap/temp redcap/modules redcapdocs ```
   1. Bitte passen Sie die Verbindungsparameter zur Datenbank (mariadb in diesem Docker Compose Setup) in der Datei _redcap/database.php_ an. Verwenden Sie dafür den von Ihnen gewählten Redcap Datenbank-Namen, den Benutzernamen und das Passwort entspr. der Einträge in den _.env-Dateien_ unter _REDCap-db/.env_redcap_db*_. Ändern Sie außerdem die SALT Variable. \
   Beispiel für die Einträge in _REDCap-app/html/redcap/database.php_:
-  ```php
-  $hostname   = 'redcap_db';   //your_mysql_host_name
-  $db         = 'redcap';      //your_mysql_db_name
-  $username   = 'redcap';      //your_mysql_db_username
-  $password   = 'password_for_redcap_user';    //your_mysql_db_password
-  ```
-  ```php
-  $salt = '32534739';
-  ```
-  6. wechseln Sie in das Hauptverzeichnis und führen Sie 'docker-compose up' aus:
-  ```console
-  cd ../..
-  docker-compose up
-  ```
-  7. Rufen Sie im Browser die REDCap Install-Seite auf: [http://127.0.0.1:8082/redcap/install.php](http://127.0.0.1:8082/redcap/install.php) (REDCap-URL)
+     ```php
+     $hostname   = 'redcap_db';   //your_mysql_host_name
+     $db         = 'redcap';      //your_mysql_db_name
+     $username   = 'redcap';      //your_mysql_db_username
+     $password   = 'password_for_redcap_user';    //your_mysql_db_password
+     ```
+     ```php
+     $salt = '32534739';
+     ```
+  1. wechseln Sie in das Hauptverzeichnis und führen Sie 'docker compose up' aus:
+     ```console
+     cd ../..
+     docker compose up
+     ```
+  1. Rufen Sie im Browser die REDCap Install-Seite auf: [http://127.0.0.1:8082/redcap/install.php](http://127.0.0.1:8082/redcap/install.php) (REDCap-URL)
      * Hinweis: _Sie können die REDCap-URL ggf. über einen Reverse-Proxy oder einen SSH-Tunnel auf dem Client-PC verfügbar machen._
      * Sie sollten Install-Seite mit mehreren Schritten sehen:![image](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/1b442942-cac8-4378-acc6-446d61956f8d)
 
@@ -33,9 +33,9 @@
         * STEP 2) Diese Anpassungen haben Sie schon vorgenommen und es sollte in gründer Schrift folgendes zu lesen sein: "Connection to the MySQL database 'redcap' was successful!"
         * STEP 3) Nehmen Sie ggf. _optional_ Änderungen vor. Klicken Sie anschließend auf "Generate SQL Install Script"
         * STEP 4) Kopieren Sie den Inhalt des SQL-Scripts und fügen Sie ihn in die Datei [REDCap-db/init/10_redcap_install-tables.sql](REDCap-db/init/10_redcap_install-tables.sql) ein. Gehen Sie anschließend zurück zur Console. Ersetzen Sie in der nachfolgenden Befehlszeile "_\<insert redcap db root pw here\>_" durch das REDCap Datenbank **_root_** Passwort und starten sie den Befehl. Das REDCap Datenbank root Passwort finden Sie unter REDCap-db/.env_redcap_db_root.password.
-         ```
-         docker-compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap < REDCap-db/init/10_redcap_install-tables.sql
-         ```
+          ```console
+          docker compose exec -T redcap_db mariadb -u root -p"<insert redcap db root pw here>" redcap < REDCap-db/init/10_redcap_install-tables.sql
+          ```
         * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten. Dies kann zu einem späteren Zeitpunkt erfolgen. Ist im unteren Bereich "CONGRATULATIONS!" zu lesen, können Sie die REDCap mit Klick auf [http://127.0.0.1:8082/redcap/](http://127.0.0.1:8082/redcap/) starten.
      * Hinweis: Diese Schritte müssen nur wiederholt werden, wenn eine neue REDCap Version zum Einsazt kommen soll. Das Update kann auch über die REDCap Weboberfläche im "Control Center" eingespielt werden.
   1. Das INTERPOLAR-Projekt in REDCap importieren:
@@ -47,7 +47,7 @@
      * Klicken Sie auf "Create Project"
      * Unter "My Projects" einscheint nun das angelegte Projekt.
      ![REDCap-Projekt importieren](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/0bfc855c-8586-4c82-8d58-84615ccb1a8f)
-
+1. Fahren Sie mit Schritt 3) [REDCap-app/Readme.md](../Readme.md) fort.
 
 [//]: # (Zurück zur Install-Anleitung einfügen)
 [//]: # (Doku für die Verwendung des REDCap INTERPOLAR-Projektes hier Verweis darauf einfügen)

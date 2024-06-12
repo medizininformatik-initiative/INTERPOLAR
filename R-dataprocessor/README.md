@@ -19,5 +19,5 @@ Weitere Informationen stehen direkt in diesem Abschnitt in der toml-Datei.
 
 Das R-Skript [StartDataProcessor.R](StartDataProcessor.R) startet den Data Processor.
 ```console
-docker-compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R
 ```

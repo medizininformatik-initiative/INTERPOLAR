@@ -64,13 +64,26 @@ Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwen
 
 Ein typischer Ablauf sieht wie folgt aus:
 
- 1. CDS2DB ausführen (Schritt 1 und 2 in der Grafik oben)
- 1. DataProcessor ausführen (Schritt 3 und 4 in der Grafik oben)
- 1. DB2Frontend ausführen (Schritt 5 und 6 in der Grafik oben)
- 1. Frontend aufrufen und dokumentieren
- 1. DB2Frontend ausführen (Schritt 7 und 8 in der Grafik oben)
+ 1. [CDS2DB](./R-cds2db) ausführen (Schritt 1 und 2 in der Grafik oben)
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
+    ```
+ 1. [DataProcessor](./R-dataprocessor) ausführen (Schritt 3 und 4 in der Grafik oben)
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R
+    ```
+ 1. [DB2Frontend](./R-db2frontend) ausführen (Schritt 5 und 6 in der Grafik oben)
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
+    ```
+ 1. Frontend im Web-Browser aufrufen und dokumentieren
+ 1. [DB2Frontend](./R-db2frontend) erneut ausführen (Schritt 7 und 8 in der Grafik oben)
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
+    ```
 
 Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) auszuführen. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
+- Haben Sie einen Fehler gefunden, legen Sie bitte ein Ticket ([Issues->New issue](https://github.com/medizininformatik-initiative/INTERPOLAR/issues/new/choose)) an.
