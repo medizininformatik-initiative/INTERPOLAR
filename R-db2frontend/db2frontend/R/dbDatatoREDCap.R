@@ -99,12 +99,13 @@ copyDB2Redcap <- function() {
 #' # This is a placeholder example and won't run without proper setup:
 #' # copyRedcap2DB()
 #'
+#' @export
 copyRedcap2DB <- function() {
   #get data from patient view / tabelle, schema _out
   initConstants()
 
   #connect to REDCap project
-  redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+  rcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
   #get data from REDCap
   rc_pat<-redcapAPI::exportRecordsTyped(rcon,forms="patient")
@@ -113,8 +114,12 @@ copyRedcap2DB <- function() {
   rc_mrp<-redcapAPI::exportRecordsTyped(rcon,forms="mrpdokumentation_validierung")
 
   #establish connection to db
-  dbcon <- etlutils::dbConnect(DB_DB2FRONTEND_USER, DB_DB2FRONTEND_PASSWORD, DB_GENERAL_NAME, DB_GENERAL_HOST,
-                               DB_GENERAL_PORT, DB_DB2FRONTEND_SCHEMA_IN)
+  dbcon <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
+                                host = DB_GENERAL_HOST,
+                                port = DB_GENERAL_PORT,
+                                user = DB_DB2FRONTEND_USER,
+                                password = DB_DB2FRONTEND_PASSWORD,
+                                schema = DB_DB2FRONTEND_SCHEMA_IN)
 
 
   #write to relevant tables

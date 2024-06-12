@@ -6,18 +6,20 @@
                 FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
                 WHERE <%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>
                       ;
-    
+
                 IF data_count = 0
                 THEN
                     INSERT INTO <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
+                        <%SIMPLE_TABLE_NAME%>_id,
                         <%TEMPLATE_COPY_FUNCTION_SUB_COLUMNS%>,
                         input_datetime
                     )
                     VALUES (
+                        current_record.<%SIMPLE_TABLE_NAME%>_id,
                         <%TEMPLATE_COPY_FUNCTION_SUB_CURRENT_RECORD_COLUMNS%>,
                         current_record.input_datetime
                     );
-    
+
                     -- Delete importet datasets
                     DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
                 ELSE
@@ -26,7 +28,7 @@
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     WHERE <%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>
                     ;
-    
+
                     -- Delete updatet datasets
                     DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
                 END IF;

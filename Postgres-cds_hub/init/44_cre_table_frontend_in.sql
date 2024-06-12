@@ -12,6 +12,9 @@ patient_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+, redcap_repeat_instrument varchar -- temporaer FE vorgabe
+, redcap_repeat_instance varchar  -- temporaer FE vorgabe
+, record_id_42076f varchar  -- temporaer FE vorgabe
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
@@ -27,9 +30,9 @@ fall_station varchar, -- Station wie vom DIZ Definiert
 fall_aufn_dat date, -- Aufnahmedatum
 fall_aufn_diag varchar, -- <div class=rich-text-field-label><p><span style=color: #e03e2d;>Diagnose(n) bei Aufnahme (wird nur zum lesen sein)</span></p></div>
 fall_gewicht_aktuell double precision, -- aktuelles Gewicht (Kg)
-fall_gewicht_aktl_einheit varchar, -- 
+fall_gewicht_aktl_einheit varchar, --
 fall_groesse double precision, -- Größe (cm)
-fall_groesse_einheit varchar, -- 
+fall_groesse_einheit varchar, --
 fall_bmi double precision, -- BMI
 fall_nieren_insuf_chron varchar, -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz
 fall_nieren_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2<div class=rich-text-field-label><p>aktuelles Ausmaß</p></div>
@@ -39,7 +42,7 @@ fall_leber_insuf_ausmass varchar, -- 1, Ausmaß unbekannt | 2, Leicht (Child-Pug
 fall_schwanger_mo varchar, -- 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9<div class=rich-text-field-label><p><span style=color: #000000;>Schwangerschaftsmonat</span></p></div>
 fall_op_geplant varchar, -- 1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant?
 fall_op_dat date, -- Operationsdatum
-fall_status varchar, -- 
+fall_status varchar, --
 fall_ent_dat date, -- Entlassdatum
 fall_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
@@ -59,7 +62,7 @@ meda_typ varchar, -- Typ der Medikationsanalyse
 meda_risiko_pat varchar, -- 1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient
 meda_ma_thueberw varchar, -- Medikationsanalyse / Therapieüberwachung in 24-48h
 meda_aufwand_zeit varchar, -- 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min]
-meda_aufwand_zeit_and int, -- wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten. 
+meda_aufwand_zeit_and int, -- wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten.
 meda_notiz varchar, -- Notizfeld
 medikationsanalyse_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
@@ -102,6 +105,8 @@ mrpdokumentation_validierung_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
+, mrp_pigrund___1 varchar -- Vorgabe FE
+, mrp_pigrund___2 varchar -- Vorgabe FE
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
