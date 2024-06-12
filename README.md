@@ -86,4 +86,4 @@ Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abst
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
-- MII Zulip-Chat Stream [FTS - FHIR Transfer Services](https://mii.zulipchat.com/#narrow/stream/431994-FTS---FHIR-Transfer-Services)
+- Haben Sie einen Fehler gefunden, legen Sie bitte ein Ticket ([Issues->New issue](https://github.com/medizininformatik-initiative/INTERPOLAR/issues/new/choose)) an.
