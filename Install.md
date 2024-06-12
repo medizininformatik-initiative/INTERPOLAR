@@ -24,3 +24,4 @@
      * ggf. muss im pgadmin die Verbindung zur cds_hub_db mit den Zugangsdaten aus der [docker-compose.yml](/docker-compose.yml#L63) (services -> cds_hub: POSTGRES_USER, POSTGRES_DB) bzw. der Passwort-Datei (secrets -> cds_hub_db_admin.password, Postgres-cds_ub/.env_cds_hub_db_admin.password) angelegt werden. Weitere Informationen siehe [Postgres-cds_hub/Readme.md](Postgres-cds_hub/Readme.md)
   1. Das Frontend (REDCap) erreichen Sie im Browser über die URL: [http://127.0.0.1:8082/redcap](http://127.0.0.1:8082/redcap)
 
+[Zurück zur Übersicht](./)
