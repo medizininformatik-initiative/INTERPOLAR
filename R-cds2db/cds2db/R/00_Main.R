@@ -59,6 +59,16 @@ retrieve <- function() {
       names(resource_tables) <- table_names
     }))
 
+    # Wait until the copy cron job runs after insertion
+    etlutils::runProcess(etlutils::runLevel2('Wait until the copy cron job runs after insertion', {
+      start <- as.numeric(Sys.time())
+      while (start + DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING * 60 > as.numeric(Sys.time())) {
+        cat(".")
+        Sys.sleep(10)
+      }
+      cat("\n")
+    }))
+
     # Convert Column Types in resource tables
     etlutils::runProcess(etlutils::runLevel2('Load untyped RAW tables from database', {
       resource_tables <- readUntypedRAWDataFromDatabase()
