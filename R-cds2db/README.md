@@ -29,7 +29,7 @@ Das R-Skript [StartRetrieval.R](StartRetrieval.R) startet das Retrieval für den
 Dieses kann an der Console manuell über den folgenden Befehl ausgeführt werden:
 
 ```console
-docker-compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
+docker compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
 ```
 
 ## Details der Implementierung
