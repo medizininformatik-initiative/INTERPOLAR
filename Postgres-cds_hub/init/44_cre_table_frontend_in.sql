@@ -14,8 +14,6 @@ patient_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
-, redcap_repeat_instrument varchar -- temporaer FE vorgabe
-, redcap_repeat_instance varchar  -- temporaer FE vorgabe
 , record_id_42076f varchar  -- temporaer FE vorgabe
 );
 
