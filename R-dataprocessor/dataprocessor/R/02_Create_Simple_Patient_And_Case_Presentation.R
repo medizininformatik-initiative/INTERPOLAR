@@ -296,7 +296,8 @@ createFrontendTables <- function() {
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
-      pat_geschlecht = NA_character_
+      pat_geschlecht = NA_character_,
+      patient_complete = NA_character_
     )
 
     # Iterate over each unique patient ID to populate the frontend table
@@ -309,6 +310,8 @@ createFrontendTables <- function() {
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
       patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
       patient_frontend_table$pat_geschlecht[i] <- patient$pat_gender
+      # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
+      patient_frontend_table$patient_complete[i] <- 'Complete'
     }
     return(patient_frontend_table)
   }
@@ -334,7 +337,8 @@ createFrontendTables <- function() {
       fall_groesse_einheit = character(),
       fall_bmi = numeric(),
       fall_status = character(),
-      fall_ent_dat = as.POSIXct(character())
+      fall_ent_dat = as.POSIXct(character()),
+      fall_complete = character()
     )
 
     # load Encounters for all PIDs
@@ -410,6 +414,7 @@ createFrontendTables <- function() {
         enc_id <- pid_encounters[[i]]$enc_id[1]
         enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
         enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
+        enc_status <- pid_encounters[[i]]$enc_status[1]
         data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
         data.table::set(enc_frontend_table, target_index, 'fall_fe_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
@@ -417,7 +422,13 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, 'record_id', pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
-        data.table::set(enc_frontend_table, target_index, 'fall_status', pid_encounters[[i]]$enc_status[1])
+        data.table::set(enc_frontend_table, target_index, 'fall_status', enc_status)
+
+        # set fall_complete (derived from FHIR Encounter.status)
+        # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
+        fall_complete <- grepl("^finished$|^cancelled$|^entered-in-error$", enc_status, ignore.case = TRUE)
+        fall_complete <- ifelse(fall_complete, "Complete", NA)
+        data.table::set(enc_frontend_table, target_index, 'fall_complete', fall_complete)
 
         # Extract ward name from pids_per_ward table
         data.table::set(enc_frontend_table, target_index, 'fall_station', pids_per_ward$ward_name[pid_index])
