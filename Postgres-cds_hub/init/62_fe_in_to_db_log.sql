@@ -16,6 +16,8 @@ BEGIN
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
                     COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                     COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
+                    COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+                    COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                     COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
                     COALESCE(target_record.pat_gebdat::text,'#NULL#') = COALESCE(current_record.pat_gebdat::text,'#NULL#') AND
                     COALESCE(target_record.pat_aktuell_alter::text,'#NULL#') = COALESCE(current_record.pat_aktuell_alter::text,'#NULL#') AND
@@ -25,11 +27,12 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.patient_fe (
-                        patient_fe_id,
+                INSERT INTO db_log.patient_fe ( patient_fe_id,
                         record_id,
                         pat_id,
                         pat_name,
+                        redcap_repeat_instrument,
+                        redcap_repeat_instance,
                         pat_vorname,
                         pat_gebdat,
                         pat_aktuell_alter,
@@ -40,6 +43,8 @@ BEGIN
                 VALUES (current_record.patient_fe_id,
                         current_record.record_id,
                         current_record.pat_id,
+                        current_record.redcap_repeat_instrument,
+                        current_record.redcap_repeat_instance,
                         current_record.pat_name,
                         current_record.pat_vorname,
                         current_record.pat_gebdat,
@@ -57,6 +62,8 @@ BEGIN
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
                         COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
+                        COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+                        COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                         COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
                         COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
                         COALESCE(target_record.pat_gebdat::text,'#NULL#') = COALESCE(current_record.pat_gebdat::text,'#NULL#') AND
@@ -84,10 +91,11 @@ BEGIN
         BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.fall_fe target_record
-            WHERE   COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
+            WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                    COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
                     COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
                     COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                    COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                    COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                     COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
@@ -114,12 +122,12 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.fall_fe (
-                        fall_fe_id,
+                INSERT INTO db_log.fall_fe ( fall_fe_id,
+                        record_id,
                         fall_id,
                         fall_pat_id,
                         patient_id_fk,
-                        record_id,
+                        fall_typ_id,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
                         fall_studienphase,
@@ -145,10 +153,11 @@ BEGIN
                         input_datetime
                 )
                 VALUES (current_record.fall_fe_id,
+                        current_record.record_id,
                         current_record.fall_id,
                         current_record.fall_pat_id,
                         current_record.patient_id_fk,
-                        current_record.record_id,
+                        current_record.fall_typ_id,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
                         current_record.fall_studienphase,
@@ -180,10 +189,11 @@ BEGIN
 	        UPDATE db_log.fall_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
-                WHERE 	COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
+                WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                        COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
                         COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
                         COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                        COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                        COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                         COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
@@ -228,7 +238,7 @@ BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.medikationsanalyse_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                    COALESCE(target_record.fall_id_fk::text,'#NULL#') = COALESCE(current_record.fall_id_fk::text,'#NULL#') AND
+                    COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
                     COALESCE(target_record.meda_fall_id::text,'#NULL#') = COALESCE(current_record.meda_fall_id::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
@@ -244,10 +254,9 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.medikationsanalyse_fe (
-                        medikationsanalyse_fe_id,
+                INSERT INTO db_log.medikationsanalyse_fe ( medikationsanalyse_fe_id,
                         record_id,
-                        fall_id_fk,
+                        fall_typ_id,
                         meda_fall_id,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
@@ -263,7 +272,7 @@ BEGIN
                 )
                 VALUES (current_record.medikationsanalyse_fe_id,
                         current_record.record_id,
-                        current_record.fall_id_fk,
+                        current_record.fall_typ_id,
                         current_record.meda_fall_id,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
@@ -285,7 +294,7 @@ BEGIN
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                        COALESCE(target_record.fall_id_fk::text,'#NULL#') = COALESCE(current_record.fall_id_fk::text,'#NULL#') AND
+                        COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
                         COALESCE(target_record.meda_fall_id::text,'#NULL#') = COALESCE(current_record.meda_fall_id::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
@@ -319,7 +328,7 @@ BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.mrpdokumentation_validierung_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                    COALESCE(target_record.meda_id_fk::text,'#NULL#') = COALESCE(current_record.meda_id_fk::text,'#NULL#') AND
+                    COALESCE(target_record.meda_typ_id::text,'#NULL#') = COALESCE(current_record.meda_typ_id::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                     COALESCE(target_record.mrp_entd_dat::text,'#NULL#') = COALESCE(current_record.mrp_entd_dat::text,'#NULL#') AND
@@ -352,10 +361,9 @@ BEGIN
 
             IF data_count = 0
             THEN
-                INSERT INTO db_log.medikationsanalyse_fe (
-                        mrpdokumentation_validierung_fe_id,
+                INSERT INTO db_log.medikationsanalyse_fe ( mrpdokumentation_validierung_fe_id,
                         record_id,
-                        meda_id_fk,
+                        meda_typ_id,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
                         mrp_entd_dat,
@@ -388,7 +396,7 @@ BEGIN
                 )
                 VALUES (current_record.mrpdokumentation_validierung_fe_id,
                         current_record.record_id,
-                        current_record.meda_id_fk,
+                        current_record.meda_typ_id,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
                         current_record.mrp_entd_dat,
@@ -427,7 +435,7 @@ BEGIN
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                        COALESCE(target_record.meda_id_fk::text,'#NULL#') = COALESCE(current_record.meda_id_fk::text,'#NULL#') AND
+                        COALESCE(target_record.meda_typ_id::text,'#NULL#') = COALESCE(current_record.meda_typ_id::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                         COALESCE(target_record.mrp_entd_dat::text,'#NULL#') = COALESCE(current_record.mrp_entd_dat::text,'#NULL#') AND
