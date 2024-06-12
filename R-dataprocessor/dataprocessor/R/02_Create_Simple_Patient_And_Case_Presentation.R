@@ -322,11 +322,11 @@ createFrontendTables <- function() {
   createEncounterFrontendTable <- function(pids_per_ward, patients) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
+      record_id	= character(), # v_patient_all - patient_id
       fall_id	= character(), # v_encounter_all - enc_id
-      fall_fe_id	= character(), # v_encounter_all - encounter_id
       fall_pat_id	= character(), # v_patient_all - pat_id
       patient_id_fk	= character(), # v_patient_all - patient_id
-      record_id	= character(), # v_patient_all - patient_id
+      fall_typ_id	= character(), # v_encounter_all - encounter_id
       fall_studienphase = character(),
       fall_station = character(),
       fall_aufn_dat = as.POSIXct(character()),
@@ -415,11 +415,11 @@ createFrontendTables <- function() {
         enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
         enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
         enc_status <- pid_encounters[[i]]$enc_status[1]
+        data.table::set(enc_frontend_table, target_index, 'record_id', pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
-        data.table::set(enc_frontend_table, target_index, 'fall_fe_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
-        data.table::set(enc_frontend_table, target_index, 'record_id', pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, 'fall_typ_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
         data.table::set(enc_frontend_table, target_index, 'fall_status', enc_status)
