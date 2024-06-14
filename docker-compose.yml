@@ -114,8 +114,8 @@ services:
     environment:
       TZ: Europe/Berlin
     volumes:
-      - ./R-cds2db/outputLocal:/src/R-cds2db/outputLocal
-      - ./R-cds2db/outputGlobal:/src/R-cds2db/outputGlobal
+      - ./outputLocal:/src/outputLocal
+      - ./outputGlobal:/src/outputGlobal
       - ./R-cds2db/cds2db_config.toml:/src/R-cds2db/cds2db_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
