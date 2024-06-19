@@ -1,6 +1,8 @@
-# Data Processor
+# "dataprocessor" - Analyse und Umwandung von Daten für das Frontend oder eine Ausleitung
 
-Dies ist das Data Processor Modul, in dem typisierte Daten von der Postgres-Datenbank eingelesen und gefiltert werden. Anschließend werden Tabellen mit relevanten Patienten und Fallinformationen erstellt und zurück in die Postgres-Datenbank geschrieben.  
+Generell ist das Modul "dataprocessor" dazu gedacht, Daten zu transformieren und für eine Ausgabe im Frontend oder für eine Ausleitung zur Verfügung zu stellen.
+
+In Version [0.2.x](tags) nutzt es die im [Modul "cds2db"](R-cds2db) typisierten Daten aus der Postgres-Datenbank, um Tabellen mit relevanten Patienten und Fallinformationen zu erstellen. Diese werden auch zurück in die Postgres-Datenbank geschrieben und anschließend über das [Modul "db2frontend"](R-db2frontend) dem Frontend zur Verfügung gestellt.
 
 ## Konfiguration
 
