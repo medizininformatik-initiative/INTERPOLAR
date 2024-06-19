@@ -1,6 +1,6 @@
 --Create SQL Table in Schema db2frontend_in
 CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
-patient_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+patient_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 pat_id varchar, -- Patient-identifier FHIR Daten
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
@@ -18,7 +18,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
-fall_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+fall_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 fall_id varchar, -- Fall-ID RedCap FHIR Daten
 fall_pat_id varchar, -- Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id)
@@ -52,7 +52,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
-medikationsanalyse_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+medikationsanalyse_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 fall_typ_id int, -- Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat]
 meda_fall_id varchar, -- Fall-ID zu dem Medikationsanalyse gehört FHIR (Fall:fall_id)
@@ -72,7 +72,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
-mrpdokumentation_validierung_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+mrpdokumentation_validierung_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id int, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 meda_typ_id int, -- Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag)
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
@@ -111,7 +111,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
-risikofaktor_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+risikofaktor_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
 rskfk_gerhemmer varchar, -- Ger.hemmer
@@ -135,7 +135,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
-trigger_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+trigger_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 trg_ast varchar, -- <div class=rich-text-field-label><p>AST<span style=font-weight: normal; font-size: 12pt;>↑</span></p></div>
