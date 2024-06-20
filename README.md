@@ -56,6 +56,25 @@ Die REDCap-app benötigt eine Datenbank (mariadb), welche sich im Verzeichnis [R
 Dieser Ordner ist eine Sammlung von R Funktionen, die von den R-Modulen (CDS2DB, DataProcessor, DB2Frontend) der CDS tool chain genutzt werden.
 
 
+## Anforderungen / Voraussetzungen
+
+Aktuell werden Erfahrungen beim Einsatz der CDS tool chain gesammelt. Wir können die Anforderungen an CPU/RAM/Storage daher nur schätzen. Dabei gehen wir vom folgenden Anwendungsfall an einem Standort aus:
+
+ - Laufzeit ca. 2 Jahre
+ - 2-6 Stationen
+ - 20-24 Betten je Station
+ - 5-6 Neuaufnahmen je Tag
+ - durchschn. Liegedauer 5 Tage (davon 30 % Kurzlieger)
+ 
+Daraus kommen wir zu folgender Abschätzung der IT-Ressourcen:
+
+ |  | |
+ | --- | --- | 
+ | CPU | 2-4 Kerne |
+ | RAM | 8-16 Gb |
+ | Storage | 500 Gb |
+
+
 ## Installation
 
 Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install.md](Install.md)
