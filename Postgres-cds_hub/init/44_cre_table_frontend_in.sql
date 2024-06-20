@@ -108,6 +108,7 @@ last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zule
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 , mrp_pigrund___1 varchar -- Vorgabe FE
 , mrp_pigrund___2 varchar -- Vorgabe FE
+, mrp_pigrund___3 varchar -- Vorgabe FE
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
