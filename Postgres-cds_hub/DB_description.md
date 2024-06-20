@@ -3,12 +3,12 @@
 ## Überblick
 Die CDS-HUB DB dient dazu die importierten FHIR-Daten sowie die erhobenen Studiendaten des Zentrums für spätere Auswertungen persistent zu speichern. Die Datenbank enthält für verschiedene Aufgaben und Zugriffsrollen mehrere Bereiche. Sie beinhaltet nur rudimentäre Logik, die ausschließlich der dauerhaften Speicherung der Daten (Logging) sowie der Bereitstellung der aktuellen Daten an den Schnittstellen dient.
 
-![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/452b133c-0f43-40a3-b46d-e921f5825cbc)
+![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/5671404/d8ee4fb8-c9fb-40f2-81cb-2adeda6d20b2)
 
 ## Arten der Daten
 In der CDS-HUB DB werden verschiedene Arten von Daten gespeichert. Diese unterscheiden sich entweder im Verwendungszweck oder dem Verarbeitungsstatus.
 Als Verwendungszweck gibt es alle Daten, die mit FHIR (also der Datenquelle), der Studiendokumentation (also Daten zum Anzeigen/Bearbeiten), organisatorischer Natur, sind (Parameter, Konfigurationen usw.) oder eine Logging davon sind (Siehe auch Bereiche /Schnittstellen).
-Beim Verarbeitungsstatus kann im besonderen bei dn FHIR Daten von den originalen importierten Daten (Endung "_raw") und den dann daraus generierten Daten in relationaler Form unterscheiden werden. Dabei ist eine Referenzierung und Rückverfolgung mit Schlüsseln durch die Datenbank gegeben (siehe Beschreibung [Datenfluss](https//) !! Hier Dataflow.md verlingen !!!).
+Beim Verarbeitungsstatus kann im besonderen bei dn FHIR Daten von den originalen importierten Daten (Endung "_raw") und den dann daraus generierten Daten in relationaler Form unterscheiden werden. Dabei ist eine Referenzierung und Rückverfolgung mit Schlüsseln durch die Datenbank gegeben (siehe Beschreibung [Datenfluss](../Dataflow.md)).
 
 ## Bereiche / Schnittstellen
 Man kann die verschiedenen Bereiche (Schemata) in Schnittstellenschemata und funktionale Schemata unterscheiden. Die Schnittstellenschemata dienen dem sicheren Austausch von Daten mit den jeweiligen 'externen' Modulen und dem damit verbundenen Rollen- und Rechtekonzept. Deshalb sind Daten in diesen Schemata nur temporär enthalten und werden von der Datenbank von dort 'weg' kopiert bzw. neu zur Verfügung gestellt.
@@ -61,7 +61,7 @@ Im Kern der Datenbank verfügen weitere Datenbanknutzer über Berechtigungen, um
 | Admin                     | * alle                   | x              | x                  | x               | x                |
 
 ## Datenfluss
-Die CDS-HUB DB ist ein Bestandteil des Datenflusses. Daher ist der Beschreibung des 'normal' vorgesehenen Datenflusses eine ausführliche und umfassende Beschreibung gewidmet (!! Hier Dataflow verlingen !!!).
+Die CDS-HUB DB ist ein Bestandteil des Datenflusses. Daher ist der Beschreibung des 'normal' vorgesehenen Datenflusses eine ausführliche und umfassende Beschreibung gewidmet ([Datenfluss](../Dataflow.md)).
 
 Um den Datenfluss zu gewährleisten und rückverfolgbar zu machen, werden zu allen Daten (Tabellen) immer datenbankinterne technische Primärschlüssel angelegt und gegebenenfalls bei der Verarbeitung weitergegeben. Diese technischen Primärschlüssel können redundant zu den in den Daten enthaltenen Primärschlüsseln sein (z. B. FHIR-IDs).
 
