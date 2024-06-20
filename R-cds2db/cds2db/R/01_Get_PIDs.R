@@ -250,16 +250,18 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 #' parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
 #'
 #' @param path_to_PID_list_file file name if the list of patient IDs should be loaded from a file (if not then NA)
+#' @param log_result logical indicating that the result of the functions should be logged via cat. Default is TRUE.
 #'
 #' @return the relevant patient IDs per ward
 #'
-getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
-  if (!is.na(path_to_PID_list_file)) {
+getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) {
+  read_pids_from_file <- !is.na(path_to_PID_list_file)
+  if (read_pids_from_file) {
     etlutils::runLevel3(paste('Get Patient IDs by file', path_to_PID_list_file), {
       pids_per_ward <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
     })
   } else {
-    etlutils::runLevel3('Get Patient IDs by Encounters from FHIR Server', {
+    etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
       initEncounterPeriodToDownload()
       filter_patterns <- convertFilterPatterns()
       # the subject reference is needed in every case to extract them if the encounter matches the pattern
@@ -275,6 +277,27 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA) {
       # now filter the encounters with the patterns and then extract the PIDs
       pids_per_ward <- getPIDsPerWard(encounters, filter_patterns)
     })
+  }
+  if (log_result) {
+    no_wards <- !length(pids_per_ward)
+    all_wards_empty <- all(sapply(pids_per_ward, function(set) length(set) == 0))
+    if (!no_wards && !all_wards_empty) {
+      cat("Found the following patient IDs for ward(s) '", paste0(names(pids_per_ward), collapse = "', '"), "':\n", sep = "")
+      print(pids_per_ward)
+    } else {
+      searched_resource <- ifelse(read_pids_from_file, "Patient IDs", "Encounters")
+      if (no_wards) {
+        message <- paste0("No ward names and no ", searched_resource, "found ")
+      } else if (all_wards_empty) {
+        message <- paste0("No ", searched_resource, " found for ward(s) '", paste0(names(pids_per_ward), collapse = "', '"), "' ")
+      }
+      if (read_pids_from_file) {
+        message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
+      } else {
+        message <- paste0(message, "on FHIR server for period ", PERIOD_START, " to ", PERIOD_END, ".\n")
+      }
+      etlutils::catWarningMessage(message)
+    }
   }
   return(pids_per_ward)
 }

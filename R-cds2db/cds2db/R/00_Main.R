@@ -49,42 +49,61 @@ retrieve <- function() {
     # Download and crack resources by Patient IDs per ward
     etlutils::runProcess(etlutils::runLevel2('Download and crack resources by Patient IDs per ward', {
       resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, fhir_table_descriptions)
-    }))
-
-    # Write raw tables to database
-    etlutils::runProcess(etlutils::runLevel2('Write raw tables to database', {
-      table_names <- names(resource_tables)
-      names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
-      writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
-      names(resource_tables) <- table_names
-    }))
-
-    # Wait until the copy cron job runs after insertion
-    etlutils::runProcess(etlutils::runLevel2('Wait until the copy cron job runs after insertion', {
-      start <- as.numeric(Sys.time())
-      while (start + DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING * 60 > as.numeric(Sys.time())) {
-        cat(".")
-        Sys.sleep(10)
+      all_empty_fhir <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
+      if (all_empty_fhir) {
+        etlutils::catWarningMessage("No FHIR resources found.")
       }
-      cat("\n")
     }))
+
+    if (!all_empty_fhir) {
+      # Write raw tables to database
+      etlutils::runProcess(etlutils::runLevel2('Write raw tables to database', {
+        table_names <- names(resource_tables)
+        names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
+        writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
+        names(resource_tables) <- table_names
+      }))
+
+      # Wait until the copy cron job runs after insertion
+      etlutils::runProcess(etlutils::runLevel2(paste0("Wait until the cron job in database has moved data from input schema to database core (", DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING, " minute(s))") , {
+        start <- as.numeric(Sys.time())
+        while (start + DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING * 60 > as.numeric(Sys.time())) {
+          cat(".")
+          Sys.sleep(10)
+        }
+        cat("\n")
+      }))
+    }
 
     # Convert Column Types in resource tables
-    etlutils::runProcess(etlutils::runLevel2('Load untyped RAW tables from database', {
+    etlutils::runProcess(etlutils::runLevel2("Load untyped RAW tables from database", {
       resource_tables <- readUntypedRAWDataFromDatabase()
+      all_empty_raw <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
+      if (all_empty_raw) {
+        etlutils::catWarningMessage("No (new) untyped RAW tables found in database")
+        cat("Note: This warning only means that only data already in the database has been loaded from the FHIR server.\n")
+      }
     }))
 
-    etlutils::runProcess(etlutils::runLevel2('Convert RAW tables to typed tables', {
-      fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
-      resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
-    }))
+    if (!all_empty_raw) {
+      etlutils::runProcess(etlutils::runLevel2('Convert RAW tables to typed tables', {
+        fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
+        resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
+      }))
 
-    etlutils::runProcess(etlutils::runLevel2('Write typed tables to database', {
-      writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
-    }))
+      etlutils::runProcess(etlutils::runLevel2("Write typed tables to database", {
+        writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+      }))
+    }
 
   })
 
-  etlutils::finalize()
+  if (all_empty_fhir && all_empty_raw) {
+    finish_message <- "Module 'cds2db' finished with no errors but the result was empty (see warnings above)."
+  } else {
+    finish_message <- "Module 'cds2db' finished with no errors."
+  }
+
+  etlutils::finalize(finish_message)
 
 }
