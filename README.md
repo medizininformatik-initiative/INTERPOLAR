@@ -58,20 +58,21 @@ Dieser Ordner ist eine Sammlung von R Funktionen, die von den R-Modulen (CDS2DB,
 
 ## Anforderungen / Voraussetzungen
 
-Ausgangslage:
+Aktuell werden Erfahrungen beim Einsatz der CDS tool chain gesammelt. Wir können die Anforderungen an CPU/RAM/Storage daher nur schätzen. Dabei gehen wir vom folgenden Anwendungsfall an einem Standort aus:
 
- - Laufzeit 2 Jahre
+ - Laufzeit ca. 2 Jahre
+ - 2-6 Stationen
  - 20-24 Betten je Station
- - durchschn. Liegedauer 5 Tage
  - 5-6 Neuaufnahmen je Tag
- - (davon 30 % Kurzlieger)
- - Gesamt 70 t Pat. verteilt auf 8 Standorte
+ - durchschn. Liegedauer 5 Tage (davon 30 % Kurzlieger)
+ 
+Daraus kommen wir zu folgender Abschätzung der IT-Ressourcen:
 
-aktuelle Schätzung:
-
- - CPU: 2-4 Kerne
- - RAM: 8-16 Gb
- - Storage: 500 Gb
+ |  | |
+ | --- | --- | 
+ | CPU | 2-4 Kerne |
+ | RAM | 8-16 Gb |
+ | Storage | 500 Gb |
 
 
 ## Installation
