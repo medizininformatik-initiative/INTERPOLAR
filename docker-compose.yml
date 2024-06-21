@@ -25,7 +25,12 @@ services:
   redcap_db:
     image: mariadb:11
     restart: unless-stopped
-    env_file: ./REDCap-db/.env-redcap-db
+    environment:
+      TZ: Europe/Berlin
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/redcap_db_root.password
+      MARIADB_DATABASE: redcap
+      MARIADB_USER: redcap
+      MARIADB_PASSWORD_FILE: /run/secrets/redcap_db.password
     secrets:
       - redcap_db_root.password
       - redcap_db.password
@@ -50,6 +55,8 @@ services:
       - external
     ports:
       - "127.0.0.1:8082:80"
+    environment:
+      TZ: Europe/Berlin
     volumes:
       - ./REDCap-app/html/redcap:/var/www/html/redcap
       - ./REDCap-app/html/redcapdocs:/var/www/html/redcapdocs
@@ -117,6 +124,7 @@ services:
       - ./outputLocal:/src/outputLocal
       - ./outputGlobal:/src/outputGlobal
       - ./R-cds2db/cds2db_config.toml:/src/R-cds2db/cds2db_config.toml
+      - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
     depends_on:
