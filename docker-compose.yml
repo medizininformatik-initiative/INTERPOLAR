@@ -124,6 +124,7 @@ services:
       - ./outputLocal:/src/outputLocal
       - ./outputGlobal:/src/outputGlobal
       - ./R-cds2db/cds2db_config.toml:/src/R-cds2db/cds2db_config.toml
+      - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
     depends_on:
