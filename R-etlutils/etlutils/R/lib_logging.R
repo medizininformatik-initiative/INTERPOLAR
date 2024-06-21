@@ -112,14 +112,23 @@ runProcess <- function(process) {
   stopOnError(err)
 }
 
-#' Finalzes the global process
+#' Finalizes the global process
 #'
+#' This function performs several tasks to finalize the global process.
+#' It prints the processes runtimes, shows warnings, saves performance metrics, logs a footer
+#' message, optionally prints a final log message, and saves all console logs.
+#'
+#' @param lastLogMessage A character string containing the final log message to be printed. Defaults to NA.
 #' @export
-finalize <- function() {
+
+finalize <- function(lastLogMessage = NA) {
   printClock()
   warnings()
   savePerformance()
   logBlockFooter()
+  if (!isSimpleNA(lastLogMessage)) {
+    cat(lastLogMessage)
+  }
   ###
   # Save all console logs
   ###

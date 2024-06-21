@@ -347,11 +347,61 @@ BEGIN
                     COALESCE(target_record.mrp_dokup_fehler::text,'#NULL#') = COALESCE(current_record.mrp_dokup_fehler::text,'#NULL#') AND
                     COALESCE(target_record.mrp_dokup_intervention::text,'#NULL#') = COALESCE(current_record.mrp_dokup_intervention::text,'#NULL#') AND
                     COALESCE(target_record.mrp_pigrund::text,'#NULL#') = COALESCE(current_record.mrp_pigrund::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___1::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___1::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___2::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___2::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___3::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___3::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___4::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___4::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___5::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___5::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___6::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___6::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___7::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___7::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___8::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___8::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___9::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___9::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___10::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___10::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___11::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___11::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___12::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___12::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___13::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___13::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___14::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___14::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___15::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___15::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___16::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___16::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___17::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___17::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___18::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___18::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___19::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___19::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___20::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___20::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___21::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___21::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___22::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___22::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___23::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___23::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___24::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___24::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___25::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___25::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___26::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___26::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_pigrund___27::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___27::text,'#NULL#') AND
                     COALESCE(target_record.mrp_ip_klasse::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_ip_klasse___1::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___1::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_ip_klasse___2::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___2::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_ip_klasse___3::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___3::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_ip_klasse___4::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___4::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_ip_klasse___5::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___5::text,'#NULL#') AND
                     COALESCE(target_record.mrp_ip_klasse_disease::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_disease::text,'#NULL#') AND
                     COALESCE(target_record.mrp_ip_klasse_labor::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_labor::text,'#NULL#') AND
                     COALESCE(target_record.mrp_massn_am::text,'#NULL#') = COALESCE(current_record.mrp_massn_am::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___1::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___2::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___3::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___4::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___5::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___6::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___7::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___8::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___9::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___9::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_am___10::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___10::text,'#NULL#') AND
                     COALESCE(target_record.mrp_massn_orga::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___1::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___2::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___3::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___4::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___5::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___6::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___7::text,'#NULL#') AND
+                    COALESCE(target_record.mrp_massn_orga___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___8::text,'#NULL#') AND
                     COALESCE(target_record.mrp_notiz::text,'#NULL#') = COALESCE(current_record.mrp_notiz::text,'#NULL#') AND
                     COALESCE(target_record.mrp_dokup_hand_emp_akz::text,'#NULL#') = COALESCE(current_record.mrp_dokup_hand_emp_akz::text,'#NULL#') AND
                     COALESCE(target_record.mrp_merp::text,'#NULL#') = COALESCE(current_record.mrp_merp::text,'#NULL#') AND
@@ -382,11 +432,61 @@ BEGIN
                         mrp_dokup_fehler,
                         mrp_dokup_intervention,
                         mrp_pigrund,
+                        mrp_pigrund___1,
+                        mrp_pigrund___2,
+                        mrp_pigrund___3,
+                        mrp_pigrund___4,
+                        mrp_pigrund___5,
+                        mrp_pigrund___6,
+                        mrp_pigrund___7,
+                        mrp_pigrund___8,
+                        mrp_pigrund___9,
+                        mrp_pigrund___10,
+                        mrp_pigrund___11,
+                        mrp_pigrund___12,
+                        mrp_pigrund___13,
+                        mrp_pigrund___14,
+                        mrp_pigrund___15,
+                        mrp_pigrund___16,
+                        mrp_pigrund___17,
+                        mrp_pigrund___18,
+                        mrp_pigrund___19,
+                        mrp_pigrund___20,
+                        mrp_pigrund___21,
+                        mrp_pigrund___22,
+                        mrp_pigrund___23,
+                        mrp_pigrund___24,
+                        mrp_pigrund___25,
+                        mrp_pigrund___26,
+                        mrp_pigrund___27,
                         mrp_ip_klasse,
+                        mrp_ip_klasse___1,
+                        mrp_ip_klasse___2,
+                        mrp_ip_klasse___3,
+                        mrp_ip_klasse___4,
+                        mrp_ip_klasse___5,
                         mrp_ip_klasse_disease,
                         mrp_ip_klasse_labor,
                         mrp_massn_am,
+                        mrp_massn_am___1,
+                        mrp_massn_am___2,
+                        mrp_massn_am___3,
+                        mrp_massn_am___4,
+                        mrp_massn_am___5,
+                        mrp_massn_am___6,
+                        mrp_massn_am___7,
+                        mrp_massn_am___8,
+                        mrp_massn_am___9,
+                        mrp_massn_am___10,
                         mrp_massn_orga,
+                        mrp_massn_orga___1,
+                        mrp_massn_orga___2,
+                        mrp_massn_orga___3,
+                        mrp_massn_orga___4,
+                        mrp_massn_orga___5,
+                        mrp_massn_orga___6,
+                        mrp_massn_orga___7,
+                        mrp_massn_orga___8,
                         mrp_notiz,
                         mrp_dokup_hand_emp_akz,
                         mrp_merp,
@@ -415,11 +515,61 @@ BEGIN
                         current_record.mrp_dokup_fehler,
                         current_record.mrp_dokup_intervention,
                         current_record.mrp_pigrund,
+                        current_record.mrp_pigrund___1,
+                        current_record.mrp_pigrund___2,
+                        current_record.mrp_pigrund___3,
+                        current_record.mrp_pigrund___4,
+                        current_record.mrp_pigrund___5,
+                        current_record.mrp_pigrund___6,
+                        current_record.mrp_pigrund___7,
+                        current_record.mrp_pigrund___8,
+                        current_record.mrp_pigrund___9,
+                        current_record.mrp_pigrund___10,
+                        current_record.mrp_pigrund___11,
+                        current_record.mrp_pigrund___12,
+                        current_record.mrp_pigrund___13,
+                        current_record.mrp_pigrund___14,
+                        current_record.mrp_pigrund___15,
+                        current_record.mrp_pigrund___16,
+                        current_record.mrp_pigrund___17,
+                        current_record.mrp_pigrund___18,
+                        current_record.mrp_pigrund___19,
+                        current_record.mrp_pigrund___20,
+                        current_record.mrp_pigrund___21,
+                        current_record.mrp_pigrund___22,
+                        current_record.mrp_pigrund___23,
+                        current_record.mrp_pigrund___24,
+                        current_record.mrp_pigrund___25,
+                        current_record.mrp_pigrund___26,
+                        current_record.mrp_pigrund___27,
                         current_record.mrp_ip_klasse,
+                        current_record.mrp_ip_klasse___1,
+                        current_record.mrp_ip_klasse___2,
+                        current_record.mrp_ip_klasse___3,
+                        current_record.mrp_ip_klasse___4,
+                        current_record.mrp_ip_klasse___5,
                         current_record.mrp_ip_klasse_disease,
                         current_record.mrp_ip_klasse_labor,
                         current_record.mrp_massn_am,
+                        current_record.mrp_massn_am___1,
+                        current_record.mrp_massn_am___2,
+                        current_record.mrp_massn_am___3,
+                        current_record.mrp_massn_am___4,
+                        current_record.mrp_massn_am___5,
+                        current_record.mrp_massn_am___6,
+                        current_record.mrp_massn_am___7,
+                        current_record.mrp_massn_am___8,
+                        current_record.mrp_massn_am___9,
+                        current_record.mrp_massn_am___10,
                         current_record.mrp_massn_orga,
+                        current_record.mrp_massn_orga___1,
+                        current_record.mrp_massn_orga___2,
+                        current_record.mrp_massn_orga___3,
+                        current_record.mrp_massn_orga___4,
+                        current_record.mrp_massn_orga___5,
+                        current_record.mrp_massn_orga___6,
+                        current_record.mrp_massn_orga___7,
+                        current_record.mrp_massn_orga___8,
                         current_record.mrp_notiz,
                         current_record.mrp_dokup_hand_emp_akz,
                         current_record.mrp_merp,
@@ -454,11 +604,61 @@ BEGIN
                         COALESCE(target_record.mrp_dokup_fehler::text,'#NULL#') = COALESCE(current_record.mrp_dokup_fehler::text,'#NULL#') AND
                         COALESCE(target_record.mrp_dokup_intervention::text,'#NULL#') = COALESCE(current_record.mrp_dokup_intervention::text,'#NULL#') AND
                         COALESCE(target_record.mrp_pigrund::text,'#NULL#') = COALESCE(current_record.mrp_pigrund::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___1::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___1::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___2::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___2::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___3::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___3::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___4::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___4::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___5::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___5::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___6::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___6::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___7::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___7::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___8::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___8::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___9::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___9::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___10::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___10::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___11::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___11::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___12::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___12::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___13::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___13::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___14::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___14::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___15::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___15::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___16::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___16::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___17::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___17::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___18::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___18::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___19::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___19::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___20::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___20::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___21::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___21::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___22::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___22::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___23::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___23::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___24::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___24::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___25::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___25::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___26::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___26::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_pigrund___27::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___27::text,'#NULL#') AND
                         COALESCE(target_record.mrp_ip_klasse::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_ip_klasse___1::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___1::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_ip_klasse___2::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___2::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_ip_klasse___3::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___3::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_ip_klasse___4::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___4::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_ip_klasse___5::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___5::text,'#NULL#') AND
                         COALESCE(target_record.mrp_ip_klasse_disease::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_disease::text,'#NULL#') AND
                         COALESCE(target_record.mrp_ip_klasse_labor::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_labor::text,'#NULL#') AND
                         COALESCE(target_record.mrp_massn_am::text,'#NULL#') = COALESCE(current_record.mrp_massn_am::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___1::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___2::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___3::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___4::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___5::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___6::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___7::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___8::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___9::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___9::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_am___10::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___10::text,'#NULL#') AND
                         COALESCE(target_record.mrp_massn_orga::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___1::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___2::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___3::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___4::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___5::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___6::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___7::text,'#NULL#') AND
+                        COALESCE(target_record.mrp_massn_orga___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___8::text,'#NULL#') AND
                         COALESCE(target_record.mrp_notiz::text,'#NULL#') = COALESCE(current_record.mrp_notiz::text,'#NULL#') AND
                         COALESCE(target_record.mrp_dokup_hand_emp_akz::text,'#NULL#') = COALESCE(current_record.mrp_dokup_hand_emp_akz::text,'#NULL#') AND
                         COALESCE(target_record.mrp_merp::text,'#NULL#') = COALESCE(current_record.mrp_merp::text,'#NULL#') AND

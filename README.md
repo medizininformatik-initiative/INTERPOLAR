@@ -2,7 +2,7 @@
 
 Dieses Repository enthält die Bestandteile der CDS tool chain zur Verarbeitung von [`MII KDS FHIR Ressourcen`](https://www.medizininformatik-initiative.de/de/basismodule-des-kerndatensatzes-der-mii). Es handelt sich um eine modular aufgebaute Referenzimplementierung, welche z.B. Datenintegrationszentren (DIZ) der MII eingesetzt werden kann. Hierbei werden FHIR-Ressourcen vom KDS (Kerndatensatz) FHIR Server / Endpunkt heruntergeladen, in eine Tabellenstruktur überführt  ([CDS2DB](./README.md#cds2db)) und in eine Posgres-Datenbank (CDS_HUB) geschrieben. In einen nächsten Schritt werden die Daten geprüft, harmonisiert und können mit Hilfe von Algorithmen weiter verarbeitet werden (DataProcessor). Anschließend werden die Daten über ein Frontend (z.B. Redcap) auf einer Benutzeroberfläche sichtbar gemacht (DB2Frontend, Frontend).
 
-![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/452b133c-0f43-40a3-b46d-e921f5825cbc)
+![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/5671404/d8ee4fb8-c9fb-40f2-81cb-2adeda6d20b2)
 
 ## Bestandteile der CDS tool chain
 
@@ -54,6 +54,25 @@ Die REDCap-app benötigt eine Datenbank (mariadb), welche sich im Verzeichnis [R
 ### R-etlutils
 
 Dieser Ordner ist eine Sammlung von R Funktionen, die von den R-Modulen (CDS2DB, DataProcessor, DB2Frontend) der CDS tool chain genutzt werden.
+
+
+## Anforderungen / Voraussetzungen
+
+Aktuell werden Erfahrungen beim Einsatz der CDS tool chain gesammelt. Wir können die Anforderungen an CPU/RAM/Storage daher nur schätzen. Dabei gehen wir vom folgenden Anwendungsfall an einem Standort aus:
+
+ - Laufzeit ca. 2 Jahre
+ - 2-6 Stationen
+ - 20-24 Betten je Station
+ - 5-6 Neuaufnahmen je Tag
+ - durchschn. Liegedauer 5 Tage (davon 30 % Kurzlieger)
+ 
+Daraus kommen wir zu folgender Abschätzung der IT-Ressourcen:
+
+ |  | |
+ | --- | --- | 
+ | CPU | 2-4 Kerne |
+ | RAM | 8-16 Gb |
+ | Storage | 500 Gb |
 
 
 ## Installation

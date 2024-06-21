@@ -1,6 +1,6 @@
 --Create SQL Table in Schema db2frontend_in
 CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
-patient_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+patient_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 pat_id varchar, -- Patient-identifier FHIR Daten
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
@@ -18,7 +18,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
-fall_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+fall_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 fall_id varchar, -- Fall-ID RedCap FHIR Daten
 fall_pat_id varchar, -- Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id)
@@ -52,7 +52,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
-medikationsanalyse_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+medikationsanalyse_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 fall_typ_id int, -- Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat]
 meda_fall_id varchar, -- Fall-ID zu dem Medikationsanalyse gehört FHIR (Fall:fall_id)
@@ -90,14 +90,64 @@ mrp_atc2 varchar, -- 2. Medikament ATC / Name
 mrp_atc3 varchar, -- 3. Medikament ATC / Name
 mrp_med_prod varchar, -- Medizinprodukt betroffen?
 mrp_med_prod_sonst varchar, -- Sonstigespräparat
-mrp_dokup_fehler varchar, -- <div class=rich-text-field-label><p>Frage / <span style=font-weight: normal;>Fehlerbeschreibung </span></p> <p><span style=font-weight: normal;>[mrp_kurzbeschr]</span></p></div>
-mrp_dokup_intervention varchar, -- <div class=rich-text-field-label><p>Intervention / <span style=font-weight: normal;>Vorschlag zur Fehlervermeldung</span></p></div>
+mrp_dokup_fehler varchar, -- Fehlerbeschreibung 
+mrp_dokup_intervention varchar, -- Intervention -Vorschlag zur Fehlervermeldung
 mrp_pigrund varchar, -- PI-Grund
+mrp_pigrund___1 varchar, -- 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF)
+mrp_pigrund___2 varchar, -- 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF)
+mrp_pigrund___3 varchar, -- 3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF)
+mrp_pigrund___4 varchar, -- 4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF)
+mrp_pigrund___5 varchar, -- 5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF)
+mrp_pigrund___6 varchar, -- 6 - AM: Übertragungsfehler (MF)
+mrp_pigrund___7 varchar, -- 7 - AM: Substitution aut idem/aut simile (MF)
+mrp_pigrund___8 varchar, -- 8 - AM: (Klare) Indikation, aber kein Medikament angeordnet (MF)
+mrp_pigrund___9 varchar, -- 9 - AM: Stellfehler (MF)
+mrp_pigrund___10 varchar, -- 10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF)
+mrp_pigrund___11 varchar, -- 11 - AM: Doppelverordnung (MF)
+mrp_pigrund___12 varchar, -- 12 - ANW: Applikation (Dauer) (MF)
+mrp_pigrund___13 varchar, -- 13 - ANW: Inkompatibilität oder falsche Zubereitung (MF)
+mrp_pigrund___14 varchar, -- 14 - ANW: Applikation (Art) (MF)
+mrp_pigrund___15 varchar, -- 15 - ANW: Anfrage zur Administration/Kompatibilität
+mrp_pigrund___16 varchar, -- 16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF)
+mrp_pigrund___17 varchar, -- 17 - D: (Fehlerhafte) Dosis (MF)
+mrp_pigrund___18 varchar, -- 18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF)
+mrp_pigrund___19 varchar, -- 19 - D: (Fehlerhaftes) Dosisinterval (MF)
+mrp_pigrund___20 varchar, -- 20 - Interaktion (MF)
+mrp_pigrund___21 varchar, -- 21 - Kontraindikation (MF)
+mrp_pigrund___22 varchar, -- 22 - Nebenwirkungen
+mrp_pigrund___23 varchar, -- 23 - S: Beratung/Auswahl eines Arzneistoffs
+mrp_pigrund___24 varchar, -- 24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs
+mrp_pigrund___25 varchar, -- 25 - S: Beschaffung/Kosten
+mrp_pigrund___26 varchar, -- 26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF)
+mrp_pigrund___27 varchar, -- 27 - S: Schulung/Beratung eines Patienten
 mrp_ip_klasse varchar, -- MRP-Klasse (INTERPOLAR)
+mrp_ip_klasse___1 varchar, -- 1 - Drug - Drug
+mrp_ip_klasse___2 varchar, -- 2 - Drug - Drug-Group
+mrp_ip_klasse___3 varchar, -- 3 - Drug - Disease
+mrp_ip_klasse___4 varchar, -- 4 - Drug - Labor
+mrp_ip_klasse___5 varchar, -- 5 - Drug - Age (Priscus 2.0 o. Dosis)
 mrp_ip_klasse_disease varchar, -- Disease
 mrp_ip_klasse_labor varchar, -- Labor
-mrp_massn_am varchar, -- <div class=rich-text-field-label><p>AM: Arzneimittel</p></div>
-mrp_massn_orga varchar, -- <div class=rich-text-field-label><p>ORGA: Organisatorisch</p></div>
+mrp_massn_am varchar, -- AM: Arzneimitte
+mrp_massn_am___1 varchar, -- 1 - Anweisung für die Applikation geben
+mrp_massn_am___2 varchar, -- 2 - Arzneimittel ändern
+mrp_massn_am___3 varchar, -- 3 - Arzneimittel stoppen/pausieren
+mrp_massn_am___4 varchar, -- 4 - Arzneimittel neu ansetzen
+mrp_massn_am___5 varchar, -- 5 - Dosierung ändern
+mrp_massn_am___6 varchar, -- 6 - Formulierung ändern
+mrp_massn_am___7 varchar, -- 7 - Hilfe bei Beschaffung
+mrp_massn_am___8 varchar, -- 8 - Information an Arzt/Pflege
+mrp_massn_am___9 varchar, -- 9 - Information an Patient
+mrp_massn_am___10 varchar, -- 10 - TDM oder Laborkontrolle emfohlen
+mrp_massn_orga varchar, -- ORGA: Organisatorisch
+mrp_massn_orga___1 varchar, -- 1 - Aushändigung einer Information/eines Medikationsplans
+mrp_massn_orga___2 varchar, -- 2 - CIRS-/AMK-Meldung
+mrp_massn_orga___3 varchar, -- 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers
+mrp_massn_orga___4 varchar, -- 4 - Etablierung einer Doppelkontrolle
+mrp_massn_orga___5 varchar, -- 5 - Lieferantenwechsel
+mrp_massn_orga___6 varchar, -- 6 - Optimierung der internen und externene Kommunikation
+mrp_massn_orga___7 varchar, -- 7 - Prozessoptimierung/Etablierung einer SOP/VA
+mrp_massn_orga___8 varchar, -- 8 - Sensibilisierung/Schulung
 mrp_notiz varchar, -- Notiz
 mrp_dokup_hand_emp_akz varchar, -- Handlungsempfehlung akzeptiert?
 mrp_merp varchar, -- NCC MERP Score
@@ -106,12 +156,10 @@ mrpdokumentation_validierung_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
-, mrp_pigrund___1 varchar -- Vorgabe FE
-, mrp_pigrund___2 varchar -- Vorgabe FE
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
-risikofaktor_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+risikofaktor_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
 rskfk_gerhemmer varchar, -- Ger.hemmer
@@ -135,7 +183,7 @@ current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datens
 );
 
 CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
-trigger_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
+trigger_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 patient_id_fk int, -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 trg_ast varchar, -- <div class=rich-text-field-label><p>AST<span style=font-weight: normal; font-size: 12pt;>↑</span></p></div>
@@ -388,14 +436,64 @@ comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc2 is '2.
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc3 is '3. Medikament ATC / Name';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_med_prod is 'Medizinprodukt betroffen?';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst is 'Sonstigespräparat';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler is '<div class="rich-text-field-label"><p>Frage / <span style="font-weight: normal;">Fehlerbeschreibung </span></p> <p><span style="font-weight: normal;">[mrp_kurzbeschr]</span></p></div>';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_intervention is '<div class="rich-text-field-label"><p>Intervention / <span style="font-weight: normal;">Vorschlag zur Fehlervermeldung</span></p></div>';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler is 'Fehlerbeschreibung ';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_intervention is 'Intervention -Vorschlag zur Fehlervermeldung';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund is 'PI-Grund';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___1 is '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___2 is '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___3 is '3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___4 is '4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___5 is '5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___6 is '6 - AM: Übertragungsfehler (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___7 is '7 - AM: Substitution aut idem/aut simile (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___8 is '8 - AM: (Klare) Indikation, aber kein Medikament angeordnet (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___9 is '9 - AM: Stellfehler (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___10 is '10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___11 is '11 - AM: Doppelverordnung (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___12 is '12 - ANW: Applikation (Dauer) (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___13 is '13 - ANW: Inkompatibilität oder falsche Zubereitung (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___14 is '14 - ANW: Applikation (Art) (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___15 is '15 - ANW: Anfrage zur Administration/Kompatibilität';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___16 is '16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___17 is '17 - D: (Fehlerhafte) Dosis (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___18 is '18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___19 is '19 - D: (Fehlerhaftes) Dosisinterval (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___20 is '20 - Interaktion (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___21 is '21 - Kontraindikation (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___22 is '22 - Nebenwirkungen';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___23 is '23 - S: Beratung/Auswahl eines Arzneistoffs';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___24 is '24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___25 is '25 - S: Beschaffung/Kosten';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___26 is '26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___27 is '27 - S: Schulung/Beratung eines Patienten';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse is 'MRP-Klasse (INTERPOLAR)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___1 is '1 - Drug - Drug';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___2 is '2 - Drug - Drug-Group';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___3 is '3 - Drug - Disease';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___4 is '4 - Drug - Labor';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___5 is '5 - Drug - Age (Priscus 2.0 o. Dosis)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease is 'Disease';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor is 'Labor';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am is '<div class="rich-text-field-label"><p>AM: Arzneimittel</p></div>';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga is '<div class="rich-text-field-label"><p>ORGA: Organisatorisch</p></div>';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am is 'AM: Arzneimitte';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___1 is '1 - Anweisung für die Applikation geben';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___2 is '2 - Arzneimittel ändern';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___3 is '3 - Arzneimittel stoppen/pausieren';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___4 is '4 - Arzneimittel neu ansetzen';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___5 is '5 - Dosierung ändern';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___6 is '6 - Formulierung ändern';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___7 is '7 - Hilfe bei Beschaffung';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___8 is '8 - Information an Arzt/Pflege';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___9 is '9 - Information an Patient';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___10 is '10 - TDM oder Laborkontrolle emfohlen';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga is 'ORGA: Organisatorisch';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___1 is '1 - Aushändigung einer Information/eines Medikationsplans';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___2 is '2 - CIRS-/AMK-Meldung';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___3 is '3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___4 is '4 - Etablierung einer Doppelkontrolle';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___5 is '5 - Lieferantenwechsel';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___6 is '6 - Optimierung der internen und externene Kommunikation';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___7 is '7 - Prozessoptimierung/Etablierung einer SOP/VA';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___8 is '8 - Sensibilisierung/Schulung';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_notiz is 'Notiz';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is 'Handlungsempfehlung akzeptiert?';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP Score';
