@@ -71,7 +71,7 @@ endLogging <- function() {
 #' @export
 logBlockHeader <- function(verbose = VERBOSE, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
-  if (!verbose) {
+  if (verbose) {
     cat(paste0(
       # print a bold underlined line of len spaces
       formatStringStyle(paste0(rep(" ", len), collapse = ""), fg = 7, bold = TRUE, underline = TRUE), "\n",
@@ -88,7 +88,7 @@ logBlockHeader <- function(verbose = VERBOSE, len = 104) {
 #' @export
 logBlockFooter <- function(verbose = VERBOSE, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
-  if (!verbose) {
+  if (verbose) {
     cat(paste0(
       # print bold underlined word END
       formatStringStyle("END", fg = 7, bold = TRUE, underline = TRUE),
