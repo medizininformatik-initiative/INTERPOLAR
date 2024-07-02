@@ -44,7 +44,10 @@ startLogging <- function(prefix) {
 #' @export
 endLogging <- function() {
   sink(type = "message")
-  sink()
+  # Remove all sinks
+  while (sink.number() > 0) {
+    sink()
+  }
 
   log_filename <- .lib_logging_env[["log_filename"]]
   log_file <- .lib_logging_env[[log_filename]]
