@@ -56,6 +56,8 @@ endLogging <- function() {
     .lib_logging_env[[log_filename]] <- NULL
     .lib_logging_env[["log_filename"]] <- NULL
   }
+  closeAllConnections()
+
   removeAnsiEscapeSequences(log_filename)
 }
 
