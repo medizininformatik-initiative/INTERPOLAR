@@ -487,9 +487,9 @@ createFrontendTables <- function() {
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
-    message <- "The pids_per_ward table is empty."
+    message <- "ERROR: The pids_per_ward table is empty."
     message <- getErrorOrWarningMessage(message, "pids_per_ward")
-    etlutils::stopWithError(message)
+    stop(message)
   }
 
   # Load the Patient resources from database

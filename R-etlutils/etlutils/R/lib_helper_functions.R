@@ -147,14 +147,16 @@ isDebug <- function() exists('DEBUG') && DEBUG
 
 #' Check for Errors
 #'
-#' @param err Any Type. In case of an error occurred it must contain try-error as class
+#' This function checks if an error has occurred and executes the corresponding expression.
+#'
+#' @param potencial_error Any Type. In case of an error occurred it must contain try-error as class.
 #' @param expr_ok An expression. This runs in case of no error.
 #' @param expr_err An expression. This runs in case of an error.
 #'
-#' @return err
+#' @return The result of either `expr_ok` or `expr_err` depending on the presence of an error.
 #' @export
-checkError <- function(err, expr_ok = {catOkMessage()}, expr_err = {catErrorMessage()}) {
-  if (isError(err)) expr_err else expr_ok
+checkError <- function(potencial_error, expr_ok = {catOkMessage()}, expr_err = {catErrorMessage()}) {
+  if (isError(potencial_error)) expr_err else expr_ok
 }
 
 #' Convert Numbers to Verbose Number Representations
