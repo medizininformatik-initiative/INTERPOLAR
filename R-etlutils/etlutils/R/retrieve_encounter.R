@@ -18,7 +18,7 @@
 #' @export
 getEncounters <- function(table_description) {
 
-  runLevel2(toupper('getEncounters'), {
+  runLevel3("Get Enconters", {
 
     #refresh token, if defined
     refreshFHIRToken()
