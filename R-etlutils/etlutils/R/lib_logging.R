@@ -189,7 +189,7 @@ runProcessInternal <- function(
     }
     # This is the return value of the transferred process. This can be an error or a regular process
     # result.
-    err <- getClock()$measure_process_time(
+    process_result <- getClock()$measure_process_time(
       message = message,
       process = process
     )
@@ -197,29 +197,29 @@ runProcessInternal <- function(
 
     # Check whether the process result is an error or a regular (non-error) result
     checkError(
-      err = err,
+      potencial_error = process_result,
       expr_ok = {
         if (single_line) catOkMessage() else catColourised('OK\n', fg = 'light blue')
         logBlockFooter()
-        return(err)
+        return(process_result)
       },
       expr_err = {
-        err <- catErrorMessage(err)
+        error_message <- catErrorMessage(process_result)
         logBlockFooter()
         if (throw_exception) {
           # This process was the very first to generate an error
           if (!exists("ERROR_MESSAGE", envir = .lib_logging_env)) {
             # write this error to .lib_logging_env
-            .lib_logging_env[["ERROR_MESSAGE"]] <- err
+            .lib_logging_env[["ERROR_MESSAGE"]] <- error_message
           } else {
             # A sub-process of this process had already generated an error ->
             # Replace the error of the current superprocess with the original error of the
             # subprocess (otherwise the error messages will be a bit confusing)
-            err <- .lib_logging_env[["ERROR_MESSAGE"]]
+            error_message <- .lib_logging_env[["ERROR_MESSAGE"]]
           }
-          stop(err)
+          stop(error_message)
         }
-        return(err)
+        return(error_message)
       }
     )
   }
