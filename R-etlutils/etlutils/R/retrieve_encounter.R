@@ -39,8 +39,8 @@ getEncounters <- function(table_description) {
       )
     })
 
-    runLevel3IgnoreError('Send Test Request', {
-      test_bundles <- try(executeFHIRSearchVariation(request = request, verbose = VERBOSE), silent = TRUE)
+    runLevel3('Send Test Request', {
+      test_bundles <- executeFHIRSearchVariation(request = request, verbose = VERBOSE)
     })
 
     #
