@@ -1302,11 +1302,11 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
 
 -- Table "encounter" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.encounter ALTER COLUMN encounter_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.encounter ALTER COLUMN encounter_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.encounter TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter TO db_user; -- Additional authorizations for testing
@@ -1330,11 +1330,11 @@ CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
 
 -- Table "patient" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.patient ALTER COLUMN patient_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.patient ALTER COLUMN patient_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.patient TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient TO db_user; -- Additional authorizations for testing
@@ -1358,11 +1358,11 @@ CREATE OR REPLACE TRIGGER patient_tr_ins_tr
 
 -- Table "condition" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.condition ALTER COLUMN condition_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.condition ALTER COLUMN condition_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.condition TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition TO db_user; -- Additional authorizations for testing
@@ -1386,11 +1386,11 @@ CREATE OR REPLACE TRIGGER condition_tr_ins_tr
 
 -- Table "medication" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medication ALTER COLUMN medication_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medication ALTER COLUMN medication_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.medication TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication TO db_user; -- Additional authorizations for testing
@@ -1414,11 +1414,11 @@ CREATE OR REPLACE TRIGGER medication_tr_ins_tr
 
 -- Table "medicationrequest" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationrequest ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationrequest ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.medicationrequest TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest TO db_user; -- Additional authorizations for testing
@@ -1442,11 +1442,11 @@ CREATE OR REPLACE TRIGGER medicationrequest_tr_ins_tr
 
 -- Table "medicationadministration" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationadministration ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationadministration ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.medicationadministration TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration TO db_user; -- Additional authorizations for testing
@@ -1470,11 +1470,11 @@ CREATE OR REPLACE TRIGGER medicationadministration_tr_ins_tr
 
 -- Table "medicationstatement" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.medicationstatement ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.medicationstatement ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.medicationstatement TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement TO db_user; -- Additional authorizations for testing
@@ -1498,11 +1498,11 @@ CREATE OR REPLACE TRIGGER medicationstatement_tr_ins_tr
 
 -- Table "observation" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.observation ALTER COLUMN observation_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.observation ALTER COLUMN observation_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.observation TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation TO db_user; -- Additional authorizations for testing
@@ -1526,11 +1526,11 @@ CREATE OR REPLACE TRIGGER observation_tr_ins_tr
 
 -- Table "diagnosticreport" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.diagnosticreport ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.diagnosticreport ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.diagnosticreport TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport TO db_user; -- Additional authorizations for testing
@@ -1554,11 +1554,11 @@ CREATE OR REPLACE TRIGGER diagnosticreport_tr_ins_tr
 
 -- Table "servicerequest" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.servicerequest ALTER COLUMN servicerequest_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.servicerequest ALTER COLUMN servicerequest_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.servicerequest TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest TO db_user; -- Additional authorizations for testing
@@ -1582,11 +1582,11 @@ CREATE OR REPLACE TRIGGER servicerequest_tr_ins_tr
 
 -- Table "procedure" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.procedure ALTER COLUMN procedure_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.procedure ALTER COLUMN procedure_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.procedure TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure TO db_user; -- Additional authorizations for testing
@@ -1610,11 +1610,11 @@ CREATE OR REPLACE TRIGGER procedure_tr_ins_tr
 
 -- Table "consent" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.consent ALTER COLUMN consent_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.consent ALTER COLUMN consent_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.consent TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent TO db_user; -- Additional authorizations for testing
@@ -1638,11 +1638,11 @@ CREATE OR REPLACE TRIGGER consent_tr_ins_tr
 
 -- Table "location" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.location ALTER COLUMN location_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.location ALTER COLUMN location_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.location TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location TO db_user; -- Additional authorizations for testing
@@ -1666,11 +1666,11 @@ CREATE OR REPLACE TRIGGER location_tr_ins_tr
 
 -- Table "pids_per_ward" in schema "db_log"
 ----------------------------------------------------
-ALTER TABLE db_log.pids_per_ward ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('db_log.db_log_seq'));
+ALTER TABLE db_log.pids_per_ward ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON db_log.pids_per_ward TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db_log.db_log_seq TO db_log_user;
+GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward TO db_user; -- Additional authorizations for testing

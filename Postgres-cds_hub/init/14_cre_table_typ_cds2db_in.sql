@@ -1302,11 +1302,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
 
 -- Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.encounter ALTER COLUMN encounter_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.encounter ALTER COLUMN encounter_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.encounter TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO db_user; -- Additional authorizations for testing
@@ -1329,11 +1329,11 @@ CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
 
 -- Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.patient ALTER COLUMN patient_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.patient ALTER COLUMN patient_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.patient TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO db_user; -- Additional authorizations for testing
@@ -1356,11 +1356,11 @@ CREATE OR REPLACE TRIGGER patient_tr_ins_tr
 
 -- Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.condition ALTER COLUMN condition_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.condition ALTER COLUMN condition_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.condition TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO db_user; -- Additional authorizations for testing
@@ -1383,11 +1383,11 @@ CREATE OR REPLACE TRIGGER condition_tr_ins_tr
 
 -- Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medication ALTER COLUMN medication_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.medication ALTER COLUMN medication_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.medication TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO db_user; -- Additional authorizations for testing
@@ -1410,11 +1410,11 @@ CREATE OR REPLACE TRIGGER medication_tr_ins_tr
 
 -- Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationrequest ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.medicationrequest ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.medicationrequest TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO db_user; -- Additional authorizations for testing
@@ -1437,11 +1437,11 @@ CREATE OR REPLACE TRIGGER medicationrequest_tr_ins_tr
 
 -- Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationadministration ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.medicationadministration ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.medicationadministration TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO db_user; -- Additional authorizations for testing
@@ -1464,11 +1464,11 @@ CREATE OR REPLACE TRIGGER medicationadministration_tr_ins_tr
 
 -- Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationstatement ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.medicationstatement ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.medicationstatement TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO db_user; -- Additional authorizations for testing
@@ -1491,11 +1491,11 @@ CREATE OR REPLACE TRIGGER medicationstatement_tr_ins_tr
 
 -- Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.observation ALTER COLUMN observation_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.observation ALTER COLUMN observation_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.observation TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO db_user; -- Additional authorizations for testing
@@ -1518,11 +1518,11 @@ CREATE OR REPLACE TRIGGER observation_tr_ins_tr
 
 -- Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.diagnosticreport ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.diagnosticreport ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.diagnosticreport TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO db_user; -- Additional authorizations for testing
@@ -1545,11 +1545,11 @@ CREATE OR REPLACE TRIGGER diagnosticreport_tr_ins_tr
 
 -- Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.servicerequest ALTER COLUMN servicerequest_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.servicerequest ALTER COLUMN servicerequest_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.servicerequest TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO db_user; -- Additional authorizations for testing
@@ -1572,11 +1572,11 @@ CREATE OR REPLACE TRIGGER servicerequest_tr_ins_tr
 
 -- Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.procedure ALTER COLUMN procedure_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.procedure ALTER COLUMN procedure_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.procedure TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO db_user; -- Additional authorizations for testing
@@ -1599,11 +1599,11 @@ CREATE OR REPLACE TRIGGER procedure_tr_ins_tr
 
 -- Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.consent ALTER COLUMN consent_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.consent ALTER COLUMN consent_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.consent TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO db_user; -- Additional authorizations for testing
@@ -1626,11 +1626,11 @@ CREATE OR REPLACE TRIGGER consent_tr_ins_tr
 
 -- Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.location ALTER COLUMN location_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.location ALTER COLUMN location_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.location TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO db_user; -- Additional authorizations for testing
@@ -1653,11 +1653,11 @@ CREATE OR REPLACE TRIGGER location_tr_ins_tr
 
 -- Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.pids_per_ward ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
+ALTER TABLE cds2db_in.pids_per_ward ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON cds2db_in.pids_per_ward TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO db_user; -- Additional authorizations for testing

@@ -220,8 +220,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.patient_fe TO db_us
 GRANT SELECT ON TABLE db2frontend_in.patient_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.patient_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-ALTER TABLE db2frontend_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
-GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
+ALTER TABLE db2frontend_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db.db_seq'));
+GRANT USAGE ON db.db_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.patient_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -245,8 +245,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.fall_fe TO db_user;
 GRANT SELECT ON TABLE db2frontend_in.fall_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.fall_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-ALTER TABLE db2frontend_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
-GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
+ALTER TABLE db2frontend_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db.db_seq'));
+GRANT USAGE ON db.db_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.fall_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -270,8 +270,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.medikationsanalyse_
 GRANT SELECT ON TABLE db2frontend_in.medikationsanalyse_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.medikationsanalyse_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-ALTER TABLE db2frontend_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
-GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
+ALTER TABLE db2frontend_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db.db_seq'));
+GRANT USAGE ON db.db_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.medikationsanalyse_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -295,8 +295,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.mrpdokumentation_va
 GRANT SELECT ON TABLE db2frontend_in.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.mrpdokumentation_validierung_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
-GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
+ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db.db_seq'));
+GRANT USAGE ON db.db_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.mrpdokumentation_validierung_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -320,8 +320,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.risikofaktor_fe TO 
 GRANT SELECT ON TABLE db2frontend_in.risikofaktor_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.risikofaktor_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-ALTER TABLE db2frontend_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
-GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
+ALTER TABLE db2frontend_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db.db_seq'));
+GRANT USAGE ON db.db_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.risikofaktor_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
@@ -345,8 +345,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.trigger_fe TO db_us
 GRANT SELECT ON TABLE db2frontend_in.trigger_fe TO db_log_user;
 GRANT TRIGGER ON db2frontend_in.trigger_fe TO db2frontend_user;
 GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
-ALTER TABLE db2frontend_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db2frontend_in.db2frontend_in_seq'));
-GRANT USAGE ON db2frontend_in.db2frontend_in_seq TO db2frontend_user;
+ALTER TABLE db2frontend_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db.db_seq'));
+GRANT USAGE ON db.db_seq TO db2frontend_user;
 
 CREATE OR REPLACE FUNCTION db2frontend_in.trigger_fe_tr_ins_fkt()
 RETURNS TRIGGER AS $$
