@@ -1,6 +1,7 @@
 ################
 # isValidTable #
 ################
+
 test_that('Test isValidTable()', {
   expect_false(isValidTable(NA))
   expect_false(isValidTable(NULL))
@@ -672,6 +673,7 @@ test_that("getcolumnIndex returns 0 for NA as column name", {
 # moveColumnBefore #
 ####################
 
+# Test if moveColumnBefore correctly reorders columns
 test_that("moveColumnBefore correctly reorders columns", {
   dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
   moveColumnBefore(dt, "b", "c")
@@ -682,6 +684,7 @@ test_that("moveColumnBefore correctly reorders columns", {
   expect_equal(names(dt), c("b", "c", "a"))
 })
 
+# Test if moveColumnBefore does not change the data
 test_that("moveColumnBefore does not change the data", {
   dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
   original_dt <- data.table::copy(dt)
@@ -691,15 +694,94 @@ test_that("moveColumnBefore does not change the data", {
   expect_equal(dt$c, original_dt$c)
 })
 
+# Test if moveColumnBefore handles non-existing columns
 test_that("moveColumnBefore handles non-existing columns", {
   dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
   expect_error(moveColumnBefore(dt, "x", "c"))
   expect_error(moveColumnBefore(dt, "a", "y"))
 })
 
+# Test if moveColumnBefore with already correct order does nothing
 test_that("moveColumnBefore with already correct order does nothing", {
   dt <- data.table(a = 1:3, b = 4:6, c = 7:9)
   original_order <- names(dt)
   moveColumnBefore(dt, "b", "c")
   expect_equal(names(dt), original_order)
+})
+
+#######################
+# collapseRowsByGroup #
+#######################
+
+# Test for collapsing rows by group with more than one row
+test_that("collapseRowsByGroup collapses rows by group and handles NAs correctly", {
+  dt <- data.table(
+    id = c(1, 2, 3, 3),
+    group = c("A", "A", "B", "B"),
+    name = c("Alice", "Bob", "Charlie", "Alice"),
+    pat_identifier_system = c("[1.1]abcdefg", "[1.2.3]hijklmn", "[2.3.4.5]opqrstu", NA),
+    status = c(NA, NA, "ok", "error")
+  )
+  result <- collapseRowsByGroup(dt, "group")
+  expect_equal(nrow(result), 2)
+  expect_equal(result$group, c("A", "B"))
+  expect_equal(result$id, c("1; 2", "3"))
+  expect_equal(result$name, c("Alice; Bob", "Charlie; Alice"))
+  expect_equal(result$pat_identifier_system, c("[1.1]abcdefg; [1.2.3]hijklmn", "[2.3.4.5]opqrstu"))
+  expect_equal(result$status, c(NA_character_, "ok; error"))
+})
+
+# Test for collapsing all rows without grouping
+test_that("collapseRowsByGroup collapses all rows without grouping and handles NAs correctly", {
+  dt <- data.table(
+    id = c(1, 2, 3, 3),
+    group = c("A", "A", "B", "B"),
+    name = c("Alice", "Bob", "Charlie", "Alice"),
+    pat_identifier_system = c("[1.1]abcdefg", "[1.2.3]hijklmn", "[2.3.4.5]opqrstu", NA),
+    status = c(NA, NA, "ok", "error")
+  )
+  result <- collapseRowsByGroup(dt)
+  expect_equal(nrow(result), 1)
+  expect_equal(result$id, "1; 2; 3")
+  expect_equal(result$name, "Alice; Bob; Charlie")
+  expect_equal(result$pat_identifier_system, "[1.1]abcdefg; [1.2.3]hijklmn; [2.3.4.5]opqrstu")
+  expect_equal(result$status, "ok; error")
+})
+
+# Test for handling a single row table
+test_that("collapseRowsByGroup returns the table unchanged if it has only one row", {
+  dt <- data.table(
+    id = 1,
+    group = "A",
+    name = "Alice",
+    pat_identifier_system = "[1.1]abcdefg",
+    status = "ok"
+  )
+  result <- collapseRowsByGroup(dt)
+  expect_equal(result, dt)
+})
+
+# Test for handling an empty table
+test_that("collapseRowsByGroup handles an empty table", {
+  dt <- data.table(id = integer(), group = character(), name = character(), pat_identifier_system = character(), status = character())
+  result <- collapseRowsByGroup(dt)
+  expect_equal(nrow(result), 0)
+  expect_equal(ncol(result), 5)
+})
+
+# Test for handling columns with all NAs
+test_that("collapseRowsByGroup handles columns with all NAs correctly", {
+  dt <- data.table(
+    id = c(NA, NA, NA),
+    group = c(NA, NA, NA),
+    name = c(NA, NA, NA),
+    pat_identifier_system = c(NA, NA, NA),
+    status = c(NA, NA, NA)
+  )
+  result <- collapseRowsByGroup(dt)
+  expect_equal(nrow(result), 1)
+  expect_true(all(is.na(result$id)))
+  expect_true(all(is.na(result$name)))
+  expect_true(all(is.na(result$pat_identifier_system)))
+  expect_true(all(is.na(result$status)))
 })

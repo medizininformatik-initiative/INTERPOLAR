@@ -1033,3 +1033,56 @@ splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname =
   split(dt, by = split_columnname, keep.by = TRUE)
 }
 
+#' Collapse Rows of a data.table by Groups
+#'
+#' This function collapses the rows of a data.table into a single row per group. Different values in the
+#' rows are converted into a string with the values separated by a specified delimiter. NA values are
+#' excluded from the concatenated string and will only appear as NA if all values in the column are NA.
+#'
+#' @param dt A data.table to be collapsed.
+#' @param group_col The column name by which to group the data.table. Default is NA, meaning no grouping.
+#' @param delimiter A string used to separate the different values. Default is "; ".
+#'
+#' @return A data.table with one row per group, where each column contains a string of concatenated values
+#' or NA if all values were NA.
+#'
+#' @examples
+#' library(data.table)
+#' patient <- data.table(
+#'   id = c(1, 2, 3, 3),
+#'   group = c("A", "A", "B", "B"),
+#'   name = c("Alice", "Bob", "Charlie", "Alice"),
+#'   pat_identifier_system = c("[1.1]abcdefg", "[1.2.3]hijklmn", "[2.3.4.5]opqrstu", NA),
+#'   status = c(NA, NA, "ok", "error")
+#' )
+#' collapseRowsByGroup(patient, "group")
+#' collapseRowsByGroup(patient)
+#'
+#' @export
+collapseRowsByGroup <- function(dt, group_col = NA, delimiter = "; ") {
+  # Function to collapse values in a column
+  collapse_column <- function(x) {
+    non_na_values <- unique(na.omit(x))
+    if (length(non_na_values) > 0) {
+      collapsed_values <- paste(non_na_values, collapse = delimiter)
+      return(collapsed_values)
+    } else {
+      return(NA_character_)
+    }
+  }
+
+  # Check if group_col is provided or not
+  if (is.na(group_col)) {
+    # Collapse all rows without grouping
+    if (nrow(dt) > 1) {
+      collapsed_dt <- dt[, lapply(.SD, collapse_column)]
+    } else {
+      collapsed_dt <- dt
+    }
+  } else {
+    # Group by the specified column and collapse the values in each group
+    collapsed_dt <- dt[, lapply(.SD, collapse_column), by = group_col]
+  }
+
+  return(collapsed_dt)
+}
