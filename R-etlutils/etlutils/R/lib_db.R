@@ -457,3 +457,33 @@ readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_con
   dbDisconnect(db_connection)
   return(tables)
 }
+
+#' Prints Database Timezone and Current Time
+#'
+#' This function prints the current timezone and the current time from the connected PostgreSQL database.
+#'
+#' @param db_connection A DBI connection object to the PostgreSQL database.
+#'
+#' @return Prints the timezone and current time of the PostgreSQL database.
+#'
+#' @export
+dbPrintTimeAndTimezone <- function(db_connection) {
+  # Query to get the current timezone
+  query <- "SHOW timezone;"
+  timezone <- DBI::dbGetQuery(db_connection, query)
+  print(paste0("DB Timezone: ", timezone))
+
+  # Query to get the current time
+  query <- "SELECT NOW();"
+  now_time <- DBI::dbGetQuery(db_connection, query)
+  print(paste0("DB SELECT NOW(): ", now_time$now))
+
+  # Query to get the current timestamp
+  query <- "SELECT CURRENT_TIMESTAMP;"
+  current_timestamp <- DBI::dbGetQuery(db_connection, query)
+  #print(paste0("CURRENT_TIMESTAMP: ", current_timestamp$current_timestamp))
+  print(paste0("DB CURRENT_TIMESTAMP: ", current_timestamp))
+
+  print(paste0("R Sys.time(): ", Sys.time()))
+  print(paste0("R Sys.timezone(): ", Sys.timezone()))
+}
