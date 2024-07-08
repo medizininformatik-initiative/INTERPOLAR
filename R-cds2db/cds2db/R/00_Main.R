@@ -100,9 +100,9 @@ retrieve <- function() {
     finish_message <- "Module 'cds2db' finished with errors (see details above).\n"
     finish_message <- paste0(finish_message, etlutils::getErrorMessage())
   } else if (all_empty_fhir && all_empty_raw) {
-    finish_message <- "Module 'cds2db' finished with no errors but the result was empty (see warnings above)."
+    finish_message <- "Module 'cds2db' finished with no errors but the result was empty (see warnings above).\n"
   } else {
-    finish_message <- "Module 'cds2db' finished with no errors."
+    finish_message <- "Module 'cds2db' finished with no errors.\n"
   }
 
   etlutils::finalize(finish_message)
