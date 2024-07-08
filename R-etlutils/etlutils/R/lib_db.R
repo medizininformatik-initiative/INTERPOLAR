@@ -320,7 +320,7 @@ dbReadTable <- function(db_connection, table_name) {
 #' @export
 createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, clear_before_insert = FALSE) {
   db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  writeTablesToDatabase(tables, db_connection, clear_before_insert, TRUE)
+  writeTablesToDatabase(tables, db_connection, clear_before_insert, close_db_connection = TRUE)
 }
 
 #' Write Multiple Tables to Database
