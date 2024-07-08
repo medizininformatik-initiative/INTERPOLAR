@@ -1,8 +1,10 @@
 #'
-#' Starts the retrieval for this project. This is the main start function start the Data Processor job
+#'
+#' Starts the retrieval for this project. This is the main start function start the Data Processor
+#' job
 #'
 #' @export
-dataprocessor <- function() {
+processData <- function() {
   ###
   # Read the module configuration toml file.
   ###

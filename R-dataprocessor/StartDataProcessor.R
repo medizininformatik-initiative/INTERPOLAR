@@ -14,4 +14,4 @@ rm(list = ls())
 library(etlutils)
 library(dataprocessor)
 
-dataprocessor()
+dataprocessor::processData()
