@@ -11,12 +11,22 @@ processData <- function() {
   path2config_toml <- "./R-dataprocessor/dataprocessor_config.toml"
   etlutils::initConstants(path2config_toml,
                           c(MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30,
+
+                            # default medication resource should be MedicationRequest and its
+                            # timestamps
                             MEDICATION_REQUEST_RESOURCE = "MedicationRequest",
                             MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id",
                             MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id",
                             MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event",
                             MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start",
-                            MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end"
+                            MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end",
+
+                            # The default for the FHIR system of the PID entry in the frontend
+                            # result table for patients is en empty string. This will display
+                            # all Identifiers values separated by semicolon if there are multiple
+                            # ones.
+                            FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM = ""
+
                           ))
 
   ###

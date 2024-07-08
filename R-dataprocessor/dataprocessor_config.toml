@@ -40,6 +40,18 @@ MAX_DIR_COUNT = 5
 #DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
 
 [analyse]
+
+# In the patient table of the frontend, the patient ID should be displayed, which
+# can be used to search for further information on the patient in other systems.
+# This is normally specified as one of several possible identifiers for a FHIR
+# patient resource. To select the correct one, a string (or a grep pattern) can be
+# specified here for the 'system' entry of the identifier via which the correct one
+# can be found. If several are found, they are written one after the other,
+# separated by semicolons. If this variable is deactivated or empty, all
+# identifiers are always returned (if multiple then separated by semicolons).
+#FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM = "https://UKB.de/pid_aaa"
+FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM = ".*"
+
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
