@@ -60,7 +60,7 @@ copyDB2Redcap <- function() {
 
   #get relevant data for Patient and Fall (Phase 1a of INTERPOLAR)
   PatientFromDB <- DBI::dbGetQuery(dbcon,
-      "SELECT record_id, patient_fe_id, pat_id, pat_name, pat_vorname, pat_gebdat, pat_aktuell_alter, pat_geschlecht,
+      "SELECT record_id, patient_fe_id, pat_id, pat_cis_pid, pat_name, pat_vorname, pat_gebdat, pat_aktuell_alter, pat_geschlecht,
        patient_complete FROM v_patient")
 
   FallFromDB <- DBI::dbGetQuery(dbcon,

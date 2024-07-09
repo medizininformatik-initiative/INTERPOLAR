@@ -1,20 +1,22 @@
 --Create SQL Table in Schema db2dataprocessor_in
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
 patient_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
-record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet"
 pat_id varchar, -- Patient-identifier FHIR Daten
+pat_cis_pid varchar, -- Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
 redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
 pat_name varchar, -- Patientenname
 pat_vorname varchar, -- Patientenvorname
 pat_gebdat date, -- Geburtsdatum
-pat_aktuell_alter double precision, -- <div class=rich-text-field-label><p>aktuelles Patientenalter (Jahre)</p></div>
+pat_aktuell_alter double precision, -- aktuelles Patientenalter (Jahre)
 pat_geschlecht varchar, -- Geschlecht (wie in FHIR)
-patient_complete varchar, -- Frontend Complete-Status
+"patient_complete varchar, -- Frontend Complete-Status
 input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Zeitpunkt an dem der Datensatz eingefügt wird
 last_check_datetime timestamp DEFAULT NULL,   -- Zeitpunkt an dem Datensatz zuletzt Überprüft wurde
 current_dataset_status varchar DEFAULT 'input'   -- Bearbeitungstatus des Datensatzes
 );
+
 
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
 fall_fe_id serial PRIMARY KEY not null, -- Primärschlüssel der Entität
@@ -374,6 +376,7 @@ CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
 -- Comment on Table in Schema db2dataprocessor_in
 comment on column db2dataprocessor_in.patient_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
 comment on column db2dataprocessor_in.patient_fe.pat_id is 'Patient-identifier FHIR Daten';
+comment on column db2dataprocessor_in.patient_fe.pat_cis_pid is 'Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht';
 comment on column db2dataprocessor_in.patient_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
 comment on column db2dataprocessor_in.patient_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
 comment on column db2dataprocessor_in.patient_fe.pat_name is 'Patientenname';

@@ -15,6 +15,7 @@ BEGIN
             FROM db_log.patient_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
                     COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
+                    COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                     COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
@@ -30,6 +31,7 @@ BEGIN
                 INSERT INTO db_log.patient_fe ( patient_fe_id,
                         record_id,
                         pat_id,
+                        pat_cis_pid,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
                         pat_name,
@@ -43,6 +45,7 @@ BEGIN
                 VALUES (current_record.patient_fe_id,
                         current_record.record_id,
                         current_record.pat_id,
+                        current_record.pat_cis_pid,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
                         current_record.pat_name,
@@ -62,6 +65,7 @@ BEGIN
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                 WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
                         COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
+                        COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                         COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
