@@ -44,7 +44,10 @@ startLogging <- function(prefix) {
 #' @export
 endLogging <- function() {
   sink(type = "message")
-  sink()
+  # Remove all sinks
+  while (sink.number() > 0) {
+    sink()
+  }
 
   log_filename <- .lib_logging_env[["log_filename"]]
   log_file <- .lib_logging_env[[log_filename]]
@@ -53,6 +56,8 @@ endLogging <- function() {
     .lib_logging_env[[log_filename]] <- NULL
     .lib_logging_env[["log_filename"]] <- NULL
   }
+  closeAllConnections()
+
   removeAnsiEscapeSequences(log_filename)
 }
 
@@ -66,7 +71,7 @@ endLogging <- function() {
 #' @export
 logBlockHeader <- function(verbose = VERBOSE, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
-  if (!verbose) {
+  if (verbose) {
     cat(paste0(
       # print a bold underlined line of len spaces
       formatStringStyle(paste0(rep(" ", len), collapse = ""), fg = 7, bold = TRUE, underline = TRUE), "\n",
@@ -83,7 +88,7 @@ logBlockHeader <- function(verbose = VERBOSE, len = 104) {
 #' @export
 logBlockFooter <- function(verbose = VERBOSE, len = 104) {
   # if verb greater than zero, print a underlined line of len spaces followed by the word START
-  if (!verbose) {
+  if (verbose) {
     cat(paste0(
       # print bold underlined word END
       formatStringStyle("END", fg = 7, bold = TRUE, underline = TRUE),
@@ -91,25 +96,6 @@ logBlockFooter <- function(verbose = VERBOSE, len = 104) {
       formatStringStyle(paste0(rep(" ", len - 3), collapse = ""), fg = 7, bold = TRUE, underline = TRUE),"\n"
     ))
   }
-}
-
-#' Start a Process with Error Handling
-#'
-#' This function initiates a process using the specified function and includes error handling.
-#'
-#' @param process The function representing the process to be executed.
-#' @return None (prints clock information and handles errors)
-#'
-#' @seealso logBlockHeader, printClock, logBlockFooter, stopOnError
-#'
-#' @export
-runProcess <- function(process) {
-  logBlockHeader()
-  err <- try(process, silent = TRUE)
-  printClock()
-  warnings()
-  logBlockFooter()
-  stopOnError(err)
 }
 
 #' Finalizes the global process
@@ -125,7 +111,6 @@ finalize <- function(lastLogMessage = NA) {
   printClock()
   warnings()
   savePerformance()
-  logBlockFooter()
   if (!isSimpleNA(lastLogMessage)) {
     cat(lastLogMessage)
   }
@@ -135,33 +120,42 @@ finalize <- function(lastLogMessage = NA) {
   endLogging()
 }
 
-#' Stop execution with Error message
+#' Check if an error has occurred
 #'
-#' This function stops execution and prints the concatenated error message.
+#' This function checks if an error message exists in the logging environment.
 #'
-#' @param ... Character vectors to be concatenated and printed as an error message.
+#' @return Logical value indicating whether an error message exists.
 #'
 #' @export
-stopWithError <- function(...) {
-  # do not change the paste(c(...), collapse = "") to paste0 !!! The result is not the same!
-  err <- try(stop(catColorRed(paste(c(...), collapse = ""))), silent = TRUE)
-  stopOnError(err)
+isErrorOccured <- function() {
+  exists("ERROR_MESSAGE", envir = .lib_logging_env)
 }
 
-#' Stop on Error
+#' Print the error message if an error has occurred
 #'
-#' This function checks if the provided argument is an error. If it is, the
-#' function stops the execution.
+#' This function prints the error message stored in the logging environment if an error has occurred.
 #'
-#' @param potential_error The object to check for being an error.
-#'
-#' @seealso stop
 #' @export
-stopOnError <- function(potential_error) {
-  if (isError(potential_error)) {
-    finalize()
-    stop()
+catErrorOccured <- function() {
+  if (isErrorOccured()) {
+    catErrorMessage(get("ERROR_MESSAGE", envir = .lib_logging_env))
   }
+}
+
+#' Retrieve the error message if an error has occurred
+#'
+#' This function checks if an error message exists in the logging environment and returns it.
+#' If no error message exists, an empty string is returned.
+#'
+#' @return A character string containing the error message if an error has occurred, otherwise an
+#' empty string.
+#'
+#' @export
+getErrorMessage <- function() {
+  if (isErrorOccured()) {
+    return(get("ERROR_MESSAGE", envir = .lib_logging_env))
+  }
+  return("")
 }
 
 #' Run and log a process
@@ -181,30 +175,51 @@ runProcessInternal <- function(
     throw_exception = TRUE,
     verbose = VERBOSE
 ) {
-  if (0 < VERBOSE) {
-    st <- Sys.time()
-    cat("[TIME]", round(as.numeric(st), 0), format(st), "\n")
+  # This function is called recursively when the functions runLevel1(), runLevel2() and runLevel3()
+  # are nested within each other. If an inner function generates an error, no further runLevelX()
+  # function is executed afterwards. The same error that the inner function had is always set for
+  # the outer function of the inner function.
+  if (!isErrorOccured()) {
+    logBlockHeader()
+    if (VERBOSE) {
+      st <- Sys.time()
+      cat("[TIME]", round(as.numeric(st), 0), format(st), "\n")
 
-    cat(paste0(message, ':', if (single_line) ' ' else paste0(colourise(text = ' RUNNING ...', fg = 'blue'), '\n')))
-  }
+      cat(paste0(message, ':', if (single_line) ' ' else paste0(colourise(text = ' RUNNING ...', fg = 'blue'), '\n')))
+    }
+    # This is the return value of the transferred process. This can be an error or a regular process
+    # result.
+    process_result <- getClock()$measure_process_time(
+      message = message,
+      process = process
+    )
+    if (!single_line && VERBOSE) cat(paste0(message, ': ' ))
 
-  err <- getClock()$measure_process_time(
-    message = message,
-    process = process
-  )
-  if (!single_line && 0 < VERBOSE) cat(paste0(message, ': ' ))
-  if (0 < VERBOSE) {
+    # Check whether the process result is an error or a regular (non-error) result
     checkError(
-      err = err,
+      potencial_error = process_result,
       expr_ok = {
         if (single_line) catOkMessage() else catColourised('OK\n', fg = 'light blue')
-        err
+        logBlockFooter()
+        return(process_result)
       },
       expr_err = {
-        catErrorMessage()
+        error_message <- catErrorMessage(process_result)
+        logBlockFooter()
         if (throw_exception) {
-          stop(err)
+          # This process was the very first to generate an error
+          if (!exists("ERROR_MESSAGE", envir = .lib_logging_env)) {
+            # write this error to .lib_logging_env
+            .lib_logging_env[["ERROR_MESSAGE"]] <- error_message
+          } else {
+            # A sub-process of this process had already generated an error ->
+            # Replace the error of the current superprocess with the original error of the
+            # subprocess (otherwise the error messages will be a bit confusing)
+            error_message <- .lib_logging_env[["ERROR_MESSAGE"]]
+          }
+          stop(error_message)
         }
+        return(error_message)
       }
     )
   }

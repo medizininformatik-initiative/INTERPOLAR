@@ -6,7 +6,7 @@ dataprocessor <- function() {
   ###
   # Read the module configuration toml file.
   ###
-  path2config_toml <- './R-dataprocessor/dataprocessor_config.toml'
+  path2config_toml <- "./R-dataprocessor/dataprocessor_config.toml"
   etlutils::initConstants(path2config_toml,
                           c(MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30,
                             MEDICATION_REQUEST_RESOURCE = "MedicationRequest",
@@ -24,7 +24,7 @@ dataprocessor <- function() {
 
   ###
   # Set the project name to 'dataprocessor'
-  PROJECT_NAME <<- 'dataprocessor'
+  PROJECT_NAME <<- "dataprocessor"
   ###
 
   etlutils::createDIRS(PROJECT_NAME)
@@ -37,21 +37,29 @@ dataprocessor <- function() {
   ###
   # log all console outputs and save them at the end
   ###
-  etlutils::startLogging('retrieval-total')
+  etlutils::startLogging(PROJECT_NAME)
 
-  etlutils::logBlockHeader()
+  #etlutils::logBlockHeader()
 
-  etlutils::runLevel1('Run Dataprocessor', {
+  try(etlutils::runLevel1("Run Dataprocessor", {
 
-    etlutils::runProcess(etlutils::runLevel2('Create Frontend Tables for Patient and Encounter', {
+    etlutils::runLevel2("Create Frontend Tables for Patient and Encounter", {
       createFrontendTables()
-    }))
+    })
 
-    etlutils::runProcess(etlutils::runLevel2('Close database connections', {
+    etlutils::runLevel2("Close database connections", {
       closeAllDatabaseConnections()
-    }))
+    })
 
-  })
+  }))
 
-  etlutils::finalize()
+  if (etlutils::isErrorOccured()) {
+    finish_message <- "Module 'dataprocessor' finished with errors (see details above).\n"
+    finish_message <- paste0(finish_message, etlutils::getErrorMessage())
+  } else {
+    finish_message <- "Module 'dataprocessor' finished with no errors.\n"
+  }
+
+  etlutils::finalize(finish_message)
+
 }

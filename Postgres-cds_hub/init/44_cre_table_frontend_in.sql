@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
 patient_fe_id int, -- Primärschlüssel der Entität - vorgegeben bei Datenausleitung
 record_id varchar, -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
 pat_id varchar, -- Patient-identifier FHIR Daten
+pat_cis_pid varchar, -- Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht
 redcap_repeat_instrument varchar, -- RedCap interne Datensatzzuordnung
 redcap_repeat_instance varchar, -- RedCap interne Datensatzzuordnung
 pat_name varchar, -- Patientenname
@@ -368,6 +369,7 @@ CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
 -- Comment on Table in Schema db2frontend_in
 comment on column db2frontend_in.patient_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet';
 comment on column db2frontend_in.patient_fe.pat_id is 'Patient-identifier FHIR Daten';
+comment on column db2frontend_in.patient_fe.pat_cis_pid is 'Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht';
 comment on column db2frontend_in.patient_fe.redcap_repeat_instrument is 'RedCap interne Datensatzzuordnung';
 comment on column db2frontend_in.patient_fe.redcap_repeat_instance is 'RedCap interne Datensatzzuordnung';
 comment on column db2frontend_in.patient_fe.pat_name is 'Patientenname';

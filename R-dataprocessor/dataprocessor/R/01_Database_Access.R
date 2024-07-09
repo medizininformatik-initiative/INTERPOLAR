@@ -92,11 +92,11 @@ getFirstTableWithNamePart <- function(db_connection, name_part, stop_on_empty_re
     return(table_names[1])
   } else if (length(table_names) > 1) {
     connection_display <- etlutils::getPrintString(db_connection)
-    etlutils::stopWithError("There are multiple tables with name part '", name_part, "' found for DB connection ", connection_display, "\n",
+    stop(paste0("There are multiple tables with name part '", name_part, "' found for DB connection ", connection_display, "\n",
                             "Tables: ", paste0(table_names, collapse = ","), "\n",
-                            "Hint: choose the namepart so that the result tablename is unique.")
+                            "Hint: choose the namepart so that the result tablename is unique."))
   } else if (stop_on_empty_result) {
     connection_display <- etlutils::getPrintString(db_connection)
-    etlutils::stopWithError("No table with name part '", name_part, "' found for DB connection ", connection_display, "\n")
+    stop(paste0("No table with name part '", name_part, "' found for DB connection ", connection_display, "\n"))
   }
 }

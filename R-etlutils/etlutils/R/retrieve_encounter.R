@@ -18,7 +18,7 @@
 #' @export
 getEncounters <- function(table_description) {
 
-  runLevel2(toupper('getEncounters'), {
+  runLevel3("Get Enconters", {
 
     #refresh token, if defined
     refreshFHIRToken()
@@ -39,8 +39,8 @@ getEncounters <- function(table_description) {
       )
     })
 
-    runLevel3IgnoreError('Send Test Request', {
-      test_bundles <- try(executeFHIRSearchVariation(request = request, verbose = VERBOSE), silent = TRUE)
+    runLevel3('Send Test Request', {
+      test_bundles <- executeFHIRSearchVariation(request = request, verbose = VERBOSE)
     })
 
     #
