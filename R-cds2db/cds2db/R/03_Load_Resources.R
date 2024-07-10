@@ -59,6 +59,24 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   # resource_tables <- etlutils::loadResourcesByPID(patientIDs, resource_table_descriptions)
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
 
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  # NOTE: only works correctly with very specific test data
+  if (etlutils::isDefinedAndTrue("DEBUG_ADD_PATIENT_IDENTIFIER")) {
+    # adds a second patient identifier
+    debugAddPatientIdentifier(resource_tables)
+    # adds a new Patient
+    result <- debugAddPatient(resource_tables$Patient, patient_IDs_per_ward)
+    resource_tables$Patient <- result$Patient
+    patient_IDs_per_ward <- result$patient_IDs_per_ward
+    rm(result)
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+
   # Add additional table of ward-patient ID per date
   resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patient_IDs_per_ward)
 
