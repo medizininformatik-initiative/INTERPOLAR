@@ -33,9 +33,9 @@ debugAddPatientIdentifier <- function(resource_tables) {
   new_value_suffix <- "_bbb"
 
   # Add a second value to all values pat_identifier_system
-  resource_tables$Patient[, pat_identifier_system := sapply(pat_identifier_system, function(x) addValue(x, old_value_suffix, new_value_suffix))]
+  resource_tables$Patient[, pat_identifier_system := sapply(pat_identifier_system, function(x) addValue(x, old_value_suffix = old_value_suffix, new_value_suffix = new_value_suffix))]
   # Add a second value to all values pat_identifier_system
-  resource_tables$Patient[, pat_identifier_value := sapply(pat_identifier_value, function(x) addValue(x, old_value_suffix, new_value_suffix))]
+  resource_tables$Patient[, pat_identifier_value := sapply(pat_identifier_value, function(x) addValue(x, old_value_suffix = old_value_suffix, new_value_suffix = new_value_suffix))]
 
   return(resource_tables)
 
