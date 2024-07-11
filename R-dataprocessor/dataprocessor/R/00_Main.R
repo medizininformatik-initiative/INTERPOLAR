@@ -21,11 +21,14 @@ processData <- function() {
                             MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start",
                             MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end",
 
-                            # The default for the FHIR system of the PID entry in the frontend
-                            # result table for patients is en empty string. This will display
-                            # all Identifiers values separated by semicolon if there are multiple
-                            # ones.
-                            FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM = ""
+                            # The default for the FHIR 'system', the 'type/coding/system' and
+                            # 'type/coding/code' of the PID entry in the frontend
+                            # result table for patients are empty strings, so all Identifiers
+                            # found in the FHIR data will be displayed in the frontend tables
+                            # (multiple values will be separated by semicolon)
+                            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = "",
+                            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "",
+                            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ""
 
                           ))
 

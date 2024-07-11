@@ -486,23 +486,28 @@ createFrontendTables <- function() {
 
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
-  # check error no Patient left after identifier system filtering
+  # check error no Patient exists in the current patinet database table
   if (!nrow(patients_from_database)) { #
     etlutils::catErrorMessage(paste0("No Patient resources found."))
     return(NA)
   }
 
-  # remove rows for the patient where the Identifier system does not match the filter variable
-  # (but only if there is a filter pattern given)
-  if (FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM  != "") {
-    patients_from_database <- patients_from_database[grepl(FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM , get("pat_identifier_system"))]
+  # filter rows in the patients_from_database table by the given filter patterns for the
+  # Identifier
+  filterRows <- function(pattern, column_name) {
+    # remove rows for the patient where row does not match the pattern
+    patients_from_database <- patients_from_database[grepl(pattern , get(column_name))]
+    # check error no Patient left after identifier filtering
+    if (!nrow(patients_from_database)) { #
+      etlutils::catErrorMessage(paste0("No Patient resources found with a '", column_name, "' matching pattern '", pattern, "'"))
+      return(NA)
+    }
+    return(patients_from_database)
   }
 
-  # check error no Patient left after identifier system filtering
-  if (!nrow(patients_from_database)) { #
-    etlutils::catErrorMessage(paste0("No Patient resources found with an identifier system matching pattern '", FRONTEND_DISPLAYED_PATIENT_IDENTIFIER_FHIR_SYSTEM, "'"))
-    return(NA)
-  }
+  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM , "pat_identifier_system"))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM , "pat_identifier_type_system"))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE , "pat_identifier_type_code"))) return(NA)
 
   # If a patient has been given any list value, e.g. an additional identifier to an existing
   # identifier that is not changed, then at least 2 data records are created in the patient table
