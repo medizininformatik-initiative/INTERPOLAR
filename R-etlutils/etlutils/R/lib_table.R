@@ -76,9 +76,12 @@ addTableRow <- function(dt, ...) {
 #' print(dt_extended_start)
 #' dt_extended_end <- addEmptyRows(dt, 2, "end")
 #' print(dt_extended_end)
+#' # same as with the parameter "end"
+#' dt_extended_end <- addEmptyRows(dt, 2)
+#' print(dt_extended_end)
 #'
 #' @export
-addEmptyRows <- function(dt, num_rows, position = c("start", "end")) {
+addEmptyRows <- function(dt, num_rows, position = c("end", "start")) {
   # Match the position argument
   position <- match.arg(position)
 
