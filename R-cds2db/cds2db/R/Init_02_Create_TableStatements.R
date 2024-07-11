@@ -30,7 +30,6 @@ getRightsDefinitionColumnNames <- function() {
     "OWNER_SCHEMA",
     "TABLE_PREFIX",
     "TABLE_POSTFIX",
-    "SEQ_NAME",
     "RIGHTS",
     "GRANT_TARGET_USER",
     "COPY_FUNC_SCRIPT_NAME",
@@ -211,12 +210,7 @@ getCreateTableGrantStatements <- function(table_description, script_rights_descr
     # load grant template
     single_statement <- loadTemplate("template_cre_table_sub_grant.sql")
 
-    sequence_name <- rights_first_row$SEQ_NAME
-    grant_sub_alter_table_statement <- ""
-    if (!is.na(sequence_name)) {
-      grant_sub_alter_table_statement <- loadTemplate("template_cre_table_sub_grant_alter_table.sql")
-      grant_sub_alter_table_statement <- gsub("<%SEQ_NAME%>", sequence_name, grant_sub_alter_table_statement)
-    }
+    grant_sub_alter_table_statement <- loadTemplate("template_cre_table_sub_grant_alter_table.sql")
     single_statement <- gsub("<%TEMPLATE_CRE_TABLE_SUB_GRANT_ALTER_TABLE%>", grant_sub_alter_table_statement, single_statement)
 
     grant_sub_rights_statements <- ""
