@@ -293,6 +293,7 @@ createFrontendTables <- function() {
       record_id = rep(NA_character_, times = pids_count), # v_patient_all - patient_id
       patient_fe_id = NA_character_, # v_patient_all - patient_id
       pat_id = NA_character_, # v_patient_all - pat_id
+      pat_cis_pid = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
@@ -305,7 +306,8 @@ createFrontendTables <- function() {
       patient <- patients[pat_id %in% pids[i]]
       patient_frontend_table$record_id[i] <- patient$patient_id
       patient_frontend_table$patient_fe_id[i] <- patient$patient_id
-      patient_frontend_table$pat_id[i] <- patient$pat_identifier_value
+      patient_frontend_table$pat_id[i] <- patient$pat_id
+      patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
       patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
@@ -377,7 +379,7 @@ createFrontendTables <- function() {
       # if there are errors in the data then there can be more than one encounter
       if (length(unique_encounter_IDs) > 1) {
         etlutils::catErrorMessage(paste0("Multiple Encounters found for PID ", pid, "\n",
-                                   "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
+                                         "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
       # If the data is incorrect and a patient has more than one active Encounter, this will be
@@ -409,7 +411,7 @@ createFrontendTables <- function() {
         enc_status <- pid_encounters[[i]]$enc_status[1]
         data.table::set(enc_frontend_table, target_index, 'record_id', pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
-        data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_identifier_value)
+        data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, 'fall_typ_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
