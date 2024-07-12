@@ -523,8 +523,12 @@ createFrontendTables <- function() {
   # filter rows in the patients_from_database table by the given filter patterns for the
   # Identifier
   filterRows <- function(pattern, column_name) {
+    # If the pattern is empty (same as any string) or matches any string, return the original table
+    if (pattern %in% c("", ".*")) {
+      return(patients_from_database)
+    }
     # remove rows for the patient where row does not match the pattern
-    patients_from_database <- patients_from_database[grepl(pattern , get(column_name))]
+    patients_from_database <- patients_from_database[grepl(pattern, get(column_name))]
     # check error no Patient left after identifier filtering
     if (!nrow(patients_from_database)) { #
       etlutils::catErrorMessage(paste0("No Patient resources found with a '", column_name, "' matching pattern '", pattern, "'"))
@@ -533,6 +537,7 @@ createFrontendTables <- function() {
     return(patients_from_database)
   }
 
+  # Apply the filterRows function for each identifier system and return NA if no patients are left
   if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM , "pat_identifier_system"))) return(NA)
   if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM , "pat_identifier_type_system"))) return(NA)
   if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE , "pat_identifier_type_code"))) return(NA)

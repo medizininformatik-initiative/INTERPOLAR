@@ -68,8 +68,9 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
 # Accepts only type/coding/code with the exact value 'MR'. This value means
 # 'medical record number' in the system http://terminology.hl7.org/CodeSystem/v2-0203
 # and is the recommended code for the patient ID in the hospital (if the variable
-# is commented out then every value will be accepted)
-#FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_VALUE = "MR"
+# is commented out then every value will be accepted). To match the start and end of the exact
+# value, use caret (^) and dollar ($) symbols.
+#FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
 
 
 # The codes for height, weight and BMI can be customised here. If several codes
