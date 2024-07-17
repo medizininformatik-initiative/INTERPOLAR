@@ -1,3 +1,80 @@
+#######################
+# normalizeTimeToUTC  #
+#######################
+
+# Test case 1: Convert time from different timezones to UTC
+test_that("normalizeTimeToUTC converts time from different timezones to UTC", {
+  # Example with New York time
+  time1 <- as.POSIXct("2023-03-10 12:00:00", tz = "America/New_York")
+  expected1 <- as.POSIXct("2023-03-10 17:00:00", tz = "UTC")  # Converted to UTC
+
+  result1 <- normalizeTimeToUTC(time1)
+  expect_equal(result1, expected1)
+
+  # Example with Tokyo time
+  time2 <- as.POSIXct("2023-03-10 12:00:00", tz = "Asia/Tokyo")
+  expected2 <- as.POSIXct("2023-03-10 03:00:00", tz = "UTC")  # Converted to UTC
+
+  result2 <- normalizeTimeToUTC(time2)
+  expect_equal(result2, expected2)
+})
+
+# Test case 2: Convert already UTC time
+test_that("normalizeTimeToUTC does not modify time already in UTC", {
+  time_utc <- as.POSIXct("2023-03-10 12:00:00", tz = "UTC")
+  expected <- time_utc
+
+  result <- normalizeTimeToUTC(time_utc)
+  expect_equal(result, expected)
+})
+
+##############################
+# normalizeTableColumnToUTC  #
+##############################
+
+# Test case 1: Convert single column from different timezones to UTC
+test_that("normalizeTableColumnToUTC converts column from different timezones to UTC", {
+  dt <- data.table(
+    time = as.POSIXct(c("2023-03-10 12:00:00", "2023-03-11 15:00:00"), tz = "America/New_York")
+  )
+  expected <- data.table(
+    time = as.POSIXct(c("2023-03-10 17:00:00", "2023-03-11 20:00:00"), tz = "UTC")
+  )
+
+  normalizeTableColumnToUTC(dt, "time")
+  expect_equal(dt, expected)
+})
+
+# Test case 2: Convert already UTC column
+test_that("normalizeTableColumnToUTC does not modify column already in UTC", {
+  dt <- data.table(
+    time = as.POSIXct(c("2023-03-10 12:00:00", "2023-03-11 15:00:00"), tz = "UTC")
+  )
+  expected <- data.table::copy(dt)
+
+  normalizeTableColumnToUTC(dt, "time")
+  expect_equal(dt, expected)
+})
+
+#############################
+# normalizeAllPOSIXctToUTC  #
+#############################
+
+# Test: Convert multiple POSIXct columns to UTC
+test_that("normalizeAllPOSIXctToUTC converts all POSIXct columns to UTC", {
+  dt <- data.table(
+    time1 = as.POSIXct(c("2023-03-10 12:00:00", "2023-03-11 15:00:00"), tz = "America/New_York"),
+    time2 = as.POSIXct(c("2023-03-10 11:00:00", "2023-03-11 14:00:00"), tz = "Europe/Berlin")
+  )
+  expected <- data.table(
+    time1 = as.POSIXct(c("2023-03-10 17:00:00", "2023-03-11 20:00:00"), tz = "UTC"),
+    time2 = as.POSIXct(c("2023-03-10 10:00:00", "2023-03-11 13:00:00"), tz = "UTC")
+  )
+
+  normalizeAllPOSIXctToUTC(dt)
+  expect_equal(dt, expected)
+})
+
 ######################
 # convertDateFormat  #
 ######################
