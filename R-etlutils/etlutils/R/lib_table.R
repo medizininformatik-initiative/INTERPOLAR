@@ -873,10 +873,10 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
 #' setDT(mtcars)
 #'
 #' # Print summary for the mtcars table
-#' printTable_summary(table = mtcars, table_name = 'mtcars')
+#' printTableSummary(table = mtcars, table_name = 'mtcars')
 #'
 #' @export
-printTable_summary <- function(table, table_name = '') {
+printTableSummary <- function(table, table_name = '') {
   dt <- data.table::as.data.table(
     cbind(
       class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
@@ -960,7 +960,7 @@ dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
 #'
 #' @return A completed data.table with missing columns added.
 #' @export
-complete_table <- function(table, table_description) {
+completeTable <- function(table, table_description) {
   # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
   .SD <- NULL
   col_names <- names(table_description@cols)

@@ -502,7 +502,7 @@ downloadAndCrackFHIRResources <- function(
       catColorRed('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
   }
   # complete tables with missing column
-  complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  completeTable(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.
@@ -567,7 +567,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
   curr_len <- min(ids_at_once, length(ids))
 
   if (curr_len < 1) {# if no ids for download. return empty data.table with required columns
-    return(complete_table(data.table::data.table(), table_description))
+    return(completeTable(data.table::data.table(), table_description))
   }
 
   os <- getOperationSystem()
@@ -743,7 +743,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     run <- run + 1
   }
   MAX_ENCOUNTER_BUNDLES <<- mb
-  complete_table(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  completeTable(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Load Resources by Their Own IDs
