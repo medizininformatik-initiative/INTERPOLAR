@@ -127,27 +127,18 @@ addTextHeaderToTable <- function(dt, header, insert_column_names_below_header = 
   if (insert_column_names_below_header) {
     num_empty_rows <- num_empty_rows + 1
   }
-
   # Add the empty rows at the start of the table
   dt <- etlutils::addEmptyRows(dt, num_empty_rows, "start")
-
   # Insert the header into the table
   dt[1:length(header), 1] <- header
-
   if (insert_column_names_below_header) {
     row <- as.integer(length(header) + 2)
     cols <- names(dt)
-    #dt[, (names(dt)) := lapply(.SD, as.character)]
-    #data.table::set(dt, i = row, j = cols, value = as.list(cols))
-
-    #data.table::set(dt, i = row, j = cols, value = lapply(as.list(cols), as.character))
-    # Einzelne Zellen als character setzen
+    # set single cells as character
     for (col in seq_along(dt)) {
       dt[[col]][row] <- as.character(cols[col])
     }
-
   }
-
   return(dt)
 }
 
@@ -934,12 +925,18 @@ printTableSummary <- function(table, table_name = '') {
 #'
 #' @export
 dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
-  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+  if (nrow(dt) == 0 && !header && !footer) {
+    return("")
+  }
+
   .SD <- NULL
   d <- if (header) rbind(as.list(names(dt)), dt) else dt
   if (footer) d <- rbind(d, as.list(names(dt)))
-  l <- d[,lapply(.SD, function(x) max(nchar(x)))]
-  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = d[[i]], width = l[[i]], side = 'left', pad = ' ')))
+  if (nrow(d) == 0) {
+    return(paste(names(dt), collapse = '  '))
+  }
+  l <- d[, lapply(.SD, function(x) max(nchar(as.character(x))))]
+  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = as.character(d[[i]]), width = l[[i]], side = 'left', pad = ' ')))
   paste0(
     sapply(
       seq_len(nrow(d)),
