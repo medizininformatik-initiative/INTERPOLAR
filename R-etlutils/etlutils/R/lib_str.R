@@ -350,3 +350,37 @@ getPrintString <- function(object) {
 reverseString <- function(input_string) {
   return(paste0(rev(strsplit(input_string, NULL)[[1]]), collapse = ""))
 }
+
+#' Convert a String to Prefixed Format
+#'
+#' This function takes a string and converts it to a prefixed format
+#' if it is not already in that format.
+#'
+#' @param str A string to be converted.
+#' @param prefix A string to be used as the prefix for the format. It may or may not
+#' contain a trailing separator.
+#' @param separator A string to be used as the separator between the prefix and the string.
+#' Default is "/". If set to NA or an empty string, no separator will be added.
+#'
+#' @return A string converted to the prefixed format.
+#'
+#' @examples
+#' convertStringToPrefixedFormat("001", prefix = "Patient", separator = "/")
+#' # Returns: "Patient/001"
+#'
+#' @export
+convertStringToPrefixedFormat <- function(str, prefix, separator = "/") {
+  # Ensure separator is not NA or empty
+  if (!is.na(separator) && separator != "") {
+    # Ensure the prefix ends with the separator
+    if (substr(prefix, nchar(prefix), nchar(prefix)) != separator) {
+      prefix <- paste0(prefix, separator)
+    }
+  }
+
+  # Convert string to prefixed format if it is not already in that format
+  if (!grepl(paste0("^", prefix), str)) {
+    str <- paste0(prefix, str)
+  }
+  return(str)
+}
