@@ -293,6 +293,9 @@ createFrontendTables <- function() {
       record_id = rep(NA_character_, times = pids_count), # v_patient_all - patient_id
       patient_fe_id = NA_character_, # v_patient_all - patient_id
       pat_id = NA_character_, # v_patient_all - pat_id
+      pat_cis_pid = NA_character_,
+      redcap_repeat_instrument = NA_character_,
+      redcap_repeat_instance = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
@@ -306,6 +309,9 @@ createFrontendTables <- function() {
       patient_frontend_table$record_id[i] <- patient$patient_id
       patient_frontend_table$patient_fe_id[i] <- patient$patient_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
+      patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
+      patient_frontend_table$redcap_repeat_instrument[i] <- "Patient"
+      patient_frontend_table$redcap_repeat_instance[i] <- 1
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
       patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
@@ -327,6 +333,8 @@ createFrontendTables <- function() {
       fall_pat_id	= character(), # v_patient_all - pat_id
       patient_id_fk	= character(), # v_patient_all - patient_id
       fall_typ_id	= character(), # v_encounter_all - encounter_id
+      redcap_repeat_instrument = character(),
+      redcap_repeat_instance = character(),
       fall_studienphase = character(),
       fall_station = character(),
       fall_aufn_dat = as.POSIXct(character()),
@@ -377,7 +385,7 @@ createFrontendTables <- function() {
       # if there are errors in the data then there can be more than one encounter
       if (length(unique_encounter_IDs) > 1) {
         etlutils::catErrorMessage(paste0("Multiple Encounters found for PID ", pid, "\n",
-                                   "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
+                                         "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
       # If the data is incorrect and a patient has more than one active Encounter, this will be
@@ -386,19 +394,11 @@ createFrontendTables <- function() {
 
       pid_patient <- patients[pat_id == extractIDsFromReferences(pid)]
 
-      # check possible errors
+      # check errors no patient resource found for PID
       if (!nrow(pid_patient)) { # no Patient resource found for PID
         etlutils::catErrorMessage(paste0("No Patient resources found for PID ", pid))
         next
       }
-
-      if (nrow(pid_patient) > 1) {
-        etlutils::catErrorMessage(paste0("Multiple Patient resources found for PID ", pid, " in database\n",
-                                         "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
-      }
-
-      # make sure that it is a single patient resource by choosing the last of the potencial list
-      pid_patient <- pid_patient[nrow(pid_patient)]
 
       # Initialize start index for adding rows to the frontend table
       start_index <- nrow(enc_frontend_table)
@@ -419,6 +419,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
         data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, 'redcap_repeat_instrument', 'Fall')
         data.table::set(enc_frontend_table, target_index, 'fall_typ_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
@@ -479,6 +480,13 @@ createFrontendTables <- function() {
         getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
 
       }
+
+      # Fill redcap_repeat_instance column in table enc_frontend_table
+      # Sort the data table by fall_pat_id and fall_aufn_dat
+      data.table::setorder(enc_frontend_table, fall_pat_id, fall_aufn_dat)
+      # Grouping and numbering based on fall_pat_id and fall_aufn_dat
+      enc_frontend_table[, redcap_repeat_instance := seq_len(.N), by = .(fall_pat_id)]
+
     }
     return(enc_frontend_table)
   }
@@ -494,6 +502,72 @@ createFrontendTables <- function() {
 
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  # Set parameter DEBUG_ADD_MULTIPLE_DIFFERENT_PATIENT_LINES = true in dataprocessor_config.toml
+  # Add new rows with a changed postal code to test the following code line which should
+  # identify one valid Identifier.value from one patient_id (= source record ID).
+  if (etlutils::isDefinedAndTrue("DEBUG_ADD_MULTIPLE_DIFFERENT_PATIENT_LINES")) {
+    patients_from_database <- debugAddMultiplePatientLines(patients_from_database)
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+  # check error no Patient exists in the current patinet database table
+  if (!nrow(patients_from_database)) { #
+    etlutils::catErrorMessage(paste0("No Patient resources found."))
+    return(NA)
+  }
+
+  # filter rows in the patients_from_database table by the given filter patterns for the
+  # Identifier
+  filterRows <- function(pattern, column_name) {
+    # If the pattern is empty (same as any string) or matches any string, return the original table
+    if (pattern %in% c("", ".*")) {
+      return(patients_from_database)
+    }
+    # remove rows for the patient where row does not match the pattern
+    patients_from_database <- patients_from_database[grepl(pattern, get(column_name))]
+    # check error no Patient left after identifier filtering
+    if (!nrow(patients_from_database)) { #
+      etlutils::catErrorMessage(paste0("No Patient resources found with a '", column_name, "' matching pattern '", pattern, "'"))
+      return(NA)
+    }
+    return(patients_from_database)
+  }
+
+  # Apply the filterRows function for each identifier system and return NA if no patients are left
+  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM , "pat_identifier_system"))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM , "pat_identifier_type_system"))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE , "pat_identifier_type_code"))) return(NA)
+
+  # If a patient has been given any list value, e.g. an additional identifier to an existing
+  # identifier that is not changed, then at least 2 data records are created in the patient table
+  # after the fhir_melt, whereby one was already present in the DB and the other is newly added.
+  # Now it can happen, for whatever reason, that the same patient has several different values
+  # ('Identifier.value') after filtering via the Identifier.system.
+  # In this case, we assume that the last value (= the one with the highest 'patient_id') is the
+  # valid one. We now remove all lines per patient with an 'Identifier.value' that is not the same
+  # as the last added 'Identifier.value'.
+  # We then set the maximum (= last valid) 'patient_id' for all remaining lines per 'pat_id', as
+  # this must be the data record ID from which all information is derived.
+
+  # only keep the lines of a 'pat_id' where the 'pat_identifier_value' is the same as in the
+  # respective line with the maximum = last created 'patient_id'.
+  # Alternative notation:
+  #patients_from_database <- patients_from_database[, .SD[pat_identifier_value == .SD[which.max(patient_id), pat_identifier_value]], by = pat_id]
+  patients_from_database <- patients_from_database[, .SD[pat_identifier_value == pat_identifier_value[which.max(patient_id)]], by = pat_id]
+
+  # set the maximum (= last valid) 'patient_id' for all remaining lines per 'pat_id'
+  patients_from_database[, patient_id := max(patient_id), by = pat_id]
+
+  # make sure that it is a single patient resource by choosing the last of the potencial list
+  # if there are multiple rows then all differen values of a column will be pasted as stings
+  # delimited by "; " in one row
+  patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
 
   # Create frontend table for patients
   patient_frontend_table <- createPatientFrontendTable(patients_from_database)

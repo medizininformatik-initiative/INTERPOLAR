@@ -110,3 +110,24 @@ getGlobalVariablesByPrefix <- function(prefix) {
 #'
 #' @export
 getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(var_name)) get(var_name) else default
+
+#' Check if a Variable is Defined and True
+#'
+#' This function checks if a given variable is defined in the specified environment and if its value is `TRUE`.
+#'
+#' @param variable_name The name of the variable to check, provided as a string.
+#' @param envir The environment in which to check for the variable. Defaults to the current environment.
+#'
+#' @return TRUE if the variable is defined and its value is `TRUE`, otherwise FALSE.
+#'
+#' @examples
+#' var1 <- TRUE
+#' var2 <- FALSE
+#' isDefinedAndTrue("var1")  # Returns TRUE
+#' isDefinedAndTrue("var2")  # Returns FALSE
+#' isDefinedAndTrue("var3")  # Returns FALSE, since var3 is not defined
+#'
+#' @export
+isDefinedAndTrue <- function(variable_name, envir = parent.frame()) {
+  return(exists(variable_name, envir = envir) && isTRUE(get(variable_name, envir = envir)))
+}

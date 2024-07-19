@@ -33,7 +33,8 @@ extractWords <- function(input_string) {
 #'
 #' This function performs case-insensitive pattern searches using `grepl` with Perl patterns. If `whole_word` is set to TRUE,
 #' the pattern is treated as a whole word, and '^' is added to the beginning and '$' to the end of the pattern if they are missing.
-#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching.
+#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching. The pattern
+#' you are looking for must be a string surrounded by whitespaces.
 #'
 #' @examples
 #' pattern <- 'AAA|BBB'
@@ -210,7 +211,6 @@ getPluralSuffix <- function(counts) {
 #' countTrailingSpaces("Hello World   ")  # returns 3
 #' countTrailingSpaces("NoSpacesHere")    # returns 0
 #' @export
-
 countTrailingSpaces <- function(text) {
   space_count <- 0
   for (i in nchar(text):1) {
@@ -335,4 +335,18 @@ getWordIndentation <- function(text, word) {
 #' @export
 getPrintString <- function(object) {
   paste(capture.output(print(object)), collapse = "\n")
+}
+
+#' Reverse a string
+#'
+#' This function takes an input string and returns it reversed.
+#'
+#' @param input_string A string to be reversed.
+#'
+#' @return A reversed string.
+#' @examples
+#' reverseString("abc")  # Returns "cba"
+#' @export
+reverseString <- function(input_string) {
+  return(paste0(rev(strsplit(input_string, NULL)[[1]]), collapse = ""))
 }

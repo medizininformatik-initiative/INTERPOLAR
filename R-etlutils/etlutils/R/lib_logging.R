@@ -489,7 +489,7 @@ createFrameString <- function(
 #' Print a table if VERBOSE level allows.
 #'
 #' This function prints a summary for the specified table if the VERBOSE level is
-#' greater than or equal to VL_50_TABLES (= 5). It uses the `printTable_summary` function
+#' greater than or equal to VL_50_TABLES (= 5). It uses the `printTableSummary` function
 #' for generating the summary.
 #'
 #' @param table The input table to print. For example, you can use the mtcars dataset.
@@ -501,7 +501,7 @@ createFrameString <- function(
 #' or equal to VL_50_TABLES. The table_name is obtained from the calling function's name.
 #'
 #' @seealso
-#' \code{\link{printTable_summary}}
+#' \code{\link{printTableSummary}}
 #'
 #' @export
 #'
@@ -529,14 +529,14 @@ printTable <- function(table, table_name = NA) {
     if (is.na(table_name)) {
       table_name <- as.character(sys.call()[2]) # get parameter names
     }
-    printTable_summary(table, table_name)
+    printTableSummary(table, table_name)
   }
 }
 
 #' Print a table if VERBOSE level allows.
 #'
 #' This function prints a summary for the specified table if the VERBOSE level is
-#' greater than or equal to VL_60_ALL_TABLES (= 6). It uses the `printTable_summary` function
+#' greater than or equal to VL_60_ALL_TABLES (= 6). It uses the `printTableSummary` function
 #' for generating the summary.
 #'
 #' @param table The input table to print. For example, you can use the mtcars dataset.
@@ -548,7 +548,7 @@ printTable <- function(table, table_name = NA) {
 #' or equal to VL_60_ALL_TABLES The table_name is obtained from the calling function's name.
 #'
 #' @seealso
-#' \code{\link{printTable_summary}}
+#' \code{\link{printTableSummary}}
 #'
 #' @export
 #'
@@ -576,6 +576,6 @@ printAllTables <- function(table, table_name = NA) {
     if (is.na(table_name)) {
       table_name <- as.character(sys.call()[2]) # get parameter names
     }
-    printTable_summary(table, table_name)
+    printTableSummary(table, table_name)
   }
 }

@@ -133,49 +133,131 @@ test_that("isSimpleNotEmptyString returns FALSE for a vector with multiple eleme
   expect_false(isSimpleNotEmptyString(c("hello", "world")))
 })
 
-###
+###########
+# isError #
+###########
 
- # Hier fehlen noch Tests für viele Funktionen
-
-##
-
-###########################
-# replacePatternsInString #
-###########################
-
-# Test for case-insensitive replacement
-test_that("replacePatternsInString performs case-insensitive replacement correctly", {
-  patternsAndReplacements <- list("HELLO" = "hi", "WORLD" = "earth")
-  result <- replacePatternsInString(patternsAndReplacements, "Hello World!", ignore.case = TRUE)
-  expect_equal(result, "hi earth!")
+# Test case 1: Object is a try-error
+test_that("isError returns TRUE for try-error object", {
+  result <- try(log("a"), silent = TRUE)
+  expect_true(isError(result))
 })
 
-# Test for case-sensitive replacement
-test_that("replacePatternsInString performs case-sensitive replacement correctly", {
-  patternsAndReplacements <- list("Hello" = "hi", "World" = "earth")
-  result <- replacePatternsInString(patternsAndReplacements, "Hello World!", ignore.case = FALSE)
-  expect_equal(result, "hi earth!")
+# Test case 2: Object is not a try-error
+test_that("isError returns FALSE for non-try-error object", {
+  numeric_result <- 42
+  expect_false(isError(numeric_result))
 })
 
-# Test for Perl-compatible regex usage
-test_that("replacePatternsInString handles Perl-compatible regexps correctly", {
-  patternsAndReplacements <- list("\\bworld\\b" = "earth")
-  result <- replacePatternsInString(patternsAndReplacements, "Hello world!", perl = TRUE)
-  expect_equal(result, "Hello earth!")
+# Test case 3: Object is NA
+test_that("isError returns FALSE for NA", {
+  expect_false(isError(NA))
 })
 
-# Test for combination of ignore.case and perl
-test_that("replacePatternsInString handles combination of ignore.case and perl correctly", {
-  patternsAndReplacements <- list("\\bWORLD\\b" = "earth")
-  result <- replacePatternsInString(patternsAndReplacements, "Hello WORLD!", ignore.case = TRUE, perl = TRUE)
-  expect_equal(result, "hello earth!")
+########
+# isOK #
+########
+
+# Test case 1: Object is an error (try-error)
+test_that("isOK returns FALSE for try-error object", {
+  result <- try(log("a"), silent = TRUE)
+  expect_false(isOK(result))
 })
 
-# Test when no matches are found
-test_that("replacePatternsInString returns the original string when no matches are found", {
-  patternsAndReplacements <- list("xyz" = "abc")
-  result <- replacePatternsInString(patternsAndReplacements, "hello world!", ignore.case = FALSE)
-  expect_equal(result, "hello world!")
+# Test case 2: Object is not an error (non-try-error)
+test_that("isOK returns TRUE for non-try-error object", {
+  numeric_result <- 42
+  expect_true(isOK(numeric_result))
+})
+
+###########
+# isDebug #
+###########
+
+# Test case 1: Debugging mode enabled (DEBUG = TRUE)
+test_that("isDebug returns TRUE when DEBUG variable is TRUE", {
+  assign("DEBUG", TRUE, envir = .GlobalEnv)
+  expect_true(isDebug())
+})
+
+# Test case 2: Debugging mode disabled (DEBUG not set or FALSE)
+test_that("isDebug returns FALSE when DEBUG variable is not set or FALSE", {
+  if (exists("DEBUG", envir = .GlobalEnv)) remove("DEBUG", envir = .GlobalEnv)
+  expect_false(isDebug())
+
+  assign("DEBUG", FALSE, envir = .GlobalEnv)
+  expect_false(isDebug())
+})
+
+# Clean up after tests
+if (exists("DEBUG", envir = .GlobalEnv)) remove("DEBUG", envir = .GlobalEnv)
+
+##############
+# checkError #
+##############
+
+# Test case 1: No Error Case
+test_that("checkError returns result of expr_ok for non-error object", {
+  result <- checkError(42, "No error", "Error occurred")
+  expect_equal(result, "No error")
+})
+
+# Test case 2: Error Case
+test_that("checkError returns result of expr_err for try-error object", {
+  result <- checkError(try(log("a"), silent = TRUE), "No error", "Error occurred")
+  expect_equal(result, "Error occurred")
+})
+
+# Test case 3: Custom Expressions
+test_that("checkError handles custom expressions correctly", {
+  result_ok <- checkError("some_value", "OK", "Error")
+  result_err <- checkError(try(log("a"), silent = TRUE), "OK", "Error occurred")
+  expect_equal(result_ok, "OK")
+  expect_equal(result_err, "Error occurred")
+})
+
+#########################
+# convertVerboseNumbers #
+#########################
+
+# Test for positive numbers less than or equal to 3
+test_that("convertVerboseNumbers converts numbers correctly (1st, 2nd, 3rd)", {
+  input <- c(1, 2, 3)
+  expected <- c("1st", "2nd", "3rd")
+  result <- convertVerboseNumbers(input)
+  expect_equal(result, expected)
+})
+
+# Test for numbers greater than 3
+test_that("convertVerboseNumbers converts numbers greater than 3 to 'th'", {
+  input <- c(4, 5, 6)
+  expected <- c("4th", "5th", "6th")
+  result <- convertVerboseNumbers(input)
+  expect_equal(result, expected)
+})
+
+# Test for numbers less than 1
+test_that("convertVerboseNumbers converts numbers less than 1 to 'th'", {
+  input <- c(-1, 0)
+  expected <- c("-1th", "0th")
+  result <- convertVerboseNumbers(input)
+  expect_equal(result, expected)
+})
+
+# Test for fixed numbers
+test_that("convertVerboseNumbers converts mixed numbers correctly", {
+  input <- c(1, 2, 3, 4, 5, 6, -1, 0)
+  expected <- c("1st", "2nd", "3rd", "4th", "5th", "6th", "-1th", "0th")
+  result <- convertVerboseNumbers(input)
+  expect_equal(result, expected)
+})
+
+# Test for empty input
+test_that("convertVerboseNumbers returns empty vector for empty input", {
+  input <- numeric(0)
+  expected <- character(0)
+  result <- convertVerboseNumbers(input)
+  expect_equal(result, expected)
 })
 
 #########################

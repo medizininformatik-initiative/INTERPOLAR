@@ -76,9 +76,12 @@ addTableRow <- function(dt, ...) {
 #' print(dt_extended_start)
 #' dt_extended_end <- addEmptyRows(dt, 2, "end")
 #' print(dt_extended_end)
+#' # same as with the parameter "end"
+#' dt_extended_end <- addEmptyRows(dt, 2)
+#' print(dt_extended_end)
 #'
 #' @export
-addEmptyRows <- function(dt, num_rows, position = c("start", "end")) {
+addEmptyRows <- function(dt, num_rows, position = c("end", "start")) {
   # Match the position argument
   position <- match.arg(position)
 
@@ -124,27 +127,18 @@ addTextHeaderToTable <- function(dt, header, insert_column_names_below_header = 
   if (insert_column_names_below_header) {
     num_empty_rows <- num_empty_rows + 1
   }
-
   # Add the empty rows at the start of the table
   dt <- etlutils::addEmptyRows(dt, num_empty_rows, "start")
-
   # Insert the header into the table
   dt[1:length(header), 1] <- header
-
   if (insert_column_names_below_header) {
     row <- as.integer(length(header) + 2)
     cols <- names(dt)
-    #dt[, (names(dt)) := lapply(.SD, as.character)]
-    #data.table::set(dt, i = row, j = cols, value = as.list(cols))
-
-    #data.table::set(dt, i = row, j = cols, value = lapply(as.list(cols), as.character))
-    # Einzelne Zellen als character setzen
+    # set single cells as character
     for (col in seq_along(dt)) {
       dt[[col]][row] <- as.character(cols[col])
     }
-
   }
-
   return(dt)
 }
 
@@ -870,10 +864,10 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
 #' setDT(mtcars)
 #'
 #' # Print summary for the mtcars table
-#' printTable_summary(table = mtcars, table_name = 'mtcars')
+#' printTableSummary(table = mtcars, table_name = 'mtcars')
 #'
 #' @export
-printTable_summary <- function(table, table_name = '') {
+printTableSummary <- function(table, table_name = '') {
   dt <- data.table::as.data.table(
     cbind(
       class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
@@ -931,12 +925,18 @@ printTable_summary <- function(table, table_name = '') {
 #'
 #' @export
 dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
-  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+  if (nrow(dt) == 0 && !header && !footer) {
+    return("")
+  }
+
   .SD <- NULL
   d <- if (header) rbind(as.list(names(dt)), dt) else dt
   if (footer) d <- rbind(d, as.list(names(dt)))
-  l <- d[,lapply(.SD, function(x) max(nchar(x)))]
-  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = d[[i]], width = l[[i]], side = 'left', pad = ' ')))
+  if (nrow(d) == 0) {
+    return(paste(names(dt), collapse = '  '))
+  }
+  l <- d[, lapply(.SD, function(x) max(nchar(as.character(x))))]
+  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = as.character(d[[i]]), width = l[[i]], side = 'left', pad = ' ')))
   paste0(
     sapply(
       seq_len(nrow(d)),
@@ -957,7 +957,7 @@ dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
 #'
 #' @return A completed data.table with missing columns added.
 #' @export
-complete_table <- function(table, table_description) {
+completeTable <- function(table, table_description) {
   # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
   .SD <- NULL
   col_names <- names(table_description@cols)
@@ -1033,3 +1033,56 @@ splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname =
   split(dt, by = split_columnname, keep.by = TRUE)
 }
 
+#' Collapse Rows of a data.table by Groups
+#'
+#' This function collapses the rows of a data.table into a single row per group. Different values in the
+#' rows are converted into a string with the values separated by a specified delimiter. NA values are
+#' excluded from the concatenated string and will only appear as NA if all values in the column are NA.
+#'
+#' @param dt A data.table to be collapsed.
+#' @param group_col The column name by which to group the data.table. Default is NA, meaning no grouping.
+#' @param delimiter A string used to separate the different values. Default is "; ".
+#'
+#' @return A data.table with one row per group, where each column contains a string of concatenated values
+#' or NA if all values were NA.
+#'
+#' @examples
+#' library(data.table)
+#' patient <- data.table(
+#'   id = c(1, 2, 3, 3),
+#'   group = c("A", "A", "B", "B"),
+#'   name = c("Alice", "Bob", "Charlie", "Alice"),
+#'   pat_identifier_system = c("[1.1]abcdefg", "[1.2.3]hijklmn", "[2.3.4.5]opqrstu", NA),
+#'   status = c(NA, NA, "ok", "error")
+#' )
+#' collapseRowsByGroup(patient, "group")
+#' collapseRowsByGroup(patient)
+#'
+#' @export
+collapseRowsByGroup <- function(dt, group_col = NA, delimiter = "; ") {
+  # Function to collapse values in a column
+  collapse_column <- function(x) {
+    non_na_values <- unique(na.omit(x))
+    if (length(non_na_values) > 0) {
+      collapsed_values <- paste(non_na_values, collapse = delimiter)
+      return(collapsed_values)
+    } else {
+      return(NA_character_)
+    }
+  }
+
+  # Check if group_col is provided or not
+  if (is.na(group_col)) {
+    # Collapse all rows without grouping
+    if (nrow(dt) > 1) {
+      collapsed_dt <- dt[, lapply(.SD, collapse_column)]
+    } else {
+      collapsed_dt <- dt
+    }
+  } else {
+    # Group by the specified column and collapse the values in each group
+    collapsed_dt <- dt[, lapply(.SD, collapse_column), by = group_col]
+  }
+
+  return(collapsed_dt)
+}

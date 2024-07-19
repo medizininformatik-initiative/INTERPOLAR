@@ -24,8 +24,10 @@ dbConnect <- function(dbname, host, port, user, password, schema) {
                                   user = user,
                                   password = password,
                                   options = paste0('-c search_path=', schema))
+
   # Increase memory allocation for this connection to improve performance for memory-intensive operations
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
+  DBI::dbExecute(db_connection, "SET TIME ZONE 'Europe/Berlin';")
   return(db_connection)
 }
 
@@ -318,7 +320,7 @@ dbReadTable <- function(db_connection, table_name) {
 #' @export
 createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, clear_before_insert = FALSE) {
   db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  writeTablesToDatabase(tables, db_connection, clear_before_insert, TRUE)
+  writeTablesToDatabase(tables, db_connection, clear_before_insert, close_db_connection = TRUE)
 }
 
 #' Write Multiple Tables to Database
@@ -456,4 +458,34 @@ readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_con
   }
   dbDisconnect(db_connection)
   return(tables)
+}
+
+#' Prints Database Timezone and Current Time
+#'
+#' This function prints the current timezone and the current time from the connected PostgreSQL database.
+#'
+#' @param db_connection A DBI connection object to the PostgreSQL database.
+#'
+#' @return Prints the timezone and current time of the PostgreSQL database.
+#'
+#' @export
+dbPrintTimeAndTimezone <- function(db_connection) {
+  # Query to get the current timezone
+  query <- "SHOW timezone;"
+  timezone <- DBI::dbGetQuery(db_connection, query)
+  print(paste0("DB Timezone: ", timezone))
+
+  # Query to get the current time
+  query <- "SELECT NOW();"
+  now_time <- DBI::dbGetQuery(db_connection, query)
+  print(paste0("DB SELECT NOW(): ", now_time$now))
+
+  # Query to get the current timestamp
+  query <- "SELECT CURRENT_TIMESTAMP;"
+  current_timestamp <- DBI::dbGetQuery(db_connection, query)
+  #print(paste0("CURRENT_TIMESTAMP: ", current_timestamp$current_timestamp))
+  print(paste0("DB CURRENT_TIMESTAMP: ", current_timestamp))
+
+  print(paste0("R Sys.time(): ", Sys.time()))
+  print(paste0("R Sys.timezone(): ", Sys.timezone()))
 }
