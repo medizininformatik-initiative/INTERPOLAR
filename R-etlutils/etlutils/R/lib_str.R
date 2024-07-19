@@ -336,3 +336,17 @@ getWordIndentation <- function(text, word) {
 getPrintString <- function(object) {
   paste(capture.output(print(object)), collapse = "\n")
 }
+
+#' Reverse a string
+#'
+#' This function takes an input string and returns it reversed.
+#'
+#' @param input_string A string to be reversed.
+#'
+#' @return A reversed string.
+#' @examples
+#' reverseString("abc")  # Returns "cba"
+#' @export
+reverseString <- function(input_string) {
+  return(paste0(rev(strsplit(input_string, NULL)[[1]]), collapse = ""))
+}

@@ -40,6 +40,39 @@ MAX_DIR_COUNT = 5
 #DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
 
 [analyse]
+
+# In the patient table of the frontend, the patient ID should be displayed, which
+# can be used to search for further information on the patient in other systems.
+# This is normally specified as one of several possible identifiers for a FHIR
+# patient resource. To select the correct one, a string as a grep pattern can be
+# specified here for the 'system' entry of the Identifier, 'type/coding/system'
+# and/or the 'type/coding/code' of the Identifier, via which the correct one
+# can be found.
+# These patterns are regular expressions for R
+# (see https://hypebright.nl/index.php/en/2020/05/25/ultimate-cheatsheet-for-regex-in-r-2/).
+# Exception: If a variable is commented out or the empty string "" then the filter
+# on this FHIR expression is deactivated. The same result can be achieved by passing
+# ".*" as the pattern, which means "any characters any number of times".
+# If the filter result on a single Patient resoruce will provide more than one
+# Identifier, then they are written one after the other, separated by semicolons.
+#
+# acceppts every system:
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*"
+
+# Accepts only type/coding/sytem with the exact value 'http://terminology.hl7.org/CodeSystem/v2-0203'
+# this system is the binded system for the clinical information system patient ID.
+# FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
+# alternative variant to accept every value in 'type/coding/system':
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
+
+# Accepts only type/coding/code with the exact value 'MR'. This value means
+# 'medical record number' in the system http://terminology.hl7.org/CodeSystem/v2-0203
+# and is the recommended code for the patient ID in the hospital (if the variable
+# is commented out then every value will be accepted). To match the start and end of the exact
+# value, use caret (^) and dollar ($) symbols.
+#FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+
+
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
