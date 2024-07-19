@@ -294,6 +294,8 @@ createFrontendTables <- function() {
       patient_fe_id = NA_character_, # v_patient_all - patient_id
       pat_id = NA_character_, # v_patient_all - pat_id
       pat_cis_pid = NA_character_,
+      redcap_repeat_instrument = NA_character_,
+      redcap_repeat_instance = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
@@ -308,6 +310,8 @@ createFrontendTables <- function() {
       patient_frontend_table$patient_fe_id[i] <- patient$patient_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
+      patient_frontend_table$redcap_repeat_instrument[i] <- "Patient"
+      patient_frontend_table$redcap_repeat_instance[i] <- 1
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
       patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
@@ -329,6 +333,8 @@ createFrontendTables <- function() {
       fall_pat_id	= character(), # v_patient_all - pat_id
       patient_id_fk	= character(), # v_patient_all - patient_id
       fall_typ_id	= character(), # v_encounter_all - encounter_id
+      redcap_repeat_instrument = character(),
+      redcap_repeat_instance = character(),
       fall_studienphase = character(),
       fall_station = character(),
       fall_aufn_dat = as.POSIXct(character()),
@@ -413,6 +419,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
         data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, 'redcap_repeat_instrument', 'Fall')
         data.table::set(enc_frontend_table, target_index, 'fall_typ_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
@@ -473,6 +480,13 @@ createFrontendTables <- function() {
         getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
 
       }
+
+      # Fill redcap_repeat_instance column in table enc_frontend_table
+      # Sort the data table by fall_pat_id and fall_aufn_dat
+      data.table::setorder(enc_frontend_table, fall_pat_id, fall_aufn_dat)
+      # Grouping and numbering based on fall_pat_id and fall_aufn_dat
+      enc_frontend_table[, redcap_repeat_instance := seq_len(.N), by = .(fall_pat_id)]
+
     }
     return(enc_frontend_table)
   }
