@@ -1,13 +1,20 @@
-# this is an example file
+# This is an example file
+
+# The complete FHIR IDs or references to patients IDs must be entered here for each ward.
+# At the end, the system searches for FHIR resources whose subject reference corresponds
+# to the transferred string. You can use both notations, i.e. either just the patient ID
+# (e.g. “UKB-0001”) or the reference notation (e.g. “Patient/UKB-0001”).
+
+# The station names given here are exactly the same as those displayed in the frontend.
 
 ward_name = "Station 1"
-UKB-0001
-UKB-0002
-UKB-0003
-UKB-0004
-UKB-0005
-UKB-0006
-UKB-0007
+Patient/UKB-0001
+Patient/UKB-0002
+Patient/UKB-0003
+Patient/UKB-0004
+Patient/UKB-0005
+Patient/UKB-0006
+Patient/UKB-0007
 
 ward_name = "Station 2"
 UKB-0008
