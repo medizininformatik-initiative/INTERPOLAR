@@ -393,3 +393,45 @@ test_that("getPrintString captures print output correctly", {
   expected_char <- paste(capture.output(print(char_vec)), collapse = "\n")
   expect_equal(getPrintString(char_vec), expected_char)
 })
+
+#################################
+# convertStringToPrefixedFormat #
+#################################
+
+# Test that strings are correctly prefixed
+test_that("Strings are correctly prefixed", {
+  expect_equal(convertStringToPrefixedFormat("001", "Patient", "/"), "Patient/001")
+  expect_equal(convertStringToPrefixedFormat("Patient/002", "Patient", "/"), "Patient/002")
+  expect_equal(convertStringToPrefixedFormat("003", "Organization", "/"), "Organization/003")
+})
+
+# Test that prefix with no separator is handled correctly
+test_that("Prefix with no separator is handled correctly", {
+  expect_equal(convertStringToPrefixedFormat("004", "Patient", ""), "Patient004")
+  expect_equal(convertStringToPrefixedFormat("Patient005", "Patient", ""), "Patient005")
+})
+
+# Test that NA separator is handled correctly
+test_that("NA separator is handled correctly", {
+  expect_equal(convertStringToPrefixedFormat("006", "Patient", NA), "Patient006")
+  expect_equal(convertStringToPrefixedFormat("Patient007", "Patient", NA), "Patient007")
+})
+
+# Test that an empty prefix works correctly
+test_that("Empty prefix works correctly", {
+  expect_equal(convertStringToPrefixedFormat("008", "", "/"), "/008")
+  expect_equal(convertStringToPrefixedFormat("/009", "", "/"), "/009")
+})
+
+# Test with different prefixes and separators
+test_that("Different prefixes and separators", {
+  expect_equal(convertStringToPrefixedFormat("010", "Dept", "-"), "Dept-010")
+  expect_equal(convertStringToPrefixedFormat("Dept-011", "Dept", "-"), "Dept-011")
+})
+
+# Test lapply with a list of strings
+test_that("lapply with a list of strings", {
+  string_list <- c("001", "Patient/002", "003")
+  result <- lapply(string_list, convertStringToPrefixedFormat, prefix = "Patient", separator = "/")
+  expect_equal(result, list("Patient/001", "Patient/002", "Patient/003"))
+})

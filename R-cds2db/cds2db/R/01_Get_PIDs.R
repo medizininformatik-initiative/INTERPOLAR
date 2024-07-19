@@ -149,27 +149,35 @@ filterResources <- function(resources, filter_patterns) {
 #' @return A unique, sorted list of patient IDs.
 #'
 parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
+
+  # Helper function to process the PIDs of a single ward
+  processWardPIDs <- function(single_ward_pids, ward_name, pids_per_ward) {
+    if (!is.na(ward_name) && length(single_ward_pids) > 0) {
+      single_ward_pids <- lapply(unique(single_ward_pids), convertStringToPrefixedFormat, prefix = "Patient", separator = "/")
+      pids_per_ward[[ward_name]] <- etlutils::sortListByValue(single_ward_pids)
+    }
+    return(pids_per_ward)
+  }
+
   pids_per_ward <- list()
   lines <- readLines(path_to_PID_list_file)
   single_ward_pids <- list()
   ward_name <- NA
+
   for (line in lines) {
     line <- trimws(sub("#.*$", "", line)) # remove comments (starts with '#')
     if (nchar(line)) {
       if (startsWith(line, 'ward_name')) {
-        if (!is.na(ward_name)) {
-          pids_per_ward[[ward_name]] <- etlutils::sortListByValue(unique(single_ward_pids))
-          single_ward_pids <- list()
-        }
+        pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
+        single_ward_pids <- list()
         ward_name <- etlutils::getBetweenQuotes(line)
       } else {
         single_ward_pids[[length(single_ward_pids) + 1]] <- line
       }
     }
   }
-  if (!is.na(ward_name)) {
-    pids_per_ward[[ward_name]] <- etlutils::sortListByValue(unique(single_ward_pids))
-  }
+  pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
+
   return(pids_per_ward)
 }
 
