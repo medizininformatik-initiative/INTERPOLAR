@@ -980,7 +980,13 @@ completeTable <- function(table, table_description) {
 #' @return A data.table with NA values filled.
 #' @examples
 #' library(data.table)
-#' dt <- data.table(A = c(1, NA, NA, 4, 5), B = c("x", NA, "z", NA, NA))
+#' dt <- data.table(A = c(0, 1, NA, NA, 4, 5), B = c(NA, "x", NA, "z", NA, NA))
+#' fillNAWithLastRowValue(dt)
+#' fillNAWithLastRowValue(dt, columns = "B")
+#' dt <- data.table(A = c(1), B = c("x"))
+#' fillNAWithLastRowValue(dt)
+#' fillNAWithLastRowValue(dt, columns = "B")
+#' dt <- data.table(A = c(NA, 1), B = c(NA, "x"))
 #' fillNAWithLastRowValue(dt)
 #' fillNAWithLastRowValue(dt, columns = "B")
 #' @export
@@ -990,15 +996,17 @@ fillNAWithLastRowValue <- function(dt, columns = NA) {
     columns <- names(dt)
   }
 
-  # fill NA values
-  dt[, (columns) := lapply(.SD, function(x) {
-    for (i in 2:length(x)) {
-      if (is.na(x[i])) {
-        x[i] <- x[i-1]
+  if (nrow(dt) > 1) {
+    # fill NA values
+    dt[, (columns) := lapply(.SD, function(x) {
+      for (i in 2:length(x)) {
+        if (is.na(x[i])) {
+          x[i] <- x[i - 1]
+        }
       }
-    }
-    return(x)
-  }), .SDcols = columns]
+      return(x)
+    }), .SDcols = columns]
+  }
 
   return(dt)
 }

@@ -1128,3 +1128,59 @@ test_that("splitTableToList handles NA values in the split column correctly", {
   expect_equal(result$B, data.table(SCRIPTNAME = c("B", "B"), VALUE = 3:4))
   expect_equal(result$C, data.table(SCRIPTNAME = "C", VALUE = 5))
 })
+
+# Test: Fill NA values in all columns
+test_that("fillNAWithLastRowValue fills NA values in all columns", {
+  dt <- data.table::data.table(A = c(1, NA, NA, 4, 5), B = c("x", NA, "z", NA, NA))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1, 1, 1, 4, 5), B = c("x", "x", "z", "z", "z"))
+  expect_equal(result, expected)
+})
+
+# Test: Fill NA values in specific columns
+test_that("fillNAWithLastRowValue fills NA values in specified columns", {
+  dt <- data.table::data.table(A = c(1, NA, NA, 4, 5), B = c("x", NA, "z", NA, NA))
+  result <- fillNAWithLastRowValue(dt, columns = "B")
+  expected <- data.table::data.table(A = c(1, NA, NA, 4, 5), B = c("x", "x", "z", "z", "z"))
+  expect_equal(result, expected)
+})
+
+# Test: No NA values to fill
+test_that("fillNAWithLastRowValue handles no NA values case", {
+  dt <- data.table::data.table(A = c(1, 2, 3, 4, 5), B = c("x", "y", "z", "w", "v"))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1, 2, 3, 4, 5), B = c("x", "y", "z", "w", "v"))
+  expect_equal(result, expected)
+})
+
+# Test: Single-row data.table
+test_that("fillNAWithLastRowValue handles single-row data.table", {
+  dt <- data.table::data.table(A = c(1), B = c("x"))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1), B = c("x"))
+  expect_equal(result, expected)
+})
+
+# Test: Single-row data.table with all values NA
+test_that("fillNAWithLastRowValue handles single-row data.table with all values NA", {
+  dt <- data.table::data.table(A = NA, B = NA)
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = NA, B = NA)
+  expect_equal(result, expected)
+})
+
+# Test: First value in column is NA
+test_that("fillNAWithLastRowValue handles first value in column being NA", {
+  dt <- data.table::data.table(A = c(NA, 1, 2, NA, 5), B = c(NA, "x", "y", "z", NA))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(NA, 1, 2, 2, 5), B = c(NA, "x", "y", "z", "z"))
+  expect_equal(result, expected)
+})
+
+# Test: Columns parameter is NA (default) -> all columns are processed
+test_that("fillNAWithLastRowValue processes all columns if columns parameter is NA", {
+  dt <- data.table::data.table(A = c(1, NA, 3), B = c("a", NA, "c"))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1, 1, 3), B = c("a", "a", "c"))
+  expect_equal(result, expected)
+})
