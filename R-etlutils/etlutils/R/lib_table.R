@@ -1094,3 +1094,29 @@ collapseRowsByGroup <- function(dt, group_col = NA, delimiter = "; ") {
 
   return(collapsed_dt)
 }
+
+#' Replace values in a column of a data.table
+#'
+#' This function replaces all values in a specified column of a data.table that match
+#' a given old value with a new value. Either the old or new value can be NA.
+#'
+#' @param dt A data.table object.
+#' @param column_name A string representing the name of the column to modify.
+#' @param old_type The value to be replaced. Can be a string or NA.
+#' @param new_type The value to replace with. Can be a string or NA.
+#'
+#' @examples
+#' dt <- data.table::data.table(a = c("x", "y", "x", NA, "y"))
+#' replaceColumnValues(dt, "a", "x", "z")
+#' # dt now has column "a" with values "z", "y", "z", NA, "y"
+#' replaceColumnValues(dt, "a", NA, "unknown")
+#' # dt now has column "a" with values "z", "y", "z", "unknown", "y"
+#'
+#' @export
+replaceColumnValues <- function(dt, column_name, old_type, new_type) {
+  if (is.na(old_type)) {
+    dt[is.na(get(column_name)), (column_name) := new_type]
+  } else {
+    dt[get(column_name) == old_type, (column_name) := new_type]
+  }
+}
