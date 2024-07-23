@@ -32,10 +32,10 @@ loadTableDescriptionFile <- function() {
 #'
 getTableDescriptionsTable <- function(columns = NA) {
   table_description <- loadTableDescriptionFile()
-  # remove all rows with NA in column 'fhir_expression'
-  table_description <- table_description[!is.na(fhir_expression), ]
-  # fill resource NA column with the last valid (non NA) value above
-  table_description[, resource := resource[1], .(cumsum(!is.na(resource)))]
+  # remove all rows with NA in column 'FHIR_EXPRESSION'
+  table_description <- table_description[!is.na(FHIR_EXPRESSION), ]
+  # fill RESOURCE NA column with the last valid (non NA) value above
+  table_description[, RESOURCE := RESOURCE[1], .(cumsum(!is.na(RESOURCE)))]
   #remove unneccesary columns
   etlutils::retainColumns(table_description, columns)
   return(table_description)
@@ -74,14 +74,14 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
   }
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionsTable(c("resource", "column_name", "fhir_expression", "reference_types"))
+    table_description_table <- getTableDescriptionsTable(c("RESOURCE", "SOLUMN_NAME", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
   }
 
-  # Grouping by 'resource' and creating lists of fhircrackr::fhir_table_description() objects
-  table_descriptions <- lapply(split(table_description_table, table_description_table$resource), function(subset) {
-    resource_name <- unique(subset$resource)
-    col_names <- subset$column_name
-    fhir_expressions <- subset$fhir_expression
+  # Grouping by 'RESOURCE' and creating lists of fhircrackr::fhir_table_description() objects
+  table_descriptions <- lapply(split(table_description_table, table_description_table$RESOURCE), function(subset) {
+    resource_name <- unique(subset$RESOURCE)
+    col_names <- subset$COLUM_NAME
+    fhir_expressions <- subset$FHIR_EXPRESSION
 
     # Creating a named vector for the 'cols' argument
     cols_vector <- setNames(as.list(fhir_expressions), col_names)

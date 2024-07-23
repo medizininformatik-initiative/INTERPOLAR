@@ -6,8 +6,8 @@
 # Test for correct extraction after the header
 test_that("extractReplacePatterns correctly extracts patterns and replacements after header", {
   table_description_collapsed <- data.table(
-    resource = c("Info", "More Info", "pattern", "pattern1", "pattern2"),
-    resource_prefix = c("Not a pattern", "Still not a pattern", "replacement", "replace1", "replace2")
+    RESOURCE = c("Info", "More Info", NA, "PATTERN", "pattern1", "pattern2"),
+    RESOURCE_PREFIX = c("Not a pattern", "Still not a pattern", NA, "REPLACEMENT", "replace1", "replace2")
   )
   result <- extractReplacePatterns(table_description_collapsed)
   expected_result <- list(pattern1 = "replace1", pattern2 = "replace2")
@@ -17,8 +17,8 @@ test_that("extractReplacePatterns correctly extracts patterns and replacements a
 # Test for table without matching header
 test_that("extractReplacePatterns returns an empty list when no matching header is found", {
   table_description_collapsed <- data.table(
-    resource = c("No pattern here", "Still no pattern"),
-    resource_prefix = c("Not a replacement", "Still not a replacement")
+    RESOURCE = c("No pattern here", "Still no pattern"),
+    RESOURCE_PREFIX = c("Not a replacement", "Still not a replacement")
   )
   result <- extractReplacePatterns(table_description_collapsed)
   expect_equal(result, list())
@@ -27,8 +27,8 @@ test_that("extractReplacePatterns returns an empty list when no matching header 
 # Test for full extraction of patterns and replacements
 test_that("extractReplacePatterns extracts all patterns and replacements after the found header", {
   table_description_collapsed <- data.table(
-    resource = c("Header", "Header", "pattern", "pattern1", "pattern2", "Extra info"),
-    resource_prefix = c("Header info", "Header info", "replacement", "replace1", "replace2", "More extra info")
+    RESOURCE = c("Header", "Header", "PATTERN", "pattern1", "pattern2", "Extra info"),
+    RESOURCE_PREFIX = c("Header info", "Header info", "REPLACEMENT", "replace1", "replace2", "More extra info")
   )
   result <- extractReplacePatterns(table_description_collapsed)
   expected_result <- list(pattern1 = "replace1", pattern2 = "replace2", 'Extra info' = "More extra info")
@@ -37,8 +37,8 @@ test_that("extractReplacePatterns extracts all patterns and replacements after t
 
 #################################
 # addEmptyRowsBeforeNewResource #
+#################################
 
-################################
 test_that("addEmptyRowsBeforeNewResource inserts empty rows correctly", {
   # Create a sample data.table
   # the function should insert 3 new full NA lines
