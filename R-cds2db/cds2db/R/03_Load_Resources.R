@@ -36,6 +36,31 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
   return(wardPatitentIDPerDate)
 }
 
+#' Get Current Datetime
+#'
+#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' Otherwise, it returns the current system time.
+#'
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
+#'
+getCurrentDatetime <- function() {
+  if (exists("DEBUG_CURRENT_DATETIME")) {
+    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
+  }
+  return(as.POSIXct(Sys.time()))
+}
+
+#' Get Query Datetime
+#'
+#' This function returns the current datetime formatted for SQL queries.
+#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
+#'
+#' @return A character string representing the current datetime formatted for SQL queries.
+#'
+getQueryDatetime <- function() {
+  format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
+}
+
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
