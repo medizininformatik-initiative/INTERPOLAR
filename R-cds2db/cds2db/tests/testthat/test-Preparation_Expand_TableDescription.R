@@ -43,13 +43,13 @@ test_that("addEmptyRowsBeforeNewResource inserts empty rows correctly", {
   # Create a sample data.table
   # the function should insert 3 new full NA lines
   dt <- data.table(
-    resource = c('Resource1', 'Resource2','Resource3', 'Resource4'),
-    value = c(1, 2, 3, 4)
+    RESOURCE = c('Resource1', 'Resource2','Resource3', 'Resource4'),
+    VALUE = c(1, 2, 3, 4)
   )
 
   expected_result <- data.table(
-    resource = c('Resource1', NA, 'Resource2', NA, 'Resource3', NA, 'Resource4'),
-    value = c(1, NA, 2, NA, 3, NA, 4)
+    RESOURCE = c('Resource1', NA, 'Resource2', NA, 'Resource3', NA, 'Resource4'),
+    VALUE = c(1, NA, 2, NA, 3, NA, 4)
   )
 
   # Apply the function
