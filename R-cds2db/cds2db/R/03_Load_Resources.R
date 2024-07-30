@@ -99,16 +99,16 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
 #' @return An updated list of data.tables including the referenced resources.
 #'
 loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, resource_tables) {
-  # table_descriptions$reference_types can be a comma or whitespace separated list like
-  # "MedicationStatement, MedicationAdministration". We need the all unique diffrerent
+  # table_descriptions$REFERENCE_TYPES can be a comma or whitespace separated list like
+  # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
-  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$reference_types))
+  reference_types <- unique(etlutils::extractWords(table_descriptions$REFERENCE_TYPES))
   for (reference_type in reference_types) {
     referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
     if (!is.null(referenced_table_description)) {
       # now extract all rows where the single reference_type is in the reference_types column as whole word
       whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-      sub_reference_type <- table_descriptions$reference_types[grepl(whole_word_pattern, reference_types)]
+      sub_reference_type <- table_descriptions$REFERENCE_TYPES[grepl(whole_word_pattern, REFERENCE_TYPES)]
 
       referenced_ids <- c()
       for (i in seq_len(nrow(sub_reference_type))) {

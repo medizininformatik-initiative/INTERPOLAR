@@ -74,13 +74,13 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
   }
   if (is.na(table_description_table)) {
-    table_description_table <- getTableDescriptionsTable(c("RESOURCE", "SOLUMN_NAME", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
+    table_description_table <- getTableDescriptionsTable(c("RESOURCE", "COLUMN_NAME", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
   }
 
   # Grouping by 'RESOURCE' and creating lists of fhircrackr::fhir_table_description() objects
   table_descriptions <- lapply(split(table_description_table, table_description_table$RESOURCE), function(subset) {
     resource_name <- unique(subset$RESOURCE)
-    col_names <- subset$COLUM_NAME
+    col_names <- subset$COLUMN_NAME
     fhir_expressions <- subset$FHIR_EXPRESSION
 
     # Creating a named vector for the 'cols' argument
@@ -105,7 +105,7 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
       pid_independant[resource_name] <- table_description
     }
   }
-  reference_types <- table_description_table[!is.na(reference_types)]
+  reference_types <- table_description_table[!is.na(REFERENCE_TYPES)]
   # Returning the list of fhircrackr::fhir_table_description() objects
   return(list(pid_dependant = pid_dependant, pid_independant = pid_independant, reference_types = reference_types))
 }
