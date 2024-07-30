@@ -21,6 +21,62 @@ writeResultFile <- function(scriptname, content) {
   writeLines(content, paste0(getDBScriptsTargetDir(), scriptname), useBytes = TRUE)
 }
 
+#' Replace and remove specific placeholders from a text
+#'
+#' This function replaces and removes lines containing only the specific placeholder surrounded
+#' by optional whitespace. It also removes the placeholder within a line, along with an optional
+#' surrounding space.
+#'
+#' @param input_string A string containing the text to process.
+#' @param placeholder A string representing the placeholder to be removed.
+#'
+#' @return A processed string with the specified placeholder removed as described.
+#'
+#' @examples
+#' text <- paste0("Dieser Text ergibt keinen Sinn, denn <%placeholder%>\n",
+#'                "er <%placeholder%> ist nur <%placeholder%> zu Demonstrationszecken da\n",
+#'                "<%placeholder%>\n",
+#'                "   <%placeholder%>\n",
+#'                "       <%placeholder%>   \n",
+#'                "und soll helfen, Chatgpt\n",
+#'                "\n",
+#'                "\n",
+#'                "\n",
+#'                "  eine Aufgabe lösen zu lassen.")
+#' cleaned_text <- removePlaceholderLines(text, "<%placeholder%>")
+#' cat(cleaned_text)
+#'
+#' @export
+removePlaceholderLines <- function(input_string, placeholder) {
+
+  placeholder <- etlutils::getEscaped(placeholder)
+
+  # Check if input_string ends with a newline
+  ends_with_newline <- grepl("\n$", input_string)
+
+  # Split the input string into lines
+  lines <- strsplit(input_string, "\n", fixed = TRUE)[[1]]
+
+  # Remove lines containing only the placeholder with optional whitespace
+  placeholder_pattern <- paste0("^\\s*", placeholder, "\\s*$")
+  lines <- lines[!grepl(placeholder_pattern, lines)]
+
+  # Remove the placeholder within lines, along with an optional surrounding space
+  placeholder_inline_pattern <- paste0("\\s?\\Q", placeholder, "\\E")
+  lines <- gsub(placeholder_inline_pattern, "", lines, perl = TRUE)
+
+  # Combine the lines back into a single string
+  output_string <- paste(lines, collapse = "\n")
+
+  # Re-add the final newline if it was originally present
+  if (nchar(output_string) && ends_with_newline) {
+    output_string <- paste0(output_string, "\n")
+  }
+
+  return(output_string)
+}
+
+
 getRightsDefinitionColumnNames <- function() {
   # these are *exactly* the names of the columns in the excel file
   etlutils::namedListByValue(
