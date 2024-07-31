@@ -16,7 +16,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.encounter target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE encounter_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -35,7 +35,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.patient target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE patient_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -54,7 +54,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.condition target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE condition_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -73,7 +73,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.medication target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE medication_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -92,7 +92,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.medicationrequest target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE medicationrequest_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -111,7 +111,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.medicationadministration target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE medicationadministration_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -130,7 +130,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.medicationstatement target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE medicationstatement_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -149,7 +149,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.observation target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE observation_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -168,7 +168,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.diagnosticreport target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE diagnosticreport_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -187,7 +187,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.servicerequest target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE servicerequest_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -206,7 +206,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.procedure target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE procedure_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -225,7 +225,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.consent target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE consent_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -244,7 +244,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.location target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE location_raw_id = current_record.id
                 ;
             EXCEPTION
@@ -263,7 +263,7 @@ BEGIN
         LOOP
             BEGIN
 		        UPDATE db_log.pids_per_ward target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE pids_per_ward_raw_id = current_record.id
                 ;
             EXCEPTION
