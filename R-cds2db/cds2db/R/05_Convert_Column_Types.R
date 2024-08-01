@@ -192,7 +192,7 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
-    if (isIndexedTable(resource_tables[[i]], fhir_table_description)) {
+    if (!is.null(fhir_table_description) && isIndexedTable(resource_tables[[i]], fhir_table_description)) {
       print(paste0("Melt table ", resource_name))
       nrow_before_melt <- nrow(resource_tables[[i]])
       resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
@@ -305,15 +305,17 @@ replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, n
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     table_description_index <- which(tolower(names(fhir_table_descriptions)) == resource_name)
-    fhir_table_description <- fhir_table_descriptions[[table_description_index]]
-    if (names_to_.Data) {
-      old_names <- fhir_table_description@cols@names
-      new_names <- fhir_table_description@cols@.Data
-    } else {
-      old_names <- fhir_table_description@cols@.Data
-      new_names <- fhir_table_description@cols@names
+    if (length(table_description_index)) {
+      fhir_table_description <- fhir_table_descriptions[[table_description_index]]
+      if (names_to_.Data) {
+        old_names <- fhir_table_description@cols@names
+        new_names <- fhir_table_description@cols@.Data
+      } else {
+        old_names <- fhir_table_description@cols@.Data
+        new_names <- fhir_table_description@cols@names
+      }
+      resource_tables[[i]] <- data.table::setnames(resource_tables[[i]], old_names, new_names)
     }
-    resource_tables[[i]] <- data.table::setnames(resource_tables[[i]], old_names, new_names)
   }
   return(resource_tables)
 }
