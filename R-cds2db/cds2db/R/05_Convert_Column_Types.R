@@ -215,18 +215,18 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
 #' @details This function takes a list of tables, where each table is represented by a data frame,
 #' and converts columns of specific types specified by \code{convert_columns}. The conversion is
 #' performed using the provided \code{convert_type_function}. The function assumes that there is
-#' a table description table containing columns: "resource", "column_name", and "type".
+#' a table description table containing columns: "RESOURCE", "COLUMN_NAME", and "FHIR_TYPE".
 #'
 convertType <- function(resource_tables, convert_columns, convert_type_function) {
   # Get table description
-  table_description <- getTableDescriptionsTable(c("resource", "column_name", "type"))
+  table_description <- getTableDescriptionsTable(c("RESOURCE", "COLUMN_NAME", "FHIR_TYPE"))
   # converting column types
-  convert_columns <- table_description[type %in% convert_columns]
-  convert_columns <- split(convert_columns, convert_columns$resource)
+  convert_columns <- table_description[FHIR_TYPE %in% convert_columns]
+  convert_columns <- split(convert_columns, convert_columns$RESOURCE)
   for (resource in names(convert_columns)) {
     resource_table <- resource_tables[[tolower(resource)]]
     if (!is.null(resource_table)) {
-      convert_type_function(resource_table, convert_columns[[resource]]$column_name)
+      convert_type_function(resource_table, convert_columns[[resource]]$COLUMN_NAME)
     }
   }
 }
