@@ -77,8 +77,10 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
     table_description_table <- getTableDescriptionsTable(c("RESOURCE", "COLUMN_NAME", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
   }
 
+  # Filter fhir resources (starts with capital letter in column resource in the table_description_table)
+  fhir_table_description_table <- table_description_table[-grep("^[a-z]", resource)]
   # Grouping by 'RESOURCE' and creating lists of fhircrackr::fhir_table_description() objects
-  table_descriptions <- lapply(split(table_description_table, table_description_table$RESOURCE), function(subset) {
+  table_descriptions <- lapply(split(fhir_table_description_table, fhir_table_description_table$RESOURCE), function(subset) {
     resource_name <- unique(subset$RESOURCE)
     col_names <- subset$COLUMN_NAME
     fhir_expressions <- subset$FHIR_EXPRESSION
@@ -100,9 +102,9 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   for (table_description in table_descriptions) {
     resource_name <- table_description@resource@.Data
     if (isPIDDependant(table_description)) {
-      pid_dependant[resource_name] <- table_description
+      pid_dependant[[resource_name]] <- table_description
     } else {
-      pid_independant[resource_name] <- table_description
+      pid_independant[[resource_name]] <- table_description
     }
   }
   reference_types <- table_description_table[!is.na(REFERENCE_TYPES)]
