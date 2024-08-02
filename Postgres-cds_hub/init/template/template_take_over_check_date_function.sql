@@ -4,8 +4,10 @@ RETURNS VOID AS $$
 DECLARE
     current_record record;
 BEGIN
-    -- Take over last check datetime Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
-<%TEMPLATE_TAKE_OVER_DATE_FUNCTION_SUB_SINGLE_TABLE%>
+    -- Take over last check datetime Functionname: <%COPY_FUNC_NAME%>- From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
+
+<%LOOP_TABS_SUB_take_over_check_date_function%>
+
 END;
 $$ LANGUAGE plpgsql;
 

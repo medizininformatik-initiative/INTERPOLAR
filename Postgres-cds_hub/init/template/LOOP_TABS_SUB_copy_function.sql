@@ -4,19 +4,21 @@
             BEGIN
                 SELECT count(1) INTO data_count
                 FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
-                WHERE <%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>
+                WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>
                       ;
 
                 IF data_count = 0
                 THEN
                     INSERT INTO <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
                         <%SIMPLE_TABLE_NAME%>_id,
-                        <%TEMPLATE_COPY_FUNCTION_SUB_COLUMNS%>,
+                        <%IF TAGS "\bTYPED\b" "<%SIMPLE_TABLE_NAME%>_raw_id,"%>
+                        <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COLUMNS%>
                         input_datetime
                     )
                     VALUES (
                         current_record.<%SIMPLE_TABLE_NAME%>_id,
-                        <%TEMPLATE_COPY_FUNCTION_SUB_CURRENT_RECORD_COLUMNS%>,
+                        <%IF TAGS "\bTYPED\b" "current_record.<%SIMPLE_TABLE_NAME%>_raw_id,"%>
+                        <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_CURRENT_RECORD%>
                         current_record.input_datetime
                     );
 
@@ -26,7 +28,7 @@
                 UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
-                    WHERE <%TEMPLATE_COPY_FUNCTION_SUB_COMPARE_COLUMNS%>
+                    WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>
                     ;
 
                     -- Delete updatet datasets

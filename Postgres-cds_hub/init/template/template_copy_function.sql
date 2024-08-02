@@ -7,7 +7,8 @@ DECLARE
     data_count integer;
 BEGIN
     -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
-<%TEMPLATE_COPY_FUNCTION_SUB_SINGLE_TABLE%>
+<%LOOP_TABS_SUB_copy_function%>
+
 END;
 $$ LANGUAGE plpgsql;
 
