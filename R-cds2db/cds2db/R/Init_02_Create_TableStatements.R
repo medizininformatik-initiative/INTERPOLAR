@@ -309,7 +309,8 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
 
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
-      if (grepl(condition_arguments$pattern, rights_first_row[[condition_arguments$field]], perl = TRUE)) {
+      condition_compare_value <- rights_first_row[[condition_arguments$field]]
+      if (!is.na(condition_compare_value) && grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE)) {
         # quotes at the beginning of the the result indicate that not a sumtemplate name is given but
         # directly the content
         if (startsWith(condition_arguments$result, "\"")) {
