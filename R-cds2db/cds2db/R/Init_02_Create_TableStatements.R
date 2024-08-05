@@ -211,16 +211,17 @@ getFullTableName <- function(tablename, script_rights_definition, name_index = 1
 ########################
 
 parseIFExpression <- function(expression) {
-  # # Examples
-  #expression1 <- "<%IF TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>"
-  #expression2 <- "<%IF TAGS \"^TYPED$\" TEMPLATE_SUB_LOOP_TABLES_CREATE_TABLE_IF_TYPED%>"
-  patternInlineIf <- "^<%[iI][fF]\\s+([a-zA-Z0-9_]+)\\s+(['\"].*['\"])\\s+(.*)%>$"
+  # Examples
+  # expression <- "<%IF NOT TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>"
+  # expression <- "<%IF TAGS \"^TYPED$\" TEMPLATE_SUB_LOOP_TABLES_CREATE_TABLE_IF_TYPED%>"
+  #patternInlineIf <- "^<%[IF]\\s+([a-zA-Z0-9_]+)\\s+(['\"].*['\"])\\s+(.*)%>$"
+  patternInlineIf <- "^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+)\\s+(['\"].*?['\"])\\s+(.*?)%>$"
   # Extract the parts of the expression
   matches <- regmatches(expression, regexec(patternInlineIf, expression))
-  if (length(matches[[1]]) != 4 || is.na(matches[[1]][1])) {
+  if (length(matches[[1]]) != 5 || is.na(matches[[1]][1])) {
     stop(paste0("Can not parse expression '", expression, "'"))
   }
-  return(list(field = matches[[1]][2], pattern = etlutils::getBetweenQuotes(matches[[1]][3]), result = matches[[1]][4]))
+  return(list(field = matches[[1]][3], invert = trimws(toupper(matches[[1]][2])) == "NOT", pattern = etlutils::getBetweenQuotes(matches[[1]][4]), result = matches[[1]][5]))
 }
 
 convertTemplate <- function(tables_descriptions, script_rights_definition, result_file_name_column = "SCRIPTNAME", template_content = NA, template_name = NA, table_name = NA, column_name = NA, indentation = "", recursion = 0) {
@@ -292,7 +293,8 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
       content <- gsub(placeholder, rights_content, content)
 
     } else if (startsWith(placeholder, "<%TEMPLATE_")) {
-      # at the moment tis case should never happens
+      # at the moment this case should never happens
+      browser()
     } else if (startsWith(placeholder, "<%TABLE_NAME")) {
       placeholder_name <- extractPlaceholderName(placeholder)
       name_index <- sub(".*_", "", placeholder_name)
@@ -310,8 +312,13 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
       condition_compare_value <- rights_first_row[[condition_arguments$field]]
-      if (!is.na(condition_compare_value) && grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE)) {
-        # quotes at the beginning of the the result indicate that not a sumtemplate name is given but
+      if (is.na(condition_compare_value)) {
+        condition_compare_value <- ""
+      }
+      if (( condition_arguments$invert && !grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE)) ||
+          (!condition_arguments$invert &&  grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
+
+        # quotes at the beginning of the result indicate that not a subtemplate name is given but
         # directly the content
         if (startsWith(condition_arguments$result, "\"")) {
           template_content <- condition_arguments$result
@@ -327,6 +334,7 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
       } else {
         content <- removePlaceholderLines(content, placeholder)
       }
+
     } else {
       placeholder_name <- extractPlaceholderName(placeholder)
       if (placeholder_name %in% names(rights_first_row)) {
