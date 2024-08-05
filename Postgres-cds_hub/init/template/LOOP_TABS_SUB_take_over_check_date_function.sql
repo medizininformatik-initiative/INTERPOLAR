@@ -8,7 +8,7 @@
         LOOP
             BEGIN
 		        UPDATE <%SCHEMA_2%>.<%TABLE_NAME_2%> target_record
-                SET target_record.last_check_datetime = current_record.last_check_datetime
+                SET last_check_datetime = current_record.last_check_datetime
                 WHERE <%TABLE_NAME%>_id = current_record.id
                 ;
             EXCEPTION

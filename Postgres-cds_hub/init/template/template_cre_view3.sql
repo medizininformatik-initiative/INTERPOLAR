@@ -1,5 +1,5 @@
 --Create View for frontend tables for schema <%OWNER_SCHEMA%>
-<%TEMPLATE_CRE_VIEW3_SUB_SINGLE_TABLE%>
+<%LOOP_TABS_SUB_cre_view3_TABLES%>
 
 --SQL Role for Views in Schema <%OWNER_SCHEMA%>
-<%TEMPLATE_CRE_VIEW3_SUB_GRANT%>
+<%LOOP_TABS_SUB_cre_view3_GRANTS%>
