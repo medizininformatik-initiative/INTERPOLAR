@@ -7,7 +7,7 @@ DECLARE
     data_count integer;
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    -- Start encounter
+    -- Start encounter_raw
     FOR current_record IN (SELECT * FROM cds2db_in.encounter_raw)
         LOOP
             BEGIN
@@ -89,7 +89,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.encounter_raw (
-                        encounter_id,
+                        encounter_raw_id,
                         enc_id,
                         enc_patient_id,
                         enc_partof_id,
@@ -164,7 +164,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.encounter_id,
+                        current_record.encounter_raw_id,
                         current_record.enc_id,
                         current_record.enc_patient_id,
                         current_record.enc_partof_id,
@@ -240,7 +240,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.encounter_raw WHERE encounter_id = current_record.encounter_id;
+                    DELETE FROM cds2db_in.encounter_raw WHERE encounter_raw_id = current_record.encounter_raw_id;
                 ELSE
                 UPDATE db_log.encounter_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -319,18 +319,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.encounter_raw WHERE encounter_id = current_record.encounter_id;
+                    DELETE FROM cds2db_in.encounter_raw WHERE encounter_raw_id = current_record.encounter_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.encounter_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE encounter_id = current_record.encounter_id;
+                    WHERE encounter_raw_id = current_record.encounter_raw_id;
             END;
     END LOOP;
-    -- END encounter
-    -- Start patient
+    -- END encounter_raw
+
+    -- Start patient_raw
     FOR current_record IN (SELECT * FROM cds2db_in.patient_raw)
         LOOP
             BEGIN
@@ -358,7 +359,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.patient_raw (
-                        patient_id,
+                        patient_raw_id,
                         pat_id,
                         pat_identifier_use,
                         pat_identifier_type_system,
@@ -379,7 +380,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.patient_id,
+                        current_record.patient_raw_id,
                         current_record.pat_id,
                         current_record.pat_identifier_use,
                         current_record.pat_identifier_type_system,
@@ -401,7 +402,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.patient_raw WHERE patient_id = current_record.patient_id;
+                    DELETE FROM cds2db_in.patient_raw WHERE patient_raw_id = current_record.patient_raw_id;
                 ELSE
                 UPDATE db_log.patient_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -426,18 +427,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.patient_raw WHERE patient_id = current_record.patient_id;
+                    DELETE FROM cds2db_in.patient_raw WHERE patient_raw_id = current_record.patient_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.patient_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE patient_id = current_record.patient_id;
+                    WHERE patient_raw_id = current_record.patient_raw_id;
             END;
     END LOOP;
-    -- END patient
-    -- Start condition
+    -- END patient_raw
+
+    -- Start condition_raw
     FOR current_record IN (SELECT * FROM cds2db_in.condition_raw)
         LOOP
             BEGIN
@@ -561,7 +563,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.condition_raw (
-                        condition_id,
+                        condition_raw_id,
                         con_id,
                         con_encounter_id,
                         con_patient_id,
@@ -678,7 +680,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.condition_id,
+                        current_record.condition_raw_id,
                         current_record.con_id,
                         current_record.con_encounter_id,
                         current_record.con_patient_id,
@@ -796,7 +798,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.condition_raw WHERE condition_id = current_record.condition_id;
+                    DELETE FROM cds2db_in.condition_raw WHERE condition_raw_id = current_record.condition_raw_id;
                 ELSE
                 UPDATE db_log.condition_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -917,18 +919,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.condition_raw WHERE condition_id = current_record.condition_id;
+                    DELETE FROM cds2db_in.condition_raw WHERE condition_raw_id = current_record.condition_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.condition_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE condition_id = current_record.condition_id;
+                    WHERE condition_raw_id = current_record.condition_raw_id;
             END;
     END LOOP;
-    -- END condition
-    -- Start medication
+    -- END condition_raw
+
+    -- Start medication_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medication_raw)
         LOOP
             BEGIN
@@ -996,7 +999,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medication_raw (
-                        medication_id,
+                        medication_raw_id,
                         med_id,
                         med_identifier_use,
                         med_identifier_type_system,
@@ -1057,7 +1060,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.medication_id,
+                        current_record.medication_raw_id,
                         current_record.med_id,
                         current_record.med_identifier_use,
                         current_record.med_identifier_type_system,
@@ -1119,7 +1122,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.medication_raw WHERE medication_id = current_record.medication_id;
+                    DELETE FROM cds2db_in.medication_raw WHERE medication_raw_id = current_record.medication_raw_id;
                 ELSE
                 UPDATE db_log.medication_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -1184,18 +1187,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.medication_raw WHERE medication_id = current_record.medication_id;
+                    DELETE FROM cds2db_in.medication_raw WHERE medication_raw_id = current_record.medication_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medication_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE medication_id = current_record.medication_id;
+                    WHERE medication_raw_id = current_record.medication_raw_id;
             END;
     END LOOP;
-    -- END medication
-    -- Start medicationrequest
+    -- END medication_raw
+
+    -- Start medicationrequest_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest_raw)
         LOOP
             BEGIN
@@ -1429,7 +1433,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationrequest_raw (
-                        medicationrequest_id,
+                        medicationrequest_raw_id,
                         medreq_id,
                         medreq_encounter_id,
                         medreq_patient_id,
@@ -1656,7 +1660,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.medicationrequest_id,
+                        current_record.medicationrequest_raw_id,
                         current_record.medreq_id,
                         current_record.medreq_encounter_id,
                         current_record.medreq_patient_id,
@@ -1884,7 +1888,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_id = current_record.medicationrequest_id;
+                    DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
                 ELSE
                 UPDATE db_log.medicationrequest_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -2115,18 +2119,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_id = current_record.medicationrequest_id;
+                    DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationrequest_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE medicationrequest_id = current_record.medicationrequest_id;
+                    WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
             END;
     END LOOP;
-    -- END medicationrequest
-    -- Start medicationadministration
+    -- END medicationrequest_raw
+
+    -- Start medicationadministration_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration_raw)
         LOOP
             BEGIN
@@ -2246,7 +2251,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationadministration_raw (
-                        medicationadministration_id,
+                        medicationadministration_raw_id,
                         medadm_id,
                         medadm_encounter_id,
                         medadm_patient_id,
@@ -2359,7 +2364,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.medicationadministration_id,
+                        current_record.medicationadministration_raw_id,
                         current_record.medadm_id,
                         current_record.medadm_encounter_id,
                         current_record.medadm_patient_id,
@@ -2473,7 +2478,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_id = current_record.medicationadministration_id;
+                    DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
                 ELSE
                 UPDATE db_log.medicationadministration_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -2590,18 +2595,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_id = current_record.medicationadministration_id;
+                    DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationadministration_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE medicationadministration_id = current_record.medicationadministration_id;
+                    WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
             END;
     END LOOP;
-    -- END medicationadministration
-    -- Start medicationstatement
+    -- END medicationadministration_raw
+
+    -- Start medicationstatement_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement_raw)
         LOOP
             BEGIN
@@ -2822,7 +2828,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationstatement_raw (
-                        medicationstatement_id,
+                        medicationstatement_raw_id,
                         medstat_id,
                         medstat_identifier_use,
                         medstat_identifier_type_system,
@@ -3036,7 +3042,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.medicationstatement_id,
+                        current_record.medicationstatement_raw_id,
                         current_record.medstat_id,
                         current_record.medstat_identifier_use,
                         current_record.medstat_identifier_type_system,
@@ -3251,7 +3257,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_id = current_record.medicationstatement_id;
+                    DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
                 ELSE
                 UPDATE db_log.medicationstatement_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -3469,18 +3475,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_id = current_record.medicationstatement_id;
+                    DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationstatement_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE medicationstatement_id = current_record.medicationstatement_id;
+                    WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
             END;
     END LOOP;
-    -- END medicationstatement
-    -- Start observation
+    -- END medicationstatement_raw
+
+    -- Start observation_raw
     FOR current_record IN (SELECT * FROM cds2db_in.observation_raw)
         LOOP
             BEGIN
@@ -3622,7 +3629,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.observation_raw (
-                        observation_id,
+                        observation_raw_id,
                         obs_id,
                         obs_encounter_id,
                         obs_patient_id,
@@ -3757,7 +3764,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.observation_id,
+                        current_record.observation_raw_id,
                         current_record.obs_id,
                         current_record.obs_encounter_id,
                         current_record.obs_patient_id,
@@ -3893,7 +3900,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.observation_raw WHERE observation_id = current_record.observation_id;
+                    DELETE FROM cds2db_in.observation_raw WHERE observation_raw_id = current_record.observation_raw_id;
                 ELSE
                 UPDATE db_log.observation_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -4032,18 +4039,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.observation_raw WHERE observation_id = current_record.observation_id;
+                    DELETE FROM cds2db_in.observation_raw WHERE observation_raw_id = current_record.observation_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.observation_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE observation_id = current_record.observation_id;
+                    WHERE observation_raw_id = current_record.observation_raw_id;
             END;
     END LOOP;
-    -- END observation
-    -- Start diagnosticreport
+    -- END observation_raw
+
+    -- Start diagnosticreport_raw
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport_raw)
         LOOP
             BEGIN
@@ -4098,7 +4106,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.diagnosticreport_raw (
-                        diagnosticreport_id,
+                        diagnosticreport_raw_id,
                         diagrep_id,
                         diagrep_encounter_id,
                         diagrep_patient_id,
@@ -4146,7 +4154,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.diagnosticreport_id,
+                        current_record.diagnosticreport_raw_id,
                         current_record.diagrep_id,
                         current_record.diagrep_encounter_id,
                         current_record.diagrep_patient_id,
@@ -4195,7 +4203,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_id = current_record.diagnosticreport_id;
+                    DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
                 ELSE
                 UPDATE db_log.diagnosticreport_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -4247,18 +4255,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_id = current_record.diagnosticreport_id;
+                    DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.diagnosticreport_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE diagnosticreport_id = current_record.diagnosticreport_id;
+                    WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
             END;
     END LOOP;
-    -- END diagnosticreport
-    -- Start servicerequest
+    -- END diagnosticreport_raw
+
+    -- Start servicerequest_raw
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest_raw)
         LOOP
             BEGIN
@@ -4327,7 +4336,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.servicerequest_raw (
-                        servicerequest_id,
+                        servicerequest_raw_id,
                         servreq_id,
                         servreq_encounter_id,
                         servreq_patient_id,
@@ -4389,7 +4398,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.servicerequest_id,
+                        current_record.servicerequest_raw_id,
                         current_record.servreq_id,
                         current_record.servreq_encounter_id,
                         current_record.servreq_patient_id,
@@ -4452,7 +4461,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_id = current_record.servicerequest_id;
+                    DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
                 ELSE
                 UPDATE db_log.servicerequest_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -4518,18 +4527,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_id = current_record.servicerequest_id;
+                    DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.servicerequest_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE servicerequest_id = current_record.servicerequest_id;
+                    WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
             END;
     END LOOP;
-    -- END servicerequest
-    -- Start procedure
+    -- END servicerequest_raw
+
+    -- Start procedure_raw
     FOR current_record IN (SELECT * FROM cds2db_in.procedure_raw)
         LOOP
             BEGIN
@@ -4608,7 +4618,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.procedure_raw (
-                        procedure_id,
+                        procedure_raw_id,
                         proc_id,
                         proc_encounter_id,
                         proc_patient_id,
@@ -4680,7 +4690,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.procedure_id,
+                        current_record.procedure_raw_id,
                         current_record.proc_id,
                         current_record.proc_encounter_id,
                         current_record.proc_patient_id,
@@ -4753,7 +4763,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.procedure_raw WHERE procedure_id = current_record.procedure_id;
+                    DELETE FROM cds2db_in.procedure_raw WHERE procedure_raw_id = current_record.procedure_raw_id;
                 ELSE
                 UPDATE db_log.procedure_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -4829,18 +4839,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.procedure_raw WHERE procedure_id = current_record.procedure_id;
+                    DELETE FROM cds2db_in.procedure_raw WHERE procedure_raw_id = current_record.procedure_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.procedure_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE procedure_id = current_record.procedure_id;
+                    WHERE procedure_raw_id = current_record.procedure_raw_id;
             END;
     END LOOP;
-    -- END procedure
-    -- Start consent
+    -- END procedure_raw
+
+    -- Start consent_raw
     FOR current_record IN (SELECT * FROM cds2db_in.consent_raw)
         LOOP
             BEGIN
@@ -4885,7 +4896,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.consent_raw (
-                        consent_id,
+                        consent_raw_id,
                         cons_id,
                         cons_patient_id,
                         cons_identifier_use,
@@ -4923,7 +4934,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.consent_id,
+                        current_record.consent_raw_id,
                         current_record.cons_id,
                         current_record.cons_patient_id,
                         current_record.cons_identifier_use,
@@ -4962,7 +4973,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.consent_raw WHERE consent_id = current_record.consent_id;
+                    DELETE FROM cds2db_in.consent_raw WHERE consent_raw_id = current_record.consent_raw_id;
                 ELSE
                 UPDATE db_log.consent_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -5004,18 +5015,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.consent_raw WHERE consent_id = current_record.consent_id;
+                    DELETE FROM cds2db_in.consent_raw WHERE consent_raw_id = current_record.consent_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.consent_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE consent_id = current_record.consent_id;
+                    WHERE consent_raw_id = current_record.consent_raw_id;
             END;
     END LOOP;
-    -- END consent
-    -- Start location
+    -- END consent_raw
+
+    -- Start location_raw
     FOR current_record IN (SELECT * FROM cds2db_in.location_raw)
         LOOP
             BEGIN
@@ -5041,7 +5053,7 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.location_raw (
-                        location_id,
+                        location_raw_id,
                         loc_id,
                         loc_identifier_use,
                         loc_identifier_type_system,
@@ -5060,7 +5072,7 @@ BEGIN
                         input_datetime
                     )
                     VALUES (
-                        current_record.location_id,
+                        current_record.location_raw_id,
                         current_record.loc_id,
                         current_record.loc_identifier_use,
                         current_record.loc_identifier_type_system,
@@ -5080,7 +5092,7 @@ BEGIN
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.location_raw WHERE location_id = current_record.location_id;
+                    DELETE FROM cds2db_in.location_raw WHERE location_raw_id = current_record.location_raw_id;
                 ELSE
                 UPDATE db_log.location_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -5103,18 +5115,19 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.location_raw WHERE location_id = current_record.location_id;
+                    DELETE FROM cds2db_in.location_raw WHERE location_raw_id = current_record.location_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.location_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE location_id = current_record.location_id;
+                    WHERE location_raw_id = current_record.location_raw_id;
             END;
     END LOOP;
-    -- END location
-    -- Start pids_per_ward
+    -- END location_raw
+
+    -- Start pids_per_ward_raw
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward_raw)
         LOOP
             BEGIN
@@ -5127,20 +5140,20 @@ BEGIN
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.pids_per_ward_raw (
-                        pids_per_ward_id,
+                        pids_per_ward_raw_id,
                         ward_name,
                         patient_id,
                         input_datetime
                     )
                     VALUES (
-                        current_record.pids_per_ward_id,
+                        current_record.pids_per_ward_raw_id,
                         current_record.ward_name,
                         current_record.patient_id,
                         current_record.input_datetime
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_id = current_record.pids_per_ward_id;
+                    DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
                 ELSE
                 UPDATE db_log.pids_per_ward_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -5150,17 +5163,18 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_id = current_record.pids_per_ward_id;
+                    DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.pids_per_ward_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
-                    WHERE pids_per_ward_id = current_record.pids_per_ward_id;
+                    WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
             END;
     END LOOP;
-    -- END pids_per_ward
+    -- END pids_per_ward_raw
+
 
 END;
 $$ LANGUAGE plpgsql;
@@ -5168,5 +5182,6 @@ $$ LANGUAGE plpgsql;
 -- CopyJob CDS in 2 DB_log
 SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
 -----------------------------
+
 
 

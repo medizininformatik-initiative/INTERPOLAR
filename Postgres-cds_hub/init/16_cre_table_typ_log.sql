@@ -2935,6 +2935,6 @@ comment on column db_log.pids_per_ward.last_check_datetime is 'Time at which dat
 comment on column db_log.pids_per_ward.current_dataset_status is 'Processing status of the data record';
 
 
-
 -- Output on
 \o
+

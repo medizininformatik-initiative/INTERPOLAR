@@ -1,45 +1,45 @@
 --Create SQL View not Typed Datasets in Schema cds2db_out
 CREATE OR REPLACE VIEW cds2db_out.v_encounter AS (
-   SELECT DISTINCT * FROM db_log.encounter_raw WHERE encounter_id NOT IN (SELECT encounter_raw_id FROM db_log.encounter) ORDER BY encounter_id
+   SELECT DISTINCT * FROM db_log.encounter_raw WHERE encounter_raw_id NOT IN (SELECT encounter_raw_id FROM db_log.encounter) ORDER BY encounter_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_patient AS (
-   SELECT DISTINCT * FROM db_log.patient_raw WHERE patient_id NOT IN (SELECT patient_raw_id FROM db_log.patient) ORDER BY patient_id
+   SELECT DISTINCT * FROM db_log.patient_raw WHERE patient_raw_id NOT IN (SELECT patient_raw_id FROM db_log.patient) ORDER BY patient_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_condition AS (
-   SELECT DISTINCT * FROM db_log.condition_raw WHERE condition_id NOT IN (SELECT condition_raw_id FROM db_log.condition) ORDER BY condition_id
+   SELECT DISTINCT * FROM db_log.condition_raw WHERE condition_raw_id NOT IN (SELECT condition_raw_id FROM db_log.condition) ORDER BY condition_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_medication AS (
-   SELECT DISTINCT * FROM db_log.medication_raw WHERE medication_id NOT IN (SELECT medication_raw_id FROM db_log.medication) ORDER BY medication_id
+   SELECT DISTINCT * FROM db_log.medication_raw WHERE medication_raw_id NOT IN (SELECT medication_raw_id FROM db_log.medication) ORDER BY medication_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_medicationrequest AS (
-   SELECT DISTINCT * FROM db_log.medicationrequest_raw WHERE medicationrequest_id NOT IN (SELECT medicationrequest_raw_id FROM db_log.medicationrequest) ORDER BY medicationrequest_id
+   SELECT DISTINCT * FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id NOT IN (SELECT medicationrequest_raw_id FROM db_log.medicationrequest) ORDER BY medicationrequest_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_medicationadministration AS (
-   SELECT DISTINCT * FROM db_log.medicationadministration_raw WHERE medicationadministration_id NOT IN (SELECT medicationadministration_raw_id FROM db_log.medicationadministration) ORDER BY medicationadministration_id
+   SELECT DISTINCT * FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id NOT IN (SELECT medicationadministration_raw_id FROM db_log.medicationadministration) ORDER BY medicationadministration_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_medicationstatement AS (
-   SELECT DISTINCT * FROM db_log.medicationstatement_raw WHERE medicationstatement_id NOT IN (SELECT medicationstatement_raw_id FROM db_log.medicationstatement) ORDER BY medicationstatement_id
+   SELECT DISTINCT * FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id NOT IN (SELECT medicationstatement_raw_id FROM db_log.medicationstatement) ORDER BY medicationstatement_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_observation AS (
-   SELECT DISTINCT * FROM db_log.observation_raw WHERE observation_id NOT IN (SELECT observation_raw_id FROM db_log.observation) ORDER BY observation_id
+   SELECT DISTINCT * FROM db_log.observation_raw WHERE observation_raw_id NOT IN (SELECT observation_raw_id FROM db_log.observation) ORDER BY observation_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_diagnosticreport AS (
-   SELECT DISTINCT * FROM db_log.diagnosticreport_raw WHERE diagnosticreport_id NOT IN (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport) ORDER BY diagnosticreport_id
+   SELECT DISTINCT * FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id NOT IN (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport) ORDER BY diagnosticreport_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_servicerequest AS (
-   SELECT DISTINCT * FROM db_log.servicerequest_raw WHERE servicerequest_id NOT IN (SELECT servicerequest_raw_id FROM db_log.servicerequest) ORDER BY servicerequest_id
+   SELECT DISTINCT * FROM db_log.servicerequest_raw WHERE servicerequest_raw_id NOT IN (SELECT servicerequest_raw_id FROM db_log.servicerequest) ORDER BY servicerequest_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_procedure AS (
-   SELECT DISTINCT * FROM db_log.procedure_raw WHERE procedure_id NOT IN (SELECT procedure_raw_id FROM db_log.procedure) ORDER BY procedure_id
+   SELECT DISTINCT * FROM db_log.procedure_raw WHERE procedure_raw_id NOT IN (SELECT procedure_raw_id FROM db_log.procedure) ORDER BY procedure_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_consent AS (
-   SELECT DISTINCT * FROM db_log.consent_raw WHERE consent_id NOT IN (SELECT consent_raw_id FROM db_log.consent) ORDER BY consent_id
+   SELECT DISTINCT * FROM db_log.consent_raw WHERE consent_raw_id NOT IN (SELECT consent_raw_id FROM db_log.consent) ORDER BY consent_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_location AS (
-   SELECT DISTINCT * FROM db_log.location_raw WHERE location_id NOT IN (SELECT location_raw_id FROM db_log.location) ORDER BY location_id
+   SELECT DISTINCT * FROM db_log.location_raw WHERE location_raw_id NOT IN (SELECT location_raw_id FROM db_log.location) ORDER BY location_raw_id
 );
 CREATE OR REPLACE VIEW cds2db_out.v_pids_per_ward AS (
-   SELECT DISTINCT * FROM db_log.pids_per_ward_raw WHERE pids_per_ward_id NOT IN (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward) ORDER BY pids_per_ward_id
+   SELECT DISTINCT * FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id NOT IN (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward) ORDER BY pids_per_ward_raw_id
 );
 
 

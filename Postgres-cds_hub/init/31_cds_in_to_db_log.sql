@@ -332,6 +332,7 @@ BEGIN
             END;
     END LOOP;
     -- END encounter
+
     -- Start patient
     FOR current_record IN (SELECT * FROM cds2db_in.patient)
         LOOP
@@ -441,6 +442,7 @@ BEGIN
             END;
     END LOOP;
     -- END patient
+
     -- Start condition
     FOR current_record IN (SELECT * FROM cds2db_in.condition)
         LOOP
@@ -934,6 +936,7 @@ BEGIN
             END;
     END LOOP;
     -- END condition
+
     -- Start medication
     FOR current_record IN (SELECT * FROM cds2db_in.medication)
         LOOP
@@ -1203,6 +1206,7 @@ BEGIN
             END;
     END LOOP;
     -- END medication
+
     -- Start medicationrequest
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest)
         LOOP
@@ -2136,6 +2140,7 @@ BEGIN
             END;
     END LOOP;
     -- END medicationrequest
+
     -- Start medicationadministration
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration)
         LOOP
@@ -2613,6 +2618,7 @@ BEGIN
             END;
     END LOOP;
     -- END medicationadministration
+
     -- Start medicationstatement
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement)
         LOOP
@@ -3494,6 +3500,7 @@ BEGIN
             END;
     END LOOP;
     -- END medicationstatement
+
     -- Start observation
     FOR current_record IN (SELECT * FROM cds2db_in.observation)
         LOOP
@@ -4059,6 +4066,7 @@ BEGIN
             END;
     END LOOP;
     -- END observation
+
     -- Start diagnosticreport
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport)
         LOOP
@@ -4276,6 +4284,7 @@ BEGIN
             END;
     END LOOP;
     -- END diagnosticreport
+
     -- Start servicerequest
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest)
         LOOP
@@ -4549,6 +4558,7 @@ BEGIN
             END;
     END LOOP;
     -- END servicerequest
+
     -- Start procedure
     FOR current_record IN (SELECT * FROM cds2db_in.procedure)
         LOOP
@@ -4862,6 +4872,7 @@ BEGIN
             END;
     END LOOP;
     -- END procedure
+
     -- Start consent
     FOR current_record IN (SELECT * FROM cds2db_in.consent)
         LOOP
@@ -5039,6 +5050,7 @@ BEGIN
             END;
     END LOOP;
     -- END consent
+
     -- Start location
     FOR current_record IN (SELECT * FROM cds2db_in.location)
         LOOP
@@ -5140,6 +5152,7 @@ BEGIN
             END;
     END LOOP;
     -- END location
+
     -- Start pids_per_ward
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward)
         LOOP
@@ -5190,11 +5203,13 @@ BEGIN
     END LOOP;
     -- END pids_per_ward
 
+
 END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
 SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -----------------------------
+
 
 

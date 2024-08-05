@@ -24,7 +24,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END encounter
+    -- END encounter_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.patient_raw to db_log.patient
@@ -43,7 +43,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END patient
+    -- END patient_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.condition_raw to db_log.condition
@@ -62,7 +62,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END condition
+    -- END condition_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.medication_raw to db_log.medication
@@ -81,7 +81,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END medication
+    -- END medication_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.medicationrequest_raw to db_log.medicationrequest
@@ -100,7 +100,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END medicationrequest
+    -- END medicationrequest_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.medicationadministration_raw to db_log.medicationadministration
@@ -119,7 +119,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END medicationadministration
+    -- END medicationadministration_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.medicationstatement_raw to db_log.medicationstatement
@@ -138,7 +138,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END medicationstatement
+    -- END medicationstatement_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.observation_raw to db_log.observation
@@ -157,7 +157,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END observation
+    -- END observation_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.diagnosticreport_raw to db_log.diagnosticreport
@@ -176,7 +176,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END diagnosticreport
+    -- END diagnosticreport_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.servicerequest_raw to db_log.servicerequest
@@ -195,7 +195,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END servicerequest
+    -- END servicerequest_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.procedure_raw to db_log.procedure
@@ -214,7 +214,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END procedure
+    -- END procedure_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.consent_raw to db_log.consent
@@ -233,7 +233,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END consent
+    -- END consent_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.location_raw to db_log.location
@@ -252,7 +252,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END location
+    -- END location_raw
     -- Transfer last check date from raw to data - if no data changes have occurred
 
     -- from  db_log.pids_per_ward_raw to db_log.pids_per_ward
@@ -271,7 +271,7 @@ BEGIN
 		    NULL;
             END;
     END LOOP;
-    -- END pids_per_ward
+    -- END pids_per_ward_raw
 
 END;
 $$ LANGUAGE plpgsql;
