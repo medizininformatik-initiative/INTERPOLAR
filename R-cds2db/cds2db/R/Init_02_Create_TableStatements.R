@@ -292,9 +292,6 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
       rights_content <- gsub("\n$", "", rights_content)
       content <- gsub(placeholder, rights_content, content)
 
-    } else if (startsWith(placeholder, "<%TEMPLATE_")) {
-      # at the moment this case should never happens
-      browser()
     } else if (startsWith(placeholder, "<%TABLE_NAME")) {
       placeholder_name <- extractPlaceholderName(placeholder)
       name_index <- sub(".*_", "", placeholder_name)
