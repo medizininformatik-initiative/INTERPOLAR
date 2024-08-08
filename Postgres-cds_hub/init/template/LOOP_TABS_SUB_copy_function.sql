@@ -1,4 +1,4 @@
-    -- Start <%SIMPLE_TABLE_NAME%>
+    -- Start <%TABLE_NAME%>
     FOR current_record IN (SELECT * FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
         LOOP
             BEGIN
@@ -10,20 +10,20 @@
                 IF data_count = 0
                 THEN
                     INSERT INTO <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
-                        <%SIMPLE_TABLE_NAME%>_id,
+                        <%TABLE_NAME%>_id,
                         <%IF TAGS "\bTYPED\b" "<%SIMPLE_TABLE_NAME%>_raw_id,"%>
                         <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COLUMNS%>
                         input_datetime
                     )
                     VALUES (
-                        current_record.<%SIMPLE_TABLE_NAME%>_id,
+                        current_record.<%TABLE_NAME%>_id,
                         <%IF TAGS "\bTYPED\b" "current_record.<%SIMPLE_TABLE_NAME%>_raw_id,"%>
                         <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_CURRENT_RECORD%>
                         current_record.input_datetime
                     );
 
                     -- Delete importet datasets
-                    DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
+                    DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
                 ELSE
                 UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
@@ -32,14 +32,15 @@
                     ;
 
                     -- Delete updatet datasets
-                    DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
+                    DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE <%SCHEMA_2%>.<%TABLE_NAME_2%>
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: <%COPY_FUNC_NAME%>'
-                    WHERE <%SIMPLE_TABLE_NAME%>_id = current_record.<%SIMPLE_TABLE_NAME%>_id;
+                    WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
             END;
     END LOOP;
-    -- END <%SIMPLE_TABLE_NAME%>
+    -- END <%TABLE_NAME%>
+

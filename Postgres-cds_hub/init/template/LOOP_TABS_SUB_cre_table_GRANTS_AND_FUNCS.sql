@@ -1,7 +1,7 @@
 
 -- Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 ----------------------------------------------------
-ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ALTER COLUMN <%SIMPLE_TABLE_NAME%>_id SET DEFAULT (nextval('db.db_seq'));
+ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ALTER COLUMN <%TABLE_NAME%>_id SET DEFAULT (nextval('db.db_seq'));
 
 GRANT TRIGGER ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> TO <%OWNER_USER%>;
 GRANT USAGE ON SCHEMA <%OWNER_SCHEMA%> TO <%OWNER_USER%>;

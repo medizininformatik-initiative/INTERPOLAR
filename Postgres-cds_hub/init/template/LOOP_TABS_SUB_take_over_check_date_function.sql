@@ -16,4 +16,4 @@
 		    NULL;
             END;
     END LOOP;
-    -- END <%SIMPLE_TABLE_NAME%>
+    -- END <%TABLE_NAME%>
