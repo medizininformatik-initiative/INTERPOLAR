@@ -5,8 +5,11 @@ DECLARE
     record_count INT;
     current_record record;
     data_count integer;
+    last_pro_nr INT;
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    SELECT nextval('db.db_seq') INTO last_pro_nr; -- Get the processing number for this process
+
     -- Start encounter_raw
     FOR current_record IN (SELECT * FROM cds2db_in.encounter_raw)
         LOOP
@@ -161,7 +164,8 @@ BEGIN
                         enc_serviceprovider_identifier_type_display,
                         enc_serviceprovider_identifier_type_text,
                         enc_serviceprovider_display,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.encounter_raw_id,
@@ -236,7 +240,8 @@ BEGIN
                         current_record.enc_serviceprovider_identifier_type_display,
                         current_record.enc_serviceprovider_identifier_type_text,
                         current_record.enc_serviceprovider_display,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -245,6 +250,7 @@ BEGIN
                 UPDATE db_log.encounter_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
                       COALESCE(target_record.enc_patient_id::text,'#NULL#') = COALESCE(current_record.enc_patient_id::text,'#NULL#') AND
                       COALESCE(target_record.enc_partof_id::text,'#NULL#') = COALESCE(current_record.enc_partof_id::text,'#NULL#') AND
@@ -326,6 +332,7 @@ BEGIN
                     UPDATE cds2db_in.encounter_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE encounter_raw_id = current_record.encounter_raw_id;
             END;
     END LOOP;
@@ -377,7 +384,8 @@ BEGIN
                         pat_gender,
                         pat_birthdate,
                         pat_address_postalcode,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.patient_raw_id,
@@ -398,7 +406,8 @@ BEGIN
                         current_record.pat_gender,
                         current_record.pat_birthdate,
                         current_record.pat_address_postalcode,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -407,6 +416,7 @@ BEGIN
                 UPDATE db_log.patient_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                       COALESCE(target_record.pat_identifier_use::text,'#NULL#') = COALESCE(current_record.pat_identifier_use::text,'#NULL#') AND
                       COALESCE(target_record.pat_identifier_type_system::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_system::text,'#NULL#') AND
@@ -434,6 +444,7 @@ BEGIN
                     UPDATE cds2db_in.patient_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE patient_raw_id = current_record.patient_raw_id;
             END;
     END LOOP;
@@ -677,7 +688,8 @@ BEGIN
                         con_note_authorreference_display,
                         con_note_time,
                         con_note_text,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.condition_raw_id,
@@ -794,7 +806,8 @@ BEGIN
                         current_record.con_note_authorreference_display,
                         current_record.con_note_time,
                         current_record.con_note_text,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -803,6 +816,7 @@ BEGIN
                 UPDATE db_log.condition_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
                       COALESCE(target_record.con_encounter_id::text,'#NULL#') = COALESCE(current_record.con_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.con_patient_id::text,'#NULL#') = COALESCE(current_record.con_patient_id::text,'#NULL#') AND
@@ -926,6 +940,7 @@ BEGIN
                     UPDATE cds2db_in.condition_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE condition_raw_id = current_record.condition_raw_id;
             END;
     END LOOP;
@@ -1057,7 +1072,8 @@ BEGIN
                         med_ingredient_itemreference_identifier_type_text,
                         med_ingredient_itemreference_display,
                         med_ingredient_isactive,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.medication_raw_id,
@@ -1118,7 +1134,8 @@ BEGIN
                         current_record.med_ingredient_itemreference_identifier_type_text,
                         current_record.med_ingredient_itemreference_display,
                         current_record.med_ingredient_isactive,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -1127,6 +1144,7 @@ BEGIN
                 UPDATE db_log.medication_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
                       COALESCE(target_record.med_identifier_use::text,'#NULL#') = COALESCE(current_record.med_identifier_use::text,'#NULL#') AND
                       COALESCE(target_record.med_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_identifier_type_system::text,'#NULL#') AND
@@ -1194,6 +1212,7 @@ BEGIN
                     UPDATE cds2db_in.medication_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE medication_raw_id = current_record.medication_raw_id;
             END;
     END LOOP;
@@ -1657,7 +1676,8 @@ BEGIN
                         medreq_substitution_reason_code,
                         medreq_substitution_reason_display,
                         medreq_substitution_reason_text,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.medicationrequest_raw_id,
@@ -1884,7 +1904,8 @@ BEGIN
                         current_record.medreq_substitution_reason_code,
                         current_record.medreq_substitution_reason_display,
                         current_record.medreq_substitution_reason_text,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -1893,6 +1914,7 @@ BEGIN
                 UPDATE db_log.medicationrequest_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
                       COALESCE(target_record.medreq_encounter_id::text,'#NULL#') = COALESCE(current_record.medreq_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.medreq_patient_id::text,'#NULL#') = COALESCE(current_record.medreq_patient_id::text,'#NULL#') AND
@@ -2126,6 +2148,7 @@ BEGIN
                     UPDATE cds2db_in.medicationrequest_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
             END;
     END LOOP;
@@ -2361,7 +2384,8 @@ BEGIN
                         medadm_dosage_ratequantity_unit,
                         medadm_dosage_ratequantity_system,
                         medadm_dosage_ratequantity_code,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.medicationadministration_raw_id,
@@ -2474,7 +2498,8 @@ BEGIN
                         current_record.medadm_dosage_ratequantity_unit,
                         current_record.medadm_dosage_ratequantity_system,
                         current_record.medadm_dosage_ratequantity_code,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -2483,6 +2508,7 @@ BEGIN
                 UPDATE db_log.medicationadministration_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
                       COALESCE(target_record.medadm_encounter_id::text,'#NULL#') = COALESCE(current_record.medadm_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.medadm_patient_id::text,'#NULL#') = COALESCE(current_record.medadm_patient_id::text,'#NULL#') AND
@@ -2602,6 +2628,7 @@ BEGIN
                     UPDATE cds2db_in.medicationadministration_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
             END;
     END LOOP;
@@ -3039,7 +3066,8 @@ BEGIN
                         medstat_dosage_maxdoseperlifetime_unit,
                         medstat_dosage_maxdoseperlifetime_system,
                         medstat_dosage_maxdoseperlifetime_code,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.medicationstatement_raw_id,
@@ -3253,7 +3281,8 @@ BEGIN
                         current_record.medstat_dosage_maxdoseperlifetime_unit,
                         current_record.medstat_dosage_maxdoseperlifetime_system,
                         current_record.medstat_dosage_maxdoseperlifetime_code,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -3262,6 +3291,7 @@ BEGIN
                 UPDATE db_log.medicationstatement_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
                       COALESCE(target_record.medstat_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_identifier_use::text,'#NULL#') AND
                       COALESCE(target_record.medstat_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_system::text,'#NULL#') AND
@@ -3482,6 +3512,7 @@ BEGIN
                     UPDATE cds2db_in.medicationstatement_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
             END;
     END LOOP;
@@ -3761,7 +3792,8 @@ BEGIN
                         obs_hasmember_identifier_type_display,
                         obs_hasmember_identifier_type_text,
                         obs_hasmember_display,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.observation_raw_id,
@@ -3896,7 +3928,8 @@ BEGIN
                         current_record.obs_hasmember_identifier_type_display,
                         current_record.obs_hasmember_identifier_type_text,
                         current_record.obs_hasmember_display,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -3905,6 +3938,7 @@ BEGIN
                 UPDATE db_log.observation_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
                       COALESCE(target_record.obs_encounter_id::text,'#NULL#') = COALESCE(current_record.obs_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.obs_patient_id::text,'#NULL#') = COALESCE(current_record.obs_patient_id::text,'#NULL#') AND
@@ -4046,6 +4080,7 @@ BEGIN
                     UPDATE cds2db_in.observation_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE observation_raw_id = current_record.observation_raw_id;
             END;
     END LOOP;
@@ -4151,7 +4186,8 @@ BEGIN
                         diagrep_conclusioncode_code,
                         diagrep_conclusioncode_display,
                         diagrep_conclusioncode_text,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.diagnosticreport_raw_id,
@@ -4199,7 +4235,8 @@ BEGIN
                         current_record.diagrep_conclusioncode_code,
                         current_record.diagrep_conclusioncode_display,
                         current_record.diagrep_conclusioncode_text,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -4208,6 +4245,7 @@ BEGIN
                 UPDATE db_log.diagnosticreport_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
                       COALESCE(target_record.diagrep_encounter_id::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.diagrep_patient_id::text,'#NULL#') = COALESCE(current_record.diagrep_patient_id::text,'#NULL#') AND
@@ -4262,6 +4300,7 @@ BEGIN
                     UPDATE cds2db_in.diagnosticreport_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
             END;
     END LOOP;
@@ -4395,7 +4434,8 @@ BEGIN
                         servreq_locationcode_code,
                         servreq_locationcode_display,
                         servreq_locationcode_text,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.servicerequest_raw_id,
@@ -4457,7 +4497,8 @@ BEGIN
                         current_record.servreq_locationcode_code,
                         current_record.servreq_locationcode_display,
                         current_record.servreq_locationcode_text,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -4466,6 +4507,7 @@ BEGIN
                 UPDATE db_log.servicerequest_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
                       COALESCE(target_record.servreq_encounter_id::text,'#NULL#') = COALESCE(current_record.servreq_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.servreq_patient_id::text,'#NULL#') = COALESCE(current_record.servreq_patient_id::text,'#NULL#') AND
@@ -4534,6 +4576,7 @@ BEGIN
                     UPDATE cds2db_in.servicerequest_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
             END;
     END LOOP;
@@ -4687,7 +4730,8 @@ BEGIN
                         proc_note_authorreference_display,
                         proc_note_time,
                         proc_note_text,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.procedure_raw_id,
@@ -4759,7 +4803,8 @@ BEGIN
                         current_record.proc_note_authorreference_display,
                         current_record.proc_note_time,
                         current_record.proc_note_text,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -4768,6 +4813,7 @@ BEGIN
                 UPDATE db_log.procedure_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
                       COALESCE(target_record.proc_encounter_id::text,'#NULL#') = COALESCE(current_record.proc_encounter_id::text,'#NULL#') AND
                       COALESCE(target_record.proc_patient_id::text,'#NULL#') = COALESCE(current_record.proc_patient_id::text,'#NULL#') AND
@@ -4846,6 +4892,7 @@ BEGIN
                     UPDATE cds2db_in.procedure_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE procedure_raw_id = current_record.procedure_raw_id;
             END;
     END LOOP;
@@ -4931,7 +4978,8 @@ BEGIN
                         cons_provision_code_text,
                         cons_provision_dataperiod_start,
                         cons_provision_dataperiod_end,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.consent_raw_id,
@@ -4969,7 +5017,8 @@ BEGIN
                         current_record.cons_provision_code_text,
                         current_record.cons_provision_dataperiod_start,
                         current_record.cons_provision_dataperiod_end,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -4978,6 +5027,7 @@ BEGIN
                 UPDATE db_log.consent_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
                       COALESCE(target_record.cons_patient_id::text,'#NULL#') = COALESCE(current_record.cons_patient_id::text,'#NULL#') AND
                       COALESCE(target_record.cons_identifier_use::text,'#NULL#') = COALESCE(current_record.cons_identifier_use::text,'#NULL#') AND
@@ -5022,6 +5072,7 @@ BEGIN
                     UPDATE cds2db_in.consent_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE consent_raw_id = current_record.consent_raw_id;
             END;
     END LOOP;
@@ -5069,7 +5120,8 @@ BEGIN
                         loc_name,
                         loc_description,
                         loc_alias,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.location_raw_id,
@@ -5088,7 +5140,8 @@ BEGIN
                         current_record.loc_name,
                         current_record.loc_description,
                         current_record.loc_alias,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -5097,6 +5150,7 @@ BEGIN
                 UPDATE db_log.location_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
                       COALESCE(target_record.loc_identifier_use::text,'#NULL#') = COALESCE(current_record.loc_identifier_use::text,'#NULL#') AND
                       COALESCE(target_record.loc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_system::text,'#NULL#') AND
@@ -5122,6 +5176,7 @@ BEGIN
                     UPDATE cds2db_in.location_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE location_raw_id = current_record.location_raw_id;
             END;
     END LOOP;
@@ -5143,13 +5198,15 @@ BEGIN
                         pids_per_ward_raw_id,
                         ward_name,
                         patient_id,
-                        input_datetime
+                        input_datetime,
+                        last_processing_nr
                     )
                     VALUES (
                         current_record.pids_per_ward_raw_id,
                         current_record.ward_name,
                         current_record.patient_id,
-                        current_record.input_datetime
+                        current_record.input_datetime,
+                        last_pro_nr
                     );
 
                     -- Delete importet datasets
@@ -5158,6 +5215,7 @@ BEGIN
                 UPDATE db_log.pids_per_ward_raw target_record
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
+                    , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                       COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                     ;
@@ -5170,6 +5228,7 @@ BEGIN
                     UPDATE cds2db_in.pids_per_ward_raw
                     SET last_check_datetime = CURRENT_TIMESTAMP
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
+                    , last_processing_nr = last_pro_nr
                     WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
             END;
     END LOOP;

@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   patient_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "fall_fe" in schema "db_log"
@@ -55,7 +56,8 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "medikationsanalyse_fe" in schema "db_log"
@@ -77,7 +79,8 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
@@ -168,7 +171,8 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "risikofaktor_fe" in schema "db_log"
@@ -194,7 +198,8 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "trigger_fe" in schema "db_log"
@@ -228,7 +233,8 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 
