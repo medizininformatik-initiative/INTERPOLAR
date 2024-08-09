@@ -11,7 +11,7 @@ BEGIN
     -- from  db_log.encounter_raw to db_log.encounter
     FOR current_record IN (SELECT DISTINCT p.encounter_raw_id AS id, r.last_check_datetime
                            FROM db_log.encounter p, db_log.encounter_raw r
-                           WHERE p.encounter_raw_id = r.encounter_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.encounter_raw_id = r.encounter_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -30,7 +30,7 @@ BEGIN
     -- from  db_log.patient_raw to db_log.patient
     FOR current_record IN (SELECT DISTINCT p.patient_raw_id AS id, r.last_check_datetime
                            FROM db_log.patient p, db_log.patient_raw r
-                           WHERE p.patient_raw_id = r.patient_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.patient_raw_id = r.patient_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -49,7 +49,7 @@ BEGIN
     -- from  db_log.condition_raw to db_log.condition
     FOR current_record IN (SELECT DISTINCT p.condition_raw_id AS id, r.last_check_datetime
                            FROM db_log.condition p, db_log.condition_raw r
-                           WHERE p.condition_raw_id = r.condition_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.condition_raw_id = r.condition_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -68,7 +68,7 @@ BEGIN
     -- from  db_log.medication_raw to db_log.medication
     FOR current_record IN (SELECT DISTINCT p.medication_raw_id AS id, r.last_check_datetime
                            FROM db_log.medication p, db_log.medication_raw r
-                           WHERE p.medication_raw_id = r.medication_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.medication_raw_id = r.medication_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -87,7 +87,7 @@ BEGIN
     -- from  db_log.medicationrequest_raw to db_log.medicationrequest
     FOR current_record IN (SELECT DISTINCT p.medicationrequest_raw_id AS id, r.last_check_datetime
                            FROM db_log.medicationrequest p, db_log.medicationrequest_raw r
-                           WHERE p.medicationrequest_raw_id = r.medicationrequest_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.medicationrequest_raw_id = r.medicationrequest_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -106,7 +106,7 @@ BEGIN
     -- from  db_log.medicationadministration_raw to db_log.medicationadministration
     FOR current_record IN (SELECT DISTINCT p.medicationadministration_raw_id AS id, r.last_check_datetime
                            FROM db_log.medicationadministration p, db_log.medicationadministration_raw r
-                           WHERE p.medicationadministration_raw_id = r.medicationadministration_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.medicationadministration_raw_id = r.medicationadministration_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -125,7 +125,7 @@ BEGIN
     -- from  db_log.medicationstatement_raw to db_log.medicationstatement
     FOR current_record IN (SELECT DISTINCT p.medicationstatement_raw_id AS id, r.last_check_datetime
                            FROM db_log.medicationstatement p, db_log.medicationstatement_raw r
-                           WHERE p.medicationstatement_raw_id = r.medicationstatement_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.medicationstatement_raw_id = r.medicationstatement_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -144,7 +144,7 @@ BEGIN
     -- from  db_log.observation_raw to db_log.observation
     FOR current_record IN (SELECT DISTINCT p.observation_raw_id AS id, r.last_check_datetime
                            FROM db_log.observation p, db_log.observation_raw r
-                           WHERE p.observation_raw_id = r.observation_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.observation_raw_id = r.observation_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -163,7 +163,7 @@ BEGIN
     -- from  db_log.diagnosticreport_raw to db_log.diagnosticreport
     FOR current_record IN (SELECT DISTINCT p.diagnosticreport_raw_id AS id, r.last_check_datetime
                            FROM db_log.diagnosticreport p, db_log.diagnosticreport_raw r
-                           WHERE p.diagnosticreport_raw_id = r.diagnosticreport_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.diagnosticreport_raw_id = r.diagnosticreport_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -182,7 +182,7 @@ BEGIN
     -- from  db_log.servicerequest_raw to db_log.servicerequest
     FOR current_record IN (SELECT DISTINCT p.servicerequest_raw_id AS id, r.last_check_datetime
                            FROM db_log.servicerequest p, db_log.servicerequest_raw r
-                           WHERE p.servicerequest_raw_id = r.servicerequest_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.servicerequest_raw_id = r.servicerequest_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -201,7 +201,7 @@ BEGIN
     -- from  db_log.procedure_raw to db_log.procedure
     FOR current_record IN (SELECT DISTINCT p.procedure_raw_id AS id, r.last_check_datetime
                            FROM db_log.procedure p, db_log.procedure_raw r
-                           WHERE p.procedure_raw_id = r.procedure_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.procedure_raw_id = r.procedure_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -220,7 +220,7 @@ BEGIN
     -- from  db_log.consent_raw to db_log.consent
     FOR current_record IN (SELECT DISTINCT p.consent_raw_id AS id, r.last_check_datetime
                            FROM db_log.consent p, db_log.consent_raw r
-                           WHERE p.consent_raw_id = r.consent_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.consent_raw_id = r.consent_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -239,7 +239,7 @@ BEGIN
     -- from  db_log.location_raw to db_log.location
     FOR current_record IN (SELECT DISTINCT p.location_raw_id AS id, r.last_check_datetime
                            FROM db_log.location p, db_log.location_raw r
-                           WHERE p.location_raw_id = r.location_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.location_raw_id = r.location_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
@@ -258,7 +258,7 @@ BEGIN
     -- from  db_log.pids_per_ward_raw to db_log.pids_per_ward
     FOR current_record IN (SELECT DISTINCT p.pids_per_ward_raw_id AS id, r.last_check_datetime
                            FROM db_log.pids_per_ward p, db_log.pids_per_ward_raw r
-                           WHERE p.pids_per_ward_raw_id = r.pids_per_ward_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
+                           WHERE p.pids_per_ward_raw_id = r.pids_per_ward_raw_id AND (p.last_check_datetime < r.last_check_datetime OR p.last_check_datetime IS NULL)
                           )
         LOOP
             BEGIN
