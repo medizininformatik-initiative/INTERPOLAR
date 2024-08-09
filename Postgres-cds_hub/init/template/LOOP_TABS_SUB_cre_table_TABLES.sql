@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
   input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
