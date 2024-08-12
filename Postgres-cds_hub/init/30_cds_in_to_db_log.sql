@@ -5,6 +5,7 @@ DECLARE
     record_count INT;
     current_record record;
     data_count integer;
+    data_count_all integer;
     last_pro_nr INT;
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
@@ -363,6 +364,8 @@ BEGIN
                       COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
                       ;
 
+                data_count_all:=data_count_all+data_count;
+
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.patient_raw (
@@ -448,6 +451,11 @@ BEGIN
                     WHERE patient_raw_id = current_record.patient_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status)
+    ( SELECT patient_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status FROM db_log.patient_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status FROM db_log.data_import_hist
+    );
     -- END patient_raw
 
     -- Start condition_raw
@@ -5234,7 +5242,9 @@ BEGIN
     END LOOP;
     -- END pids_per_ward_raw
 
-
+    IF data_count_all>0 THEN
+       SELECT db.take_over_last_check_date();
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 

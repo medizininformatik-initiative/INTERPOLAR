@@ -6,6 +6,7 @@
                 FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
                 WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>
                       ;
+                data_count_all:=data_count_all integer+data_count;
 
                 IF data_count = 0
                 THEN
@@ -46,5 +47,10 @@
                     WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, '<%COPY_FUNC_NAME%>' AS function_name FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END <%TABLE_NAME%>
 

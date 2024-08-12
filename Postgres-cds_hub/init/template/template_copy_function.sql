@@ -5,6 +5,7 @@ DECLARE
     record_count INT;
     current_record record;
     data_count integer;
+    data_count_all integer;
     last_pro_nr INT;
 BEGIN
     -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
@@ -12,6 +13,10 @@ BEGIN
 
 <%LOOP_TABS_SUB_copy_function%>
 
+
+    IF data_count_all>0 THEN
+       SELECT db.take_over_last_check_date();
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
