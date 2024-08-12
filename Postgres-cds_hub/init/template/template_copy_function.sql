@@ -14,7 +14,7 @@ BEGIN
 <%LOOP_TABS_SUB_copy_function%>
 
 
-    IF data_count_all>0 THEN
+    IF data_count_all!=0 THEN
        SELECT db.take_over_last_check_date();
     END IF;
 END;

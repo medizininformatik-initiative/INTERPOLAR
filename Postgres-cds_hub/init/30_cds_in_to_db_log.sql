@@ -89,6 +89,7 @@ BEGIN
                       COALESCE(target_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') AND
                       COALESCE(target_record.enc_serviceprovider_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_display::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -337,7 +338,13 @@ BEGIN
                     WHERE encounter_raw_id = current_record.encounter_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT encounter_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.encounter_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END encounter_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start patient_raw
     FOR current_record IN (SELECT * FROM cds2db_in.patient_raw)
@@ -363,8 +370,7 @@ BEGIN
                       COALESCE(target_record.pat_birthdate::text,'#NULL#') = COALESCE(current_record.pat_birthdate::text,'#NULL#') AND
                       COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
                       ;
-
-                data_count_all:=data_count_all+data_count;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -452,11 +458,12 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status)
-    ( SELECT patient_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status FROM db_log.patient_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status FROM db_log.data_import_hist
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT patient_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.patient_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END patient_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start condition_raw
     FOR current_record IN (SELECT * FROM cds2db_in.condition_raw)
@@ -578,6 +585,7 @@ BEGIN
                       COALESCE(target_record.con_note_time::text,'#NULL#') = COALESCE(current_record.con_note_time::text,'#NULL#') AND
                       COALESCE(target_record.con_note_text::text,'#NULL#') = COALESCE(current_record.con_note_text::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -952,7 +960,13 @@ BEGIN
                     WHERE condition_raw_id = current_record.condition_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT condition_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.condition_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END condition_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medication_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medication_raw)
@@ -1018,6 +1032,7 @@ BEGIN
                       COALESCE(target_record.med_ingredient_itemreference_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_display::text,'#NULL#') AND
                       COALESCE(target_record.med_ingredient_isactive::text,'#NULL#') = COALESCE(current_record.med_ingredient_isactive::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -1224,7 +1239,13 @@ BEGIN
                     WHERE medication_raw_id = current_record.medication_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medication_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medication_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END medication_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medicationrequest_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest_raw)
@@ -1456,6 +1477,7 @@ BEGIN
                       COALESCE(target_record.medreq_substitution_reason_display::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_display::text,'#NULL#') AND
                       COALESCE(target_record.medreq_substitution_reason_text::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_text::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -2160,7 +2182,13 @@ BEGIN
                     WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medicationrequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END medicationrequest_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medicationadministration_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration_raw)
@@ -2278,6 +2306,7 @@ BEGIN
                       COALESCE(target_record.medadm_dosage_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_system::text,'#NULL#') AND
                       COALESCE(target_record.medadm_dosage_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_code::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -2640,7 +2669,13 @@ BEGIN
                     WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medicationadministration_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END medicationadministration_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medicationstatement_raw
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement_raw)
@@ -2859,6 +2894,7 @@ BEGIN
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') AND
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -3524,7 +3560,13 @@ BEGIN
                     WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medicationstatement_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END medicationstatement_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start observation_raw
     FOR current_record IN (SELECT * FROM cds2db_in.observation_raw)
@@ -3664,6 +3706,7 @@ BEGIN
                       COALESCE(target_record.obs_hasmember_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_text::text,'#NULL#') AND
                       COALESCE(target_record.obs_hasmember_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_display::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -4092,7 +4135,13 @@ BEGIN
                     WHERE observation_raw_id = current_record.observation_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT observation_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.observation_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END observation_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start diagnosticreport_raw
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport_raw)
@@ -4145,6 +4194,7 @@ BEGIN
                       COALESCE(target_record.diagrep_conclusioncode_display::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_display::text,'#NULL#') AND
                       COALESCE(target_record.diagrep_conclusioncode_text::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_text::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -4312,7 +4362,13 @@ BEGIN
                     WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT diagnosticreport_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END diagnosticreport_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start servicerequest_raw
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest_raw)
@@ -4379,6 +4435,7 @@ BEGIN
                       COALESCE(target_record.servreq_locationcode_display::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_display::text,'#NULL#') AND
                       COALESCE(target_record.servreq_locationcode_text::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_text::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -4588,7 +4645,13 @@ BEGIN
                     WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT servicerequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.servicerequest_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END servicerequest_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start procedure_raw
     FOR current_record IN (SELECT * FROM cds2db_in.procedure_raw)
@@ -4665,6 +4728,7 @@ BEGIN
                       COALESCE(target_record.proc_note_time::text,'#NULL#') = COALESCE(current_record.proc_note_time::text,'#NULL#') AND
                       COALESCE(target_record.proc_note_text::text,'#NULL#') = COALESCE(current_record.proc_note_text::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -4904,7 +4968,13 @@ BEGIN
                     WHERE procedure_raw_id = current_record.procedure_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT procedure_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.procedure_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END procedure_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start consent_raw
     FOR current_record IN (SELECT * FROM cds2db_in.consent_raw)
@@ -4947,6 +5017,7 @@ BEGIN
                       COALESCE(target_record.cons_provision_dataperiod_start::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_start::text,'#NULL#') AND
                       COALESCE(target_record.cons_provision_dataperiod_end::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_end::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -5084,7 +5155,13 @@ BEGIN
                     WHERE consent_raw_id = current_record.consent_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT consent_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.consent_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END consent_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start location_raw
     FOR current_record IN (SELECT * FROM cds2db_in.location_raw)
@@ -5108,6 +5185,7 @@ BEGIN
                       COALESCE(target_record.loc_description::text,'#NULL#') = COALESCE(current_record.loc_description::text,'#NULL#') AND
                       COALESCE(target_record.loc_alias::text,'#NULL#') = COALESCE(current_record.loc_alias::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -5188,7 +5266,13 @@ BEGIN
                     WHERE location_raw_id = current_record.location_raw_id;
             END;
     END LOOP;
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT location_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.location_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
     -- END location_raw
+    -----------------------------------------------------------------------------------------------------------------------
 
     -- Start pids_per_ward_raw
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward_raw)
@@ -5199,6 +5283,7 @@ BEGIN
                 WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                       COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                       ;
+                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
@@ -5240,9 +5325,17 @@ BEGIN
                     WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
             END;
     END LOOP;
-    -- END pids_per_ward_raw
 
-    IF data_count_all>0 THEN
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT pids_per_ward_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+    -- END pids_per_ward_raw
+    -----------------------------------------------------------------------------------------------------------------------
+
+
+
+    IF data_count_all!=0 THEN
        SELECT db.take_over_last_check_date();
     END IF;
 END;
