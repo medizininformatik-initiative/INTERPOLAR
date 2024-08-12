@@ -5,7 +5,7 @@
 -- Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
-  patient_fe_id serial PRIMARY KEY not null, -- Primary key of the entity
+  patient_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   pat_id varchar,   -- Patient-identifier FHIR Daten (varchar)
   pat_cis_pid varchar,   -- Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
 -- Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
-  fall_fe_id serial PRIMARY KEY not null, -- Primary key of the entity
+  fall_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   fall_id varchar,   -- Fall-ID RedCap FHIR Daten (varchar)
   fall_pat_id varchar,   -- Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
 -- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
-  medikationsanalyse_fe_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medikationsanalyse_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   fall_typ_id int,   -- Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)
   meda_fall_id varchar,   -- Fall-ID zu dem Medikationsanalyse gehört FHIR (Fall:fall_id) (varchar)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
 -- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
-  mrpdokumentation_validierung_fe_id serial PRIMARY KEY not null, -- Primary key of the entity
+  mrpdokumentation_validierung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id int,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (int)
   meda_typ_id int,   -- Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
 -- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
-  risikofaktor_fe_id serial PRIMARY KEY not null, -- Primary key of the entity
+  risikofaktor_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
   rskfk_gerhemmer varchar,   -- Ger.hemmer (varchar)
@@ -205,7 +205,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
 -- Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
-  trigger_fe_id serial PRIMARY KEY not null, -- Primary key of the entity
+  trigger_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   trg_ast varchar,   -- AST (varchar)

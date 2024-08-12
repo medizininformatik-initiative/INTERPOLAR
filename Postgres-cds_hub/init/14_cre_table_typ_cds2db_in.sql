@@ -5,7 +5,7 @@
 -- Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
-  encounter_id serial PRIMARY KEY not null, -- Primary key of the entity
+  encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   enc_id varchar,   -- id (varchar)
   enc_patient_id varchar,   -- subject/reference (varchar)
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
 -- Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
-  patient_id serial PRIMARY KEY not null, -- Primary key of the entity
+  patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   pat_id varchar,   -- id (varchar)
   pat_identifier_use varchar,   -- identifier/use (varchar)
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
 -- Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition (
-  condition_id serial PRIMARY KEY not null, -- Primary key of the entity
+  condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   con_id varchar,   -- id (varchar)
   con_encounter_id varchar,   -- encounter/reference (varchar)
@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
 -- Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
-  medication_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   med_id varchar,   -- id (varchar)
   med_identifier_use varchar,   -- identifier/use (varchar)
@@ -307,7 +307,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
 -- Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
-  medicationrequest_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medreq_id varchar,   -- id (varchar)
   medreq_encounter_id varchar,   -- encounter/reference (varchar)
@@ -541,7 +541,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
 -- Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
-  medicationadministration_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medadm_id varchar,   -- id (varchar)
   medadm_encounter_id varchar,   -- context/reference (varchar)
@@ -661,7 +661,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
 -- Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
-  medicationstatement_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medstat_id varchar,   -- id (varchar)
   medstat_identifier_use varchar,   -- identifier/use (varchar)
@@ -882,7 +882,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
 -- Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
-  observation_id serial PRIMARY KEY not null, -- Primary key of the entity
+  observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   obs_id varchar,   -- id (varchar)
   obs_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1024,7 +1024,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
 -- Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
-  diagnosticreport_id serial PRIMARY KEY not null, -- Primary key of the entity
+  diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   diagrep_id varchar,   -- id (varchar)
   diagrep_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1079,7 +1079,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
 -- Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
-  servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
+  servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   servreq_id varchar,   -- id (varchar)
   servreq_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1148,7 +1148,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
 -- Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
-  procedure_id serial PRIMARY KEY not null, -- Primary key of the entity
+  procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   proc_id varchar,   -- id (varchar)
   proc_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1227,7 +1227,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
 -- Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
-  consent_id serial PRIMARY KEY not null, -- Primary key of the entity
+  consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   cons_id varchar,   -- id (varchar)
   cons_patient_id varchar,   -- patient/reference (varchar)
@@ -1272,7 +1272,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
 -- Table "location" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
-  location_id serial PRIMARY KEY not null, -- Primary key of the entity
+  location_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   loc_id varchar,   -- id (varchar)
   loc_identifier_use varchar,   -- identifier/use (varchar)
@@ -1298,7 +1298,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
 -- Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
-  pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
+  pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
