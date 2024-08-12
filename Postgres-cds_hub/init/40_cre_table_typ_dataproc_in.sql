@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
   last_processing_nr int -- Last processing number of the data record
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat date,   -- Entlassdatum (date)
   fall_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
   last_processing_nr int -- Last processing number of the data record
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
   meda_aufwand_zeit_and int,   -- wie lange hat die Medikationsanalyse gedauert? Eingabe in Minuten.  (int)
   meda_notiz varchar,   -- Notizfeld (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
   last_processing_nr int -- Last processing number of the data record
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_merp varchar,   -- NCC MERP Score (varchar)
   mrp_wiedervorlage varchar,   -- MRP Wiedervorlage (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
   last_processing_nr int -- Last processing number of the data record
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
   rskfk_entern varchar,   -- ent. Ern. (varchar)
   rskfkt_anz_rskamklassen varchar,   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
   last_processing_nr int -- Last processing number of the data record
@@ -231,7 +231,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
   trg_krea varchar,   -- Krea↑ (varchar)
   trg_egfr varchar,   -- eGFR<30 (varchar)
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
   last_processing_nr int -- Last processing number of the data record
@@ -245,8 +245,6 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
 
 -- Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-ALTER TABLE db2dataprocessor_in.patient_fe ALTER COLUMN patient_fe_id SET DEFAULT (nextval('db.db_seq'));
-
 GRANT TRIGGER ON db2dataprocessor_in.patient_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
@@ -273,8 +271,6 @@ CREATE OR REPLACE TRIGGER patient_fe_tr_ins_tr
 
 -- Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-ALTER TABLE db2dataprocessor_in.fall_fe ALTER COLUMN fall_fe_id SET DEFAULT (nextval('db.db_seq'));
-
 GRANT TRIGGER ON db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
@@ -301,8 +297,6 @@ CREATE OR REPLACE TRIGGER fall_fe_tr_ins_tr
 
 -- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe ALTER COLUMN medikationsanalyse_fe_id SET DEFAULT (nextval('db.db_seq'));
-
 GRANT TRIGGER ON db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
@@ -329,8 +323,6 @@ CREATE OR REPLACE TRIGGER medikationsanalyse_fe_tr_ins_tr
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ALTER COLUMN mrpdokumentation_validierung_fe_id SET DEFAULT (nextval('db.db_seq'));
-
 GRANT TRIGGER ON db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
@@ -357,8 +349,6 @@ CREATE OR REPLACE TRIGGER mrpdokumentation_validierung_fe_tr_ins_tr
 
 -- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-ALTER TABLE db2dataprocessor_in.risikofaktor_fe ALTER COLUMN risikofaktor_fe_id SET DEFAULT (nextval('db.db_seq'));
-
 GRANT TRIGGER ON db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
@@ -385,8 +375,6 @@ CREATE OR REPLACE TRIGGER risikofaktor_fe_tr_ins_tr
 
 -- Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-ALTER TABLE db2dataprocessor_in.trigger_fe ALTER COLUMN trigger_fe_id SET DEFAULT (nextval('db.db_seq'));
-
 GRANT TRIGGER ON db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
