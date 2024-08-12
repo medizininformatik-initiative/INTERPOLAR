@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status (varchar)
+  record_id_42076f varchar,   -- ToDo: zu Entfernen wenn aus RC Projekt (varchar)
   input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
@@ -417,6 +418,7 @@ comment on column db2dataprocessor_in.patient_fe.pat_gebdat is 'Geburtsdatum (da
 comment on column db2dataprocessor_in.patient_fe.pat_aktuell_alter is 'aktuelles Patientenalter (Jahre) (double precision)';
 comment on column db2dataprocessor_in.patient_fe.pat_geschlecht is 'Geschlecht (wie in FHIR) (varchar)';
 comment on column db2dataprocessor_in.patient_fe.patient_complete is 'Frontend Complete-Status (varchar)';
+comment on column db2dataprocessor_in.patient_fe.record_id_42076f is 'ToDo: zu Entfernen wenn aus RC Projekt (varchar)';
 comment on column db2dataprocessor_in.patient_fe.input_datetime is 'Time at which the data record is inserted';
 comment on column db2dataprocessor_in.patient_fe.last_check_datetime is 'Time at which data record was last checked';
 comment on column db2dataprocessor_in.patient_fe.current_dataset_status is 'Processing status of the data record';
