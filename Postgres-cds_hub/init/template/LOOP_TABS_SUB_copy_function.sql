@@ -2,6 +2,8 @@
     FOR current_record IN (SELECT * FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
                 WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>

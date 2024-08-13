@@ -9,12 +9,13 @@ DECLARE
     last_pro_nr INT;
 BEGIN
     -- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    SELECT nextval('db.db_seq') INTO last_pro_nr; -- Get the processing number for this process
 
     -- Start encounter
     FOR current_record IN (SELECT * FROM cds2db_in.encounter)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.encounter target_record
                 WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
@@ -352,6 +353,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.patient)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.patient target_record
                 WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
@@ -473,6 +476,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.condition)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.condition target_record
                 WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
@@ -978,6 +983,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.medication)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.medication target_record
                 WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
@@ -1259,6 +1266,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.medicationrequest target_record
                 WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
@@ -2204,6 +2213,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.medicationadministration target_record
                 WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
@@ -2693,6 +2704,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.medicationstatement target_record
                 WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
@@ -3586,6 +3599,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.observation)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.observation target_record
                 WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
@@ -4163,6 +4178,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.diagnosticreport target_record
                 WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
@@ -4392,6 +4409,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.servicerequest target_record
                 WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
@@ -4677,6 +4696,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.procedure)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.procedure target_record
                 WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
@@ -5002,6 +5023,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.consent)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.consent target_record
                 WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
@@ -5191,6 +5214,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.location)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.location target_record
                 WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
@@ -5304,6 +5329,8 @@ BEGIN
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward)
         LOOP
             BEGIN
+                IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
+
                 SELECT count(1) INTO data_count
                 FROM db_log.pids_per_ward target_record
                 WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND

@@ -9,7 +9,6 @@ DECLARE
     last_pro_nr INT;
 BEGIN
     -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
-    SELECT nextval('db.db_seq') INTO last_pro_nr; -- Get the processing number for this process
 
 <%LOOP_TABS_SUB_copy_function%>
 
