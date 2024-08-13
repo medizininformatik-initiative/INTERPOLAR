@@ -563,7 +563,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/1 * * * *', 'SELECT db.take_over_last_check_date();');
+-- Move to copy function - SELECT cron.schedule('*/1 * * * *', 'SELECT db.take_over_last_check_date();');
 -----------------------------
 
 
