@@ -344,9 +344,13 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       # the period end is needed to check if the Encounter is still finsihed
       # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
       filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
-      # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
-      # additional paths above
-      encounters <- etlutils::getEncounters(filter_enc_table_description)
+      # Get current or debug datetime
+      current_datetime <- getQueryDatetime()
+      # Replace space with 'T' in timestamp for correct time format
+      current_datetime <- gsub(" ", "T", current_datetime)
+      # Download the Encounters and crack them in a table with the columns of the xpaths in
+      # filter patterns + the additional paths above
+      encounters <- getEncounters(filter_enc_table_description, current_datetime)
       # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data
