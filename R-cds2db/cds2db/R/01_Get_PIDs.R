@@ -252,6 +252,74 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   return(pids_per_ward)
 }
 
+#' Download and preprocess encounter data from FHIR server
+#'
+#' This function retrieves encounter data from a FHIR server, applies various filters,
+#' and performs data processing tasks.
+#'
+#' @param table_description the fhir crackr table description with the columns definition
+#' of the returned table.
+#' @param current_datetime the current datetime or debug datetime
+#'
+#' @details
+#' The function handles the download of encounter data, filtering based on date ranges,
+#' and additional processing steps such as fixing dates, adding columns, and handling
+#' exclusion criteria.
+#'
+#' @return
+#' The processed encounter data is saved, and relevant tables are returned and/or
+#' saved as RData files.
+#'
+getEncounters <- function(table_description, current_datetime) {
+
+  runLevel3("Get Enconters", {
+
+    # Refresh token, if defined
+    refreshFHIRToken()
+
+    resource <- 'Encounter'
+
+    runLevel3('Download and Crack Encounters', {
+      if (exists('DEBUG_ENCOUNTER_STATUS')) {
+        encounter_status <- DEBUG_ENCOUNTER_STATUS
+      } else {
+        encounter_status <- "in-progress"
+      }
+
+      request_encounter <- fhircrackr::fhir_url(
+        url        = FHIR_SERVER_ENDPOINT,
+        resource   = 'Encounter',
+        parameters = etlutils::addParamToFHIRRequest(c(
+          'date'    = paste0('lt', current_datetime),
+          'status' = encounter_status)
+        )
+      )
+
+      table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
+                                                 table_description = table_description,
+                                                 max_bundles = MAX_ENCOUNTER_BUNDLES,
+                                                 log_errors  = 'enc_error.xml')
+
+      if (etlutils::isSimpleNA(table_enc)) {
+        stop('The FHIR request did not return any available Encounter bundles.\n Request: ',
+             etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE))
+      }
+
+    })
+
+    runLevel3Line('change column classes', {
+      table_enc <- table_enc[, lapply(.SD, as.character), ]
+    })
+
+    etlutils::printAllTables(table_enc)
+
+    runLevel3Line('Save and Delete Encounters Table', {
+      etlutils::writeRData(table_enc, 'pid_source_encounter_unfiltered')
+    })
+
+    return(table_enc)
+  })
+}
 
 #' Extracts the relevant patient IDs from download Encounter resources. If the file name parameter is NA then
 #' the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file name
