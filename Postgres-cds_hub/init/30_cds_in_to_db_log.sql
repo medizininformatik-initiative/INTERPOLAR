@@ -7,6 +7,7 @@ DECLARE
     data_count integer;
     data_count_all integer;
     last_pro_nr INT;
+    temp varchar;
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
 
@@ -5361,10 +5362,7 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
 
 
-
-    IF data_count_all!=0 THEN
-       SELECT db.take_over_last_check_date();
-    END IF;
+    SELECT db.take_over_last_check_date() INTO temp;
 END;
 $$ LANGUAGE plpgsql;
 

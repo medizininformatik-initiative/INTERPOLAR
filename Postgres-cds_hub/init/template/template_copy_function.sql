@@ -7,15 +7,13 @@ DECLARE
     data_count integer;
     data_count_all integer;
     last_pro_nr INT;
+    temp varchar;
 BEGIN
     -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
 
 <%LOOP_TABS_SUB_copy_function%>
 
-
-    IF data_count_all!=0 THEN
-       SELECT db.take_over_last_check_date();
-    END IF;
+    SELECT db.take_over_last_check_date() INTO temp;
 END;
 $$ LANGUAGE plpgsql;
 

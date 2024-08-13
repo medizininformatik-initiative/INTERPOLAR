@@ -18,7 +18,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/1 * * * *', 'SELECT db.<%COPY_FUNC_NAME%>();');
+-- Move to copy function - SELECT cron.schedule('*/1 * * * *', 'SELECT db.<%COPY_FUNC_NAME%>();');
 -----------------------------
 
 
