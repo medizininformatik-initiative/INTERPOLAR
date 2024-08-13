@@ -9,13 +9,17 @@
     SELECT <%TABLE_NAME%>_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE <%TABLE_NAME%>_id IN 
-            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=max_last_pro_nr
+            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE <%SCHEMA_2%>.<%TABLE_NAME_2%>
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds

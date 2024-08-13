@@ -8,8 +8,7 @@ DECLARE
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
 BEGIN
     -- Take over last check datetime Functionname: take_over_last_check_date the last_pro_nr - From: db_log (raw) -> To: db_log
-    SELECT nextval('db.db_seq') INTO new_last_pro_nr; -- Get the processing number for this sync process
-
+    
     -- Last import Nr in raw-data
     SELECT MAX(last_processing_nr) INTO last_raw_pro_nr FROM db_log.data_import_hist WHERE table_name like '%_raw' AND schema_name='db_log';
 
@@ -24,13 +23,17 @@ BEGIN
     SELECT encounter_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.encounter_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
-            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr
+            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.encounter
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -59,13 +62,17 @@ BEGIN
     SELECT patient_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.patient_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
-            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr
+            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.patient
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -94,13 +101,17 @@ BEGIN
     SELECT condition_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.condition_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
-            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr
+            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.condition
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -129,13 +140,17 @@ BEGIN
     SELECT medication_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medication_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
-            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.medication
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -164,13 +179,17 @@ BEGIN
     SELECT medicationrequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
-            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.medicationrequest
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -199,13 +218,17 @@ BEGIN
     SELECT medicationadministration_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
-            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.medicationadministration
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -234,13 +257,17 @@ BEGIN
     SELECT medicationstatement_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
-            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.medicationstatement
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -269,13 +296,17 @@ BEGIN
     SELECT observation_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.observation_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
-            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr
+            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.observation
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -304,13 +335,17 @@ BEGIN
     SELECT diagnosticreport_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
-            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr
+            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.diagnosticreport
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -339,13 +374,17 @@ BEGIN
     SELECT servicerequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.servicerequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
-            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr
+            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.servicerequest
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -374,13 +413,17 @@ BEGIN
     SELECT procedure_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.procedure_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
-            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr
+            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.procedure
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -409,13 +452,17 @@ BEGIN
     SELECT consent_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.consent_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
-            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr
+            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.consent
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -444,13 +491,17 @@ BEGIN
     SELECT location_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.location_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
-            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr
+            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.location
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -479,13 +530,17 @@ BEGIN
     SELECT pids_per_ward_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
-            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr
+            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-         AND last_processing_nr=last_raw_pro_nr
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
             BEGIN
+                -- Obtain a new processing number if necessary
+                IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+
                 UPDATE db_log.pids_per_ward
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
