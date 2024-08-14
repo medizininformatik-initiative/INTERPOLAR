@@ -10,7 +10,7 @@ DECLARE
     temp varchar;
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    SELECT pg_sleep(floor(random() * (12) + 1)::int); -- Start jobs at different times
+    SELECT pg_sleep(floor(random() * (12) + 1)::int) INTO temp; -- Start jobs at different times
 
     -- Start encounter_raw
     FOR current_record IN (SELECT * FROM cds2db_in.encounter_raw)
