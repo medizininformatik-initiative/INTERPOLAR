@@ -25,7 +25,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
             (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -64,7 +64,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
             (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -103,7 +103,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
             (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -142,7 +142,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
             (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -181,7 +181,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
             (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -220,7 +220,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
             (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -259,7 +259,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
             (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -298,7 +298,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
             (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -337,7 +337,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
             (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -376,7 +376,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
             (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -415,7 +415,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
             (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -454,7 +454,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
             (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -493,7 +493,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
             (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
@@ -532,7 +532,7 @@ BEGIN
         (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
             (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP

@@ -11,7 +11,7 @@
         (SELECT last_processing_nr FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE <%TABLE_NAME%>_id IN 
             (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     )
         LOOP
