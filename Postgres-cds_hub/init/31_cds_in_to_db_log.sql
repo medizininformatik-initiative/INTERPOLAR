@@ -10,7 +10,6 @@ DECLARE
     temp varchar;
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
-    SELECT pg_sleep(floor(random() * (12) + 1)::int) INTO temp; -- Start jobs at different times
 
     -- Start encounter
     FOR current_record IN (SELECT * FROM cds2db_in.encounter)
@@ -5391,12 +5390,10 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
 
 
-    SELECT db.take_over_last_check_date() INTO temp;
 END;
 $$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
-SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
+-- CopyJob CDS in 2 DB_log - SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_type_cds_in_to_db_log();');
 -----------------------------
 
 
