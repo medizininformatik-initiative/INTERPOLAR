@@ -1,3 +1,23 @@
+#' Retrieve the Last Processing Number from the Database
+#'
+#' This function connects to the database and retrieves the maximum `last_processing_nr`
+#' from the `data_import_hist` table within the `db_log` schema. It specifically looks
+#' for records where the `function_name` is `'copy_type_cds_in_to_db_log'` and the
+#' `table_name` does not contain `'_raw'`.
+#'
+#' @return A data frame containing the maximum `last_processing_nr` from the specified
+#'         records in the `db_log.data_import_hist` table.
+#'
+getLastProcessingNumber <- function() {
+  db_connection_read <- getDatabaseReadConnection()
+  statement <- "SELECT MAX(last_processing_nr)
+                FROM db_log.data_import_hist
+                WHERE function_name='copy_type_cds_in_to_db_log'
+                  AND schema_name='db_log' AND table_name NOT LIKE '%_raw';"
+
+  etlutils::dbGetQuery(db_connection_read, statement)
+}
+
 #' Load All Data with Last Timestamp from Database
 #'
 #' This function loads all data from a database table that has the most recent timestamp.
@@ -6,12 +26,14 @@
 #' @param table_name_part A string representing part of the table name to search for.
 #' @return A data frame containing the records with the most recent timestamp from the specified table.
 #'
-loadAllDataWithLastTimestampFromDB <- function(table_name_part) {
+loadLastImportedDatasetsFromDB <- function(table_name_part) {
   db_connection_read <- getDatabaseReadConnection()
   table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
+  last_processing_nr <- getLastProcessingNumber()
+  # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
-                      "   WHERE COALESCE(last_check_datetime, input_datetime) =\n",
-                      "      (SELECT MAX(COALESCE(last_check_datetime, input_datetime)) FROM ", table_name, ");")
+                      " WHERE last_processing_nr = ", last_processing_nr, ";")
+
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
@@ -101,16 +123,13 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
+  last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
   table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
-    "SELECT * FROM ", table_name, " a,\n",
-    "(\n",
-    "  SELECT max(COALESCE(last_check_datetime, input_datetime)) last_date, ", id_column, "\n",
-    "  FROM ", table_name, " GROUP BY ", id_column, "\n",
-    ") b\n",
-    "WHERE b.last_date = COALESCE(a.last_check_datetime, a.input_datetime) and a.", id_column, " = b.", id_column,
+    "SELECT * FROM ", table_name, "a\n",
+    " WHERE last_processing_nr = ", last_processing_nr,
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
@@ -350,15 +369,15 @@ createFrontendTables <- function() {
     )
 
     # load Encounters for all PIDs
-    query_date <- getQueryDatetime()
+    query_datetime <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
     db_read_connection <- getDatabaseReadConnection()
     table_name <- getFirstTableWithNamePart(db_read_connection, "encounter_all")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
                     "  enc_partof_id IS NULL AND\n",
-                    "  (enc_period_end IS NULL OR enc_period_end > '", query_date, "') AND\n",
-                    "  enc_period_start <= '", query_date, "'\n")
+                    "  (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "') AND\n",
+                    "  enc_period_start <= '", query_datetime, "'\n")
     encounters <- etlutils::dbGetQuery(db_read_connection, query)
 
     # load Conditions referenced by Encounters
@@ -452,7 +471,7 @@ createFrontendTables <- function() {
                           "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
-                          "        obs_effectivedatetime < '", query_date, "'\n")
+                          "        obs_effectivedatetime < '", query_datetime, "'\n")
           observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
@@ -462,7 +481,7 @@ createFrontendTables <- function() {
                             "        obs_code_code IN (", codes, ") AND\n",
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
-                            "        obs_effectivedatetime < '", query_date, "'\n")
+                            "        obs_effectivedatetime < '", query_datetime, "'\n")
             observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
           }
           if (nrow(observations)) {
@@ -491,7 +510,7 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward <- loadAllDataWithLastTimestampFromDB("pids_per_ward")
+  pids_per_ward <- loadLastImportedDatasetsFromDB("pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
