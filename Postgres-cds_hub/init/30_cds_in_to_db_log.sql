@@ -93,6 +93,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.encounter_raw', 'encounter_raw_id: '||current_record.encounter_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.encounter_raw (
@@ -376,6 +378,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.patient_raw', 'patient_raw_id: '||current_record.patient_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.patient_raw (
@@ -593,6 +597,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.condition_raw', 'condition_raw_id: '||current_record.condition_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.condition_raw (
@@ -1042,6 +1048,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medication_raw', 'medication_raw_id: '||current_record.medication_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medication_raw (
@@ -1489,6 +1497,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationrequest_raw', 'medicationrequest_raw_id: '||current_record.medicationrequest_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationrequest_raw (
@@ -2320,6 +2330,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationadministration_raw', 'medicationadministration_raw_id: '||current_record.medicationadministration_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationadministration_raw (
@@ -2910,6 +2922,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationstatement_raw', 'medicationstatement_raw_id: '||current_record.medicationstatement_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationstatement_raw (
@@ -3724,6 +3738,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.observation_raw', 'observation_raw_id: '||current_record.observation_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.observation_raw (
@@ -4214,6 +4230,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.diagnosticreport_raw', 'diagnosticreport_raw_id: '||current_record.diagnosticreport_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.diagnosticreport_raw (
@@ -4457,6 +4475,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.servicerequest_raw', 'servicerequest_raw_id: '||current_record.servicerequest_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.servicerequest_raw (
@@ -4752,6 +4772,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.procedure_raw', 'procedure_raw_id: '||current_record.procedure_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.procedure_raw (
@@ -5043,6 +5065,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.consent_raw', 'consent_raw_id: '||current_record.consent_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.consent_raw (
@@ -5213,6 +5237,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.location_raw', 'location_raw_id: '||current_record.location_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.location_raw (
@@ -5313,6 +5339,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.pids_per_ward_raw', 'pids_per_ward_raw_id: '||current_record.pids_per_ward_raw_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_raw_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.pids_per_ward_raw (

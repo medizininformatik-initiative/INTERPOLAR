@@ -23,15 +23,20 @@ BEGIN
     SELECT encounter_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.encounter_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
-            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.encounter', 'encounter_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.encounter
@@ -39,6 +44,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE encounter_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.encounter_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE encounter_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -46,7 +56,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT encounter_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.encounter
+    ( SELECT encounter_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.encounter_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT encounter_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.encounter
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End encounter
@@ -62,15 +77,20 @@ BEGIN
     SELECT patient_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.patient_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
-            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.patient', 'patient_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.patient
@@ -78,6 +98,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE patient_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.patient_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE patient_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -85,7 +110,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT patient_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.patient
+    ( SELECT patient_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.patient_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT patient_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.patient
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End patient
@@ -101,15 +131,20 @@ BEGIN
     SELECT condition_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.condition_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
-            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.condition', 'condition_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.condition
@@ -117,6 +152,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE condition_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.condition_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE condition_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -124,7 +164,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT condition_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.condition
+    ( SELECT condition_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.condition_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT condition_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.condition
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End condition
@@ -140,15 +185,20 @@ BEGIN
     SELECT medication_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medication_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
-            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medication', 'medication_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.medication
@@ -156,6 +206,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE medication_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.medication_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE medication_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -163,7 +218,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medication_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.medication
+    ( SELECT medication_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medication_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medication_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medication
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End medication
@@ -179,15 +239,20 @@ BEGIN
     SELECT medicationrequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
-            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationrequest', 'medicationrequest_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.medicationrequest
@@ -195,6 +260,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE medicationrequest_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.medicationrequest_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE medicationrequest_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -202,7 +272,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.medicationrequest
+    ( SELECT medicationrequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationrequest_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationrequest
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End medicationrequest
@@ -218,15 +293,20 @@ BEGIN
     SELECT medicationadministration_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
-            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationadministration', 'medicationadministration_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.medicationadministration
@@ -234,6 +314,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE medicationadministration_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.medicationadministration_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE medicationadministration_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -241,7 +326,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.medicationadministration
+    ( SELECT medicationadministration_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationadministration_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationadministration
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End medicationadministration
@@ -257,15 +347,20 @@ BEGIN
     SELECT medicationstatement_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
-            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationstatement', 'medicationstatement_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.medicationstatement
@@ -273,6 +368,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE medicationstatement_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.medicationstatement_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE medicationstatement_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -280,7 +380,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.medicationstatement
+    ( SELECT medicationstatement_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationstatement_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationstatement
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End medicationstatement
@@ -296,15 +401,20 @@ BEGIN
     SELECT observation_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.observation_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
-            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.observation', 'observation_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.observation
@@ -312,6 +422,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE observation_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.observation_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE observation_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -319,7 +434,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT observation_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.observation
+    ( SELECT observation_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.observation_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT observation_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.observation
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End observation
@@ -335,15 +455,20 @@ BEGIN
     SELECT diagnosticreport_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
-            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.diagnosticreport', 'diagnosticreport_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.diagnosticreport
@@ -351,6 +476,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE diagnosticreport_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.diagnosticreport_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE diagnosticreport_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -358,7 +488,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.diagnosticreport
+    ( SELECT diagnosticreport_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.diagnosticreport_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.diagnosticreport
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End diagnosticreport
@@ -374,15 +509,20 @@ BEGIN
     SELECT servicerequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.servicerequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
-            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.servicerequest', 'servicerequest_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.servicerequest
@@ -390,6 +530,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE servicerequest_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.servicerequest_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE servicerequest_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -397,7 +542,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT servicerequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.servicerequest
+    ( SELECT servicerequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.servicerequest_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT servicerequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.servicerequest
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End servicerequest
@@ -413,15 +563,20 @@ BEGIN
     SELECT procedure_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.procedure_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
-            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.procedure', 'procedure_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.procedure
@@ -429,6 +584,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE procedure_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.procedure_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE procedure_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -436,7 +596,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT procedure_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.procedure
+    ( SELECT procedure_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.procedure_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT procedure_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.procedure
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End procedure
@@ -452,15 +617,20 @@ BEGIN
     SELECT consent_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.consent_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
-            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.consent', 'consent_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.consent
@@ -468,6 +638,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE consent_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.consent_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE consent_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -475,7 +650,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT consent_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.consent
+    ( SELECT consent_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.consent_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT consent_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.consent
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End consent
@@ -491,15 +671,20 @@ BEGIN
     SELECT location_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.location_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
-            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.location', 'location_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.location
@@ -507,6 +692,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE location_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.location_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE location_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -514,7 +704,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT location_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.location
+    ( SELECT location_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.location_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT location_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.location
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End location
@@ -530,15 +725,20 @@ BEGIN
     SELECT pids_per_ward_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
-            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
+            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr
+--AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
-            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr<max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
+--            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
+    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
         LOOP
             BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.pids_per_ward', 'pids_per_ward_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
 
 
                 UPDATE db_log.pids_per_ward
@@ -546,6 +746,11 @@ BEGIN
                 , current_dataset_status = current_record.cds
                 , last_processing_nr = new_last_pro_nr
                 WHERE pids_per_ward_raw_id = current_record.id;
+
+                -- sync done
+                UPDATE <db_log.pids_per_ward_raw
+                SET last_processing_nr = new_last_pro_nr
+                WHERE pids_per_ward_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -553,7 +758,12 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_check_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' FROM db_log.pids_per_ward
+    ( SELECT pids_per_ward_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward_raw' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.pids_per_ward_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+    ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_check_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.pids_per_ward
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- End pids_per_ward

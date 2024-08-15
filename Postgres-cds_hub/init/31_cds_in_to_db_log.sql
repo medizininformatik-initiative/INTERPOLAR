@@ -93,6 +93,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.encounter', 'encounter_id: '||current_record.encounter_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.encounter (
@@ -378,6 +380,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.patient', 'patient_id: '||current_record.patient_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.patient (
@@ -597,6 +601,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.condition', 'condition_id: '||current_record.condition_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.condition (
@@ -1048,6 +1054,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medication', 'medication_id: '||current_record.medication_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medication (
@@ -1497,6 +1505,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationrequest', 'medicationrequest_id: '||current_record.medicationrequest_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationrequest (
@@ -2330,6 +2340,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationadministration', 'medicationadministration_id: '||current_record.medicationadministration_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationadministration (
@@ -2922,6 +2934,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationstatement', 'medicationstatement_id: '||current_record.medicationstatement_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.medicationstatement (
@@ -3738,6 +3752,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.observation', 'observation_id: '||current_record.observation_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.observation (
@@ -4230,6 +4246,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.diagnosticreport', 'diagnosticreport_id: '||current_record.diagnosticreport_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.diagnosticreport (
@@ -4475,6 +4493,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.servicerequest', 'servicerequest_id: '||current_record.servicerequest_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.servicerequest (
@@ -4772,6 +4792,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.procedure', 'procedure_id: '||current_record.procedure_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.procedure (
@@ -5065,6 +5087,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.consent', 'consent_id: '||current_record.consent_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.consent (
@@ -5237,6 +5261,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.location', 'location_id: '||current_record.location_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.location (
@@ -5339,6 +5365,8 @@ BEGIN
                       ;
                 data_count_all := data_count_all + data_count;
 
+-- temp test log
+INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.pids_per_ward', 'pids_per_ward_id: '||current_record.pids_per_ward_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'copy_type_cds_in_to_db_log');
                 IF data_count = 0
                 THEN
                     INSERT INTO db_log.pids_per_ward (
