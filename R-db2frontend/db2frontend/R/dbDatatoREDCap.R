@@ -11,13 +11,22 @@
 #'
 #' @seealso \code{\link[etlutils]{initConstants}} for details on how configuration settings are loaded and set.
 #'
-initConstants <- function() {
-  # Path to the module configuration TOML file
-  path2config_toml <- './R-db2frontend/db2frontend_config.toml'
-  # Load module configuration settings
-  etlutils::initConstants(path2config_toml)
-  # Load database configuration settings
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+initConstantsAndLogging <- function() {
+  if (!exists("PROJECT_NAME", envir = .GlobalEnv)) {
+    # Set the PROJECT_NAME to 'db2frontend'
+    PROJECT_NAME <<- "db2frontend"
+    etlutils::createDIRS(PROJECT_NAME)
+    # Path to the module configuration TOML file
+    path2config_toml <- './R-db2frontend/db2frontend_config.toml'
+    # Load module configuration settings
+    etlutils::initConstants(path2config_toml)
+    # Load database configuration settings
+    etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+    # Create globally used process_clock
+    etlutils::createClock()
+    # log all console outputs and save them at the end
+    etlutils::startLogging(PROJECT_NAME)
+  }
 }
 
 #' Retrieve Database Table and Column Names
@@ -37,7 +46,7 @@ getDBTableAndColumnNames <- function() {
       )
 }
 
-#' Copy Database Content to REDCap
+#' Copy Database Content to Frontend
 #'
 #' This function retrieves data from the view or table in a database
 #' (defined in the schema `_out`) and imports this data into an existing REDCap project.
@@ -51,40 +60,45 @@ getDBTableAndColumnNames <- function() {
 #'
 #' @return Invisible. The function is called for its side effects: importing data
 #' into REDCap and does not return a value.
-copyDB2Redcap <- function() {
+importDB2Redcap <- function() {
   # Initialize constants
-  initConstants()
+  initConstantsAndLogging()
 
-  # Establish connection to the database
-  db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                       host = DB_GENERAL_HOST,
-                                       port = DB_GENERAL_PORT,
-                                       user = DB_DB2FRONTEND_USER,
-                                       password = DB_DB2FRONTEND_PASSWORD,
-                                       schema = DB_DB2FRONTEND_SCHEMA_OUT)
+  try(etlutils::runLevel1("Run Import from Database to Frontend", {
 
-  # Connect to REDCap
-  frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
-  # Get table and column names
-  db_table_and_columns <- getDBTableAndColumnNames()
+    # Establish connection to the database
+    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
+                                         host = DB_GENERAL_HOST,
+                                         port = DB_GENERAL_PORT,
+                                         user = DB_DB2FRONTEND_USER,
+                                         password = DB_DB2FRONTEND_PASSWORD,
+                                         schema = DB_DB2FRONTEND_SCHEMA_OUT)
 
-  # Iterate over tables and columns to fetch and send data
-  for (table_name in names(db_table_and_columns)) {
-    columns <- db_table_and_columns[[table_name]]
+    # Connect to REDCap
+    frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
-    # Create SQL query dynamically based on columns
-    query <- sprintf("SELECT record_id, %s FROM %s", paste(columns, collapse = ", "), table_name)
+    # Get table and column names
+    db_table_and_columns <- getDBTableAndColumnNames()
 
-    # Fetch data from the database
-    data_from_db <- etlutils::dbGetQuery(db_connection, query)
+    # Iterate over tables and columns to fetch and send data
+    for (table_name in names(db_table_and_columns)) {
+      columns <- db_table_and_columns[[table_name]]
 
-    # Import data to REDCap
-    redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db, logfile = "log.txt")
-  }
+      # Create SQL query dynamically based on columns
+      query <- sprintf("SELECT record_id, %s FROM %s", paste(columns, collapse = ", "), table_name)
 
-  # Disconnect from the database
-  etlutils::dbDisconnect(db_connection)
+      # Fetch data from the database
+      data_from_db <- etlutils::dbGetQuery(db_connection, query)
+
+      # Import data to REDCap
+      redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
+    }
+
+    # Disconnect from the database
+    etlutils::dbDisconnect(db_connection)
+
+  }))
 }
 
 
@@ -121,36 +135,43 @@ getFrontendTableNames <- function() {
 #' # copyRedcap2DB()
 #'
 #' @export
-copyRedcap2DB <- function() {
-  #get data from patient view / tabelle, schema _out
-  initConstants()
+importRedcap2DB <- function() {
 
-  #connect to REDCap
-  frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
-  form_names <- getFrontendTableNames()
+  try(etlutils::runLevel1("Run Import from Frontend to Database", {
 
-  tables2Export <- list()
+    #get data from patient view / tabelle, schema _out
+    initConstantsAndLogging()
 
-  # get data from REDCap
-  for (form_name in form_names) {
-    tables2Export[[form_name]] <- redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)
-  }
+    #connect to REDCap
+    frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
-  #establish connection to db
-  db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                       host = DB_GENERAL_HOST,
-                                       port = DB_GENERAL_PORT,
-                                       user = DB_DB2FRONTEND_USER,
-                                       password = DB_DB2FRONTEND_PASSWORD,
-                                       schema = DB_DB2FRONTEND_SCHEMA_IN)
+    form_names <- getFrontendTableNames()
 
-  # write tables to database
-  for (i in seq_along(tables2Export)) {
-    table_name <- paste0(names(tables2Export)[i], "_fe")
-    etlutils::dbAddContent(db_connection, table_name, tables2Export[[i]])
-  }
+    tables2Export <- list()
 
-  #disconnect from db
-  etlutils::dbDisconnect(db_connection)
+    # get data from REDCap
+    for (form_name in form_names) {
+      tables2Export[[form_name]] <- redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)
+    }
+
+    #establish connection to db
+    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
+                                         host = DB_GENERAL_HOST,
+                                         port = DB_GENERAL_PORT,
+                                         user = DB_DB2FRONTEND_USER,
+                                         password = DB_DB2FRONTEND_PASSWORD,
+                                         schema = DB_DB2FRONTEND_SCHEMA_IN)
+
+    # write tables to database
+    for (i in seq_along(tables2Export)) {
+      table_name <- paste0(names(tables2Export)[i], "_fe")
+      etlutils::dbAddContent(db_connection, table_name, tables2Export[[i]])
+    }
+
+    #disconnect from db
+    etlutils::dbDisconnect(db_connection)
+
+  }))
+
 }
