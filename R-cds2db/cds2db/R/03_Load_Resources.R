@@ -77,15 +77,16 @@ getQueryDatetime <- function() {
 loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
   patientIDs <- unique(unlist(patient_IDs_per_ward))
   # Get current or debug datetime
-  query_date <- getQueryDatetime()
-  # Filtering patients who are no longer on a relevant ward, but the case is still not closed
-  # Load all patient IDs from Encounters with no enddate or an enddate greater current date
+  query_datetime <- getQueryDatetime()
+  # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
+  # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
+  # an enddate greater current date.
   loadActivePatientIDsFromDB <- function(table_name_part) {
     db_connection_read <- getDatabaseReadConnection()
     table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
     statement <- paste0("SELECT enc_patient_id FROM ", table_name, "\n",
-                        "   WHERE enc_period_end is NULL\n",
-                        "   OR enc_period_end > '", query_date, "';")
+                        "   WHERE enc_period_start <= '", query_datetime, "' AND\n",
+                        "   (enc_period_end is NULL OR enc_period_end > '", query_datetime, "');")
     etlutils::dbGetQuery(db_connection_read, statement)
   }
   patientIDsActive <- loadActivePatientIDsFromDB("encounter_all")
