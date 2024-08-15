@@ -332,18 +332,9 @@ downloadAndCrackFHIRResources <- function(
     log_errors = log_errors
   )
 
-  total_bundle_value <- as.numeric(
-    xml2::xml_attr(
-      x = xml2::xml_find_all(
-        x = bundles[[1]],
-        xpath = './/total'
-      ),
-      'value'
-    ))
-
   cracked_ressources <- NA
 
-  if (total_bundle_value) {
+  if (!isSimpleNA(bundles) && all(length(bundles))) {
     cracked_ressources <- fhircrackr::fhir_crack(
       bundles = bundles,
       design = table_description,
