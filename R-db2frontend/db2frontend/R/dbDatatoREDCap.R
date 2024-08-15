@@ -60,6 +60,8 @@ getDBTableAndColumnNames <- function() {
 #'
 #' @return Invisible. The function is called for its side effects: importing data
 #' into REDCap and does not return a value.
+#'
+#' @export
 importDB2Redcap <- function() {
   # Initialize constants
   initConstantsAndLogging()
@@ -101,7 +103,6 @@ importDB2Redcap <- function() {
   }))
 }
 
-
 #' Retrieve Frontend Table Names
 #'
 #' This function returns a vector of predefined frontend table names used in the REDCap export
@@ -136,7 +137,6 @@ getFrontendTableNames <- function() {
 #'
 #' @export
 importRedcap2DB <- function() {
-
 
   try(etlutils::runLevel1("Run Import from Frontend to Database", {
 
