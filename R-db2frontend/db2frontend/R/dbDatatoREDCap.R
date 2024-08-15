@@ -11,21 +11,48 @@
 #'
 #' @seealso \code{\link[etlutils]{initConstants}} for details on how configuration settings are loaded and set.
 #'
-initConstants <- function() {
-  # Path to the module configuration TOML file
-  path2config_toml <- './R-db2frontend/db2frontend_config.toml'
-  # Load module configuration settings
-  etlutils::initConstants(path2config_toml)
-  # Load database configuration settings
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+initConstantsAndLogging <- function() {
+  if (!exists("PROJECT_NAME", envir = .GlobalEnv)) {
+    # Set the PROJECT_NAME to 'db2frontend'
+    PROJECT_NAME <<- "db2frontend"
+    etlutils::createDIRS(PROJECT_NAME)
+    # Path to the module configuration TOML file
+    path2config_toml <- './R-db2frontend/db2frontend_config.toml'
+    # Load module configuration settings
+    etlutils::initConstants(path2config_toml)
+    # Load database configuration settings
+    etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+    # Create globally used process_clock
+    etlutils::createClock()
+    # log all console outputs and save them at the end
+    etlutils::startLogging(PROJECT_NAME)
+  }
 }
 
-#' Copy Database Content to REDCap
+#' Retrieve Database Table and Column Names
+#'
+#' This function returns a list of predefined database table names and their associated column names
+#' that are used in the database export and REDCap import process.
+#'
+getDBTableAndColumnNames <- function() {
+  # TODO: can we get this from an external source?
+  list(v_patient = c("patient_fe_id", "pat_id", "pat_cis_pid", "pat_name", "pat_vorname",
+                     "pat_gebdat", "pat_aktuell_alter", "pat_geschlecht", "patient_complete"),
+       v_fall = c("redcap_repeat_instrument", "redcap_repeat_instance", "patient_id_fk",
+                  "fall_typ_id", "fall_fe_id", "fall_pat_id", "fall_id", "fall_studienphase",
+                  "fall_station", "fall_aufn_dat", "fall_aufn_diag", "fall_gewicht_aktuell",
+                  "fall_gewicht_aktl_einheit", "fall_groesse", "fall_groesse_einheit",
+                  "fall_status", "fall_ent_dat", "fall_complete")
+      )
+}
+
+#' Copy Database Content to Frontend
 #'
 #' This function retrieves data from the view or table in a database
 #' (defined in the schema `_out`) and imports this data into an existing REDCap project.
-#' It establishes a connection to a PostgreSQL database, fetches relevant patient data,
-#' then connects to the REDCap project using API credentials and imports the data.
+#' It establishes a connection to a PostgreSQL database, fetches relevant data for
+#' each table defined in `getDBTableAndColumnNames`, then connects to the REDCap project
+#' using API credentials and imports the data.
 #'
 #' Note: Database and REDCap connection details (e.g., credentials, table names) are
 #' required to be predefined or passed as arguments (not included in this example for
@@ -33,48 +60,56 @@ initConstants <- function() {
 #'
 #' @return Invisible. The function is called for its side effects: importing data
 #' into REDCap and does not return a value.
+importDB2Redcap <- function() {
+  # Initialize constants
+  initConstantsAndLogging()
+
+  try(etlutils::runLevel1("Run Import from Database to Frontend", {
+
+
+    # Establish connection to the database
+    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
+                                         host = DB_GENERAL_HOST,
+                                         port = DB_GENERAL_PORT,
+                                         user = DB_DB2FRONTEND_USER,
+                                         password = DB_DB2FRONTEND_PASSWORD,
+                                         schema = DB_DB2FRONTEND_SCHEMA_OUT)
+
+    # Connect to REDCap
+    frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+
+    # Get table and column names
+    db_table_and_columns <- getDBTableAndColumnNames()
+
+    # Iterate over tables and columns to fetch and send data
+    for (table_name in names(db_table_and_columns)) {
+      columns <- db_table_and_columns[[table_name]]
+
+      # Create SQL query dynamically based on columns
+      query <- sprintf("SELECT record_id, %s FROM %s", paste(columns, collapse = ", "), table_name)
+
+      # Fetch data from the database
+      data_from_db <- etlutils::dbGetQuery(db_connection, query)
+
+      # Import data to REDCap
+      redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
+    }
+
+    # Disconnect from the database
+    etlutils::dbDisconnect(db_connection)
+
+  }))
+}
+
+
+#' Retrieve Frontend Table Names
 #'
-#' @examples
-#' # Before using this function, ensure that variables `dbname`, `dbhost`, `dbport`,
-#' # `dbfrontenduser`, `dbfrontendpassword`, `dbfrontendoptionsout`, `url`, and `token`
-#' # are correctly set up with your database and REDCap project details.
-#' # This is a placeholder example and won't run without proper setup:
-#' # copyDB2Redcap()
+#' This function returns a vector of predefined frontend table names used in the REDCap export
+#' process.
 #'
-#' @export
-copyDB2Redcap <- function() {
-  #get data from patient view / tabelle, schema _out
-  initConstants()
-
-  #establish connection to db
-  dbcon <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                               host = DB_GENERAL_HOST,
-                               port = DB_GENERAL_PORT,
-                               user = DB_DB2FRONTEND_USER,
-                               password = DB_DB2FRONTEND_PASSWORD,
-                               schema = DB_DB2FRONTEND_SCHEMA_OUT)
-
-
-  #connect to REDCap project
-  redcapcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
-
-  #get relevant data for Patient and Fall (Phase 1a of INTERPOLAR)
-  PatientFromDB <- DBI::dbGetQuery(dbcon,
-      "SELECT record_id, patient_fe_id, pat_id, pat_cis_pid, pat_name, pat_vorname, pat_gebdat, pat_aktuell_alter, pat_geschlecht,
-       patient_complete FROM v_patient")
-
-  FallFromDB <- DBI::dbGetQuery(dbcon,
-       "SELECT record_id, redcap_repeat_instrument, redcap_repeat_instance, patient_id_fk, fall_typ_id, fall_fe_id, fall_pat_id, fall_id,
-       fall_studienphase, fall_station, fall_aufn_dat, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit,
-       fall_groesse, fall_groesse_einheit, fall_status, fall_ent_dat, fall_complete FROM v_fall")
-
-
-  #send data to REDCap for Patient and Fall (Phase 1a of INTERPOLAR)
-  redcapAPI::importRecords(redcapcon, data = PatientFromDB, logfile = "log.txt")
-  redcapAPI::importRecords(redcapcon, data = FallFromDB, logfile = "log.txt")
-
-  #disconnect from db
-  DBI::dbDisconnect(dbcon)
+getFrontendTableNames <- function() {
+  # TODO: Read this information from frontend_table_desciptin.xlsx
+  c("patient", "fall", "medikationsanalyse", "mrpdokumentation_validierung")
 }
 
 #' Copy REDCap Content to Database
@@ -100,34 +135,43 @@ copyDB2Redcap <- function() {
 #' # copyRedcap2DB()
 #'
 #' @export
-copyRedcap2DB <- function() {
-  #get data from patient view / tabelle, schema _out
-  initConstants()
-
-  #connect to REDCap project
-  rcon <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
-
-  #get data from REDCap
-  rc_pat<-redcapAPI::exportRecordsTyped(rcon,forms="patient")
-  rc_fall<-redcapAPI::exportRecordsTyped(rcon,forms="fall")
-  rc_medana<-redcapAPI::exportRecordsTyped(rcon,forms="medikationsanalyse")
-  rc_mrp<-redcapAPI::exportRecordsTyped(rcon,forms="mrpdokumentation_validierung")
-
-  #establish connection to db
-  dbcon <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                host = DB_GENERAL_HOST,
-                                port = DB_GENERAL_PORT,
-                                user = DB_DB2FRONTEND_USER,
-                                password = DB_DB2FRONTEND_PASSWORD,
-                                schema = DB_DB2FRONTEND_SCHEMA_IN)
+importRedcap2DB <- function() {
 
 
-  #write to relevant tables
-  DBI::dbAppendTable(dbcon,"patient_fe",rc_pat)
-  DBI::dbAppendTable(dbcon,"fall_fe",rc_fall)
-  DBI::dbAppendTable(dbcon,"medikationsanalyse_fe",rc_medana)
-  DBI::dbAppendTable(dbcon,"mrpdokumentation_validierung_fe",rc_mrp)
+  try(etlutils::runLevel1("Run Import from Frontend to Database", {
 
-  #disconnect from db
-  DBI::dbDisconnect(dbcon)
+    #get data from patient view / tabelle, schema _out
+    initConstantsAndLogging()
+
+    #connect to REDCap
+    frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+
+    form_names <- getFrontendTableNames()
+
+    tables2Export <- list()
+
+    # get data from REDCap
+    for (form_name in form_names) {
+      tables2Export[[form_name]] <- redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)
+    }
+
+    #establish connection to db
+    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
+                                         host = DB_GENERAL_HOST,
+                                         port = DB_GENERAL_PORT,
+                                         user = DB_DB2FRONTEND_USER,
+                                         password = DB_DB2FRONTEND_PASSWORD,
+                                         schema = DB_DB2FRONTEND_SCHEMA_IN)
+
+    # write tables to database
+    for (i in seq_along(tables2Export)) {
+      table_name <- paste0(names(tables2Export)[i], "_fe")
+      etlutils::dbAddContent(db_connection, table_name, tables2Export[[i]])
+    }
+
+    #disconnect from db
+    etlutils::dbDisconnect(db_connection)
+
+  }))
+
 }
