@@ -78,7 +78,7 @@ getFhircrackrTableDescriptions <- function(table_description_table = NA) {
   }
 
   # Filter fhir resources (starts with capital letter in column resource in the table_description_table)
-  fhir_table_description_table <- table_description_table[-grep("^[a-z]", resource)]
+  fhir_table_description_table <- table_description_table[-grep("^[a-z]", RESOURCE)]
   # Grouping by 'RESOURCE' and creating lists of fhircrackr::fhir_table_description() objects
   table_descriptions <- lapply(split(fhir_table_description_table, fhir_table_description_table$RESOURCE), function(subset) {
     resource_name <- unique(subset$RESOURCE)
