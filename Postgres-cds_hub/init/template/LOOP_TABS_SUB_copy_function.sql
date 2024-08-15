@@ -10,8 +10,6 @@
                       ;
                 data_count_all := data_count_all + data_count;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('<%OWNER_SCHEMA%>.<%TABLE_NAME%>', '<%TABLE_NAME_2%>_id: '||current_record.<%TABLE_NAME_2%>_id, 'last_pro_nr: '||last_pro_nr, 'Count new Datasets data_count :'||data_count, 'SumCount DS data_count_all: '||data_count_all, 'function: '||'<%COPY_FUNC_NAME%>');
                 IF data_count = 0
                 THEN
                     INSERT INTO <%OWNER_SCHEMA%>.<%TABLE_NAME%> (

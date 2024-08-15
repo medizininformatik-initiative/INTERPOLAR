@@ -24,9 +24,7 @@ BEGIN
     FROM db_log.encounter_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
             (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -35,10 +33,6 @@ BEGIN
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.encounter', 'encounter_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.encounter
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -46,9 +40,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE encounter_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.encounter_raw
+                UPDATE db_log.encounter_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE encounter_id = current_record.id;
+                WHERE encounter_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -78,9 +72,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.patient_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
             (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -89,10 +81,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.patient', 'patient_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.patient
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -100,9 +88,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE patient_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.patient_raw
+                UPDATE db_log.patient_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE patient_id = current_record.id;
+                WHERE patient_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -132,9 +120,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.condition_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
             (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -143,10 +129,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.condition', 'condition_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.condition
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -154,9 +136,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE condition_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.condition_raw
+                UPDATE db_log.condition_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE condition_id = current_record.id;
+                WHERE condition_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -186,9 +168,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.medication_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
             (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -197,10 +177,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medication', 'medication_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.medication
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -208,9 +184,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE medication_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.medication_raw
+                UPDATE db_log.medication_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE medication_id = current_record.id;
+                WHERE medication_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -240,9 +216,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
             (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -251,10 +225,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationrequest', 'medicationrequest_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.medicationrequest
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -262,9 +232,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE medicationrequest_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.medicationrequest_raw
+                UPDATE db_log.medicationrequest_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE medicationrequest_id = current_record.id;
+                WHERE medicationrequest_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -294,9 +264,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
             (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -305,10 +273,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationadministration', 'medicationadministration_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.medicationadministration
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -316,9 +280,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE medicationadministration_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.medicationadministration_raw
+                UPDATE db_log.medicationadministration_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE medicationadministration_id = current_record.id;
+                WHERE medicationadministration_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -348,9 +312,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
             (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -359,10 +321,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.medicationstatement', 'medicationstatement_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.medicationstatement
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -370,9 +328,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE medicationstatement_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.medicationstatement_raw
+                UPDATE db_log.medicationstatement_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE medicationstatement_id = current_record.id;
+                WHERE medicationstatement_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -402,9 +360,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.observation_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
             (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -413,10 +369,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.observation', 'observation_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.observation
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -424,9 +376,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE observation_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.observation_raw
+                UPDATE db_log.observation_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE observation_id = current_record.id;
+                WHERE observation_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -456,9 +408,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
             (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -467,10 +417,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.diagnosticreport', 'diagnosticreport_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.diagnosticreport
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -478,9 +424,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE diagnosticreport_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.diagnosticreport_raw
+                UPDATE db_log.diagnosticreport_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE diagnosticreport_id = current_record.id;
+                WHERE diagnosticreport_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -510,9 +456,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.servicerequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
             (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -521,10 +465,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.servicerequest', 'servicerequest_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.servicerequest
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -532,9 +472,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE servicerequest_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.servicerequest_raw
+                UPDATE db_log.servicerequest_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE servicerequest_id = current_record.id;
+                WHERE servicerequest_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -564,9 +504,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.procedure_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
             (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -575,10 +513,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.procedure', 'procedure_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.procedure
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -586,9 +520,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE procedure_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.procedure_raw
+                UPDATE db_log.procedure_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE procedure_id = current_record.id;
+                WHERE procedure_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -618,9 +552,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.consent_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
             (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -629,10 +561,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.consent', 'consent_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.consent
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -640,9 +568,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE consent_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.consent_raw
+                UPDATE db_log.consent_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE consent_id = current_record.id;
+                WHERE consent_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -672,9 +600,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.location_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
             (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -683,10 +609,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.location', 'location_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.location
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -694,9 +616,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE location_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.location_raw
+                UPDATE db_log.location_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE location_id = current_record.id;
+                WHERE location_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
@@ -726,9 +648,7 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
     FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
             (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr
---AND last_processing_nr=last_raw_pro_nr -- only if resource part of last import
             )
---            OR (last_processing_nr=last_raw_pro_nr and last_raw_pro_nr>max_last_pro_nr) -- the case that all of them had already been imported earlier but only a part was imported the last time
          )
     AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
     )
@@ -737,10 +657,6 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 -- Obtain a new processing number if necessary
                 IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
--- temp test log
-INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUEs ('db_log.pids_per_ward', 'pids_per_ward_raw_id: '||current_record.id, 'new_last_pro_nr: '||new_last_pro_nr, 'Höchste Lokale Raw PNr max_last_pro_nr: '||max_last_pro_nr, 'Höchste All RAW PNr. last_raw_pro_nr :'|| last_raw_pro_nr, 'function: take_over_check_date_function');
-
-
                 UPDATE db_log.pids_per_ward
                 SET last_check_datetime = current_record.lcd
                 , current_dataset_status = current_record.cds
@@ -748,9 +664,9 @@ INSERT INTO db_log.test_log (ent_ident, ent_id, text1, text2, text3,text4) VALUE
                 WHERE pids_per_ward_raw_id = current_record.id;
 
                 -- sync done
-                UPDATE <db_log.pids_per_ward_raw
+                UPDATE db_log.pids_per_ward_raw
                 SET last_processing_nr = new_last_pro_nr
-                WHERE pids_per_ward_id = current_record.id;
+                WHERE pids_per_ward_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
                     NULL;
