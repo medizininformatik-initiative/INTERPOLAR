@@ -13,15 +13,15 @@
 #'
 initConstantsAndLogging <- function() {
   if (!exists("PROJECT_NAME", envir = .GlobalEnv)) {
-    # Set the PROJECT_NAME to 'db2frontend'
-    PROJECT_NAME <<- "db2frontend"
-    etlutils::createDIRS(PROJECT_NAME)
     # Path to the module configuration TOML file
     path2config_toml <- './R-db2frontend/db2frontend_config.toml'
     # Load module configuration settings
     etlutils::initConstants(path2config_toml)
     # Load database configuration settings
     etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
+    # Set the PROJECT_NAME to 'db2frontend'
+    PROJECT_NAME <<- "db2frontend"
+    etlutils::createDIRS(PROJECT_NAME)
     # Create globally used process_clock
     etlutils::createClock()
     # log all console outputs and save them at the end

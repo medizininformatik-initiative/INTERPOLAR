@@ -128,7 +128,7 @@ getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
   table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
-    "SELECT * FROM ", table_name, "a\n",
+    "SELECT * FROM ", table_name, " a\n",
     " WHERE last_processing_nr = ", last_processing_nr,
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"

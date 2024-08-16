@@ -33,8 +33,7 @@ initConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
     }
   }
 
-  # the result dir can be extended by an timestamp. this is not neccessary
-  # in Interploar but was used in Polar. For debug reasons we have not deactivated
+  # the result dir can be extended by an timestamp. For debug reasons we have not deactivated
   # this functionality. To enable timestamp suffixes at the result dir set
   # the variable USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = true in the config toml file.
   PROJECT_TIME_STAMP <<- if (exists('USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX') && USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX) {
