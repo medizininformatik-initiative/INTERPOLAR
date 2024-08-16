@@ -46,6 +46,10 @@ retrieve <- function() {
 
     # Download and crack resources by Patient IDs per ward
     etlutils::runLevel2("Download and crack resources by Patient IDs per ward", {
+      # loadResourcesFromFHIRServer() returns a list of tables with the downloades resources and
+      # the pids_per_ward table. But it contains only tables which have at least 1 row. Tables
+      # for resources which could not be downloaded (generally missing or not present for the
+      # current date) are not included here.
       resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, fhir_table_descriptions)
       all_empty_fhir <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
       if (all_empty_fhir) {
@@ -56,10 +60,8 @@ retrieve <- function() {
     if (!all_empty_fhir) {
       # Write raw tables to database
       etlutils::runLevel2("Write raw tables to database", {
-        table_names <- names(resource_tables)
         names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
         writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
-        names(resource_tables) <- table_names
       })
 
       # Wait until the copy cron job runs after insertion
@@ -75,7 +77,22 @@ retrieve <- function() {
 
     # Convert Column Types in resource tables
     etlutils::runLevel2("Load untyped RAW tables from database", {
-      resource_tables <- readUntypedRAWDataFromDatabase()
+      # it could be that some resources could not be downloaded in the current run but in the last
+      # run, but the melt and type process was interrupted for any reason -> try not to download
+      # only the resources from this run from the database, but also all other resources to melt
+      # and type them. And the second point is that the resource_tables contains the pids_per_ward
+      # table which is not a resource from the FHIR server -> so we have to join and unique the
+      # name set:
+      all_resource_names <- c(names(fhir_table_descriptions[["pid_dependant"]]), names(fhir_table_descriptions[["pid_independant"]]))
+      # add "_raw" prefix to the resource table names to match the identical names from the raw tables
+      all_resource_raw_table_names <- paste0(tolower(all_resource_names), "_raw")
+      all_current_run_table_names <- names(resource_tables)
+      all_table_names_raw <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
+
+      all_table_names_raw <- sub("_raw", "", all_table_names_raw)
+      all_table_names_raw <- paste0("v_", all_table_names_raw)
+
+      resource_tables <- readTablesFromDatabase(all_table_names_raw)
       all_empty_raw <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
       if (all_empty_raw) {
         etlutils::catWarningMessage("No (new) untyped RAW tables found in database")
@@ -84,6 +101,7 @@ retrieve <- function() {
     })
 
     if (!all_empty_raw) {
+
       etlutils::runLevel2("Convert RAW tables to typed tables", {
         fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
         resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
@@ -92,6 +110,7 @@ retrieve <- function() {
       etlutils::runLevel2("Write typed tables to database", {
         writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
       })
+
     }
 
   }))
