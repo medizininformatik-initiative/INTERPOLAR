@@ -26,10 +26,15 @@ CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
 );
 
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
+GRANT USAGE ON SCHEMA db_log TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db_log TO cds2db_user;
+GRANT USAGE ON SCHEMA db_log TO db2frontend_user;
+
 GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_log_user;
 GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_user;
-GRANT SELECT ON TABLE db_log.data_import_hist TO cds2db_user;
-GRANT SELECT ON TABLE db_log.data_import_hist TO db2dataprocessor_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO cds2db_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2dataprocessor_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2frontend_user;
 
 
 
