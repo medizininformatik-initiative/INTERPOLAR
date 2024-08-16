@@ -75,22 +75,17 @@ getQueryDatetime <- function() {
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
-  patientIDs <- unique(unlist(patient_IDs_per_ward))
   # Get current or debug datetime
   query_datetime <- getQueryDatetime()
   # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
   # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
   # an enddate greater current date.
-  loadActivePatientIDsFromDB <- function(table_name_part) {
-    db_connection_read <- getDatabaseReadConnection()
-    table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
-    statement <- paste0("SELECT enc_patient_id FROM ", table_name, "\n",
+  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
                         "   WHERE enc_period_start <= '", query_datetime, "' AND\n",
                         "   (enc_period_end is NULL OR enc_period_end > '", query_datetime, "');")
-    etlutils::dbGetQuery(db_connection_read, statement)
-  }
-  patientIDsActive <- loadActivePatientIDsFromDB("encounter_all")
+  patientIDsActive <- getQueryFromDatabase(query)
   # Unify and unique all patient IDs
+  patientIDs <- unique(unlist(patient_IDs_per_ward))
   patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
@@ -114,7 +109,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
 
 
   # Add additional table of ward-patient ID per date
-  resource_tables[['pids_per_ward']] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
+  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
 
   return(resource_tables)
 }
