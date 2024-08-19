@@ -308,7 +308,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       # the subject reference is needed in every case to extract them if the encounter matches the pattern
       # the period end is needed to check if the Encounter is still finsihed
       # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
-      filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
+      filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, "id", "subject/reference", "period/start", "period/end", "status")
       # Get current or debug datetime
       current_datetime <- getQueryDatetime()
       # Replace space with 'T' in timestamp for correct time format
