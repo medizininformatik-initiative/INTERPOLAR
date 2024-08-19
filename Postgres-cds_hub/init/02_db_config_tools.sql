@@ -16,7 +16,8 @@ WHERE status='succeeded' and end_time < now() - interval '7 days'$$);
 -- Table "data_import_hist" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
-  table_primary_key int, -- Primary key in the table
+  id serial,
+  table_primary_key int, -- Primary key in the documentet table
   last_processing_nr int, -- Last processing number of the data in the table
   schema_name varchar,
   table_name varchar,
