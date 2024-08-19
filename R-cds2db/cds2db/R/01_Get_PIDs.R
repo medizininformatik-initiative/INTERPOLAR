@@ -339,7 +339,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       if (read_pids_from_file) {
         message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
       } else {
-        message <- paste0(message, "on FHIR server for timestamp ", current_datetime, " and encounter status ", encounter_status, ".\n")
+        message <- paste0(message, "on FHIR server for timestamp ", current_datetime, ".\n")
       }
       etlutils::catWarningMessage(message)
     }
