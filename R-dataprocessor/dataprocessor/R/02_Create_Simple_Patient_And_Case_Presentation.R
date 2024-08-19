@@ -329,7 +329,7 @@ createFrontendTables <- function() {
       patient_frontend_table$patient_fe_id[i] <- patient$patient_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
-      patient_frontend_table$redcap_repeat_instrument[i] <- "Patient"
+      patient_frontend_table$redcap_repeat_instrument[i] <- "patient"
       patient_frontend_table$redcap_repeat_instance[i] <- 1
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
@@ -438,7 +438,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
         data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
-        data.table::set(enc_frontend_table, target_index, 'redcap_repeat_instrument', 'Fall')
+        data.table::set(enc_frontend_table, target_index, 'redcap_repeat_instrument', 'fall')
         data.table::set(enc_frontend_table, target_index, 'fall_typ_id', pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
         data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
