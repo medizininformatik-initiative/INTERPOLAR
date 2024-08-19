@@ -14,6 +14,7 @@ BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.patient_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                    COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
                     COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                     COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
                     COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
@@ -30,6 +31,7 @@ BEGIN
             THEN
                 INSERT INTO db_log.patient_fe ( patient_fe_id,
                         record_id,
+                        pat_header,
                         pat_id,
                         pat_cis_pid,
                         redcap_repeat_instrument,
@@ -43,7 +45,8 @@ BEGIN
                         input_datetime
                 )
                 VALUES (current_record.patient_fe_id,
-                        current_record.record_id,
+	                current_record.record_id,
+                        current_record.pat_header,
                         current_record.pat_id,
                         current_record.pat_cis_pid,
                         current_record.redcap_repeat_instrument,
@@ -63,7 +66,8 @@ BEGIN
 	        UPDATE db_log.patient_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
-                WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                        COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
                         COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                         COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
                         COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
@@ -74,7 +78,7 @@ BEGIN
                         COALESCE(target_record.pat_aktuell_alter::text,'#NULL#') = COALESCE(current_record.pat_aktuell_alter::text,'#NULL#') AND
                         COALESCE(target_record.pat_geschlecht::text,'#NULL#') = COALESCE(current_record.pat_geschlecht::text,'#NULL#') AND
                         COALESCE(target_record.patient_complete::text,'#NULL#') = COALESCE(current_record.patient_complete::text,'#NULL#')
-                ;
+                  ;
 
                 -- Delete updatet datasets
                 DELETE FROM db2dataprocessor_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
@@ -96,94 +100,118 @@ BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.fall_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                    COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
-                    COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
-                    COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                    COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
-                    COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                    COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                    COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
-                    COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                    COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
-                    COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
-                    COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
-                    COALESCE(target_record.fall_gewicht_aktl_einheit::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktl_einheit::text,'#NULL#') AND
-                    COALESCE(target_record.fall_groesse::text,'#NULL#') = COALESCE(current_record.fall_groesse::text,'#NULL#') AND
-                    COALESCE(target_record.fall_groesse_einheit::text,'#NULL#') = COALESCE(current_record.fall_groesse_einheit::text,'#NULL#') AND
-                    COALESCE(target_record.fall_bmi::text,'#NULL#') = COALESCE(current_record.fall_bmi::text,'#NULL#') AND
-                    COALESCE(target_record.fall_nieren_insuf_chron::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_chron::text,'#NULL#') AND
-                    COALESCE(target_record.fall_nieren_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass::text,'#NULL#') AND
-                    COALESCE(target_record.fall_nieren_insuf_dialysev::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev::text,'#NULL#') AND
-                    COALESCE(target_record.fall_leber_insuf::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf::text,'#NULL#') AND
-                    COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
-                    COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
-                    COALESCE(target_record.fall_op_geplant::text,'#NULL#') = COALESCE(current_record.fall_op_geplant::text,'#NULL#') AND
-                    COALESCE(target_record.fall_op_dat::text,'#NULL#') = COALESCE(current_record.fall_op_dat::text,'#NULL#') AND
-                    COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
-                    COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
-                    COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
+		    COALESCE(target_record.fall_header::text,'#NULL#') = COALESCE(current_record.fall_header::text,'#NULL#') AND
+COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
+COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
+COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
+COALESCE(target_record.fall_femb::text,'#NULL#') = COALESCE(current_record.fall_femb::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
+COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
+COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
+COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
+COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
+COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
+COALESCE(target_record.fall_gewicht_aktl_einheit::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktl_einheit::text,'#NULL#') AND
+COALESCE(target_record.fall_groesse::text,'#NULL#') = COALESCE(current_record.fall_groesse::text,'#NULL#') AND
+COALESCE(target_record.fall_groesse_einheit::text,'#NULL#') = COALESCE(current_record.fall_groesse_einheit::text,'#NULL#') AND
+COALESCE(target_record.fall_bmi::text,'#NULL#') = COALESCE(current_record.fall_bmi::text,'#NULL#') AND
+COALESCE(target_record.fall_femb_2::text,'#NULL#') = COALESCE(current_record.fall_femb_2::text,'#NULL#') AND
+COALESCE(target_record.fall_femb_3::text,'#NULL#') = COALESCE(current_record.fall_femb_3::text,'#NULL#') AND
+COALESCE(target_record.fall_femb_4::text,'#NULL#') = COALESCE(current_record.fall_femb_4::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_chron::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_chron::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_dialysev::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev::text,'#NULL#') AND
+COALESCE(target_record.fall_leber_insuf::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf::text,'#NULL#') AND
+COALESCE(target_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
+COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
+COALESCE(target_record.fall_op_geplant::text,'#NULL#') = COALESCE(current_record.fall_op_geplant::text,'#NULL#') AND
+COALESCE(target_record.fall_op_dat_lbl::text,'#NULL#') = COALESCE(current_record.fall_op_dat_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_op_dat::text,'#NULL#') = COALESCE(current_record.fall_op_dat::text,'#NULL#') AND
+COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
+COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
+COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
                   ;
 
             IF data_count = 0
             THEN
                 INSERT INTO db_log.fall_fe ( fall_fe_id,
-                        record_id,
-                        fall_id,
-                        fall_pat_id,
-                        patient_id_fk,
-                        fall_typ_id,
-                        redcap_repeat_instrument,
-                        redcap_repeat_instance,
-                        fall_studienphase,
-                        fall_station,
-                        fall_aufn_dat,
-                        fall_aufn_diag,
-                        fall_gewicht_aktuell,
-                        fall_gewicht_aktl_einheit,
-                        fall_groesse,
-                        fall_groesse_einheit,
-                        fall_bmi,
-                        fall_nieren_insuf_chron,
-                        fall_nieren_insuf_ausmass,
-                        fall_nieren_insuf_dialysev,
-                        fall_leber_insuf,
-                        fall_leber_insuf_ausmass,
-                        fall_schwanger_mo,
-                        fall_op_geplant,
-                        fall_op_dat,
-                        fall_status,
-                        fall_ent_dat,
-                        fall_complete,
+record_id,
+fall_header,
+fall_id,
+fall_pat_id,
+patient_id_fk,
+fall_femb,
+redcap_repeat_instrument,
+redcap_repeat_instance,
+fall_studienphase,
+fall_station,
+fall_aufn_dat,
+fall_aufn_diag,
+fall_gewicht_aktuell,
+fall_gewicht_aktl_einheit,
+fall_groesse,
+fall_groesse_einheit,
+fall_bmi,
+fall_femb_2,
+fall_femb_3,
+fall_femb_4,
+fall_nieren_insuf_chron,
+fall_nieren_insuf_ausmass_lbl,
+fall_nieren_insuf_ausmass,
+fall_nieren_insuf_dialysev_lbl,
+fall_nieren_insuf_dialysev,
+fall_leber_insuf,
+fall_leber_insuf_ausmass_lbl,
+fall_leber_insuf_ausmass,
+fall_schwanger_mo,
+fall_op_geplant,
+fall_op_dat_lbl,
+fall_op_dat,
+fall_status,
+fall_ent_dat,
+fall_complete,
                         input_datetime
                 )
                 VALUES (current_record.fall_fe_id,
-                        current_record.record_id,
-                        current_record.fall_id,
-                        current_record.fall_pat_id,
-                        current_record.patient_id_fk,
-                        current_record.fall_typ_id,
-                        current_record.redcap_repeat_instrument,
-                        current_record.redcap_repeat_instance,
-                        current_record.fall_studienphase,
-                        current_record.fall_station,
-                        current_record.fall_aufn_dat,
-                        current_record.fall_aufn_diag,
-                        current_record.fall_gewicht_aktuell,
-                        current_record.fall_gewicht_aktl_einheit,
-                        current_record.fall_groesse,
-                        current_record.fall_groesse_einheit,
-                        current_record.fall_bmi,
-                        current_record.fall_nieren_insuf_chron,
-                        current_record.fall_nieren_insuf_ausmass,
-                        current_record.fall_nieren_insuf_dialysev,
-                        current_record.fall_leber_insuf,
-                        current_record.fall_leber_insuf_ausmass,
-                        current_record.fall_schwanger_mo,
-                        current_record.fall_op_geplant,
-                        current_record.fall_op_dat,
-                        current_record.fall_status,
-                        current_record.fall_ent_dat,
-                        current_record.fall_complete,
+current_record.record_id,
+current_record.fall_header,
+current_record.fall_id,
+current_record.fall_pat_id,
+current_record.patient_id_fk,
+current_record.fall_femb,
+current_record.redcap_repeat_instrument,
+current_record.redcap_repeat_instance,
+current_record.fall_studienphase,
+current_record.fall_station,
+current_record.fall_aufn_dat,
+current_record.fall_aufn_diag,
+current_record.fall_gewicht_aktuell,
+current_record.fall_gewicht_aktl_einheit,
+current_record.fall_groesse,
+current_record.fall_groesse_einheit,
+current_record.fall_bmi,
+current_record.fall_femb_2,
+current_record.fall_femb_3,
+current_record.fall_femb_4,
+current_record.fall_nieren_insuf_chron,
+current_record.fall_nieren_insuf_ausmass_lbl,
+current_record.fall_nieren_insuf_ausmass,
+current_record.fall_nieren_insuf_dialysev_lbl,
+current_record.fall_nieren_insuf_dialysev,
+current_record.fall_leber_insuf,
+current_record.fall_leber_insuf_ausmass_lbl,
+current_record.fall_leber_insuf_ausmass,
+current_record.fall_schwanger_mo,
+current_record.fall_op_geplant,
+current_record.fall_op_dat_lbl,
+current_record.fall_op_dat,
+current_record.fall_status,
+current_record.fall_ent_dat,
+current_record.fall_complete,
                         current_record.input_datetime
                 );
 
@@ -193,33 +221,41 @@ BEGIN
 	        UPDATE db_log.fall_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
-                WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                        COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
-                        COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
-                        COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                        COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
-                        COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                        COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                        COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
-                        COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                        COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
-                        COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
-                        COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
-                        COALESCE(target_record.fall_gewicht_aktl_einheit::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktl_einheit::text,'#NULL#') AND
-                        COALESCE(target_record.fall_groesse::text,'#NULL#') = COALESCE(current_record.fall_groesse::text,'#NULL#') AND
-                        COALESCE(target_record.fall_groesse_einheit::text,'#NULL#') = COALESCE(current_record.fall_groesse_einheit::text,'#NULL#') AND
-                        COALESCE(target_record.fall_bmi::text,'#NULL#') = COALESCE(current_record.fall_bmi::text,'#NULL#') AND
-                        COALESCE(target_record.fall_nieren_insuf_chron::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_chron::text,'#NULL#') AND
-                        COALESCE(target_record.fall_nieren_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass::text,'#NULL#') AND
-                        COALESCE(target_record.fall_nieren_insuf_dialysev::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev::text,'#NULL#') AND
-                        COALESCE(target_record.fall_leber_insuf::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf::text,'#NULL#') AND
-                        COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
-                        COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
-                        COALESCE(target_record.fall_op_geplant::text,'#NULL#') = COALESCE(current_record.fall_op_geplant::text,'#NULL#') AND
-                        COALESCE(target_record.fall_op_dat::text,'#NULL#') = COALESCE(current_record.fall_op_dat::text,'#NULL#') AND
-                        COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
-                        COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
-                        COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
+                WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+		    COALESCE(target_record.fall_header::text,'#NULL#') = COALESCE(current_record.fall_header::text,'#NULL#') AND
+COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
+COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
+COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
+COALESCE(target_record.fall_femb::text,'#NULL#') = COALESCE(current_record.fall_femb::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
+COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
+COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
+COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
+COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
+COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
+COALESCE(target_record.fall_gewicht_aktl_einheit::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktl_einheit::text,'#NULL#') AND
+COALESCE(target_record.fall_groesse::text,'#NULL#') = COALESCE(current_record.fall_groesse::text,'#NULL#') AND
+COALESCE(target_record.fall_groesse_einheit::text,'#NULL#') = COALESCE(current_record.fall_groesse_einheit::text,'#NULL#') AND
+COALESCE(target_record.fall_bmi::text,'#NULL#') = COALESCE(current_record.fall_bmi::text,'#NULL#') AND
+COALESCE(target_record.fall_femb_2::text,'#NULL#') = COALESCE(current_record.fall_femb_2::text,'#NULL#') AND
+COALESCE(target_record.fall_femb_3::text,'#NULL#') = COALESCE(current_record.fall_femb_3::text,'#NULL#') AND
+COALESCE(target_record.fall_femb_4::text,'#NULL#') = COALESCE(current_record.fall_femb_4::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_chron::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_chron::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_nieren_insuf_dialysev::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev::text,'#NULL#') AND
+COALESCE(target_record.fall_leber_insuf::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf::text,'#NULL#') AND
+COALESCE(target_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
+COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
+COALESCE(target_record.fall_op_geplant::text,'#NULL#') = COALESCE(current_record.fall_op_geplant::text,'#NULL#') AND
+COALESCE(target_record.fall_op_dat_lbl::text,'#NULL#') = COALESCE(current_record.fall_op_dat_lbl::text,'#NULL#') AND
+COALESCE(target_record.fall_op_dat::text,'#NULL#') = COALESCE(current_record.fall_op_dat::text,'#NULL#') AND
+COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
+COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
+COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
                 ;
 
                 -- Delete updatet datasets
@@ -242,52 +278,91 @@ BEGIN
             SELECT count(1) INTO data_count
             FROM db_log.medikationsanalyse_fe target_record
             WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                    COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
-                    COALESCE(target_record.meda_fall_id::text,'#NULL#') = COALESCE(current_record.meda_fall_id::text,'#NULL#') AND
-                    COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                    COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                    COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
-                    COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
-                    COALESCE(target_record.meda_risiko_pat::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat::text,'#NULL#') AND
-                    COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
-                    COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
-                    COALESCE(target_record.meda_aufwand_zeit_and::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and::text,'#NULL#') AND
-                    COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
-                    COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
+COALESCE(target_record.meda_header::text,'#NULL#') = COALESCE(current_record.meda_header::text,'#NULL#') AND
+COALESCE(target_record.meda_femb::text,'#NULL#') = COALESCE(current_record.meda_femb::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_2::text,'#NULL#') = COALESCE(current_record.meda_femb_2::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_3::text,'#NULL#') = COALESCE(current_record.meda_femb_3::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_4::text,'#NULL#') = COALESCE(current_record.meda_femb_4::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_5::text,'#NULL#') = COALESCE(current_record.meda_femb_5::text,'#NULL#') AND
+COALESCE(target_record.fall_fe_id::text,'#NULL#') = COALESCE(current_record.fall_fe_id::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
+COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
+COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
+COALESCE(target_record.meda_risiko_pat::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat::text,'#NULL#') AND
+COALESCE(target_record.meda_risiko_pat_info::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info::text,'#NULL#') AND
+COALESCE(target_record.meda_risiko_pat_info_txt::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info_txt::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp_dat::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat::text,'#NULL#') AND
+COALESCE(target_record.meda_mrp_detekt::text,'#NULL#') = COALESCE(current_record.meda_mrp_detekt::text,'#NULL#') AND
+COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
+COALESCE(target_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') AND
+COALESCE(target_record.meda_aufwand_zeit_and::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and::text,'#NULL#') AND
+COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
+COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
                   ;
 
             IF data_count = 0
             THEN
                 INSERT INTO db_log.medikationsanalyse_fe ( medikationsanalyse_fe_id,
-                        record_id,
-                        fall_typ_id,
-                        meda_fall_id,
-                        redcap_repeat_instrument,
-                        redcap_repeat_instance,
-                        meda_dat,
-                        meda_typ,
-                        meda_risiko_pat,
-                        meda_ma_thueberw,
-                        meda_aufwand_zeit,
-                        meda_aufwand_zeit_and,
-                        meda_notiz,
-                        medikationsanalyse_complete,
+record_id,
+meda_header,
+meda_femb,
+meda_femb_2,
+meda_femb_3,
+meda_femb_4,
+meda_femb_5,
+fall_fe_id,
+redcap_repeat_instrument,
+redcap_repeat_instance,
+meda_dat,
+meda_typ,
+meda_risiko_pat,
+meda_risiko_pat_info,
+meda_risiko_pat_info_txt,
+meda_ma_thueberw,
+meda_ma_thueberw_comp_lbl,
+meda_ma_thueberw_comp,
+meda_ma_thueberw_comp_dat_lbl,
+meda_ma_thueberw_comp_dat,
+meda_mrp_detekt,
+meda_aufwand_zeit,
+meda_aufwand_zeit_and_lbl,
+meda_aufwand_zeit_and,
+meda_notiz,
+medikationsanalyse_complete,
                         input_datetime
                 )
                 VALUES (current_record.medikationsanalyse_fe_id,
-                        current_record.record_id,
-                        current_record.fall_typ_id,
-                        current_record.meda_fall_id,
-                        current_record.redcap_repeat_instrument,
-                        current_record.redcap_repeat_instance,
-                        current_record.meda_dat,
-                        current_record.meda_typ,
-                        current_record.meda_risiko_pat,
-                        current_record.meda_ma_thueberw,
-                        current_record.meda_aufwand_zeit,
-                        current_record.meda_aufwand_zeit_and,
-                        current_record.meda_notiz,
-                        current_record.medikationsanalyse_complete,
+current_record.record_id,
+current_record.meda_header,
+current_record.meda_femb,
+current_record.meda_femb_2,
+current_record.meda_femb_3,
+current_record.meda_femb_4,
+current_record.meda_femb_5,
+current_record.fall_fe_id,
+current_record.redcap_repeat_instrument,
+current_record.redcap_repeat_instance,
+current_record.meda_dat,
+current_record.meda_typ,
+current_record.meda_risiko_pat,
+current_record.meda_risiko_pat_info,
+current_record.meda_risiko_pat_info_txt,
+current_record.meda_ma_thueberw,
+current_record.meda_ma_thueberw_comp_lbl,
+current_record.meda_ma_thueberw_comp,
+current_record.meda_ma_thueberw_comp_dat_lbl,
+current_record.meda_ma_thueberw_comp_dat,
+current_record.meda_mrp_detekt,
+current_record.meda_aufwand_zeit,
+current_record.meda_aufwand_zeit_and_lbl,
+current_record.meda_aufwand_zeit_and,
+current_record.meda_notiz,
+current_record.medikationsanalyse_complete,
                         current_record.input_datetime
                 );
 
@@ -297,20 +372,33 @@ BEGIN
 	        UPDATE db_log.medikationsanalyse_fe target_record
                 SET last_check_datetime = CURRENT_TIMESTAMP
                 , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
-                WHERE 	COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                        COALESCE(target_record.fall_typ_id::text,'#NULL#') = COALESCE(current_record.fall_typ_id::text,'#NULL#') AND
-                        COALESCE(target_record.meda_fall_id::text,'#NULL#') = COALESCE(current_record.meda_fall_id::text,'#NULL#') AND
-                        COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                        COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                        COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
-                        COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
-                        COALESCE(target_record.meda_risiko_pat::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat::text,'#NULL#') AND
-                        COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
-                        COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
-                        COALESCE(target_record.meda_aufwand_zeit_and::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and::text,'#NULL#') AND
-                        COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
-                        COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
-                ;
+            WHERE   COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+COALESCE(target_record.meda_header::text,'#NULL#') = COALESCE(current_record.meda_header::text,'#NULL#') AND
+COALESCE(target_record.meda_femb::text,'#NULL#') = COALESCE(current_record.meda_femb::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_2::text,'#NULL#') = COALESCE(current_record.meda_femb_2::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_3::text,'#NULL#') = COALESCE(current_record.meda_femb_3::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_4::text,'#NULL#') = COALESCE(current_record.meda_femb_4::text,'#NULL#') AND
+COALESCE(target_record.meda_femb_5::text,'#NULL#') = COALESCE(current_record.meda_femb_5::text,'#NULL#') AND
+COALESCE(target_record.fall_fe_id::text,'#NULL#') = COALESCE(current_record.fall_fe_id::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
+COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
+COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
+COALESCE(target_record.meda_risiko_pat::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat::text,'#NULL#') AND
+COALESCE(target_record.meda_risiko_pat_info::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info::text,'#NULL#') AND
+COALESCE(target_record.meda_risiko_pat_info_txt::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info_txt::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') AND
+COALESCE(target_record.meda_ma_thueberw_comp_dat::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat::text,'#NULL#') AND
+COALESCE(target_record.meda_mrp_detekt::text,'#NULL#') = COALESCE(current_record.meda_mrp_detekt::text,'#NULL#') AND
+COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
+COALESCE(target_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') AND
+COALESCE(target_record.meda_aufwand_zeit_and::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and::text,'#NULL#') AND
+COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
+COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
+                  ;
 
                 -- Delete updatet datasets
                 DELETE FROM db2dataprocessor_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
