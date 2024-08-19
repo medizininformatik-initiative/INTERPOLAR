@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
   patient_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   pat_header varchar,   -- descriptive item only for frontend (varchar)
-  patient_fe_id varchar,   -- Patienten-identifier Datenbank für synchronisation (varchar)
   pat_id varchar,   -- Patient-identifier FHIR Daten (varchar)
   pat_cis_pid varchar,   -- Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  patient (varchar)
@@ -34,7 +33,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
   fall_id varchar,   -- Fall-ID RedCap FHIR Daten (varchar)
   fall_pat_id varchar,   -- Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)
   patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
-  fall_fe_id int,   -- Datenbank-FK des getypten Falls zur Datenflussverfolgung (Fall: v_fall_all . fall_id) (int)
   fall_femb varchar,   -- descriptive item only for frontend (varchar)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :   fall (varchar)
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
@@ -138,7 +136,6 @@ CREATE OR REPLACE TRIGGER fall_fe_tr_ins_tr
 comment on column db2frontend_in.patient_fe.patient_fe_id is 'Primary key of the entity';
 comment on column db2frontend_in.patient_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 comment on column db2frontend_in.patient_fe.pat_header is 'descriptive item only for frontend (varchar)';
-comment on column db2frontend_in.patient_fe.patient_fe_id is 'Patienten-identifier Datenbank für synchronisation (varchar)';
 comment on column db2frontend_in.patient_fe.pat_id is 'Patient-identifier FHIR Daten (varchar)';
 comment on column db2frontend_in.patient_fe.pat_cis_pid is 'Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)';
 comment on column db2frontend_in.patient_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :  patient (varchar)';
@@ -159,7 +156,6 @@ comment on column db2frontend_in.fall_fe.fall_header is 'descriptive item only f
 comment on column db2frontend_in.fall_fe.fall_id is 'Fall-ID RedCap FHIR Daten (varchar)';
 comment on column db2frontend_in.fall_fe.fall_pat_id is 'Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)';
 comment on column db2frontend_in.fall_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-comment on column db2frontend_in.fall_fe.fall_fe_id is 'Datenbank-FK des getypten Falls zur Datenflussverfolgung (Fall: v_fall_all . fall_id) (int)';
 comment on column db2frontend_in.fall_fe.fall_femb is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.fall_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :   fall (varchar)';
 comment on column db2frontend_in.fall_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
