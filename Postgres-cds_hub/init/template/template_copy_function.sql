@@ -9,7 +9,7 @@ DECLARE
     last_pro_nr INT;
     temp varchar;
 BEGIN
-    -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
 
 <%LOOP_TABS_SUB_copy_function%>
 
