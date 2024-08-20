@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
   meda_typ varchar,   -- Typ der Medikationsanalyse (varchar)
   meda_risiko_pat varchar,   -- 1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (varchar)
   meda_risiko_pat_info varchar,   -- descriptive item only for frontend (varchar)
+  meda_risiko_pat_info__1 varchar,   -- descriptive item only for frontend (varchar)
   meda_risiko_pat_info_txt varchar,   -- descriptive item only for frontend (varchar)
   meda_ma_thueberw varchar,   -- Medikationsanalyse / Therapieüberwachung in 24-48h (varchar)
   meda_ma_thueberw_comp_lbl varchar,   -- descriptive item only for frontend (varchar)
@@ -122,7 +123,9 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_femb_2 varchar,   -- descriptive item only for frontend (varchar)
   mrp_femb_3 varchar,   -- descriptive item only for frontend (varchar)
   mrp_pi_info varchar,   -- descriptive item only for frontend (varchar)
+  mrp_pi_info__1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_mf_info varchar,   -- descriptive item only for frontend (varchar)
+  mrp_mf_info__1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_pi_info_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_mf_info_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_femb_4 varchar,   -- descriptive item only for frontend (varchar)
@@ -229,9 +232,10 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_femb_21 varchar,   -- descriptive item only for frontend (varchar)
   mrp_dokup_hand_emp_akz varchar,   -- Handlungsempfehlung akzeptiert? (varchar)
   mrp_merp varchar,   -- NCC MERP Score (varchar)
-  mrp_merp_info varchar,   -- descriptive item only for frontend (varchar)
+  mrp_merp_info__1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_wiedervorlage varchar,   -- MRP Wiedervorlage (varchar)
+  mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status (varchar)
   input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
@@ -243,8 +247,8 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
   risikofaktor_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
-  patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
-  rskfk_gerhemmer varchar,   -- Ger.hemmer (varchar)
+  patient_id_fk varchar,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (varchar)
+  rskfk_gerhemmer int,   -- Ger.hemmer (int)
   rskfk_tah varchar,   -- TAH (varchar)
   rskfk_immunsupp varchar,   -- Immunsupp. (varchar)
   rskfk_tumorth varchar,   -- Tumorth. (varchar)
@@ -269,8 +273,8 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
   trigger_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
-  record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
+  patient_id_fk varchar,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (varchar)
+  record_id int,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (int)
   trg_ast varchar,   -- AST (varchar)
   trg_alt varchar,   -- ALT↑ (varchar)
   trg_crp varchar,   -- CRP↑ (varchar)
@@ -544,6 +548,7 @@ comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_dat is 'Datum d
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_typ is 'Typ der Medikationsanalyse (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat is '1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat_info is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat_info__1 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw is 'Medikationsanalyse / Therapieüberwachung in 24-48h (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw_comp_lbl is 'descriptive item only for frontend (varchar)';
@@ -570,7 +575,9 @@ comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb i
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_2 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_3 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pi_info is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pi_info__1 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_mf_info is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_mf_info__1 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pi_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_mf_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_4 is 'descriptive item only for frontend (varchar)';
@@ -677,17 +684,18 @@ comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_notiz 
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_21 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is 'Handlungsempfehlung akzeptiert? (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP Score (varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info__1 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wiedervorlage is 'MRP Wiedervorlage (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.input_datetime is 'Time at which the data record is inserted';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.last_check_datetime is 'Time at which data record was last checked';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.current_dataset_status is 'Processing status of the data record';
 
 comment on column db2dataprocessor_in.risikofaktor_fe.risikofaktor_fe_id is 'Primary key of the entity';
 comment on column db2dataprocessor_in.risikofaktor_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db2dataprocessor_in.risikofaktor_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_gerhemmer is 'Ger.hemmer (varchar)';
+comment on column db2dataprocessor_in.risikofaktor_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (varchar)';
+comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_gerhemmer is 'Ger.hemmer (int)';
 comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_tah is 'TAH (varchar)';
 comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_immunsupp is 'Immunsupp. (varchar)';
 comment on column db2dataprocessor_in.risikofaktor_fe.rskfk_tumorth is 'Tumorth. (varchar)';
@@ -707,8 +715,8 @@ comment on column db2dataprocessor_in.risikofaktor_fe.last_check_datetime is 'Ti
 comment on column db2dataprocessor_in.risikofaktor_fe.current_dataset_status is 'Processing status of the data record';
 
 comment on column db2dataprocessor_in.trigger_fe.trigger_fe_id is 'Primary key of the entity';
-comment on column db2dataprocessor_in.trigger_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-comment on column db2dataprocessor_in.trigger_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+comment on column db2dataprocessor_in.trigger_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (varchar)';
+comment on column db2dataprocessor_in.trigger_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (int)';
 comment on column db2dataprocessor_in.trigger_fe.trg_ast is 'AST (varchar)';
 comment on column db2dataprocessor_in.trigger_fe.trg_alt is 'ALT↑ (varchar)';
 comment on column db2dataprocessor_in.trigger_fe.trg_crp is 'CRP↑ (varchar)';
