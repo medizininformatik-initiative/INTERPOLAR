@@ -9,7 +9,7 @@ DECLARE
     last_pro_nr INT;
     temp varchar;
 BEGIN
-    -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    -- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
 
     -- Start encounter
     FOR current_record IN (SELECT * FROM cds2db_in.encounter)

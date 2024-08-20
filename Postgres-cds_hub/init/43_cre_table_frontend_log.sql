@@ -313,7 +313,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_user; -- Additional authorizations for testing
 
 CREATE OR REPLACE FUNCTION db_log.patient_fe_tr_ins_fkt()
@@ -338,7 +337,6 @@ GRANT TRIGGER ON db_log.fall_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_user; -- Additional authorizations for testing
 
@@ -365,7 +363,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_user; -- Additional authorizations for testing
 
 CREATE OR REPLACE FUNCTION db_log.medikationsanalyse_fe_tr_ins_fkt()
@@ -390,7 +387,6 @@ GRANT TRIGGER ON db_log.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
 
@@ -417,7 +413,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_user; -- Additional authorizations for testing
 
 CREATE OR REPLACE FUNCTION db_log.risikofaktor_fe_tr_ins_fkt()
@@ -442,7 +437,6 @@ GRANT TRIGGER ON db_log.trigger_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_user; -- Additional authorizations for testing
 
