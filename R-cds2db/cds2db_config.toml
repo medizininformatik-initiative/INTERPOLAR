@@ -78,15 +78,20 @@ DELAY_REQ                          = 2 # if request fails, wait X seconds, the d
 # FOR DEBUG ONLY: #
 ###################
 
+DEBUG_ADD_PATIENT_IDENTIFIER = true
+
 # Activate this date to load all patient IDs from Encounters with an enddate greater
 # DEBUG_CURRENT_DATETIME from database. If it is not set, then time now will be taken.
 #DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
+DEBUG_CURRENT_DATETIME = "2020-06-30 21:25:00" #       end <- sub("6", "7", current_datetime)
+#DEBUG_CURRENT_DATETIME = "2020-06-30 21:25:00" #       end <- sub("6", "8", current_datetime)
+#DEBUG_CURRENT_DATETIME = "2020-07-30 21:25:00" #       end <- sub("7", "9", current_datetime)
 
 # Activate this encounter status for tests only
 # This parameter is called in function for download and crack encounters
 # Only encounters with exactly this status are found. If no status is set, the status "in-progress"
 # applies.
-#DEBUG_ENCOUNTER_STATUS = "finished"
+DEBUG_ENCOUNTER_STATUS = "finished"
 
 
 [retrieve.patient_id_filtering]
@@ -111,8 +116,8 @@ ENCOUNTER_FILTER_PATTERN_1 = [
 ]
 
 ENCOUNTER_FILTER_PATTERN_2 = [
-  "ward_name = 'Station 2'",
-  "serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "ward_name = 'Station 2'"#,
+  #"serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_3 = [
