@@ -1,7 +1,7 @@
   1. Bitte laden Sie Redcap (Install, zip) herunter: [https://redcap.vanderbilt.edu/community/custom/download.php](https://redcap.vanderbilt.edu/community/custom/download.php)
-  1. Entpacken Sie die Zip-Datei, z.B. _redcap14.1.5.zip_ in den Ordner 'html'. \
+  1. Entpacken Sie die Zip-Datei, z.B. _redcap14.6.2.zip_ in den Ordner 'html'. \
     ``` cd REDCap-app/html/ ``` \
-    ``` unzip redcap14.1.5.zip ```
+    ``` unzip redcap14.6.2.zip ```
   1. Legen Sie das folgende Verzeichnis an: _REDCap-app/html/redcapdocs_ \
     ``` mkdir redcapdocs ```
   1. Passen Sie die Zugriffrechte für die folgenden Verzeichnisse an:
@@ -47,6 +47,7 @@
      * Klicken Sie auf "Create Project"
      * Unter "My Projects" einscheint nun das angelegte Projekt.
      ![REDCap-Projekt importieren](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/0bfc855c-8586-4c82-8d58-84615ccb1a8f)
+1. Führen Sie die [Konfiguration von DB2Frontend](../../R-db2frontend) durch (REDCap API-Token).
 1. Fahren Sie mit Schritt 3) [REDCap-app/Readme.md](../Readme.md) fort.
 
 [//]: # (Zurück zur Install-Anleitung einfügen)
