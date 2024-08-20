@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
   meda_typ varchar,   -- Typ der Medikationsanalyse (varchar)
   meda_risiko_pat varchar,   -- 1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (varchar)
   meda_risiko_pat_info varchar,   -- descriptive item only for frontend (varchar)
-  meda_risiko_pat_info__1 varchar,   -- descriptive item only for frontend (varchar)
+  meda_risiko_pat_info___1 varchar,   -- descriptive item only for frontend (varchar)
   meda_risiko_pat_info_txt varchar,   -- descriptive item only for frontend (varchar)
   meda_ma_thueberw varchar,   -- Medikationsanalyse / Therapieüberwachung in 24-48h (varchar)
   meda_ma_thueberw_comp_lbl varchar,   -- descriptive item only for frontend (varchar)
@@ -123,9 +123,9 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrp_femb_2 varchar,   -- descriptive item only for frontend (varchar)
   mrp_femb_3 varchar,   -- descriptive item only for frontend (varchar)
   mrp_pi_info varchar,   -- descriptive item only for frontend (varchar)
-  mrp_pi_info__1 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_pi_info___1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_mf_info varchar,   -- descriptive item only for frontend (varchar)
-  mrp_mf_info__1 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_mf_info___1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_pi_info_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_mf_info_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_femb_4 varchar,   -- descriptive item only for frontend (varchar)
@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrp_femb_21 varchar,   -- descriptive item only for frontend (varchar)
   mrp_dokup_hand_emp_akz varchar,   -- Handlungsempfehlung akzeptiert? (varchar)
   mrp_merp varchar,   -- NCC MERP Score (varchar)
-  mrp_merp_info__1 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_merp_info___1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_wiedervorlage varchar,   -- MRP Wiedervorlage (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status (varchar)
@@ -548,7 +548,7 @@ comment on column db2frontend_in.medikationsanalyse_fe.meda_dat is 'Datum der Me
 comment on column db2frontend_in.medikationsanalyse_fe.meda_typ is 'Typ der Medikationsanalyse (varchar)';
 comment on column db2frontend_in.medikationsanalyse_fe.meda_risiko_pat is '1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (varchar)';
 comment on column db2frontend_in.medikationsanalyse_fe.meda_risiko_pat_info is 'descriptive item only for frontend (varchar)';
-comment on column db2frontend_in.medikationsanalyse_fe.meda_risiko_pat_info__1 is 'descriptive item only for frontend (varchar)';
+comment on column db2frontend_in.medikationsanalyse_fe.meda_risiko_pat_info___1 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.medikationsanalyse_fe.meda_risiko_pat_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.medikationsanalyse_fe.meda_ma_thueberw is 'Medikationsanalyse / Therapieüberwachung in 24-48h (varchar)';
 comment on column db2frontend_in.medikationsanalyse_fe.meda_ma_thueberw_comp_lbl is 'descriptive item only for frontend (varchar)';
@@ -575,9 +575,9 @@ comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb is 'de
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_2 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_3 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info is 'descriptive item only for frontend (varchar)';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info__1 is 'descriptive item only for frontend (varchar)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info___1 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info is 'descriptive item only for frontend (varchar)';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info__1 is 'descriptive item only for frontend (varchar)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info___1 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_4 is 'descriptive item only for frontend (varchar)';
@@ -684,7 +684,7 @@ comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_notiz is 'N
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_21 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is 'Handlungsempfehlung akzeptiert? (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP Score (varchar)';
-comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp_info__1 is 'descriptive item only for frontend (varchar)';
+comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp_info___1 is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrp_wiedervorlage is 'MRP Wiedervorlage (varchar)';
 comment on column db2frontend_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status (varchar)';
