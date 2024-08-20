@@ -1,7 +1,7 @@
   1. Bitte laden Sie Redcap (Install, zip) herunter: [https://redcap.vanderbilt.edu/community/custom/download.php](https://redcap.vanderbilt.edu/community/custom/download.php)
-  1. Entpacken Sie die Zip-Datei, z.B. _redcap14.1.5.zip_ in den Ordner 'html'. \
+  1. Entpacken Sie die Zip-Datei, z.B. _redcap14.6.2.zip_ in den Ordner 'html'. \
     ``` cd REDCap-app/html/ ``` \
-    ``` unzip redcap14.1.5.zip ```
+    ``` unzip redcap14.6.2.zip ```
   1. Legen Sie das folgende Verzeichnis an: _REDCap-app/html/redcapdocs_ \
     ``` mkdir redcapdocs ```
   1. Passen Sie die Zugriffrechte für die folgenden Verzeichnisse an:
