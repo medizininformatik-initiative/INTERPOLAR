@@ -47,6 +47,7 @@
      * Klicken Sie auf "Create Project"
      * Unter "My Projects" einscheint nun das angelegte Projekt.
      ![REDCap-Projekt importieren](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/11329281/0bfc855c-8586-4c82-8d58-84615ccb1a8f)
+1. Führen Sie die [Konfiguration von DB2Frontend](../../R-db2frontend) durch (REDCap API-Token).
 1. Fahren Sie mit Schritt 3) [REDCap-app/Readme.md](../Readme.md) fort.
 
 [//]: # (Zurück zur Install-Anleitung einfügen)
