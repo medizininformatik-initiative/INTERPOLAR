@@ -57,6 +57,12 @@ retrieve <- function() {
       }
     })
 
+    #####################DEBUG only START########################
+    resource_tables[["Observation"]] <- resource_tables[["Observation"]][1:10]
+    resource_tables[["MedicationStatement"]] <- resource_tables[["MedicationStatement"]][1:10]
+
+    #####################DEBUG only END########################
+
     if (!all_empty_fhir) {
       # Write raw tables to database
       etlutils::runLevel2("Write raw tables to database", {
