@@ -91,7 +91,10 @@ sortListByValue <- function(list) list[order(names(setNames(list, list)))]
 #' print(sorted_list)
 #'
 #' @export
-sortListByName <- function(list) list[order(names(list))]
+sortListByName <- function(list) {
+  if (length(list) == 0) return(list)
+  list[order(names(list))]
+}
 
 #' Flatten a nested list
 #'

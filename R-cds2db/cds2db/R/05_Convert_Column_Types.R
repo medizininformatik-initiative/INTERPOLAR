@@ -192,7 +192,7 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
-    if (isIndexedTable(resource_tables[[i]], fhir_table_description)) {
+    if (!is.null(fhir_table_description) && isIndexedTable(resource_tables[[i]], fhir_table_description)) {
       print(paste0("Melt table ", resource_name))
       nrow_before_melt <- nrow(resource_tables[[i]])
       resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
@@ -215,18 +215,18 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
 #' @details This function takes a list of tables, where each table is represented by a data frame,
 #' and converts columns of specific types specified by \code{convert_columns}. The conversion is
 #' performed using the provided \code{convert_type_function}. The function assumes that there is
-#' a table description table containing columns: "resource", "column_name", and "type".
+#' a table description table containing columns: "RESOURCE", "COLUMN_NAME", and "FHIR_TYPE".
 #'
 convertType <- function(resource_tables, convert_columns, convert_type_function) {
   # Get table description
-  table_description <- getTableDescriptionsTable(c("resource", "column_name", "type"))
+  table_description <- getTableDescriptionsTable(c("RESOURCE", "COLUMN_NAME", "FHIR_TYPE"))
   # converting column types
-  convert_columns <- table_description[type %in% convert_columns]
-  convert_columns <- split(convert_columns, convert_columns$resource)
+  convert_columns <- table_description[FHIR_TYPE %in% convert_columns]
+  convert_columns <- split(convert_columns, convert_columns$RESOURCE)
   for (resource in names(convert_columns)) {
     resource_table <- resource_tables[[tolower(resource)]]
     if (!is.null(resource_table)) {
-      convert_type_function(resource_table, convert_columns[[resource]]$column_name)
+      convert_type_function(resource_table, convert_columns[[resource]]$COLUMN_NAME)
     }
   }
 }
@@ -305,15 +305,17 @@ replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, n
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     table_description_index <- which(tolower(names(fhir_table_descriptions)) == resource_name)
-    fhir_table_description <- fhir_table_descriptions[[table_description_index]]
-    if (names_to_.Data) {
-      old_names <- fhir_table_description@cols@names
-      new_names <- fhir_table_description@cols@.Data
-    } else {
-      old_names <- fhir_table_description@cols@.Data
-      new_names <- fhir_table_description@cols@names
+    if (length(table_description_index)) {
+      fhir_table_description <- fhir_table_descriptions[[table_description_index]]
+      if (names_to_.Data) {
+        old_names <- fhir_table_description@cols@names
+        new_names <- fhir_table_description@cols@.Data
+      } else {
+        old_names <- fhir_table_description@cols@.Data
+        new_names <- fhir_table_description@cols@names
+      }
+      resource_tables[[i]] <- data.table::setnames(resource_tables[[i]], old_names, new_names)
     }
-    resource_tables[[i]] <- data.table::setnames(resource_tables[[i]], old_names, new_names)
   }
   return(resource_tables)
 }

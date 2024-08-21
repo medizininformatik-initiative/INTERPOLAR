@@ -1,0 +1,237 @@
+-- Einfacher Test mit temporärer Logtabelle bereitstellung aktuelle Daten - manuelle Funktionsausführung - Testlog in eigene Tabelle
+-- Anlegen einer Tabelle zur Dokumentation
+CREATE TABLE IF NOT EXISTS db_log.test_log (
+  test_log_id serial PRIMARY KEY not null, -- Primary key of the entity
+  ent_name varchar,
+  ent_ident varchar,
+  ent_id varchar,
+  text1 varchar,
+  text2 varchar,
+  text3 varchar,
+  text4 varchar,
+  text5 varchar,
+  text6 varchar,
+  text7 varchar,
+  text8 varchar,
+  text9 varchar,
+  input_datetime timestamp not null default CURRENT_TIMESTAMP   -- Time at which the data record is inserted
+);
+
+ALTER TABLE db_log.test_log ALTER COLUMN test_log_id SET DEFAULT (nextval('db.db_seq'));
+--------------------------------------------------------------------------------------------------------------------------------
+-- #############################################################################################################################
+-- Testdatensätze am Beispiel Patient - RAW -> Prinzipielle Kopierfunktion cds_in to log
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
+-- Inputdate dokumentieren
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text7, text8, text9)
+(select 'cds2db_in.patient_raw', pat_id, patient_raw_id, input_datetime, 'input_datetime in cds2db_in.patient_raw', last_check_datetime, 'last_check_datetime in cds2db_in.patient_raw'
+,'db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient_raw  where pat_id like 'Pat_FHIR_Test_%');
+
+-- Kopieren von RAW zu Log
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+SELECT db.copy_raw_cds_in_to_db_log();
+--> evtl. Überlegen das Insertdatum vereinheitlichen auf den Kopiervorgang oder zusätzlich noch eine Spalte für Vorgangsnummer und eine Logtabelle dazu
+
+-- Imputdate in Log dokumentieren
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text5, text6, text7, text8,text9)
+(select 'db_log.patient_raw', pat_id, patient_raw_id, input_datetime, 'input_datetime in db_log.patient_raw', last_check_datetime, 'last_check_datetime in db_log.patient_raw', current_dataset_status, 'current_dataset_status in db_log.patient_raw', 'db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from db_log.patient_raw where pat_id like 'Pat_FHIR_Test_%');
+
+-- Zählen ob alle Datensätze übernommen wurden
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text7, text8, text9)
+(select 'Info','Info','Info',count(1), 'Anzahl Datensätze in cds2db_in.patient_raw - sollten 0 sein nach Übernahme','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient_raw where pat_id like 'Pat_FHIR_Test_%');
+
+-- Testdatensätze NOCHMAL einfügen Patient - RAW
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
+-- Inputdate dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text7, text8,text9)
+(select 'cds2db_in.patient_raw', pat_id, patient_raw_id, input_datetime, '2e input_datetime in cds2db_in.patient_raw', last_check_datetime, 'last_check_datetime in cds2db_in.patient_raw','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient_raw  where pat_id like 'Pat_FHIR_Test_%');
+
+-- Kopieren von RAW zu Log
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+SELECT db.copy_raw_cds_in_to_db_log();
+
+-- Zählen ob alle Datensätze übernommen wurden
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2,text7,text8,text9)
+(select 'Info','Info','Info',count(1), '2e Anzahl Datensätze in cds2db_in.patient_raw - sollten 0 sein nach Übernahme','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde' from cds2db_in.patient_raw where pat_id like 'Pat_FHIR_Test_%');
+
+-- Imputdate in Log 2mal dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text5, text6,text7,text8)
+(select 'db_log.patient_raw', pat_id, patient_raw_id, input_datetime, '2e input_datetime in db_log.patient_raw', last_check_datetime, 'last_check_datetime in db_log.patient_raw', current_dataset_status, 'current_dataset_status in db_log.patient_raw','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from db_log.patient_raw where pat_id like 'Pat_FHIR_Test_%');
+
+---------------------------------------
+-- Testdatensätze 3mal einfügen Patient - RAW
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
+-- Inputdate 3mal dokumentieren
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text7, text8,text9)
+(select 'cds2db_in.patient_raw', pat_id, patient_raw_id, input_datetime, '3e input_datetime in cds2db_in.patient_raw', last_check_datetime, 'last_check_datetime in cds2db_in.patient_raw','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient_raw  where pat_id like 'Pat_FHIR_Test_%');
+
+-- Kopieren von RAW zu Log
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+SELECT db.copy_raw_cds_in_to_db_log();
+
+-- Zählen ob alle Datensätze übernommen wurden
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2,text7,text8,text9)
+(select 'Info','Info','Info',count(1), '3e Anzahl Datensätze in cds2db_in.patient_raw - sollten 0 sein nach Übernahme','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient_raw where pat_id like 'Pat_FHIR_Test_%');
+
+-- Imputdate in Log 3mal dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text5, text6,text7,text8,text9)
+(select 'db_log.patient_raw', pat_id, patient_raw_id, input_datetime, '3e input_datetime in db_log.patient_raw', last_check_datetime, 'last_check_datetime in db_log.patient_raw', current_dataset_status, 'current_dataset_status in db_log.patient_raw','db.copy_raw_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from db_log.patient_raw where pat_id like 'Pat_FHIR_Test_%');
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+-- #############################################################################################################################
+-- Testdatensätze am Beispiel Patient MeltetData -> Prinzipielle Kopierfunktion cds_in to log
+-- Test wird mit bisher eingefügten Testpatienten durchgeführt aus db_log.patient_raw
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_%');
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+
+-- Inputdate dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text7, text8, text9)
+(select 'cds2db_in.patient', pat_id, patient_id, input_datetime, 'input_datetime in cds2db_in.patient', last_check_datetime, 'last_check_datetime in cds2db_in.patient'
+,'db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient  where pat_id like 'Pat_FHIR_Test_%');
+
+-- Kopieren von RAW zu Log
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+SELECT db.copy_type_cds_in_to_db_log();
+--> evtl. Überlegen das Insertdatum vereinheitlichen auf den Kopiervorgang oder zusätzlich noch eine Spalte für Vorgangsnummer und eine Logtabelle dazu
+
+-- Imputdate in Log dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text5, text6, text7, text8, text9)
+(select 'db_log.patient', pat_id, patient_id, input_datetime, 'input_datetime in db_log.patient', last_check_datetime, 'last_check_datetime in db_log.patient', current_dataset_status, 'current_dataset_status in db_log.patient', 'db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from db_log.patient where pat_id like 'Pat_FHIR_Test_%');
+
+-- Zählen ob alle Datensätze übernommen wurden
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text7, text8, text9)
+(select 'Info','Info','Info',count(1), 'Anzahl Datensätze in cds2db_in.patient - sollten 0 sein nach Übernahme','db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient where pat_id like 'Pat_FHIR_Test_%');
+
+-- Testdatensätze NOCHMAL einfügen Patient
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_%');
+
+-- Inputdate dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text7, text8, text9)
+(select 'cds2db_in.patient', pat_id, patient_id, input_datetime, '2e input_datetime in cds2db_in.patient', last_check_datetime, 'last_check_datetime in cds2db_in.patient'
+,'db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient  where pat_id like 'Pat_FHIR_Test_%');
+
+-- Kopieren von RAW zu Log
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+SELECT db.copy_type_cds_in_to_db_log();
+--> evtl. Überlegen das Insertdatum vereinheitlichen auf den Kopiervorgang oder zusätzlich noch eine Spalte für Vorgangsnummer und eine Logtabelle dazu
+
+-- Imputdate in Log dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text5, text6, text7, text8, text9)
+(select 'db_log.patient', pat_id, patient_id, input_datetime, '2e input_datetime in db_log.patient', last_check_datetime, 'last_check_datetime in db_log.patient', current_dataset_status, 'current_dataset_status in db_log.patient', 'db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from db_log.patient where pat_id like 'Pat_FHIR_Test_%');
+
+-- Zählen ob alle Datensätze übernommen wurden
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text7, text8, text9)
+(select 'Info','Info','Info',count(1), '2e Anzahl Datensätze in cds2db_in.patient - sollten 0 sein nach Übernahme','db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde', 'last_processing_nr: '||last_processing_nr from cds2db_in.patient where pat_id like 'Pat_FHIR_Test_%');
+
+---------------------------------------
+-- Testdatensätze 3mal einfügen Patient
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_05');
+
+
+-- Inputdate dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text7, text8)
+(select 'cds2db_in.patient', pat_id, patient_id, input_datetime, '3e input_datetime in cds2db_in.patient', last_check_datetime, 'last_check_datetime in cds2db_in.patient'
+,'db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde' from cds2db_in.patient  where pat_id like 'Pat_FHIR_Test_%');
+
+-- Kopieren von RAW zu Log
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+SELECT db.copy_type_cds_in_to_db_log();
+--> evtl. Überlegen das Insertdatum vereinheitlichen auf den Kopiervorgang oder zusätzlich noch eine Spalte für Vorgangsnummer und eine Logtabelle dazu
+
+-- Imputdate in Log dokumentieren
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text3, text4, text5, text6, text7, text8)
+(select 'db_log.patient', pat_id, patient_id, input_datetime, '3e input_datetime in db_log.patient', last_check_datetime, 'last_check_datetime in db_log.patient', current_dataset_status, 'current_dataset_status in db_log.patient', 'db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde' from db_log.patient where pat_id like 'Pat_FHIR_Test_%');
+
+-- Zählen ob alle Datensätze übernommen wurden
+insert into db_log.test_log (ent_name, ent_ident, ent_id, text1, text2, text7, text8)
+(select 'Info','Info','Info',count(1), '3e Anzahl Datensätze in cds2db_in.patient - sollten 0 sein nach Übernahme','db.copy_type_cds_in_to_db_log - Kopierfunktion', 'Name was getestet wurde' from cds2db_in.patient where pat_id like 'Pat_FHIR_Test_%');
+
+--------------------------------------------------------------------------------------------------------------------------------
+-- #############################################################################################################################
+-- Testung wie man sicherstellt, das alle FHIR Daten die zum selben Zeitpunkt importiert wurden auch die selbe last_processing_nr erhalen
+-- 3 Datensätze in raw imporieren
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+-- copy to log
+SELECT db.copy_raw_cds_in_to_db_log();
+-- melten
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_%');
+-- copy to log
+-- takeoverfunktion
+-- die selben 3 Datensätze in raw imporieren plus weitere
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+-- copy to log
+SELECT db.copy_raw_cds_in_to_db_log();
+-- melten
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_%');
+-- copy to log
+-- takeoverfunktion
+
+
+
+
+select * from db_log.test_log --where ent_ident='Pat_FHIR_Test_02'
+order by ent_ident, test_log_id;
+select * from cds2db_in.patient_raw;
+select * from db_log.patient_raw;
+select * from db_log.patient;

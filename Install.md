@@ -9,15 +9,13 @@
   1. Konfigurationsdateien aus den Vorlagen (Templates) erstellen \
      * _Postgres-cds_hub/template_env_cds_hub_db_admin.password_ nach _Postgres-cds_hub/.env_cds_hub_db_admin.password_ kopieren und ein Passwort-String einfügen. Dieses Passwort ist für den Admin-Nutzer der CDS_HUB-Datenbank. \
     ```cp Postgres-cds_hub/template_env_cds_hub_db_admin.password Postgres-cds_hub/.env_cds_hub_db_admin.password```
-     * _REDCap-db/template_env-redcap-db_ kopieren nach _REDCap-db/.env-redcap-db_ \
-    ```cp REDCap-db/template_env-redcap-db REDCap-db/.env-redcap-db```
      * _REDCap-db/template_env_redcap_db.password_ kopieren nach _REDCap-db/.env_redcap_db.password_ und tragen Sie ein Passwort für den Nutzer der redcap Datenbank ein \
     ```cp REDCap-db/template_env_redcap_db.password REDCap-db/.env_redcap_db.password```
      * _REDCap-db/template_env_redcap_db_root.password_ kopieren nach _REDCap-db/.env_redcap_db_root.password_ und tragen Sie ein Passwort für den root-Nutzer der Datenbank ein \
     ```cp REDCap-db/template_env_redcap_db_root.password REDCap-db/.env_redcap_db_root.password```
   1. Führen Sie die Anweisungen in [REDCap-app/Readme.md](REDCap-app/Readme.md) aus
   1. Führen Sie die Anweisungen in [REDCap-app/html/Readme.md](REDCap-app/html/Readme.md) aus
-  1. Führen Sie docker-compose aus: \
+  1. Führen Sie docker-compose aus, falls Sie es noch nicht ausgeführt: \
     ```docker-compose up```
   1. Die cds_hub_db (Postges-Datenbank) erreichen Sie im Browser (PGAdmin) über die URL: [http://127.0.0.1:8089/](http://127.0.0.1:8089/)
      * Die Zugangsdaten für pgadmin entnehmen Sie bitte der [docker-compose.yml](/docker-compose.yml#L94) (services -> pgadmin) bzw. können Sie diese dort anpassen.

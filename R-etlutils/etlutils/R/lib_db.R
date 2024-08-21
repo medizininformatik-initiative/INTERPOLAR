@@ -23,7 +23,9 @@ dbConnect <- function(dbname, host, port, user, password, schema) {
                                   port = port,
                                   user = user,
                                   password = password,
-                                  options = paste0('-c search_path=', schema))
+                                  options = paste0('-c search_path=', schema),
+                                  timezone = "Europe/Berlin")
+
   # Increase memory allocation for this connection to improve performance for memory-intensive operations
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
   return(db_connection)
@@ -241,18 +243,43 @@ dbExecute <- function(db_connection, statement, log = TRUE) {
 #' This function executes a given SQL query on a specified database connection.
 #'
 #' @param db_connection A database connection object.
-#' @param statement A string representing the SQL query to be executed.
+#' @param query A string representing the SQL query to be executed.
 #' @param log logical value indicating whether the statement should be logged to the console.
 #' Default is TRUE.
 #'
 #' @return The result of the SQL query.
 #'
 #' @export
-dbGetQuery <- function(db_connection, statement, log = TRUE) {
+dbGetQuery <- function(db_connection, query, log = TRUE) {
   if (log) {
-    cat(statement, "\n")
+    cat(query, "\n")
   }
-  data.table::as.data.table(DBI::dbGetQuery(db_connection, statement))
+  data.table::as.data.table(DBI::dbGetQuery(db_connection, query))
+}
+
+#' Execute a SQL Query on a Database with Automatic Connection Management
+#'
+#' This function establishes a database connection using the provided credentials,
+#' executes the specified SQL query, and then disconnects from the database.
+#'
+#' @param dbname A string representing the name of the database.
+#' @param host A string representing the database host.
+#' @param port An integer representing the port number to connect to.
+#' @param user A string representing the username for authentication.
+#' @param password A string representing the password for authentication.
+#' @param schema A string representing the schema to be used within the database.
+#' @param query A string representing the SQL query to be executed.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#' Default is TRUE.
+#'
+#' @return A data.table containing the result of the SQL query.
+#'
+#' @export
+dbConnectAndGetQuery <- function(dbname, host, port, user, password, schema, query, log = TRUE) {
+  db_connection <- dbConnect(dbname, host, port, user, password, schema)
+  result <- dbGetQuery(db_connection, query, log)
+  dbDisconnect(db_connection)
+  return(result)
 }
 
 #' Read a Table from a PostgreSQL Database
@@ -318,7 +345,7 @@ dbReadTable <- function(db_connection, table_name) {
 #' @export
 createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, clear_before_insert = FALSE) {
   db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  writeTablesToDatabase(tables, db_connection, clear_before_insert, TRUE)
+  writeTablesToDatabase(tables, db_connection, clear_before_insert, close_db_connection = TRUE)
 }
 
 #' Write Multiple Tables to Database
@@ -456,4 +483,34 @@ readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_con
   }
   dbDisconnect(db_connection)
   return(tables)
+}
+
+#' Prints Database Timezone and Current Time
+#'
+#' This function prints the current timezone and the current time from the connected PostgreSQL database.
+#'
+#' @param db_connection A DBI connection object to the PostgreSQL database.
+#'
+#' @return Prints the timezone and current time of the PostgreSQL database.
+#'
+#' @export
+dbPrintTimeAndTimezone <- function(db_connection) {
+  # Query to get the current timezone
+  query <- "SHOW timezone;"
+  timezone <- DBI::dbGetQuery(db_connection, query)
+  print(paste0("DB Timezone: ", timezone))
+
+  # Query to get the current time
+  query <- "SELECT NOW();"
+  now_time <- DBI::dbGetQuery(db_connection, query)
+  print(paste0("DB SELECT NOW(): ", now_time$now))
+
+  # Query to get the current timestamp
+  query <- "SELECT CURRENT_TIMESTAMP;"
+  current_timestamp <- DBI::dbGetQuery(db_connection, query)
+  #print(paste0("CURRENT_TIMESTAMP: ", current_timestamp$current_timestamp))
+  print(paste0("DB CURRENT_TIMESTAMP: ", current_timestamp))
+
+  print(paste0("R Sys.time(): ", Sys.time()))
+  print(paste0("R Sys.timezone(): ", Sys.timezone()))
 }

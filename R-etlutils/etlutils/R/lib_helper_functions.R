@@ -114,6 +114,33 @@ isSimpleNotEmptyString <- function(s) {
 isError <- function(obj) !isSimpleNA(obj) && sum(class(obj) %in% "try-error") > 0
 
 #'
+#' Tests the passed object for being an atomic NA or an error.
+#'
+#' This function checks whether the input object is an 'try-error' or a simple NA.
+#' If the object is an error or NA, the function returns TRUE; otherwise, it returns
+#' FALSE.
+#'
+#' @param obj The object to be tested for being an error or NA.
+#'
+#' @return TRUE if the object is an 'try-error' or NA, FALSE otherwise.
+#'
+#' @examples
+#' # Example 1: Check if an error is an error or NA
+#' result <- try(log("a"))
+#' isError(result)
+#'
+#' # Example 2: Check if a numeric value is not an error or NA
+#' numeric_result <- 42
+#' isError(numeric_result)
+#'
+#' # Example 3: Check if a NA value is not an error or NA
+#' numeric_result <- NA
+#' isError(numeric_result)
+#'
+#' @export
+isSimpleNaOrError <- function(obj) isSimpleNA(obj) || sum(class(obj) %in% "try-error") > 0
+
+#'
 #' Tests the passed object for being not an error.
 #'
 #' This function checks whether the input object is not an 'try-error'. If the object
@@ -147,14 +174,16 @@ isDebug <- function() exists('DEBUG') && DEBUG
 
 #' Check for Errors
 #'
-#' @param err Any Type. In case of an error occurred it must contain try-error as class
+#' This function checks if an error has occurred and executes the corresponding expression.
+#'
+#' @param potencial_error Any Type. In case of an error occurred it must contain try-error as class.
 #' @param expr_ok An expression. This runs in case of no error.
 #' @param expr_err An expression. This runs in case of an error.
 #'
-#' @return err
+#' @return The result of either `expr_ok` or `expr_err` depending on the presence of an error.
 #' @export
-checkError <- function(err, expr_ok = {catOkMessage()}, expr_err = {catErrorMessage()}) {
-  if (isError(err)) expr_err else expr_ok
+checkError <- function(potencial_error, expr_ok = {catOkMessage()}, expr_err = {catErrorMessage()}) {
+  if (isError(potencial_error)) expr_err else expr_ok
 }
 
 #' Convert Numbers to Verbose Number Representations

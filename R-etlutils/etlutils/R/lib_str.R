@@ -33,7 +33,8 @@ extractWords <- function(input_string) {
 #'
 #' This function performs case-insensitive pattern searches using `grepl` with Perl patterns. If `whole_word` is set to TRUE,
 #' the pattern is treated as a whole word, and '^' is added to the beginning and '$' to the end of the pattern if they are missing.
-#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching.
+#' When `perl` is TRUE, Perl-compatible regular expressions are used for pattern matching. The pattern
+#' you are looking for must be a string surrounded by whitespaces.
 #'
 #' @examples
 #' pattern <- 'AAA|BBB'
@@ -210,7 +211,6 @@ getPluralSuffix <- function(counts) {
 #' countTrailingSpaces("Hello World   ")  # returns 3
 #' countTrailingSpaces("NoSpacesHere")    # returns 0
 #' @export
-
 countTrailingSpaces <- function(text) {
   space_count <- 0
   for (i in nchar(text):1) {
@@ -335,4 +335,83 @@ getWordIndentation <- function(text, word) {
 #' @export
 getPrintString <- function(object) {
   paste(capture.output(print(object)), collapse = "\n")
+}
+
+#' Reverse a string
+#'
+#' This function takes an input string and returns it reversed.
+#'
+#' @param input_string A string to be reversed.
+#'
+#' @return A reversed string.
+#' @examples
+#' reverseString("abc")  # Returns "cba"
+#' @export
+reverseString <- function(input_string) {
+  return(paste0(rev(strsplit(input_string, NULL)[[1]]), collapse = ""))
+}
+
+#' Convert a String to Prefixed Format
+#'
+#' This function takes a string and converts it to a prefixed format
+#' if it is not already in that format.
+#'
+#' @param str A string to be converted.
+#' @param prefix A string to be used as the prefix for the format. It may or may not
+#' contain a trailing separator.
+#' @param separator A string to be used as the separator between the prefix and the string.
+#' Default is "/". If set to NA or an empty string, no separator will be added.
+#'
+#' @return A string converted to the prefixed format.
+#'
+#' @examples
+#' convertStringToPrefixedFormat("001", prefix = "Patient", separator = "/")
+#' # Returns: "Patient/001"
+#'
+#' @export
+convertStringToPrefixedFormat <- function(str, prefix, separator = "/") {
+  # Ensure separator is not NA or empty
+  if (!is.na(separator) && separator != "") {
+    # Ensure the prefix ends with the separator
+    if (substr(prefix, nchar(prefix), nchar(prefix)) != separator) {
+      prefix <- paste0(prefix, separator)
+    }
+  }
+
+  # Convert string to prefixed format if it is not already in that format
+  if (!grepl(paste0("^", prefix), str)) {
+    str <- paste0(prefix, str)
+  }
+  return(str)
+}
+
+#' Escape special characters in a string for grep patterns
+#'
+#' This function escapes only special characters in a given string by prefixing them with a
+#' backslash. Alphanumeric characters (letters and numbers) are not escaped.
+#'
+#' @param string A string to be escaped.
+#'
+#' @return A string with special characters escaped by a backslash.
+#'
+#' @examples
+#' escaped <- getEscaped("example@#")
+#' print(escaped) # Output: "example\@\#"
+#'
+#' @export
+getEscaped <- function(string) {
+  if (nchar(string) == 0) {
+    return(string)
+  }
+  special_chars <- c(".", "\\", "|", "(", ")", "[", "]", "{", "}", "^", "$", "*", "+", "?", "-")
+  chars <- strsplit(string, "")[[1]]
+  escaped_chars <- sapply(chars, function(char) {
+    if (char %in% special_chars) {
+      return(paste0("\\", char))
+    } else {
+      return(char)
+    }
+  })
+  escaped_string <- paste0(escaped_chars, collapse = "")
+  return(escaped_string)
 }

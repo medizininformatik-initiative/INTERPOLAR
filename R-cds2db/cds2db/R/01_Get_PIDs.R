@@ -149,27 +149,35 @@ filterResources <- function(resources, filter_patterns) {
 #' @return A unique, sorted list of patient IDs.
 #'
 parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
+
+  # Helper function to process the PIDs of a single ward
+  processWardPIDs <- function(single_ward_pids, ward_name, pids_per_ward) {
+    if (!is.na(ward_name) && length(single_ward_pids) > 0) {
+      single_ward_pids <- lapply(unique(single_ward_pids), convertStringToPrefixedFormat, prefix = "Patient", separator = "/")
+      pids_per_ward[[ward_name]] <- etlutils::sortListByValue(single_ward_pids)
+    }
+    return(pids_per_ward)
+  }
+
   pids_per_ward <- list()
   lines <- readLines(path_to_PID_list_file)
   single_ward_pids <- list()
   ward_name <- NA
+
   for (line in lines) {
     line <- trimws(sub("#.*$", "", line)) # remove comments (starts with '#')
     if (nchar(line)) {
       if (startsWith(line, 'ward_name')) {
-        if (!is.na(ward_name)) {
-          pids_per_ward[[ward_name]] <- etlutils::sortListByValue(unique(single_ward_pids))
-          single_ward_pids <- list()
-        }
+        pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
+        single_ward_pids <- list()
         ward_name <- etlutils::getBetweenQuotes(line)
       } else {
         single_ward_pids[[length(single_ward_pids) + 1]] <- line
       }
     }
   }
-  if (!is.na(ward_name)) {
-    pids_per_ward[[ward_name]] <- etlutils::sortListByValue(unique(single_ward_pids))
-  }
+  pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
+
   return(pids_per_ward)
 }
 
@@ -182,40 +190,6 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 isEncounterTableEmpty <- function() {
   # TODO: implement check if Encounter table in database is empty
   TRUE
-}
-
-
-#' Initialize encounter retrieval period for downloading.
-#'
-#' This function initializes the period for downloading encounters based on various conditions.
-#' If debugging period start and end are provided, those values are used. Otherwise, it checks
-#' if encounter data exists. If not, it sets the period in the past based on the initial days;
-#' otherwise, it sets the period based on the usual days. If debugging period start is provided,
-#' it adjusts the start date by subtracting the initial days; otherwise, it uses the current time.
-#'
-initEncounterPeriodToDownload <- function() {
-  # the debug parameters are given both
-  if (exists('DEBUG_PERIOD_START') && exists('DEBUG_PERIOD_END')) {
-    PERIOD_START <<- as.Date(DEBUG_PERIOD_START)
-    PERIOD_END <<- as.Date(DEBUG_PERIOD_END)
-  } else {
-    # is this the very first start?
-    if (isEncounterTableEmpty()) {
-      # only if the retrieval never ran before = initial start -> days_in_past should
-      # be a little bit more (maybe 30)
-      days_in_past <- get('INITIAL_ENCOUNTER_START_DATE_IN_PAST_DAYS')
-    } else {
-      # it is not the very first start
-      days_in_past <- get('USUAL_ENCOUNTER_START_DATE_IN_PAST_DAYS')
-    }
-    days_in_past <- days_in_past * 24 * 3600 # this value must be subtracted from a date (days in seconds)
-    if (exists('DEBUG_PERIOD_START')) {
-      PERIOD_START <<- as.Date(as.POSIXct(DEBUG_PERIOD_START) - days_in_past)
-    } else {
-      PERIOD_START <<- as.Date(Sys.time() - days_in_past)
-    }
-    PERIOD_END <<- as.Date(Sys.time() + 100 * 24 * 3600) # end must be somewhere in the future so we take 100 days
-  }
 }
 
 #' Get unique patient IDs per ward based on filter patterns.
@@ -244,6 +218,74 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   return(pids_per_ward)
 }
 
+#' Download and preprocess encounter data from FHIR server
+#'
+#' This function retrieves encounter data from a FHIR server, applies various filters,
+#' and performs data processing tasks.
+#'
+#' @param table_description the fhir crackr table description with the columns definition
+#' of the returned table.
+#' @param current_datetime the current datetime or debug datetime
+#'
+#' @details
+#' The function handles the download of encounter data, filtering based on date ranges,
+#' and additional processing steps such as fixing dates, adding columns, and handling
+#' exclusion criteria.
+#'
+#' @return
+#' The processed encounter data is saved, and relevant tables are returned and/or
+#' saved as RData files.
+#'
+getEncounters <- function(table_description, current_datetime) {
+
+  runLevel3("Get Enconters", {
+
+    # Refresh token, if defined
+    refreshFHIRToken()
+
+    resource <- 'Encounter'
+
+    runLevel3('Download and Crack Encounters', {
+      if (exists('DEBUG_ENCOUNTER_STATUS')) {
+        encounter_status <- DEBUG_ENCOUNTER_STATUS
+      } else {
+        encounter_status <- "in-progress"
+      }
+
+      request_encounter <- fhircrackr::fhir_url(
+        url        = FHIR_SERVER_ENDPOINT,
+        resource   = 'Encounter',
+        parameters = etlutils::addParamToFHIRRequest(c(
+          'date'    = paste0('lt', current_datetime),
+          'status' = encounter_status)
+        )
+      )
+
+      table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
+                                                 table_description = table_description,
+                                                 max_bundles = MAX_ENCOUNTER_BUNDLES,
+                                                 log_errors  = 'enc_error.xml')
+
+      if (etlutils::isSimpleNA(table_enc)) {
+        stop('The FHIR request did not return any available Encounter bundles.\n Request: ',
+             etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE))
+      }
+
+    })
+
+    runLevel3Line('change column classes', {
+      table_enc <- table_enc[, lapply(.SD, as.character), ]
+    })
+
+    etlutils::printAllTables(table_enc)
+
+    runLevel3Line('Save and Delete Encounters Table', {
+      etlutils::writeRData(table_enc, 'pid_source_encounter_unfiltered')
+    })
+
+    return(table_enc)
+  })
+}
 
 #' Extracts the relevant patient IDs from download Encounter resources. If the file name parameter is NA then
 #' the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file name
@@ -262,15 +304,18 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
     })
   } else {
     etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
-      initEncounterPeriodToDownload()
       filter_patterns <- convertFilterPatterns()
       # the subject reference is needed in every case to extract them if the encounter matches the pattern
       # the period end is needed to check if the Encounter is still finsihed
       # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
-      filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, 'id', 'subject/reference', 'period/start', 'period/end')
-      # download the Encounters and crack them in a table with the columns of the xpaths in filter patterns + the
-      # additional paths above
-      encounters <- etlutils::getEncounters(filter_enc_table_description)
+      filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, "id", "subject/reference", "period/start", "period/end", "status")
+      # Get current or debug datetime
+      current_datetime <- getQueryDatetime()
+      # Replace space with 'T' in timestamp for correct time format
+      current_datetime <- gsub(" ", "T", current_datetime)
+      # Download the Encounters and crack them in a table with the columns of the xpaths in
+      # filter patterns + the additional paths above
+      encounters <- getEncounters(filter_enc_table_description, current_datetime)
       # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data
@@ -294,7 +339,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       if (read_pids_from_file) {
         message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
       } else {
-        message <- paste0(message, "on FHIR server for period ", PERIOD_START, " to ", PERIOD_END, ".\n")
+        message <- paste0(message, "on FHIR server for timestamp ", current_datetime, ".\n")
       }
       etlutils::catWarningMessage(message)
     }

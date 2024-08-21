@@ -1,7 +1,7 @@
 ####################################################################################
 # Preferences: The current working directory must be the main project directory.   #
 #              In interactive setting this is the parent directory of the R-cds2db #
-#              directory (default 'INTERPOLAR').                                   #
+#              directory.                                                          #
 ####################################################################################
 
 # chance the working directory to the main directory

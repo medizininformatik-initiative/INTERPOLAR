@@ -1,3 +1,34 @@
+##################################################
+# Project Definition for module db2frontend      #
+##################################################
+
+###
+# VERBOSE LEVELS
+###
+# VL_00_NOTHING             = 0
+# VL_10_MAIN_INFO           = 1
+# VL_20_OUTER_SCRIPTS       = 2
+# VL_30_INNER_SCRIPTS       = 3
+# VL_40_INNER_SCRIPTS_INFOS = 4
+# VL_50_TABLES              = 5
+# VL_60_ALL_TABLES          = 6
+# VL_70_DOWNLOAD            = 7
+# VL_80_COI_PROCESSING      = 8
+# VL_90_FHIR_RESPONSE       = 9
+VERBOSE               = 10 # Retrieval / analysis verbose level
+
+# Set true if every sourcing of the 00_Main file should create result
+# directories in the otuputGlobal and otuputLocal directores with a timestamp
+# suffix. If false then every run will write in the same subdirectory without
+# a timestamp. The default behaviour should write in subdirectories with only
+# the project name (false) or in or in a subdirectory with the project name
+# and the suffix '_timestamp'. (true)
+USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
+
+# Maximum of saved cds2db result folders in outputLocal and outputGlobal
+MAX_DIR_COUNT = 5
+
+
 [database]
 
 PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"

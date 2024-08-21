@@ -20,20 +20,45 @@
 #'   )
 #'
 #'   # Applying the function
-#'   result_table <- createWardPatitentIDPerDateTable(patientIDsPerWard)
+#'   result_table <- createWardPatientIDPerDateTable(patientIDsPerWard)
 #'
 #'   # Displaying the result
 #'   print(result_table)
 #' }
 #'
-createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
+createWardPatientIDPerDateTable <- function(patientIDsPerWard) {
   ward_names <- names(patientIDsPerWard)
   patient_ids <- unlist(patientIDsPerWard)
-  wardPatitentIDPerDate <- data.table::data.table(
+  wardPatientIDPerDate <- data.table::data.table(
     ward_name = rep(ward_names, lengths(patientIDsPerWard)),
     patient_id = patient_ids
   )
-  return(wardPatitentIDPerDate)
+  return(wardPatientIDPerDate)
+}
+
+#' Get Current Datetime
+#'
+#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' Otherwise, it returns the current system time.
+#'
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
+#'
+getCurrentDatetime <- function() {
+  if (exists("DEBUG_CURRENT_DATETIME")) {
+    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
+  }
+  return(as.POSIXct(Sys.time()))
+}
+
+#' Get Query Datetime
+#'
+#' This function returns the current datetime formatted for SQL queries.
+#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
+#'
+#' @return A character string representing the current datetime formatted for SQL queries.
+#'
+getQueryDatetime <- function() {
+  format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
@@ -50,17 +75,41 @@ createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
+  # Get current or debug datetime
+  query_datetime <- getQueryDatetime()
+  # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
+  # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
+  # an enddate greater current date.
+  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
+                        "   WHERE enc_period_start <= '", query_datetime, "' AND\n",
+                        "   (enc_period_end is NULL OR enc_period_end > '", query_datetime, "');")
+  patientIDsActive <- getQueryFromDatabase(query)
+  # Unify and unique all patient IDs
   patientIDs <- unique(unlist(patient_IDs_per_ward))
-
-  # # Find the names of the elements that start with a lowercase letter (pids_per_ward are no resources to download)
-  # # All names of real resources start with a capital letter
-  # resource_table_descriptions <- table_descriptions[-grep("^[a-z]", names(table_descriptions))]
-  #
-  # resource_tables <- etlutils::loadResourcesByPID(patientIDs, resource_table_descriptions)
+  patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
+  # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
 
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  # NOTE: only works correctly with very specific test data
+  if (etlutils::isDefinedAndTrue("DEBUG_ADD_PATIENT_IDENTIFIER")) {
+    # adds a second patient identifier
+    debugAddPatientIdentifier(resource_tables)
+    # adds a new Patient
+    result <- debugAddPatient(resource_tables$Patient, patient_IDs_per_ward)
+    resource_tables$Patient <- result$Patient
+    patient_IDs_per_ward <- result$patient_IDs_per_ward
+    rm(result)
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+
   # Add additional table of ward-patient ID per date
-  resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patient_IDs_per_ward)
+  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
 
   return(resource_tables)
 }
@@ -81,16 +130,16 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
 #' @return An updated list of data.tables including the referenced resources.
 #'
 loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, resource_tables) {
-  # table_descriptions$reference_types can be a comma or whitespace separated list like
-  # "MedicationStatement, MedicationAdministration". We need the all unique diffrerent
+  # table_descriptions$REFERENCE_TYPES can be a comma or whitespace separated list like
+  # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
-  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$reference_types))
+  reference_types <- unique(etlutils::extractWords(table_descriptions$REFERENCE_TYPES))
   for (reference_type in reference_types) {
     referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
     if (!is.null(referenced_table_description)) {
       # now extract all rows where the single reference_type is in the reference_types column as whole word
       whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-      sub_reference_type <- table_descriptions$reference_types[grepl(whole_word_pattern, reference_types)]
+      sub_reference_type <- table_descriptions$REFERENCE_TYPES[grepl(whole_word_pattern, REFERENCE_TYPES)]
 
       referenced_ids <- c()
       for (i in seq_len(nrow(sub_reference_type))) {

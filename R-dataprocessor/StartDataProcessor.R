@@ -1,7 +1,7 @@
 ####################################################################################
 # Preferences: The current working directory must be the main project directory.   #
 #              In interactive setting this is the parent directory of the          #
-#              R-dataprocessor directory (default 'INTERPOLAR').                   #
+#              R-dataprocessor directory.                                          #
 ####################################################################################
 
 # chance the working directory to the main directory
@@ -14,4 +14,4 @@ rm(list = ls())
 library(etlutils)
 library(dataprocessor)
 
-dataprocessor()
+dataprocessor::processData()
