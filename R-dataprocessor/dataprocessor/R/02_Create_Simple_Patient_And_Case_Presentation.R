@@ -313,8 +313,6 @@ createFrontendTables <- function() {
       patient_fe_id = NA_character_, # v_patient_all -> patient_id
       pat_id = NA_character_, # v_patient_all -> pat_id
       pat_cis_pid = NA_character_,
-      redcap_repeat_instrument = NA_character_,
-      redcap_repeat_instance = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
@@ -329,8 +327,6 @@ createFrontendTables <- function() {
       patient_frontend_table$patient_fe_id[i] <- patient$patient_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
-      patient_frontend_table$redcap_repeat_instrument[i] <- "patient"
-      patient_frontend_table$redcap_repeat_instance[i] <- 1
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
       patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
