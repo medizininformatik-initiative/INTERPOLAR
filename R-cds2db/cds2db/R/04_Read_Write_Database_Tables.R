@@ -25,13 +25,36 @@ writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
 #' This function connects to a database, retrieves the table names, reads the tables, and returns
 #' the data as a list of data frames.
 #'
+#' @param table_names names of the tables or views to load
+#'
 #' @return A list of data frames where each data frame corresponds to a table from the database.
 #'
-readUntypedRAWDataFromDatabase <- function() {
+readTablesFromDatabase <- function(table_names) {
   etlutils::createConnectionAndReadTablesFromDatabase(dbname = DB_GENERAL_NAME,
                                                       host = DB_GENERAL_HOST,
                                                       port = DB_GENERAL_PORT,
                                                       user = DB_CDS2DB_USER,
                                                       password = DB_CDS2DB_PASSWORD,
-                                                      schema = DB_CDS2DB_SCHEMA_OUT)
+                                                      schema = DB_CDS2DB_SCHEMA_OUT,
+                                                      table_names = table_names)
+}
+
+#' Retrieve Data from Database using a Predefined Connection Configuration
+#'
+#' This function executes a SQL query on a database using a predefined set of
+#' connection parameters, which are sourced from globally defined variables.
+#'
+#' @param query A string representing the SQL query to be executed.
+#'
+#' @return A data.table containing the result of the SQL query.
+#'
+#' @export
+getQueryFromDatabase <- function(query) {
+  etlutils::dbConnectAndGetQuery(dbname = DB_GENERAL_NAME,
+                                 host = DB_GENERAL_HOST,
+                                 port = DB_GENERAL_PORT,
+                                 user = DB_CDS2DB_USER,
+                                 password = DB_CDS2DB_PASSWORD,
+                                 schema = DB_CDS2DB_SCHEMA_OUT,
+                                 query = query)
 }

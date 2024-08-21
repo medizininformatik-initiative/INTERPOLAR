@@ -22,15 +22,7 @@ CREATE SCHEMA db2frontend_out;
 CREATE SCHEMA db2frontend_in;
 
 -- Create Sequenz
-CREATE SEQUENCE IF NOT EXISTS db.db_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS db_config.db_config_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS db_log.db_log_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS cds2db_in.cds2db_in_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS cds2db_out.cds2db_out_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS db2dataprocessor_out.db2dataprocessor_out_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS db2dataprocessor_in.db2dataprocessor_in_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS db2frontend_out.db2frontend_out_seq INCREMENT 1 START 1;
-CREATE SEQUENCE IF NOT EXISTS db2frontend_in.db2frontend_in_seq INCREMENT 1 START 1;
+CREATE SEQUENCE IF NOT EXISTS db.db_seq INCREMENT 1 START 1; -- Using a central sequence
 
 -- Create Comment on Schema
 COMMENT ON SCHEMA db IS 'Schema to store all “core data” of the MRP-DB - MRP-DB Core';

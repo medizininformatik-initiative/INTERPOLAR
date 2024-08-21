@@ -30,12 +30,12 @@
 extractReplacePatterns <- function(table_description_collapsed) {
   replace_patterns <- list()
   # find the row withe the table header for the replace patterns
-  patterns_start_row <- etlutils::getFirstRowWithPatterns(table_description_collapsed, c('pattern', 'replacement')) + 1
+  patterns_start_row <- etlutils::getFirstRowWithPatterns(table_description_collapsed, c("PATTERN", "REPLACEMENT")) + 1
   # found the header line?
   if (patterns_start_row > 0) {
     for(r in patterns_start_row:nrow(table_description_collapsed)) {
-      pattern <- table_description_collapsed$resource[r] # patterns are in the column 'resource'
-      replace <- table_description_collapsed$resource_prefix[r] # replaces strings are in the column 'resource_prefix'
+      pattern <- table_description_collapsed$RESOURCE[r] # patterns are in the column 'RESOURCE'
+      replace <- table_description_collapsed$RESOURCE_PREFIX[r] # replaces strings are in the column 'RESOURCE_PREFIX'
       if (etlutils::isSimpleNotEmptyString(pattern)) {
         replace_patterns[[pattern]] <- replace
       }
@@ -64,8 +64,8 @@ extractReplacePatterns <- function(table_description_collapsed) {
 addEmptyRowsBeforeNewResource <- function(table) {
 
   # Generate an index indicating where empty rows should be inserted
-  # (before each row except the first and if 'resource' column is not NA)
-  new_resource_start_rows <- which(!is.na(table$resource) & seq_len(nrow(table)) != 1)
+  # (before each row except the first and if 'RESOURCE' column is not NA)
+  new_resource_start_rows <- which(!is.na(table$RESOURCE) & seq_len(nrow(table)) != 1)
 
   for (empty_row_insert_index in seq(length(new_resource_start_rows), 1, by = -1)) {
     index <- new_resource_start_rows[empty_row_insert_index]
@@ -83,13 +83,13 @@ addEmptyRowsBeforeNewResource <- function(table) {
 #'
 #' This function expands a given table description by replacing certain rows with data from expansion tables.
 #' It specifically targets rows with patterns and replaces them based on a set of rules, effectively expanding
-#' the original table description. The expansion is guided by `resource_prefix` and `fhir_expression` columns.
-#' Rows with `NA` in `fhir_expression` are removed. The function adjusts the expansion tables to match the
+#' the original table description. The expansion is guided by `RESOURCE_PREFIX` and `FHIR_EXPRESSION` columns.
+#' Rows with `NA` in `FHIR_EXPRESSION` are removed. The function adjusts the expansion tables to match the
 #' target table's structure, removing unnecessary columns and adding missing ones as `NA`. It generates full
-#' column names by combining `resource_prefix` with modified `fhir_expression` values, replacing slashes with
+#' column names by combining `RESOURCE_PREFIX` with modified `FHIR_EXPRESSION` values, replacing slashes with
 #' underscores and appending prefixes. The expansion process might replace a single row with multiple rows
-#' from an expansion table, adjusting `count` values and column names accordingly.
-#' Finally, all `column_name` entries are converted to lowercase.
+#' from an expansion table, adjusting `COUNT` values and column names accordingly.
+#' Finally, all `COLUMN_NAME` entries are converted to lowercase.
 #'
 #' @param table_description_collapsed A `data.table` object that contains the initial table description to be
 #' expanded.
@@ -123,8 +123,8 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
 
   replace_patterns <- extractReplacePatterns(table)
 
-  # remove all rows with NA in column 'fhir_expression'
-  table <- table[!is.na(fhir_expression), ]
+  # remove all rows with NA in column 'FHIR_EXPRESSION'
+  table <- table[!is.na(FHIR_EXPRESSION), ]
 
   # prepare expand_table for rbind = add missing columns of target table and set same column order
   for (expand_table in expansion_tables) {
@@ -144,7 +144,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
     full_column_name <- paste0(resource_prefix, full_column_name)
   }
 
-  table[, column_name := NA_character_]
+  table[, COLUMN_NAME := NA_character_]
   resource_prefix <- NA
 
   expand_table_names <- names(expansion_tables)
@@ -152,24 +152,24 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   last_row_index <- nrow(table)
   while (row <= last_row_index) {
 
-    if (!is.na(table$resource[row])) {
-      if (!is.na(table$resource_prefix[row])) {
-        resource_prefix <- paste0(table$resource_prefix[row], '_')
+    if (!is.na(table$RESOURCE[row])) {
+      if (!is.na(table$RESOURCE_PREFIX[row])) {
+        resource_prefix <- paste0(table$RESOURCE_PREFIX[row], '_')
       } else {
         resource_prefix <- ""
       }
     }
 
-    fhir_expression <- table$fhir_expression[row]
+    fhir_expression <- table$FHIR_EXPRESSION[row]
     stringAfterLastlash <- etlutils::getAfterLastSlash(fhir_expression)
     replace_table_index <- match(stringAfterLastlash, expand_table_names)
     if (!is.na(replace_table_index)) {
       fhir_expression <- substr(fhir_expression, 1, nchar(fhir_expression) - nchar(stringAfterLastlash))
       replace_prefix_column_name <- getFullColumnName(resource_prefix, fhir_expression)
-      replace_prefix_fhir_expression <- etlutils::getBeforeLastSlash(table$fhir_expression[row])
+      replace_prefix_fhir_expression <- etlutils::getBeforeLastSlash(table$FHIR_EXPRESSION[row])
 
       expansion_table <- data.table::copy(expansion_tables[[expand_table_names[replace_table_index]]])
-      expansion_table[, count := ifelse(is.na(count), 1, count) * table$count[row]]
+      expansion_table[, COUNT := ifelse(is.na(COUNT), 1, COUNT) * table$COUNT[row]]
 
       # replace line with the content of the expansion table
       if (row == 1) {
@@ -179,19 +179,19 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       }
       new_table <- rbind(new_table, table[(row + 1):nrow(table)], fill = TRUE)
 
-      # Only for References: If the reference_type column is filled for a Reference
-      # which should be expanded -> write the reference_type column value also to
+      # Only for References: If the REFERENCE_TYPES column is filled for a Reference
+      # which should be expanded -> write the REFERENCE_TYPES column value also to
       # the first column of the expanded reference
-      new_table[row, reference_types := table[row][["reference_types"]]]
+      new_table[row, REFERENCE_TYPES := table[row][["REFERENCE_TYPES"]]]
 
       for (expanded_row_index in 1:nrow(expansion_table)) {
         replaced_row_index <- as.integer(row + expanded_row_index - 1)
         if (nchar(replace_prefix_column_name)) {
-          new_value <- paste0(replace_prefix_column_name, gsub('/', '_',expansion_table$fhir_expression[expanded_row_index]))
-          data.table::set(new_table, replaced_row_index, 'column_name', new_value)
+          new_value <- paste0(replace_prefix_column_name, gsub('/', '_', expansion_table$FHIR_EXPRESSION[expanded_row_index]))
+          data.table::set(new_table, replaced_row_index, 'COLUMN_NAME', new_value)
         }
         if (nchar(replace_prefix_fhir_expression)) {
-          data.table::set(new_table, replaced_row_index, 'fhir_expression', paste(replace_prefix_fhir_expression, new_table$fhir_expression[replaced_row_index], sep = "/"))
+          data.table::set(new_table, replaced_row_index, 'FHIR_EXPRESSION', paste(replace_prefix_fhir_expression, new_table$FHIR_EXPRESSION[replaced_row_index], sep = "/"))
         }
       }
 
@@ -204,18 +204,20 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       # replace strings in the resulting column names according to the given replace definition
       full_column_name <- etlutils::replacePatternsInString(replace_patterns, full_column_name, ignore.case = TRUE, perl = TRUE)
       # set the final trasformed column name for the fhir expression in this row
-      table[row, column_name := full_column_name]
+      table[row, COLUMN_NAME := full_column_name]
       row <- row + 1
     }
   }
-  # set the column 'column_name' directly in front of column 'fhir_expression'
-  etlutils::moveColumnBefore(table, 'column_name', 'fhir_expression')
-  # remove column resource_prefix
-  table[, resource_prefix := NULL]
+
+  # set the column 'COLUMN_NAME' directly in front of column 'FHIR_EXPRESSION'
+  etlutils::moveColumnBefore(table, 'COLUMN_NAME', 'FHIR_EXPRESSION')
+  # remove column RESOURCE_PREFIX
+  table[, RESOURCE_PREFIX := NULL]
   # set all column_name entries to lower case
-  table[, column_name := tolower(column_name)]
+  table[, COLUMN_NAME := tolower(COLUMN_NAME)]
   # add empty row after every last entry of a resource (and before a new resource starts)
   table <- addEmptyRowsBeforeNewResource(table)
+
 }
 
 #' Expand Table Description from an Excel File
@@ -327,10 +329,10 @@ checkResult <- function(expanded_table_description) {
   isValid <- TRUE
 
   # check that there are no column names which exceeds the maximum length of 64 characters in Postgres DBs
-  max_column_name_chars <- max(nchar(na.omit(expanded_table_description$column_name)))
+  max_column_name_chars <- max(nchar(na.omit(expanded_table_description$COLUMN_NAME)))
   if (max_column_name_chars > 64) {
     message('ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
-    for (s in expanded_table_description$column_name[which(nchar(na.omit(expanded_table_description$column_name)) > 64)]) {
+    for (s in expanded_table_description$COLUMN_NAME[which(nchar(na.omit(expanded_table_description$COLUMN_NAME)) > 64)]) {
       message(paste0("\t", s))
     }
     message(paste0("Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
@@ -342,36 +344,36 @@ checkResult <- function(expanded_table_description) {
   column_names <- c()
   table_name <- NA
   for (row in seq_len(nrow(expanded_table_description))) {
-    next_table_name <- expanded_table_description$resource[row]
+    next_table_name <- expanded_table_description$RESOURCE[row]
     if (!is.na(table_name) && !is.na(next_table_name)) {
       duplicates <- column_names[which(duplicated(column_names))]
       if (length(duplicates)) {
-        message("ERROR: Table ", table_name,  ": The following result column names (Column 'column_names') in Table_Description.xlsx are duplicated:")
+        message("ERROR: Table ", table_name,  ": The following result column names (column 'COLUMN_NAMES') in Table_Description.xlsx are duplicated:")
         message(paste0("\t", duplicates, collapse = "\n"))
-        message("Solution: Check entries in Table_Description_Definition.xlsx in column 'fhir_expression' for these duplicates.")
+        message("Solution: Check entries in Table_Description_Definition.xlsx in column 'FHIR_EXPRESSION' for these duplicates.")
         message(paste0("Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
                        "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
                        "itself appears twice, this error occurs.\n"))
         isValid <- FALSE
       }
-      resource <- expanded_table_description$resource[row]
+      resource <- expanded_table_description$RESOURCE[row]
       column_names <- c()
     }
     if (!is.na(next_table_name)) {
       table_name <- next_table_name
     }
-    column_names[length(column_names) + 1] <- expanded_table_description$column_name[row]
+    column_names[length(column_names) + 1] <- expanded_table_description$COLUMN_NAME[row]
   }
 
-  # check that all entries have value in column 'single_length'
-  invalid_rows <- which(!is.na(expanded_table_description$fhir_expression) & is.na(expanded_table_description$single_length))
+  # check that all entries have value in column 'SINGLE_LENGTH'
+  invalid_rows <- which(!is.na(expanded_table_description$FHIR_EXPRESSION) & is.na(expanded_table_description$SINGLE_LENGTH))
   if (length(invalid_rows)) {
-    message("ERROR: The following rows have no entry in column single_length.")
+    message("ERROR: The following rows have no entry in column 'SINGLE_LENGTH'.")
     # Erfasse die Ausgabe von print() in einem Vektor
     message_data <- capture.output(print(expanded_table_description[invalid_rows]))
     # Verwende message(), um den Vektor Zeile für Zeile auszugeben
     message(paste(message_data, collapse = "\n"))
-    message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the fhir_expression column for a row that should be expanded.")
+    message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the column 'FHIR_EXPRESSION' for a row that should be expanded.")
     isValid <- FALSE
   }
   return(isValid)

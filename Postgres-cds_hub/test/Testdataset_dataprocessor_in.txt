@@ -1,7 +1,7 @@
--- Beispieldatensatz DP to Frontend
-insert into db2dataprocessor_in.patient_fe (patient_fe_id,record_id,pat_id,pat_name,pat_vorname) values (10,10,'TestPat1','Mustermann','Max');
-insert into db2dataprocessor_in.patient_fe (patient_fe_id,record_id,pat_id,pat_name,pat_vorname) values (11,11,'TestPat2','Mustermann','Mariana');
-insert into db2dataprocessor_in.patient_fe (patient_fe_id,record_id,pat_id,pat_name,pat_vorname) values (12,12,'TestPat3','Müller','Klara');
+-- Beispieldatensatz Dataprocessor to Frontend (no FHIR Data)
+insert into db2dataprocessor_in.patient_fe (pat_cis_pid,patient_fe_id,record_id,pat_id,pat_name,pat_vorname) values ('KIS-1',10,10,'TestPat1','Mustermann','Max');
+insert into db2dataprocessor_in.patient_fe (pat_cis_pid,patient_fe_id,record_id,pat_id,pat_name,pat_vorname) values ('KIS-2',11,11,'TestPat2','Mustermann','Mariana');
+insert into db2dataprocessor_in.patient_fe (pat_cis_pid,patient_fe_id,record_id,pat_id,pat_name,pat_vorname) values ('KIS-3',12,12,'TestPat3','Müller','Klara');
 
 insert into db2dataprocessor_in.fall_fe (fall_fe_id,fall_id,fall_pat_id,patient_id_fk,record_id,fall_aufn_dat,fall_ent_dat) values (4,'P1-F1','TestPat1',10,10,to_date('01.01.2020','DD.MM.YYYY'),to_date('15.01.2020','DD.MM.YYYY'));
 insert into db2dataprocessor_in.fall_fe (fall_fe_id,fall_id,fall_pat_id,patient_id_fk,record_id,fall_aufn_dat,fall_ent_dat) values (5,'P1-F2','TestPat1',10,10,to_date('01.02.2020','DD.MM.YYYY'),to_date('03.02.2020','DD.MM.YYYY'));

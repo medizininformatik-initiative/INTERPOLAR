@@ -13,3 +13,29 @@ SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details
 WHERE status='succeeded' and end_time < now() - interval '7 days'$$);
 
 
+-- Table "data_import_hist" in schema "db_log"
+----------------------------------------------------
+CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
+  id serial,
+  table_primary_key int, -- Primary key in the documentet table
+  last_processing_nr int, -- Last processing number of the data in the table
+  schema_name varchar,
+  table_name varchar,
+  function_name varchar, -- Name of function
+  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT NULL   -- Processing status of the data record
+);
+
+GRANT USAGE ON SCHEMA db_log TO db_log_user;
+GRANT USAGE ON SCHEMA db_log TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db_log TO cds2db_user;
+GRANT USAGE ON SCHEMA db_log TO db2frontend_user;
+
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_log_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO cds2db_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2dataprocessor_user;
+GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2frontend_user;
+
+
+

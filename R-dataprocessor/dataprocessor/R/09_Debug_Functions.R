@@ -8,11 +8,13 @@ debugAddMultiplePatientLines <- function(patients_from_database) {
     i_source <- nrow(patients_from_database) - (2 * new_row_count) + i
     i_target <- i_source + new_row_count
     patients_from_database[i_target] <- patients_from_database[i_source]
+    #increase the patient_id = db internal record id number
+    new_id <- max(na.omit(patients_from_database$patient_id)) + 1
+    patients_from_database[i_target, patient_id := new_id]
   }
-  # now change the postal code and increase the patient_id = db internal record id number
+  # now change the postal code
   new_column_indices <- (nrow(patients_from_database) - new_row_count + 1):nrow(patients_from_database)
   patients_from_database[new_column_indices, pat_address_postalcode := etlutils::reverseString(pat_address_postalcode)]
   patients_from_database[new_column_indices, pat_address_postalcode := etlutils::reverseString("ABC")]
-  patients_from_database[new_column_indices, patient_id := patient_id + 1]
   return(patients_from_database)
 }
