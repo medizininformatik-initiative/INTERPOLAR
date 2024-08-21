@@ -510,7 +510,8 @@ createFrontendTables <- function() {
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
-    message <- "ERROR: The pids_per_ward table is empty."
+    message <- paste0("WARNING: The pids_per_ward table is empty.\n",
+                                "Hint: Please ensure there was enoungh time between the 'cds2db' module and the 'dataprocessor' module. At least a little bit more than 1 minute.")
     message <- getErrorOrWarningMessage(message, "pids_per_ward")
     stop(message)
   }
