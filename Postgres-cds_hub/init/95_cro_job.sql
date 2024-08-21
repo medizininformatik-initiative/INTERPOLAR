@@ -22,6 +22,9 @@ BEGIN
     SELECT pg_sleep(2) INTO temp;
 
     SELECT db.copy_fe_fe_in_to_db_log() INTO temp;
+    
+    -- Commit all transactions at one time - between BEGIN/END
+    COMMIT;
 END;
 $$ LANGUAGE plpgsql;
 
