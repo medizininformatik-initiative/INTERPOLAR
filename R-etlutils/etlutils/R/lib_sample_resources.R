@@ -295,214 +295,55 @@ logRequest <- function(verbose, resource_name, bundles) {
   close(log_file)
 }
 
-#' Download and Crack FHIR Resources in Parallel
+#' Download and Crack FHIR Resources
 #'
-#' This function downloads FHIR resources by making parallel requests and cracks the bundles in parallel.
+#' This function downloads FHIR resources based on the provided `request` and processes
+#' them into a table format using the `fhircrackr` package. It handles the download of
+#' FHIR bundles, checks the total number of available resources, and converts the
+#' downloaded data into a table according to the specified `table_description`.
 #'
-#' @param request The initial FHIR request to start the download process.
-#' @param table_description The description of the expected table structure for the resource.
-#' @param bundles_at_once The maximum number of bundles to process in a single iteration.
-#' @param verbose An integer specifying the verbosity level.
-#' @param bundles_left The total number of bundles to download and process.
-#' @param max_cores The maximum number of CPU cores to use for parallel processing.
-#' @param log_errors The file name for logging errors during the process.
+#' @param request A string representing the FHIR search request. This request should
+#'   define the criteria for retrieving FHIR resources.
+#' @param max_bundles Integer specifying the maximum number of bundles to download.
+#'   Default is `MAX_ENCOUNTER_BUNDLES`.
+#' @param table_description A table description that defines the structure of the
+#'   resulting table. This should be compatible with the `fhircrackr` package.
+#' @param verbose Logical flag indicating whether to print detailed logs during
+#'   the execution of the function. Default is `VERBOSE`.
+#' @param log_errors A string specifying the file name where any errors encountered
+#'   during the FHIR request will be logged. Default is `'enc_error.xml'`.
 #'
-#' @return A data.table containing the cracked FHIR resource data.
+#' @return A data table containing the cracked FHIR resources as defined by the
+#'   `table_description`.
+#'
 #' @export
 downloadAndCrackFHIRResources <- function(
     request,
+    max_bundles,
     table_description,
-    bundles_at_once   = 20,
-    verbose           = 1,
-    bundles_left      = Inf,
-    max_cores         = 2, #1core: Download, 1core: crack (the previous downloaded bundles)
-    log_errors        = 'enc_error.xml'
+    verbose     = VERBOSE,
+    log_errors
 ) {
 
-  WAIT_TIMES <- DELAY_REQ ** (0 : 7) # try 8 times and wait DELAY_REQ^loop seconds
-  max_trials <- length(WAIT_TIMES) # 8
+  bundles <- executeFHIRSearchVariation(
+    request = request,
+    max_bundles = max_bundles,
+    verbose = verbose,
+    log_errors = log_errors
+  )
 
-  if (bundles_left < 1) {# if no bundle to download
-    stop(
-      paste0(
-        'bundles_left needs to be positive. bundles_left is ', bundles_left, '. Stop execution here.'
-      )
+  cracked_ressources <- NA
+
+  if (!isSimpleNA(bundles) && all(length(bundles))) {
+    cracked_ressources <- fhircrackr::fhir_crack(
+      bundles = bundles,
+      design = table_description,
+      verbose = verbose,
+      data.table = TRUE
     )
   }
-  if (bundles_left < bundles_at_once) {# bundles_at_once cannot be greater than bundles_left
-    bundles_at_once <- bundles_left
-  }
 
-  # in case of relative URL in next_link
-  # extract the base url, FHIR_ENDPOINT might contain some additional paths, such as
-  # http://im.a.fhir.endpoint/fhir/api/v4
-  baseurl <- stringr::str_match(FHIR_SERVER_ENDPOINT, "(.*?:\\/\\/.*?)\\/")[[2]]
-  tables <- list()
-  i <- 0
-  curr_request <- request # first request
-  pkg <- list(request = curr_request, bundles = NULL) # store request with empty bundle in pkg
-  succesfully <- TRUE
-  resource_name <- table_description@resource
-  while (!is.null(pkg$request) || !is.null(pkg$bundles)) {#while there is at least a request or a bundle in pkg
-    if (0 < verbose) {
-      if (!is.null(pkg$request) && !is.null(pkg$bundles)) {
-        cat(paste0(
-          'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
-          ' (FHIR Resource: ', resource_name, ' ',
-          substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
-          ' and Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
-        ))
-      } else if (!is.null(pkg$request) && is.null(pkg$bundles)) {
-        cat(paste0(
-          'Download of ', convertVerboseNumbers(i + 1), ' ', bundles_at_once, ' bundle', getPluralSuffix(bundles_at_once),
-          ' (FHIR Resource: ', resource_name, ' ',
-          substr(gsub(paste0(".*", resource_name), "", pkg$request@.Data),2,30),')',
-          '.\n'
-        ))
-      } else {
-        cat(paste0(
-          'Crack of ', convertVerboseNumbers(i), ' ', length(pkg$bundles), ' bundle', getPluralSuffix(length(pkg$bundles)), '.\n'
-        ))
-      }
-    }
-    trial <- 1
-    succ <- FALSE
-
-    while (trial <= max_trials && !succ) {
-      pkg <- parallel::mclapply(# parallel apply with max max_cores cores if available
-        mc.cores = limitAvailableCoreNumber(max_cores),
-        X        = namedListByValue(names(pkg)),
-        # alternating function
-        FUN      = function(n) {# n <- names(pkg)[[1]]
-          element <- pkg[[n]] # get nth pkg element
-          if (!is.null(element)) {# if there is a element
-            if (n == 'request') {# if name of pkg is 'request'
-              if (inherits(element, 'fhir_url')) {# if the element itself is a fhir request
-                bundles <- try(executeFHIRSearchVariation( # try to download resources
-                  request     = element,
-                  verbose     = verbose,
-                  log_errors  = log_errors,
-                  max_bundles = bundles_at_once
-                ))
-                if (inherits(bundles, 'try-error')) {# if download fails return error stored in variable bundle
-                  if (0 < verbose) {
-                    cat(
-                      formatStringStyle(
-                        'Bundles for the following IDs could not be downloaded:',
-                        element,
-                        "Request with error:",
-                        fhircrackr::fhir_current_request(),
-                        fg = 1,
-                        bold = TRUE,
-                        sep = "\n"
-                      ),
-                      '\n',
-                      pkg$ids
-                    )
-                    cat(formatStringStyle('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
-                  }
-                } else {# if download was successful
-                  logRequest(verbose, resource_name, bundles)
-                  try(fhircrackr::fhir_serialize(bundles)) # return serialized bundles due to stable addressing
-                }
-              } else {# return nothing
-                NULL
-              }
-            } else if (n == 'bundles') {# if name of pkg is 'bundles'
-              if (inherits(element, 'fhir_bundle_list')) {# if element is a fhir_bundle_list
-                unserialized_bundle <- try(fhircrackr::fhir_unserialize(element)) # serialize bundles
-                if (inherits(unserialized_bundle, 'try-error')) {# return error stored in unserialized_bundle
-                  unserialized_bundle
-                } else {# try to crack bundles ignoring errors
-                  try(fhircrackr::fhir_crack(bundles = unserialized_bundle, design = table_description, data.table = TRUE, verbose = verbose))
-                }
-              } else {# return nothing
-                NULL
-              }
-            } else {# some mysterious name has occurred in pkg names
-              stop(paste0(n, ' is not part of the pkg list. Stop Execution here.'))
-            }
-          } else {# element is NULL here
-            # NULL             #is.null(element)
-            element #aka NULL
-          }
-        }
-      )
-
-      if (inherits(pkg$bundles, 'data.table')) {# if pkg$bundles are actually data.tables
-        tables <- c(tables, list(pkg$bundles)) # add to resulting table list
-        pkg$bundles <- NULL # remove bundle from pkg
-      }
-
-      # if we have no request of request is a fhir_bundle_list
-      if (is.null(pkg$request) || inherits(pkg$request, 'fhir_bundle_list')) {
-        succ <- TRUE # we succeded
-      } else {# otherwise we have to repeat
-        succ <- FALSE
-        if (0 < verbose) {
-          catColorRed(pkg$request)
-          catColorRed(paste0('Stream lost. Wait for ', WAIT_TIMES[[trial]], ' seconds and try again...\n'))
-        }
-        Sys.sleep(WAIT_TIMES[[trial]]) # wait longer and longer between requests
-        pkg$request <- curr_request # and again
-        trial <- trial + 1 # count trials
-      }
-    }
-
-    if (max_trials < trial) {# if we' reached've done to many trials
-      if (0 < verbose)
-        catColorRed('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
-      succesfully <- FALSE
-      break; # stop while loop
-    } else if (succ) {# if trial <= max_trials
-      pkg$bundles <- pkg$request # remember pkg request contains here a fhir_bundle_list
-      if (!is.null(pkg$request) && inherits(pkg$request, 'fhir_bundle_list')) {# if it is so
-        unserialized_bundle <- fhircrackr::fhir_unserialize(pkg$request) # unserialize the bundles
-        bundles_left <- bundles_left - length(unserialized_bundle)
-        if (0 < bundles_left) {# if there are bundle left
-          pkg$request <- # create next request from next link found in bundle
-            if (0 < length(unserialized_bundle) && 0 < length(unserialized_bundle[length(unserialized_bundle)][[1]]@next_link)) {
-              next_link <- unserialized_bundle[length(unserialized_bundle)][[1]]@next_link
-
-              #is next_link a relative URL?
-              if (grepl("^/", next_link) == TRUE) {
-                next_link <- fhircrackr::fhir_url(paste0(baseurl, next_link), url_enc = NEXT_LINK_ENCODE)
-              }
-
-              #check for issues such as missing port specification
-              if (9 <= VERBOSE) {
-
-                if (!grepl(baseurl, next_link)) {
-
-                  warning("specified FHIR_ENDPOINT is not part of the next_link URL\n")
-                }
-
-                if ( URL_PORT_SPEC && grepl(":[0-9]+(/.*)?$", next_link) ) {
-
-                  warning("specified FHIR_ENDPOINT provides a PORT, whereas the next_link URL does not provide a PORT\n")
-                }
-              }
-              next_link
-            } else {
-              NULL
-            }
-
-          if (bundles_left < bundles_at_once) {
-            bundles_at_once <- bundles_left
-          }
-        } else {# if no bundles left
-          pkg$request <- NULL
-        }
-      }
-      i <- i + 1
-    }
-  }
-  if (!succesfully) {
-    if (0 < verbose)
-      catColorRed('Download Stream broken. Leave Download Routine now. Please note! This may cause further problems.\n')
-  }
-  # complete tables with missing column
-  completeTable(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  return(cracked_ressources)
 }
 
 #' Downloads and cracks FHIR resources in parallel for a given resource type and patient IDs.

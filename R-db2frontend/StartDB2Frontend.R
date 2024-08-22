@@ -8,5 +8,5 @@ rm(list = ls())
 library(etlutils)
 library(db2frontend)
 
-copyDB2Redcap()
-copyRedcap2DB()
+db2frontend::importDB2Redcap()
+db2frontend::importRedcap2DB()

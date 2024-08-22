@@ -5,7 +5,7 @@
 -- Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
-  encounter_id serial PRIMARY KEY not null, -- Primary key of the entity
+  encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   enc_id varchar,   -- id (varchar)
   enc_patient_id varchar,   -- subject/reference (varchar)
@@ -78,15 +78,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   enc_serviceprovider_identifier_type_display varchar,   -- serviceProvider/identifier/type/coding/display (varchar)
   enc_serviceprovider_identifier_type_text varchar,   -- serviceProvider/identifier/type/text (varchar)
   enc_serviceprovider_display varchar,   -- serviceProvider/display (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
-  patient_id serial PRIMARY KEY not null, -- Primary key of the entity
+  patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   pat_id varchar,   -- id (varchar)
   pat_identifier_use varchar,   -- identifier/use (varchar)
@@ -105,15 +106,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   pat_gender varchar,   -- gender (varchar)
   pat_birthdate date,   -- birthDate (date)
   pat_address_postalcode varchar,   -- address/postalCode (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition (
-  condition_id serial PRIMARY KEY not null, -- Primary key of the entity
+  condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   con_id varchar,   -- id (varchar)
   con_encounter_id varchar,   -- encounter/reference (varchar)
@@ -228,15 +230,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   con_note_authorreference_display varchar,   -- note/authorReference/display (varchar)
   con_note_time timestamp,   -- note/time (timestamp)
   con_note_text varchar,   -- note/text (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
-  medication_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   med_id varchar,   -- id (varchar)
   med_identifier_use varchar,   -- identifier/use (varchar)
@@ -295,15 +298,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   med_ingredient_itemreference_identifier_type_text varchar,   -- ingredient/itemReference/identifier/type/text (varchar)
   med_ingredient_itemreference_display varchar,   -- ingredient/itemReference/display (varchar)
   med_ingredient_isactive boolean,   -- ingredient/isActive (boolean)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
-  medicationrequest_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medreq_id varchar,   -- id (varchar)
   medreq_encounter_id varchar,   -- encounter/reference (varchar)
@@ -528,15 +532,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medreq_substitution_reason_code varchar,   -- substitution/reason/coding/code (varchar)
   medreq_substitution_reason_display varchar,   -- substitution/reason/coding/display (varchar)
   medreq_substitution_reason_text varchar,   -- substitution/reason/text (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
-  medicationadministration_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medadm_id varchar,   -- id (varchar)
   medadm_encounter_id varchar,   -- context/reference (varchar)
@@ -647,15 +652,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medadm_dosage_ratequantity_unit varchar,   -- dosage/rateQuantity/unit (varchar)
   medadm_dosage_ratequantity_system varchar,   -- dosage/rateQuantity/system (varchar)
   medadm_dosage_ratequantity_code varchar,   -- dosage/rateQuantity/code (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
-  medicationstatement_id serial PRIMARY KEY not null, -- Primary key of the entity
+  medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medstat_id varchar,   -- id (varchar)
   medstat_identifier_use varchar,   -- identifier/use (varchar)
@@ -867,15 +873,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medstat_dosage_maxdoseperlifetime_unit varchar,   -- dosage/maxDosePerLifetime/unit (varchar)
   medstat_dosage_maxdoseperlifetime_system varchar,   -- dosage/maxDosePerLifetime/system (varchar)
   medstat_dosage_maxdoseperlifetime_code varchar,   -- dosage/maxDosePerLifetime/code (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
-  observation_id serial PRIMARY KEY not null, -- Primary key of the entity
+  observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   obs_id varchar,   -- id (varchar)
   obs_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1008,15 +1015,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   obs_hasmember_identifier_type_display varchar,   -- hasMember/identifier/type/coding/display (varchar)
   obs_hasmember_identifier_type_text varchar,   -- hasMember/identifier/type/text (varchar)
   obs_hasmember_display varchar,   -- hasMember/display (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
-  diagnosticreport_id serial PRIMARY KEY not null, -- Primary key of the entity
+  diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   diagrep_id varchar,   -- id (varchar)
   diagrep_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1062,15 +1070,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagrep_conclusioncode_code varchar,   -- conclusionCode/coding/code (varchar)
   diagrep_conclusioncode_display varchar,   -- conclusionCode/coding/display (varchar)
   diagrep_conclusioncode_text varchar,   -- conclusionCode/text (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
-  servicerequest_id serial PRIMARY KEY not null, -- Primary key of the entity
+  servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   servreq_id varchar,   -- id (varchar)
   servreq_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1130,15 +1139,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servreq_locationcode_code varchar,   -- locationCode/coding/code (varchar)
   servreq_locationcode_display varchar,   -- locationCode/coding/display (varchar)
   servreq_locationcode_text varchar,   -- locationCode/text (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
-  procedure_id serial PRIMARY KEY not null, -- Primary key of the entity
+  procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   proc_id varchar,   -- id (varchar)
   proc_encounter_id varchar,   -- encounter/reference (varchar)
@@ -1208,15 +1218,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   proc_note_authorreference_display varchar,   -- note/authorReference/display (varchar)
   proc_note_time timestamp,   -- note/time (timestamp)
   proc_note_text varchar,   -- note/text (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
-  consent_id serial PRIMARY KEY not null, -- Primary key of the entity
+  consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   cons_id varchar,   -- id (varchar)
   cons_patient_id varchar,   -- patient/reference (varchar)
@@ -1252,15 +1263,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   cons_provision_code_text varchar,   -- provision/code/text (varchar)
   cons_provision_dataperiod_start timestamp,   -- provision/dataPeriod/start (timestamp)
   cons_provision_dataperiod_end timestamp,   -- provision/dataPeriod/end (timestamp)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "location" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
-  location_id serial PRIMARY KEY not null, -- Primary key of the entity
+  location_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   loc_id varchar,   -- id (varchar)
   loc_identifier_use varchar,   -- identifier/use (varchar)
@@ -1277,21 +1289,23 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
   loc_name varchar,   -- name (varchar)
   loc_description varchar,   -- description (varchar)
   loc_alias varchar,   -- alias (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 -- Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
-  pids_per_ward_id serial PRIMARY KEY not null, -- Primary key of the entity
+  pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
-  input_datetime timestamp not null default CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input'   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
+  last_processing_nr int -- Last processing number of the data record
 );
 
 
@@ -1302,11 +1316,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
 
 -- Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.encounter ALTER COLUMN encounter_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.encounter TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO db_user; -- Additional authorizations for testing
@@ -1329,11 +1341,9 @@ CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
 
 -- Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.patient ALTER COLUMN patient_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.patient TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO db_user; -- Additional authorizations for testing
@@ -1356,11 +1366,9 @@ CREATE OR REPLACE TRIGGER patient_tr_ins_tr
 
 -- Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.condition ALTER COLUMN condition_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.condition TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO db_user; -- Additional authorizations for testing
@@ -1383,11 +1391,9 @@ CREATE OR REPLACE TRIGGER condition_tr_ins_tr
 
 -- Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medication ALTER COLUMN medication_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.medication TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO db_user; -- Additional authorizations for testing
@@ -1410,11 +1416,9 @@ CREATE OR REPLACE TRIGGER medication_tr_ins_tr
 
 -- Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationrequest ALTER COLUMN medicationrequest_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.medicationrequest TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO db_user; -- Additional authorizations for testing
@@ -1437,11 +1441,9 @@ CREATE OR REPLACE TRIGGER medicationrequest_tr_ins_tr
 
 -- Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationadministration ALTER COLUMN medicationadministration_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.medicationadministration TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO db_user; -- Additional authorizations for testing
@@ -1464,11 +1466,9 @@ CREATE OR REPLACE TRIGGER medicationadministration_tr_ins_tr
 
 -- Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.medicationstatement ALTER COLUMN medicationstatement_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.medicationstatement TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO db_user; -- Additional authorizations for testing
@@ -1491,11 +1491,9 @@ CREATE OR REPLACE TRIGGER medicationstatement_tr_ins_tr
 
 -- Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.observation ALTER COLUMN observation_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.observation TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO db_user; -- Additional authorizations for testing
@@ -1518,11 +1516,9 @@ CREATE OR REPLACE TRIGGER observation_tr_ins_tr
 
 -- Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.diagnosticreport ALTER COLUMN diagnosticreport_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.diagnosticreport TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO db_user; -- Additional authorizations for testing
@@ -1545,11 +1541,9 @@ CREATE OR REPLACE TRIGGER diagnosticreport_tr_ins_tr
 
 -- Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.servicerequest ALTER COLUMN servicerequest_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.servicerequest TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO db_user; -- Additional authorizations for testing
@@ -1572,11 +1566,9 @@ CREATE OR REPLACE TRIGGER servicerequest_tr_ins_tr
 
 -- Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.procedure ALTER COLUMN procedure_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.procedure TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO db_user; -- Additional authorizations for testing
@@ -1599,11 +1591,9 @@ CREATE OR REPLACE TRIGGER procedure_tr_ins_tr
 
 -- Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.consent ALTER COLUMN consent_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.consent TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO db_user; -- Additional authorizations for testing
@@ -1626,11 +1616,9 @@ CREATE OR REPLACE TRIGGER consent_tr_ins_tr
 
 -- Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.location ALTER COLUMN location_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.location TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO db_user; -- Additional authorizations for testing
@@ -1653,11 +1641,9 @@ CREATE OR REPLACE TRIGGER location_tr_ins_tr
 
 -- Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-ALTER TABLE cds2db_in.pids_per_ward ALTER COLUMN pids_per_ward_id SET DEFAULT (nextval('cds2db_in.cds2db_in_seq'));
-
 GRANT TRIGGER ON cds2db_in.pids_per_ward TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
-GRANT USAGE ON cds2db_in.cds2db_in_seq TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO db_user; -- Additional authorizations for testing
@@ -2921,6 +2907,6 @@ comment on column cds2db_in.pids_per_ward.last_check_datetime is 'Time at which 
 comment on column cds2db_in.pids_per_ward.current_dataset_status is 'Processing status of the data record';
 
 
-
 -- Output on
 \o
+

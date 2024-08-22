@@ -1,3 +1,23 @@
+#' Retrieve the Last Processing Number from the Database
+#'
+#' This function connects to the database and retrieves the maximum `last_processing_nr`
+#' from the `data_import_hist` table within the `db_log` schema. It specifically looks
+#' for records where the `function_name` is `'copy_type_cds_in_to_db_log'` and the
+#' `table_name` does not contain `'_raw'`.
+#'
+#' @return A data frame containing the maximum `last_processing_nr` from the specified
+#'         records in the `db_log.data_import_hist` table.
+#'
+getLastProcessingNumber <- function() {
+  db_connection_read <- getDatabaseReadConnection()
+  statement <- "SELECT MAX(last_processing_nr)
+                FROM db_log.data_import_hist
+                WHERE function_name = 'copy_type_cds_in_to_db_log'
+                  AND schema_name='db_log' AND table_name NOT LIKE '%_raw';"
+
+  etlutils::dbGetQuery(db_connection_read, statement)
+}
+
 #' Load All Data with Last Timestamp from Database
 #'
 #' This function loads all data from a database table that has the most recent timestamp.
@@ -6,12 +26,14 @@
 #' @param table_name_part A string representing part of the table name to search for.
 #' @return A data frame containing the records with the most recent timestamp from the specified table.
 #'
-loadAllDataWithLastTimestampFromDB <- function(table_name_part) {
+loadLastImportedDatasetsFromDB <- function(table_name_part) {
   db_connection_read <- getDatabaseReadConnection()
   table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
+  last_processing_nr <- getLastProcessingNumber()
+  # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
-                      "   WHERE COALESCE(last_check_datetime, input_datetime) =\n",
-                      "      (SELECT MAX(COALESCE(last_check_datetime, input_datetime)) FROM ", table_name, ");")
+                      " WHERE last_processing_nr = ", last_processing_nr, ";")
+
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
@@ -101,16 +123,13 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
+  last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
   table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
-    "SELECT * FROM ", table_name, " a,\n",
-    "(\n",
-    "  SELECT max(COALESCE(last_check_datetime, input_datetime)) last_date, ", id_column, "\n",
-    "  FROM ", table_name, " GROUP BY ", id_column, "\n",
-    ") b\n",
-    "WHERE b.last_date = COALESCE(a.last_check_datetime, a.input_datetime) and a.", id_column, " = b.", id_column,
+    "SELECT * FROM ", table_name, " a\n",
+    " WHERE last_processing_nr = ", last_processing_nr,
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
@@ -290,12 +309,10 @@ createFrontendTables <- function() {
 
     # Initialize an empty data table to store patient information
     patient_frontend_table <- data.table(
-      record_id = rep(NA_character_, times = pids_count), # v_patient_all - patient_id
-      patient_fe_id = NA_character_, # v_patient_all - patient_id
-      pat_id = NA_character_, # v_patient_all - pat_id
+      record_id = rep(NA_character_, times = pids_count), # v_patient_all -> patient_id
+      patient_fe_id = NA_character_, # v_patient_all -> patient_id
+      pat_id = NA_character_, # v_patient_all -> pat_id
       pat_cis_pid = NA_character_,
-      redcap_repeat_instrument = NA_character_,
-      redcap_repeat_instance = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
       pat_gebdat = as.POSIXct.Date(NA),
@@ -310,8 +327,6 @@ createFrontendTables <- function() {
       patient_frontend_table$patient_fe_id[i] <- patient$patient_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
-      patient_frontend_table$redcap_repeat_instrument[i] <- "Patient"
-      patient_frontend_table$redcap_repeat_instance[i] <- 1
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
       patient_frontend_table$pat_name[i] <- patient$pat_name_family
       patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
@@ -328,11 +343,11 @@ createFrontendTables <- function() {
   createEncounterFrontendTable <- function(pids_per_ward, patients) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
-      record_id	= character(), # v_patient_all - patient_id
-      fall_id	= character(), # v_encounter_all - enc_id
-      fall_pat_id	= character(), # v_patient_all - pat_id
-      patient_id_fk	= character(), # v_patient_all - patient_id
-      fall_typ_id	= character(), # v_encounter_all - encounter_id
+      record_id	= character(), # v_patient_all -> patient_id
+      fall_id	= character(), # v_encounter_all -> enc_id
+      fall_pat_id	= character(), # v_patient_all -> pat_id
+      patient_id_fk	= character(), # v_patient_all -> patient_id
+      fall_fe_id	= character(), # v_encounter_all -> encounter_id
       redcap_repeat_instrument = character(),
       redcap_repeat_instance = character(),
       fall_studienphase = character(),
@@ -350,15 +365,15 @@ createFrontendTables <- function() {
     )
 
     # load Encounters for all PIDs
-    query_date <- getQueryDatetime()
+    query_datetime <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
     db_read_connection <- getDatabaseReadConnection()
     table_name <- getFirstTableWithNamePart(db_read_connection, "encounter_all")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
                     "  enc_partof_id IS NULL AND\n",
-                    "  (enc_period_end IS NULL OR enc_period_end > '", query_date, "') AND\n",
-                    "  enc_period_start <= '", query_date, "'\n")
+                    "  (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "') AND\n",
+                    "  enc_period_start <= '", query_datetime, "'\n")
     encounters <- etlutils::dbGetQuery(db_read_connection, query)
 
     # load Conditions referenced by Encounters
@@ -415,24 +430,24 @@ createFrontendTables <- function() {
         enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
         enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
         enc_status <- pid_encounters[[i]]$enc_status[1]
-        data.table::set(enc_frontend_table, target_index, 'record_id', pid_patient$patient_id)
-        data.table::set(enc_frontend_table, target_index, 'fall_id', enc_id)
-        data.table::set(enc_frontend_table, target_index, 'fall_pat_id', pid_patient$pat_id)
-        data.table::set(enc_frontend_table, target_index, 'patient_id_fk', pid_patient$patient_id)
-        data.table::set(enc_frontend_table, target_index, 'redcap_repeat_instrument', 'Fall')
-        data.table::set(enc_frontend_table, target_index, 'fall_typ_id', pid_encounters[[i]]$encounter_id[1])
-        data.table::set(enc_frontend_table, target_index, 'fall_aufn_dat', enc_period_start)
-        data.table::set(enc_frontend_table, target_index, 'fall_ent_dat',enc_period_end)
-        data.table::set(enc_frontend_table, target_index, 'fall_status', enc_status)
+        data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, "fall_id", enc_id)
+        data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
+        data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
+        data.table::set(enc_frontend_table, target_index, "fall_fe_id", pid_encounters[[i]]$encounter_id[1])
+        data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
+        data.table::set(enc_frontend_table, target_index, "fall_ent_dat",enc_period_end)
+        data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
         # set fall_complete (derived from FHIR Encounter.status)
         # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
         fall_complete <- grepl("^finished$|^cancelled$|^entered-in-error$", enc_status, ignore.case = TRUE)
         fall_complete <- ifelse(fall_complete, "Complete", NA)
-        data.table::set(enc_frontend_table, target_index, 'fall_complete', fall_complete)
+        data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
         # Extract ward name from pids_per_ward table
-        data.table::set(enc_frontend_table, target_index, 'fall_station', pids_per_ward$ward_name[pid_index])
+        data.table::set(enc_frontend_table, target_index, "fall_station", pids_per_ward$ward_name[pid_index])
 
         # Extract the admission diagnosis
         admission_diagnoses <- pid_encounters[[i]][enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
@@ -441,7 +456,7 @@ createFrontendTables <- function() {
         admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
-        data.table::set(enc_frontend_table, target_index, 'fall_aufn_diag', admission_diagnoses)
+        data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
 
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
@@ -452,7 +467,7 @@ createFrontendTables <- function() {
                           "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
-                          "        obs_effectivedatetime < '", query_date, "'\n")
+                          "        obs_effectivedatetime < '", query_datetime, "'\n")
           observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
@@ -462,7 +477,7 @@ createFrontendTables <- function() {
                             "        obs_code_code IN (", codes, ") AND\n",
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
-                            "        obs_effectivedatetime < '", query_date, "'\n")
+                            "        obs_effectivedatetime < '", query_datetime, "'\n")
             observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
           }
           if (nrow(observations)) {
@@ -491,11 +506,12 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward <- loadAllDataWithLastTimestampFromDB("pids_per_ward")
+  pids_per_ward <- loadLastImportedDatasetsFromDB("pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
-    message <- "ERROR: The pids_per_ward table is empty."
+    message <- paste0("WARNING: The pids_per_ward table is empty.\n",
+                                "Hint: Please ensure there was enoungh time between the 'cds2db' module and the 'dataprocessor' module. At least a little bit more than 1 minute.")
     message <- getErrorOrWarningMessage(message, "pids_per_ward")
     stop(message)
   }

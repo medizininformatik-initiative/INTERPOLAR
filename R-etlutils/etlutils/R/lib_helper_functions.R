@@ -114,6 +114,33 @@ isSimpleNotEmptyString <- function(s) {
 isError <- function(obj) !isSimpleNA(obj) && sum(class(obj) %in% "try-error") > 0
 
 #'
+#' Tests the passed object for being an atomic NA or an error.
+#'
+#' This function checks whether the input object is an 'try-error' or a simple NA.
+#' If the object is an error or NA, the function returns TRUE; otherwise, it returns
+#' FALSE.
+#'
+#' @param obj The object to be tested for being an error or NA.
+#'
+#' @return TRUE if the object is an 'try-error' or NA, FALSE otherwise.
+#'
+#' @examples
+#' # Example 1: Check if an error is an error or NA
+#' result <- try(log("a"))
+#' isError(result)
+#'
+#' # Example 2: Check if a numeric value is not an error or NA
+#' numeric_result <- 42
+#' isError(numeric_result)
+#'
+#' # Example 3: Check if a NA value is not an error or NA
+#' numeric_result <- NA
+#' isError(numeric_result)
+#'
+#' @export
+isSimpleNaOrError <- function(obj) isSimpleNA(obj) || sum(class(obj) %in% "try-error") > 0
+
+#'
 #' Tests the passed object for being not an error.
 #'
 #' This function checks whether the input object is not an 'try-error'. If the object

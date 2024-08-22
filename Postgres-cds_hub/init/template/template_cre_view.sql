@@ -1,5 +1,6 @@
 --Create SQL View not Typed Datasets in Schema <%OWNER_SCHEMA%>
-<%TEMPLATE_CRE_VIEW_SUB_CREATE_OR_REPLACE_VIEW%>
+<%LOOP_TABS_SUB_cre_view_VIEWS%>
+
 
 --SQL Role for Views in Schema <%OWNER_SCHEMA%>
-<%TEMPLATE_CRE_VIEW_SUB_GRANT%>
+<%LOOP_TABS_SUB_cre_view_GRANTS%>

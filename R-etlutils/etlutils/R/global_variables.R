@@ -5,7 +5,7 @@ utils::globalVariables(c("BUNDLES_AT_ONCE", "ENC_REQ_PER", "ENC_REQ_TYPE", "FHIR
                          "REQUEST_ENCOUNTER", "URL_PORT_SPEC", "SORT", "IDS_AT_ONCE", "OBS_BY_FILTER",
                          "ENCOUNTER_IDENTIFIER_PATH", "ENCOUNTER_IDENTIFIER_VALUE_PATTERN"))
 # global variables for ressource description
-utils::globalVariables(c("PERIOD_END", "PERIOD_START", "RESOURCES_TO_DOWNLOAD", "TABLE_DESCRIPTION"))
+utils::globalVariables(c("RESOURCES_TO_DOWNLOAD", "TABLE_DESCRIPTION"))
 # global variables for directory
 utils::globalVariables(c("PROJECT_NAME", "SUB_PROJECTS_DIRS", "PROJECT_TIME_STAMP"))
 # global variables for logging

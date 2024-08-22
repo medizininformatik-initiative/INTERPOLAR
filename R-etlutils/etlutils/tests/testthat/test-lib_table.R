@@ -1128,3 +1128,105 @@ test_that("splitTableToList handles NA values in the split column correctly", {
   expect_equal(result$B, data.table(SCRIPTNAME = c("B", "B"), VALUE = 3:4))
   expect_equal(result$C, data.table(SCRIPTNAME = "C", VALUE = 5))
 })
+
+# Test: Fill NA values in all columns
+test_that("fillNAWithLastRowValue fills NA values in all columns", {
+  dt <- data.table::data.table(A = c(1, NA, NA, 4, 5), B = c("x", NA, "z", NA, NA))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1, 1, 1, 4, 5), B = c("x", "x", "z", "z", "z"))
+  expect_equal(result, expected)
+})
+
+# Test: Fill NA values in specific columns
+test_that("fillNAWithLastRowValue fills NA values in specified columns", {
+  dt <- data.table::data.table(A = c(1, NA, NA, 4, 5), B = c("x", NA, "z", NA, NA))
+  result <- fillNAWithLastRowValue(dt, columns = "B")
+  expected <- data.table::data.table(A = c(1, NA, NA, 4, 5), B = c("x", "x", "z", "z", "z"))
+  expect_equal(result, expected)
+})
+
+# Test: No NA values to fill
+test_that("fillNAWithLastRowValue handles no NA values case", {
+  dt <- data.table::data.table(A = c(1, 2, 3, 4, 5), B = c("x", "y", "z", "w", "v"))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1, 2, 3, 4, 5), B = c("x", "y", "z", "w", "v"))
+  expect_equal(result, expected)
+})
+
+# Test: Single-row data.table
+test_that("fillNAWithLastRowValue handles single-row data.table", {
+  dt <- data.table::data.table(A = c(1), B = c("x"))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1), B = c("x"))
+  expect_equal(result, expected)
+})
+
+# Test: Single-row data.table with all values NA
+test_that("fillNAWithLastRowValue handles single-row data.table with all values NA", {
+  dt <- data.table::data.table(A = NA, B = NA)
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = NA, B = NA)
+  expect_equal(result, expected)
+})
+
+# Test: First value in column is NA
+test_that("fillNAWithLastRowValue handles first value in column being NA", {
+  dt <- data.table::data.table(A = c(NA, 1, 2, NA, 5), B = c(NA, "x", "y", "z", NA))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(NA, 1, 2, 2, 5), B = c(NA, "x", "y", "z", "z"))
+  expect_equal(result, expected)
+})
+
+# Test: Columns parameter is NA (default) -> all columns are processed
+test_that("fillNAWithLastRowValue processes all columns if columns parameter is NA", {
+  dt <- data.table::data.table(A = c(1, NA, 3), B = c("a", NA, "c"))
+  result <- fillNAWithLastRowValue(dt)
+  expected <- data.table::data.table(A = c(1, 1, 3), B = c("a", "a", "c"))
+  expect_equal(result, expected)
+})
+
+#######################
+# replaceColumnValues #
+#######################
+
+# Test replacing non-NA values
+test_that("Non-NA values are replaced correctly", {
+  dt <- data.table::data.table(a = c("x", "y", "x", "y"))
+  replaceColumnValues(dt, "a", "x", "z")
+  expect_equal(dt$a, c("z", "y", "z", "y"))
+})
+
+# Test replacing NA values
+test_that("NA values are replaced correctly", {
+  dt <- data.table::data.table(a = c("x", NA, "x", "y"))
+  replaceColumnValues(dt, "a", NA, "unknown")
+  expect_equal(dt$a, c("x", "unknown", "x", "y"))
+})
+
+# Test replacing with NA values
+test_that("Values are replaced with NA correctly", {
+  dt <- data.table::data.table(a = c("x", "y", "x", "y"))
+  replaceColumnValues(dt, "a", "x", NA)
+  expect_equal(dt$a, c(NA, "y", NA, "y"))
+})
+
+# Test with no matching values
+test_that("No changes when no matching values are found", {
+  dt <- data.table::data.table(a = c("x", "y", "x", "y"))
+  replaceColumnValues(dt, "a", "z", "w")
+  expect_equal(dt$a, c("x", "y", "x", "y"))
+})
+
+# Test with column containing only NA values
+test_that("Column with only NA values is handled correctly", {
+  dt <- data.table::data.table(a = c(NA_character_, NA_character_, NA_character_))
+  replaceColumnValues(dt, "a", NA, "unknown")
+  expect_equal(dt$a, c("unknown", "unknown", "unknown"))
+})
+
+# Test with all values replaced
+test_that("All values in the column are replaced correctly", {
+  dt <- data.table::data.table(a = c("x", "x", "x"))
+  replaceColumnValues(dt, "a", "x", "z")
+  expect_equal(dt$a, c("z", "z", "z"))
+})

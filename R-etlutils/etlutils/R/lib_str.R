@@ -384,3 +384,34 @@ convertStringToPrefixedFormat <- function(str, prefix, separator = "/") {
   }
   return(str)
 }
+
+#' Escape special characters in a string for grep patterns
+#'
+#' This function escapes only special characters in a given string by prefixing them with a
+#' backslash. Alphanumeric characters (letters and numbers) are not escaped.
+#'
+#' @param string A string to be escaped.
+#'
+#' @return A string with special characters escaped by a backslash.
+#'
+#' @examples
+#' escaped <- getEscaped("example@#")
+#' print(escaped) # Output: "example\@\#"
+#'
+#' @export
+getEscaped <- function(string) {
+  if (nchar(string) == 0) {
+    return(string)
+  }
+  special_chars <- c(".", "\\", "|", "(", ")", "[", "]", "{", "}", "^", "$", "*", "+", "?", "-")
+  chars <- strsplit(string, "")[[1]]
+  escaped_chars <- sapply(chars, function(char) {
+    if (char %in% special_chars) {
+      return(paste0("\\", char))
+    } else {
+      return(char)
+    }
+  })
+  escaped_string <- paste0(escaped_chars, collapse = "")
+  return(escaped_string)
+}

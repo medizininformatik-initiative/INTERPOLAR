@@ -1,2 +1,2 @@
 --Create View for typed tables for schema db2dataprocessor_out
-<%TEMPLATE_CRE_VIEW2_SUB_SINGLE_TABLE%>
+<%LOOP_TABS_SUB_cre_view2_VIEWS_AND_GRANTS%>

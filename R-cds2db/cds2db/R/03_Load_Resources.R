@@ -20,20 +20,20 @@
 #'   )
 #'
 #'   # Applying the function
-#'   result_table <- createWardPatitentIDPerDateTable(patientIDsPerWard)
+#'   result_table <- createWardPatientIDPerDateTable(patientIDsPerWard)
 #'
 #'   # Displaying the result
 #'   print(result_table)
 #' }
 #'
-createWardPatitentIDPerDateTable <- function(patientIDsPerWard) {
+createWardPatientIDPerDateTable <- function(patientIDsPerWard) {
   ward_names <- names(patientIDsPerWard)
   patient_ids <- unlist(patientIDsPerWard)
-  wardPatitentIDPerDate <- data.table::data.table(
+  wardPatientIDPerDate <- data.table::data.table(
     ward_name = rep(ward_names, lengths(patientIDsPerWard)),
     patient_id = patient_ids
   )
-  return(wardPatitentIDPerDate)
+  return(wardPatientIDPerDate)
 }
 
 #' Get Current Datetime
@@ -75,21 +75,17 @@ getQueryDatetime <- function() {
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
-  patientIDs <- unique(unlist(patient_IDs_per_ward))
   # Get current or debug datetime
-  query_date <- getQueryDatetime()
-  # Filtering patients who are no longer on a relevant ward, but the case is still not closed
-  # Load all patient IDs from Encounters with no enddate or an enddate greater current date
-  loadActivePatientIDsFromDB <- function(table_name_part) {
-    db_connection_read <- getDatabaseReadConnection()
-    table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
-    statement <- paste0("SELECT enc_patient_id FROM ", table_name, "\n",
-                        "   WHERE enc_period_end is NULL\n",
-                        "   OR enc_period_end > '", query_date, "';")
-    etlutils::dbGetQuery(db_connection_read, statement)
-  }
-  patientIDsActive <- loadActivePatientIDsFromDB("encounter_all")
+  query_datetime <- getQueryDatetime()
+  # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
+  # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
+  # an enddate greater current date.
+  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
+                        "   WHERE enc_period_start <= '", query_datetime, "' AND\n",
+                        "   (enc_period_end is NULL OR enc_period_end > '", query_datetime, "');")
+  patientIDsActive <- getQueryFromDatabase(query)
   # Unify and unique all patient IDs
+  patientIDs <- unique(unlist(patient_IDs_per_ward))
   patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
@@ -113,7 +109,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
 
 
   # Add additional table of ward-patient ID per date
-  resource_tables[['pids_per_ward']] <- createWardPatitentIDPerDateTable(patient_IDs_per_ward)
+  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
 
   return(resource_tables)
 }
@@ -134,16 +130,16 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
 #' @return An updated list of data.tables including the referenced resources.
 #'
 loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, resource_tables) {
-  # table_descriptions$reference_types can be a comma or whitespace separated list like
-  # "MedicationStatement, MedicationAdministration". We need the all unique diffrerent
+  # table_descriptions$REFERENCE_TYPES can be a comma or whitespace separated list like
+  # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
-  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$reference_types))
+  reference_types <- unique(etlutils::extractWords(table_descriptions$REFERENCE_TYPES))
   for (reference_type in reference_types) {
     referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
     if (!is.null(referenced_table_description)) {
       # now extract all rows where the single reference_type is in the reference_types column as whole word
       whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-      sub_reference_type <- table_descriptions$reference_types[grepl(whole_word_pattern, reference_types)]
+      sub_reference_type <- table_descriptions$REFERENCE_TYPES[grepl(whole_word_pattern, REFERENCE_TYPES)]
 
       referenced_ids <- c()
       for (i in seq_len(nrow(sub_reference_type))) {

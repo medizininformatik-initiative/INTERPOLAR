@@ -66,7 +66,11 @@ Die CDS-HUB DB ist ein Bestandteil des Datenflusses. Daher ist der Beschreibung 
 Um den Datenfluss zu gewährleisten und rückverfolgbar zu machen, werden zu allen Daten (Tabellen) immer datenbankinterne technische Primärschlüssel angelegt und gegebenenfalls bei der Verarbeitung weitergegeben. Diese technischen Primärschlüssel können redundant zu den in den Daten enthaltenen Primärschlüsseln sein (z. B. FHIR-IDs).
 
 ## Erzeugung der Datenbank
-Zur Erzeugung der Strukturen und Funktionalität der Datenbank werden beim Initialisierung verschiedene Skripte in Reihenfolge ausgeführt. Diese Skripte initialisieren die Datenbank zum aktuellen Entwicklungsstand und können zukünftigen Änderungen unterliegen. Der genaue Inhalt ist im jeweiligen SQL-Skript nachzulesen (siehe [Postgres-cds_hub/init (SQL-Skripte)](../Postgres-cds_hub/init)). Teilweise werden diese Skripte mithilfe von Templates und Konfigurationsdateien erzeugt, um die Änderungen während der Entwicklung bei den jeweiligen FHIR- bzw. Frontend-Strukturen abbilden zu können. Bei der Initaliesierung der Datenbank ist darauf zu achten das alle Skripte Fehlerfrei ausgeführt werden um die Funktionalität zu gewährleisten.
+Zur Erzeugung der Strukturen und Funktionalität der Datenbank werden bei der Initialisierung Skripte in einer durch Nummerierung vorgegebenen Reihenfolge ausgeführt. Diese Skripte initialisieren die Datenbank zum aktuellen Entwicklungsstand und können zukünftigen Änderungen unterliegen. Der genaue Inhalt ist im jeweiligen SQL-Skript nachzulesen (siehe [Postgres-cds_hub/init (SQL-Skripte)](../Postgres-cds_hub/init)). 
+
+Teilweise werden diese Skripte mit Hilfe von Templates und Konfigurationsdateien erzeugt. Dies betrifft alle Skripte zum Anlegen von Tabellen und deren Spalten. Die Definition der Tabellen für das Modul 'cds2db' (insbesondere die Definition der Tabellen für die FHIR Ressourcen) finden sich in der Datei [Table_Description.xlsx](../R-cds2db/cds2db/inst/extdata/Table_Description.xlsx). Die Definition der Tabellen für das Modul 'frontend' sind in der Datei [Frontend_Table_Description.xlsx](../R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx) angegeben. Zusätzlich dazu gibt es noch eine Definition der Tabellenschemata und Rechte, die im Generierungsprozess benötigt wird (siehe [User_Schema_Rights_Definition.xlsx](./init/template)) sowie die eigentlichen Templates im selben Ordner. Durch das R-Script [Init_02_Create_TableStatements.R](../R-cds2db/cds2db/R/Init_02_Create_TableStatements.R) wird der generierte Teil der SQL-Scripte erzeugt.
+
+Bei der Initalisierung der Datenbank ist darauf zu achten das alle Skripte fehlerfrei ausgeführt werden, um die Funktionalität zu gewährleisten.
 
 ### 01_main_user_schema_sequence
 Initialisierung aller Schemata, Nutzer und Sequenzen. Passwörter für die verschiedenen Datenbanknutzer der Bereiche (Module / Schnittstellen) sind hier zu setzen.
@@ -92,6 +96,12 @@ Erstellt Views im Schnittstellenschema cds2db_out um alle Datensätze zu listen,
 ### 19_cre_view_typ_dataproc_all
 Erstellt Views im Schnittstellenschema db2dataprocessor_out um alle verwendbaren (getypten, aufgeschlüsselt) FHIR-Daten dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
+### 20_take_over_check_date
+Funktion welche in den Datensätzen dokumentiert wann zuletzt bearbeitet wurden - mit Processing-Nr.
+
+### 21_cre_view_typ_cds2db_all
+Erstellt Views im Schnittstellenschema cds2db_out um Daten die für den Import der FHIR Daten notwenig sind zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
 ### 30_cds_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_raw_cds_in_to_db_log) für die FHIR-Daten vom Schnittstellenschema cds2db_in in den Kern (db_log) für die Raw-Daten. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
@@ -101,7 +111,7 @@ Erstellt die Überführungsfunktion (db.copy_type_cds_in_to_db_log) für die FHI
 ### 40_cre_table_typ_dataproc_in
 Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für das Frontend im Schnittstellenschema db2dataprocessor_in. Dabei werden eindeutige Primärschlüssel vergeben, die technischen Primärschlüssel der FHIR-Daten referenziert sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
 
-### 42_cre_table_frontent_log
+### 42_cre_table_frontent_log / 43_cre_table_frontent_log
 Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für das Frontend zum dauerhaften Speichern im Schema db_log. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
 ### 44_cre_table_frontent_in
@@ -116,5 +126,8 @@ Erstellt die Überführungsfunktion (db.copy_fe_dp_in_to_db_log) für die Studie
 ### 62_fe_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_fe_fe_in_to_db_log) für die Studiendaten (Frontend) vom Schnittstellenschema db2frontend_in in den Kern (db_log) zur dauerhaften speicherung. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
+### 95_cro_job
+Erstellt eine zentralen cron-job der alle Überführungsfunktionen der Datenbank steuert und ausführt.
 
-
+### 98_dev_and_test
+Anlegen von Hilfstabellen für Tests und Entwicklung - nicht Produktiv.
