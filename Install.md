@@ -1,7 +1,8 @@
 # Installationsanleitung bzw. Anleitung zur Einrichtung der CDS tool chain
 
-  1. Checkout des INTERPOLAR Repositories \
-    ```git clone git@github.com:medizininformatik-initiative/INTERPOLAR.git```
+  1. Checkout des INTERPOLAR Repositories, z.B. mit einem dieser Befehle: \
+    ```git clone git@github.com:medizininformatik-initiative/INTERPOLAR.git``` \
+    ```git clone https://github.com/medizininformatik-initiative/INTERPOLAR.git```
   1. Wechsel in das geclonte Verzeichnis \
     ```cd INTERPOLAR```
   1. Optionaler Schritt: Wenn Sie die aktuellste Entwickler-Version ausprobieren möchten, checken Sie den Branch 'release' aus. Ansonsten überspringen Sie diesen Schritt. \
