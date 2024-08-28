@@ -1,3 +1,35 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "db2frontend_in"
+-- Create time: 2024-08-28 11:51:20
+-- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
+-- SCRIPTNAME:  44_cre_table_frontend_in.sql
+-- TEMPLATE:  template_cre_table.sql
+-- OWNER_USER:  db2frontend_user
+-- OWNER_SCHEMA:  db2frontend_in
+-- TAGS:  INT_ID
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  _fe
+-- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
+-- RIGHTS (3):  SELECT
+-- GRANT_TARGET_USER:  db2frontend_user
+-- GRANT_TARGET_USER (2):  db_user
+-- GRANT_TARGET_USER (3):  db_log_user
+-- COPY_FUNC_SCRIPTNAME:  
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  
+-- SCHEMA_2:  
+-- TABLE_POSTFIX_2:  
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 -----------------------------------------------------
 -- Create SQL Tables in Schema "db2frontend_in" --
 -----------------------------------------------------
