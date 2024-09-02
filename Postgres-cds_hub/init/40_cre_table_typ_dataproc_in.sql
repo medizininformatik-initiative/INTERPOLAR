@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2024-09-02 13:42:32
+-- Create time: 2024-09-02 14:31:46
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  40_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -39,6 +39,8 @@
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
   patient_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
+  redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)
+  redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)
   pat_header varchar,   -- descriptive item only for frontend (varchar)
   pat_id varchar,   -- Patient-identifier FHIR Daten (varchar)
   pat_femb varchar,   -- descriptive item only for frontend (varchar)
@@ -504,6 +506,8 @@ CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
 
 comment on column db2dataprocessor_in.patient_fe.patient_fe_id is 'Primary key of the entity';
 comment on column db2dataprocessor_in.patient_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+comment on column db2dataprocessor_in.patient_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
+comment on column db2dataprocessor_in.patient_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_header is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_id is 'Patient-identifier FHIR Daten (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_femb is 'descriptive item only for frontend (varchar)';
