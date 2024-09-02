@@ -206,6 +206,51 @@ getFullTableName <- function(tablename, script_rights_definition, name_index = 1
   paste0(tablename_prefix, tablename, tablename_postfix)
 }
 
+#####################################
+# Crate Generated SQL Script Header #
+#####################################
+
+createHeader <- function(script_rights_definition) {
+
+  add <- function(...) {
+    header <<- paste0(header, paste0(...), "\n")
+  }
+
+  formatTime <- function(timestamp) {
+    format(timestamp, "%Y-%m-%d %H:%M:%S")
+  }
+
+  rights_definition_file_name <- getRightsDefinitionFileName()
+  rights_definition_file_info <- file.info(rights_definition_file_name)
+
+  header <- ""
+  add("-- ########################################################################################################")
+  add("--")
+  add("-- This file is generated. Changes should only be made by regenerating the file.")
+  add("--")
+  add("-- Rights definition file             : ", rights_definition_file_name)
+  add("-- Rights definition file last update : ", formatTime(rights_definition_file_info$mtime))
+  add("-- Rights definition file size        : ", rights_definition_file_info$size, " Byte")
+  add("--")
+  add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA ,"\"")
+  add("-- Create time: ", formatTime(Sys.time()))
+  # iterate over all columns and rows in the script_rights_definition
+  col_names <- names(script_rights_definition)
+  for (col_name in col_names) {
+    for (r in seq_len(nrow(script_rights_definition))) {
+      # add the value always if we are in the first row of the script_rights_definition or if
+      # the value is not NA and different to the value in the previous row
+      if (r == 1 || ((!is.na(script_rights_definition[r, ..col_name]) && !(script_rights_definition[r, ..col_name] %in% script_rights_definition[r - 1, ..col_name])))) {
+        value <- script_rights_definition[r, ..col_name]
+        if (is.na(value)) value <- "" # change NA values to NA (should only happen in row 1)
+        add("-- ", col_name, ifelse (r == 1, "", paste0(" (", r, ")")), ":  ", value, "")
+      }
+    }
+  }
+  add("-- ########################################################################################################\n")
+  return(header)
+}
+
 ########################
 # Convert Create Table #
 ########################
@@ -228,6 +273,11 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
   rights_first_row <- script_rights_definition[1]
   # Load SQL template
   content <- ifelse (is.na(template_content), loadTemplate(template_name), template_content)
+  if (recursion == 0) {
+    header <- createHeader(script_rights_definition)
+    content <- paste0(header, content)
+  }
+
   placeholders <- extractPlaceholders(content)
 
   for (placeholder in placeholders) {

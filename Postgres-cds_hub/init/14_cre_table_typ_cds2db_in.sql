@@ -1,3 +1,33 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "cds2db_in"
+-- Create time: 2024-08-28 11:50:58
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
+-- TEMPLATE:  template_cre_table.sql
+-- OWNER_USER:  cds2db_user
+-- OWNER_SCHEMA:  cds2db_in
+-- TAGS:  TYPED
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  
+-- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
+-- GRANT_TARGET_USER:  cds2db_user
+-- GRANT_TARGET_USER (2):  db_user
+-- COPY_FUNC_SCRIPTNAME:  
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  
+-- SCHEMA_2:  
+-- TABLE_POSTFIX_2:  
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 -----------------------------------------------------
 -- Create SQL Tables in Schema "cds2db_in" --
 -----------------------------------------------------

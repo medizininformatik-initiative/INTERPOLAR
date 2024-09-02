@@ -1,3 +1,33 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "cds2db_out"
+-- Create time: 2024-08-28 11:51:18
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  18_cre_view_raw_type_diff_log.sql
+-- TEMPLATE:  template_cre_view.sql
+-- OWNER_USER:  cds2db_user
+-- OWNER_SCHEMA:  cds2db_out
+-- TAGS:  
+-- TABLE_PREFIX:  v_
+-- TABLE_POSTFIX:  
+-- RIGHTS:  SELECT
+-- GRANT_TARGET_USER:  cds2db_user
+-- GRANT_TARGET_USER (2):  db_user
+-- COPY_FUNC_SCRIPTNAME:  
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  
+-- SCHEMA_2:  db_log
+-- TABLE_POSTFIX_2:  _raw
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 --Create SQL View not Typed Datasets in Schema cds2db_out
 CREATE OR REPLACE VIEW cds2db_out.v_encounter AS (
    SELECT DISTINCT * FROM db_log.encounter_raw WHERE encounter_raw_id NOT IN (SELECT encounter_raw_id FROM db_log.encounter) ORDER BY encounter_raw_id

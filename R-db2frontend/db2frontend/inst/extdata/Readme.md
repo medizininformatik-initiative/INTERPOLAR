@@ -1,0 +1,1 @@
+In der Datei [Frontend_Table_Description.xlsx](./Frontend_Table_Description.xlsx) ist beschrieben, welche Spalten für das Frontend in der Datenbank generiert werden. Wird REDCap als Frontend eingesetzt, wird diese Datei auf Basis des REDCap Projekt Data Dictionary manuel erzeugt.

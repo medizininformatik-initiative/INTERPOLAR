@@ -1,3 +1,33 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "db2frontend_out"
+-- Create time: 2024-08-28 11:51:27
+-- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
+-- SCRIPTNAME:  52_cre_view_fe_out.sql
+-- TEMPLATE:  template_cre_view3.sql
+-- OWNER_USER:  db2frontend_user
+-- OWNER_SCHEMA:  db2frontend_out
+-- TAGS:  
+-- TABLE_PREFIX:  v_
+-- TABLE_POSTFIX:  
+-- RIGHTS:  SELECT
+-- GRANT_TARGET_USER:  db2frontend_user
+-- GRANT_TARGET_USER (2):  db_user
+-- COPY_FUNC_SCRIPTNAME:  
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  
+-- SCHEMA_2:  db_log
+-- TABLE_POSTFIX_2:  _fe
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 --Create View for frontend tables for schema db2frontend_out
 
 CREATE OR REPLACE VIEW db2frontend_out.v_patient AS (
