@@ -165,7 +165,7 @@ getResourcesByIDs <- function(
 ) {
   getResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
-    collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_LEN - RES_LEN) {
+    collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS - MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE) {
       if (length(ids) < 1) {# if there are no more ids to stringify
         warning(
           paste0(
