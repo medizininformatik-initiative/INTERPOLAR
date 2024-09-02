@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file last update : 2024-08-21 10:04:46
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2024-08-28 11:51:19
+-- Create time: 2024-09-02 13:42:32
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  40_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -43,8 +43,6 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
   pat_id varchar,   -- Patient-identifier FHIR Daten (varchar)
   pat_femb varchar,   -- descriptive item only for frontend (varchar)
   pat_cis_pid varchar,   -- Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)
-  redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  patient (varchar)
-  redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1 (varchar)
   pat_name varchar,   -- Patientenname (varchar)
   pat_vorname varchar,   -- Patientenvorname (varchar)
   pat_gebdat date,   -- Geburtsdatum (date)
@@ -71,6 +69,8 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
   fall_studienphase varchar,   -- Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)
   fall_station varchar,   -- Station wie vom DIZ Definiert (varchar)
+  fall_bettplatz varchar,   -- Bettplatz wie vom DIZ Definiert (varchar)
+  fall_zimmernr varchar,   -- Zimmernummer wie vom DIZ Definiert (varchar)
   fall_aufn_dat date,   -- Aufnahmedatum (date)
   fall_aufn_diag varchar,   -- Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)
   fall_gewicht_aktuell double precision,   -- aktuelles Gewicht (Kg) (double precision)
@@ -93,9 +93,6 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
   fall_leber_insuf_ausmass varchar,   -- 1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß (varchar)
   fall_schwanger_mo varchar,   -- 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)
   fall_schwanger_mo_lbl varchar,   -- descriptive item only for frontend (varchar)
-  fall_op_geplant varchar,   -- 1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant? (varchar)
-  fall_op_dat_lbl varchar,   -- descriptive item only for frontend (varchar)
-  fall_op_dat date,   -- Operationsdatum (date)
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat date,   -- Entlassdatum (date)
   fall_complete varchar,   -- Frontend Complete-Status (varchar)
@@ -121,10 +118,6 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
   meda_dat date,   -- Datum der Medikationsanalyse (date)
   meda_typ varchar,   -- Typ der Medikationsanalyse (varchar)
-  meda_risiko_pat varchar,   -- 1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (varchar)
-  meda_risiko_pat_info varchar,   -- descriptive item only for frontend (varchar)
-  meda_risiko_pat_info___1 varchar,   -- descriptive item only for frontend (varchar)
-  meda_risiko_pat_info_txt varchar,   -- descriptive item only for frontend (varchar)
   meda_ma_thueberw varchar,   -- Medikationsanalyse / Therapieüberwachung in 24-48h (varchar)
   meda_ma_thueberw_comp_lbl varchar,   -- descriptive item only for frontend (varchar)
   meda_ma_thueberw_comp varchar,   -- Wiedervorlage abgeschlossen? 1, Ja|0, Nein (varchar)
@@ -170,6 +163,10 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_hinweisgeber varchar,   -- Hinweisgeber auf das MRP (varchar)
   mrp_gewissheit_lbl varchar,   -- descriptive item only for frontend (varchar)
   mrp_gewissheit varchar,   -- Sicherheit des detektierten MRP (varchar)
+  mrp_femb_22 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_gewissheit_oth varchar,   -- Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)
+  mrp_femb_23 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_hinweisgeber_oth varchar,   -- Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)
   mrp_gewiss_grund_abl_lbl varchar,   -- descriptive item only for frontend (varchar)
   mrp_gewiss_grund_abl varchar,   -- Grund für nicht Bestätigung (varchar)
   mrp_gewiss_grund_abl_sonst_lbl varchar,   -- descriptive item only for frontend (varchar)
@@ -264,10 +261,11 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_femb_21 varchar,   -- descriptive item only for frontend (varchar)
   mrp_dokup_hand_emp_akz varchar,   -- Handlungsempfehlung akzeptiert? (varchar)
   mrp_merp varchar,   -- NCC MERP Score (varchar)
+  mrp_merp_info varchar,   -- descriptive item only for frontend (varchar)
   mrp_merp_info___1 varchar,   -- descriptive item only for frontend (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend (varchar)
   mrp_wiedervorlage varchar,   -- MRP Wiedervorlage (varchar)
-  mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status (varchar)
+  mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  (varchar)
   input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
@@ -510,8 +508,6 @@ comment on column db2dataprocessor_in.patient_fe.pat_header is 'descriptive item
 comment on column db2dataprocessor_in.patient_fe.pat_id is 'Patient-identifier FHIR Daten (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_femb is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_cis_pid is 'Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)';
-comment on column db2dataprocessor_in.patient_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :  patient (varchar)';
-comment on column db2dataprocessor_in.patient_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1 (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_name is 'Patientenname (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_vorname is 'Patientenvorname (varchar)';
 comment on column db2dataprocessor_in.patient_fe.pat_gebdat is 'Geburtsdatum (date)';
@@ -533,6 +529,8 @@ comment on column db2dataprocessor_in.fall_fe.redcap_repeat_instrument is 'Front
 comment on column db2dataprocessor_in.fall_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_studienphase is 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_station is 'Station wie vom DIZ Definiert (varchar)';
+comment on column db2dataprocessor_in.fall_fe.fall_bettplatz is 'Bettplatz wie vom DIZ Definiert (varchar)';
+comment on column db2dataprocessor_in.fall_fe.fall_zimmernr is 'Zimmernummer wie vom DIZ Definiert (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_aufn_dat is 'Aufnahmedatum (date)';
 comment on column db2dataprocessor_in.fall_fe.fall_aufn_diag is 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_gewicht_aktuell is 'aktuelles Gewicht (Kg) (double precision)';
@@ -555,9 +553,6 @@ comment on column db2dataprocessor_in.fall_fe.fall_leber_insuf_ausmass_lbl is 'd
 comment on column db2dataprocessor_in.fall_fe.fall_leber_insuf_ausmass is '1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_schwanger_mo is '0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_schwanger_mo_lbl is 'descriptive item only for frontend (varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_op_geplant is '1, ja | 0, nein | -1, nicht bekanntIst eine Operation geplant? (varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_op_dat_lbl is 'descriptive item only for frontend (varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_op_dat is 'Operationsdatum (date)';
 comment on column db2dataprocessor_in.fall_fe.fall_status is 'Status des Falls (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_ent_dat is 'Entlassdatum (date)';
 comment on column db2dataprocessor_in.fall_fe.fall_complete is 'Frontend Complete-Status (varchar)';
@@ -578,10 +573,6 @@ comment on column db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instru
 comment on column db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_dat is 'Datum der Medikationsanalyse (date)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_typ is 'Typ der Medikationsanalyse (varchar)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat is '1, Risikopatient | 2, Medikationsanalyse / Therapieüberwachung in 24-48hMarkieren als Risikopatient (varchar)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat_info is 'descriptive item only for frontend (varchar)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat_info___1 is 'descriptive item only for frontend (varchar)';
-comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_risiko_pat_info_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw is 'Medikationsanalyse / Therapieüberwachung in 24-48h (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw_comp_lbl is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw_comp is 'Wiedervorlage abgeschlossen? 1, Ja|0, Nein (varchar)';
@@ -622,6 +613,10 @@ comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinwei
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber is 'Hinweisgeber auf das MRP (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit_lbl is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit is 'Sicherheit des detektierten MRP (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_22 is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit_oth is 'Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_23 is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth is 'Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_lbl is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl is 'Grund für nicht Bestätigung (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst_lbl is 'descriptive item only for frontend (varchar)';
@@ -716,10 +711,11 @@ comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_notiz 
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_21 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is 'Handlungsempfehlung akzeptiert? (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP Score (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info___1 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_txt is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wiedervorlage is 'MRP Wiedervorlage (varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.input_datetime is 'Time at which the data record is inserted';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.last_check_datetime is 'Time at which data record was last checked';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.current_dataset_status is 'Processing status of the data record';

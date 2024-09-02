@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file last update : 2024-08-21 10:04:46
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-08-28 11:51:27
+-- Create time: 2024-09-02 13:42:42
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -54,8 +54,6 @@ BEGIN
                       COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                       COALESCE(target_record.pat_femb::text,'#NULL#') = COALESCE(current_record.pat_femb::text,'#NULL#') AND
                       COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
-                      COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                      COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
                       COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
                       COALESCE(target_record.pat_gebdat::text,'#NULL#') = COALESCE(current_record.pat_gebdat::text,'#NULL#') AND
@@ -74,8 +72,6 @@ BEGIN
                         pat_id,
                         pat_femb,
                         pat_cis_pid,
-                        redcap_repeat_instrument,
-                        redcap_repeat_instance,
                         pat_name,
                         pat_vorname,
                         pat_gebdat,
@@ -92,8 +88,6 @@ BEGIN
                         current_record.pat_id,
                         current_record.pat_femb,
                         current_record.pat_cis_pid,
-                        current_record.redcap_repeat_instrument,
-                        current_record.redcap_repeat_instance,
                         current_record.pat_name,
                         current_record.pat_vorname,
                         current_record.pat_gebdat,
@@ -116,8 +110,6 @@ BEGIN
                       COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                       COALESCE(target_record.pat_femb::text,'#NULL#') = COALESCE(current_record.pat_femb::text,'#NULL#') AND
                       COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
-                      COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                      COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
                       COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
                       COALESCE(target_record.pat_gebdat::text,'#NULL#') = COALESCE(current_record.pat_gebdat::text,'#NULL#') AND
@@ -164,6 +156,8 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
                       COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
+                      COALESCE(target_record.fall_bettplatz::text,'#NULL#') = COALESCE(current_record.fall_bettplatz::text,'#NULL#') AND
+                      COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
                       COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
@@ -186,9 +180,6 @@ BEGIN
                       COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
                       COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
                       COALESCE(target_record.fall_schwanger_mo_lbl::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.fall_op_geplant::text,'#NULL#') = COALESCE(current_record.fall_op_geplant::text,'#NULL#') AND
-                      COALESCE(target_record.fall_op_dat_lbl::text,'#NULL#') = COALESCE(current_record.fall_op_dat_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.fall_op_dat::text,'#NULL#') = COALESCE(current_record.fall_op_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
                       COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
@@ -209,6 +200,8 @@ BEGIN
                         redcap_repeat_instance,
                         fall_studienphase,
                         fall_station,
+                        fall_bettplatz,
+                        fall_zimmernr,
                         fall_aufn_dat,
                         fall_aufn_diag,
                         fall_gewicht_aktuell,
@@ -231,9 +224,6 @@ BEGIN
                         fall_leber_insuf_ausmass,
                         fall_schwanger_mo,
                         fall_schwanger_mo_lbl,
-                        fall_op_geplant,
-                        fall_op_dat_lbl,
-                        fall_op_dat,
                         fall_status,
                         fall_ent_dat,
                         fall_complete,
@@ -252,6 +242,8 @@ BEGIN
                         current_record.redcap_repeat_instance,
                         current_record.fall_studienphase,
                         current_record.fall_station,
+                        current_record.fall_bettplatz,
+                        current_record.fall_zimmernr,
                         current_record.fall_aufn_dat,
                         current_record.fall_aufn_diag,
                         current_record.fall_gewicht_aktuell,
@@ -274,9 +266,6 @@ BEGIN
                         current_record.fall_leber_insuf_ausmass,
                         current_record.fall_schwanger_mo,
                         current_record.fall_schwanger_mo_lbl,
-                        current_record.fall_op_geplant,
-                        current_record.fall_op_dat_lbl,
-                        current_record.fall_op_dat,
                         current_record.fall_status,
                         current_record.fall_ent_dat,
                         current_record.fall_complete,
@@ -301,6 +290,8 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
                       COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
+                      COALESCE(target_record.fall_bettplatz::text,'#NULL#') = COALESCE(current_record.fall_bettplatz::text,'#NULL#') AND
+                      COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
                       COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
@@ -323,9 +314,6 @@ BEGIN
                       COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
                       COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
                       COALESCE(target_record.fall_schwanger_mo_lbl::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.fall_op_geplant::text,'#NULL#') = COALESCE(current_record.fall_op_geplant::text,'#NULL#') AND
-                      COALESCE(target_record.fall_op_dat_lbl::text,'#NULL#') = COALESCE(current_record.fall_op_dat_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.fall_op_dat::text,'#NULL#') = COALESCE(current_record.fall_op_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
                       COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
@@ -371,10 +359,6 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
                       COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat_info::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat_info___1::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info___1::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat_info_txt::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info_txt::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw_comp::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp::text,'#NULL#') AND
@@ -405,10 +389,6 @@ BEGIN
                         redcap_repeat_instance,
                         meda_dat,
                         meda_typ,
-                        meda_risiko_pat,
-                        meda_risiko_pat_info,
-                        meda_risiko_pat_info___1,
-                        meda_risiko_pat_info_txt,
                         meda_ma_thueberw,
                         meda_ma_thueberw_comp_lbl,
                         meda_ma_thueberw_comp,
@@ -437,10 +417,6 @@ BEGIN
                         current_record.redcap_repeat_instance,
                         current_record.meda_dat,
                         current_record.meda_typ,
-                        current_record.meda_risiko_pat,
-                        current_record.meda_risiko_pat_info,
-                        current_record.meda_risiko_pat_info___1,
-                        current_record.meda_risiko_pat_info_txt,
                         current_record.meda_ma_thueberw,
                         current_record.meda_ma_thueberw_comp_lbl,
                         current_record.meda_ma_thueberw_comp,
@@ -475,10 +451,6 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
                       COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat_info::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat_info___1::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info___1::text,'#NULL#') AND
-                      COALESCE(target_record.meda_risiko_pat_info_txt::text,'#NULL#') = COALESCE(current_record.meda_risiko_pat_info_txt::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw_comp::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp::text,'#NULL#') AND
@@ -544,6 +516,10 @@ BEGIN
                       COALESCE(target_record.mrp_hinweisgeber::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewissheit_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_lbl::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewissheit::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_gewissheit_oth::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_oth::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_23::text,'#NULL#') = COALESCE(current_record.mrp_femb_23::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_hinweisgeber_oth::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber_oth::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewiss_grund_abl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') AND
@@ -638,6 +614,7 @@ BEGIN
                       COALESCE(target_record.mrp_femb_21::text,'#NULL#') = COALESCE(current_record.mrp_femb_21::text,'#NULL#') AND
                       COALESCE(target_record.mrp_dokup_hand_emp_akz::text,'#NULL#') = COALESCE(current_record.mrp_dokup_hand_emp_akz::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp::text,'#NULL#') = COALESCE(current_record.mrp_merp::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
                       COALESCE(target_record.mrp_wiedervorlage::text,'#NULL#') = COALESCE(current_record.mrp_wiedervorlage::text,'#NULL#') AND
@@ -673,6 +650,10 @@ BEGIN
                         mrp_hinweisgeber,
                         mrp_gewissheit_lbl,
                         mrp_gewissheit,
+                        mrp_femb_22,
+                        mrp_gewissheit_oth,
+                        mrp_femb_23,
+                        mrp_hinweisgeber_oth,
                         mrp_gewiss_grund_abl_lbl,
                         mrp_gewiss_grund_abl,
                         mrp_gewiss_grund_abl_sonst_lbl,
@@ -767,6 +748,7 @@ BEGIN
                         mrp_femb_21,
                         mrp_dokup_hand_emp_akz,
                         mrp_merp,
+                        mrp_merp_info,
                         mrp_merp_info___1,
                         mrp_merp_txt,
                         mrp_wiedervorlage,
@@ -800,6 +782,10 @@ BEGIN
                         current_record.mrp_hinweisgeber,
                         current_record.mrp_gewissheit_lbl,
                         current_record.mrp_gewissheit,
+                        current_record.mrp_femb_22,
+                        current_record.mrp_gewissheit_oth,
+                        current_record.mrp_femb_23,
+                        current_record.mrp_hinweisgeber_oth,
                         current_record.mrp_gewiss_grund_abl_lbl,
                         current_record.mrp_gewiss_grund_abl,
                         current_record.mrp_gewiss_grund_abl_sonst_lbl,
@@ -894,6 +880,7 @@ BEGIN
                         current_record.mrp_femb_21,
                         current_record.mrp_dokup_hand_emp_akz,
                         current_record.mrp_merp,
+                        current_record.mrp_merp_info,
                         current_record.mrp_merp_info___1,
                         current_record.mrp_merp_txt,
                         current_record.mrp_wiedervorlage,
@@ -933,6 +920,10 @@ BEGIN
                       COALESCE(target_record.mrp_hinweisgeber::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewissheit_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_lbl::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewissheit::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_gewissheit_oth::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_oth::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_23::text,'#NULL#') = COALESCE(current_record.mrp_femb_23::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_hinweisgeber_oth::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber_oth::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewiss_grund_abl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl::text,'#NULL#') AND
                       COALESCE(target_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') AND
@@ -1027,6 +1018,7 @@ BEGIN
                       COALESCE(target_record.mrp_femb_21::text,'#NULL#') = COALESCE(current_record.mrp_femb_21::text,'#NULL#') AND
                       COALESCE(target_record.mrp_dokup_hand_emp_akz::text,'#NULL#') = COALESCE(current_record.mrp_dokup_hand_emp_akz::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp::text,'#NULL#') = COALESCE(current_record.mrp_merp::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
                       COALESCE(target_record.mrp_wiedervorlage::text,'#NULL#') = COALESCE(current_record.mrp_wiedervorlage::text,'#NULL#') AND
