@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-09-02 13:42:38
+-- Create time: 2024-09-02 14:31:53
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -50,6 +50,8 @@ BEGIN
                 SELECT count(1) INTO data_count
                 FROM db_log.patient_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                      COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+                      COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
                       COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                       COALESCE(target_record.pat_femb::text,'#NULL#') = COALESCE(current_record.pat_femb::text,'#NULL#') AND
@@ -68,6 +70,8 @@ BEGIN
                     INSERT INTO db_log.patient_fe (
                         patient_fe_id,
                         record_id,
+                        redcap_repeat_instrument,
+                        redcap_repeat_instance,
                         pat_header,
                         pat_id,
                         pat_femb,
@@ -84,6 +88,8 @@ BEGIN
                     VALUES (
                         current_record.patient_fe_id,
                         current_record.record_id,
+                        current_record.redcap_repeat_instrument,
+                        current_record.redcap_repeat_instance,
                         current_record.pat_header,
                         current_record.pat_id,
                         current_record.pat_femb,
@@ -106,6 +112,8 @@ BEGIN
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
+                      COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
+                      COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
                       COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
                       COALESCE(target_record.pat_femb::text,'#NULL#') = COALESCE(current_record.pat_femb::text,'#NULL#') AND
