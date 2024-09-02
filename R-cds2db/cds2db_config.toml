@@ -62,14 +62,12 @@ DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the defa
 MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
 COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
 SORT                               = ""  # some Fhir server require a sort parameter per default
-BUNDLES_AT_ONCE                    = 10  # bundles per request - number of bundles which are processed in a FHIR request
 IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
 
 # polar_download_by_ids_and_crack_parallel() and polar_download_and_crack_parallel()
 MAX_CORES                          = 0 # paralellization, number of cores used, 0: unlimited
 FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack parallel with basic method, avoid polar_download_by_ids_and_crack_parallel()
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
-DELAY_REQ                          = 2 # if request fails, wait X seconds, the delay X=DELAY_REQ^(1..n) in seconds
 
 
 [retrieve.debug]
