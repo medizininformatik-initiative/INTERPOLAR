@@ -55,12 +55,12 @@ retrieve <- function() {
       if (all_empty_fhir) {
         etlutils::catWarningMessage("No FHIR resources found.")
       }
+      names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
     })
 
     if (!all_empty_fhir) {
       # Write raw tables to database
       etlutils::runLevel2("Write raw tables to database", {
-        names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
         writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
       })
 
