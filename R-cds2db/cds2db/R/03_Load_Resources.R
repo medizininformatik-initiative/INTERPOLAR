@@ -38,16 +38,21 @@ createWardPatientIDPerDateTable <- function(patientIDsPerWard) {
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME_START` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
-  if (exists("DEBUG_CURRENT_DATETIME")) {
-    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
+  start_datetime <- as.POSIXct(Sys.time())
+  if (exists('DEBUG_CURRENT_DATETIME_START')) {
+    start_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_START)
+    if (exists('DEBUG_CURRENT_DATETIME_END')) {
+      end_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_END)
+      return(c(start_datetime = start_datetime, end_datetime = end_datetime))
+    }
   }
-  return(as.POSIXct(Sys.time()))
+  return(c(start_datetime = start_datetime))
 }
 
 #' Get Query Datetime
@@ -81,8 +86,9 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
   # an enddate greater current date.
   query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
-                        "   WHERE enc_period_start <= '", query_datetime, "' AND\n",
-                        "   (enc_period_end is NULL OR enc_period_end > '", query_datetime, "');")
+                  "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
+                  "   (enc_period_end is NULL OR enc_period_end > '",
+                  query_datetime[["start_datetime"]], "');")
   patientIDsActive <- getQueryFromDatabase(query)
   # Unify and unique all patient IDs
   patientIDs <- unique(unlist(patient_IDs_per_ward))

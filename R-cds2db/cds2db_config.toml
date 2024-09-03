@@ -76,9 +76,12 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # FOR DEBUG ONLY: #
 ###################
 
-# Activate this date to load all patient IDs from Encounters with an enddate greater
-# DEBUG_CURRENT_DATETIME from database. If it is not set, then time now will be taken.
-#DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
+# Activate this dates to load all patient IDs from Encounters with an startdate same or above
+# DEBUG_CURRENT_DATETIME_START and an enddate ends before DEBUG_CURRENT_DATETIME_END from database.
+# If it is not set, then all Encounters lower or equal current time will be taken. Both parameter
+# must be activated or deactivated. Otherwise current time will be activated.
+#DEBUG_CURRENT_DATETIME_START = "2020-06-30 21:25:00"
+#DEBUG_CURRENT_DATETIME_END = "2020-08-30 21:25:00"
 
 # Activate this encounter status for tests only
 # This parameter is called in function for download and crack encounters

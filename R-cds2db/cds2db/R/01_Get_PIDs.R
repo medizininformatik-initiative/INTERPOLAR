@@ -252,19 +252,33 @@ getEncounters <- function(table_description, current_datetime) {
         encounter_status <- "in-progress"
       }
 
-      request_encounter <- fhircrackr::fhir_url(
-        url        = FHIR_SERVER_ENDPOINT,
-        resource   = 'Encounter',
-        parameters = etlutils::addParamToFHIRRequest(c(
-          'date'    = paste0('lt', current_datetime),
-          'status' = encounter_status)
+      if (exists('DEBUG_CURRENT_DATETIME_START') && exists('DEBUG_CURRENT_DATETIME_END')) {
+        request_encounter <- fhircrackr::fhir_url(
+          url        = FHIR_SERVER_ENDPOINT,
+          resource   = "Encounter",
+          parameters = etlutils::addParamToFHIRRequest(
+            c(
+              "date"   = paste0("sa", current_datetime[["start_datetime"]]),
+              "date"   = paste0("eb", current_datetime[["end_datetime"]]),
+              "status" = encounter_status
+            )
+          )
         )
-      )
+      } else {
+        request_encounter <- fhircrackr::fhir_url(
+          url        = FHIR_SERVER_ENDPOINT,
+          resource   = 'Encounter',
+          parameters = etlutils::addParamToFHIRRequest(c(
+            'date'   = paste0('lt', current_datetime),
+            'status' = encounter_status)
+          )
+        )
+      }
 
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
-                                                 table_description = table_description,
-                                                 max_bundles = MAX_ENCOUNTER_BUNDLES,
-                                                 log_errors  = 'enc_error.xml')
+                                                           table_description = table_description,
+                                                           max_bundles = MAX_ENCOUNTER_BUNDLES,
+                                                           log_errors  = 'enc_error.xml')
 
       if (etlutils::isSimpleNA(table_enc)) {
         stop('The FHIR request did not return any available Encounter bundles.\n Request: ',
