@@ -13,8 +13,7 @@ getLastProcessingNumber <- function() {
   statement <- "SELECT MAX(last_processing_nr)
                 FROM db_log.data_import_hist
                 WHERE function_name = 'copy_type_cds_in_to_db_log'
-                  AND schema_name='db_log' AND table_name NOT LIKE '%_raw';"
-
+                  AND schema_name = 'db_log' AND table_name NOT LIKE '%_raw';"
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
@@ -33,7 +32,6 @@ loadLastImportedDatasetsFromDB <- function(table_name_part) {
   # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
                       " WHERE last_processing_nr = ", last_processing_nr, ";")
-
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
