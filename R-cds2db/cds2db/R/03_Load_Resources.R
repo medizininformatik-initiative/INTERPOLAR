@@ -185,6 +185,63 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
   resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  # Prefix of all global debug variables. One for each FHIR resources.
+  global_debug_filter_variable_prefix <- "DEBUG_FILTER_"
+  # Get global variables by prefix
+  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix)
+  if (length(global_filter_variables)) {
+    # Extract and process resource names
+    resource_patterns_full <- names(global_filter_variables)
+    resource_patterns <- tolower(gsub(global_debug_filter_variable_prefix, "", resource_patterns_full))
+    resource_table_names <- tolower(names(resource_tables))
+    different_resources <- setdiff(resource_patterns, resource_table_names)
+    if (length(different_resources)) {
+      catInfoMessage(paste0("Note: The following debug filter resources are not in the resource table: ",
+                            paste(different_resources, collapse = ", "),
+                            ". Fix it in cds2db_config.toml."))
+    }
+    # Find common names between resource names and resource table names
+    common_names <- intersect(resource_patterns, resource_table_names)
+    # Iterate over each common name
+    error_messages <- c()
+    for (name in common_names) {
+      # Find the full resource names that match the current common name (case-insensitive)
+      matching_indices <- which(name == resource_patterns)
+      # Take the first match, if multiple
+      full_resource_name <- resource_patterns_full[matching_indices]
+      # Get indices using the full resource name
+      indices <- etlutils::getIndices(get(full_resource_name))
+      # Retrieve the original name to update the correct resource table
+      original_name <- names(resource_tables)[match(name, tolower(names(resource_tables)))]
+      # Check if indices is NA
+      if (all(is.na(indices))) {
+        # Set the table to be empty if indices is NA
+        resource_tables[[original_name]] <- resource_tables[[original_name]][0, ]
+      } else {
+        rows_count <- nrow(resource_tables[[original_name]])
+        # Check for valid indices (e.g., within the range of the number of rows in the resource table)
+        invalid_indices <- indices[indices < 1 | indices > rows_count]
+        # Only proceed if there are valid indices
+        if (length(invalid_indices) > 0) {
+          error_messages <- c(error_messages, paste0(full_resource_name, ": the following indices are invalid. The table has only ", rows_count, " rows. Invalid indices: ", paste(invalid_indices, collapse = ", ")))
+        }
+        # Update the resource table with valid indices
+        resource_tables[[original_name]] <- resource_tables[[original_name]][indices, ]
+      }
+    }
+    if (length(error_messages)) {
+      catErrorMessage(paste0(error_messages, collapse = "\n"))
+      stop("Process stopped because not all resource debug filter indices are valid. See above. Fix indices in cds2db_config.toml.")
+    }
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
   for (i in seq_along(resource_tables)) {
     writeRData(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }

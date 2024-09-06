@@ -89,6 +89,24 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # applies.
 #DEBUG_ENCOUNTER_STATUS = "finished"
 
+# These parameters can be set to filter the resource table to specific rows for each resource after
+# downloading. The valid range for indices is, for example, "1, 3-5, 7", which stands for the
+# indices "1, 3, 4, 5, 7"" in the respective resource table. If an empty string, "", is specified,
+# then all lines of the respective resource are deleted. The "DEBUG_FILTER_" variables that are
+# commented out are not filtered.
+#DEBUG_FILTER_CONDITION = "1-10"
+#DEBUG_FILTER_CONSENT = ""
+#DEBUG_FILTER_DIAGNOSTICREPORT = ""
+#DEBUG_FILTER_ENCOUNTER = ""
+#DEBUG_FILTER_LOCATION = ""
+#DEBUG_FILTER_MEDICATION = ""
+#DEBUG_FILTER_MEDICATIONADMINISTRATION = ""
+#DEBUG_FILTER_MEDICATIONREQUEST = ""
+#DEBUG_FILTER_MEDICATIONSTATEMENT = ""
+#DEBUG_FILTER_OBSERVATION = "1-10"
+#DEBUG_FILTER_PATIENT = ""
+#DEBUG_FILTER_PROCEDURE = ""
+#DEBUG_FILTER_SERVICEREQUEST = ""
 
 [retrieve.patient_id_filtering]
 

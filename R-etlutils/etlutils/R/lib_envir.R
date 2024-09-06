@@ -43,15 +43,15 @@ initConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
 
 }
 
-#' Get a list of global variables with a specified prefix.
+#' Get a vector of global variables with a specified prefix.
 #'
 #' This function searches for global variables in the current workspace whose names
-#' start with the specified prefix and returns a list containing variable names
+#' start with the specified prefix and returns a vector containing variable names
 #' along with their values.
 #'
 #' @param prefix The prefix to match in variable names.
 #'
-#' @return A list containing the names and values of global variables with the given prefix.
+#' @return A vector containing the names and values of global variables with the given prefix.
 #'
 #' @examples
 #' \dontrun{
@@ -59,11 +59,6 @@ initConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
 #' result <- getGlobalVariablesByPrefix(prefix)
 #' print(result)
 #' }
-#'
-#' @seealso
-#' \code{\link{ls}}, \code{\link{eapply}}
-#'
-#' @keywords global variables workspace prefix
 #'
 #' @export
 getGlobalVariablesByPrefix <- function(prefix) {
