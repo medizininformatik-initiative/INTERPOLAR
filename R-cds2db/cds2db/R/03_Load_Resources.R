@@ -113,7 +113,6 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   # END: FOR DEBUG ONLY #
   #######################
 
-
   # Add additional table of ward-patient ID per date
   resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
 
@@ -139,22 +138,25 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
   # table_descriptions$REFERENCE_TYPES can be a comma or whitespace separated list like
   # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
-  reference_types <- unique(etlutils::extractWords(table_descriptions$REFERENCE_TYPES))
+  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$REFERENCE_TYPES))
   for (reference_type in reference_types) {
     referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
     if (!is.null(referenced_table_description)) {
       # now extract all rows where the single reference_type is in the reference_types column as whole word
       whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-      sub_reference_type <- table_descriptions$REFERENCE_TYPES[grepl(whole_word_pattern, REFERENCE_TYPES)]
+      sub_reference_type <- table_descriptions$reference_types[grepl(whole_word_pattern, REFERENCE_TYPES)]
 
       referenced_ids <- c()
       for (i in seq_len(nrow(sub_reference_type))) {
-        resource_name <- sub_reference_type[i]$resource
-        column_name <- sub_reference_type[i]$column_name
+        resource_name <- sub_reference_type[i]$RESOURCE
+        column_name <- sub_reference_type[i]$COLUMN_NAME
         new_referenced_ids <- resource_tables[[resource_name]][[column_name]]
         new_referenced_ids <- unique(na.omit(new_referenced_ids))
         referenced_ids <- c(referenced_ids, new_referenced_ids)
       }
+      table_description_sep <- referenced_table_description@sep
+      referenced_ids <- unlist(strsplit(referenced_ids, table_description_sep, fixed = TRUE))
+      referenced_ids <- getAfterLastSlash(referenced_ids)
       referenced_ids <- unique(referenced_ids)
 
       resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids, referenced_table_description)
