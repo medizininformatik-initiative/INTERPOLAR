@@ -10,15 +10,16 @@
 #' @return the filter patterns which are converted to a list of lists
 #'
 convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 'ENCOUNTER_FILTER_PATTERN') {
-
   ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
 
   if (!length(ward_pids_filter_patterns)) {
     stopWithError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
   }
 
-  # the result list with all. The structure of the list is the following:
-  # list of
+  # Initializes an empty list to store the final converted filter patterns. Each element in this list
+  # corresponds to a ward, with the ward name as the key. The value for each ward is another list that
+  # contains the AND-connected filter conditions (sub-conditions). Multiple groups of such conditions
+  # are stored as separate elements, representing the OR-connected groups of filters for the ward.
   converted_filter_patterns <- list()
   ward_index <- 1
   for (ward_filter_patterns in ward_pids_filter_patterns) {
@@ -214,6 +215,12 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
     writeRData(ward_encounters, 'pid_source_encounter_filtered')
     pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
+  }
+
+  if (exists("DEBUG_PATIENT_ID_PATTERN")) {
+    for (ward in names(pids_per_ward)) {
+      pids_per_ward[[ward]] <- pids_per_ward[[ward]][grepl(DEBUG_PATIENT_ID_PATTERN, pids_per_ward[[ward]])]
+    }
   }
   return(pids_per_ward)
 }
