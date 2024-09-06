@@ -192,7 +192,7 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
   # Prefix of all global debug variables. One for each FHIR resources.
   global_debug_filter_variable_prefix <- "DEBUG_FILTER_"
   # Get global variables by prefix
-  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix)
+  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
   if (length(global_filter_variables)) {
     # Extract and process resource names
     resource_patterns_full <- names(global_filter_variables)
