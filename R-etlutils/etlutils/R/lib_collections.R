@@ -175,3 +175,31 @@ getIndices <- function(filter_string, delimiter = ",", range_delimiter = "-") {
   # Return the sorted, unique result
   return(sort(unique(result)))
 }
+
+#' Print a list with each element's name and value, with optional prefix and suffix
+#'
+#' This function prints each element of a given list in the format "name = value".
+#' It uses the helper function `getPrintString` to format each value. If a list
+#' contains other lists, the nested lists are handled recursively. The user can
+#' specify a prefix and suffix to wrap the output.
+#'
+#' @param list A named list or a list of lists to be printed.
+#' @param prefix A string to print before the list output (optional).
+#' @param suffix A string to print after the list output (optional).
+#'
+#' @return None. Prints the list elements to the console.
+#'
+#' @examples
+#' my_list <- list(a = 1, b = list(x = 10, y = 20))
+#' catList(my_list, prefix = "Start:\n", suffix = "End\n")
+#'
+#' @export
+catList <- function(list, prefix = "", suffix = "") {
+  cat(prefix)
+  for (name in names(list)) {
+    value <- list[[name]]
+    if (is.list(value)) value <- getPrintString(value)
+    cat(paste0(name, " = ", value, "\n"))
+  }
+  cat(suffix)
+}

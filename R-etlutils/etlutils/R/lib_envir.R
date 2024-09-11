@@ -40,7 +40,7 @@ initConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
       assign(variable_name, defaults[i], envir = envir)
     }
   }
-
+  return(flattenConfig)
 }
 
 #' Get Global Variables by Prefix

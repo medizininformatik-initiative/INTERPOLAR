@@ -8,7 +8,7 @@ retrieve <- function() {
   # Read the module configuration toml file.
   ###
   path2config_toml <- "./R-cds2db/cds2db_config.toml"
-  etlutils::initConstants(path2config_toml)
+  config <- etlutils::initConstants(path2config_toml)
 
   ###
   # Read the DB configuration toml file
@@ -31,6 +31,9 @@ retrieve <- function() {
   # log all console outputs and save them at the end
   ###
   etlutils::startLogging(PROJECT_NAME)
+
+  # log all log-configuration
+  etlutils::catList(config, "Configuration:\n--------------\n", "\n" )
 
   try(etlutils::runLevel1("Run Retrieve", {
 

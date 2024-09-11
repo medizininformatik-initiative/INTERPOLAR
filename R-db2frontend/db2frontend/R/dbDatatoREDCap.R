@@ -16,7 +16,7 @@ initConstantsAndLogging <- function() {
     # Path to the module configuration TOML file
     path2config_toml <- './R-db2frontend/db2frontend_config.toml'
     # Load module configuration settings
-    etlutils::initConstants(path2config_toml)
+    config <- etlutils::initConstants(path2config_toml)
     # Load database configuration settings
     etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
     # Set the PROJECT_NAME to 'db2frontend'
@@ -26,6 +26,8 @@ initConstantsAndLogging <- function() {
     etlutils::createClock()
     # log all console outputs and save them at the end
     etlutils::startLogging(PROJECT_NAME)
+    # log all log-configuration
+    etlutils::catList(config, "Configuration:\n--------------\n", "\n" )
   }
 }
 
