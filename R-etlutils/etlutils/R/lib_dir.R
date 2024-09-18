@@ -198,82 +198,6 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
   saveRDS(object = object, file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData'))
 }
 
-#' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' a <- ReadRData('a')
-#'
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
-#' then the tables will be loaded from outputLocal/tables'.
-#'
-#' @return the object
-#'
-#' @export
-readRData <- function(filename_without_extension, project_sub_dir = NA) {
-  # default project_sub_dir is NA -> load tables from outputLocal/tables
-  if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
-  } else {
-    project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
-  }
-  fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
-  data <- NULL
-  if (file.exists(fname)) {
-    # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
-    # 5.3 Reading data.table from RDS or RData file
-    # ---------------------------------------------
-    # *.RDS and *.RData are file types which can store in-memory R objects
-    # on disk efficiently. However, storing data.table into the binary file
-    # loses its column over-allocation. This isn't a big deal – your
-    # data.table will be copied in memory on the next by reference
-    # operation and throw a warning. Therefore it is recommended to call
-    # setalloccol() on each data.table loaded with readRDS() or load() calls.
-    data <- readRDS(fname)
-    if ('data.table' %in% class(data)) {
-      invisible(data.table::setalloccol(data))
-    }
-  }
-  data
-}
-
-#' Get the filename for an RData file corresponding to a table
-#'
-#' This function constructs the filename for an RData file corresponding to the specified table.
-#'
-#' @param table_name The name of the table.
-#' @return A character string representing the filename for the RData file.
-#'
-#' @export
-getLocalRdataFileName <- function(table_name) {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData')
-}
-
-#' Read the entire content of a file as a string
-#'
-#' This function reads the entire content of a given file and returns it as a single string,
-#' ensuring that the final newline character is preserved if it exists.
-#'
-#' Note: of the original file ends with a new line character then this caracter is missing in
-#' the result.
-#'
-#' @param file_path A string representing the path to the file.
-#'
-#' @return A single string containing the entire content of the file, including the final
-#' newline character if it was present.
-#'
-#' @examples
-#' \dontrun{
-#'   file_content <- readFileLinesAsString("path/to/your/file.txt")
-#'   print(file_content)
-#' }
-#'
-#' @export
-readFileLinesAsString <- function(file_path) {
-  file_content <- readLines(file_path, warn = FALSE)
-  full_content <- paste(file_content, collapse = "\n")
-  return(full_content)
-}
-
 #' Read the entire content of a file as a string
 #'
 #' This function reads the entire content of a given file and returns it as a single string,
@@ -300,3 +224,108 @@ readFileAsString <- function(file_path, normalize_newlines = TRUE) {
   }
   return(file_content)
 }
+
+#' #' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
+#' #'
+#' #' a <- ReadRData('a')
+#' #'
+#' #' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
+#' #' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
+#' #' then the tables will be loaded from outputLocal/tables'.
+#' #'
+#' #' @return the object
+#' #'
+#' #' @export
+#' readRData <- function(filename_without_extension, project_sub_dir = NA) {
+#'   # default project_sub_dir is NA -> load tables from outputLocal/tables
+#'   if (is.na(project_sub_dir)) {
+#'     project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
+#'   } else {
+#'     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+#'   }
+#'   fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
+#'   data <- NULL
+#'   if (file.exists(fname)) {
+#'     # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
+#'     # 5.3 Reading data.table from RDS or RData file
+#'     # ---------------------------------------------
+#'     # *.RDS and *.RData are file types which can store in-memory R objects
+#'     # on disk efficiently. However, storing data.table into the binary file
+#'     # loses its column over-allocation. This isn't a big deal – your
+#'     # data.table will be copied in memory on the next by reference
+#'     # operation and throw a warning. Therefore it is recommended to call
+#'     # setalloccol() on each data.table loaded with readRDS() or load() calls.
+#'     data <- readRDS(fname)
+#'     if ('data.table' %in% class(data)) {
+#'       invisible(data.table::setalloccol(data))
+#'     }
+#'   }
+#'   data
+#' }
+#'
+#' #' Get the filename for an RData file corresponding to a table
+#' #'
+#' #' This function constructs the filename for an RData file corresponding to the specified table.
+#' #'
+#' #' @param table_name The name of the table.
+#' #' @return A character string representing the filename for the RData file.
+#' #'
+#' #' @export
+#' getLocalRdataFileName <- function(table_name) {
+#'   fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData')
+#' }
+#'
+#' #' Get file information for an RData file
+#' #'
+#' #' This function retrieves information about an RData file corresponding to the specified table.
+#' #'
+#' #' @param table_name The name of the table.
+#' #' @return A list containing file information such as size, permissions, and timestamps.
+#' #'
+#' #' @export
+#' getLocalRdataFileInfo <- function(table_name) {
+#'   table_name <- getLocalRdataFileName(table_name)
+#'   file_info <- list()
+#'   if (file.exists(table_name)) {
+#'     file_info <- file.info(table_name)
+#'   }
+#'   return(file_info)
+#' }
+#'
+#' #' Check if an RData file exists locally
+#' #'
+#' #' This function checks if an RData file corresponding to the specified table exists locally.
+#' #'
+#' #' @param table_name The name of the table.
+#' #' @return TRUE if the RData file exists locally, otherwise FALSE.
+#' #'
+#' #' @export
+#' existsLocalRdataFile <- function(table_name) {
+#'   file.exists(getLocalRdataFileName(table_name))
+#' }
+#'
+#' #' Read Content from a File into a Single String
+#' #'
+#' #' This function reads the entire content of a given file and returns it as a single string,
+#' #' ensuring that the final newline character is preserved if it exists.
+#' #'
+#' #' Note: of the original file ends with a new line character then this caracter is missing in
+#' #' the result.
+#' #'
+#' #' @param file_path A string representing the path to the file.
+#' #'
+#' #' @return A single string containing the entire content of the file, including the final
+#' #' newline character if it was present.
+#' #'
+#' #' @examples
+#' #' \dontrun{
+#' #'   file_content <- readFileLinesAsString("path/to/your/file.txt")
+#' #'   print(file_content)
+#' #' }
+#' #'
+#' #' @export
+#' readFileLinesAsString <- function(file_path) {
+#'   file_content <- readLines(file_path, warn = FALSE)
+#'   full_content <- paste(file_content, collapse = "\n")
+#'   return(full_content)
+#' }
