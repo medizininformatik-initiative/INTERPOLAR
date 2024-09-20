@@ -32,8 +32,8 @@ retrieve <- function() {
   ###
   etlutils::startLogging(PROJECT_NAME)
 
-  # log all log-configuration
-  etlutils::catList(config, "Configuration:\n--------------\n", "\n" )
+  # log all configuration parameters but hide value with parameter name starts with "FHIR_"
+  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
 
   try(etlutils::runLevel1("Run Retrieve", {
 
