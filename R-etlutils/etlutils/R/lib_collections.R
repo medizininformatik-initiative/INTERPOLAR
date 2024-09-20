@@ -194,27 +194,30 @@ getIndices <- function(filter_string, delimiter = ",", range_delimiter = "-") {
 #' @return None. Prints the list elements to the console.
 #'
 #' @examples
-#' my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "")
+#' my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "", e = "test")
 #' catList(my_list, prefix = "Start:\n", suffix = "End\n")
-#' catList(my_list, hide_value_pattern = "10")
+#' catList(my_list, hide_value_pattern = "c")
+#' catList(my_list, hide_value_pattern = "e")
+#' catList(my_list, hide_value_pattern = "e|b")
 #'
 #' @export
 catList <- function(list, prefix = "", suffix = "", hide_value_pattern = "") {
   cat(prefix)
+  if (is.na(hide_value_pattern)) hide_value_pattern <- ""
   for (name in names(list)) {
     value <- list[[name]]
     # Only apply hide_value_pattern logic if it's non-empty
     if (hide_value_pattern != "") {
       if (is.list(value)) {
         # If it's a list, check the elements for the hide_value_pattern
-        if (any(sapply(value, function(v) grepl(hide_value_pattern, v)))) {
+        if (grepl(hide_value_pattern, name)) {
           value <- "<Not empty list>"
         } else {
           value <- getPrintString(value)
         }
       } else if (grepl(hide_value_pattern, name) && nchar(value)) {
         # If it's not a list, check if the value matches the hide_value_pattern
-        value <- "<Not empty string>"
+        value <- paste("<Not empty", typeof(value), "value>")
       }
     } else {
       # If no pattern is provided, just print the value normally
