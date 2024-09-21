@@ -117,6 +117,9 @@ Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für 
 ### 44_cre_table_frontent_in
 Erstellen der Strukturen im Schnittstellenschema db2frontend_in um Daten vom Modul Frontend (wieder) entgegen zu nehmen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
+### 45_cre_table_frontend_in_trig
+Zusätzlich zu den Tabellen in Skript 44 - Trigger welche den Datensätzen die erstmalig im Frontend erzeugt eine eindeutige primary key in der Datenbank setzen.
+
 ### 52_cre_view_fe_out
 Erstellt Views im Schnittstellenschema db2frontend_out um aktuelle Daten aus dem Kern dem Frontend zur Übergabe bereit zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
