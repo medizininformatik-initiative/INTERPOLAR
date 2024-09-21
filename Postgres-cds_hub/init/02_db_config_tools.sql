@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
   table_name varchar,
   function_name varchar, -- Name of function
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT NULL   -- Processing status of the data record
+  current_dataset_status varchar DEFAULT NULL,  -- Processing status of the data record
+  import_hist_cre_at timestamp DEFAULT timestamp -- Timestamp the HistRec wars create
 );
 
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
