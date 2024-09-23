@@ -154,7 +154,9 @@ importRedcap2DB <- function() {
 
     # get data from REDCap
     for (form_name in form_names) {
-      tables2Export[[form_name]] <- redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)
+      dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
+      data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
+      tables2Export[[form_name]] <- dt
     }
 
     #establish connection to db
