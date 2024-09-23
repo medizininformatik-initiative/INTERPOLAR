@@ -5,13 +5,23 @@ FROM rocker/r-ver:4.4.1
 RUN echo 'options(repos = c(CRAN = "https://ftp.fau.de/cran/"))' >>"${R_HOME}/etc/Rprofile.site"
 
 
+# R-env
+
+# Utils
+RUN apt-get update && apt-get install -y -q \
+        apt-utils \
+        vim less \
+        wget curl
+
 # etlutils
 
-RUN apt-get update \
-    && apt-get install -y libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev
+RUN apt-get install -y \
+	libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev 
 
 RUN /rocker_scripts/bin/install2.r memuse openxlsx RcppTOML DBI lubridate RPostgres ICD10gm data.table httr RcppTOML rlang stringr
+
 RUN /rocker_scripts/bin/install2.r xml2
+
 RUN /rocker_scripts/bin/install2.r fhircrackr
 
 WORKDIR /src
