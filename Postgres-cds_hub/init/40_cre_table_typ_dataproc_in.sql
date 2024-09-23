@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2024-09-23 14:22:20
+-- Create time: 2024-09-23 17:12:24
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  40_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_hinweisgeber varchar,   -- Hinweisgeber auf das MRP (varchar)
   mrp_gewissheit_lbl varchar,   -- descriptive item only for frontend (varchar)
   mrp_gewissheit varchar,   -- Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)
-  mrp_femb_22 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_femb_22 varchar,   -- descriptive item only for frontend - femb der Variablen (varchar)
   mrp_gewissheit_oth varchar,   -- Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)
   mrp_femb_23 varchar,   -- descriptive item only for frontend (varchar)
   mrp_hinweisgeber_oth varchar,   -- Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)
@@ -259,7 +259,6 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_merp_info varchar,   -- descriptive item only for frontend (varchar)
   mrp_merp_info___1 varchar,   -- descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)
-  mrp_femb_22 varchar,   -- descriptive item only for frontend - femb der Variablen (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
@@ -345,22 +344,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_log_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db2dataprocessor_in.patient_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER patient_fe_tr_ins_tr
-  BEFORE INSERT
-  ON db2dataprocessor_in.patient_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE db2dataprocessor_in.patient_fe_tr_ins_fkt();
-
-
 -- Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 GRANT TRIGGER ON db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
@@ -370,22 +353,6 @@ GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db2dataprocessor_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_log_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db2dataprocessor_in.fall_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER fall_fe_tr_ins_tr
-  BEFORE INSERT
-  ON db2dataprocessor_in.fall_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE db2dataprocessor_in.fall_fe_tr_ins_fkt();
-
 
 -- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
@@ -397,22 +364,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsana
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db2dataprocessor_in.medikationsanalyse_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medikationsanalyse_fe_tr_ins_tr
-  BEFORE INSERT
-  ON db2dataprocessor_in.medikationsanalyse_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE db2dataprocessor_in.medikationsanalyse_fe_tr_ins_fkt();
-
-
 -- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 GRANT TRIGGER ON db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
@@ -422,22 +373,6 @@ GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db2dataprocessor_in.mrpdokumentation_validierung_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER mrpdokumentation_validierung_fe_tr_ins_tr
-  BEFORE INSERT
-  ON db2dataprocessor_in.mrpdokumentation_validierung_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE db2dataprocessor_in.mrpdokumentation_validierung_fe_tr_ins_fkt();
-
 
 -- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
@@ -449,22 +384,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_f
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db2dataprocessor_in.risikofaktor_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER risikofaktor_fe_tr_ins_tr
-  BEFORE INSERT
-  ON db2dataprocessor_in.risikofaktor_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE db2dataprocessor_in.risikofaktor_fe_tr_ins_fkt();
-
-
 -- Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
 GRANT TRIGGER ON db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
@@ -474,22 +393,6 @@ GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db2dataprocessor_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_log_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db2dataprocessor_in.trigger_fe_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER trigger_fe_tr_ins_tr
-  BEFORE INSERT
-  ON db2dataprocessor_in.trigger_fe
-  FOR EACH ROW
-  EXECUTE PROCEDURE db2dataprocessor_in.trigger_fe_tr_ins_fkt();
-
 
 ------------------------------------------------------
 -- Comments on Tables in Schema "db2dataprocessor_in" --
@@ -603,7 +506,7 @@ comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinwei
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber is 'Hinweisgeber auf das MRP (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit_lbl is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit is 'Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_22 is 'descriptive item only for frontend (varchar)';
+comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_22 is 'descriptive item only for frontend - femb der Variablen (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_gewissheit_oth is 'Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_23 is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth is 'Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)';
@@ -704,7 +607,6 @@ comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp i
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info is 'descriptive item only for frontend (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info___1 is 'descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_txt is 'descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)';
-comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_femb_22 is 'descriptive item only for frontend - femb der Variablen (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.input_datetime is 'Time at which the data record is inserted';
 comment on column db2dataprocessor_in.mrpdokumentation_validierung_fe.last_check_datetime is 'Time at which data record was last checked';
