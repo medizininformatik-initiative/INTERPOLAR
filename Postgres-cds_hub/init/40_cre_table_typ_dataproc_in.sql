@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2024-09-21 14:23:04
+-- Create time: 2024-09-23 14:22:20
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  40_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -71,7 +71,6 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
   fall_studienphase varchar,   -- Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)
   fall_station varchar,   -- Station wie vom DIZ Definiert (varchar)
-  fall_bettplatz varchar,   -- Bettplatz wie vom DIZ Definiert (varchar)
   fall_zimmernr varchar,   -- Zimmernummer wie vom DIZ Definiert (varchar)
   fall_aufn_dat date,   -- Aufnahmedatum (date)
   fall_aufn_diag varchar,   -- Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)
@@ -527,7 +526,6 @@ comment on column db2dataprocessor_in.fall_fe.redcap_repeat_instrument is 'Front
 comment on column db2dataprocessor_in.fall_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_studienphase is 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_station is 'Station wie vom DIZ Definiert (varchar)';
-comment on column db2dataprocessor_in.fall_fe.fall_bettplatz is 'Bettplatz wie vom DIZ Definiert (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_zimmernr is 'Zimmernummer wie vom DIZ Definiert (varchar)';
 comment on column db2dataprocessor_in.fall_fe.fall_aufn_dat is 'Aufnahmedatum (date)';
 comment on column db2dataprocessor_in.fall_fe.fall_aufn_diag is 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)';

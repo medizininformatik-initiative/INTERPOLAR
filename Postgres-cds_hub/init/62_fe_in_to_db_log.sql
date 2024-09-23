@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-09-21 14:23:14
+-- Create time: 2024-09-23 14:22:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -164,7 +164,6 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
                       COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                      COALESCE(target_record.fall_bettplatz::text,'#NULL#') = COALESCE(current_record.fall_bettplatz::text,'#NULL#') AND
                       COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
@@ -208,7 +207,6 @@ BEGIN
                         redcap_repeat_instance,
                         fall_studienphase,
                         fall_station,
-                        fall_bettplatz,
                         fall_zimmernr,
                         fall_aufn_dat,
                         fall_aufn_diag,
@@ -250,7 +248,6 @@ BEGIN
                         current_record.redcap_repeat_instance,
                         current_record.fall_studienphase,
                         current_record.fall_station,
-                        current_record.fall_bettplatz,
                         current_record.fall_zimmernr,
                         current_record.fall_aufn_dat,
                         current_record.fall_aufn_diag,
@@ -298,7 +295,6 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
                       COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                      COALESCE(target_record.fall_bettplatz::text,'#NULL#') = COALESCE(current_record.fall_bettplatz::text,'#NULL#') AND
                       COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
