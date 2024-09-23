@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-09-02 14:31:56
+-- Create time: 2024-09-23 14:22:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -54,7 +54,7 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
                       COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
-                      COALESCE(target_record.pat_femb::text,'#NULL#') = COALESCE(current_record.pat_femb::text,'#NULL#') AND
+                      COALESCE(target_record.pat_femb_1::text,'#NULL#') = COALESCE(current_record.pat_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
                       COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
                       COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
@@ -74,7 +74,7 @@ BEGIN
                         redcap_repeat_instance,
                         pat_header,
                         pat_id,
-                        pat_femb,
+                        pat_femb_1,
                         pat_cis_pid,
                         pat_name,
                         pat_vorname,
@@ -92,7 +92,7 @@ BEGIN
                         current_record.redcap_repeat_instance,
                         current_record.pat_header,
                         current_record.pat_id,
-                        current_record.pat_femb,
+                        current_record.pat_femb_1,
                         current_record.pat_cis_pid,
                         current_record.pat_name,
                         current_record.pat_vorname,
@@ -116,7 +116,7 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
                       COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
-                      COALESCE(target_record.pat_femb::text,'#NULL#') = COALESCE(current_record.pat_femb::text,'#NULL#') AND
+                      COALESCE(target_record.pat_femb_1::text,'#NULL#') = COALESCE(current_record.pat_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
                       COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
                       COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
@@ -159,12 +159,11 @@ BEGIN
                       COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
                       COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
                       COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                      COALESCE(target_record.fall_femb::text,'#NULL#') = COALESCE(current_record.fall_femb::text,'#NULL#') AND
+                      COALESCE(target_record.fall_femb_1::text,'#NULL#') = COALESCE(current_record.fall_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
                       COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                      COALESCE(target_record.fall_bettplatz::text,'#NULL#') = COALESCE(current_record.fall_bettplatz::text,'#NULL#') AND
                       COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
@@ -203,12 +202,11 @@ BEGIN
                         fall_id,
                         fall_pat_id,
                         patient_id_fk,
-                        fall_femb,
+                        fall_femb_1,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
                         fall_studienphase,
                         fall_station,
-                        fall_bettplatz,
                         fall_zimmernr,
                         fall_aufn_dat,
                         fall_aufn_diag,
@@ -245,12 +243,11 @@ BEGIN
                         current_record.fall_id,
                         current_record.fall_pat_id,
                         current_record.patient_id_fk,
-                        current_record.fall_femb,
+                        current_record.fall_femb_1,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
                         current_record.fall_studienphase,
                         current_record.fall_station,
-                        current_record.fall_bettplatz,
                         current_record.fall_zimmernr,
                         current_record.fall_aufn_dat,
                         current_record.fall_aufn_diag,
@@ -293,12 +290,11 @@ BEGIN
                       COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
                       COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
                       COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                      COALESCE(target_record.fall_femb::text,'#NULL#') = COALESCE(current_record.fall_femb::text,'#NULL#') AND
+                      COALESCE(target_record.fall_femb_1::text,'#NULL#') = COALESCE(current_record.fall_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
                       COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                      COALESCE(target_record.fall_bettplatz::text,'#NULL#') = COALESCE(current_record.fall_bettplatz::text,'#NULL#') AND
                       COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
@@ -357,21 +353,15 @@ BEGIN
                 FROM db_log.medikationsanalyse_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
                       COALESCE(target_record.meda_header::text,'#NULL#') = COALESCE(current_record.meda_header::text,'#NULL#') AND
-                      COALESCE(target_record.meda_femb::text,'#NULL#') = COALESCE(current_record.meda_femb::text,'#NULL#') AND
+                      COALESCE(target_record.meda_femb_1::text,'#NULL#') = COALESCE(current_record.meda_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.meda_femb_2::text,'#NULL#') = COALESCE(current_record.meda_femb_2::text,'#NULL#') AND
                       COALESCE(target_record.meda_femb_3::text,'#NULL#') = COALESCE(current_record.meda_femb_3::text,'#NULL#') AND
-                      COALESCE(target_record.meda_femb_4::text,'#NULL#') = COALESCE(current_record.meda_femb_4::text,'#NULL#') AND
-                      COALESCE(target_record.meda_femb_5::text,'#NULL#') = COALESCE(current_record.meda_femb_5::text,'#NULL#') AND
                       COALESCE(target_record.fall_fe_id::text,'#NULL#') = COALESCE(current_record.fall_fe_id::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
                       COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp_dat::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat::text,'#NULL#') AND
                       COALESCE(target_record.meda_mrp_detekt::text,'#NULL#') = COALESCE(current_record.meda_mrp_detekt::text,'#NULL#') AND
                       COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
                       COALESCE(target_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') AND
@@ -387,21 +377,15 @@ BEGIN
                         medikationsanalyse_fe_id,
                         record_id,
                         meda_header,
-                        meda_femb,
+                        meda_femb_1,
                         meda_femb_2,
                         meda_femb_3,
-                        meda_femb_4,
-                        meda_femb_5,
                         fall_fe_id,
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
                         meda_dat,
                         meda_typ,
                         meda_ma_thueberw,
-                        meda_ma_thueberw_comp_lbl,
-                        meda_ma_thueberw_comp,
-                        meda_ma_thueberw_comp_dat_lbl,
-                        meda_ma_thueberw_comp_dat,
                         meda_mrp_detekt,
                         meda_aufwand_zeit,
                         meda_aufwand_zeit_and_lbl,
@@ -415,21 +399,15 @@ BEGIN
                         current_record.medikationsanalyse_fe_id,
                         current_record.record_id,
                         current_record.meda_header,
-                        current_record.meda_femb,
+                        current_record.meda_femb_1,
                         current_record.meda_femb_2,
                         current_record.meda_femb_3,
-                        current_record.meda_femb_4,
-                        current_record.meda_femb_5,
                         current_record.fall_fe_id,
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
                         current_record.meda_dat,
                         current_record.meda_typ,
                         current_record.meda_ma_thueberw,
-                        current_record.meda_ma_thueberw_comp_lbl,
-                        current_record.meda_ma_thueberw_comp,
-                        current_record.meda_ma_thueberw_comp_dat_lbl,
-                        current_record.meda_ma_thueberw_comp_dat,
                         current_record.meda_mrp_detekt,
                         current_record.meda_aufwand_zeit,
                         current_record.meda_aufwand_zeit_and_lbl,
@@ -449,21 +427,15 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
                       COALESCE(target_record.meda_header::text,'#NULL#') = COALESCE(current_record.meda_header::text,'#NULL#') AND
-                      COALESCE(target_record.meda_femb::text,'#NULL#') = COALESCE(current_record.meda_femb::text,'#NULL#') AND
+                      COALESCE(target_record.meda_femb_1::text,'#NULL#') = COALESCE(current_record.meda_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.meda_femb_2::text,'#NULL#') = COALESCE(current_record.meda_femb_2::text,'#NULL#') AND
                       COALESCE(target_record.meda_femb_3::text,'#NULL#') = COALESCE(current_record.meda_femb_3::text,'#NULL#') AND
-                      COALESCE(target_record.meda_femb_4::text,'#NULL#') = COALESCE(current_record.meda_femb_4::text,'#NULL#') AND
-                      COALESCE(target_record.meda_femb_5::text,'#NULL#') = COALESCE(current_record.meda_femb_5::text,'#NULL#') AND
                       COALESCE(target_record.fall_fe_id::text,'#NULL#') = COALESCE(current_record.fall_fe_id::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
                       COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
                       COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat_lbl::text,'#NULL#') AND
-                      COALESCE(target_record.meda_ma_thueberw_comp_dat::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw_comp_dat::text,'#NULL#') AND
                       COALESCE(target_record.meda_mrp_detekt::text,'#NULL#') = COALESCE(current_record.meda_mrp_detekt::text,'#NULL#') AND
                       COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
                       COALESCE(target_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') AND
@@ -505,7 +477,7 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.mrp_header::text,'#NULL#') = COALESCE(current_record.mrp_header::text,'#NULL#') AND
-                      COALESCE(target_record.mrp_femb::text,'#NULL#') = COALESCE(current_record.mrp_femb::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_1::text,'#NULL#') = COALESCE(current_record.mrp_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_femb_2::text,'#NULL#') = COALESCE(current_record.mrp_femb_2::text,'#NULL#') AND
                       COALESCE(target_record.mrp_femb_3::text,'#NULL#') = COALESCE(current_record.mrp_femb_3::text,'#NULL#') AND
                       COALESCE(target_record.mrp_pi_info::text,'#NULL#') = COALESCE(current_record.mrp_pi_info::text,'#NULL#') AND
@@ -625,7 +597,7 @@ BEGIN
                       COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
-                      COALESCE(target_record.mrp_wiedervorlage::text,'#NULL#') = COALESCE(current_record.mrp_wiedervorlage::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
                       COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                       ;
                 data_count_all := data_count_all + data_count;
@@ -639,7 +611,7 @@ BEGIN
                         redcap_repeat_instrument,
                         redcap_repeat_instance,
                         mrp_header,
-                        mrp_femb,
+                        mrp_femb_1,
                         mrp_femb_2,
                         mrp_femb_3,
                         mrp_pi_info,
@@ -759,7 +731,7 @@ BEGIN
                         mrp_merp_info,
                         mrp_merp_info___1,
                         mrp_merp_txt,
-                        mrp_wiedervorlage,
+                        mrp_femb_22,
                         mrpdokumentation_validierung_complete,
                         input_datetime,
                         last_processing_nr
@@ -771,7 +743,7 @@ BEGIN
                         current_record.redcap_repeat_instrument,
                         current_record.redcap_repeat_instance,
                         current_record.mrp_header,
-                        current_record.mrp_femb,
+                        current_record.mrp_femb_1,
                         current_record.mrp_femb_2,
                         current_record.mrp_femb_3,
                         current_record.mrp_pi_info,
@@ -891,7 +863,7 @@ BEGIN
                         current_record.mrp_merp_info,
                         current_record.mrp_merp_info___1,
                         current_record.mrp_merp_txt,
-                        current_record.mrp_wiedervorlage,
+                        current_record.mrp_femb_22,
                         current_record.mrpdokumentation_validierung_complete,
                         current_record.input_datetime,
                         last_pro_nr
@@ -909,7 +881,7 @@ BEGIN
                       COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
                       COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
                       COALESCE(target_record.mrp_header::text,'#NULL#') = COALESCE(current_record.mrp_header::text,'#NULL#') AND
-                      COALESCE(target_record.mrp_femb::text,'#NULL#') = COALESCE(current_record.mrp_femb::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_1::text,'#NULL#') = COALESCE(current_record.mrp_femb_1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_femb_2::text,'#NULL#') = COALESCE(current_record.mrp_femb_2::text,'#NULL#') AND
                       COALESCE(target_record.mrp_femb_3::text,'#NULL#') = COALESCE(current_record.mrp_femb_3::text,'#NULL#') AND
                       COALESCE(target_record.mrp_pi_info::text,'#NULL#') = COALESCE(current_record.mrp_pi_info::text,'#NULL#') AND
@@ -1029,7 +1001,7 @@ BEGIN
                       COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
-                      COALESCE(target_record.mrp_wiedervorlage::text,'#NULL#') = COALESCE(current_record.mrp_wiedervorlage::text,'#NULL#') AND
+                      COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
                       COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                     ;
 
