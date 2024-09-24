@@ -16,7 +16,9 @@
 
 -- patient_fe ------------------------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db2frontend_in.patient_fe_ins_fkt()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+AS $$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.patient_fe_id IS NULL THEN
@@ -34,7 +36,9 @@ CREATE OR REPLACE TRIGGER patient_fe_tr_ins
 
 -- fall_fe ---------------------------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db2frontend_in.fall_fe_ins_fkt()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+AS $$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.fall_fe_id IS NULL THEN
@@ -52,7 +56,9 @@ CREATE OR REPLACE TRIGGER fall_fe_tr_ins
 
 -- medikationsanalyse_fe -------------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db2frontend_in.medikationsanalyse_fe_ins_fkt()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+AS $$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.medikationsanalyse_fe_id IS NULL THEN
@@ -70,7 +76,9 @@ CREATE OR REPLACE TRIGGER medikationsanalyse_fe_tr_ins
 
 -- mrpdokumentation_validierung_fe ---------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db2frontend_in.mrpdokumentation_validierung_fe_ins_fkt()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+AS $$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.mrpdokumentation_validierung_fe_id IS NULL THEN
