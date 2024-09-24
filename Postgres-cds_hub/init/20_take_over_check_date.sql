@@ -1,3 +1,32 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "db_log"
+-- Create time: 2024-08-28 11:51:18
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  20_take_over_check_date.sql
+-- TEMPLATE:  template_take_over_check_date_function.sql
+-- OWNER_USER:  
+-- OWNER_SCHEMA:  db_log
+-- TAGS:  
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  _raw
+-- RIGHTS:  
+-- GRANT_TARGET_USER:  
+-- COPY_FUNC_SCRIPTNAME:  template_take_over_check_date_function.sql
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  take_over_last_check_date
+-- SCHEMA_2:  db_log
+-- TABLE_POSTFIX_2:  
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 ------------------------------
 CREATE OR REPLACE FUNCTION db.take_over_last_check_date()
 RETURNS VOID AS $$

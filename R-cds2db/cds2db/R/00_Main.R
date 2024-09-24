@@ -8,7 +8,7 @@ retrieve <- function() {
   # Read the module configuration toml file.
   ###
   path2config_toml <- "./R-cds2db/cds2db_config.toml"
-  etlutils::initConstants(path2config_toml)
+  config <- etlutils::initConstants(path2config_toml)
 
   ###
   # Read the DB configuration toml file
@@ -31,6 +31,9 @@ retrieve <- function() {
   # log all console outputs and save them at the end
   ###
   etlutils::startLogging(PROJECT_NAME)
+
+  # log all configuration parameters but hide value with parameter name starts with "FHIR_"
+  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
 
   try(etlutils::runLevel1("Run Retrieve", {
 
@@ -55,12 +58,12 @@ retrieve <- function() {
       if (all_empty_fhir) {
         etlutils::catWarningMessage("No FHIR resources found.")
       }
+      names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
     })
 
     if (!all_empty_fhir) {
       # Write raw tables to database
       etlutils::runLevel2("Write raw tables to database", {
-        names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
         writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
       })
 

@@ -10,15 +10,16 @@
 #' @return the filter patterns which are converted to a list of lists
 #'
 convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 'ENCOUNTER_FILTER_PATTERN') {
-
   ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
 
   if (!length(ward_pids_filter_patterns)) {
     stopWithError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
   }
 
-  # the result list with all. The structure of the list is the following:
-  # list of
+  # Initializes an empty list to store the final converted filter patterns. Each element in this list
+  # corresponds to a ward, with the ward name as the key. The value for each ward is another list that
+  # contains the AND-connected filter conditions (sub-conditions). Multiple groups of such conditions
+  # are stored as separate elements, representing the OR-connected groups of filters for the ward.
   converted_filter_patterns <- list()
   ward_index <- 1
   for (ward_filter_patterns in ward_pids_filter_patterns) {
@@ -215,6 +216,12 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
     pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
   }
+
+  if (exists("DEBUG_PATIENT_ID_PATTERN")) {
+    for (ward in names(pids_per_ward)) {
+      pids_per_ward[[ward]] <- pids_per_ward[[ward]][grepl(DEBUG_PATIENT_ID_PATTERN, pids_per_ward[[ward]])]
+    }
+  }
   return(pids_per_ward)
 }
 
@@ -252,19 +259,33 @@ getEncounters <- function(table_description, current_datetime) {
         encounter_status <- "in-progress"
       }
 
-      request_encounter <- fhircrackr::fhir_url(
-        url        = FHIR_SERVER_ENDPOINT,
-        resource   = 'Encounter',
-        parameters = etlutils::addParamToFHIRRequest(c(
-          'date'    = paste0('lt', current_datetime),
-          'status' = encounter_status)
+      if (exists('DEBUG_CURRENT_DATETIME_START') && exists('DEBUG_CURRENT_DATETIME_END')) {
+        request_encounter <- fhircrackr::fhir_url(
+          url        = FHIR_SERVER_ENDPOINT,
+          resource   = "Encounter",
+          parameters = etlutils::addParamToFHIRRequest(
+            c(
+              "date"   = paste0("sa", current_datetime[["start_datetime"]]),
+              "date"   = paste0("eb", current_datetime[["end_datetime"]]),
+              "status" = encounter_status
+            )
+          )
         )
-      )
+      } else {
+        request_encounter <- fhircrackr::fhir_url(
+          url        = FHIR_SERVER_ENDPOINT,
+          resource   = 'Encounter',
+          parameters = etlutils::addParamToFHIRRequest(c(
+            'date'   = paste0('lt', current_datetime),
+            'status' = encounter_status)
+          )
+        )
+      }
 
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
-                                                 table_description = table_description,
-                                                 max_bundles = MAX_ENCOUNTER_BUNDLES,
-                                                 log_errors  = 'enc_error.xml')
+                                                           table_description = table_description,
+                                                           max_bundles = MAX_ENCOUNTER_BUNDLES,
+                                                           log_errors  = 'enc_error.xml')
 
       if (etlutils::isSimpleNA(table_enc)) {
         stop('The FHIR request did not return any available Encounter bundles.\n Request: ',
@@ -339,7 +360,9 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       if (read_pids_from_file) {
         message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
       } else {
-        message <- paste0(message, "on FHIR server for timestamp ", current_datetime, ".\n")
+        # current_datetime can be only a start date or a vector with an start and end date (in DEBUG mode)
+        current_datetime_display <- ifelse(length(current_datetime) == 1, current_datetime, paste0("start ", paste0(current_datetime, collapse = " to end ")))
+        message <- paste0(message, "on FHIR server for timestamp ", current_datetime_display, ".\n")
       }
       etlutils::catWarningMessage(message)
     }

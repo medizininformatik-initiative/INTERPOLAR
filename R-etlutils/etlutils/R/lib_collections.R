@@ -128,3 +128,104 @@ flattenList <- function(x, prefix = NULL) {
   }
   result
 }
+
+#' Extract Indices from a Filter String
+#'
+#' This function parses a filter string containing comma-separated values and ranges
+#' and returns a vector of unique, sorted indices. It handles both individual values
+#' and ranges specified with a hyphen.
+#'
+#' @param filter_string A character string containing comma-separated values and/or ranges.
+#'   Values can be individual numbers or ranges (e.g., "1, 2, 3, 5-10").
+#' @param delimiter A character used to separate values in the string. The default is a comma (",").
+#' @param range_delimiter A character used to specify ranges within the string. The default is a hyphen ("-").
+#'
+#' @return A numeric vector of sorted, unique indices derived from the input string.
+#'   Returns `NA` if the input string is empty.
+#'
+#' @examples
+#' getIndices("1, 2, 3, 5-10")
+#' # Returns: 1 2 3 5 6 7 8 9 10
+#'
+#' getIndices("10-12, 14")
+#' # Returns: 10 11 12 14
+#'
+#' @export
+getIndices <- function(filter_string, delimiter = ",", range_delimiter = "-") {
+  # Remove leading/trailing whitespace and all spaces within the string
+  filter_string <- gsub(" ", "", trimws(filter_string))
+  # Return NA if the input string is empty
+  if (!nchar(filter_string)) return(NA)
+  # Split the string by the main delimiter (default is a comma)
+  split_values <- strsplit(filter_string, delimiter)[[1]]
+  # Initialize an empty vector to store the results
+  result <- c()
+  # Iterate over each split value
+  for (value in split_values) {
+    # Check if the value contains a range
+    if (grepl(range_delimiter, value)) {
+      # If it's a range, split by the range delimiter and generate the sequence
+      range_limits <- as.integer(strsplit(value, range_delimiter)[[1]])
+      result <- c(result, seq(range_limits[1], range_limits[2]))
+    } else {
+      # If it's a single value, directly convert and append it
+      result <- c(result, as.integer(value))
+    }
+  }
+  # Return the sorted, unique result
+  return(sort(unique(result)))
+}
+
+#' Print a list with each element's name and value, with optional prefix, suffix, and hide value pattern
+#'
+#' This function prints each element of a given list in the format "name = value". It uses the
+#' helper function `getPrintString` to format each value. If the list contains nested lists, they
+#' are handled recursively. The user can specify a prefix and suffix to wrap the output, and an
+#' optional `hide_value_pattern` to hide values based on a pattern. If an element's value matches
+#' the `hide_value_pattern`, it will display "<Not empty list>" for lists or "<Not empty string>"
+#' for non-empty strings.
+#'
+#' @param list A named list or a list of lists to be printed.
+#' @param prefix A string to print before the list output (optional, default is an empty string).
+#' @param suffix A string to print after the list output (optional, default is an empty string).
+#' @param hide_value_pattern A regular expression pattern to hide the values of specific list
+#' elements (optional, default is an empty string). If empty, no values are hidden.
+#'
+#' @return None. Prints the list elements to the console.
+#'
+#' @examples
+#' my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "", e = "test")
+#' catList(my_list, prefix = "Start:\n", suffix = "End\n")
+#' catList(my_list, hide_value_pattern = "c")
+#' catList(my_list, hide_value_pattern = "e")
+#' catList(my_list, hide_value_pattern = "e|b")
+#'
+#' @export
+catList <- function(list, prefix = "", suffix = "", hide_value_pattern = "") {
+  cat(prefix)
+  if (is.na(hide_value_pattern)) hide_value_pattern <- ""
+  for (name in names(list)) {
+    value <- list[[name]]
+    # Only apply hide_value_pattern logic if it's non-empty
+    if (hide_value_pattern != "") {
+      if (is.list(value)) {
+        # If it's a list, check the elements for the hide_value_pattern
+        if (grepl(hide_value_pattern, name)) {
+          value <- "<Not empty list>"
+        } else {
+          value <- getPrintString(value)
+        }
+      } else if (grepl(hide_value_pattern, name) && nchar(value)) {
+        # If it's not a list, check if the value matches the hide_value_pattern
+        value <- paste("<Not empty", typeof(value), "value>")
+      }
+    } else {
+      # If no pattern is provided, just print the value normally
+      if (is.list(value)) {
+        value <- getPrintString(value)
+      }
+    }
+    cat(paste0(name, " = ", value, "\n"))
+  }
+  cat(suffix)
+}
