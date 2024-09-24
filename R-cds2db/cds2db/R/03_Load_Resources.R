@@ -209,7 +209,6 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
     # Find common names between resource names and resource table names
     common_names <- intersect(resource_patterns, resource_table_names)
     # Iterate over each common name
-    error_messages <- c()
     for (name in common_names) {
       # Find the full resource names that match the current common name (case-insensitive)
       matching_indices <- which(name == resource_patterns)
@@ -229,15 +228,14 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
         invalid_indices <- indices[indices < 1 | indices > rows_count]
         # Only proceed if there are valid indices
         if (length(invalid_indices) > 0) {
-          error_messages <- c(error_messages, paste0(full_resource_name, ": the following indices are invalid. The table has only ", rows_count, " rows. Invalid indices: ", paste(invalid_indices, collapse = ", ")))
+          etlutils::catWarningMessage(paste0("Check '", full_resource_name, "': The following indices
+                                             are invalid for resource ", original_name, ". The table
+                                             has only ", rows_count, " rows. Invalid indices: ",
+                                             paste(invalid_indices, collapse = ", ")))
         }
         # Update the resource table with valid indices
         resource_tables[[original_name]] <- resource_tables[[original_name]][indices, ]
       }
-    }
-    if (length(error_messages)) {
-      catErrorMessage(paste0(error_messages, collapse = "\n"))
-      stop("Process stopped because not all resource debug filter indices are valid. See above. Fix indices in cds2db_config.toml.")
     }
   }
   #######################
