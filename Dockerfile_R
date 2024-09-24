@@ -4,15 +4,36 @@ FROM rocker/r-ver:4.4.1
 
 RUN echo 'options(repos = c(CRAN = "https://ftp.fau.de/cran/"))' >>"${R_HOME}/etc/Rprofile.site"
 
+# Number of CPUs to speed up build (unclear, if this has any effect)
+
+ENV NCPUS=1
+
+# R-env
+
+# Utils
+RUN apt-get update && apt-get install -y -q \
+        apt-utils \
+        vim less \
+        wget curl
 
 # etlutils
 
-RUN apt-get update \
-    && apt-get install -y libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev
+RUN apt-get install -y \
+	libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev 
 
-RUN /rocker_scripts/bin/install2.r memuse openxlsx RcppTOML DBI lubridate RPostgres ICD10gm data.table httr RcppTOML rlang stringr
-RUN /rocker_scripts/bin/install2.r xml2
-RUN /rocker_scripts/bin/install2.r fhircrackr
+RUN /rocker_scripts/bin/install2.r -n $NCPUS memuse
+RUN /rocker_scripts/bin/install2.r -n $NCPUS openxlsx
+RUN /rocker_scripts/bin/install2.r -n $NCPUS RcppTOML
+RUN /rocker_scripts/bin/install2.r -n $NCPUS DBI
+RUN /rocker_scripts/bin/install2.r -n $NCPUS lubridate
+RUN /rocker_scripts/bin/install2.r -n $NCPUS RPostgres
+RUN /rocker_scripts/bin/install2.r -n $NCPUS ICD10gm
+RUN /rocker_scripts/bin/install2.r -n $NCPUS data.table 
+RUN /rocker_scripts/bin/install2.r -n $NCPUS httr
+RUN /rocker_scripts/bin/install2.r -n $NCPUS rlang 
+RUN /rocker_scripts/bin/install2.r -n $NCPUS stringr
+RUN /rocker_scripts/bin/install2.r -n $NCPUS xml2
+RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
 
 WORKDIR /src
 
@@ -36,7 +57,8 @@ RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cds2db/cds2db
 
 RUN apt-get install -y libsodium-dev libsecret-1-0
 
-RUN /rocker_scripts/bin/install2.r redcapAPI dplyr
+RUN /rocker_scripts/bin/install2.r -n $NCPUS redcapAPI
+RUN /rocker_scripts/bin/install2.r -n $NCPUS dplyr
 
 COPY R-db2frontend R-db2frontend
 

@@ -1,8 +1,13 @@
 # "php:apache" siehe https://hub.docker.com/r/library/php/
 FROM php:8-apache-bookworm
-#FROM php:8-apache-bullseye
 
 LABEL maintainer "Sebastian Stäubert <sebastian.staeubert@imise.uni-leipzig.de>"
+
+# Packages Utils
+RUN apt-get update && apt-get install -y -q \
+	apt-utils \
+	vim less \
+	wget curl
 
 # Packages fuer den Mailversand
 RUN apt-get update && apt-get install -y -q \
@@ -11,16 +16,13 @@ RUN apt-get update && apt-get install -y -q \
 
 # PHP-Erweiterungen iconv, mcrypt, gd, zip, mysqli, imagick installieren
 RUN apt-get install -y \
-	apt-utils \
-	vim \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
         libmcrypt-dev \
         libpng-dev \
 	libzip-dev \
 	libmagickwand-dev \
-	imagemagick \
-	wget
+	imagemagick
 
 # Erweiterung für PHP: iconv
 RUN docker-php-ext-configure iconv \
