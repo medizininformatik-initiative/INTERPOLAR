@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-09-23 14:22:34
+-- Create time: 2024-09-23 17:12:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -597,7 +597,6 @@ BEGIN
                       COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
-                      COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
                       COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                       ;
                 data_count_all := data_count_all + data_count;
@@ -731,7 +730,6 @@ BEGIN
                         mrp_merp_info,
                         mrp_merp_info___1,
                         mrp_merp_txt,
-                        mrp_femb_22,
                         mrpdokumentation_validierung_complete,
                         input_datetime,
                         last_processing_nr
@@ -863,7 +861,6 @@ BEGIN
                         current_record.mrp_merp_info,
                         current_record.mrp_merp_info___1,
                         current_record.mrp_merp_txt,
-                        current_record.mrp_femb_22,
                         current_record.mrpdokumentation_validierung_complete,
                         current_record.input_datetime,
                         last_pro_nr
@@ -1001,7 +998,6 @@ BEGIN
                       COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
-                      COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
                       COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                     ;
 

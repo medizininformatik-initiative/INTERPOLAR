@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file last update : 2024-08-21 10:04:46
 -- Rights definition file size        : 15036 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2024-08-28 11:50:58
+-- Create time: 2024-09-23 17:11:56
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1353,22 +1353,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.encounter_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.encounter
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.encounter_tr_ins_fkt();
-
-
 -- Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.patient TO cds2db_user;
@@ -1377,22 +1361,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.patient_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER patient_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.patient
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.patient_tr_ins_fkt();
-
 
 -- Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
@@ -1403,22 +1371,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.condition_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER condition_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.condition
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.condition_tr_ins_fkt();
-
-
 -- Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.medication TO cds2db_user;
@@ -1427,22 +1379,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.medication_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medication_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.medication
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.medication_tr_ins_fkt();
-
 
 -- Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
@@ -1453,22 +1389,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.medicationrequest_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationrequest_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.medicationrequest
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.medicationrequest_tr_ins_fkt();
-
-
 -- Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.medicationadministration TO cds2db_user;
@@ -1477,22 +1397,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.medicationadministration_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationadministration_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.medicationadministration
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.medicationadministration_tr_ins_fkt();
-
 
 -- Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
@@ -1503,22 +1407,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.medicationstatement_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationstatement_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.medicationstatement
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.medicationstatement_tr_ins_fkt();
-
-
 -- Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.observation TO cds2db_user;
@@ -1527,22 +1415,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.observation_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER observation_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.observation
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.observation_tr_ins_fkt();
-
 
 -- Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
@@ -1553,22 +1425,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.diagnosticreport_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER diagnosticreport_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.diagnosticreport
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.diagnosticreport_tr_ins_fkt();
-
-
 -- Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.servicerequest TO cds2db_user;
@@ -1577,22 +1433,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.servicerequest_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER servicerequest_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.servicerequest
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.servicerequest_tr_ins_fkt();
-
 
 -- Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
@@ -1603,22 +1443,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.procedure_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER procedure_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.procedure
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.procedure_tr_ins_fkt();
-
-
 -- Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.consent TO cds2db_user;
@@ -1627,22 +1451,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.consent_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER consent_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.consent
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.consent_tr_ins_fkt();
-
 
 -- Table "location" in schema "cds2db_in"
 ----------------------------------------------------
@@ -1653,22 +1461,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION cds2db_in.location_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER location_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.location
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.location_tr_ins_fkt();
-
-
 -- Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 GRANT TRIGGER ON cds2db_in.pids_per_ward TO cds2db_user;
@@ -1677,22 +1469,6 @@ GRANT USAGE ON db.db_seq TO cds2db_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO cds2db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION cds2db_in.pids_per_ward_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER pids_per_ward_tr_ins_tr
-  BEFORE INSERT
-  ON cds2db_in.pids_per_ward
-  FOR EACH ROW
-  EXECUTE PROCEDURE cds2db_in.pids_per_ward_tr_ins_fkt();
-
 
 ------------------------------------------------------
 -- Comments on Tables in Schema "cds2db_in" --
