@@ -233,8 +233,9 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
                                              has only ", rows_count, " rows. Invalid indices: ",
                                              paste(invalid_indices, collapse = ", ")))
         }
+        valide_indices <- setdiff(indices, invalid_indices)
         # Update the resource table with valid indices
-        resource_tables[[original_name]] <- resource_tables[[original_name]][indices, ]
+        resource_tables[[original_name]] <- resource_tables[[original_name]][valide_indices, ]
       }
     }
   }
