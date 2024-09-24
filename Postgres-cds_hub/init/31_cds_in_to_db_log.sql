@@ -1,3 +1,35 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 09:59:34
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "db_log"
+-- Create time: 2024-08-28 11:51:15
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  16_cre_table_typ_log.sql
+-- TEMPLATE:  template_cre_table.sql
+-- OWNER_USER:  db_log_user
+-- OWNER_SCHEMA:  db_log
+-- TAGS:  TYPED
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  
+-- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
+-- RIGHTS (3):  SELECT
+-- GRANT_TARGET_USER:  db_log_user
+-- GRANT_TARGET_USER (2):  db_user
+-- GRANT_TARGET_USER (3):  cds2db_user
+-- COPY_FUNC_SCRIPTNAME:  31_cds_in_to_db_log.sql
+-- COPY_FUNC_TEMPLATE:  template_copy_function.sql
+-- COPY_FUNC_NAME:  copy_type_cds_in_to_db_log
+-- SCHEMA_2:  cds2db_in
+-- TABLE_POSTFIX_2:  
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$

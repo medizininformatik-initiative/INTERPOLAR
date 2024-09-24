@@ -16,7 +16,7 @@ initConstantsAndLogging <- function() {
     # Path to the module configuration TOML file
     path2config_toml <- './R-db2frontend/db2frontend_config.toml'
     # Load module configuration settings
-    etlutils::initConstants(path2config_toml)
+    config <- etlutils::initConstants(path2config_toml)
     # Load database configuration settings
     etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
     # Set the PROJECT_NAME to 'db2frontend'
@@ -26,6 +26,8 @@ initConstantsAndLogging <- function() {
     etlutils::createClock()
     # log all console outputs and save them at the end
     etlutils::startLogging(PROJECT_NAME)
+    # log all configuration parameters but hide value with parameter name starts with "FHIR_"
+    etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
   }
 }
 
@@ -88,7 +90,7 @@ importDB2Redcap <- function() {
       columns <- db_table_and_columns[[table_name]]
 
       # Create SQL query dynamically based on columns
-      query <- sprintf("SELECT record_id, %s FROM %s", paste(columns, collapse = ", "), table_name)
+      query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
 
       # Fetch data from the database
       data_from_db <- etlutils::dbGetQuery(db_connection, query)
@@ -152,7 +154,9 @@ importRedcap2DB <- function() {
 
     # get data from REDCap
     for (form_name in form_names) {
-      tables2Export[[form_name]] <- redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)
+      dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
+      data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
+      tables2Export[[form_name]] <- dt
     }
 
     #establish connection to db

@@ -1,3 +1,35 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 10:04:46
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "db_log"
+-- Create time: 2024-09-23 17:12:08
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  16_cre_table_typ_log.sql
+-- TEMPLATE:  template_cre_table.sql
+-- OWNER_USER:  db_log_user
+-- OWNER_SCHEMA:  db_log
+-- TAGS:  TYPED
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  
+-- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
+-- RIGHTS (3):  SELECT
+-- GRANT_TARGET_USER:  db_log_user
+-- GRANT_TARGET_USER (2):  db_user
+-- GRANT_TARGET_USER (3):  cds2db_user
+-- COPY_FUNC_SCRIPTNAME:  31_cds_in_to_db_log.sql
+-- COPY_FUNC_TEMPLATE:  template_copy_function.sql
+-- COPY_FUNC_NAME:  copy_type_cds_in_to_db_log
+-- SCHEMA_2:  cds2db_in
+-- TABLE_POSTFIX_2:  
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 -----------------------------------------------------
 -- Create SQL Tables in Schema "db_log" --
 -----------------------------------------------------
@@ -1324,22 +1356,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter TO db_log_user; -
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.encounter TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.encounter_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER encounter_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.encounter
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.encounter_tr_ins_fkt();
-
-
 -- Table "patient" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.patient TO db_log_user;
@@ -1349,22 +1365,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.patient TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.patient_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER patient_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.patient
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.patient_tr_ins_fkt();
-
 
 -- Table "condition" in schema "db_log"
 ----------------------------------------------------
@@ -1376,22 +1376,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition TO db_log_user; -
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.condition TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.condition_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER condition_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.condition
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.condition_tr_ins_fkt();
-
-
 -- Table "medication" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.medication TO db_log_user;
@@ -1401,22 +1385,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.medication TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.medication_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medication_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medication
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medication_tr_ins_fkt();
-
 
 -- Table "medicationrequest" in schema "db_log"
 ----------------------------------------------------
@@ -1428,22 +1396,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest TO db_log
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.medicationrequest TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.medicationrequest_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationrequest_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medicationrequest
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medicationrequest_tr_ins_fkt();
-
-
 -- Table "medicationadministration" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.medicationadministration TO db_log_user;
@@ -1453,22 +1405,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.medicationadministration TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.medicationadministration_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationadministration_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medicationadministration
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medicationadministration_tr_ins_fkt();
-
 
 -- Table "medicationstatement" in schema "db_log"
 ----------------------------------------------------
@@ -1480,22 +1416,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement TO db_l
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.medicationstatement TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.medicationstatement_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationstatement_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medicationstatement
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medicationstatement_tr_ins_fkt();
-
-
 -- Table "observation" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.observation TO db_log_user;
@@ -1505,22 +1425,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.observation TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.observation_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER observation_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.observation
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.observation_tr_ins_fkt();
-
 
 -- Table "diagnosticreport" in schema "db_log"
 ----------------------------------------------------
@@ -1532,22 +1436,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport TO db_log_
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.diagnosticreport TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.diagnosticreport_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER diagnosticreport_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.diagnosticreport
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.diagnosticreport_tr_ins_fkt();
-
-
 -- Table "servicerequest" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.servicerequest TO db_log_user;
@@ -1557,22 +1445,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.servicerequest TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.servicerequest_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER servicerequest_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.servicerequest
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.servicerequest_tr_ins_fkt();
-
 
 -- Table "procedure" in schema "db_log"
 ----------------------------------------------------
@@ -1584,22 +1456,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure TO db_log_user; -
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.procedure TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.procedure_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER procedure_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.procedure
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.procedure_tr_ins_fkt();
-
-
 -- Table "consent" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.consent TO db_log_user;
@@ -1609,22 +1465,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.consent TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.consent_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER consent_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.consent
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.consent_tr_ins_fkt();
-
 
 -- Table "location" in schema "db_log"
 ----------------------------------------------------
@@ -1636,22 +1476,6 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location TO db_log_user; --
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.location TO cds2db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.location_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER location_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.location
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.location_tr_ins_fkt();
-
-
 -- Table "pids_per_ward" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.pids_per_ward TO db_log_user;
@@ -1661,22 +1485,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db_log.pids_per_ward TO cds2db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.pids_per_ward_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER pids_per_ward_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.pids_per_ward
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.pids_per_ward_tr_ins_fkt();
-
 
 ------------------------------------------------------
 -- Comments on Tables in Schema "db_log" --

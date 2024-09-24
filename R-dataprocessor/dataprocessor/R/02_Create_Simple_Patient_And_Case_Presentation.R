@@ -13,8 +13,7 @@ getLastProcessingNumber <- function() {
   statement <- "SELECT MAX(last_processing_nr)
                 FROM db_log.data_import_hist
                 WHERE function_name = 'copy_type_cds_in_to_db_log'
-                  AND schema_name='db_log' AND table_name NOT LIKE '%_raw';"
-
+                  AND schema_name = 'db_log' AND table_name NOT LIKE '%_raw';"
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
@@ -33,7 +32,6 @@ loadLastImportedDatasetsFromDB <- function(table_name_part) {
   # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
                       " WHERE last_processing_nr = ", last_processing_nr, ";")
-
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
@@ -364,6 +362,9 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
+    # Enable/Disable query log
+    query_log <- if (VERBOSE >= 9) TRUE else FALSE
+
     # load Encounters for all PIDs
     query_datetime <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
@@ -374,7 +375,7 @@ createFrontendTables <- function() {
                     "  enc_partof_id IS NULL AND\n",
                     "  (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "') AND\n",
                     "  enc_period_start <= '", query_datetime, "'\n")
-    encounters <- etlutils::dbGetQuery(db_read_connection, query)
+    encounters <- etlutils::dbGetQuery(db_read_connection, query, query_log)
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
@@ -382,7 +383,7 @@ createFrontendTables <- function() {
     table_name <- getFirstTableWithNamePart(db_read_connection, "condition_all")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
-    conditions <- etlutils::dbGetQuery(db_read_connection, query)
+    conditions <- etlutils::dbGetQuery(db_read_connection, query, query_log)
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
@@ -468,7 +469,7 @@ createFrontendTables <- function() {
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
-          observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+          observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query, query_log)
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
           if (!nrow(observations)) {
@@ -478,7 +479,7 @@ createFrontendTables <- function() {
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_datetime, "'\n")
-            observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query)
+            observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query, query_log)
           }
           if (nrow(observations)) {
             # take the very frist Observation with the latest date (should be only 1 but sure is sure)

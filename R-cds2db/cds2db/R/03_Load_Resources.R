@@ -38,16 +38,21 @@ createWardPatientIDPerDateTable <- function(patientIDsPerWard) {
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME_START` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
-  if (exists("DEBUG_CURRENT_DATETIME")) {
-    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
+  start_datetime <- as.POSIXct(Sys.time())
+  if (exists('DEBUG_CURRENT_DATETIME_START')) {
+    start_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_START)
+    if (exists('DEBUG_CURRENT_DATETIME_END')) {
+      end_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_END)
+      return(c(start_datetime = start_datetime, end_datetime = end_datetime))
+    }
   }
-  return(as.POSIXct(Sys.time()))
+  return(c(start_datetime = start_datetime))
 }
 
 #' Get Query Datetime
@@ -81,8 +86,9 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
   # an enddate greater current date.
   query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
-                        "   WHERE enc_period_start <= '", query_datetime, "' AND\n",
-                        "   (enc_period_end is NULL OR enc_period_end > '", query_datetime, "');")
+                  "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
+                  "   (enc_period_end is NULL OR enc_period_end > '",
+                  query_datetime[["start_datetime"]], "');")
   patientIDsActive <- getQueryFromDatabase(query)
   # Unify and unique all patient IDs
   patientIDs <- unique(unlist(patient_IDs_per_ward))
@@ -106,7 +112,6 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   #######################
   # END: FOR DEBUG ONLY #
   #######################
-
 
   # Add additional table of ward-patient ID per date
   resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
@@ -133,22 +138,25 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
   # table_descriptions$REFERENCE_TYPES can be a comma or whitespace separated list like
   # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
-  reference_types <- unique(etlutils::extractWords(table_descriptions$REFERENCE_TYPES))
+  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$REFERENCE_TYPES))
   for (reference_type in reference_types) {
     referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
     if (!is.null(referenced_table_description)) {
       # now extract all rows where the single reference_type is in the reference_types column as whole word
       whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-      sub_reference_type <- table_descriptions$REFERENCE_TYPES[grepl(whole_word_pattern, REFERENCE_TYPES)]
+      sub_reference_type <- table_descriptions$reference_types[grepl(whole_word_pattern, REFERENCE_TYPES)]
 
       referenced_ids <- c()
       for (i in seq_len(nrow(sub_reference_type))) {
-        resource_name <- sub_reference_type[i]$resource
-        column_name <- sub_reference_type[i]$column_name
+        resource_name <- sub_reference_type[i]$RESOURCE
+        column_name <- sub_reference_type[i]$COLUMN_NAME
         new_referenced_ids <- resource_tables[[resource_name]][[column_name]]
         new_referenced_ids <- unique(na.omit(new_referenced_ids))
         referenced_ids <- c(referenced_ids, new_referenced_ids)
       }
+      table_description_sep <- referenced_table_description@sep
+      referenced_ids <- unlist(strsplit(referenced_ids, table_description_sep, fixed = TRUE))
+      referenced_ids <- getAfterLastSlash(referenced_ids)
       referenced_ids <- unique(referenced_ids)
 
       resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids, referenced_table_description)
@@ -179,6 +187,71 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
   resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  # Prefix of all global debug variables. One for each FHIR resources.
+  global_debug_filter_variable_prefix <- "DEBUG_FILTER_"
+  # Get global variables by prefix
+  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
+  if (length(global_filter_variables)) {
+    # Extract and process resource names
+    resource_patterns_full <- names(global_filter_variables)
+    resource_patterns <- tolower(gsub(global_debug_filter_variable_prefix, "", resource_patterns_full))
+    resource_table_names <- tolower(names(resource_tables))
+    different_resources <- setdiff(resource_patterns, resource_table_names)
+    if (length(different_resources)) {
+      catInfoMessage(paste0("Note: The following debug filter resources are not in the resource table: ",
+                            paste(different_resources, collapse = ", "),
+                            ". Fix it in cds2db_config.toml."))
+    }
+    # Find common names between resource names and resource table names
+    common_names <- intersect(resource_patterns, resource_table_names)
+    # Iterate over each common name
+    for (name in common_names) {
+      # Find the full resource names that match the current common name (case-insensitive)
+      matching_indices <- which(name == resource_patterns)
+      # Take the first match, if multiple
+      debug_parameter_name <- resource_patterns_full[matching_indices]
+      # Get indices using the full resource name
+      indices <- etlutils::getIndices(get(debug_parameter_name))
+      # Retrieve the original name to update the correct resource table
+      original_name <- names(resource_tables)[match(name, tolower(names(resource_tables)))]
+      # Check if indices is NA
+      if (all(is.na(indices))) {
+        # Set the table to be empty if indices is NA
+        resource_tables[[original_name]] <- resource_tables[[original_name]][0, ]
+      } else {
+        rows_count <- nrow(resource_tables[[original_name]])
+        # Check for valid indices (e.g., within the range of the number of rows in the resource table)
+        invalid_indices <- indices[indices < 1 | indices > rows_count]
+        # Only proceed if there are valid indices
+        if (length(invalid_indices) > 0) {
+          l <- length(invalid_indices)
+          # If there are more than 10 invalid indices, just the first 5 and the last 5 entries are displayed
+          # separately between 3 dots
+          if (l <= 10) {
+            invalid_indices_string <- invalid_indices
+          } else {
+            invalid_indices_string <- paste0(paste0(invalid_indices[1:5], collapse = ", "), " ... ",
+                                             paste0(invalid_indices[(l-5):l], collapse = ", "))
+          }
+          etlutils::catWarningMessage(paste0(
+            "Check '", debug_parameter_name, "': The following indices are invalid for resource ",
+            original_name, ". The table has only ", rows_count, " rows. Invalid indices: ",
+            paste(invalid_indices_string, collapse = ", ")))
+        }
+        valide_indices <- setdiff(indices, invalid_indices)
+        # Update the resource table with valid indices
+        resource_tables[[original_name]] <- resource_tables[[original_name]][valide_indices, ]
+      }
+    }
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
   for (i in seq_along(resource_tables)) {
     writeRData(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }

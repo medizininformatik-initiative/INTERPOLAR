@@ -14,5 +14,14 @@ Dies erfolgt in 3 Schritten:
    REDCap enthält eine Benutzerverwaltung mit Rechten und Rollen. Die Einrichtung / Konfiguration ist in der REDCap Dokumentation beschrieben:
    * [How to change and set up authentication in REDCap](https://redcap.vumc.org/community/post.php?id=691)
    * [How do I create a customized report in REDCap?](https://confluence.research.cchmc.org/pages/viewpage.action?pageId=90966866)
+1. Cronjob für REDCap einrichten: \
+   Es gibt mehrere Möglichkeiten, den Cronjob für die regelmäßigen Aufgaben, welche vom REDCap durchgeführt werden müssen, einzurichten. Dies kann z.B. ein Script sein, dass per Cron des Host-System aufgerufen wird oder die Hinzunahme eines weiteren "Cron"-Eintrages/Services in der docker-compose.yml. \
+   Eine einfache Möglichkeit besteht darin, den folgenden Eintrag in die crontab des docker-Nutzers auf dem Host-System bzw. wenn dies root ist in der _/etc/crontab_ hinzuzufügen. Wenn die CDS Tool Chain auf dem Host-System im Verzeichnis _/opt/docker/INTERPOLAR_ ausgecheckt wurde, sieht der Eintrag beispielsweise so aus:
+   ```cron
+   * *     * * *   root    cd /opt/docker/INTERPOLAR && docker compose exec -T redcap php /var/www/html/redcap/cron.php > /dev/null
+   ```
+   Beim Durchlauf des Configuration-Check über die REDCap Weboberfläche sollte dann der Test für den Cronjob "grün" sein.
+   ![image](https://github.com/user-attachments/assets/16e7f884-a559-4341-9e01-782d2b38678f)
+
 
 [Zurück zur Installationsanleitung](../Install.md) (weiter mit Schritt 7)

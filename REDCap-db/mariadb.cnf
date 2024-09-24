@@ -19,10 +19,14 @@ character-set-server  = utf8
 #character_set_server   = utf8 
 #collation_server       = utf8_general_ci 
 max_allowed_packet=1G
+optimizer_switch=rowid_filter=OFF
 # Vorschläge für Cache Parameter (nicht aktiv)
 #query_cache_size = 256M
 #query_cache_limit = 64K
-optimizer_switch=rowid_filter=OFF
+# redcap defaults for query_cache_*
+query_cache_size = 16777216
+query_cache_limit = 16777216
+query_cache_type = 1
 
 # Import all .cnf files from configuration directory
 !includedir /etc/mysql/mariadb.conf.d/

@@ -153,3 +153,67 @@ test_that("sortListByName sorts a list with duplicated values by names", {
   expected <- list(a = "banana", b = "apple", c = "apple")
   expect_equal(result, expected)
 })
+
+###########
+# catList #
+###########
+
+my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "")
+
+# Test to check if catList correctly prints a simple list without any prefix or suffix
+test_that("catList prints simple list without prefix or suffix", {
+  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = "
+  output <- capture.output(catList(my_list))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to verify that catList works with a specified prefix and suffix
+test_that("catList works with prefix and suffix", {
+  expected_output <- "Start:\na = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = \nEnd"
+  output <- capture.output(catList(my_list, prefix = "Start:\n", suffix = "End\n"))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to ensure catList hides values based on the specified pattern
+test_that("catList hides values based on pattern", {
+  expected_output <- "a = 1\nb = <Not empty list>\nc = 3\nd = "
+  output <- capture.output(catList(my_list, hide_value_pattern = "b"))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to check that catList behaves normally with an empty hide_value_pattern
+test_that("catList works with empty hide_value_pattern", {
+  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = "
+  output <- capture.output(catList(my_list, hide_value_pattern = ""))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to verify how catList handles lists containing NA and empty strings
+test_that("catList handles list with NA and empty string", {
+  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = <Not empty double value>\nd = "
+  output <- capture.output(catList(my_list, hide_value_pattern = "c"))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to verify behavior with NA hide_value_pattern
+test_that("catList handles NA hide_value_pattern", {
+  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = "
+  output <- capture.output(catList(my_list, hide_value_pattern = NA))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to verify behavior with complex nested lists
+test_that("catList handles complex nested lists", {
+  complex_list <- list(a = 1, b = list(x = 10, y = list(z = 20)), c = 3)
+  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n$y$z\n[1] 20\n\n\nc = 3"
+  output <- capture.output(catList(complex_list))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})
+
+# Test to verify that empty lists are handled correctly
+test_that("catList handles empty lists", {
+  empty_list <- list()
+  expected_output <- ""
+  output <- capture.output(catList(empty_list))
+  expect_equal(paste(output, collapse = "\n"), expected_output)
+})

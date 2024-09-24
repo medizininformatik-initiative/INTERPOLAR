@@ -1,3 +1,33 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2024-08-21 10:04:46
+-- Rights definition file size        : 15036 Byte
+--
+-- Create SQL Tables in Schema "db_log"
+-- Create time: 2024-09-23 17:11:40
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  12_cre_table_raw_db_log.sql
+-- TEMPLATE:  template_cre_table.sql
+-- OWNER_USER:  db_log_user
+-- OWNER_SCHEMA:  db_log
+-- TAGS:  RAW
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  _raw
+-- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
+-- GRANT_TARGET_USER:  db_log_user
+-- GRANT_TARGET_USER (2):  db_user
+-- COPY_FUNC_SCRIPTNAME:  30_cds_in_to_db_log.sql
+-- COPY_FUNC_TEMPLATE:  template_copy_function.sql
+-- COPY_FUNC_NAME:  copy_raw_cds_in_to_db_log
+-- SCHEMA_2:  cds2db_in
+-- TABLE_POSTFIX_2:  _raw
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 -----------------------------------------------------
 -- Create SQL Tables in Schema "db_log" --
 -----------------------------------------------------
@@ -1309,22 +1339,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.encounter_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER encounter_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.encounter_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.encounter_raw_tr_ins_fkt();
-
-
 -- Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.patient_raw TO db_log_user;
@@ -1333,22 +1347,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.patient_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER patient_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.patient_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.patient_raw_tr_ins_fkt();
-
 
 -- Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
@@ -1359,22 +1357,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.condition_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER condition_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.condition_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.condition_raw_tr_ins_fkt();
-
-
 -- Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.medication_raw TO db_log_user;
@@ -1383,22 +1365,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.medication_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medication_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medication_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medication_raw_tr_ins_fkt();
-
 
 -- Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
@@ -1409,22 +1375,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.medicationrequest_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationrequest_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medicationrequest_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medicationrequest_raw_tr_ins_fkt();
-
-
 -- Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.medicationadministration_raw TO db_log_user;
@@ -1433,22 +1383,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.medicationadministration_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationadministration_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medicationadministration_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medicationadministration_raw_tr_ins_fkt();
-
 
 -- Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
@@ -1459,22 +1393,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.medicationstatement_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER medicationstatement_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.medicationstatement_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.medicationstatement_raw_tr_ins_fkt();
-
-
 -- Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.observation_raw TO db_log_user;
@@ -1483,22 +1401,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.observation_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER observation_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.observation_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.observation_raw_tr_ins_fkt();
-
 
 -- Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
@@ -1509,22 +1411,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.diagnosticreport_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER diagnosticreport_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.diagnosticreport_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.diagnosticreport_raw_tr_ins_fkt();
-
-
 -- Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.servicerequest_raw TO db_log_user;
@@ -1533,22 +1419,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.servicerequest_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER servicerequest_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.servicerequest_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.servicerequest_raw_tr_ins_fkt();
-
 
 -- Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
@@ -1559,22 +1429,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.procedure_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER procedure_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.procedure_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.procedure_raw_tr_ins_fkt();
-
-
 -- Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.consent_raw TO db_log_user;
@@ -1583,22 +1437,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.consent_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER consent_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.consent_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.consent_raw_tr_ins_fkt();
-
 
 -- Table "location_raw" in schema "db_log"
 ----------------------------------------------------
@@ -1609,22 +1447,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location_raw TO db_user; -- Additional authorizations for testing
 
-CREATE OR REPLACE FUNCTION db_log.location_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER location_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.location_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.location_raw_tr_ins_fkt();
-
-
 -- Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
 GRANT TRIGGER ON db_log.pids_per_ward_raw TO db_log_user;
@@ -1633,22 +1455,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward_raw TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward_raw TO db_user; -- Additional authorizations for testing
-
-CREATE OR REPLACE FUNCTION db_log.pids_per_ward_raw_tr_ins_fkt()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Enter the current time
-    NEW.input_datetime := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER pids_per_ward_raw_tr_ins_tr
-  BEFORE INSERT
-  ON db_log.pids_per_ward_raw
-  FOR EACH ROW
-  EXECUTE PROCEDURE db_log.pids_per_ward_raw_tr_ins_fkt();
-
 
 ------------------------------------------------------
 -- Comments on Tables in Schema "db_log" --

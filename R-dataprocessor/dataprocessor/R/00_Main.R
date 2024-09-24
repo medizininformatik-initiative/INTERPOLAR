@@ -9,7 +9,7 @@ processData <- function() {
   # Read the module configuration toml file.
   ###
   path2config_toml <- "./R-dataprocessor/dataprocessor_config.toml"
-  etlutils::initConstants(path2config_toml,
+  config <- etlutils::initConstants(path2config_toml,
                           c(MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30,
 
                             # default medication resource should be MedicationRequest and its
@@ -54,7 +54,8 @@ processData <- function() {
   ###
   etlutils::startLogging(PROJECT_NAME)
 
-  #etlutils::logBlockHeader()
+  # log all configuration parameters but hide value with parameter name starts with "FHIR_"
+  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 

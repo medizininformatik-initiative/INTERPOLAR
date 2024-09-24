@@ -2,6 +2,8 @@
 
 Die Datenbank "cds_hub_db" wird mit SQL-Scripten im Ordner "Postgres-cds_hub/init/" beim ersten Start (docker compose up) initialisiert. Die Daten werden in einem Volume "cds_hub_db-data" gespeichert.
 
+Eine detaillierte Beschreibung der Datenbankstruktur befindet sich in [DB_description.md](DB_description.md).
+
 ## Verbindung: Console
 
 Um sich mit der Datenbank auf der Console zu verbinden, führen Sie folgenden Befehl aus:
