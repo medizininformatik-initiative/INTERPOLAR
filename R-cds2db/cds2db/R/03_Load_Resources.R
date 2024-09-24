@@ -209,14 +209,13 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
     # Find common names between resource names and resource table names
     common_names <- intersect(resource_patterns, resource_table_names)
     # Iterate over each common name
-    error_messages <- c()
     for (name in common_names) {
       # Find the full resource names that match the current common name (case-insensitive)
       matching_indices <- which(name == resource_patterns)
       # Take the first match, if multiple
-      full_resource_name <- resource_patterns_full[matching_indices]
+      debug_parameter_name <- resource_patterns_full[matching_indices]
       # Get indices using the full resource name
-      indices <- etlutils::getIndices(get(full_resource_name))
+      indices <- etlutils::getIndices(get(debug_parameter_name))
       # Retrieve the original name to update the correct resource table
       original_name <- names(resource_tables)[match(name, tolower(names(resource_tables)))]
       # Check if indices is NA
@@ -229,15 +228,24 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
         invalid_indices <- indices[indices < 1 | indices > rows_count]
         # Only proceed if there are valid indices
         if (length(invalid_indices) > 0) {
-          error_messages <- c(error_messages, paste0(full_resource_name, ": the following indices are invalid. The table has only ", rows_count, " rows. Invalid indices: ", paste(invalid_indices, collapse = ", ")))
+          l <- length(invalid_indices)
+          # If there are more than 10 invalid indices, just the first 5 and the last 5 entries are displayed
+          # separately between 3 dots
+          if (l <= 10) {
+            invalid_indices_string <- invalid_indices
+          } else {
+            invalid_indices_string <- paste0(paste0(invalid_indices[1:5], collapse = ", "), " ... ",
+                                             paste0(invalid_indices[(l-5):l], collapse = ", "))
+          }
+          etlutils::catWarningMessage(paste0(
+            "Check '", debug_parameter_name, "': The following indices are invalid for resource ",
+            original_name, ". The table has only ", rows_count, " rows. Invalid indices: ",
+            paste(invalid_indices_string, collapse = ", ")))
         }
+        valide_indices <- setdiff(indices, invalid_indices)
         # Update the resource table with valid indices
-        resource_tables[[original_name]] <- resource_tables[[original_name]][indices, ]
+        resource_tables[[original_name]] <- resource_tables[[original_name]][valide_indices, ]
       }
-    }
-    if (length(error_messages)) {
-      catErrorMessage(paste0(error_messages, collapse = "\n"))
-      stop("Process stopped because not all resource debug filter indices are valid. See above. Fix indices in cds2db_config.toml.")
     }
   }
   #######################
