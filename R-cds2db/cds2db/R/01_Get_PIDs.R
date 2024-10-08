@@ -254,7 +254,7 @@ getEncounters <- function(table_description, current_datetime) {
 
     runLevel3('Download and Crack Encounters', {
       if (exists('DEBUG_ENCOUNTER_STATUS')) {
-        encounter_status <- DEBUG_ENCOUNTER_STATUS
+        encounter_status <- paste(DEBUG_ENCOUNTER_STATUS, collapse = ",")
       } else {
         encounter_status <- "in-progress"
       }
