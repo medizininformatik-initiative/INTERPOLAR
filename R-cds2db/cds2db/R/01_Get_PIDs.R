@@ -252,36 +252,56 @@ getEncounters <- function(table_description, current_datetime) {
 
     resource <- "Encounter"
 
-    runLevel3('Download and Crack Encounters', {
-      if (exists('DEBUG_ENCOUNTER_STATUS')) {
-        encounter_status <- paste(DEBUG_ENCOUNTER_STATUS, collapse = ",")
+    runLevel3("Download and Crack Encounters", {
+
+      # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
+      # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
+      # at 2)
+      if (exists("DEBUG_CURRENT_DATETIME_START") && exists("DEBUG_CURRENT_DATETIME_END")) {
+        encounter_dates <- c(
+          "date"   = paste0("sa", current_datetime[["start_datetime"]]),
+          "date"   = paste0("eb", current_datetime[["end_datetime"]])
+        )
+      # If there is no end date given, but a start date, then we search with 'lower than' (lt).
+      # If in the toml file a start date is given (parameter DEBUG_CURRENT_DATETIME_START) then
+      # this date replaces the current date of the system.
+      } else {
+        encounter_dates <- c(
+          "date"   = paste0("lt", current_datetime)
+        )
+      }
+
+      # default encounter status "in-progress" can be replaced in the toml file  by the
+      # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
+      # will be comma separated pasted together.
+      if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
+        encounter_status <- paste(FHIR_SEARCH_ENCOUNTER_STATUS, collapse = ",")
       } else {
         encounter_status <- "in-progress"
       }
 
-      if (exists('DEBUG_CURRENT_DATETIME_START') && exists('DEBUG_CURRENT_DATETIME_END')) {
-        request_encounter <- fhircrackr::fhir_url(
-          url        = FHIR_SERVER_ENDPOINT,
-          resource   = "Encounter",
-          parameters = etlutils::addParamToFHIRRequest(
-            c(
-              "date"   = paste0("sa", current_datetime[["start_datetime"]]),
-              "date"   = paste0("eb", current_datetime[["end_datetime"]]),
-              "status" = encounter_status
-            )
-          )
-        )
+      # same as the status with the parameter FHIR_SEARCH_ENCOUNTER_CLASS for the FHIR search
+      # parameter 'class'
+      if (exists("FHIR_SEARCH_ENCOUNTER_CLASS")) {
+        encounter_class <- paste(FHIR_SEARCH_ENCOUNTER_CLASS, collapse = ",")
       } else {
-        request_encounter <- fhircrackr::fhir_url(
-          url        = FHIR_SERVER_ENDPOINT,
-          resource   = "Encounter",
-          parameters = etlutils::addParamToFHIRRequest(c(
-            "date"   = paste0("lt", current_datetime),
-            "status" = encounter_status)
-          )
-        )
+        encounter_class <- NA
       }
 
+      request_encounter <- fhircrackr::fhir_url(
+        url        = FHIR_SERVER_ENDPOINT,
+        resource   = "Encounter",
+        parameters = etlutils::addParamToFHIRRequest(
+          c(
+            dates,
+            "status" = encounter_status,
+            "class" = encounter_class
+          )
+        )
+      )
+
+
+      # stop the execution and print the current result of FHIR search request (DEBUG)
       if (etlutils::isDefinedAndTrue("DEBUG_TEST_ENCOUNTER_REQUEST")) {
         stop(paste("DEBUG_TEST_ENCOUNTER_REQUEST:\n", request_encounter, "\n"))
       }
