@@ -9,11 +9,11 @@
 #'
 #' @return the filter patterns which are converted to a list of lists
 #'
-convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 'ENCOUNTER_FILTER_PATTERN') {
+convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = "ENCOUNTER_FILTER_PATTERN") {
   ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
 
   if (!length(ward_pids_filter_patterns)) {
-    stopWithError('No ward filter patterns found with prefix', filter_patterns_global_variable_name_prefix, 'in toml file')
+    stopWithError("No ward filter patterns found with prefix", filter_patterns_global_variable_name_prefix, "in toml file")
   }
 
   # Initializes an empty list to store the final converted filter patterns. Each element in this list
@@ -24,21 +24,21 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   ward_index <- 1
   for (ward_filter_patterns in ward_pids_filter_patterns) {
     single_ward_converted_filter_patterns <- list()
-    ward_name <- paste('Station', ward_index)
+    ward_name <- paste("Station", ward_index)
     for (filter_patterns in ward_filter_patterns) { # filter_patterns <- ward_pids_filter_patterns[[1]]
       for (filter_pattern in filter_patterns) { # filter_pattern <- filter_patterns$value[2]
-        if (startsWith(filter_pattern, 'ward_name')) {
+        if (startsWith(filter_pattern, "ward_name")) {
           ward_name <- etlutils::getBetweenQuotes(filter_pattern)
         } else {
           and_conditions <- list()
-          filter_pattern_conditions <- unlist(strsplit(filter_pattern, '\\+'))
+          filter_pattern_conditions <- unlist(strsplit(filter_pattern, "\\+"))
           for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
-            condition_key_value <- unlist(strsplit(condition, '='))
+            condition_key_value <- unlist(strsplit(condition, "="))
             condition_column <- trimws(condition_key_value[1])
             condition_value <- etlutils::getBetweenQuotes(condition_key_value[2])
             and_conditions[[condition_column]] <- condition_value
           }
-          single_ward_converted_filter_patterns[[paste0('Condition_', length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
+          single_ward_converted_filter_patterns[[paste0("Condition_", length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
         }
       }
       converted_filter_patterns[[length(converted_filter_patterns) + 1]] <- single_ward_converted_filter_patterns
@@ -70,7 +70,7 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
   cols_vector <- c(cols_vector, ...)
   cols_vector <- sort(unique(cols_vector))
   fhir_table_desc <- fhircrackr::fhir_table_description(
-    resource = 'Encounter',
+    resource = "Encounter",
     cols = cols_vector,
     sep = SEP,
     brackets = NULL
@@ -168,7 +168,7 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
   for (line in lines) {
     line <- trimws(sub("#.*$", "", line)) # remove comments (starts with '#')
     if (nchar(line)) {
-      if (startsWith(line, 'ward_name')) {
+      if (startsWith(line, "ward_name")) {
         pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
         single_ward_pids <- list()
         ward_name <- etlutils::getBetweenQuotes(line)
@@ -212,7 +212,7 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
     ward_encounters <- filterResources(encounters, ward_filter_patterns)
-    writeRData(ward_encounters, 'pid_source_encounter_filtered')
+    writeRData(ward_encounters, "pid_source_encounter_filtered")
     pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
   }
@@ -250,7 +250,7 @@ getEncounters <- function(table_description, current_datetime) {
     # Refresh token, if defined
     refreshFHIRToken()
 
-    resource <- 'Encounter'
+    resource <- "Encounter"
 
     runLevel3('Download and Crack Encounters', {
       if (exists('DEBUG_ENCOUNTER_STATUS')) {
@@ -274,10 +274,10 @@ getEncounters <- function(table_description, current_datetime) {
       } else {
         request_encounter <- fhircrackr::fhir_url(
           url        = FHIR_SERVER_ENDPOINT,
-          resource   = 'Encounter',
+          resource   = "Encounter",
           parameters = etlutils::addParamToFHIRRequest(c(
-            'date'   = paste0('lt', current_datetime),
-            'status' = encounter_status)
+            "date"   = paste0("lt", current_datetime),
+            "status" = encounter_status)
           )
         )
       }
@@ -289,23 +289,23 @@ getEncounters <- function(table_description, current_datetime) {
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
                                                            table_description = table_description,
                                                            max_bundles = MAX_ENCOUNTER_BUNDLES,
-                                                           log_errors  = 'enc_error.xml')
+                                                           log_errors  = "enc_error.xml")
 
       if (etlutils::isSimpleNA(table_enc)) {
-        stop('The FHIR request did not return any available Encounter bundles.\n Request: ',
+        stop("The FHIR request did not return any available Encounter bundles.\n Request: ",
              etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE))
       }
 
     })
 
-    runLevel3Line('change column classes', {
+    runLevel3Line("change column classes", {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
     etlutils::printAllTables(table_enc)
 
-    runLevel3Line('Save and Delete Encounters Table', {
-      etlutils::writeRData(table_enc, 'pid_source_encounter_unfiltered')
+    runLevel3Line("Save and Delete Encounters Table", {
+      etlutils::writeRData(table_enc, "pid_source_encounter_unfiltered")
     })
 
     return(table_enc)
@@ -324,7 +324,7 @@ getEncounters <- function(table_description, current_datetime) {
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) {
   read_pids_from_file <- !is.na(path_to_PID_list_file)
   if (read_pids_from_file) {
-    etlutils::runLevel3(paste('Get Patient IDs by file', path_to_PID_list_file), {
+    etlutils::runLevel3(paste("Get Patient IDs by file", path_to_PID_list_file), {
       pids_per_ward <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
     })
   } else {
