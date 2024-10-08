@@ -131,6 +131,20 @@ isErrorOccured <- function() {
   exists("ERROR_MESSAGE", envir = .lib_logging_env)
 }
 
+#' Check if the error message contains an intentional debug test error
+#'
+#' This function checks whether the error message returned by `getErrorMessage()` contains the string
+#' "DEBUG_TEST_", indicating that it is an intentional debug test error.
+#'
+#' @return A logical value: \code{TRUE} if the error message contains "DEBUG_TEST_"; \code{FALSE}
+#' otherwise.
+#'
+#' @export
+isIntentionallyDebugTestError <- function() {
+  err <- getErrorMessage()
+  grepl("DEBUG_TEST_", err)
+}
+
 #' Print the error message if an error has occurred
 #'
 #' This function prints the error message stored in the logging environment if an error has occurred.

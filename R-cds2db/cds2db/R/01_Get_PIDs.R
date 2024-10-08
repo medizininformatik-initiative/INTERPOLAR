@@ -282,6 +282,10 @@ getEncounters <- function(table_description, current_datetime) {
         )
       }
 
+      if (etlutils::isDefinedAndTrue("DEBUG_TEST_ENCOUNTER_REQUEST")) {
+        stop(paste("DEBUG_TEST_ENCOUNTER_REQUEST:\n", request_encounter, "\n"))
+      }
+
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
                                                            table_description = table_description,
                                                            max_bundles = MAX_ENCOUNTER_BUNDLES,

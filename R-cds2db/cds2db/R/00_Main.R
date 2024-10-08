@@ -119,8 +119,15 @@ retrieve <- function() {
   }))
 
   if (etlutils::isErrorOccured()) {
-    finish_message <- "Module 'cds2db' finished with errors (see details above).\n"
-    finish_message <- paste0(finish_message, etlutils::getErrorMessage())
+    if (etlutils::isIntentionallyDebugTestError()) {
+      finish_message <- "\nModule 'cds2db' Debug Test Message:\n"
+    } else {
+      finish_message <- "\nModule 'cds2db' finished with errors (see details above).\n"
+    }
+    # Remove the irrelevant part from the error message, that the error occurs in our checkError()
+    # function. This message part is the begiining of the error message and ends with a " : ".
+    error_message <- sub("^[^:]*: ", "", etlutils::getErrorMessage())
+    finish_message <- paste0(finish_message, error_message)
   } else if (all_empty_fhir && all_empty_raw) {
     finish_message <- "Module 'cds2db' finished with no errors but the result was empty (see warnings above).\n"
   } else {
