@@ -282,10 +282,15 @@ getEncounters <- function(table_description, current_datetime) {
 
       # same as the status with the parameter FHIR_SEARCH_ENCOUNTER_CLASS for the FHIR search
       # parameter 'class'
+      encounter_class <- NA
       if (exists("FHIR_SEARCH_ENCOUNTER_CLASS")) {
         encounter_class <- paste(FHIR_SEARCH_ENCOUNTER_CLASS, collapse = ",")
-      } else {
-        encounter_class <- NA
+      }
+
+      # filtering for the IDs of referenced Locations in the Encounters
+      encounter_locations <- NA
+      if (exists("FHIR_SEARCH_LOCATION_IDS")) {
+        encounter_locations <- paste(FHIR_SEARCH_LOCATION_IDS, collapse = ",")
       }
 
       request_encounter <- fhircrackr::fhir_url(
@@ -293,9 +298,10 @@ getEncounters <- function(table_description, current_datetime) {
         resource   = "Encounter",
         parameters = etlutils::addParamToFHIRRequest(
           c(
-            dates,
+            encounter_dates,
             "status" = encounter_status,
-            "class" = encounter_class
+            "class" = encounter_class,
+            "location" = encounter_locations
           )
         )
       )
