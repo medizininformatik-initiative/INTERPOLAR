@@ -8,5 +8,4 @@ rm(list = ls())
 library(etlutils)
 library(db2frontend)
 
-db2frontend::importDB2Redcap()
-db2frontend::importRedcap2DB()
+db2frontend::retrieve()

@@ -2,3 +2,4 @@
 
 export(importDB2Redcap)
 export(importRedcap2DB)
+export(retrieve)
