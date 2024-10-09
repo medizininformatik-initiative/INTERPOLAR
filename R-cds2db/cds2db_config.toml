@@ -64,14 +64,51 @@ COUNT_PER_BUNDLE                   = 100 # as default or use server default ? Th
 SORT                               = ""  # some Fhir server require a sort parameter per default
 IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
 
-# polar_download_by_ids_and_crack_parallel() and polar_download_and_crack_parallel()
 MAX_CORES                          = 0 # paralellization, number of cores used, 0: unlimited
 FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack parallel with basic method, avoid polar_download_by_ids_and_crack_parallel()
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
 
 
+[retrieve.fhir-search]
+
+# Only encounters with exactly this status are found. If this Debug parameter is not set, the default
+# status "in-progress" applies.
+#
+# The following expression styles are allowed:
+#
+# single status:
+#FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
+#
+# multiple status can be wtitten as comma separated list:
+#FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
+
+
+# Only encounters with exactly this classes are found. If this Debug parameter is not set, then the
+# class attribute will not be considered in the FHIR search request.
+# See https://simplifier.net/packages/de.basisprofil.r4/1.4.0/files/656744
+#
+# The following expression styles are allowed:
+#
+# single class:
+#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP"
+#
+# multiple classes can be wtitten as comma separated list:
+#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,AMB"
+
+
+# If the IDs of the Locations to which the Encounters refer are known, they can be entered here as
+# a list or comma-separated and thus appended to the FHIR search query in order to find the relevant
+# Encounters.
+#FHIR_SEARCH_LOCATION_IDS = [
+#  "location_reference1",
+#  "location_reference2",
+#  "location_reference3"
+#]
+
+
 [retrieve.debug]
 
+[retrieve.debug.fhir-search]
 ###################
 # FOR DEBUG ONLY: #
 ###################
@@ -87,9 +124,7 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 #DEBUG_CURRENT_DATETIME_START = "2020-06-30 21:25:00"
 #DEBUG_CURRENT_DATETIME_END = "2020-08-30 21:25:00"
 
-# Only encounters with exactly this status are found. If this Debug parameter is not set, the status
-# "in-progress" applies.
-#DEBUG_ENCOUNTER_STATUS = "finished"
+[retrieve.debug.filtering]
 
 # These parameters can be set to filter the resource table to specific rows for each resource after
 # downloading. The valid range for indices is, for example, "1, 3-5, 7", which stands for the
@@ -97,6 +132,8 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # then all lines of the respective resource are deleted. The "DEBUG_FILTER_" variables that are
 # commented out are not filtered.
 # This can be used to pass only certain data of a query in test cases.
+# NOTE: This filter does not affect any FHIR search request, but only filters the resources found
+# afterwards.
 #DEBUG_FILTER_CONDITION = "1-10"
 #DEBUG_FILTER_CONSENT = ""
 #DEBUG_FILTER_DIAGNOSTICREPORT = ""
@@ -114,7 +151,19 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # This debug parameter restricts the table pids_per_ward by filtering out all patients who have not
 # the corresponding string in patient ID.
 # This parameter can also be used to allow only certain data of a query to pass in test cases.
+# NOTE: This filter does not affect any FHIR search request, but only filters the patients found
+# afterwards.
 #DEBUG_PATIENT_ID_PATTERN = "UKB"
+
+
+[retrieve.debug.test]
+
+# Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.
+# This will only output the request, but not execute the entire 'cds2db' module.
+# Use this to see the result of the above debug parameters or, without the debug parameters, the
+# first FHIR search request for Encounter.
+#DEBUG_TEST_ENCOUNTER_REQUEST = true
+
 
 [retrieve.patient_id_filtering]
 
