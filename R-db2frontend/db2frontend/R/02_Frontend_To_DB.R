@@ -23,7 +23,6 @@ getFrontendTableNames <- function() {
 #' @return A data.table that has been adjusted to match the PostgreSQL table structure,
 #'   including appropriate column names and converted data types.
 #'
-#' @export
 adjustTableToDBTable <- function(con, dt, table_name) {
   # 1. Get the PostgreSQL table columns and types
   db_columns <- etlutils::getDBTableColumns(con, table_name)
@@ -65,7 +64,7 @@ importRedcap2DB <- function() {
 
     # get data from REDCap
     for (form_name in form_names) {
-      dt <-data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
+      dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
       redcapAPI::reviewInvalidRecords(dt)
       data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
       tables2Export[[form_name]] <- dt
