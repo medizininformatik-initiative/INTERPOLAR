@@ -532,7 +532,7 @@ createFrontendTables <- function() {
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
           codes <- parseQueryList(codes)
-          table_name <- getFullTableName("observation")
+          table_name <- getFullTableName("Observation")
           # Extract the Observations by direct encounter references
           query <- paste0("SELECT * FROM ", table_name, "\n",
                           "  WHERE obs_encounter_ref = 'Encounter/", enc_id, "' AND\n",
@@ -585,7 +585,7 @@ createFrontendTables <- function() {
   if (!nrow(pids_per_ward)) {
     message <- paste0("WARNING: The pids_per_ward table is empty.\n",
                                 "Hint: Please ensure there was enoungh time between the 'cds2db' module and the 'dataprocessor' module. At least a little bit more than 1 minute.")
-    message <- getErrorOrWarningMessage(message, "pids_per_ward")
+    message <- getErrorOrWarningMessage(message, pids_per_ward_table_name)
     stop(message)
   }
 
@@ -707,25 +707,6 @@ getResourceAbbreviation <- function(resource_name) {
   resource_to_abbreviation[[resource_name]]
 }
 
-#' Get PID Column for Resource
-#'
-#' This function retrieves the name of the PID column for a given resource.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the PID column for the specified resource.
-#'
-getPIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  if (resource_name == "patient") {
-    pid_column <- "id"
-  } else {
-    pid_column <- "patient_id"
-  }
-  pid_column <- paste0(getResourceAbbreviation(resource_name), "_", pid_column)
-  return(pid_column)
-}
-
 #' Get ID Column for Resource
 #'
 #' This function retrieves the name of the ID column for a given resource.
@@ -740,6 +721,43 @@ getIDColumn <- function(resource_name) {
   return(id_column)
 }
 
+#' Get Foreign ID Column for Resource
+#'
+#' This function retrieves the name of the foreign ID column for a given resource and a
+#' specified foreign resource. If the resource and foreign resource are the same, it returns
+#' the ID column for the resource itself.
+#'
+#' @param resource_name A character string representing the name of the primary resource.
+#' @param foreign_resource_name A character string representing the name of the foreign
+#' resource for which the ID column should be retrieved.
+#'
+#' @return A character string containing the name of the foreign ID column for the
+#' specified resource pair.
+#'
+getForeignIDColumn <- function(resource_name, foreign_resource_name) {
+  resource_name <- tolower(resource_name)
+  foreign_resource_name <- tolower(foreign_resource_name)
+  # returns not a real foreign ID if the resource name and the foreign_resource_name are equals
+  if (resource_name == foreign_resource_name) {
+    getIDColumn(resource_name)
+  }
+  foreign_id_column <- paste0(foreign_resource_name, "_id")
+  foreign_id_column <- paste0(getResourceAbbreviation(resource_name), "_", foreign_id_column)
+  return(pid_column)
+}
+
+#' Get PID Column for Resource
+#'
+#' This function retrieves the name of the PID column for a given resource.
+#'
+#' @param resource_name A character string representing the name of the resource.
+#'
+#' @return A character string containing the name of the PID column for the specified resource.
+#'
+getPIDColumn <- function(resource_name) {
+  getForeignIDColumn(resource_name, "patient")
+}
+
 #' Get Encounter ID/Reference Column for Resource
 #'
 #' This function retrieves the name of the column with the reference to Encounters for a given
@@ -750,12 +768,5 @@ getIDColumn <- function(resource_name) {
 #' @return A character string containing the name of the Encounter ID column for the specified resource.
 #'
 getEncIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  if (resource_name == "encounter") {
-    enc_id_column <- "id"
-  } else {
-    enc_id_column <- "encounter_id"
-  }
-  enc_id_column <- paste0(getResourceAbbreviation(resource_name), "_", enc_id_column)
-  return(enc_id_column)
+  getForeignIDColumn(resource_name, "encounter")
 }
