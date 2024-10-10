@@ -22,12 +22,11 @@ getLastProcessingNumber <- function() {
 #' This function loads all data from a database table that has the most recent timestamp.
 #' It constructs a SQL query to fetch records where the timestamp is the latest in the table.
 #'
-#' @param table_name_part A string representing part of the table name to search for.
+#' @param table_name the table name
 #' @return A data frame containing the records with the most recent timestamp from the specified table.
 #'
-loadLastImportedDatasetsFromDB <- function(table_name_part) {
+loadLastImportedDatasetsFromDB <- function(table_name) {
   db_connection_read <- getDatabaseReadConnection()
-  table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
   last_processing_nr <- getLastProcessingNumber()
   # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
@@ -108,7 +107,19 @@ parseQueryList <- function(list_string, split = " ") {
 # Load Resources by ID (= own ID or PID or Enc ID) #
 ####################################################
 
-#' Get Load Resources Last Status From Database Query
+#' Get Full Table Name for Resource
+#'
+#' This function constructs the full table name for a given resource by converting the
+#' resource name to lowercase and appending it to a prefix and suffix.
+#'
+#' @param resource_name A character string representing the name of the resource.
+#'
+#' @return A character string containing the full table name for the specified resource.
+#'
+getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name), "_all")
+
+
+#' Load Resources Last Status From Database Query
 #'
 #' This function constructs a SQL statement to retrieve the last status of load resources
 #' from a specified table in the database. It utilizes various helper functions to
@@ -119,11 +130,11 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 #' @return A character string representing the SQL query.
 #'
-getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
+getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
-  table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
+  table_name <- getFullTableName(resource_name)
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
     "SELECT * FROM ", table_name, " a\n",
@@ -173,7 +184,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
 #'
 runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
-  statement <- getLoadResourcesLastStatusFromDBQuery(resource_name, filter)
+  statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
   db_connection_read <- getDatabaseReadConnection()
   etlutils::dbGetQuery(db_connection_read, statement, log)
 }
@@ -190,7 +201,7 @@ runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
 #' @return A data frame containing the last status of load resources.
 #'
 loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
-  statement <- getLoadResourcesLastStatusFromDBQuery(resource_name, filter = "")
+  statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
   db_connection_read <- getDatabaseReadConnection()
   etlutils::dbGetQuery(db_connection_read, statement, log)
 }
@@ -275,7 +286,6 @@ createFrontendTables <- function() {
   # information such as related tables and database connection details. It can be
   # used to provide more context when reporting errors or warnings.
   getErrorOrWarningMessage <- function(text, tables = NA, db_connection = getDatabaseReadConnection()) {
-    tables <- if (!etlutils::isSimpleNA(tables)) sapply(tables, function(table_name_part) getFirstTableWithNamePart(db_connection, table_name_part)) else NA
     tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
     db_connection <- if (!etlutils::isSimpleNA(db_connection)) paste0(" DB connection: ", etlutils::getPrintString(db_connection)) else ""
     text <- paste0(text, tables, db_connection)
@@ -369,7 +379,7 @@ createFrontendTables <- function() {
     query_datetime <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
     db_read_connection <- getDatabaseReadConnection()
-    table_name <- getFirstTableWithNamePart(db_read_connection, "encounter_all")
+    table_name <- getFullTableName("encounter")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
                     "  enc_partof_id IS NULL AND\n",
@@ -380,7 +390,7 @@ createFrontendTables <- function() {
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
     query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
-    table_name <- getFirstTableWithNamePart(db_read_connection, "condition_all")
+    table_name <- getFullTableName("condition")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
     conditions <- etlutils::dbGetQuery(db_read_connection, query, query_log)
@@ -462,7 +472,7 @@ createFrontendTables <- function() {
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
           codes <- parseQueryList(codes)
-          table_name <- getFirstTableWithNamePart(db_read_connection, "observation_all")
+          table_name <- getFullTableName("Observation")
           # Extract the Observations by direct encounter references
           query <- paste0("SELECT * FROM ", table_name, "\n",
                           "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
@@ -507,13 +517,14 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward <- loadLastImportedDatasetsFromDB("pids_per_ward")
+  pids_per_ward_table_name <- getFullTableName("pids_per_ward")
+  pids_per_ward <- loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
     message <- paste0("WARNING: The pids_per_ward table is empty.\n",
                                 "Hint: Please ensure there was enoungh time between the 'cds2db' module and the 'dataprocessor' module. At least a little bit more than 1 minute.")
-    message <- getErrorOrWarningMessage(message, "pids_per_ward")
+    message <- getErrorOrWarningMessage(message, pids_per_ward_table_name)
     stop(message)
   }
 
@@ -633,25 +644,6 @@ getResourceAbbreviation <- function(resource_name) {
   resource_to_abbreviation[[resource_name]]
 }
 
-#' Get PID Column for Resource
-#'
-#' This function retrieves the name of the PID column for a given resource.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the PID column for the specified resource.
-#'
-getPIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  if (resource_name == "patient") {
-    pid_column <- "id"
-  } else {
-    pid_column <- "patient_id"
-  }
-  pid_column <- paste0(getResourceAbbreviation(resource_name), "_", pid_column)
-  return(pid_column)
-}
-
 #' Get ID Column for Resource
 #'
 #' This function retrieves the name of the ID column for a given resource.
@@ -666,6 +658,43 @@ getIDColumn <- function(resource_name) {
   return(id_column)
 }
 
+#' Get Foreign ID Column for Resource
+#'
+#' This function retrieves the name of the foreign ID column for a given resource and a
+#' specified foreign resource. If the resource and foreign resource are the same, it returns
+#' the ID column for the resource itself.
+#'
+#' @param resource_name A character string representing the name of the primary resource.
+#' @param foreign_resource_name A character string representing the name of the foreign
+#' resource for which the ID column should be retrieved.
+#'
+#' @return A character string containing the name of the foreign ID column for the
+#' specified resource pair.
+#'
+getForeignIDColumn <- function(resource_name, foreign_resource_name) {
+  resource_name <- tolower(resource_name)
+  foreign_resource_name <- tolower(foreign_resource_name)
+  # returns not a real foreign ID if the resource name and the foreign_resource_name are equals
+  if (resource_name == foreign_resource_name) {
+    getIDColumn(resource_name)
+  }
+  foreign_id_column <- paste0(foreign_resource_name, "_id")
+  foreign_id_column <- paste0(getResourceAbbreviation(resource_name), "_", foreign_id_column)
+  return(pid_column)
+}
+
+#' Get PID Column for Resource
+#'
+#' This function retrieves the name of the PID column for a given resource.
+#'
+#' @param resource_name A character string representing the name of the resource.
+#'
+#' @return A character string containing the name of the PID column for the specified resource.
+#'
+getPIDColumn <- function(resource_name) {
+  getForeignIDColumn(resource_name, "patient")
+}
+
 #' Get Encounter ID/Reference Column for Resource
 #'
 #' This function retrieves the name of the column with the reference to Encounters for a given
@@ -676,12 +705,5 @@ getIDColumn <- function(resource_name) {
 #' @return A character string containing the name of the Encounter ID column for the specified resource.
 #'
 getEncIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  if (resource_name == "encounter") {
-    enc_id_column <- "id"
-  } else {
-    enc_id_column <- "encounter_id"
-  }
-  enc_id_column <- paste0(getResourceAbbreviation(resource_name), "_", enc_id_column)
-  return(enc_id_column)
+  getForeignIDColumn(resource_name, "encounter")
 }
