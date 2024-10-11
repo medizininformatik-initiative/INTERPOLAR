@@ -306,11 +306,8 @@ getEncounters <- function(table_description, current_datetime) {
         )
       )
 
-
       # stop the execution and print the current result of FHIR search request (DEBUG)
-      if (etlutils::isDefinedAndTrue("DEBUG_TEST_ENCOUNTER_REQUEST")) {
-        stop(paste("DEBUG_TEST_ENCOUNTER_REQUEST:\n", request_encounter, "\n"))
-      }
+      checkDebugTestError("DEBUG_TEST_ENCOUNTER_REQUEST", request_encounter)
 
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
                                                            table_description = table_description,

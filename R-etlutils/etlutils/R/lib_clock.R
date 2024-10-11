@@ -265,9 +265,10 @@ Clock = setRefClass(
       # find row of current running process
       last_row <- max(which(.history$state == 'RUNNING'))
       # add end time, error and state to this row
+      is_error <- inherits(err, 'try-error') && !isDebugTestError(err)
       .history[last_row, 'end'] <<- now_
-      .history[last_row, 'error'] <<- if (inherits(err, 'try-error')) err else ''
-      .history[last_row, 'state'] <<- if (inherits(err, 'try-error')) 'ERROR' else 'OK'
+      .history[last_row, 'error'] <<- if (is_error) err else ''
+      .history[last_row, 'state'] <<- if (is_error) 'ERROR' else 'OK'
       # if 0 < verbose print some messages
       if (0 < verbose) {
         cat(paste0('finish   ', message, ': ', .history[last_row, end], '\n'))
