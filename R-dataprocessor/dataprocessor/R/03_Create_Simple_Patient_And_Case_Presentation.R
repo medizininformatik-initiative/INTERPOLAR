@@ -516,7 +516,6 @@ createFrontendTables <- function() {
     }
     return(enc_frontend_table)
   }
-
   pids_per_ward_table_name <- getFullTableName("pids_per_ward")
   pids_per_ward <- loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
@@ -612,98 +611,4 @@ createFrontendTables <- function() {
                                  getDatabaseWriteConnection(),
                                  table_name = "fall_fe",
                                  clear_before_insert = TRUE)
-}
-
-# List with resource abbreviations
-resource_to_abbreviation <- list(
-  condition = "con",
-  consent = "cons",
-  diagnosticreport = "diagrep",
-  encounter = "enc",
-  location = "loc",
-  medication = "med",
-  medicationadministration = "medadm",
-  medicationrequest = "medreq",
-  medicationstatement = "medstat",
-  observation = "obs",
-  patient = "pat",
-  procedure = "proc",
-  servicerequest = "servreq"
-)
-
-#' Get Abbreviation for Resource Name
-#'
-#' This function retrieves the abbreviation for a given resource name.
-#'
-#' @param resource_name A character string representing the resource name.
-#'
-#' @return A character string containing the abbreviation for the specified resource name.
-#'
-getResourceAbbreviation <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  resource_to_abbreviation[[resource_name]]
-}
-
-#' Get ID Column for Resource
-#'
-#' This function retrieves the name of the ID column for a given resource.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the ID column for the specified resource.
-#'
-getIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  id_column <- paste0(getResourceAbbreviation(resource_name), "_id")
-  return(id_column)
-}
-
-#' Get Foreign ID Column for Resource
-#'
-#' This function retrieves the name of the foreign ID column for a given resource and a
-#' specified foreign resource. If the resource and foreign resource are the same, it returns
-#' the ID column for the resource itself.
-#'
-#' @param resource_name A character string representing the name of the primary resource.
-#' @param foreign_resource_name A character string representing the name of the foreign
-#' resource for which the ID column should be retrieved.
-#'
-#' @return A character string containing the name of the foreign ID column for the
-#' specified resource pair.
-#'
-getForeignIDColumn <- function(resource_name, foreign_resource_name) {
-  resource_name <- tolower(resource_name)
-  foreign_resource_name <- tolower(foreign_resource_name)
-  # returns not a real foreign ID if the resource name and the foreign_resource_name are equals
-  if (resource_name == foreign_resource_name) {
-    getIDColumn(resource_name)
-  }
-  foreign_id_column <- paste0(foreign_resource_name, "_id")
-  foreign_id_column <- paste0(getResourceAbbreviation(resource_name), "_", foreign_id_column)
-  return(pid_column)
-}
-
-#' Get PID Column for Resource
-#'
-#' This function retrieves the name of the PID column for a given resource.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the PID column for the specified resource.
-#'
-getPIDColumn <- function(resource_name) {
-  getForeignIDColumn(resource_name, "patient")
-}
-
-#' Get Encounter ID/Reference Column for Resource
-#'
-#' This function retrieves the name of the column with the reference to Encounters for a given
-#' resource type.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the Encounter ID column for the specified resource.
-#'
-getEncIDColumn <- function(resource_name) {
-  getForeignIDColumn(resource_name, "encounter")
 }
