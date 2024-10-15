@@ -612,3 +612,11 @@ createFrontendTables <- function() {
                                  table_name = "fall_fe",
                                  clear_before_insert = TRUE)
 }
+
+
+
+etlutils::runLevel2("Study 1a Create Simple Patient and Case View", {
+  createFrontendTables()
+})
+
+

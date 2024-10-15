@@ -32,6 +32,7 @@ getDatabaseConnection <- function(schema_name) {
 #'
 #' @return A database connection object for the default read schema.
 #'
+#' @export
 getDatabaseReadConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_SCHEMA_OUT)
 
 #' Get Database Write Connection
@@ -41,6 +42,7 @@ getDatabaseReadConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_S
 #'
 #' @return A database connection object for the default write schema.
 #'
+#' @export
 getDatabaseWriteConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_SCHEMA_IN)
 
 #' Close All Database Connections
