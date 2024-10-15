@@ -675,3 +675,11 @@ createFrontendTables <- function() {
                                  log = VERBOSE >= VL_90_FHIR_RESPONSE,
                                  stop_if_table_not_empty = TRUE)
 }
+
+
+
+etlutils::runLevel2("Study 1a Create Simple Patient and Case View", {
+  createFrontendTables()
+})
+
+
