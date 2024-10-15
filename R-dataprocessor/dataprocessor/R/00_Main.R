@@ -3,10 +3,6 @@
 #' This function iterates over the submodule directories in the package, sourcing all R scripts in the directory.
 #' If a Start.R file is present, it will be sourced after all other R scripts in the submodule directory.
 #'
-#' @param none No parameters are required.
-#'
-#' @return Nothing is returned. This function performs actions by sourcing scripts in each submodule.
-#'
 runSubmodules <- function() {
   # Path to the submodules directory
   submodule_path <- system.file("submodules", package = "dataprocessor")
@@ -19,24 +15,23 @@ runSubmodules <- function() {
     submodule_name <- basename(dir)
 
     # Source all R scripts in the directory
-    etlutils::runLevel1(paste0("Source submodule scripts in ", submodule_name), {
-      r_scripts <- list.files(dir, pattern = "\\.R$", full.names = TRUE)
+    etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
 
+      r_scripts <- list.files(dir, pattern = "\\.R$", full.names = TRUE)
       for (script in r_scripts) {
         # Source each R script except Start.R
         if (basename(script) != "Start.R") {
           source(script)
         }
       }
-    })
 
-    # Check for Start.R and source it if exists
-    start_script <- file.path(dir, "Start.R")
-    if (file.exists(start_script)) {
-      etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
+      # Check for Start.R and source it if exists
+      start_script <- file.path(dir, "Start.R")
+      if (file.exists(start_script)) {
         source(start_script)
-      })
-    }
+      }
+
+    })
   }
 }
 
