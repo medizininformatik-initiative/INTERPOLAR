@@ -607,7 +607,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #' @export
 loadFHIRResourcesByOwnID <- function(ids, table_description) {
   resource <- table_description@resource@.Data
-  if (!rlang::is_empty(ids)) {
+  if (length(ids)) {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
       resource = resource,
       id_param_str = '_id',

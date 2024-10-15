@@ -110,7 +110,7 @@ fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name
   step <- 1
   repeat {
     prefixes <- getUniquePrefixes(step)
-    if (!rlang::is_empty(prefixes)) {
+    if (length(prefixes)) {
       for (prefix in prefixes) {
         columns <- getColumns(prefix)
         melted_data <- fhircrackr::fhir_melt(melted_data, columns, brackets, sep, all_columns = TRUE)
