@@ -1,11 +1,13 @@
-#' Run submodules by sourcing the Start.R script or all R scripts in each submodule directory
+#' Run submodules by sourcing all R scripts in each submodule directory, including Start.R
 #'
-#' This function iterates over the submodule directories in the package,
-#' sourcing the Start.R file if present. If no Start.R file is found, it
-#' sources all R scripts in the directory.
+#' This function iterates over the submodule directories in the package, sourcing all R scripts in the directory.
+#' If a Start.R file is present, it will be sourced after all other R scripts in the submodule directory.
+#'
+#' @param none No parameters are required.
+#'
+#' @return Nothing is returned. This function performs actions by sourcing scripts in each submodule.
 #'
 runSubmodules <- function() {
-
   # Path to the submodules directory
   submodule_path <- system.file("submodules", package = "dataprocessor")
 
@@ -14,22 +16,25 @@ runSubmodules <- function() {
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
-    start_script <- file.path(dir, "Start.R")
     submodule_name <- basename(dir)
 
-    # If Start.R exists, source it
+    # Source all R scripts in the directory
+    etlutils::runLevel1(paste0("Source submodule scripts in ", submodule_name), {
+      r_scripts <- list.files(dir, pattern = "\\.R$", full.names = TRUE)
+
+      for (script in r_scripts) {
+        # Source each R script except Start.R
+        if (basename(script) != "Start.R") {
+          source(script)
+        }
+      }
+    })
+
+    # Check for Start.R and source it if exists
+    start_script <- file.path(dir, "Start.R")
     if (file.exists(start_script)) {
       etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
         source(start_script)
-      })
-    } else {
-      etlutils::runLevel1(paste0("Source submodule scripts in ", submodule_name), {
-        # Otherwise, source all R scripts in the directory
-        scripts <- list.files(dir, pattern = "\\.R$", full.names = TRUE)
-
-        for (script in scripts) {
-          source(script)
-        }
       })
     }
   }
