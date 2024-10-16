@@ -245,14 +245,14 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 #'
 getEncounters <- function(table_description, current_datetime) {
 
-  runLevel3("Get Enconters", {
+  etlutils::runLevel3("Get Enconters", {
 
     # Refresh token, if defined
     refreshFHIRToken()
 
     resource <- "Encounter"
 
-    runLevel3("Download and Crack Encounters", {
+    etlutils::runLevel3("Download and Crack Encounters", {
 
       # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
       # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
@@ -306,11 +306,8 @@ getEncounters <- function(table_description, current_datetime) {
         )
       )
 
-
       # stop the execution and print the current result of FHIR search request (DEBUG)
-      if (etlutils::isDefinedAndTrue("DEBUG_TEST_ENCOUNTER_REQUEST")) {
-        stop(paste("DEBUG_TEST_ENCOUNTER_REQUEST:\n", request_encounter, "\n"))
-      }
+      checkDebugTestError("DEBUG_TEST_ENCOUNTER_REQUEST", request_encounter)
 
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
                                                            table_description = table_description,
@@ -324,18 +321,19 @@ getEncounters <- function(table_description, current_datetime) {
 
     })
 
-    runLevel3Line("change column classes", {
+    etlutils::runLevel3Line("Change column classes", {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
     etlutils::printAllTables(table_enc)
 
-    runLevel3Line("Save and Delete Encounters Table", {
+    etlutils::runLevel3Line("Save and Delete Encounters Table", {
       etlutils::writeRData(table_enc, "pid_source_encounter_unfiltered")
     })
 
-    return(table_enc)
   })
+
+  return(table_enc)
 }
 
 #' Extracts the relevant patient IDs from download Encounter resources. If the file name parameter is NA then

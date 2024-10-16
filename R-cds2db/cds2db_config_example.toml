@@ -104,9 +104,9 @@ FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
 # a list or comma-separated and thus appended to the FHIR search query in order to find the relevant
 # Encounters.
 #FHIR_SEARCH_LOCATION_IDS = [
-#  "location_reference1",
-#  "location_reference2",
-#  "location_reference3"
+#  "location_id_1",
+#  "location_id_2",
+#  "location_id_3"
 #]
 
 
@@ -186,17 +186,20 @@ DEBUG_PATIENT_ID_PATTERN = "UKB"
 # A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
+  #"location.location.reference = 'Location/location_id_1'",
   "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
   "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_2 = [
   "ward_name = 'Station 2'"#,
+  #"location.location.reference = 'Location/location_id_2'",
   #"serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_3 = [
   "ward_name = 'Station 3'",
+  #"location.location.reference = 'Location/location_id_3'",
   "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
   "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]

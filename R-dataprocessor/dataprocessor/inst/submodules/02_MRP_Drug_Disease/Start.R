@@ -1,0 +1,7 @@
+# TODO Drug_Disease:
+# Lade alle Patienten über die aktuelle Liste der PIDs (Patienten, die aktuell auf einer
+# IP-Station sind)
+# Lade alle Encounter herunter, von den Patienten, die gerade auf einer IP-Station sind (ggf. mit Zeitbegrenzung)
+# Lade alle anderen Ressourcen (MedicationRequest/Condition) über Encounter-ID herunter (Solange wir die Encounter-Reference haben)
+# MRP Calculation
+# Write MRP in DB-Table

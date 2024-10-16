@@ -1,3 +1,40 @@
+#' Run submodules by sourcing all R scripts in each submodule directory, including Start.R
+#'
+#' This function iterates over the submodule directories in the package, sourcing all R scripts in the directory.
+#' If a Start.R file is present, it will be sourced after all other R scripts in the submodule directory.
+#'
+runSubmodules <- function() {
+  # Path to the submodules directory
+  submodule_path <- system.file("submodules", package = "dataprocessor")
+
+  # Get list of submodule directories
+  submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
+
+  # Iterate over each submodule directory
+  for (dir in submodule_dirs) {
+    submodule_name <- basename(dir)
+
+    # Source all R scripts in the directory
+    etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
+
+      r_scripts <- list.files(dir, pattern = "\\.R$", full.names = TRUE)
+      for (script in r_scripts) {
+        # Source each R script except Start.R
+        if (basename(script) != "Start.R") {
+          source(script)
+        }
+      }
+
+      # Check for Start.R and source it if exists
+      start_script <- file.path(dir, "Start.R")
+      if (file.exists(start_script)) {
+        source(start_script)
+      }
+
+    })
+  }
+}
+
 #'
 #'
 #' Starts the retrieval for this project. This is the main start function start the Data Processor
@@ -58,15 +95,8 @@ processData <- function() {
   etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
 
   try(etlutils::runLevel1("Run Dataprocessor", {
-
-    etlutils::runLevel2("Create Frontend Tables for Patient and Encounter", {
-      createFrontendTables()
-    })
-
-    etlutils::runLevel2("Close database connections", {
+      runSubmodules()
       closeAllDatabaseConnections()
-    })
-
   }))
 
   if (etlutils::isErrorOccured()) {
