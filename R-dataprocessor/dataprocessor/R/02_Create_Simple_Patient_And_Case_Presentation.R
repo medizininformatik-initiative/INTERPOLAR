@@ -32,6 +32,10 @@ loadLastImportedDatasetsFromDB <- function(table_name_part) {
   # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
                       " WHERE last_processing_nr = ", last_processing_nr, ";")
+  # This only occurs if the database has been reset and the dataprocessor was executed too quickly
+  if (is.na(last_processing_nr)) {
+    stop(paste0("In table ", table_name, " the content of column last_processing_nr in the database is ‘NA’, so the following SQL query will return an error:\n", statement, "\nPlease wait at least 1 minute before starting the dataprocessor!"))
+  }
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
