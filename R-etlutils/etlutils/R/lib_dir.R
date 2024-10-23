@@ -68,7 +68,7 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
   newName <- NA
   if (dir.exists(dir)) {
     dirCreationTime <- file.info(dir)$ctime
-    dirCreationTime <- as.POSIXct(dirCreationTime, tz = "GMT")  # Convert to POSIXct
+    dirCreationTime <- as.POSIXct(dirCreationTime)  # Convert to POSIXct
     dirCreationTime <- format(dirCreationTime, "%Y-%m-%d_%H-%M-%S")  # Format without milliseconds
     dirCreationTime <- gsub(" ", "_", dirCreationTime)
     dirCreationTime <- gsub(":", "-", dirCreationTime)
