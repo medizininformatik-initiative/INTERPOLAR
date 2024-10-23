@@ -4,7 +4,7 @@
 #' with columns for date_time, ward, and pid. Each row represents a unique combination
 #' of date, ward, and patient ID extracted from the provided list.
 #'
-#' @param patientIDsPerWard A list of patient IDs, where each element corresponds to a ward.
+#' @param patient_ids_per_ward A list of patient IDs, where each element corresponds to a ward.
 #'
 #' @return A data.table with columns date_time, ward, and pid, representing the date, ward,
 #'   and patient ID for each combination extracted from the provided list.
@@ -13,27 +13,27 @@
 #' \dontrun{
 #'   library(data.table)
 #'   # Example: A list of patient IDs per ward
-#'   patientIDsPerWard <- list(
+#'   patient_ids_per_ward <- list(
 #'     Ward_A = c("PID_A001", "PID_A002", "PID_A003"),
 #'     Ward_B = c("PID_B001", "PID_B002"),
 #'     Ward_C = c("PID_C001", "PID_C002", "PID_C003", "PID_C004")
 #'   )
 #'
 #'   # Applying the function
-#'   result_table <- createWardPatientIDPerDateTable(patientIDsPerWard)
+#'   result_table <- createward_patient_id_per_dateTable(patient_ids_per_ward)
 #'
 #'   # Displaying the result
 #'   print(result_table)
 #' }
 #'
-createWardPatientIDPerDateTable <- function(patientIDsPerWard) {
-  ward_names <- names(patientIDsPerWard)
-  patient_ids <- unlist(patientIDsPerWard)
-  wardPatientIDPerDate <- data.table::data.table(
-    ward_name = rep(ward_names, lengths(patientIDsPerWard)),
+createward_patient_id_per_dateTable <- function(patient_ids_per_ward) {
+  ward_names <- names(patient_ids_per_ward)
+  patient_ids <- unlist(patient_ids_per_ward)
+  ward_patient_id_per_date <- data.table::data.table(
+    ward_name = rep(ward_names, lengths(patient_ids_per_ward)),
     patient_id = patient_ids
   )
-  return(wardPatientIDPerDate)
+  return(ward_patient_id_per_date)
 }
 
 #' Get Current Datetime
@@ -74,12 +74,12 @@ getQueryDatetime <- function() {
 #' result is a list of data.tables, where each element contains FHIR resources for a specific
 #' patient, and the last element is a table representing the ward and patient ID per date.
 #'
-#' @param patient_IDs_per_ward A list of patient IDs, where each element corresponds to a ward.
+#' @param patient_ids_per_ward A list of patient IDs, where each element corresponds to a ward.
 #' @param table_descriptions the fhircrackr table descriptions of the result tables
 #' @return A list of data.tables, each containing FHIR resources for a specific patient,
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
-loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
+loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
   # Get current or debug datetime
   query_datetime <- getQueryDatetime()
   # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
@@ -89,12 +89,12 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
                   "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
                   "   (enc_period_end is NULL OR enc_period_end > '",
                   query_datetime[["start_datetime"]], "');")
-  patientIDsActive <- getQueryFromDatabase(query)
+  patient_ids_active <- getQueryFromDatabase(query)
   # Unify and unique all patient IDs
-  patientIDs <- unique(unlist(patient_IDs_per_ward))
-  patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
+  patient_ids <- unique(unlist(patient_ids_per_ward))
+  patient_ids <- unique(c(patient_ids, patient_ids_active$enc_patient_id))
   # Load all data of relevant patients from FHIR server
-  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
+  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patient_ids, table_descriptions)
 
   #########################
   # START: FOR DEBUG ONLY #
@@ -104,9 +104,9 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
     # adds a second patient identifier
     debugAddPatientIdentifier(resource_tables)
     # adds a new Patient
-    result <- debugAddPatient(resource_tables$Patient, patient_IDs_per_ward)
+    result <- debugAddPatient(resource_tables$Patient, patient_ids_per_ward)
     resource_tables$Patient <- result$Patient
-    patient_IDs_per_ward <- result$patient_IDs_per_ward
+    patient_ids_per_ward <- result$patient_ids_per_ward
     rm(result)
   }
   #######################
@@ -114,7 +114,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   #######################
 
   # Add additional table of ward-patient ID per date
-  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
+  resource_tables[["pids_per_ward"]] <- createward_patient_id_per_dateTable(patient_ids_per_ward)
 
   return(resource_tables)
 }
@@ -174,7 +174,7 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #' `loadReferencedResourcesByOwnIDFromFHIRServer`. The results are then saved as RData files, with
 #' filenames derived from the resource names.
 #'
-#' @param patient_IDs_per_ward A list of patient IDs, where each element corresponds to a ward and
+#' @param patient_ids_per_ward A list of patient IDs, where each element corresponds to a ward and
 #'   contains patient IDs associated with that ward.
 #' @param table_descriptions A list containing two elements: `pid_dependant` and
 #'   `pid_independant`, each of which describes table structures for resources that are dependent
@@ -184,8 +184,8 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   RData files using `writeRData`. The filenames are derived by converting the names of the
 #'   resources in the `resource_tables` list to lowercase.
 #'
-loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
-  resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
+loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
+  resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_ids_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
 
   #########################
