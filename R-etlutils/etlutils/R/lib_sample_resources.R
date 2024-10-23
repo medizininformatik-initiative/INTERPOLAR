@@ -706,3 +706,24 @@ addParamToFHIRRequest <- function(parameters = NULL) {
   }
   parameters
 }
+
+#' Complete Table with Missing Columns
+#'
+#' This function completes a table by adding missing columns based on the specified table description.
+#'
+#' @param table A data.table representing the table to be completed.
+#' @param table_description A description of the expected table structure.
+#'
+#' @return A completed data.table with missing columns added.
+#' @export
+completeTable <- function(table, table_description) {
+  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
+  .SD <- NULL
+  col_names <- names(table_description@cols)
+  empty_table <- data.table::setnames(
+    data.table::data.table(matrix(ncol = length(col_names), nrow = 0)),
+    new = col_names
+  )
+  d <- data.table::rbindlist(list(empty_table, table), fill = TRUE, use.names = TRUE)
+  d[, lapply(.SD, function(x) methods::as(x, 'character'))]
+}
