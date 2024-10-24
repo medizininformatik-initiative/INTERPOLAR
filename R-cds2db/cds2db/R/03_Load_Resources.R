@@ -20,13 +20,13 @@
 #'   )
 #'
 #'   # Applying the function
-#'   result_table <- createward_patient_id_per_dateTable(patient_ids_per_ward)
+#'   result_table <- createWardPatientIDPerDateTable(patient_ids_per_ward)
 #'
 #'   # Displaying the result
 #'   print(result_table)
 #' }
 #'
-createward_patient_id_per_dateTable <- function(patient_ids_per_ward) {
+createWardPatientIDPerDateTable <- function(patient_ids_per_ward) {
   ward_names <- names(patient_ids_per_ward)
   patient_ids <- unlist(patient_ids_per_ward)
   ward_patient_id_per_date <- data.table::data.table(
@@ -114,7 +114,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   #######################
 
   # Add additional table of ward-patient ID per date
-  resource_tables[["pids_per_ward"]] <- createward_patient_id_per_dateTable(patient_ids_per_ward)
+  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
 
   return(resource_tables)
 }
