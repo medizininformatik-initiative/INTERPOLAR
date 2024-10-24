@@ -1,3 +1,52 @@
+####################
+# mapDatesToPids   #
+####################
+
+# Test: Mapping of unique dates to patient IDs with comparator
+test_that("mapDatesToPids correctly maps PIDs to the earliest date with a comparator", {
+  # Test input data
+  pids_with_last_updated <- c("PID1", "PID2", "PID3", "PID4", "PID5", "PID1", "PID6", "PID6")
+  names(pids_with_last_updated) <- c("2024-01-01", "2024-01-02", NA,
+                                     "2024-01-01", NA, NA, "2024-01-01", "2024-12-31")
+
+  # Run the function
+  result <- mapDatesToPids(pids_with_last_updated, "gt")
+
+  # Check that there are exactly three groups
+  expect_equal(length(result), 3)
+
+  # Check that there are three groups: "gt2024-01-01", "gt2024-01-02", and NA
+  expect_true("gt2024-01-01" %in% names(result))
+  expect_true("gt2024-01-02" %in% names(result))
+  expect_true(any(is.na(names(result))))
+
+  # Check that PIDs are correctly grouped
+  # Access the NA group using is.na on names
+  expect_equal(sort(result[is.na(names(result))][[1]]), sort(c("PID1", "PID3", "PID5")))
+
+  # PID6 should only be in the group for "gt2024-01-01" since it's the minimal date for PID6
+  expect_equal(sort(result[["gt2024-01-01"]]), sort(c("PID4", "PID6")))
+
+  # PID2 should only appear in "gt2024-01-02"
+  expect_equal(result[["gt2024-01-02"]], "PID2")
+})
+
+# Test: Mapping of unique dates to patient IDs when no names are provided
+test_that("mapDatesToPids handles PIDs without names by setting all names to NA", {
+  # Test input data: PIDs without names
+  pids_with_last_updated <- c("PID1", "PID2", "PID3", "PID4", "PID5")
+
+  # Expect that names are all NA
+  result <- mapDatesToPids(pids_with_last_updated, "gt")
+
+  # Check that there is only one group: NA
+  expect_true(length(result) == 1)
+  expect_true(is.na(names(result)[1]))
+
+  # Check that all PIDs are in the NA group
+  expect_equal(sort(result[[1]]), sort(c("PID1", "PID2", "PID3", "PID4", "PID5")))
+})
+
 ##########################
 # addParamToFHIRRequest  #
 ##########################

@@ -356,6 +356,7 @@ downloadAndCrackFHIRResources <- function(
 #' @param table_description A table description object specifying the structure of the resulting data table.
 #' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
 #' @param id_param_str Additional parameter string for constructing the FHIR request URL.
+#' @param last_updated Date of the last_update parameters for the FHIR search request. Default: NA
 #' @param verbose Verbosity level (default: VERBOSE)
 #'
 #' @return A data.table containing the cracked FHIR resources.
@@ -366,6 +367,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     table_description,
     ids_at_once       = IDS_AT_ONCE,
     id_param_str,
+    last_updated = NA,
     verbose = VERBOSE
 ) {
   WAIT_TIMES <- 2 ** (0 : 7)
@@ -506,7 +508,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 resource     = resource,
                 ids          = element,
                 id_param_str = id_param_str,
-                parameters   = NULL,
+                parameters   = c("_lastUpdated" = last_updated),
                 verbose      = verbose
               ))
               if (inherits(bundles, 'try-error')) {
@@ -599,13 +601,14 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #' @param table_description An object containing the description of the table where the resources
 #' are to be found. This object must have a specific structure, including a resource slot that
 #' contains the URL or identifier needed for downloading the resources.
+#' @param last_updated Date of the last_update parameters for the FHIR search request. Default: NA
 #'
 #' @return Returns a table of the downloaded resources, processed and cracked open according to the
 #' specifications in `table_description`. The exact structure of the returned table depends on the
 #' `table_description` parameter and the data processing within `downloadAndCrackFHIRResourcesByPIDs`.
 #'
 #' @export
-loadFHIRResourcesByOwnID <- function(ids, table_description) {
+loadFHIRResourcesByOwnID <- function(ids, table_description, last_updated = NA) {
   resource <- table_description@resource@.Data
   if (!rlang::is_empty(ids)) {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
@@ -613,6 +616,7 @@ loadFHIRResourcesByOwnID <- function(ids, table_description) {
       id_param_str = '_id',
       ids = getAfterLastSlash(ids),
       table_description = table_description,
+      last_updated = last_updated,
       verbose = VERBOSE
     )
   } else {
@@ -637,22 +641,24 @@ loadFHIRResourcesByOwnID <- function(ids, table_description) {
 #' @param table_description An object describing the table where the resources are to be found.
 #' This object must have a specific structure, including a resource slot that contains the URL or
 #' identifier needed for downloading the resources.
+#' @param last_updated Date of the last_update parameters for the FHIR search request. Default: NA
 #'
 #' @return Returns a table of the downloaded resources, processed according to the specifications
 #' in `table_description`. The function handles different types of resources by adapting the ID
 #' parameter string based on the resource type, ensuring correct processing.
 #'
 #' @export
-loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
+loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated = NA) {
   resource <- table_description@resource@.Data
   if (resource == "Patient") {
-    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description)
+    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description, last_updated)
   } else {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
       resource = resource,
       id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
       ids = patient_IDs,
       table_description = table_description,
+      last_updated = last_updated,
       verbose = VERBOSE
     )
   }
@@ -665,26 +671,88 @@ loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
 #' it calls the downloadAndCrackFHIRResourcesByPIDs function to download and crack FHIR resources
 #' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
 #'
-#' @param patient_IDs A vector of patient IDs for whom FHIR resources should be retrieved.
+#' @param pids_with_last_updated A named vector where the names are the last updated dates and the values
+#' are the patient IDs. These are the patient IDs for whom FHIR resources should be retrieved. The last
+#' updated date indicates the point from which updated FHIR resources for the respective PID should be downloaded.
 #' @param table_descriptions A list of table descriptions for different FHIR resource types.
+#' @param last_updated_comparator A string to specify the comparator for the last updated date, typically "gt"
+#' (greater than) for comparison. This is used when checking for resources updated after a certain date.
 #'
 #' @return A list containing a table for each resource type, with resource type names as keys.
 #' @export
-loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
+
+loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descriptions, last_updated_comparator = "gt") {
+  # Split patient IDs by their last updated date
+  date_to_pids <- mapDatesToPids(pids_with_last_updated, last_updated_comparator)
+  # Initialize an empty list to store the results for each resource type
   resource_name_to_resources <- list()
   for (table_description in table_descriptions) {
-    resource_table <- loadFHIRResourcesByPID(patient_IDs, table_description)
-    if (!isSimpleNA(resource_table)) {
-      resource <- table_description@resource@.Data
-      resource_name_to_resources[[resource]] <- resource_table
-      if (nrow(resource_table)) {
-        printAllTables(resource_table, resource)
-      } else {
-        catInfoMessage(paste("Info: No", resource, "resources found for the given Patient IDs.\n"))
+    resource_name <- table_description@resource@.Data
+    # Iterate over each unique last updated date
+    for (i in seq_along(date_to_pids)) {
+      last_updated <- names(date_to_pids)[i]
+      resource_table <- loadFHIRResourcesByPID(date_to_pids[[i]], table_description, last_updated)
+      if (!isSimpleNA(resource_table)) {
+        # Combine resources for each resource type across multiple patient IDs
+        if (!is.null(resource_name_to_resources[[resource_name]])) {
+          if (nrow(resource_table)) {
+            # Append new resources to existing ones with rbind
+            resource_name_to_resources[[resource_name]] <- rbind(
+              resource_name_to_resources[[resource_name]],
+              resource_table
+            )
+          }
+        } else {
+          # If this is the first occurrence, simply assign the table (even if nrow is 0)
+          resource_name_to_resources[[resource_name]] <- resource_table
+        }
       }
     }
+    resource_table <- resource_name_to_resources[[resource_name]]
+    if (!is.null(resource_table) && nrow(resource_table)) {
+      printAllTables(resource_table, resource_name)
+    } else {
+      catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs.\n"))
+    }
   }
-  resource_name_to_resources
+  return(resource_name_to_resources)
+}
+
+#' Creates a mapping of unique dates to patient IDs
+#'
+#' This function takes a named vector where names are dates (as Date objects or NA) and values are patient IDs.
+#' It returns a list where the names are the unique last updated dates, prefixed with the specified comparator,
+#' and the values are vectors of patient IDs associated with those dates.
+#'
+#' @param pids_with_last_updated A named vector where names are dates (as Date objects or NA) and values are patient IDs.
+#' @param last_updated_comparator A string to specify the comparator that will be prefixed to the last updated dates.
+#' The default is "gt".
+#'
+#' @return A list where the keys are unique dates prefixed with the comparator (or NA) and the values are vectors of patient IDs.
+#'
+mapDatesToPids <- function(pids_with_last_updated, last_updated_comparator = "gt") {
+  # If there are no names given -> set all names to NA (needed to group the values)
+  if (is.null(names(pids_with_last_updated))) {
+    names(pids_with_last_updated) <- rep(NA, length(pids_with_last_updated))
+  }
+  # Swap names and values (now the dates are the values and the PIDs are the names)
+  pids_with_last_updated <- setNames(names(pids_with_last_updated), pids_with_last_updated)
+  # Use tapply to group by PIDs and get the minimum date for each PID
+  pids_with_last_updated <- tapply(pids_with_last_updated, names(pids_with_last_updated), min)
+  # Convert back as dates
+  pids_with_last_updated <- as.Date(pids_with_last_updated, origin = "1970-01-01")
+  # Replace NA with "1000-01-01" as Date object
+  pids_with_last_updated[is.na(pids_with_last_updated)] <- "1000-01-01"
+  # Create a list where the unique dates map to patient IDs
+  date_to_pids <- split(names(pids_with_last_updated), pids_with_last_updated)
+  # Set the name "1000-01-01" back to NA in the final output
+  names(date_to_pids)[names(date_to_pids) == "1000-01-01"] <- NA
+  # Add the comparator to the names of the dates, but leave NA unchanged
+  names(date_to_pids)[!is.na(names(date_to_pids))] <- paste0(
+    last_updated_comparator,
+    names(date_to_pids)[!is.na(names(date_to_pids))]
+  )
+  return(date_to_pids)
 }
 
 #' Add common parameters to FHIR resource request
