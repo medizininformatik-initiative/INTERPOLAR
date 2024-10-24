@@ -67,6 +67,33 @@ getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
+#' Get active encounter patient IDs from the database
+#'
+#' This function retrieves patient IDs from encounters that are active based on the current query date.
+#' An encounter is considered active if its start date is less than or equal to the current date and
+#' either has no end date or its end date is greater than the current date.
+#'
+#' The function retrieves the current datetime using \code{getQueryDatetime()} and then constructs and executes
+#' a SQL query to fetch the active patient IDs from the database.
+#'
+#' @return A vector of patient IDs with active encounters.
+#'
+getActiveEncounterPIDsFromDB <- function() {
+  # Get current or debug datetime
+  query_datetime <- getQueryDatetime()
+
+  # Create the SQL-Query
+  query <- paste0(
+    "SELECT enc_patient_id FROM v_encounter_all\n",
+    "WHERE enc_period_start <= '", query_datetime, "' AND\n",
+    "(enc_period_end IS NULL OR enc_period_end > '", query_datetime, "');"
+  )
+
+  # Run the SQL query and return patient IDs
+  patient_ids_active <- getQueryFromDatabase(query)
+
+  return(patient_ids_active$enc_patient_id)
+}
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
@@ -81,18 +108,12 @@ getQueryDatetime <- function() {
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
-  # Get current or debug datetime
-  query_datetime <- getQueryDatetime()
-  # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
-  # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
-  # an enddate greater current date.
-  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
-                  "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
-                  "   (enc_period_end is NULL OR enc_period_end > '",
-                  query_datetime[["start_datetime"]], "');")
-  patient_ids_active <- getQueryFromDatabase(query)
-  # Unify and unique all patient IDs
+
   patient_ids <- unique(unlist(patient_ids_per_ward))
+
+  # Get active encounter patient IDs from the database
+  patient_ids_active <- getActiveEncounterPIDsFromDB()
+  # Unify and unique all patient IDs
   patient_ids <- unique(c(patient_ids, patient_ids_active$enc_patient_id))
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patient_ids, table_descriptions)
