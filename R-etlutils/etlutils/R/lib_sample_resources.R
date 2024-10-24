@@ -687,13 +687,26 @@ loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
   resource_name_to_resources
 }
 
-#' Add Common Parameters to FHIR Resource Request
+#' Add common parameters to FHIR resource request
 #'
 #' This function adds common parameters, such as '_count' and '_sort', to a list of FHIR resource query parameters.
+#' If the '_count' or '_sort' parameters are not already present in the input list, it checks for the existence of
+#' the global variables 'COUNT_PER_BUNDLE' and 'SORT' respectively. If these variables are defined, non-null, and non-empty,
+#' they are added to the query parameters.
 #'
-#' @param parameters A list of FHIR resource query parameters.
+#' @param parameters A named list of FHIR resource query parameters. If NULL, it will be treated as an empty list.
 #'
-#' @return A modified list of FHIR resource query parameters with common parameters added.
+#' @return A modified named list of FHIR resource query parameters with common parameters ('_count' and '_sort') added,
+#'         if applicable.
+#'
+#' @examples
+#' parameters <- list('_id' = '12345')
+#' COUNT_PER_BUNDLE <- 50
+#' SORT <- 'date'
+#' result <- addParamToFHIRRequest(parameters)
+#' print(result)
+#' result <- addParamToFHIRRequest(NULL)
+#' print(result)
 #'
 #' @export
 addParamToFHIRRequest <- function(parameters = NULL) {
