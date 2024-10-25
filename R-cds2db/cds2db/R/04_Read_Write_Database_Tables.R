@@ -45,16 +45,20 @@ readTablesFromDatabase <- function(table_names) {
 #' connection parameters, which are sourced from globally defined variables.
 #'
 #' @param query A string representing the SQL query to be executed.
+#' @param params A list of parameters to be safely inserted into the SQL query, allowing for
+#'        parameterized queries. If NA, no parameters will be used. This is useful for preventing
+#'        SQL injection and handling dynamic query inputs.
 #'
 #' @return A data.table containing the result of the SQL query.
 #'
 #' @export
-getQueryFromDatabase <- function(query) {
+getQueryFromDatabase <- function(query, params = NULL) {
   etlutils::dbConnectAndGetQuery(dbname = DB_GENERAL_NAME,
                                  host = DB_GENERAL_HOST,
                                  port = DB_GENERAL_PORT,
                                  user = DB_CDS2DB_USER,
                                  password = DB_CDS2DB_PASSWORD,
                                  schema = DB_CDS2DB_SCHEMA_OUT,
-                                 query = query)
+                                 query = query,
+                                 params = params)
 }

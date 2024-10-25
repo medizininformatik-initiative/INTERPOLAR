@@ -240,21 +240,23 @@ dbExecute <- function(db_connection, statement, log = TRUE) {
 
 #' Execute a SQL Query on a Database Connection
 #'
-#' This function executes a given SQL query on a specified database connection.
+#' This function executes a given SQL query on a specified database connection. It allows for the
+#' optional logging of the query to the console and supports parameterized queries using the `params` argument.
 #'
 #' @param db_connection A database connection object.
 #' @param query A string representing the SQL query to be executed.
-#' @param log logical value indicating whether the statement should be logged to the console.
-#' Default is TRUE.
+#' @param log Logical value indicating whether the query should be logged to the console. Default is TRUE.
+#' @param params A list of parameters to be safely inserted into the SQL query, allowing for parameterized queries.
+#' If NA, no parameters will be used. This is useful for preventing SQL injection and handling dynamic query inputs.
 #'
-#' @return The result of the SQL query.
+#' @return The result of the SQL query as a data.table.
 #'
 #' @export
-dbGetQuery <- function(db_connection, query, log = TRUE) {
+dbGetQuery <- function(db_connection, query, log = TRUE, params = NULL) {
   if (log) {
     cat(query, "\n")
   }
-  data.table::as.data.table(DBI::dbGetQuery(db_connection, query))
+  data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
 }
 
 #' Execute a SQL Query on a Database with Automatic Connection Management
@@ -270,14 +272,17 @@ dbGetQuery <- function(db_connection, query, log = TRUE) {
 #' @param schema A string representing the schema to be used within the database.
 #' @param query A string representing the SQL query to be executed.
 #' @param log A logical value indicating whether the SQL statement should be logged to the console.
-#' Default is TRUE.
+#'        Default is TRUE.
+#' @param params A list of parameters to be safely inserted into the SQL query, allowing for
+#'        parameterized queries. If NA, no parameters will be used. This is useful for preventing
+#'        SQL injection and handling dynamic query inputs.
 #'
 #' @return A data.table containing the result of the SQL query.
 #'
 #' @export
-dbConnectAndGetQuery <- function(dbname, host, port, user, password, schema, query, log = TRUE) {
+dbConnectAndGetQuery <- function(dbname, host, port, user, password, schema, query, log = TRUE, params = NULL) {
   db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  result <- dbGetQuery(db_connection, query, log)
+  result <- dbGetQuery(db_connection, query, log, params)
   dbDisconnect(db_connection)
   return(result)
 }
