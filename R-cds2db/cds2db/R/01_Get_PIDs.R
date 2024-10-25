@@ -182,17 +182,6 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
   return(pids_per_ward)
 }
 
-#' Checks whether this start of the application is the very first start.
-#'
-#' @return TRUE when this application fills the database for the first time. This is recognized by whether the
-#' Encounter table is still completely empty. If there is already something in this table, FALSE is returned,
-#' as this cannot be the initial start.
-#'
-isEncounterTableEmpty <- function() {
-  # TODO: implement check if Encounter table in database is empty
-  TRUE
-}
-
 #' Get unique patient IDs per ward based on filter patterns.
 #'
 #' This function takes a list of encounters and a corresponding list of filter patterns for each ward.
