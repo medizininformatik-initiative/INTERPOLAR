@@ -83,17 +83,16 @@ getActiveEncounterPIDsFromDB <- function() {
   query_datetime <- getQueryDatetime()
 
   # Create the SQL-Query
-  query <- paste0(
-    "SELECT enc_patient_id FROM v_encounter_all\n",
-    "WHERE enc_period_start <= '", query_datetime, "' AND\n",
-    "(enc_period_end IS NULL OR enc_period_end > '", query_datetime, "');"
-  )
-
+  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
+                  "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
+                  "   (enc_period_end is NULL OR enc_period_end > '",
+                  query_datetime[["start_datetime"]], "');")
   # Run the SQL query and return patient IDs
   patient_ids_active <- getQueryFromDatabase(query)
 
   return(patient_ids_active$enc_patient_id)
 }
+
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
@@ -114,26 +113,50 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Get active encounter patient IDs from the database
   patient_ids_active <- getActiveEncounterPIDsFromDB()
   # Unify and unique all patient IDs
-  patient_ids <- unique(c(patient_ids, patient_ids_active$enc_patient_id))
-  # Load all data of relevant patients from FHIR server
-  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patient_ids, table_descriptions)
+  patient_ids <- unique(c(patient_ids, patient_ids_active))
 
-  #########################
-  # START: FOR DEBUG ONLY #
-  #########################
-  # NOTE: only works correctly with very specific test data
-  if (etlutils::isDefinedAndTrue("DEBUG_ADD_PATIENT_IDENTIFIER")) {
-    # adds a second patient identifier
-    debugAddPatientIdentifier(resource_tables)
-    # adds a new Patient
-    result <- debugAddPatient(resource_tables$Patient, patient_ids_per_ward)
-    resource_tables$Patient <- result$Patient
-    patient_ids_per_ward <- result$patient_ids_per_ward
-    rm(result)
+  # Get the date for every PID when the Patient resource was written to the database the last time
+  getLastPatientUpdateDate <- function(patient_ids) {
+
+    # Ensure these are IDs and not references
+    patient_ids <- getAfterLastSlash(patient_ids)
+
+    # Create the query for the last insert/update date for every ID
+    query <- paste0(
+      "SELECT pat_id,\n",
+      "       COALESCE(MAX(last_check_datetime), MAX(input_datetime)) AS last_insert_datetime\n",
+      "FROM v_patient_all\n",
+      "WHERE pat_id = ANY($1::text[])\n",
+      "GROUP BY pat_id;"
+    )
+
+    # Create the corrct format for the Postgres Parameter Array
+    params <- list(paste0("{", paste(shQuote(patient_ids), collapse = ","), "}"))
+    # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
+    result <- getQueryFromDatabase(query, params = params)
+
+    # Create an empty result vector with NAs for patient IDs not found in the database
+    last_insert_dates <- as.Date(rep(NA, length(patient_ids)))
+
+    # Map the retrieved data to the corresponding patient IDs
+    for (i in seq_along(patient_ids)) {
+      matching_row <- result[result$pat_id == patient_ids[i], ]
+      if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
+        last_insert_dates[i] <- as.Date(as.POSIXct(max(matching_row$last_insert_datetime)))
+      }
+    }
+
+    # Reduce the original date by at least 1 day to prevent time gaps
+    last_insert_dates <- last_insert_dates - 1
+
+    setNames(as.list(patient_ids), last_insert_dates)
   }
-  #######################
-  # END: FOR DEBUG ONLY #
-  #######################
+
+  # Get the date for every PID when the Patient resource was written to the database the last time
+  pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+
+  # Load all data of relevant patients from FHIR server
+  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions)
 
   # Add additional table of ward-patient ID per date
   resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
