@@ -131,7 +131,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     )
 
     # Create the corrct format for the Postgres Parameter Array
-    params <- list(paste0("{", paste(shQuote(patient_ids), collapse = ","), "}"))
+    params <- list(paste0("{", paste(patient_ids, collapse = ","), "}"))
     # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
     result <- getQueryFromDatabase(query, params = params)
 
