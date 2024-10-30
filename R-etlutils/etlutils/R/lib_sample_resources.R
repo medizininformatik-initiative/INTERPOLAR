@@ -84,61 +84,75 @@ refreshFHIRToken <- function() {
   }
 }
 
-#' Paste Parameters for a FHIR Search Request
+#' Construct a Parameter String for FHIR Search Requests
 #'
-#' @param parameters Either a character of length 1 containing an existing parameter string or
-#' a named vector or list of the form
-#' c("_summary" = "count", "gender" = "male") or list("_summary" = "count", "gender" = "female").
-#' @param parameters2add Either a character of length 1 containing a parameter string to add or
-#' a named vector or list of the form
-#' c("_summary" = "count", "gender" = "male") or list("_summary" = "count", "gender" = "female").
-#' @param add_question_sign Logical. Should an ?-Sign to be prefixed. Defaults to FALSE.
+#' This function combines parameters for a FHIR search request from existing parameters
+#' and additional parameters to be added. It constructs a valid parameter string by
+#' ensuring that only non-NA values are included in the output.
 #'
-#' @return A character of length 1 representing the pasted parameter string.
+#' @param existing_params A named vector or list containing existing search parameters,
+#'                        e.g., c("_summary" = "count", "gender" = "male").
+#' @param new_params A named vector or list of parameters to add to the existing parameters,
+#'                   e.g., c("_summary" = "count", "gender" = "female").
+#' @param prepend_question_mark Logical. Should a '?' be prefixed to the output string?
+#'                               Defaults to FALSE.
+#'
+#' @return A single character string representing the combined parameter string for a FHIR
+#'         search request, properly formatted without any NULL or NA entries.
 #' @export
-pasteFHIRSearchParams <- function(parameters = NULL, parameters2add = NULL, add_question_sign = F) {
-  # convert list names and elements to a string of the form name1=element2&name1=element2&...
-  convert <- function(arg) {
-    n <- names(arg)
-    if (length(n) < length(arg)) {# if less arg names than arg elements were given
-      if (0 == length(n) && length(arg) == 1) {# if no names were given and one single element
-        # return arg
-        arg
+combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL, prepend_question_mark = FALSE) {
+
+  # Helper function to convert a named vector or list into a parameter string
+  convertToParamString <- function(params) {
+    param_names <- names(params)
+    # Handle cases where params might not have names
+    if (is.null(param_names) || length(param_names) < length(params)) {
+      if (length(params) == 1 && is.null(param_names)) {
+        # Return the parameter directly if it's a single unnamed element
+        return(params)
+      } else {
+        # Return NULL if the parameters are not properly named
+        return(NULL)
       }
-    } else {# if every element has a name paste all the names and elements to name1=element1&name2=element2&...
-      paste0(
-        sapply(
-          seq_along(arg),
-          function(i) {
-            if (is.null(arg[i]) || is.na(arg[i])) {# if element is NULL or NA
-              if (VL_70_DOWNLOAD <= VERBOSE) {# if verbose level is at least VL_70_DOWNLOAD
-                warning("WARNING: Ignore parameter ",n[i]," which is ",arg[i],"\n")
-              }
-              ""
-            } else {
-              paste0(n[i], "=", arg[i])
-            }
+    } else {
+      # Create valid parameter pairs, filtering out any NULL or NA values
+      valid_param_pairs <- sapply(seq_along(params), function(i) {
+        if (!is.null(params[[i]]) && !is.na(params[[i]])) {
+          # If the parameter is unnamed and not a list, return it directly
+          if (is.null(param_names[i]) || param_names[i] == "") {
+            return(as.character(params[[i]]))  # Return just the value
           }
-        ),
-        collapse = "&"
-      )
+          # Otherwise, return the key=value format
+          paste0(param_names[i], "=", params[[i]])
+        } else {
+          NULL  # Exclude NULL or NA values
+        }
+      })
+      # Remove any NULL entries and collapse the valid parameters into a string
+      valid_param_pairs <- valid_param_pairs[!sapply(valid_param_pairs, is.null)]
+      return(paste(valid_param_pairs, collapse = "&"))
     }
   }
-  # build argument string from old parameters list
-  pre  = convert(parameters)
-  # build argument string from new parameters list
-  post = convert(parameters2add)
-  s <- if (0 < nchar(pre) && 0 < nchar(post)) {# if both strings aren't zero
-    paste0(pre, "&", post)
-  } else if (0 < nchar(pre)) {# if no old parameters were present
-    pre
-  } else {# if no new parameters were present
-    post
+
+  # Create parameter strings for the existing and new parameters
+  existing_param_string <- convertToParamString(existing_params)
+  new_param_string <- convertToParamString(new_params)
+
+  # Combine the parameter strings appropriately
+  if (nzchar(existing_param_string) && nzchar(new_param_string)) {
+    combined_string <- paste0(existing_param_string, "&", new_param_string)
+  } else if (nzchar(existing_param_string)) {
+    combined_string <- existing_param_string
+  } else {
+    combined_string <- new_param_string
   }
-  if (0 < nchar(s) && substr(s, 1, 1) != "?" && add_question_sign) {# add a question sign if required and needed
-    s <- paste0("?", s)
+
+  # Add a question mark at the start if required
+  if (nzchar(combined_string) && substr(combined_string, 1, 1) != "?" && prepend_question_mark) {
+    combined_string <- paste0("?", combined_string)
   }
-  s
+
+  return(combined_string)
 }
 
 #' Get FHIR Resources by IDs
@@ -203,7 +217,7 @@ getResourcesByIDs <- function(
       # build request string of maximal max_ids ids
       ids_ <- collect_ids_for_request(ids = ids, max_ids = length(ids))
       # create request with list of resource ids to get from server
-      url_ <- fhircrackr::fhir_url(endpoint, resource, pasteFHIRSearchParams(paste0(id_param_str, "=", ids_$str), addParamToFHIRRequest(parameters)))
+      url_ <- fhircrackr::fhir_url(endpoint, resource, combineFHIRSearchParams(paste0(id_param_str, "=", ids_$str), addParamToFHIRRequest(parameters)))
       # get bundle
       bnd_ <- executeFHIRSearchVariation(request = url_, verbose = verbose)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
@@ -229,9 +243,9 @@ getResourcesByIDs <- function(
         url_enc  = TRUE
       ),
       body    = fhircrackr::fhir_body(
-        content = pasteFHIRSearchParams(
-          parameters     = parameters_list,
-          parameters2add = parameters
+        content = combineFHIRSearchParams(
+          existing_params     = parameters_list,
+          new_params = parameters
         ),
         type    = "application/x-www-form-urlencoded"
       ),
@@ -356,6 +370,7 @@ downloadAndCrackFHIRResources <- function(
 #' @param table_description A table description object specifying the structure of the resulting data table.
 #' @param ids_at_once The maximum number of IDs to process in each iteration (default: IDS_AT_ONCE).
 #' @param id_param_str Additional parameter string for constructing the FHIR request URL.
+#' @param additional_search_parameter Optional parameter for the FHIR search request. Default: NA
 #' @param verbose Verbosity level (default: VERBOSE)
 #'
 #' @return A data.table containing the cracked FHIR resources.
@@ -366,6 +381,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     table_description,
     ids_at_once       = IDS_AT_ONCE,
     id_param_str,
+    additional_search_parameter = NA,
     verbose = VERBOSE
 ) {
   WAIT_TIMES <- 2 ** (0 : 7)
@@ -506,7 +522,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 resource     = resource,
                 ids          = element,
                 id_param_str = id_param_str,
-                parameters   = NULL,
+                parameters   = c(additional_search_parameter),
                 verbose      = verbose
               ))
               if (inherits(bundles, 'try-error')) {
@@ -599,13 +615,14 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #' @param table_description An object containing the description of the table where the resources
 #' are to be found. This object must have a specific structure, including a resource slot that
 #' contains the URL or identifier needed for downloading the resources.
+#' @param additional_search_parameter Optional parameter for the FHIR search request. Default: NA
 #'
 #' @return Returns a table of the downloaded resources, processed and cracked open according to the
 #' specifications in `table_description`. The exact structure of the returned table depends on the
 #' `table_description` parameter and the data processing within `downloadAndCrackFHIRResourcesByPIDs`.
 #'
 #' @export
-loadFHIRResourcesByOwnID <- function(ids, table_description) {
+loadFHIRResourcesByOwnID <- function(ids, table_description, additional_search_parameter = NA) {
   resource <- table_description@resource@.Data
   if (!rlang::is_empty(ids)) {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
@@ -613,6 +630,7 @@ loadFHIRResourcesByOwnID <- function(ids, table_description) {
       id_param_str = '_id',
       ids = getAfterLastSlash(ids),
       table_description = table_description,
+      additional_search_parameter = additional_search_parameter,
       verbose = VERBOSE
     )
   } else {
@@ -637,22 +655,24 @@ loadFHIRResourcesByOwnID <- function(ids, table_description) {
 #' @param table_description An object describing the table where the resources are to be found.
 #' This object must have a specific structure, including a resource slot that contains the URL or
 #' identifier needed for downloading the resources.
+#' @param additional_search_parameter Optional parameter for the FHIR search request. Default: NA
 #'
 #' @return Returns a table of the downloaded resources, processed according to the specifications
 #' in `table_description`. The function handles different types of resources by adapting the ID
 #' parameter string based on the resource type, ensuring correct processing.
 #'
 #' @export
-loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
+loadFHIRResourcesByPID <- function(patient_IDs, table_description, additional_search_parameter = NA) {
   resource <- table_description@resource@.Data
   if (resource == "Patient") {
-    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description)
+    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description, additional_search_parameter)
   } else {
     resource_table <- downloadAndCrackFHIRResourcesByPIDs(
       resource = resource,
       id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
       ids = patient_IDs,
       table_description = table_description,
+      additional_search_parameter = additional_search_parameter,
       verbose = VERBOSE
     )
   }
@@ -665,17 +685,30 @@ loadFHIRResourcesByPID <- function(patient_IDs, table_description) {
 #' it calls the downloadAndCrackFHIRResourcesByPIDs function to download and crack FHIR resources
 #' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
 #'
-#' @param patient_IDs A vector of patient IDs for whom FHIR resources should be retrieved.
-#' @param table_descriptions A list of table descriptions for different FHIR resource types.
+#' @param patient_IDs A vector of patient IDs for whom the FHIR resources should be retrieved.
+#' @param table_descriptions A list containing descriptions of different FHIR resource types.
+#' @param resources_add_search_parameter A named list of additional search parameters for each resource type (optional).
 #'
-#' @return A list containing a table for each resource type, with resource type names as keys.
+#' @return A list containing a data table for each resource type, with resource type names as the keys.
 #' @export
-loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
+loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions, resources_add_search_parameter = NA) {
+  # Initialize an empty list to store the resulting data tables by resource type
   resource_name_to_resources <- list()
+  # Loop through each resource type description in `table_descriptions`
   for (table_description in table_descriptions) {
-    resource_table <- loadFHIRResourcesByPID(patient_IDs, table_description)
+    # Extract the resource name from the current `table_description` object
+    resource <- table_description@resource@.Data
+    # Check if the current resource has a corresponding entry in `resources_add_search_parameter`
+    if (resource %in% names(resources_add_search_parameter)) {
+      # Retrieve the additional search parameter for this resource
+      additional_search_parameter <- resources_add_search_parameter[[resource]]
+    } else {
+      additional_search_parameter <- NULL
+    }
+    # Load and process FHIR resources for the current patient IDs and resource type
+    resource_table <- loadFHIRResourcesByPID(patient_IDs, table_description, additional_search_parameter)
+    # If `resource_table` is valid (not NA), add it to `resource_name_to_resources`
     if (!isSimpleNA(resource_table)) {
-      resource <- table_description@resource@.Data
       resource_name_to_resources[[resource]] <- resource_table
       if (nrow(resource_table)) {
         printAllTables(resource_table, resource)
@@ -684,6 +717,7 @@ loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions) {
       }
     }
   }
+  # Return the list of resource data tables, with resource types as the keys
   resource_name_to_resources
 }
 

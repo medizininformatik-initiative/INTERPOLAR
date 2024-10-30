@@ -93,8 +93,25 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   # Unify and unique all patient IDs
   patientIDs <- unique(unlist(patient_IDs_per_ward))
   patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
-  # Load all data of relevant patients from FHIR server
-  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
+
+  # Define the prefix for global debug filter variables
+  global_debug_filter_variable_prefix <- "DEBUG_ADD_FHIR_SEARCH_"
+  # Get global filter variables with the specified prefix
+  global_filter_variables <- as.list(etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector"))
+
+  # Load FHIR resources based on the presence of global filter variables
+  if (length(global_filter_variables)) {
+    resources_add_search_parameter <- adjustListNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
+    if (exists("DEBUG_ADD_FHIR_SEARCH_GENERAL")) {
+      # Write value of 'GENERAL' for all tables
+      for (name in names(table_descriptions)) {
+          resources_add_search_parameter[[name]] <- resources_add_search_parameter[["GENERAL"]]
+      }
+    }
+    resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions, resources_add_search_parameter)
+  } else {
+    resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
+  }
 
   #########################
   # START: FOR DEBUG ONLY #
