@@ -66,6 +66,45 @@ getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
+#' Adjusts the names of a list by removing a specified prefix and matching them
+#' to a list of valid names with correct capitalization.
+#'
+#' This function processes the names of a named list by removing a specified
+#' prefix and then matching the resulting names to a provided vector of valid
+#' names. If a match is found, the function will replace the name with the
+#' corresponding name from the valid names vector, preserving the correct
+#' capitalization.
+#'
+#' @param variable_list A named list whose names need to be adjusted.
+#' @param prefix A character string representing the prefix to be removed
+#' from the names of the list.
+#' @param valid_names A character vector containing valid names to match
+#' against, used to format the names correctly.
+#'
+#' @return A named list with adjusted names, where the specified prefix has
+#' been removed and names are replaced with the corresponding valid names
+#' from the `valid_names` vector, preserving case.
+#'
+adjustListNames <- function(variable_list, prefix, valid_names) {
+  # Internal helper function to process individual names
+  processName <- function(name) {
+    # Remove the specified prefix
+    name <- sub(paste0("^", prefix), "", name)
+    # Find the corresponding name in valid_names (case-insensitive matching)
+    match_index <- match(tolower(name), tolower(valid_names))
+
+    # If a match is found, use the valid name with correct casing
+    if (!is.na(match_index)) {
+      name <- valid_names[match_index]
+    }
+    return(name)
+  }
+  # Apply the helper function to all list names
+  names(variable_list) <- sapply(names(variable_list), processName)
+  # Return the modified list
+  return(variable_list)
+}
+
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
