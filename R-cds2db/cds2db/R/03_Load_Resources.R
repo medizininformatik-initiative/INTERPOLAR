@@ -252,34 +252,30 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
   # Get global variables by prefix
   global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
   if (length(global_filter_variables)) {
-    # Extract and process resource names
-    resource_patterns_full <- names(global_filter_variables)
-    resource_patterns <- tolower(gsub(global_debug_filter_variable_prefix, "", resource_patterns_full))
-    resource_table_names <- tolower(names(resource_tables))
-    different_resources <- setdiff(resource_patterns, resource_table_names)
+    resource_table_names <- names(resource_tables)
+    resource_filter_patterns <- adjustListNames(global_filter_variables, global_debug_filter_variable_prefix, resource_table_names)
+    different_resources <- setdiff(names(resource_filter_patterns), resource_table_names)
     if (length(different_resources)) {
       catInfoMessage(paste0("Note: The following debug filter resources are not in the resource table: ",
                             paste(different_resources, collapse = ", "),
                             ". Fix it in cds2db_config.toml."))
     }
     # Find common names between resource names and resource table names
-    common_names <- intersect(resource_patterns, resource_table_names)
+    common_names <- intersect(names(resource_filter_patterns), resource_table_names)
     # Iterate over each common name
     for (name in common_names) {
-      # Find the full resource names that match the current common name (case-insensitive)
-      matching_indices <- which(name == resource_patterns)
+      # Find the full resource names that match the current common name
+      matching_indices <- which(name == names(resource_filter_patterns))
       # Take the first match, if multiple
-      debug_parameter_name <- resource_patterns_full[matching_indices]
+      debug_parameter_name <- names(global_filter_variables)[matching_indices]
       # Get indices using the full resource name
       indices <- etlutils::getIndices(get(debug_parameter_name))
-      # Retrieve the original name to update the correct resource table
-      original_name <- names(resource_tables)[match(name, tolower(names(resource_tables)))]
       # Check if indices is NA
       if (all(is.na(indices))) {
         # Set the table to be empty if indices is NA
-        resource_tables[[original_name]] <- resource_tables[[original_name]][0, ]
+        resource_tables[[name]] <- resource_tables[[name]][0, ]
       } else {
-        rows_count <- nrow(resource_tables[[original_name]])
+        rows_count <- nrow(resource_tables[[name]])
         # Check for valid indices (e.g., within the range of the number of rows in the resource table)
         invalid_indices <- indices[indices < 1 | indices > rows_count]
         # Only proceed if there are valid indices
@@ -295,12 +291,12 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
           }
           etlutils::catWarningMessage(paste0(
             "Check '", debug_parameter_name, "': The following indices are invalid for resource ",
-            original_name, ". The table has only ", rows_count, " rows. Invalid indices: ",
+            name, ". The table has only ", rows_count, " rows. Invalid indices: ",
             paste(invalid_indices_string, collapse = ", ")))
         }
         valide_indices <- setdiff(indices, invalid_indices)
         # Update the resource table with valid indices
-        resource_tables[[original_name]] <- resource_tables[[original_name]][valide_indices, ]
+        resource_tables[[name]] <- resource_tables[[name]][valide_indices, ]
       }
     }
   }
