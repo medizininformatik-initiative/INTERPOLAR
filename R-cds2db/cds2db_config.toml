@@ -124,6 +124,25 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 #DEBUG_CURRENT_DATETIME_START = "2020-06-30 21:25:00"
 #DEBUG_CURRENT_DATETIME_END = "2020-08-30 21:25:00"
 
+# These parameters can set additional FHIR-search parameters for downloading Requests. It is possible
+# to set parameters for each FHIR resource or set specific parameters for all FHIR resources with the
+# parameter DEBUG_ADD_FHIR_SEARCH_GENERAL. Several parameters can be customised by linking the FHIR
+# search parameters with an ‘&’.
+#DEBUG_ADD_FHIR_SEARCH_GENERAL = "subject=Patient/456&id=456"
+DEBUG_ADD_FHIR_SEARCH_CONDITION = "subject=Patient/123&id=123"
+#DEBUG_ADD_FHIR_SEARCH_CONSENT = ""
+#DEBUG_ADD_FHIR_SEARCH_DIAGNOSTICREPORT = ""
+#DEBUG_ADD_FHIR_SEARCH_ENCOUNTER = ""
+#DEBUG_ADD_FHIR_SEARCH_LOCATION = ""
+#DEBUG_ADD_FHIR_SEARCH_MEDICATION = ""
+#DEBUG_ADD_FHIR_SEARCH_MEDICATIONADMINISTRATION = ""
+#DEBUG_ADD_FHIR_SEARCH_MEDICATIONREQUEST = ""
+#DEBUG_ADD_FHIR_SEARCH_MEDICATIONSTATEMENT = ""
+#DEBUG_ADD_FHIR_SEARCH_OBSERVATION = ""
+#DEBUG_ADD_FHIR_SEARCH_PATIENT = ""
+#DEBUG_ADD_FHIR_SEARCH_PROCEDURE = ""
+#DEBUG_ADD_FHIR_SEARCH_SERVICEREQUEST = ""
+
 [retrieve.debug.filtering]
 
 # These parameters can be set to filter the resource table to specific rows for each resource after
