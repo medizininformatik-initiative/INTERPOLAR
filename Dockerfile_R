@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y -q \
 # etlutils
 
 RUN apt-get install -y \
-	libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev 
+	libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev
 
 RUN /rocker_scripts/bin/install2.r -n $NCPUS memuse
 RUN /rocker_scripts/bin/install2.r -n $NCPUS openxlsx
@@ -28,19 +28,21 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS DBI
 RUN /rocker_scripts/bin/install2.r -n $NCPUS lubridate
 RUN /rocker_scripts/bin/install2.r -n $NCPUS RPostgres
 RUN /rocker_scripts/bin/install2.r -n $NCPUS ICD10gm
-RUN /rocker_scripts/bin/install2.r -n $NCPUS data.table 
+RUN /rocker_scripts/bin/install2.r -n $NCPUS data.table
 RUN /rocker_scripts/bin/install2.r -n $NCPUS httr
-RUN /rocker_scripts/bin/install2.r -n $NCPUS rlang 
+RUN /rocker_scripts/bin/install2.r -n $NCPUS rlang
 RUN /rocker_scripts/bin/install2.r -n $NCPUS stringr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS xml2
-RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
+#RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
+RUN R -e "install.packages('remotes')"
+RUN R -e "remotes::install_github('POLAR-fhiR/fhircrackr@142-optimize-fhir_melt_all')"
 
 WORKDIR /src
 
 COPY R-etlutils R-etlutils
 
 RUN R CMD build R-etlutils/etlutils
-    
+
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-etlutils/etlutils
 
 
