@@ -732,11 +732,11 @@ loadMultipleFHIRResourcesByPID <- function(patient_IDs, table_descriptions, reso
 #' @export
 addParamToFHIRRequest <- function(parameters = NULL) {
   parameters <- parameters[!is.na(parameters)]
-  if (!'_count' %in% names(parameters) && exists('COUNT_PER_BUNDLE') && !is.null(COUNT_PER_BUNDLE) && !is.na(COUNT_PER_BUNDLE) && COUNT_PER_BUNDLE != '') {
-    parameters <- c(parameters, c('_count' = COUNT_PER_BUNDLE))
+  if (!"_count" %in% names(parameters) && exists("COUNT_PER_BUNDLE") && !is.null(COUNT_PER_BUNDLE) && !is.na(COUNT_PER_BUNDLE) && COUNT_PER_BUNDLE != "") {
+    parameters <- c(parameters, c("_count" = COUNT_PER_BUNDLE))
   }
-  if (!'_sort' %in% names(parameters) && exists('SORT') && !is.null(SORT) && !is.na(SORT) && SORT != '') {
-    parameters <- c(parameters, c('_sort' = SORT))
+  if (!"_sort" %in% names(parameters) && exists("SORT") && !is.null(SORT) && !is.na(SORT) && SORT != "") {
+    parameters <- c(parameters, c("_sort" = SORT))
   }
   parameters
 }
