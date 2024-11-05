@@ -94,44 +94,66 @@ refreshFHIRToken <- function() {
 #'                        e.g., c("_summary" = "count", "gender" = "male").
 #' @param new_params A named vector or list of parameters to add to the existing parameters,
 #'                   e.g., c("_summary" = "count", "gender" = "female").
-#' @param prepend_question_mark Logical. Should a '?' be prefixed to the output string?
-#'                               Defaults to FALSE.
 #'
 #' @return A single character string representing the combined parameter string for a FHIR
 #'         search request, properly formatted without any NULL or NA entries.
+#'
+#' @examples
+#' # Example 1: Basic usage with existing and new parameters
+#' existing_params <- c("_summary" = "count", "gender" = "male")
+#' new_params <- c("age" = "30", "gender" = "female")  # gender will appear twice
+#' combineFHIRSearchParams(existing_params, new_params)
+#' # Returns: "_summary=count&gender=male&age=30&gender=female"
+#'
+#' # Example 2: Handling NA values
+#' existing_params <- c("_summary" = "count", "gender" = NA)
+#' new_params <- c("age" = "30", "gender" = "female")
+#' combineFHIRSearchParams(existing_params, new_params)
+#' # Returns: "_summary=count&age=30&gender=female"
+#'
+#' # Example 3: Handling NULL values in new parameters
+#' existing_params <- c("_summary" = "count")
+#' new_params <- c("age" = NULL, "gender" = "female")
+#' combineFHIRSearchParams(existing_params, new_params)
+#' # Returns: "_summary=count&gender=female"
+#'
+#' # Example 4: No additional parameters, only existing parameters
+#' existing_params <- c("gender" = "male")
+#' combineFHIRSearchParams(existing_params)
+#' # Returns: "gender=male"
+#'
+#' # Example 5: No parameters provided
+#' combineFHIRSearchParams()
+#' # Returns: ""
+#'
 #' @export
-combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL, prepend_question_mark = FALSE) {
+combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL) {
 
   # Helper function to convert a named vector or list into a parameter string
   convertToParamString <- function(params) {
+    if (is.null(params)) {
+      return("")
+    }
     param_names <- names(params)
-    # Handle cases where params might not have names
-    if (is.null(param_names) || length(param_names) < length(params)) {
-      if (length(params) == 1 && is.null(param_names)) {
-        # Return the parameter directly if it's a single unnamed element
-        return(params)
-      } else {
-        # Return NULL if the parameters are not properly named
+    if (is.null(param_names)) {
+      return("")
+    }
+
+    # Create valid parameter pairs, filtering out any NULL or NA values
+    valid_param_pairs <- sapply(seq_along(params), function(i) {
+      if (is.null(params[[i]]) || is.na(params[[i]]) || params[[i]] == "") {
         return(NULL)
       }
-    } else {
-      # Create valid parameter pairs, filtering out any NULL or NA values
-      valid_param_pairs <- sapply(seq_along(params), function(i) {
-        if (!is.null(params[[i]]) && !is.na(params[[i]])) {
-          # If the parameter is unnamed and not a list, return it directly
-          if (is.null(param_names[i]) || param_names[i] == "") {
-            return(as.character(params[[i]]))  # Return just the value
-          }
-          # Otherwise, return the key=value format
-          paste0(param_names[i], "=", params[[i]])
-        } else {
-          NULL  # Exclude NULL or NA values
-        }
-      })
-      # Remove any NULL entries and collapse the valid parameters into a string
-      valid_param_pairs <- valid_param_pairs[!sapply(valid_param_pairs, is.null)]
-      return(paste(valid_param_pairs, collapse = "&"))
-    }
+      if (is.na(param_names[i]) || param_names[i] == "") {
+        return(NULL)
+      }
+      # return the key=value format
+      return(paste0(param_names[i], "=", params[[i]]))
+    })
+
+    # Remove any NULL entries and collapse the valid parameters into a string
+    valid_param_pairs <- valid_param_pairs[!sapply(valid_param_pairs, is.null)]
+    return(paste(valid_param_pairs, collapse = "&"))
   }
 
   # Create parameter strings for the existing and new parameters
@@ -146,12 +168,6 @@ combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL, p
   } else {
     combined_string <- new_param_string
   }
-
-  # Add a question mark at the start if required
-  if (nzchar(combined_string) && substr(combined_string, 1, 1) != "?" && prepend_question_mark) {
-    combined_string <- paste0("?", combined_string)
-  }
-
   return(combined_string)
 }
 
@@ -216,8 +232,17 @@ getResourcesByIDs <- function(
     while (0 < length(ids)) {# while there are still ids to add
       # build request string of maximal max_ids ids
       ids_ <- collect_ids_for_request(ids = ids, max_ids = length(ids))
+
       # create request with list of resource ids to get from server
-      url_ <- fhircrackr::fhir_url(endpoint, resource, combineFHIRSearchParams(paste0(id_param_str, "=", ids_$str), addParamToFHIRRequest(parameters)))
+      url_ <- fhircrackr::fhir_url(
+        url = endpoint,
+        resource = resource,
+        parameters = combineFHIRSearchParams(
+          existing_params = setNames(ids_$str, id_param_str),
+          new_params = addParamToFHIRRequest(parameters)
+        )
+      )
+
       # get bundle
       bnd_ <- executeFHIRSearchVariation(request = url_, verbose = verbose)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
