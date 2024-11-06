@@ -66,28 +66,26 @@ getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
-#' Adjusts the names of a list by removing a specified prefix and matching them
+#' Adjusts the names of a vector or list by removing a specified prefix and matching them
 #' to a list of valid names with correct capitalization.
 #'
-#' This function processes the names of a named list by removing a specified
-#' prefix and then matching the resulting names to a provided vector of valid
-#' names. If a match is found, the function will replace the name with the
-#' corresponding name from the valid names vector, preserving the correct
-#' capitalization.
+#' This function processes the names of a named vector or list by removing a specified
+#' prefix and then matching the resulting names to a provided vector of valid names. If a
+#' match is found, the function replaces the name with the corresponding name from the
+#' valid names vector, preserving the correct capitalization.
 #'
-#' @param variable_list A named list whose names need to be adjusted.
-#' @param prefix A character string representing the prefix to be removed
-#' from the names of the list.
-#' @param valid_names A character vector containing valid names to match
-#' against, used to format the names correctly.
+#' @param variables A named vector or list whose names need to be adjusted.
+#' @param prefix A character string representing the prefix to be removed from the names.
+#' @param valid_names A character vector containing valid names to match against, used to
+#' format the names correctly.
 #'
-#' @return A named list with adjusted names, where the specified prefix has
-#' been removed and names are replaced with the corresponding valid names
-#' from the `valid_names` vector, preserving case.
+#' @return A named vector or list with adjusted names, where the specified prefix has been
+#' removed and names are replaced with the corresponding valid names from the `valid_names`
+#' vector, preserving case.
 #'
-adjustListNames <- function(variable_list, prefix, valid_names) {
+adjustNames <- function(variables, prefix, valid_names) {
   # Internal helper function to process individual names
-  processName <- function(name) {
+  process_name <- function(name) {
     # Remove the specified prefix
     name <- sub(paste0("^", prefix), "", name)
     # Find the corresponding name in valid_names (case-insensitive matching)
@@ -99,10 +97,10 @@ adjustListNames <- function(variable_list, prefix, valid_names) {
     }
     return(name)
   }
-  # Apply the helper function to all list names
-  names(variable_list) <- sapply(names(variable_list), processName)
-  # Return the modified list
-  return(variable_list)
+  # Apply the helper function to all names
+  names(variables) <- sapply(names(variables), process_name)
+  # Return the modified vector or list
+  return(variables)
 }
 
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
@@ -140,7 +138,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
 
   # Load FHIR resources based on the presence of global filter variables
   if (length(global_filter_variables)) {
-    resources_add_search_parameter <- adjustListNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
+    resources_add_search_parameter <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
     if (exists("DEBUG_ADD_FHIR_SEARCH_GENERAL")) {
       # Write value of 'GENERAL' for all tables
       for (name in names(table_descriptions)) {
@@ -253,7 +251,7 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
   global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
   if (length(global_filter_variables)) {
     resource_table_names <- names(resource_tables)
-    resource_filter_patterns <- adjustListNames(global_filter_variables, global_debug_filter_variable_prefix, resource_table_names)
+    resource_filter_patterns <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, resource_table_names)
     different_resources <- setdiff(names(resource_filter_patterns), resource_table_names)
     if (length(different_resources)) {
       catInfoMessage(paste0("Note: The following debug filter resources are not in the resource table: ",
