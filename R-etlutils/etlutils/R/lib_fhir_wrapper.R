@@ -1,17 +1,17 @@
 #' Wrapper for fhircrackr::fhir_search with automatic Authentication
 #'
-#' @param request A character of length one containing a fhir search request.
-#' @param body A  character of length one containing the body for a POST request.
-#' @param max_bundles An integer of length one. How many bundles should be retrieved.
-#' @param verbose An integer of length one. Selects the verbosity. Defaults to 1.
-#' @param max_attempts An integer of length one. The number of attempts, if some error occurs.
-#' @param delay_between_attempts An number of length one. The time between two attempts in seconds.
-#' @param log_errors Either NULL or a character vector of length one indicating the name of a file
+#' @param request A string containing a fhir search request.
+#' @param body A string containing the body for a POST request.
+#' @param max_bundles An integer. How many bundles should be retrieved.
+#' @param verbose An integer. Selects the verbosity. Defaults to 1.
+#' @param max_attempts An integer. The number of attempts, if some error occurs.
+#' @param delay_between_attempts An number. The time between two attempts in seconds.
+#' @param log_errors Either NULL or a string indicating the name of a file
 #'  in which to save the http errors.
 #'  NULL means no error logging. When a file name is provided, the errors are saved in the specified file.
 #'  Defaults to NULL. Regardless of the value of log_errors the most recent http error message whithin
 #'  the current R session is saved internally and can be accessed with fhir_recent_http_error().
-#' @param save_to_disc Either NULL or a character vector of length one indicating the name of a directory
+#' @param save_to_disc Either NULL or a string indicating the name of a directory
 #' in which to save the bundles. If a directory name is provided, the bundles are saved as numerated xml-files
 #' into the directory specified and not returned as a bundle list in the R session.
 #' This is useful when a lot of bundles are to be downloaded and keeping them all in one R session might
