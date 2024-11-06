@@ -68,3 +68,11 @@ test_that("Only existing parameters (list)", {
 test_that("No parameters provided", {
   expect_equal(combineFHIRSearchParams(), "")
 })
+
+# Test new_params provided as a single string
+test_that("new_params as a single string", {
+  existing_params <- c("status" = "active")
+  new_params <- "gender=male"
+  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+               "status=active&gender=male")
+})

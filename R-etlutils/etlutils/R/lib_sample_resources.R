@@ -87,16 +87,20 @@ refreshFHIRToken <- function() {
 #' Construct a Parameter String for FHIR Search Requests
 #'
 #' This function combines parameters for a FHIR search request from existing parameters
-#' and additional parameters to be added. It constructs a valid parameter string by
-#' ensuring that only non-NA values are included in the output.
+#' and additional parameters to be added. Only non-NULL and non-NA values are included,
+#' creating a valid parameter string that is ready for use in a request.
 #'
-#' @param existing_params A named vector or list containing existing search parameters,
-#'                        e.g., c("_summary" = "count", "gender" = "male").
-#' @param new_params A named vector or list of parameters to add to the existing parameters,
-#'                   e.g., c("_summary" = "count", "gender" = "female").
+#' @param existing_params A named vector or list with initial search parameters, e.g.,
+#'                        c("_summary" = "count", "gender" = "male").
+#' @param new_params An additional named vector or list of parameters to be appended to the existing
+#'                   ones. The names in `new_params` are used as keys in the resulting parameter
+#'                   string, e.g., c("age" = "30", "gender" = "female"). If a name is present in
+#'                   both `existing_params` and `new_params`, both entries will be included in the
+#'                   final string without overwriting each other. If `new_params` has no names, it
+#'                   will simply be appended as its string representation.
 #'
-#' @return A single character string representing the combined parameter string for a FHIR
-#'         search request, properly formatted without any NULL or NA entries.
+#' @return A single character string representing the combined parameter string, formatted
+#'         without any NULL or NA entries.
 #'
 #' @examples
 #' # Example 1: Basic usage with existing and new parameters
@@ -105,7 +109,7 @@ refreshFHIRToken <- function() {
 #' combineFHIRSearchParams(existing_params, new_params)
 #' # Returns: "_summary=count&gender=male&age=30&gender=female"
 #'
-#' # Example 2: Handling NA values
+#' # Example 2: Handling NA values in parameters
 #' existing_params <- c("_summary" = "count", "gender" = NA)
 #' new_params <- c("age" = "30", "gender" = "female")
 #' combineFHIRSearchParams(existing_params, new_params)
@@ -117,7 +121,7 @@ refreshFHIRToken <- function() {
 #' combineFHIRSearchParams(existing_params, new_params)
 #' # Returns: "_summary=count&gender=female"
 #'
-#' # Example 4: No additional parameters, only existing parameters
+#' # Example 4: Only existing parameters provided
 #' existing_params <- c("gender" = "male")
 #' combineFHIRSearchParams(existing_params)
 #' # Returns: "gender=male"
@@ -125,6 +129,12 @@ refreshFHIRToken <- function() {
 #' # Example 5: No parameters provided
 #' combineFHIRSearchParams()
 #' # Returns: ""
+#'
+#' # Example 6: new_params provided as a single string
+#' existing_params <- c("status" = "active")
+#' new_params <- "gender=male"
+#' combineFHIRSearchParams(existing_params, new_params)
+#' # Returns: "status=active&gender=male"
 #'
 #' @export
 combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL) {
@@ -136,7 +146,7 @@ combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL) {
     }
     param_names <- names(params)
     if (is.null(param_names)) {
-      return("")
+      return(as.character(params))
     }
 
     # Create valid parameter pairs, filtering out any NULL or NA values
