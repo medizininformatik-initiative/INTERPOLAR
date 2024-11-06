@@ -261,19 +261,30 @@ getResourcesByIDs <- function(
   getResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     parameters_list <- list(paste0(ids, collapse = ","), COUNT_PER_BUNDLE) # add all ids
     names(parameters_list) <- c(id_param_str, '_count') # name arguments
+
+    # Create FHIR-search request
+    request <- fhircrackr::fhir_url(# get resources
+      url      = endpoint,
+      resource = resource,
+      url_enc  = TRUE
+    )
+
+    # Create FHIR-search Content ( = parameters)
+    content <- combineFHIRSearchParams(
+      existing_params = parameters_list,
+      new_params      = parameters
+    )
+
+    # Create FHIR-search Body
+    body <- fhircrackr::fhir_body(
+      content = content,
+      type    = "application/x-www-form-urlencoded"
+    )
+
+    # Run FHIR-search
     executeFHIRSearchVariation(
-      request = fhircrackr::fhir_url(# get resources
-        url      = endpoint,
-        resource = resource,
-        url_enc  = TRUE
-      ),
-      body    = fhircrackr::fhir_body(
-        content = combineFHIRSearchParams(
-          existing_params     = parameters_list,
-          new_params = parameters
-        ),
-        type    = "application/x-www-form-urlencoded"
-      ),
+      request = request,
+      body    = body,
       verbose = verbose
     )
   }
