@@ -320,8 +320,9 @@ getEncounters <- function(table_description, current_datetime) {
       etlutils::writeRData(table_enc, "pid_source_encounter_unfiltered")
     })
 
-    return(table_enc)
   })
+
+  return(table_enc)
 }
 
 #' Extracts the relevant patient IDs from download Encounter resources. If the file name parameter is NA then

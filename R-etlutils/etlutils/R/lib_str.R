@@ -415,3 +415,32 @@ getEscaped <- function(string) {
   escaped_string <- paste0(escaped_chars, collapse = "")
   return(escaped_string)
 }
+
+#' Escape all characters in a string
+#'
+#' This function escapes every character in the input string by prepending a backslash (`\`).
+#' If the string is empty, it returns the empty string. If the string contains only one character,
+#' it simply prepends a backslash to that character.
+#'
+#' @param string A character string to be escaped.
+#'
+#' @return The input string where every character is escaped with a backslash.
+#'
+#' @examples
+#' getEscapedAll("abc") # returns "\\a\\b\\c"
+#' getEscapedAll("[.]") # returns "\\[\\.\\]"
+#' getEscapedAll("")     # returns ""
+#' getEscapedAll("a")    # returns "\\a"
+#'
+#' @export
+getEscapedAll <- function(string) {
+  if (nchar(string) == 0) {
+    return(string)  # Return empty string if input is empty
+  } else if (nchar(string) == 1) {
+    return(paste0("\\", string))  # Escape single character
+  } else {
+    chars <- strsplit(string, "")[[1]]  # Split string into individual characters
+    escaped_string <- paste0("\\", chars, collapse = "")  # Escape each character
+    return(escaped_string)  # Return the fully escaped string
+  }
+}

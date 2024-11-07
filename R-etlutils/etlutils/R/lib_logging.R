@@ -106,7 +106,6 @@ logBlockFooter <- function(verbose = VERBOSE, len = 104) {
 #'
 #' @param lastLogMessage A character string containing the final log message to be printed. Defaults to NA.
 #' @export
-
 finalize <- function(lastLogMessage = NA) {
   printClock()
   warnings()
