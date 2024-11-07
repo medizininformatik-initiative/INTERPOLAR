@@ -6,6 +6,7 @@ DECLARE
     new_last_pro_nr INT; -- New processing number for these sync
     max_last_pro_nr INT; -- Last processing number in core data
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
+    last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
 BEGIN
     -- Take over last check datetime Functionname: <%COPY_FUNC_NAME%> the last_pro_nr - From: <%SCHEMA_2%> (raw) -> To: <%OWNER_SCHEMA%>
     

@@ -17,6 +17,7 @@
                         <%IF TAGS "\bTYPED\b" "<%SIMPLE_TABLE_NAME%>_raw_id,"%>
                         <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COLUMNS%>
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -24,6 +25,7 @@
                         <%IF TAGS "\bTYPED\b" "current_record.<%SIMPLE_TABLE_NAME%>_raw_id,"%>
                         <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_CURRENT_RECORD%>
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -31,7 +33,7 @@
                     DELETE FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
                 ELSE
                 UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>
@@ -43,7 +45,7 @@
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE <%SCHEMA_2%>.<%TABLE_NAME_2%>
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: <%COPY_FUNC_NAME%>'
                     , last_processing_nr = last_pro_nr
                     WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
@@ -51,8 +53,8 @@
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, '<%TABLE_NAME%>' AS table_name, last_check_datetime, current_dataset_status, '<%COPY_FUNC_NAME%>' AS function_name FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, '<%TABLE_NAME%>' AS table_name, last_pro_datetime, current_dataset_status, '<%COPY_FUNC_NAME%>' AS function_name FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END <%TABLE_NAME%>
     -----------------------------------------------------------------------------------------------------------------------

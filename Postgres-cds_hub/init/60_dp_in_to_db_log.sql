@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-08-21 10:04:46
--- Rights definition file size        : 15036 Byte
+-- Rights definition file last update : 2024-11-07 11:28:16
+-- Rights definition file size        : 15113 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-09-23 17:12:30
+-- Create time: 2024-11-07 13:39:54
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -36,8 +36,9 @@ DECLARE
     current_record record;
     data_count integer;
     data_count_all integer;
-    last_pro_nr INT;
+    last_pro_nr INT; -- Last processing number
     temp varchar;
+    last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
 BEGIN
     -- Copy Functionname: copy_fe_dp_in_to_db_log - From: db2dataprocessor_in -> To: db_log
 
@@ -83,6 +84,7 @@ BEGIN
                         pat_geschlecht,
                         patient_complete,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -101,6 +103,7 @@ BEGIN
                         current_record.pat_geschlecht,
                         current_record.patient_complete,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -108,7 +111,7 @@ BEGIN
                     DELETE FROM db2dataprocessor_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
                 ELSE
                 UPDATE db_log.patient_fe target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -132,7 +135,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE db2dataprocessor_in.patient_fe
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE patient_fe_id = current_record.patient_fe_id;
@@ -140,8 +143,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT patient_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_fe' AS table_name, last_check_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.patient_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT patient_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.patient_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END patient_fe
     -----------------------------------------------------------------------------------------------------------------------
@@ -234,6 +237,7 @@ BEGIN
                         fall_ent_dat,
                         fall_complete,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -275,6 +279,7 @@ BEGIN
                         current_record.fall_ent_dat,
                         current_record.fall_complete,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -282,7 +287,7 @@ BEGIN
                     DELETE FROM db2dataprocessor_in.fall_fe WHERE fall_fe_id = current_record.fall_fe_id;
                 ELSE
                 UPDATE db_log.fall_fe target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -329,7 +334,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE db2dataprocessor_in.fall_fe
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE fall_fe_id = current_record.fall_fe_id;
@@ -337,8 +342,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT fall_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'fall_fe' AS table_name, last_check_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.fall_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT fall_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.fall_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END fall_fe
     -----------------------------------------------------------------------------------------------------------------------
@@ -393,6 +398,7 @@ BEGIN
                         meda_notiz,
                         medikationsanalyse_complete,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -415,6 +421,7 @@ BEGIN
                         current_record.meda_notiz,
                         current_record.medikationsanalyse_complete,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -422,7 +429,7 @@ BEGIN
                     DELETE FROM db2dataprocessor_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
                 ELSE
                 UPDATE db_log.medikationsanalyse_fe target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -450,7 +457,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE db2dataprocessor_in.medikationsanalyse_fe
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
@@ -458,8 +465,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_check_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END medikationsanalyse_fe
     -----------------------------------------------------------------------------------------------------------------------
@@ -732,6 +739,7 @@ BEGIN
                         mrp_merp_txt,
                         mrpdokumentation_validierung_complete,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -863,6 +871,7 @@ BEGIN
                         current_record.mrp_merp_txt,
                         current_record.mrpdokumentation_validierung_complete,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -870,7 +879,7 @@ BEGIN
                     DELETE FROM db2dataprocessor_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
                 ELSE
                 UPDATE db_log.mrpdokumentation_validierung_fe target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -1007,7 +1016,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE db2dataprocessor_in.mrpdokumentation_validierung_fe
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
@@ -1015,8 +1024,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_check_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END mrpdokumentation_validierung_fe
     -----------------------------------------------------------------------------------------------------------------------
@@ -1071,6 +1080,7 @@ BEGIN
                         rskfkt_anz_rskamklassen,
                         risikofaktor_complete,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -1093,6 +1103,7 @@ BEGIN
                         current_record.rskfkt_anz_rskamklassen,
                         current_record.risikofaktor_complete,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -1100,7 +1111,7 @@ BEGIN
                     DELETE FROM db2dataprocessor_in.risikofaktor_fe WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
                 ELSE
                 UPDATE db_log.risikofaktor_fe target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -1128,7 +1139,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE db2dataprocessor_in.risikofaktor_fe
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
@@ -1136,8 +1147,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_check_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END risikofaktor_fe
     -----------------------------------------------------------------------------------------------------------------------
@@ -1208,6 +1219,7 @@ BEGIN
                         trg_egfr,
                         trigger_complete,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -1238,6 +1250,7 @@ BEGIN
                         current_record.trg_egfr,
                         current_record.trigger_complete,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -1245,7 +1258,7 @@ BEGIN
                     DELETE FROM db2dataprocessor_in.trigger_fe WHERE trigger_fe_id = current_record.trigger_fe_id;
                 ELSE
                 UPDATE db_log.trigger_fe target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
@@ -1281,7 +1294,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE db2dataprocessor_in.trigger_fe
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE trigger_fe_id = current_record.trigger_fe_id;
@@ -1289,8 +1302,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_check_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.trigger_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.trigger_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END trigger_fe
     -----------------------------------------------------------------------------------------------------------------------
