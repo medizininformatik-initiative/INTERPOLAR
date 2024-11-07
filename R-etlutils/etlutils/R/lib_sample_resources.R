@@ -741,15 +741,13 @@ loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated 
 #' are the patient IDs. These are the patient IDs for whom FHIR resources should be retrieved. The last
 #' updated date indicates the point from which updated FHIR resources for the respective PID should be downloaded.
 #' @param table_descriptions A list of table descriptions for different FHIR resource types.
-#' @param last_updated_comparator A string to specify the comparator for the last updated date, typically "gt"
-#' (greater than) for comparison. This is used when checking for resources updated after a certain date.
 #' @param resources_add_search_parameter A named list of additional search parameters for each resource type (optional).
 #'
 #' @return A list containing a data table for each resource type, with resource type names as the keys.
 #' @export
-loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descriptions, last_updated_comparator = "gt", resources_add_search_parameter = NA) {
+loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descriptions, resources_add_search_parameter = NA) {
   # Split patient IDs by their last updated date
-  date_to_pids <- mapDatesToPids(pids_with_last_updated, last_updated_comparator)
+  date_to_pids <- mapDatesToPids(pids_with_last_updated)
   # Initialize an empty list to store the results for each resource type
   resource_name_to_resources <- list()
   # Loop through each resource type description in `table_descriptions`
@@ -803,12 +801,10 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descrip
 #' and the values are vectors of patient IDs associated with those dates.
 #'
 #' @param pids_with_last_updated A named vector where names are dates (as Date objects or NA) and values are patient IDs.
-#' @param last_updated_comparator A string to specify the comparator that will be prefixed to the last updated dates.
-#' The default is "gt".
 #'
 #' @return A list where the keys are unique dates prefixed with the comparator (or NA) and the values are vectors of patient IDs.
 #'
-mapDatesToPids <- function(pids_with_last_updated, last_updated_comparator = "gt") {
+mapDatesToPids <- function(pids_with_last_updated) {
   # If there are no names given -> set all names to NA (needed to group the values)
   if (is.null(names(pids_with_last_updated))) {
     names(pids_with_last_updated) <- rep(NA, length(pids_with_last_updated))
@@ -827,7 +823,7 @@ mapDatesToPids <- function(pids_with_last_updated, last_updated_comparator = "gt
   names(date_to_pids)[names(date_to_pids) == "1000-01-01"] <- NA
   # Add the comparator to the names of the dates, but leave NA unchanged
   names(date_to_pids)[!is.na(names(date_to_pids))] <- paste0(
-    last_updated_comparator,
+    "gt", # we search for resources which are updated after the given last_updated_date -> comparator "greater than"
     names(date_to_pids)[!is.na(names(date_to_pids))]
   )
   return(date_to_pids)

@@ -10,7 +10,7 @@ test_that("mapDatesToPids correctly maps PIDs to the earliest date with a compar
                                      "2024-01-01", NA, NA, "2024-01-01", "2024-12-31")
 
   # Run the function
-  result <- mapDatesToPids(pids_with_last_updated, "gt")
+  result <- mapDatesToPids(pids_with_last_updated)
 
   # Check that there are exactly three groups
   expect_equal(length(result), 3)
@@ -37,7 +37,7 @@ test_that("mapDatesToPids handles PIDs without names by setting all names to NA"
   pids_with_last_updated <- c("PID1", "PID2", "PID3", "PID4", "PID5")
 
   # Expect that names are all NA
-  result <- mapDatesToPids(pids_with_last_updated, "gt")
+  result <- mapDatesToPids(pids_with_last_updated)
 
   # Check that there is only one group: NA
   expect_true(length(result) == 1)
