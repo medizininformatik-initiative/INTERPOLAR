@@ -155,7 +155,7 @@ combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL) {
         return(NULL)
       }
       if (is.na(param_names[i]) || param_names[i] == "") {
-        return(NULL)
+        return(params[[i]])
       }
       # return the key=value format
       return(paste0(param_names[i], "=", params[[i]]))
@@ -203,6 +203,7 @@ getResourcesByIDs <- function(
     parameters   = addParamToFHIRRequest(c()),
     verbose      = 0
 ) {
+
   getResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
     collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS - MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE) {
