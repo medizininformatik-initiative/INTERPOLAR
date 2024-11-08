@@ -69,12 +69,7 @@ retrieve <- function() {
 
       # Wait until the copy cron job runs after insertion
       etlutils::runLevel2(paste0("Wait until the cron job in database has moved data from input schema to database core (", DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING, " minute(s))") , {
-        start <- as.numeric(Sys.time())
-        while (start + DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING * 60 + 10 > as.numeric(Sys.time())) {
-          cat(".")
-          Sys.sleep(10)
-        }
-        cat("\n")
+        etlutils::waitWithDelay(DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING)
       })
     }
 
@@ -113,6 +108,13 @@ retrieve <- function() {
       etlutils::runLevel2("Write typed tables to database", {
         writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
       })
+
+      # Wait until the copy cron job runs after insertion
+      if (!etlutils::isDefinedAndTrue(SKIP_DELAY_AT_END)) {
+        etlutils::runLevel2(paste0("Wait until the cron job in database has moved data from input schema to database core (", DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING, " minute(s))") , {
+          etlutils::waitWithDelay(DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING)
+        })
+      }
 
     }
 
