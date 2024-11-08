@@ -54,7 +54,9 @@ retrieve <- function() {
       # for resources which could not be downloaded (generally missing or not present for the
       # current date) are not included here.
       resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, fhir_table_descriptions)
-      all_empty_fhir <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
+      all_empty_fhir <- all(sapply(names(resource_tables), function(name) {
+        if (name == "pids_per_ward") {TRUE} else {nrow(resource_tables[[name]]) == 0}
+      }))
       if (all_empty_fhir) {
         etlutils::catWarningMessage("No FHIR resources found.")
       }
