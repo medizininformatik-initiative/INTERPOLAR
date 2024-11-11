@@ -102,6 +102,9 @@ Funktion welche in den Datensätzen dokumentiert wann zuletzt bearbeitet wurden 
 ### 21_cre_view_typ_cds2db_all
 Erstellt Views im Schnittstellenschema cds2db_out um Daten die für den Import der FHIR Daten notwenig sind zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
+### 22_cre_view_raw_cds2db_last
+Erstellt Views im Schnittstellenschema cds2db_out um die letzten Raw-Daten für einen optimierten Import der FHIR Daten bereit zus stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
 ### 30_cds_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_raw_cds_in_to_db_log) für die FHIR-Daten vom Schnittstellenschema cds2db_in in den Kern (db_log) für die Raw-Daten. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
@@ -134,3 +137,8 @@ Erstellt eine zentralen cron-job der alle Überführungsfunktionen der Datenbank
 
 ### 98_dev_and_test
 Anlegen von Hilfstabellen für Tests und Entwicklung - nicht Produktiv.
+
+## Namenskonvention Views und Tabellen
+In der Datenbank gibt es für verschiedene Aufgaben verschiedene Views welche auf dieselbe Datenquelle zugreifen. Um diese voneinander zu unterscheiden werden den Tabellen/Views verschiedene Pre- und Postfix hinzugefügt. Aufgrund der begrenzten Zeichenanzahl geben diese teilweise nicht eine vollständige Beschreibung, sondern nur Hinweise (Genaue Funktionalität ist im SQL-Skript/Code nachzulesen).
+*_raw* - Tabellen/Views mit diesem Postfix beinhalten Raw-Daten - ohne diesen Postfix sind es typisierte Daten
+*_[Bedingung] -  Wenn Einschränkende Bedingungen vorhanden sind, werden diese als Stichwort genannt (z.B. Last, Diff,...)
