@@ -383,11 +383,25 @@ createFrontendTables <- function() {
     query_ids <- getQueryList(pids_per_ward$patient_id)
     db_read_connection <- getDatabaseReadConnection()
     table_name <- getFullTableName("encounter")
-    query <- paste0("SELECT * FROM ", table_name, "\n",
-                    "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
-                    "  enc_partof_id IS NULL AND\n",
-                    "  (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "') AND\n",
-                    "  enc_period_start <= '", query_datetime, "'\n")
+
+    enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
+
+    # create additional condition if there are class codes defined for the accepted encounters
+    enc_class_codes <- if (all(is.na(enc_class_codes)) || length(enc_class_codes) < 1) {
+      ""
+    } else {
+      # Additional condition only if enc_class_codes is not empty
+      paste0("  AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "')\n")
+    }
+
+    query <- paste0( "SELECT * FROM ", table_name, "\n",
+                     "  WHERE enc_patient_id IN (", query_ids, ")\n",
+                     "  AND enc_partof_id IS NULL\n",
+                     "  AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
+                     "  AND enc_period_start <= '", query_datetime, "'\n",
+                     enc_class_codes
+    )
+
     encounters <- etlutils::dbGetQuery(db_read_connection, query, query_log)
 
     # load Conditions referenced by Encounters

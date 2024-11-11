@@ -72,6 +72,12 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
 # value, use caret (^) and dollar ($) symbols.
 #FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
 
+# Only Encounters that have one of the entries specified here as a class attribute are displayed
+# in the frontend. This match must be exact, i.e. no patterns may be specified here.
+# This can be used to ensure that, for example, no outpatient Encounters are displayed even though
+# they have not yet ended.
+FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
+
 
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.
