@@ -120,7 +120,7 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 #' @return A character string containing the full table name for the specified resource.
 #'
-getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name), "_all")
+getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name))
 
 #' Load Resources Last Status From Database Query
 #'
@@ -136,7 +136,7 @@ getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name),
 getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
-  # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
+  # this should be view tables named in a style like 'v_patient' for resource_name Patient
   table_name <- getFullTableName(resource_name)
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
@@ -320,9 +320,9 @@ createFrontendTables <- function() {
 
     # Initialize an empty data table to store patient information
     patient_frontend_table <- data.table(
-      record_id = rep(NA_character_, times = pids_count), # v_patient_all -> patient_id
-      patient_fe_id = NA_character_, # v_patient_all -> patient_id
-      pat_id = NA_character_, # v_patient_all -> pat_id
+      record_id = rep(NA_character_, times = pids_count), # v_patient -> patient_id
+      patient_fe_id = NA_character_, # v_patient -> patient_id
+      pat_id = NA_character_, # v_patient -> pat_id
       pat_cis_pid = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
@@ -354,11 +354,11 @@ createFrontendTables <- function() {
   createEncounterFrontendTable <- function(pids_per_ward, patients) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
-      record_id	= character(), # v_patient_all -> patient_id
-      fall_id	= character(), # v_encounter_all -> enc_id
-      fall_pat_id	= character(), # v_patient_all -> pat_id
-      patient_id_fk	= character(), # v_patient_all -> patient_id
-      fall_fe_id	= character(), # v_encounter_all -> encounter_id
+      record_id	= character(), # v_patient -> patient_id
+      fall_id	= character(), # v_encounter -> enc_id
+      fall_pat_id	= character(), # v_patient -> pat_id
+      patient_id_fk	= character(), # v_patient -> patient_id
+      fall_fe_id	= character(), # v_encounter -> encounter_id
       redcap_repeat_instrument = character(),
       redcap_repeat_instance = character(),
       fall_studienphase = character(),

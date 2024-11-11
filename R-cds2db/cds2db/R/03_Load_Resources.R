@@ -83,7 +83,7 @@ getActiveEncounterPIDsFromDB <- function() {
   query_datetime <- getQueryDatetime()
 
   # Create the SQL-Query
-  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
+  query <- paste0("SELECT enc_patient_id FROM v_encounter\n",
                   "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
                   "   (enc_period_end is NULL OR enc_period_end > '",
                   query_datetime[["start_datetime"]], "');")
@@ -194,7 +194,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     query <- paste0(
       "SELECT pat_id,\n",
       "       COALESCE(MAX(last_check_datetime), MAX(input_datetime)) AS last_insert_datetime\n",
-      "FROM v_patient_all\n",
+      "FROM v_patient\n",
       "WHERE pat_id = ANY($1::text[])\n",
       "GROUP BY pat_id;"
     )
