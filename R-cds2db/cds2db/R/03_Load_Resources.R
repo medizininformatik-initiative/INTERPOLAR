@@ -147,6 +147,11 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
 
   # Get active encounter patient IDs from the database
   patient_ids_active <- getActiveEncounterPIDsFromDB()
+
+  if (!length(patient_ids_active)) {
+    stop("No active patient IDs in encounter table found in database. Please check FHIR-search parameter for encounter in toml-file.")
+  }
+
   # Unify and unique all patient IDs
   patient_ids <- unique(unlist(patient_ids_per_ward))
   patient_ids <- unique(c(patient_ids, patient_ids_active))

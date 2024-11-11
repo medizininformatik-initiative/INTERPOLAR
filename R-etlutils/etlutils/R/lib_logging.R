@@ -621,3 +621,23 @@ printAllTables <- function(table, table_name = NA) {
     printTableSummary(table, table_name)
   }
 }
+
+#' Wait with Periodic Dots Output
+#'
+#' This function waits for a specified number of minutes, printing a dot every 10 seconds
+#' to indicate ongoing processing. After the delay, it moves to a new line.
+#'
+#' @param delay_minutes Numeric. The number of minutes to wait.
+#'
+#' @export
+#'
+waitWithDelay <- function(delay_minutes) {
+  # Record the start time in seconds
+  start <- as.numeric(Sys.time())
+  # Loop, printing a dot every 10 seconds, until the specified delay has elapsed
+  while (start + delay_minutes * 60 + 10 > as.numeric(Sys.time())) {
+    cat(".")       # Output a dot as a visual indicator
+    Sys.sleep(10)  # Pause for 10 seconds
+  }
+  cat("\n")
+}
