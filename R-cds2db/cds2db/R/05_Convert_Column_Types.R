@@ -171,6 +171,7 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #' @param resource_tables A list of data tables representing resources.
 #' @param fhir_table_descriptions A named list of all relevant FHIR table descriptions (named with
 #'                                resource name).
+#' @param resource_tables_suffix A suffix for resource_tables, default: "_raw_diff".
 #'
 #' @details This function takes a list of data tables \code{resource_tables} as input.
 #' It converts the data types of columns in these tables based on predefined mappings:
