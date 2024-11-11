@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-08-21 09:59:34
--- Rights definition file size        : 15036 Byte
+-- Rights definition file last update : 2024-11-07 11:28:16
+-- Rights definition file size        : 15113 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-08-28 11:50:54
+-- Create time: 2024-11-07 13:39:16
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -36,8 +36,9 @@ DECLARE
     current_record record;
     data_count integer;
     data_count_all integer;
-    last_pro_nr INT;
+    last_pro_nr INT; -- Last processing number
     temp varchar;
+    last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
 BEGIN
     -- Copy Functionname: copy_raw_cds_in_to_db_log - From: cds2db_in -> To: db_log
 
@@ -199,6 +200,7 @@ BEGIN
                         enc_serviceprovider_identifier_type_text,
                         enc_serviceprovider_display,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -275,6 +277,7 @@ BEGIN
                         current_record.enc_serviceprovider_identifier_type_text,
                         current_record.enc_serviceprovider_display,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -282,7 +285,7 @@ BEGIN
                     DELETE FROM cds2db_in.encounter_raw WHERE encounter_raw_id = current_record.encounter_raw_id;
                 ELSE
                 UPDATE db_log.encounter_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
@@ -364,7 +367,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.encounter_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE encounter_raw_id = current_record.encounter_raw_id;
@@ -372,8 +375,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT encounter_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.encounter_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT encounter_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.encounter_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END encounter_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -428,6 +431,7 @@ BEGIN
                         pat_birthdate,
                         pat_address_postalcode,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -450,6 +454,7 @@ BEGIN
                         current_record.pat_birthdate,
                         current_record.pat_address_postalcode,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -457,7 +462,7 @@ BEGIN
                     DELETE FROM cds2db_in.patient_raw WHERE patient_raw_id = current_record.patient_raw_id;
                 ELSE
                 UPDATE db_log.patient_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
@@ -485,7 +490,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.patient_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE patient_raw_id = current_record.patient_raw_id;
@@ -493,8 +498,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT patient_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.patient_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT patient_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.patient_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END patient_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -741,6 +746,7 @@ BEGIN
                         con_note_time,
                         con_note_text,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -859,6 +865,7 @@ BEGIN
                         current_record.con_note_time,
                         current_record.con_note_text,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -866,7 +873,7 @@ BEGIN
                     DELETE FROM cds2db_in.condition_raw WHERE condition_raw_id = current_record.condition_raw_id;
                 ELSE
                 UPDATE db_log.condition_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
@@ -990,7 +997,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.condition_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE condition_raw_id = current_record.condition_raw_id;
@@ -998,8 +1005,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT condition_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.condition_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT condition_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.condition_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END condition_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -1134,6 +1141,7 @@ BEGIN
                         med_ingredient_itemreference_display,
                         med_ingredient_isactive,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -1196,6 +1204,7 @@ BEGIN
                         current_record.med_ingredient_itemreference_display,
                         current_record.med_ingredient_isactive,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -1203,7 +1212,7 @@ BEGIN
                     DELETE FROM cds2db_in.medication_raw WHERE medication_raw_id = current_record.medication_raw_id;
                 ELSE
                 UPDATE db_log.medication_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
@@ -1271,7 +1280,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medication_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medication_raw_id = current_record.medication_raw_id;
@@ -1279,8 +1288,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medication_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medication_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT medication_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medication_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END medication_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -1747,6 +1756,7 @@ BEGIN
                         medreq_substitution_reason_display,
                         medreq_substitution_reason_text,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -1975,6 +1985,7 @@ BEGIN
                         current_record.medreq_substitution_reason_display,
                         current_record.medreq_substitution_reason_text,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -1982,7 +1993,7 @@ BEGIN
                     DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
                 ELSE
                 UPDATE db_log.medicationrequest_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
@@ -2216,7 +2227,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationrequest_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
@@ -2224,8 +2235,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medicationrequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT medicationrequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END medicationrequest_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -2464,6 +2475,7 @@ BEGIN
                         medadm_dosage_ratequantity_system,
                         medadm_dosage_ratequantity_code,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -2578,6 +2590,7 @@ BEGIN
                         current_record.medadm_dosage_ratequantity_system,
                         current_record.medadm_dosage_ratequantity_code,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -2585,7 +2598,7 @@ BEGIN
                     DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
                 ELSE
                 UPDATE db_log.medicationadministration_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
@@ -2705,7 +2718,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationadministration_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
@@ -2713,8 +2726,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medicationadministration_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT medicationadministration_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END medicationadministration_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -3155,6 +3168,7 @@ BEGIN
                         medstat_dosage_maxdoseperlifetime_system,
                         medstat_dosage_maxdoseperlifetime_code,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -3370,6 +3384,7 @@ BEGIN
                         current_record.medstat_dosage_maxdoseperlifetime_system,
                         current_record.medstat_dosage_maxdoseperlifetime_code,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -3377,7 +3392,7 @@ BEGIN
                     DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
                 ELSE
                 UPDATE db_log.medicationstatement_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
@@ -3598,7 +3613,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.medicationstatement_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
@@ -3606,8 +3621,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medicationstatement_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT medicationstatement_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END medicationstatement_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -3890,6 +3905,7 @@ BEGIN
                         obs_hasmember_identifier_type_text,
                         obs_hasmember_display,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -4026,6 +4042,7 @@ BEGIN
                         current_record.obs_hasmember_identifier_type_text,
                         current_record.obs_hasmember_display,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -4033,7 +4050,7 @@ BEGIN
                     DELETE FROM cds2db_in.observation_raw WHERE observation_raw_id = current_record.observation_raw_id;
                 ELSE
                 UPDATE db_log.observation_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
@@ -4175,7 +4192,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.observation_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE observation_raw_id = current_record.observation_raw_id;
@@ -4183,8 +4200,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT observation_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.observation_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT observation_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.observation_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END observation_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -4293,6 +4310,7 @@ BEGIN
                         diagrep_conclusioncode_display,
                         diagrep_conclusioncode_text,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -4342,6 +4360,7 @@ BEGIN
                         current_record.diagrep_conclusioncode_display,
                         current_record.diagrep_conclusioncode_text,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -4349,7 +4368,7 @@ BEGIN
                     DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
                 ELSE
                 UPDATE db_log.diagnosticreport_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
@@ -4404,7 +4423,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.diagnosticreport_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
@@ -4412,8 +4431,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT diagnosticreport_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT diagnosticreport_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END diagnosticreport_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -4550,6 +4569,7 @@ BEGIN
                         servreq_locationcode_display,
                         servreq_locationcode_text,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -4613,6 +4633,7 @@ BEGIN
                         current_record.servreq_locationcode_display,
                         current_record.servreq_locationcode_text,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -4620,7 +4641,7 @@ BEGIN
                     DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
                 ELSE
                 UPDATE db_log.servicerequest_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
@@ -4689,7 +4710,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.servicerequest_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
@@ -4697,8 +4718,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT servicerequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.servicerequest_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT servicerequest_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.servicerequest_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END servicerequest_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -4855,6 +4876,7 @@ BEGIN
                         proc_note_time,
                         proc_note_text,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -4928,6 +4950,7 @@ BEGIN
                         current_record.proc_note_time,
                         current_record.proc_note_text,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -4935,7 +4958,7 @@ BEGIN
                     DELETE FROM cds2db_in.procedure_raw WHERE procedure_raw_id = current_record.procedure_raw_id;
                 ELSE
                 UPDATE db_log.procedure_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
@@ -5014,7 +5037,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.procedure_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE procedure_raw_id = current_record.procedure_raw_id;
@@ -5022,8 +5045,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT procedure_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.procedure_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT procedure_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.procedure_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END procedure_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -5112,6 +5135,7 @@ BEGIN
                         cons_provision_dataperiod_start,
                         cons_provision_dataperiod_end,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -5151,6 +5175,7 @@ BEGIN
                         current_record.cons_provision_dataperiod_start,
                         current_record.cons_provision_dataperiod_end,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -5158,7 +5183,7 @@ BEGIN
                     DELETE FROM cds2db_in.consent_raw WHERE consent_raw_id = current_record.consent_raw_id;
                 ELSE
                 UPDATE db_log.consent_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
@@ -5203,7 +5228,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.consent_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE consent_raw_id = current_record.consent_raw_id;
@@ -5211,8 +5236,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT consent_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.consent_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT consent_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.consent_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END consent_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -5263,6 +5288,7 @@ BEGIN
                         loc_description,
                         loc_alias,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -5283,6 +5309,7 @@ BEGIN
                         current_record.loc_description,
                         current_record.loc_alias,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -5290,7 +5317,7 @@ BEGIN
                     DELETE FROM cds2db_in.location_raw WHERE location_raw_id = current_record.location_raw_id;
                 ELSE
                 UPDATE db_log.location_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
@@ -5316,7 +5343,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.location_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE location_raw_id = current_record.location_raw_id;
@@ -5324,8 +5351,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT location_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.location_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT location_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.location_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END location_raw
     -----------------------------------------------------------------------------------------------------------------------
@@ -5350,6 +5377,7 @@ BEGIN
                         ward_name,
                         patient_id,
                         input_datetime,
+                        last_check_datetime,
                         last_processing_nr
                     )
                     VALUES (
@@ -5357,6 +5385,7 @@ BEGIN
                         current_record.ward_name,
                         current_record.patient_id,
                         current_record.input_datetime,
+                        last_pro_datetime,
                         last_pro_nr
                     );
 
@@ -5364,7 +5393,7 @@ BEGIN
                     DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
                 ELSE
                 UPDATE db_log.pids_per_ward_raw target_record
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
                     WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
@@ -5377,7 +5406,7 @@ BEGIN
             EXCEPTION
                 WHEN OTHERS THEN
                     UPDATE cds2db_in.pids_per_ward_raw
-                    SET last_check_datetime = CURRENT_TIMESTAMP
+                    SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
@@ -5385,8 +5414,8 @@ BEGIN
     END LOOP;
 
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT pids_per_ward_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward_raw' AS table_name, last_check_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward_raw
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_check_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    ( SELECT pids_per_ward_raw_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward_raw
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
     -- END pids_per_ward_raw
     -----------------------------------------------------------------------------------------------------------------------
