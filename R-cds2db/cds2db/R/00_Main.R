@@ -90,12 +90,10 @@ retrieve <- function() {
       # add "_raw" prefix to the resource table names to match the identical names from the raw tables
       all_resource_raw_table_names <- paste0(tolower(all_resource_names), "_raw")
       all_current_run_table_names <- names(resource_tables)
-      all_table_names_raw <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
+      all_table_names_raw_diff <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
+      all_table_names_raw_diff <- paste0("v_", all_table_names_raw_diff, "_diff")
 
-      all_table_names_raw <- sub("_raw", "", all_table_names_raw)
-      all_table_names_raw <- paste0("v_", all_table_names_raw)
-
-      resource_tables <- readTablesFromDatabase(all_table_names_raw)
+      resource_tables_raw_diff <- readTablesFromDatabase(all_table_names_raw_diff)
       all_empty_raw <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
       if (all_empty_raw) {
         etlutils::catWarningMessage("No (new) untyped RAW tables found in database")
@@ -107,7 +105,7 @@ retrieve <- function() {
 
       etlutils::runLevel2("Convert RAW tables to typed tables", {
         fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
-        resource_tables <- convertTypes(resource_tables, fhir_table_descriptions)
+        resource_tables <- convertTypes(resource_tables_raw_diff, fhir_table_descriptions)
       })
 
       etlutils::runLevel2("Write typed tables to database", {

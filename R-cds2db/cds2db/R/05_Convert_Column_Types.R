@@ -183,8 +183,9 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #'
 #' @return This function modifies the input resource tables by converting the data types of columns.
 #'
-convertTypes <- function(resource_tables, fhir_table_descriptions) {
-
+convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tables_suffix = "_raw_diff") {
+  # remove _raw_diff suffix in resource_table names
+  names(resource_tables) <- sub(resource_tables_suffix, "", names(resource_tables))
   # rename the database column names in style of something like 'con_identifier_code' back
   # to 'identifier/code'. This we need for correct working of the following join and melt.
   resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions, TRUE)
