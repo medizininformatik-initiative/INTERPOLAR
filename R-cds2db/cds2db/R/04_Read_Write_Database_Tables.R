@@ -1,15 +1,15 @@
 #' Write Data Tables to a Database
 #'
 #' This function takes a list of data.table objects and writes them to a specified database.
-#' It establishes a database connection using predefined credentials and configuration parameters.
-#' Users have the option to clear existing table contents before writing new data by setting
-#' `clear_before_insert` to TRUE. The function writes all provided tables.
+#' It establishes a database connection using predefined credentials and configuration parameters,
+#' and optionally checks if tables are empty before writing.
 #'
 #' @param tables A named list of data.table objects to be written to the database. Each element in
 #'               the list represents a dataset intended for a corresponding table in the database.
-#' @param clear_before_insert A logical flag indicating whether to clear the table contents
-#'                            before inserting new data. Defaults to FALSE.
-writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
+#' @param stop_if_table_not_empty A logical value indicating whether to check if each target table
+#'                        in the database is empty before writing. If `TRUE`, the function will stop
+#'                        with an error if any table already contains data. Default is `FALSE`.
+writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE) {
   etlutils::createConnectionAndWriteTablesToDatabase(tables,
                                                      dbname = DB_GENERAL_NAME,
                                                      host = DB_GENERAL_HOST,
@@ -17,7 +17,7 @@ writeTablesToDatabase <- function(tables, clear_before_insert = FALSE) {
                                                      user = DB_CDS2DB_USER,
                                                      password = DB_CDS2DB_PASSWORD,
                                                      schema = DB_CDS2DB_SCHEMA_IN,
-                                                     clear_before_insert = clear_before_insert)
+                                                     stop_if_table_not_empty = stop_if_table_not_empty)
 }
 
 #' Retrieve Untyped RAW Data from Database

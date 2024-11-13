@@ -66,7 +66,7 @@ retrieve <- function() {
     if (!all_empty_fhir) {
       # Write raw tables to database
       etlutils::runLevel2("Write raw tables to database", {
-        writeTablesToDatabase(resource_tables, clear_before_insert = TRUE)
+        writeTablesToDatabase(resource_tables, stop_if_table_not_empty = TRUE)
       })
 
       # Wait until the copy cron job runs after insertion
@@ -106,7 +106,7 @@ retrieve <- function() {
       })
 
       etlutils::runLevel2("Write typed tables to database", {
-        writeTablesToDatabase(resource_tables, clear_before_insert = FALSE)
+        writeTablesToDatabase(resource_tables, stop_if_table_not_empty = TRUE)
       })
 
       # Wait until the copy cron job runs after insertion

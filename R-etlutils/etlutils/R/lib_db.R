@@ -325,68 +325,104 @@ dbReadTable <- function(db_connection, table_name) {
 #' @param user A string representing the database user name.
 #' @param password A string representing the database user password.
 #' @param schema A string representing the database schema.
-#' @param clear_before_insert A logical value indicating whether to clear existing data in the
-#' tables before inserting new data. Default is FALSE.
+#' @param stop_if_table_not_empty A logical value indicating whether to check if each target table
+#'                        in the database is empty before writing. If `TRUE`, the function will stop
+#'                        with an error if any table already contains data. Default is `FALSE`.
 #'
 #' @return NULL. The function is used for its side effects of writing data to the database.
 #'
-#' @examples
-#' \dontrun{
-#' tables <- list(
-#'   table1 = data.frame(col1 = 1:3, col2 = letters[1:3]),
-#'   table2 = data.frame(col1 = 4:6, col2 = letters[4:6])
-#' )
-#' writeTablesTablesToDatabase(
-#'   tables,
-#'   dbname = "dbname",
-#'   host = "host",
-#'   port = 5432,
-#'   user = "user",
-#'   password = "password",
-#'   schema = "schema"
-#' )
-#' }
-#'
 #' @export
-createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, clear_before_insert = FALSE) {
+createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, stop_if_table_not_empty = FALSE) {
   db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  writeTablesToDatabase(tables, db_connection, clear_before_insert, close_db_connection = TRUE)
+  writeTablesToDatabase(tables, db_connection, stop_if_table_not_empty, close_db_connection = TRUE)
+}
+
+#' Check if a Database Table is Empty
+#'
+#' This function checks if a specified table in the database is empty by
+#' executing a SQL query that counts the number of rows in the table.
+#'
+#' @param db_connection A database connection object created using `DBI::dbConnect()`.
+#' @param table_name A character string specifying the name of the table to check.
+#'
+#' @return A logical value: `TRUE` if the table is empty, `FALSE` otherwise.
+#'
+dbIsTableEmpty <- function(db_connection, table_name) {
+  # SQL query to count rows in the table
+  query <- paste0("SELECT COUNT(*) FROM ", table_name)
+  # Execute the query and fetch the result
+  result <- dbGetQuery(db_connection, query)
+  # Return TRUE if the count is 0, indicating the table is empty
+  return(result[1, 1] == 0)
 }
 
 #' Write Multiple Tables to Database
 #'
-#' This function writes multiple tables to a specified database schema. It can optionally clear
-#' existing content before inserting new data.
+#' This function writes multiple data frames to specified tables within a database schema.
+#' It includes an option to stop the process if any target table is not empty and an option
+#' to close the database connection after execution.
 #'
 #' @param tables A named list of data frames representing the tables to be written to the database.
-#' @param db_connection A database connection from where the tables should be read.
-#' @param clear_before_insert A logical value indicating whether to clear existing data in the
-#' tables before inserting new data. Default is FALSE.
-#' @param close_db_connection If TRUE the database connection will be closed at the end of the
-#'                            process. Default is FALSE.
+#'               Each list element name should correspond to the target database table name.
+#' @param db_connection A connection object to the target database.
+#' @param stop_if_table_not_empty A logical value indicating whether the function should stop if
+#'                                any target database table is not empty. If `TRUE`, the function
+#'                                checks each table and raises an error listing the tables that
+#'                                are not empty. Default is `FALSE`.
+#' @param close_db_connection A logical value indicating whether to close the database connection
+#'                            after executing the function. Default is `FALSE`.
 #'
-#' @return NULL. The function is used for its side effects of writing data to the database.
+#' @return NULL. This function is used for its side effects of writing data to the database and,
+#'         optionally, closing the connection.
+#'
+#' @details
+#' - The function first checks if each table specified in `tables` exists in the database.
+#' - If `stop_if_table_not_empty` is set to `TRUE`, the function verifies that each target
+#'   table is empty before writing. If any table is not empty, an error is raised with a
+#'   message listing these tables.
+#' - If `stop_if_table_not_empty` is `FALSE`, the function proceeds to write data directly
+#'   to the tables without checking.
+#' - If `close_db_connection` is `TRUE`, the database connection will be closed at the end of the process.
 #'
 #' @export
-writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = FALSE, close_db_connection = FALSE) {
+writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty = FALSE, close_db_connection = FALSE) {
   table_names <- names(tables)
   db_table_names <- dbListTableNames(db_connection)
 
-  # write tables to DB
+  # Warn about tables that do not exist in the database
   for (table_name in table_names) {
-    if (table_name %in% db_table_names) {
-      table <- tables[[table_name]]
-      if (clear_before_insert) {
-        dbDeleteContent(db_connection, table_name)
-      }
-      # Check column widths of table content
-      dbCheckContent(db_connection, table_name, table)
-      # Add table content to DB
-      dbAddContent(db_connection, table_name, table)
-    } else {
+    if (!(table_name %in% db_table_names)) {
       warning(paste("Table", table_name, "not found in database"))
     }
   }
+
+  # Restrict `table_names` to only those found in both `tables` and the database
+  table_names <- intersect(table_names, db_table_names)
+
+  # 1. Check if any tables are not empty when `stop_if_table_not_empty` is TRUE
+  non_empty_tables <- c()
+  if (stop_if_table_not_empty) {
+    for (table_name in table_names) {
+      if (!dbIsTableEmpty(db_connection, table_name)) {
+        non_empty_tables <- c(non_empty_tables, table_name)
+      }
+    }
+
+    # If there are non-empty tables, raise an error and list them
+    if (length(non_empty_tables) > 0) {
+      stop(paste("The following tables are not empty. The cron job may not have completed yet:",
+                 paste(non_empty_tables, collapse = ", ")))
+    }
+  }
+
+  # 2. Write tables to DB (only if all tables are empty or if `stop_if_table_not_empty` is FALSE)
+  for (table_name in table_names) {
+    table <- tables[[table_name]]
+    # Proceed with writing table data to the database
+    dbCheckContent(db_connection, table_name, table)  # Check column widths
+    dbAddContent(db_connection, table_name, table)    # Add table content
+  }
+
   if (close_db_connection) {
     dbDisconnect(db_connection)
   }
@@ -395,28 +431,31 @@ writeTablesToDatabase <- function(tables, db_connection, clear_before_insert = F
 #' Write a Data Table to a Database
 #'
 #' This function writes a single data.table to a specified database. If the table name is not
-#' provided, the function uses the name of the data.table variable. The user can choose to clear
-#' existing table contents before writing new data by setting `clear_before_insert` to TRUE.
+#' provided, the function uses the name of the data.table variable. It includes an option to stop
+#' the process if any target table is not empty and an option to close the database connection after
+#' execution.
 #'
 #' @param table A data.table object to be written to the database.
 #' @param db_connection A database connection to which the table should be written.
 #' @param table_name A character string representing the name of the table in the database. If not provided,
 #'                   the name of the data.table variable is used.
-#' @param clear_before_insert A logical flag indicating whether to clear the table contents
-#'                            before inserting new data. Defaults to FALSE.
+#' @param stop_if_table_not_empty A logical value indicating whether the function should stop if
+#'                                any target database table is not empty. If `TRUE`, the function
+#'                                checks each table and raises an error listing the tables that
+#'                                are not empty. Default is `FALSE`.
 #' @param close_db_connection If TRUE, the database connection will be closed at the end of the
 #'                            process. Default is FALSE.
 #'
 #' @return NULL. The function is used for its side effects of writing data to the database.
 #'
 #' @export
-writeTableToDatabase <- function(table, db_connection, table_name = NA, clear_before_insert = FALSE, close_db_connection = FALSE) {
+writeTableToDatabase <- function(table, db_connection, table_name = NA, stop_if_table_not_empty = FALSE, close_db_connection = FALSE) {
   if (is.na(table_name)) {
     table_name <- as.character(sys.call()[2]) # get the table variable name
   }
   tables <- list(table)
   names(tables) <- table_name
-  writeTablesToDatabase(tables, db_connection, clear_before_insert, close_db_connection)
+  writeTablesToDatabase(tables, db_connection, stop_if_table_not_empty, close_db_connection)
 }
 
 #' Read Multiple Tables from Database
