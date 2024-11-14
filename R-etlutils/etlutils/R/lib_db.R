@@ -389,11 +389,11 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
   table_names <- names(tables)
   db_table_names <- dbListTableNames(db_connection)
 
-  # Warn about tables that do not exist in the database
-  for (table_name in table_names) {
-    if (!(table_name %in% db_table_names)) {
-      warning(paste("Table", table_name, "not found in database"))
-    }
+  # Stop with error if there are tables that do not exist in the database
+  missing_db_table_names <- setdiff(db_table_names, table_names)
+  if (length(missing_db_table_names) > 0) {
+    stop(paste("The following tables are not found in the database. Perhaps the database was not initialized correctly?",
+               paste(missing_db_table_names, collapse = "\n   ")))
   }
 
   # Restrict `table_names` to only those found in both `tables` and the database
@@ -410,8 +410,8 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
 
     # If there are non-empty tables, raise an error and list them
     if (length(non_empty_tables) > 0) {
-      stop(paste("The following tables are not empty. The cron job may not have completed yet:",
-                 paste(non_empty_tables, collapse = ", ")))
+      stop(paste("The following tables are not empty. The cron job may not have completed yet:\n   ",
+                 paste(non_empty_tables, collapse = "\n   ")))
     }
   }
 
