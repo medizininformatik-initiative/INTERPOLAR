@@ -351,7 +351,7 @@ dbIsTableEmpty <- function(db_connection, table_name) {
   # SQL query to count rows in the table
   query <- paste0("SELECT COUNT(*) FROM ", table_name)
   # Execute the query and fetch the result
-  result <- dbGetQuery(db_connection, query)
+  result <- dbGetQuery(db_connection, query, log = FALSE)
   # Return TRUE if the count is 0, indicating the table is empty
   return(result[1, 1] == 0)
 }
