@@ -110,7 +110,7 @@ retrieve <- function() {
       })
 
       # Wait until the copy cron job runs after insertion
-      if (!etlutils::isDefinedAndTrue(SKIP_DELAY_AT_END)) {
+      if (!etlutils::isDefinedAndTrue("SKIP_DELAY_AT_END")) {
         etlutils::runLevel2(paste0("Wait until the cron job in database has moved data from input schema to database core (", DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING, " minute(s))") , {
           etlutils::waitWithDelay(DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING)
         })
