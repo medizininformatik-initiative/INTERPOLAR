@@ -232,10 +232,27 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
-  # Add additional table of ward-patient ID per date
-  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+  # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
+  table_names <- paste0(names(table_descriptions), "_raw_last")
+  # Read the tables from the database using the generated table names
+  db_resource_tables <- readTablesFromDatabase(table_names)
+  # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
+  names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
+  # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
+  full_tables <- mergeTablesUnion(table_names, db_resource_tables)
 
-  return(resource_tables)
+  # Loop through each table name in the `full_tables` list
+  for (full_table_name in names(full_tables)) {
+    # Extract the column names from the corresponding entry in `table_descriptions`
+    full_table_columns <- table_descriptions[[full_table_name]]@cols@names
+    # Subset the columns of the current table in `full_tables` to match the columns from `table_descriptions`
+    full_tables[[full_table_name]] <- full_tables[[full_table_name]][, ..full_table_columns]
+  }
+
+  # Add additional table of ward-patient ID per date
+  full_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+
+  return(full_tables)
 }
 
 #' Load Referenced Resources by Own ID from FHIR Server
