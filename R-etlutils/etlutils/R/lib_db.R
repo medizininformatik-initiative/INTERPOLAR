@@ -390,7 +390,7 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
   db_table_names <- dbListTableNames(db_connection)
 
   # Stop with error if there are tables that do not exist in the database
-  missing_db_table_names <- setdiff(db_table_names, table_names)
+  missing_db_table_names <- setdiff(table_names, db_table_names)
   if (length(missing_db_table_names) > 0) {
     stop(paste("The following tables are not found in the database. Perhaps the database was not initialized correctly?",
                paste(missing_db_table_names, collapse = "\n   ")))
