@@ -514,3 +514,99 @@ dbPrintTimeAndTimezone <- function(db_connection) {
   print(paste0("R Sys.time(): ", Sys.time()))
   print(paste0("R Sys.timezone(): ", Sys.timezone()))
 }
+
+#' Get the current schema of the PostgreSQL connection
+#'
+#' This function retrieves the current schema of an active PostgreSQL connection
+#' using the SQL query `SELECT current_schema();`. It returns the name of the
+#' schema that is currently in use by the connection.
+#'
+#' @param con A valid PostgreSQL connection object from the RPostgres package.
+#'
+#' @return A string representing the name of the current schema.
+#'
+getCurrentSchema <- function(con) {
+  # SQL query to retrieve the current schema
+  query <- "SELECT current_schema();"
+  # Execute the query and store the result
+  result <- dbGetQuery(con, query)
+  # Return the schema name from the first row and column
+  return(result$current_schema[1])
+}
+
+#' Retrieve Database Table Columns
+#'
+#' This function retrieves the column names and their corresponding data types
+#' for a specified table in the current schema of a PostgreSQL database.
+#'
+#' @param con A database connection object. This connection must be established
+#'   using an appropriate database driver.
+#' @param table_name A character string representing the name of the table for
+#'   which the column information is to be retrieved.
+#'
+#' @return A data.frame containing two columns:
+#'   \itemize{
+#'     \item \code{column_name}: The names of the columns in the specified table.
+#'     \item \code{data_type}: The corresponding PostgreSQL data types of the columns.
+#'   }
+#'
+#' @export
+getDBTableColumns <- function(con, table_name) {
+  # Get the current schema using the helper function
+  schema <- getCurrentSchema(con)
+  # SQL query to retrieve column names and data types for the specified table in the current schema
+  query <- paste0(
+    "SELECT column_name, data_type
+     FROM information_schema.columns
+     WHERE table_name = '", table_name, "'
+     AND table_schema = '", schema, "'"
+  )
+  # Execute the query and return the result as a data frame
+  result <- dbGetQuery(con, query)
+  return(result)
+}
+
+#' Convert Data Table Column types to Database column Types
+#'
+#' This function converts the columns of a data.table to specified types based on a PostgreSQL schema.
+#'
+#' @param dt A data.table object containing the data to be converted.
+#' @param db_columns A data.frame or data.table containing the database schema with two columns:
+#'   \itemize{
+#'     \item \code{column_name}: The names of the columns in the data.table.
+#'     \item \code{data_type}: The corresponding PostgreSQL data types to convert to, which can include
+#'     "integer", "double precision", "character varying", "date", and "timestamp without time zone".
+#'   }
+#'
+#' @return A data.table with columns converted to the specified database types.
+#'
+#' @export
+convertToDBTypes <- function(dt, db_columns) {
+  # Iterate over each column in the database schema
+  for (i in seq_along(db_columns$column_name)) {
+    col_name <- db_columns$column_name[i]
+    db_type <- db_columns$data_type[i]
+
+    # Check if the column exists in the data.table
+    if (col_name %in% names(dt)) {
+      # Convert the column type based on PostgreSQL type
+      if (db_type == "integer") {
+        # Convert to integer type
+        dt[, (col_name) := as.integer(get(col_name))]
+      } else if (db_type == "double precision") {
+        # Convert to numeric type
+        dt[, (col_name) := as.numeric(get(col_name))]
+      } else if (db_type == "character varying") {
+        # Convert to character type
+        dt[, (col_name) := as.character(get(col_name))]
+      } else if (db_type == "date") {
+        # Convert to Date type
+        dt[, (col_name) := as.Date(get(col_name))]
+      } else if (db_type == "timestamp without time zone") {
+        # Convert to POSIXct (datetime) type
+        dt[, (col_name) := as.POSIXct(get(col_name))]
+      }
+    }
+  }
+  return(dt)
+}

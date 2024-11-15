@@ -22,16 +22,19 @@ getLastProcessingNumber <- function() {
 #' This function loads all data from a database table that has the most recent timestamp.
 #' It constructs a SQL query to fetch records where the timestamp is the latest in the table.
 #'
-#' @param table_name_part A string representing part of the table name to search for.
+#' @param table_name The table name.
 #' @return A data frame containing the records with the most recent timestamp from the specified table.
 #'
-loadLastImportedDatasetsFromDB <- function(table_name_part) {
+loadLastImportedDatasetsFromDB <- function(table_name) {
   db_connection_read <- getDatabaseReadConnection()
-  table_name <- getFirstTableWithNamePart(db_connection_read, table_name_part)
   last_processing_nr <- getLastProcessingNumber()
   # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
                       " WHERE last_processing_nr = ", last_processing_nr, ";")
+  # This only occurs if the database has been reset and the dataprocessor was executed too quickly
+  if (is.na(last_processing_nr)) {
+    stop(paste0("In table ", table_name, " the content of column last_processing_nr in the database is NA, so the following SQL query will return an error:\n", statement, "\nPlease wait at least 1 minute before starting the dataprocessor!"))
+  }
   etlutils::dbGetQuery(db_connection_read, statement)
 }
 
@@ -108,7 +111,18 @@ parseQueryList <- function(list_string, split = " ") {
 # Load Resources by ID (= own ID or PID or Enc ID) #
 ####################################################
 
-#' Get Load Resources Last Status From Database Query
+#' Get Full Table Name for Resource
+#'
+#' This function constructs the full table name for a given resource by converting the
+#' resource name to lowercase and appending it to a prefix and suffix.
+#'
+#' @param resource_name A character string representing the name of the resource.
+#'
+#' @return A character string containing the full table name for the specified resource.
+#'
+getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name), "_all")
+
+#' Load Resources Last Status From Database Query
 #'
 #' This function constructs a SQL statement to retrieve the last status of load resources
 #' from a specified table in the database. It utilizes various helper functions to
@@ -119,11 +133,11 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 #' @return A character string representing the SQL query.
 #'
-getLoadResourcesLastStatusFromDBQuery <- function(resource_name, filter = "") {
+getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
   db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
-  table_name <- getFirstTableWithNamePart(db_connection_read, paste0(resource_name, "_all"))
+  table_name <- getFullTableName(resource_name)
   id_column <- getIDColumn(resource_name)
   statement <-paste0(
     "SELECT * FROM ", table_name, " a\n",
@@ -173,7 +187,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
 #'
 runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
-  statement <- getLoadResourcesLastStatusFromDBQuery(resource_name, filter)
+  statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
   db_connection_read <- getDatabaseReadConnection()
   etlutils::dbGetQuery(db_connection_read, statement, log)
 }
@@ -190,7 +204,7 @@ runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
 #' @return A data frame containing the last status of load resources.
 #'
 loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
-  statement <- getLoadResourcesLastStatusFromDBQuery(resource_name, filter = "")
+  statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
   db_connection_read <- getDatabaseReadConnection()
   etlutils::dbGetQuery(db_connection_read, statement, log)
 }
@@ -275,7 +289,6 @@ createFrontendTables <- function() {
   # information such as related tables and database connection details. It can be
   # used to provide more context when reporting errors or warnings.
   getErrorOrWarningMessage <- function(text, tables = NA, db_connection = getDatabaseReadConnection()) {
-    tables <- if (!etlutils::isSimpleNA(tables)) sapply(tables, function(table_name_part) getFirstTableWithNamePart(db_connection, table_name_part)) else NA
     tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
     db_connection <- if (!etlutils::isSimpleNA(db_connection)) paste0(" DB connection: ", etlutils::getPrintString(db_connection)) else ""
     text <- paste0(text, tables, db_connection)
@@ -369,7 +382,7 @@ createFrontendTables <- function() {
     query_datetime <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
     db_read_connection <- getDatabaseReadConnection()
-    table_name <- getFirstTableWithNamePart(db_read_connection, "encounter_all")
+    table_name <- getFullTableName("encounter")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
                     "  enc_partof_id IS NULL AND\n",
@@ -380,7 +393,7 @@ createFrontendTables <- function() {
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
     query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
-    table_name <- getFirstTableWithNamePart(db_read_connection, "condition_all")
+    table_name <- getFullTableName("condition")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
     conditions <- etlutils::dbGetQuery(db_read_connection, query, query_log)
@@ -462,7 +475,7 @@ createFrontendTables <- function() {
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
           codes <- parseQueryList(codes)
-          table_name <- getFirstTableWithNamePart(db_read_connection, "observation_all")
+          table_name <- getFullTableName("observation")
           # Extract the Observations by direct encounter references
           query <- paste0("SELECT * FROM ", table_name, "\n",
                           "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
@@ -507,7 +520,8 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward <- loadLastImportedDatasetsFromDB("pids_per_ward")
+  pids_per_ward_table_name <- getFullTableName("pids_per_ward")
+  pids_per_ward <- loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {

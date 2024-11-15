@@ -66,6 +66,43 @@ getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
 
+#' Adjusts the names of a vector or list by removing a specified prefix and matching them
+#' to a list of valid names with correct capitalization.
+#'
+#' This function processes the names of a named vector or list by removing a specified
+#' prefix and then matching the resulting names to a provided vector of valid names. If a
+#' match is found, the function replaces the name with the corresponding name from the
+#' valid names vector, preserving the correct capitalization.
+#'
+#' @param variables A named vector or list whose names need to be adjusted.
+#' @param prefix A character string representing the prefix to be removed from the names.
+#' @param valid_names A character vector containing valid names to match against, used to
+#' format the names correctly.
+#'
+#' @return A named vector or list with adjusted names, where the specified prefix has been
+#' removed and names are replaced with the corresponding valid names from the `valid_names`
+#' vector, preserving case.
+#'
+adjustNames <- function(variables, prefix, valid_names) {
+  # Internal helper function to process individual names
+  process_name <- function(name) {
+    # Remove the specified prefix
+    name <- sub(paste0("^", prefix), "", name)
+    # Find the corresponding name in valid_names (case-insensitive matching)
+    match_index <- match(tolower(name), tolower(valid_names))
+
+    # If a match is found, use the valid name with correct casing
+    if (!is.na(match_index)) {
+      name <- valid_names[match_index]
+    }
+    return(name)
+  }
+  # Apply the helper function to all names
+  names(variables) <- sapply(names(variables), process_name)
+  # Return the modified vector or list
+  return(variables)
+}
+
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
@@ -93,8 +130,41 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
   # Unify and unique all patient IDs
   patientIDs <- unique(unlist(patient_IDs_per_ward))
   patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
-  # Load all data of relevant patients from FHIR server
-  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions)
+
+  # This parameter should only be changed via DEBUG variables to set additional test filters for
+  # the FHIR-search request.
+  resources_add_search_parameter <- NA
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+
+  # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+
+  # Define the prefix for global debug filter variables
+  global_debug_filter_variable_prefix <- "DEBUG_ADD_FHIR_SEARCH_"
+  # Get global filter variables with the specified prefix
+  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
+
+  # Load FHIR resources based on the presence of global filter variables
+  if (length(global_filter_variables)) {
+    resources_add_search_parameter <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
+    if (exists("DEBUG_ADD_FHIR_SEARCH_GENERAL")) {
+      # Prepend value of 'GENERAL' for all resources
+      for (name in names(table_descriptions)) {
+        full_value <- resources_add_search_parameter[["GENERAL"]]
+        if (name %in% names(resources_add_search_parameter)) {
+          full_value <- paste0(full_value, "&", resources_add_search_parameter[[name]])
+        }
+        resources_add_search_parameter[[name]] <- full_value
+      }
+    }
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions, resources_add_search_parameter)
 
   #########################
   # START: FOR DEBUG ONLY #
@@ -196,34 +266,30 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
   # Get global variables by prefix
   global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
   if (length(global_filter_variables)) {
-    # Extract and process resource names
-    resource_patterns_full <- names(global_filter_variables)
-    resource_patterns <- tolower(gsub(global_debug_filter_variable_prefix, "", resource_patterns_full))
-    resource_table_names <- tolower(names(resource_tables))
-    different_resources <- setdiff(resource_patterns, resource_table_names)
+    resource_table_names <- names(resource_tables)
+    resource_filter_patterns <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, resource_table_names)
+    different_resources <- setdiff(names(resource_filter_patterns), resource_table_names)
     if (length(different_resources)) {
       catInfoMessage(paste0("Note: The following debug filter resources are not in the resource table: ",
                             paste(different_resources, collapse = ", "),
                             ". Fix it in cds2db_config.toml."))
     }
     # Find common names between resource names and resource table names
-    common_names <- intersect(resource_patterns, resource_table_names)
+    common_names <- intersect(names(resource_filter_patterns), resource_table_names)
     # Iterate over each common name
     for (name in common_names) {
-      # Find the full resource names that match the current common name (case-insensitive)
-      matching_indices <- which(name == resource_patterns)
+      # Find the full resource names that match the current common name
+      matching_indices <- which(name == names(resource_filter_patterns))
       # Take the first match, if multiple
-      debug_parameter_name <- resource_patterns_full[matching_indices]
+      debug_parameter_name <- names(global_filter_variables)[matching_indices]
       # Get indices using the full resource name
       indices <- etlutils::getIndices(get(debug_parameter_name))
-      # Retrieve the original name to update the correct resource table
-      original_name <- names(resource_tables)[match(name, tolower(names(resource_tables)))]
       # Check if indices is NA
       if (all(is.na(indices))) {
         # Set the table to be empty if indices is NA
-        resource_tables[[original_name]] <- resource_tables[[original_name]][0, ]
+        resource_tables[[name]] <- resource_tables[[name]][0, ]
       } else {
-        rows_count <- nrow(resource_tables[[original_name]])
+        rows_count <- nrow(resource_tables[[name]])
         # Check for valid indices (e.g., within the range of the number of rows in the resource table)
         invalid_indices <- indices[indices < 1 | indices > rows_count]
         # Only proceed if there are valid indices
@@ -239,12 +305,12 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
           }
           etlutils::catWarningMessage(paste0(
             "Check '", debug_parameter_name, "': The following indices are invalid for resource ",
-            original_name, ". The table has only ", rows_count, " rows. Invalid indices: ",
+            name, ". The table has only ", rows_count, " rows. Invalid indices: ",
             paste(invalid_indices_string, collapse = ", ")))
         }
-        valide_indices <- setdiff(indices, invalid_indices)
+        valid_indices <- setdiff(indices, invalid_indices)
         # Update the resource table with valid indices
-        resource_tables[[original_name]] <- resource_tables[[original_name]][valide_indices, ]
+        resource_tables[[name]] <- resource_tables[[name]][valid_indices, ]
       }
     }
   }
