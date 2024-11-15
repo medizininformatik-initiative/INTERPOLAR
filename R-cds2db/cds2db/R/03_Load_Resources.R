@@ -150,8 +150,12 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Background: We want to track all cases that have ever been on a relevant station until they are completed.
   patient_ids_db <- getActiveEncounterPIDsFromDB()
 
-  if (!length(patient_ids_active)) {
-    stop("No active patient IDs in encounter table found in database. Please check FHIR-search parameter for encounter in toml-file.")
+  if (!length(patient_ids_db)) {
+    etlutils::catWarningMessage(paste(
+      "No active patient IDs in encounter table found in database. \n",
+      "HINT: This message appears if no active encounters were written to the database during",
+      "the last run of the CDS tool chain. This should only happen if the CDS tool chain is",
+      "running for the first time."))
   }
 
   # Unify and unique all patient IDs
