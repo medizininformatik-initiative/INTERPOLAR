@@ -16,8 +16,10 @@
     ```cp REDCap-db/template_env_redcap_db_root.password REDCap-db/.env_redcap_db_root.password```
   1. Führen Sie die Anweisungen in [REDCap-app/Readme.md](REDCap-app/Readme.md) aus
   1. Führen Sie die Anweisungen in [REDCap-app/html/Readme.md](REDCap-app/html/Readme.md) aus
-  1. Führen Sie docker-compose aus, falls Sie es noch nicht ausgeführt: \
-    ```docker-compose up```
+  1. Nehmen Sie Anpassungen in der [docker-compose.yml](/docker-compose.yml#L131) vor, falls erforderlich, z.B. um self-signed Zertifikate einzubinden. Führen Sie anschließend docker-compose aus, falls Sie es noch nicht ausgeführt haben: \
+    ```docker-compose up``` \
+    Falls Sie Änderungen z.B. an Dockerfiles oder am R Code vorgenommen haben, nutzen Sie bitte den '--build' Parameter, um die erneute Erstellung der Docker Images zu erzwingen. Der Build-Vorgang kann mehrere Minuten in Anspruch nehmen.: \
+    ```docker-compose up --build```
   1. Die cds_hub_db (Postges-Datenbank) erreichen Sie im Browser (PGAdmin) über die URL: [http://127.0.0.1:8089/](http://127.0.0.1:8089/)
      * Die Zugangsdaten für pgadmin entnehmen Sie bitte der [docker-compose.yml](/docker-compose.yml#L94) (services -> pgadmin) bzw. können Sie diese dort anpassen.
      * ggf. muss im pgadmin die Verbindung zur cds_hub_db mit den Zugangsdaten aus der [docker-compose.yml](/docker-compose.yml#L63) (services -> cds_hub: POSTGRES_USER, POSTGRES_DB) bzw. der Passwort-Datei (secrets -> cds_hub_db_admin.password, Postgres-cds_ub/.env_cds_hub_db_admin.password) angelegt werden. Weitere Informationen siehe [Postgres-cds_hub/Readme.md](Postgres-cds_hub/Readme.md)

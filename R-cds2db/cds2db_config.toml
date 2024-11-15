@@ -42,6 +42,10 @@ DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING = 1
 
 [retrieve.fhir_server]
 
+# If you use self-signed certificates to secure the FHIR server (SSL/TLS), please configure 
+# the corresponding certificates in the 'r-env' service in the 'volumes' section of 
+# docker-compose.yml so that these certificates can be checked in the CDS Tool Chain.
+# Otherwise the connection cannot be established.
 FHIR_SERVER_ENDPOINT = "https://mii-agiop-3p.life.uni-leipzig.de/blaze"
 FHIR_SERVER_USER = ""
 FHIR_SERVER_PASS = ""
