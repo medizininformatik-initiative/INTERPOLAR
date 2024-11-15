@@ -554,7 +554,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 l         = lapply(
                   unserialized_bundle,
                   function(b) {
-                    fhircrackr::fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose)
+                    suppressWarnings(fhircrackr::fhir_crack(bundles = b, design = table_description, data.table = TRUE, verbose = verbose))
                   }
                 ),
                 fill      = TRUE,
