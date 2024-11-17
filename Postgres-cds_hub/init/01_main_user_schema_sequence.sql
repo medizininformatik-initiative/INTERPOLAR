@@ -1,5 +1,5 @@
-CREATE EXTENSION pg_cron;
-CREATE EXTENSION pg_background;
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_background;
 
 -- optionally, grant usage to regular users:
 GRANT USAGE ON SCHEMA cron TO cds_hub_db_admin;
