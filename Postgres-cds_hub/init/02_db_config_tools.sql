@@ -1,4 +1,5 @@
--- Übersicht der cron jobs
+-- View "v_cron_jobs" in schema "db_config" - Übersicht der cron jobs
+----------------------------------------------------
 create or replace view db_config.v_cron_jobs as
 select command, count(1) anzahl
 ,  (select to_char(max(s.end_time),'YYYY-MM-DD HH24:MI:SS') from cron.job_run_details s where s.command=m.command and s.status='succeeded') last_succeeded_run
@@ -12,6 +13,39 @@ GRANT SELECT ON db_config.v_cron_jobs TO db_user;
 SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details 
 WHERE status='succeeded' and end_time < now() - interval '7 days'$$);
 
+-- Table "db_parameter" in schema "db_config" - Parameter für Ablauf in der Datenbank
+----------------------------------------------------
+CREATE TABLE IF NOT EXISTS db_config.db_parameter (
+  id serial,
+  parameter_name varchar unique,
+  parameter_value varchar,
+  parameter_description varchar,
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  last_change_timestamp timestamp DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
+);
+
+GRANT INSERT ON db_config.db_parameter TO db_user;
+GRANT SELECT ON db_config.db_parameter TO db_user;
+GRANT UPDATE ON db_config.db_parameter TO db_user;
+
+-- Table "db_process_control" in schema "db_config" - Tabele für Semaphore und Fortschrittskennzahlen
+----------------------------------------------------
+CREATE TABLE IF NOT EXISTS db_config.db_process_control (
+  id serial,
+  pc_name varchar unique,
+  pc_value varchar,
+  pc_description varchar,
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+  last_change_timestamp timestamp DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
+);
+
+GRANT INSERT ON db_config.db_process_control TO db_user;
+GRANT SELECT ON db_config.db_process_control TO db_user;
+GRANT UPDATE ON db_config.db_process_control TO db_user;
+
+-- initialiesieren der notwendigen values
+insert into db_config.db_process_control (pc_name, pc_value, pc_description)
+values ('semaphor_cron_job_data_transfer','ready','semaphore to control the cron_job_data_transfer job, contains the current processing status - ongoing / pause / ready / interrupted'); -- Normal Status are: ready --> ongoing --> pause --> ready
 
 -- Table "data_import_hist" in schema "db_log"
 ----------------------------------------------------
