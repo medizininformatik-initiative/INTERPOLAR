@@ -245,7 +245,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
   names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
   # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
-  full_tables <- mergeTablesUnion(table_names, db_resource_tables)
+  full_tables <- mergeTablesUnion(resource_tables, db_resource_tables)
 
   # Loop through each table name in the `full_tables` list
   for (full_table_name in names(full_tables)) {
