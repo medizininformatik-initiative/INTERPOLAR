@@ -5,6 +5,11 @@ DECLARE
     status varchar;
     num int;
 BEGIN
+    -- Doppelt angelegte Cron-Jobs deaktivieren
+    UPDATE cron.job m SET active = FALSE WHERE m.command in
+    (select i.command as t from (select command, count(1) anz from cron.job group by command) i where anz>1)
+    and m.jobid not in (select min(f.jobid) from cron.job f where f.command in (select i.command as t from (select command, count(1) anz from cron.job group by       command) i where anz>1));
+
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
     SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     IF num=1 THEN
