@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-07 11:28:16
--- Rights definition file size        : 15113 Byte
+-- Rights definition file last update : 2024-11-11 08:18:58
+-- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-07 13:39:54
+-- Create time: 2024-11-20 15:24:52
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -32,17 +32,19 @@
 CREATE OR REPLACE FUNCTION db.copy_fe_dp_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
-    record_count INT;
+    record_count INT:=0;
     current_record record;
-    data_count integer;
-    data_count_all integer;
+    data_count INT:=0;
+    data_count_all INT:=0;
     last_pro_nr INT; -- Last processing number
     temp varchar;
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
+    timestamp_point timestamp not null DEFAULT CURRENT_TIMESTAMP; -- timestamp for different points in the function
 BEGIN
     -- Copy Functionname: copy_fe_dp_in_to_db_log - From: db2dataprocessor_in -> To: db_log
 
     -- Start patient_fe
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.patient_fe)
         LOOP
             BEGIN
@@ -146,10 +148,18 @@ BEGIN
     ( SELECT patient_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.patient_fe
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT patient_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.patient_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END patient_fe
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start fall_fe
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.fall_fe)
         LOOP
             BEGIN
@@ -345,10 +355,18 @@ BEGIN
     ( SELECT fall_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.fall_fe
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT fall_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.fall_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END fall_fe
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medikationsanalyse_fe
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.medikationsanalyse_fe)
         LOOP
             BEGIN
@@ -468,10 +486,18 @@ BEGIN
     ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.medikationsanalyse_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END medikationsanalyse_fe
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start mrpdokumentation_validierung_fe
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.mrpdokumentation_validierung_fe)
         LOOP
             BEGIN
@@ -1027,10 +1053,18 @@ BEGIN
     ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.mrpdokumentation_validierung_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END mrpdokumentation_validierung_fe
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start risikofaktor_fe
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.risikofaktor_fe)
         LOOP
             BEGIN
@@ -1150,10 +1184,18 @@ BEGIN
     ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.risikofaktor_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END risikofaktor_fe
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start trigger_fe
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.trigger_fe)
         LOOP
             BEGIN
@@ -1304,6 +1346,13 @@ BEGIN
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
     ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.trigger_fe
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.trigger_fe
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
     );
     -- END trigger_fe
     -----------------------------------------------------------------------------------------------------------------------

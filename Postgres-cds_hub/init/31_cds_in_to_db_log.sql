@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-07 11:28:16
--- Rights definition file size        : 15113 Byte
+-- Rights definition file last update : 2024-11-11 08:18:58
+-- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-07 13:39:42
+-- Create time: 2024-11-20 15:24:39
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -34,17 +34,19 @@
 CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
 RETURNS VOID AS $$
 DECLARE
-    record_count INT;
+    record_count INT:=0;
     current_record record;
-    data_count integer;
-    data_count_all integer;
+    data_count INT:=0;
+    data_count_all INT:=0;
     last_pro_nr INT; -- Last processing number
     temp varchar;
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
+    timestamp_point timestamp not null DEFAULT CURRENT_TIMESTAMP; -- timestamp for different points in the function
 BEGIN
     -- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
 
     -- Start encounter
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.encounter)
         LOOP
             BEGIN
@@ -382,10 +384,18 @@ BEGIN
     ( SELECT encounter_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.encounter
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT encounter_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.encounter
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END encounter
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start patient
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.patient)
         LOOP
             BEGIN
@@ -507,10 +517,18 @@ BEGIN
     ( SELECT patient_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.patient
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT patient_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.patient
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END patient
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start condition
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.condition)
         LOOP
             BEGIN
@@ -1016,10 +1034,18 @@ BEGIN
     ( SELECT condition_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.condition
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT condition_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.condition
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END condition
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medication
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.medication)
         LOOP
             BEGIN
@@ -1301,10 +1327,18 @@ BEGIN
     ( SELECT medication_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medication
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT medication_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.medication
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END medication
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medicationrequest
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest)
         LOOP
             BEGIN
@@ -2250,10 +2284,18 @@ BEGIN
     ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.medicationrequest
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END medicationrequest
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medicationadministration
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration)
         LOOP
             BEGIN
@@ -2743,10 +2785,18 @@ BEGIN
     ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.medicationadministration
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END medicationadministration
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start medicationstatement
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement)
         LOOP
             BEGIN
@@ -3640,10 +3690,18 @@ BEGIN
     ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.medicationstatement
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END medicationstatement
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start observation
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.observation)
         LOOP
             BEGIN
@@ -4221,10 +4279,18 @@ BEGIN
     ( SELECT observation_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.observation
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT observation_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.observation
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END observation
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start diagnosticreport
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport)
         LOOP
             BEGIN
@@ -4454,10 +4520,18 @@ BEGIN
     ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.diagnosticreport
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END diagnosticreport
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start servicerequest
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest)
         LOOP
             BEGIN
@@ -4743,10 +4817,18 @@ BEGIN
     ( SELECT servicerequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.servicerequest
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT servicerequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.servicerequest
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END servicerequest
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start procedure
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.procedure)
         LOOP
             BEGIN
@@ -5072,10 +5154,18 @@ BEGIN
     ( SELECT procedure_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.procedure
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT procedure_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.procedure
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END procedure
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start consent
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.consent)
         LOOP
             BEGIN
@@ -5265,10 +5355,18 @@ BEGIN
     ( SELECT consent_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.consent
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT consent_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.consent
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END consent
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start location
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.location)
         LOOP
             BEGIN
@@ -5382,10 +5480,18 @@ BEGIN
     ( SELECT location_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.location
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
     );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT location_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.location
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
+    );
     -- END location
     -----------------------------------------------------------------------------------------------------------------------
 
     -- Start pids_per_ward
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward)
         LOOP
             BEGIN
@@ -5446,6 +5552,13 @@ BEGIN
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
     ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.pids_per_ward
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
     );
     -- END pids_per_ward
     -----------------------------------------------------------------------------------------------------------------------

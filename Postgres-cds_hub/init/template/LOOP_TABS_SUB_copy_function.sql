@@ -1,4 +1,5 @@
     -- Start <%TABLE_NAME%>
+    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
     FOR current_record IN (SELECT * FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
         LOOP
             BEGIN
@@ -55,6 +56,13 @@
     INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
     ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, '<%TABLE_NAME%>' AS table_name, last_pro_datetime, current_dataset_status, '<%COPY_FUNC_NAME%>' AS function_name FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
     EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
+    );
+
+    -- dataset count
+    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
+    ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, '<%TABLE_NAME%>' AS table_name, last_pro_datetime, current_dataset_status, '<%COPY_FUNC_NAME%>' AS function_name
+    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
+    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
     );
     -- END <%TABLE_NAME%>
     -----------------------------------------------------------------------------------------------------------------------

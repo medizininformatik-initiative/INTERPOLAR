@@ -53,9 +53,11 @@ CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
   id serial,
   table_primary_key int, -- Primary key in the documentet table
   last_processing_nr int, -- Last processing number of the data in the table
-  schema_name varchar,
-  table_name varchar,
+  schema_name varchar, -- Schema
+  table_name varchar, -- Table
   function_name varchar, -- Name of function
+  dataset_count int, -- count of datasets in this session
+  copy_time_in_sec int, -- time to process in second
   last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
   current_dataset_status varchar DEFAULT NULL,  -- Processing status of the data record
   import_hist_cre_at timestamp DEFAULT current_timestamp -- Timestamp the HistRec wars create
