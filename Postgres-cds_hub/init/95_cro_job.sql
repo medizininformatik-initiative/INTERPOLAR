@@ -22,7 +22,7 @@ BEGIN
 
 -- Erinnerung ToDo bei obgoing evt Parameter einbauen für Maximaldauer einer Blockade
 
-    IF status='ready' THEN
+    IF status in ('ready','pause') THEN
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
         status='ongoing - 1/5 db.copy_raw_cds_in_to_db_log()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
 
@@ -62,12 +62,12 @@ BEGIN
         SELECT count(1) INTO num FROM db_config.db_parameter WHERE parameter_name='pause_after_process_execution';
         If num=0 THEN -- falls Parameter fehlt - initial setzen
             insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-            values ('pause_after_process_execution','20','Pause after copy process execution in second');
+            values ('pause_after_process_execution','5','Pause after copy process execution in second');
         END IF;
 
         SELECT CAST(parameter_value AS NUMERIC) INTO num FROM db_config.db_parameter WHERE parameter_name='pause_after_process_execution';
-        If num<10 then num:=10; END IF; -- Wenn kleiner als 10 sec - Mindestwartedauer um chance für externe intervention zu geben
-        If num>60 then num:=45; END IF; -- Wenn größer als JobInterval - kleiner setzen um wieder in Takt zu kommen
+        If num<5 then num:=5; END IF; -- Wenn kleiner als 10 sec - Mindestwartedauer um chance für externe intervention zu geben
+        If num>45 then num:=40; END IF; -- Wenn größer als JobInterval - kleiner setzen um wieder in Takt zu kommen
 
         -- Semaphore setzen das Pause gemacht werden kann - ohne Rückgabe der SubProzessID
         PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''pause'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
@@ -75,7 +75,7 @@ BEGIN
         SELECT pg_sleep(num) INTO temp;
     
         -- Semaphore wieder frei geben - ohne Rückgabe der SubProzessID
-        PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''ongoing%'' and pc_name=''semaphor_cron_job_data_transfer''');
+        PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''ongoing%'' and pc_value=''pause'' and pc_name=''semaphor_cron_job_data_transfer''');
     END IF;
 END;
 $$ LANGUAGE plpgsql;

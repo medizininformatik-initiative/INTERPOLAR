@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-20 15:24:52
+-- Create time: 2024-11-25 11:20:47
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -34,17 +34,37 @@ RETURNS VOID AS $$
 DECLARE
     record_count INT:=0;
     current_record record;
-    data_count INT:=0;
-    data_count_all INT:=0;
+    data_count INT:=0; -- Variable for process decision
+    data_count_all INT:=0; -- Counting all new records of the entity
+    data_count_new INT:=0; -- Count the newly inserted records of the entity
+    data_count_update INT:=0; -- Counting the entitys verified records (update)
+    data_count_pro_all INT:=0; -- Counting all records in this run
+    data_count_pro_new INT:=0; -- Counting all new inserted records in this run
     last_pro_nr INT; -- Last processing number
-    temp varchar;
+    temp varchar; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
-    timestamp_point timestamp not null DEFAULT CURRENT_TIMESTAMP; -- timestamp for different points in the function
+    data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
+    tmp_sec double precision:=0; -- Temporary variable to store execution time
+    session_id TEXT; -- session id
+    timestamp_start varchar;
+    timestamp_end varchar;
+    timestamp_ent_start varchar;
+    timestamp_ent_end varchar;
 BEGIN
+    -- set start time
+	SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
+
     -- Copy Functionname: copy_fe_dp_in_to_db_log - From: db2dataprocessor_in -> To: db_log
+    SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
     -- Start patient_fe
-    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
+    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log - patient_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+
+    data_count:=0; data_count_update:=0; data_count_new:=0;
+    SELECT COUNT(1) INTO data_count_all FROM db2dataprocessor_in.patient_fe; -- Counting new records in the source
+    data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.patient_fe)
         LOOP
             BEGIN
@@ -66,10 +86,10 @@ BEGIN
                       COALESCE(target_record.pat_geschlecht::text,'#NULL#') = COALESCE(current_record.pat_geschlecht::text,'#NULL#') AND
                       COALESCE(target_record.patient_complete::text,'#NULL#') = COALESCE(current_record.patient_complete::text,'#NULL#')
                       ;
-                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
+                    data_count_new:=data_count_new+1;
                     INSERT INTO db_log.patient_fe (
                         patient_fe_id,
                         record_id,
@@ -112,6 +132,7 @@ BEGIN
                     -- Delete importet datasets
                     DELETE FROM db2dataprocessor_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
                 ELSE
+                data_count_update:=data_count_update+1;
                 UPDATE db_log.patient_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
@@ -144,22 +165,38 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT patient_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.patient_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
-    );
+    IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        ( SELECT patient_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.patient_fe d WHERE d.last_processing_nr=last_pro_nr
+        EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+        );
+    END IF;
 
-    -- dataset count
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
-    ( SELECT patient_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
-    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.patient_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
-    );
+    -- Collect and save counts for the entity
+    IF data_count_all>0 THEN -- only if where are new data
+        data_count_pro_new:=data_count_pro_new+data_count_new;
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_new', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_update', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
+    END IF;
     -- END patient_fe
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start fall_fe
-    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
+    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log - fall_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+
+    data_count:=0; data_count_update:=0; data_count_new:=0;
+    SELECT COUNT(1) INTO data_count_all FROM db2dataprocessor_in.fall_fe; -- Counting new records in the source
+    data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.fall_fe)
         LOOP
             BEGIN
@@ -204,10 +241,10 @@ BEGIN
                       COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
                       COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
                       ;
-                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
+                    data_count_new:=data_count_new+1;
                     INSERT INTO db_log.fall_fe (
                         fall_fe_id,
                         record_id,
@@ -296,6 +333,7 @@ BEGIN
                     -- Delete importet datasets
                     DELETE FROM db2dataprocessor_in.fall_fe WHERE fall_fe_id = current_record.fall_fe_id;
                 ELSE
+                data_count_update:=data_count_update+1;
                 UPDATE db_log.fall_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
@@ -351,22 +389,38 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT fall_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.fall_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
-    );
+    IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        ( SELECT fall_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.fall_fe d WHERE d.last_processing_nr=last_pro_nr
+        EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+        );
+    END IF;
 
-    -- dataset count
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
-    ( SELECT fall_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
-    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.fall_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
-    );
+    -- Collect and save counts for the entity
+    IF data_count_all>0 THEN -- only if where are new data
+        data_count_pro_new:=data_count_pro_new+data_count_new;
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_new', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_update', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_all', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
+    END IF;
     -- END fall_fe
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start medikationsanalyse_fe
-    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
+    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log - medikationsanalyse_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+
+    data_count:=0; data_count_update:=0; data_count_new:=0;
+    SELECT COUNT(1) INTO data_count_all FROM db2dataprocessor_in.medikationsanalyse_fe; -- Counting new records in the source
+    data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.medikationsanalyse_fe)
         LOOP
             BEGIN
@@ -392,10 +446,10 @@ BEGIN
                       COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
                       COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
                       ;
-                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
+                    data_count_new:=data_count_new+1;
                     INSERT INTO db_log.medikationsanalyse_fe (
                         medikationsanalyse_fe_id,
                         record_id,
@@ -446,6 +500,7 @@ BEGIN
                     -- Delete importet datasets
                     DELETE FROM db2dataprocessor_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
                 ELSE
+                data_count_update:=data_count_update+1;
                 UPDATE db_log.medikationsanalyse_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
@@ -482,22 +537,38 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
-    );
+    IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe d WHERE d.last_processing_nr=last_pro_nr
+        EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+        );
+    END IF;
 
-    -- dataset count
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
-    ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
-    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.medikationsanalyse_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
-    );
+    -- Collect and save counts for the entity
+    IF data_count_all>0 THEN -- only if where are new data
+        data_count_pro_new:=data_count_pro_new+data_count_new;
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
+    END IF;
     -- END medikationsanalyse_fe
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start mrpdokumentation_validierung_fe
-    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
+    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log - mrpdokumentation_validierung_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+
+    data_count:=0; data_count_update:=0; data_count_new:=0;
+    SELECT COUNT(1) INTO data_count_all FROM db2dataprocessor_in.mrpdokumentation_validierung_fe; -- Counting new records in the source
+    data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.mrpdokumentation_validierung_fe)
         LOOP
             BEGIN
@@ -632,10 +703,10 @@ BEGIN
                       COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
                       COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                       ;
-                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
+                    data_count_new:=data_count_new+1;
                     INSERT INTO db_log.mrpdokumentation_validierung_fe (
                         mrpdokumentation_validierung_fe_id,
                         record_id,
@@ -904,6 +975,7 @@ BEGIN
                     -- Delete importet datasets
                     DELETE FROM db2dataprocessor_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
                 ELSE
+                data_count_update:=data_count_update+1;
                 UPDATE db_log.mrpdokumentation_validierung_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
@@ -1049,22 +1121,38 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
-    );
+    IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe d WHERE d.last_processing_nr=last_pro_nr
+        EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+        );
+    END IF;
 
-    -- dataset count
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
-    ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
-    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.mrpdokumentation_validierung_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
-    );
+    -- Collect and save counts for the entity
+    IF data_count_all>0 THEN -- only if where are new data
+        data_count_pro_new:=data_count_pro_new+data_count_new;
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_new', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_update', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_all', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
+    END IF;
     -- END mrpdokumentation_validierung_fe
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start risikofaktor_fe
-    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
+    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log - risikofaktor_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+
+    data_count:=0; data_count_update:=0; data_count_new:=0;
+    SELECT COUNT(1) INTO data_count_all FROM db2dataprocessor_in.risikofaktor_fe; -- Counting new records in the source
+    data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.risikofaktor_fe)
         LOOP
             BEGIN
@@ -1090,10 +1178,10 @@ BEGIN
                       COALESCE(target_record.rskfkt_anz_rskamklassen::text,'#NULL#') = COALESCE(current_record.rskfkt_anz_rskamklassen::text,'#NULL#') AND
                       COALESCE(target_record.risikofaktor_complete::text,'#NULL#') = COALESCE(current_record.risikofaktor_complete::text,'#NULL#')
                       ;
-                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
+                    data_count_new:=data_count_new+1;
                     INSERT INTO db_log.risikofaktor_fe (
                         risikofaktor_fe_id,
                         record_id,
@@ -1144,6 +1232,7 @@ BEGIN
                     -- Delete importet datasets
                     DELETE FROM db2dataprocessor_in.risikofaktor_fe WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
                 ELSE
+                data_count_update:=data_count_update+1;
                 UPDATE db_log.risikofaktor_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
@@ -1180,22 +1269,38 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
-    );
+    IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe d WHERE d.last_processing_nr=last_pro_nr
+        EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+        );
+    END IF;
 
-    -- dataset count
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
-    ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
-    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.risikofaktor_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
-    );
+    -- Collect and save counts for the entity
+    IF data_count_all>0 THEN -- only if where are new data
+        data_count_pro_new:=data_count_pro_new+data_count_new;
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_new', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_update', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_all', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
+    END IF;
     -- END risikofaktor_fe
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start trigger_fe
-    timestamp_point:=CURRENT_TIMESTAMP; data_count:=0;
+    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_dp_in_to_db_log - trigger_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+
+    data_count:=0; data_count_update:=0; data_count_new:=0;
+    SELECT COUNT(1) INTO data_count_all FROM db2dataprocessor_in.trigger_fe; -- Counting new records in the source
+    data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
     FOR current_record IN (SELECT * FROM db2dataprocessor_in.trigger_fe)
         LOOP
             BEGIN
@@ -1229,10 +1334,10 @@ BEGIN
                       COALESCE(target_record.trg_egfr::text,'#NULL#') = COALESCE(current_record.trg_egfr::text,'#NULL#') AND
                       COALESCE(target_record.trigger_complete::text,'#NULL#') = COALESCE(current_record.trigger_complete::text,'#NULL#')
                       ;
-                data_count_all := data_count_all + data_count;
 
                 IF data_count = 0
                 THEN
+                    data_count_new:=data_count_new+1;
                     INSERT INTO db_log.trigger_fe (
                         trigger_fe_id,
                         patient_id_fk,
@@ -1299,6 +1404,7 @@ BEGIN
                     -- Delete importet datasets
                     DELETE FROM db2dataprocessor_in.trigger_fe WHERE trigger_fe_id = current_record.trigger_fe_id;
                 ELSE
+                data_count_update:=data_count_update+1;
                 UPDATE db_log.trigger_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
@@ -1343,26 +1449,48 @@ BEGIN
             END;
     END LOOP;
 
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
-    ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.trigger_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist
-    );
+    IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.trigger_fe d WHERE d.last_processing_nr=last_pro_nr
+        EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+        );
+    END IF;
 
-    -- dataset count
-    INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec)
-    ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name
-    , data_count, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - timestamp_point)) AS sec FROM db_log.trigger_fe
-    EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name, dataset_count, copy_time_in_sec FROM db_log.data_import_hist
-    );
+    -- Collect and save counts for the entity
+    IF data_count_all>0 THEN -- only if where are new data
+        data_count_pro_new:=data_count_pro_new+data_count_new;
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_new', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_update', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_all', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
+    END IF;
     -- END trigger_fe
     -----------------------------------------------------------------------------------------------------------------------
 
+    -- Collect and save counts for the function
+    IF data_count_pro_all>0 THEN
+        -- calculation of the time period
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_end;
 
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
+    
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_pro_all', 'db_log', 'copy_fe_dp_in_to_db_log', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
+
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_fe_dp_in_to_db_log', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log - SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_fe_dp_in_to_db_log();');
+-- old start CopyJob CDS in 2 DB_log - SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_fe_dp_in_to_db_log();');
 -----------------------------
-
-
 
