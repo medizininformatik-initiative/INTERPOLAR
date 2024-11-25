@@ -38,17 +38,17 @@ createWardPatientIDPerDateTable <- function(patient_ids_per_ward) {
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME_START` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME_START` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME_START` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
   start_datetime <- as.POSIXct(Sys.time())
-  if (exists('DEBUG_CURRENT_DATETIME_START')) {
-    start_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_START)
-    if (exists('DEBUG_CURRENT_DATETIME_END')) {
-      end_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_END)
+  if (exists('DEBUG_ENCOUNTER_DATETIME_START')) {
+    start_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_START)
+    if (exists('DEBUG_ENCOUNTER_DATETIME_END') && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
+      end_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_END)
       return(c(start_datetime = start_datetime, end_datetime = end_datetime))
     }
   }
@@ -83,10 +83,32 @@ getActiveEncounterPIDsFromDB <- function() {
   query_datetime <- getQueryDatetime()
 
   # Create the SQL-Query
-  query <- paste0("SELECT enc_patient_id FROM v_encounter\n",
-                  "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
-                  "   (enc_period_end is NULL OR enc_period_end > '",
-                  query_datetime[["start_datetime"]], "');")
+  # query <- paste0("SELECT enc_patient_id FROM v_encounter\n",
+  #                 "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
+  #                 "   (enc_period_end is NULL OR enc_period_end > '", query_datetime[["start_datetime"]], "');")
+  datetime <- query_datetime[["start_datetime"]]
+
+  query <- paste0(
+    "WITH latest_encounter AS (\n",
+    "  SELECT\n",
+    "    enc_id,\n",
+    "    enc_patient_id,\n",
+    "    enc_period_start,\n",
+    "    enc_period_end,\n",
+    "    ROW_NUMBER() OVER (\n",
+    "      PARTITION BY enc_id\n",
+    "      ORDER BY input_datetime DESC\n",
+    "    ) AS row_num\n",
+    "  FROM v_encounter\n",
+    "  WHERE input_datetime <= '", datetime, "'\n",
+    ")\n",
+    "SELECT DISTINCT enc_patient_id\n",
+    "FROM latest_encounter\n",
+    "WHERE row_num = 1\n",
+    "  AND enc_period_start <= '", datetime, "'\n",
+    "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
+  )
+
   # Run the SQL query and return patient IDs
   patient_ids_active <- getQueryFromDatabase(query)
 
@@ -236,12 +258,14 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
 
   # Load all data of relevant patients from FHIR server
+  #browser()
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
   # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
   table_names <- paste0(names(table_descriptions), "_raw_last")
   # Read the tables from the database using the generated table names
   db_resource_tables <- readTablesFromDatabase(table_names)
+  #browser()
   # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
   names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
   # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list

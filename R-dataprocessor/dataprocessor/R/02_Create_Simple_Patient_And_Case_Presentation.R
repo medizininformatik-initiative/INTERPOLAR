@@ -40,14 +40,14 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME_START` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
-  if (exists("DEBUG_CURRENT_DATETIME")) {
-    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
+  if (exists("DEBUG_ENCOUNTER_DATETIME_START")) {
+    return(as.POSIXct(DEBUG_ENCOUNTER_DATETIME_START))
   }
   return(as.POSIXct(Sys.time()))
 }

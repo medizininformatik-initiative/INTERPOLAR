@@ -117,16 +117,16 @@ FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
 # FOR DEBUG ONLY: #
 ###################
 
-# If the DEBUG_CURRENT_DATETIME_START parameter is activated, only Encounters whose start date is
+# If the DEBUG_ENCOUNTER_DATETIME_START parameter is activated, only Encounters whose start date is
 # before this date are searched for.
 # If it is not activated, the current date is automatically assumed.
-# If in addition (!) to DEBUG_CURRENT_DATETIME_START the parameter DEBUG_CURRENT_DATETIME_END is
+# If in addition (!) to DEBUG_ENCOUNTER_DATETIME_START the parameter DEBUG_ENCOUNTER_DATETIME_END is
 # also set, then only Encounters whose start date (Encounter.period.start) is after the
-# DEBUG_CURRENT_DATETIME_START and before the DEBUG_CURRENT_DATETIME_END are found.
+# DEBUG_ENCOUNTER_DATETIME_START and before the DEBUG_ENCOUNTER_DATETIME_END are found.
 # Since the end date of Encounters cannot be queried without a FHIR Custom Search parameter, all
 # queries for the Encounter date always refer to its start date.
-DEBUG_CURRENT_DATETIME_START = "2020-06-30 21:25:00"
-DEBUG_CURRENT_DATETIME_END = "2020-08-30 21:25:00"
+DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
+DEBUG_ENCOUNTER_DATETIME_END = "2020-08-30 21:25:00"
 
 [retrieve.debug.filtering]
 
@@ -157,7 +157,7 @@ DEBUG_FILTER_OBSERVATION = "1-10"
 # This parameter can also be used to allow only certain data of a query to pass in test cases.
 # NOTE: This filter does not affect any FHIR search request, but only filters the patients found
 # afterwards.
-DEBUG_PATIENT_ID_PATTERN = "UKB"
+DEBUG_FILTER_PIDS_PATTERN = "UKB"
 
 
 [retrieve.debug.test]
@@ -166,7 +166,7 @@ DEBUG_PATIENT_ID_PATTERN = "UKB"
 # This will only output the request, but not execute the entire 'cds2db' module.
 # Use this to see the result of the above debug parameters or, without the debug parameters, the
 # first FHIR search request for Encounter.
-#DEBUG_TEST_ENCOUNTER_REQUEST = true
+#DEBUG_ENCOUNTER_REQUEST_TEST = true
 
 
 [retrieve.patient_id_filtering]
