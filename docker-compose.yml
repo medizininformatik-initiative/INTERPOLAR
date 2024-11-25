@@ -128,6 +128,11 @@ services:
       - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
+      # Include certificates, e.g. self-signed certificates of the FHIR-Server, 
+      # incl. root-CA or CHAIN if needed.
+      #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
+      #- <root-CA_cert.pem>:/etc/ssl/certs/<root-CA_cert.pem>
+      #- <CHAIN.pem>:/etc/ssl/certs/<CHAIN.pem>
     depends_on:
       - cds_hub
       - redcap
@@ -152,9 +157,8 @@ secrets:
     file: ./REDCap-db/.env_redcap_db.password
 
 volumes:
+    #blaze-data-DIC:
     redcap-db-data:
-    blaze-data-DIC:
-    blaze-data-IP:
     cds_hub_db-data:
     pgadmin-data:
 
