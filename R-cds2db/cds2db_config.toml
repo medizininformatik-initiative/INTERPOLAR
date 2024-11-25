@@ -140,9 +140,13 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # queries for the Encounter date always refer to its start date.
 #DEBUG_CURRENT_DATETIME_START = "2020-06-30 21:25:00"
 #DEBUG_CURRENT_DATETIME_END = "2020-08-30 21:25:00"
-#################
 
-#################
+# If this parameter is activated, only those whose subject ID is in this list are found in the initial
+# encounter request.
+DEBUG_ACCEPTED_ENCOUNTER_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
+                                 "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
+                                 "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015"]
+
 # These parameters can set additional FHIR-search parameters for downloading Requests. It is possible
 # to set parameters for each FHIR resource or set specific parameters for all FHIR resources with the
 # parameter DEBUG_ADD_FHIR_SEARCH_GENERAL. Several parameters can be customised by linking the FHIR

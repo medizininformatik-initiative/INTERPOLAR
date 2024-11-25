@@ -282,17 +282,25 @@ getEncounters <- function(table_description, current_datetime) {
         encounter_locations <- paste(FHIR_SEARCH_LOCATION_IDS, collapse = ",")
       }
 
+      parameters <- c(
+        encounter_dates,
+        "status" = encounter_status,
+        "class" = encounter_class,
+        "location" = encounter_locations)
+
+      if (exists("DEBUG_ACCEPTED_ENCOUNTER_PIDS") && length(DEBUG_ACCEPTED_ENCOUNTER_PIDS) > 0) {
+        encounter_pids <- DEBUG_ACCEPTED_ENCOUNTER_PIDS
+        encounter_pids <- ifelse(grepl("/", encounter_pids), encounter_pids, paste0("Patient/", encounter_pids))
+        encounter_pids <- paste(encounter_pids, collapse = ",")
+        parameters <- c(parameters, "subject" = encounter_pids)
+      }
+
+      parameters <- etlutils::addParamToFHIRRequest(parameters)
+
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,
         resource   = "Encounter",
-        parameters = etlutils::addParamToFHIRRequest(
-          c(
-            encounter_dates,
-            "status" = encounter_status,
-            "class" = encounter_class,
-            "location" = encounter_locations
-          )
-        )
+        parameters = parameters
       )
 
       # stop the execution and print the current result of FHIR search request (DEBUG)
