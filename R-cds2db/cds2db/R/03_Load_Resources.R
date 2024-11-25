@@ -145,16 +145,22 @@ adjustNames <- function(variables, prefix, valid_names) {
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
 
-  # Get active encounter patient IDs from the database
-  patient_ids_active <- getActiveEncounterPIDsFromDB()
+  # Load all encounters from the database which, according to the database, have not yet ended on the
+  # ‘current’ date and determine the PIDs.
+  # Background: We want to track all cases that have ever been on a relevant station until they are completed.
+  patient_ids_db <- getActiveEncounterPIDsFromDB()
 
-  if (!length(patient_ids_active)) {
-    stop("No active patient IDs in encounter table found in database. Please check FHIR-search parameter for encounter in toml-file.")
+  if (!length(patient_ids_db)) {
+    etlutils::catWarningMessage(paste(
+      "No active patient IDs in encounter table found in database. \n",
+      "HINT: This message appears if no active encounters were written to the database during",
+      "the last run of the CDS tool chain. This should only happen if the CDS tool chain is",
+      "running for the first time."))
   }
 
   # Unify and unique all patient IDs
-  patient_ids <- unique(unlist(patient_ids_per_ward))
-  patient_ids <- unique(c(patient_ids, patient_ids_active))
+  patient_ids_fhir <- unique(unlist(patient_ids_per_ward))
+  patient_ids <- unique(c(patient_ids_fhir, patient_ids_db))
 
   # This parameter should only be changed via DEBUG variables to set additional test filters for
   # the FHIR-search request.
@@ -239,7 +245,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
   names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
   # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
-  full_tables <- mergeTablesUnion(table_names, db_resource_tables)
+  full_tables <- mergeTablesUnion(resource_tables, db_resource_tables)
 
   # Loop through each table name in the `full_tables` list
   for (full_table_name in names(full_tables)) {

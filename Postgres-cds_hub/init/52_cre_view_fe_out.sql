@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-08-21 09:59:34
--- Rights definition file size        : 15036 Byte
+-- Rights definition file last update : 2024-11-11 14:21:24
+-- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2024-08-28 11:51:27
+-- Create time: 2024-11-25 13:53:21
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  52_cre_view_fe_out.sql
 -- TEMPLATE:  template_cre_view3.sql
