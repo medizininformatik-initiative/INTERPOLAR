@@ -400,7 +400,7 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
                                              paste0(invalid_indices[(l-5):l], collapse = ", "))
           }
           etlutils::catWarningMessage(paste0(
-            "Check '", debug_parameter_name, "': The following indices are invalid for resource ",
+            "Check '", debug_parameter_name, "': The following indices in debug filter are invalid for resource ",
             name, ". The table has only ", rows_count, " rows. Invalid indices: ",
             paste(invalid_indices_string, collapse = ", ")))
         }

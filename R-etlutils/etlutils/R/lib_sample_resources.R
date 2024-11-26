@@ -466,7 +466,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     as.numeric(xml2::xml_attr(xml2::xml_find_all(bndls[[1]], '//total'), 'value'))
   }
   if (total < 1) {
-    if (verbose) catWarningMessage(paste0('Warning: No ', resource, 's found on FHIR Server. Return empty Table. Please note!\n'))
+    if (verbose) catWarningMessage(paste0('No ', resource, 's found on FHIR Server. Return empty Table. Please note!\n'))
     return(NA)
   }
 

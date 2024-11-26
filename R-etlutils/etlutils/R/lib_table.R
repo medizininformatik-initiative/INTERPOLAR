@@ -1118,9 +1118,12 @@ replaceColumnValues <- function(dt, column_name, old_type, new_type) {
 #' if applicable. Tables that appear in only one list are included in the final output without alteration.
 #'
 #' @examples
+#' library(data.table)
 #' # Define two example lists with overlapping table names and distinct columns
-#' list1 <- list(tableA = data.table(x = 1:3, y = 4:6, z = 7:9), tableB = data.table(x = 7:9, z = 10:12))
-#' list2 <- list(tableA = data.table(x = 10:12, y = 13:15), tableC = data.table(w = 1:3))
+#' list1 <- list(tableA = data.table(x = 1:3, y = 4:6, z = 7:9),
+#'               tableB = data.table(x = 7:9, z = 10:12))
+#' list2 <- list(tableA = data.table(x = 10:12, y = 13:15),
+#'               tableC = data.table(w = 1:3))
 #' # Merge tables from both lists
 #' merged_tables <- mergeTablesUnion(list1, list2)
 #'
