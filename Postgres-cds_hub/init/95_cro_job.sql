@@ -138,9 +138,9 @@ BEGIN
     IF status like 'ongoing%'||msg THEN -- Prozess ruht von diesem Aufruf(Schlüssel) - also kann er blokiert werden
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
         PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
-	RETURN TRUE;
+	    RETURN TRUE;
     ELSE
-	RETURN FALSE;
+	    RETURN FALSE;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -170,4 +170,3 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db2dataprocessor_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db_user;
-
