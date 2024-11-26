@@ -279,13 +279,14 @@ getResourcesByIDs <- function(
       resource = resource,
       url_enc  = TRUE
     )
+    logRequest(VERBOSE, resource, request)
 
     # Create FHIR-search Content ( = parameters)
     content <- combineFHIRSearchParams(
       existing_params = parameters_list,
       new_params      = parameters
     )
-
+    logRequest(VERBOSE, resource, content)
     # Create FHIR-search Body
     body <- fhircrackr::fhir_body(
       content = content,
@@ -346,10 +347,13 @@ getResourcesByIDs <- function(
 #' writing to a file and potentially printing to the console.
 #'
 logRequest <- function(verbose, resource_name, bundles) {
-  bundles_requests <- paste0("Request for ", resource_name, ":\n", toString(bundles[[1]]@self_link), "\n")
-    if (verbose >= VL_90_FHIR_RESPONSE) {
-      cat(bundles_requests)
-    }
+  bundles_requests <- try(paste0("Request for ", resource_name, ":\n", toString(bundles[[1]]@self_link), "\n"), silent = TRUE)
+  if (isError(bundles_requests)) {
+    bundles_requests <- bundles
+  }
+  if (verbose >= VL_90_FHIR_RESPONSE) {
+    cat(bundles_requests)
+  }
   log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("cds2db_total_bundles.txt"))
   log_file <- file(log_filename, open = "at")
   writeLines(bundles_requests, log_file, useBytes = TRUE)
