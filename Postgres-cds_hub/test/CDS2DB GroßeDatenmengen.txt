@@ -1,0 +1,20 @@
+-- Testdatensätze am Beispiel Patient - RAW -> Prinzipielle Kopierfunktion cds_in to log
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
+INSERT INTO cds2db_in.patient_raw (pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode)
+(select rn||
+pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode
+from cds2db_in.patient_raw a, (SELECT generate_series(1, 20000) AS rn) b)
+;
+
+
