@@ -20,3 +20,7 @@ values ('pause_after_process_execution','10','Pause after copy process execution
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
 values ('data_import_hist_every_dataset','no','Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no]');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='data_import_hist_every_dataset';
+
+insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+values ('max_process_time_set_ready','10','Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]');
+--update db_config.db_parameter set parameter_value='?' where parameter_name='max_process_time_set_ready';
