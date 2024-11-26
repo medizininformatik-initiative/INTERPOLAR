@@ -20,9 +20,26 @@ BEGIN
         status='pause';
     END IF;
 
--- Erinnerung ToDo bei obgoing evt Parameter einbauen für Maximaldauer einer Blockade
+    IF status like 'ongoing%' THEN -- Notaus überprüfen
+        SELECT count(1) INTO num FROM db_config.db_parameter WHERE parameter_name='max_process_time_set_ready';
+        If num=1 THEN
+            SELECT CAST(parameter_value AS NUMERIC) INTO num FROM db_config.db_parameter WHERE parameter_name='max_process_time_set_ready';
+        END IF;
+    
+        If num=0 THEN -- falls Parameter fehlt - initial setzen
+            num:=5;
+        END IF;
 
-    IF status in ('ready','pause') THEN
+        -- Bisher Zeitspanne seit letztem start von ongoing - in Parametern angegebene Minuten überschritten
+        SELECT CASE WHEN round(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-last_change_timestamp))) > (60*num) THEN 0 ELSE 1 END INTO num
+        FROM db_config.db_process_control WHERE pc_name = 'semaphor_cron_job_data_transfer';
+        
+        If num=1 THEN
+            status:='ready';
+        END IF;
+    END IF;
+
+    IF status in ('ready') THEN
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
         status='ongoing - 1/5 db.copy_raw_cds_in_to_db_log()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
 
@@ -85,7 +102,9 @@ SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
 
 -- Funktion zum steuern des cron-jobs für Externe - Anhalten
 CREATE OR REPLACE FUNCTION db.data_transfer_stop(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben')
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+SECURITY DEFINER
+AS $$
 DECLARE
     num int;
     status varchar;
@@ -100,7 +119,7 @@ BEGIN
         status='pause';
     END IF;
 
-    IF status in ('pause') THEN -- Prozess ruht - also kann er blokiert werden
+    IF status in ('pause','ready') THEN -- Prozess ruht bzw. wartend - also kann er blokiert werden
         -- Semaphore setzen - ohne Rückgabe der SubProzessID - optinal mit übergeben Text
         status='ongoing - '||msg;
         PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
@@ -120,7 +139,9 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_stop(varchar) TO db_user;
 
 -- Funktion zum steuern des cron-jobs für Externe - Starten
 CREATE OR REPLACE FUNCTION db.data_transfer_start(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben')
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+SECURITY DEFINER
+AS $$
 DECLARE
     num int;
     status varchar;
@@ -152,7 +173,9 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar) TO db_user;
 
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.data_transfer_status()
-RETURNS TEXT AS $$
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 DECLARE
     status TEXT;
 BEGIN
