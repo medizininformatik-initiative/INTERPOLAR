@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS db_config.db_process_control (
 GRANT INSERT ON db_config.db_process_control TO db_user;
 GRANT SELECT ON db_config.db_process_control TO db_user;
 GRANT UPDATE ON db_config.db_process_control TO db_user;
+GRANT SELECT ON db_config.db_process_control TO cds2db_user;
+GRANT SELECT ON db_config.db_process_control TO db2frontend_user;
+GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
+GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
@@ -108,5 +112,3 @@ where variable_name='data_count_pro_new' group by function_name, to_char(import_
 ;
 
 GRANT SELECT ON db_config.v_data_count_report TO db_user;
-
-
