@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-26 23:46:41
+-- Create time: 2024-11-27 08:56:14
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1643,7 +1643,7 @@ EXCEPTION
             current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
             SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
             err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
 END;
