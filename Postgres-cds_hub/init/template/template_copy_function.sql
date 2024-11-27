@@ -20,15 +20,22 @@ DECLARE
     timestamp_end varchar;
     timestamp_ent_start varchar;
     timestamp_ent_end varchar;
+    err_section varchar;
+    err_schema varchar;
+    err_table varchar;
 BEGIN
+    err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
     -- set start time
 	SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
 
     -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
+    err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
 <%LOOP_TABS_SUB_copy_function%>
+
+    err_section:='BOTTON-01';  err_schema:='db_log';    err_table:='data_import_hist';
 
     -- Collect and save counts for the function
     IF data_count_pro_all>0 THEN
@@ -43,6 +50,19 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     END IF;
+    err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        SELECT db.error_log(
+            err_schema,                     -- Schema, in dem der Fehler auftrat
+            'db.<%COPY_FUNC_NAME%> - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+            err_section,                    -- Zeilennummer oder Abschnitt
+            PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+            last_pro_nr                     -- Letzte Verarbeitungsnummer
+        );
 END;
 $$ LANGUAGE plpgsql;
 

@@ -39,3 +39,9 @@ COMMENT ON SCHEMA db2frontend_in IS 'Interface schema for frontend writing - Fro
 -- Collected general database configurations / functionalities
 -- db_user may also create/execute jobs - this may later remain with Admin
 GRANT USAGE ON SCHEMA cron TO db_user;
+
+-- Schemazugriff für User um auf Funktionen zugreifen zu können - noch nicht die Berechtigung der einzelnen Funktionen
+GRANT USAGE ON SCHEMA db TO cds2db_user;
+GRANT USAGE ON SCHEMA db TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db TO db2frontend_user;
+GRANT USAGE ON SCHEMA db TO db_user;

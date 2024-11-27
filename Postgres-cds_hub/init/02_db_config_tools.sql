@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS db_config.db_process_control (
 GRANT INSERT ON db_config.db_process_control TO db_user;
 GRANT SELECT ON db_config.db_process_control TO db_user;
 GRANT UPDATE ON db_config.db_process_control TO db_user;
+GRANT SELECT ON db_config.db_process_control TO cds2db_user;
+GRANT SELECT ON db_config.db_process_control TO db2frontend_user;
+GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
+GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
@@ -109,4 +113,57 @@ where variable_name='data_count_pro_new' group by function_name, to_char(import_
 
 GRANT SELECT ON db_config.v_data_count_report TO db_user;
 
+-- Table "db_error_log" in schema "db_config" - Dokumentation bei Auftretenden Fehlern in der Datenbank
+----------------------------------------------------
+CREATE TABLE IF NOT EXISTS db_config.db_error_log (
+  id serial,
+  err_schema varchar, -- Schema in which the error occurred
+  err_objekt varchar, -- Table or function or other object where the error occurred
+  err_user varchar, -- User
+  err_msg varchar, -- Error message
+  err_line varchar, -- Optionally the code line/section
+  err_variables varchar, -- Optional variables for troubleshooting
+  last_processing_nr int, -- Optional last_processing_nr
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP   -- Time at which the error record is inserted
+);
 
+GRANT INSERT ON db_config.db_error_log TO db_user;
+GRANT SELECT ON db_config.db_error_log TO db_user;
+GRANT UPDATE ON db_config.db_error_log TO db_user;
+
+-- View "v_db_error_log" in "db_config"
+----------------------------------------------------
+CREATE OR REPLACE VIEW db_config.v_db_error_log as
+select input_datetime, id, err_schema, err_objekt, err_line, err_msg, err_variables, err_user from db_config.db_error_log
+order by input_datetime desc, id desc;
+
+GRANT SELECT ON db_config.v_db_error_log TO db_user;
+
+-- Funktion zur Dokumentation von Fehlern
+----------------------------------------------------
+CREATE OR REPLACE FUNCTION db.error_log(
+  err_schema varchar DEFAULT current_schema, -- Schema in which the error occurred
+  err_objekt varchar DEFAULT NULL, -- Table or function or other object where the error occurred
+  err_user varchar DEFAULT current_user, -- User
+  err_msg varchar DEFAULT 'n.a.', -- Error message
+  err_line varchar DEFAULT '', -- Optionally the code line/section
+  err_variables varchar DEFAULT '', -- Optional variables for troubleshooting
+  last_processing_nr int DEFAULT NULL -- Optional last_processing_nr
+)
+RETURNS VOID
+SECURITY DEFINER
+AS $$
+BEGIN
+    PERFORM pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
+    VALUES ('''||err_schema||''','''||err_objekt||''','''||err_user||''','''||err_msg||''','''||err_line||''','''||err_variables||''','||last_processing_nr||')');
+EXCEPTION
+    WHEN OTHERS THEN
+        INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
+        VALUES (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr);
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db_user;

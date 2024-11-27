@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 14:21:24
+-- Rights definition file last update : 2024-11-11 08:18:58
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-25 13:53:16
+-- Create time: 2024-11-26 23:46:29
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -52,26 +52,36 @@ DECLARE
     timestamp_end varchar;
     timestamp_ent_start varchar;
     timestamp_ent_end varchar;
+    err_section varchar;
+    err_schema varchar;
+    err_table varchar;
 BEGIN
+    err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
     -- set start time
 	SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
 
     -- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
+    err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
     -- Start encounter
+    err_section:='encounter-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - encounter'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.encounter; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='encounter-05';    err_schema:='cds2db_in';    err_table:='encounter';
+
     FOR current_record IN (SELECT * FROM cds2db_in.encounter)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='encounter-10';    err_schema:='db_log';    err_table:='encounter';
                 SELECT count(1) INTO data_count
                 FROM db_log.encounter target_record
                 WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
@@ -147,6 +157,7 @@ BEGIN
                       COALESCE(target_record.enc_serviceprovider_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_display::text,'#NULL#')
                       ;
 
+                err_section:='encounter-15';    err_schema:='db_log';    err_table:='encounter';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -308,10 +319,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='encounter-20';    err_schema:='cds2db_in';    err_table:='encounter';
                     DELETE FROM cds2db_in.encounter WHERE encounter_id = current_record.encounter_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.encounter target_record
+                    err_section:='encounter-25';    err_schema:='db_log';    err_table:='encounter';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.encounter target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -389,19 +402,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='encounter-30';    err_schema:='cds2db_in';    err_table:='encounter';
                     DELETE FROM cds2db_in.encounter WHERE encounter_id = current_record.encounter_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='encounter-35';    err_schema:='cds2db_in';    err_table:='encounter';
                     UPDATE cds2db_in.encounter
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE encounter_id = current_record.encounter_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='encounter-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT encounter_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'encounter' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.encounter d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -410,6 +436,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='encounter-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -424,20 +451,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'encounter', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='encounter-50';    err_schema:='/';    err_table:='/';
     -- END encounter
     -----------------------------------------------------------------------------------------------------------------------
     -- Start patient
+    err_section:='patient-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - patient'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.patient; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='patient-05';    err_schema:='cds2db_in';    err_table:='patient';
+
     FOR current_record IN (SELECT * FROM cds2db_in.patient)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='patient-10';    err_schema:='db_log';    err_table:='patient';
                 SELECT count(1) INTO data_count
                 FROM db_log.patient target_record
                 WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
@@ -459,6 +492,7 @@ BEGIN
                       COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
                       ;
 
+                err_section:='patient-15';    err_schema:='db_log';    err_table:='patient';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -512,10 +546,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='patient-20';    err_schema:='cds2db_in';    err_table:='patient';
                     DELETE FROM cds2db_in.patient WHERE patient_id = current_record.patient_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.patient target_record
+                    err_section:='patient-25';    err_schema:='db_log';    err_table:='patient';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.patient target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -539,19 +575,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='patient-30';    err_schema:='cds2db_in';    err_table:='patient';
                     DELETE FROM cds2db_in.patient WHERE patient_id = current_record.patient_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='patient-35';    err_schema:='cds2db_in';    err_table:='patient';
                     UPDATE cds2db_in.patient
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE patient_id = current_record.patient_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='patient-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT patient_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'patient' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.patient d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -560,6 +609,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='patient-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -574,20 +624,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='patient-50';    err_schema:='/';    err_table:='/';
     -- END patient
     -----------------------------------------------------------------------------------------------------------------------
     -- Start condition
+    err_section:='condition-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - condition'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.condition; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='condition-05';    err_schema:='cds2db_in';    err_table:='condition';
+
     FOR current_record IN (SELECT * FROM cds2db_in.condition)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='condition-10';    err_schema:='db_log';    err_table:='condition';
                 SELECT count(1) INTO data_count
                 FROM db_log.condition target_record
                 WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
@@ -705,6 +761,7 @@ BEGIN
                       COALESCE(target_record.con_note_text::text,'#NULL#') = COALESCE(current_record.con_note_text::text,'#NULL#')
                       ;
 
+                err_section:='condition-15';    err_schema:='db_log';    err_table:='condition';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -950,10 +1007,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='condition-20';    err_schema:='cds2db_in';    err_table:='condition';
                     DELETE FROM cds2db_in.condition WHERE condition_id = current_record.condition_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.condition target_record
+                    err_section:='condition-25';    err_schema:='db_log';    err_table:='condition';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.condition target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -1073,19 +1132,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='condition-30';    err_schema:='cds2db_in';    err_table:='condition';
                     DELETE FROM cds2db_in.condition WHERE condition_id = current_record.condition_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='condition-35';    err_schema:='cds2db_in';    err_table:='condition';
                     UPDATE cds2db_in.condition
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE condition_id = current_record.condition_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='condition-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT condition_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'condition' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.condition d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -1094,6 +1166,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='condition-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -1108,20 +1181,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'condition', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='condition-50';    err_schema:='/';    err_table:='/';
     -- END condition
     -----------------------------------------------------------------------------------------------------------------------
     -- Start medication
+    err_section:='medication-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - medication'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medication; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='medication-05';    err_schema:='cds2db_in';    err_table:='medication';
+
     FOR current_record IN (SELECT * FROM cds2db_in.medication)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='medication-10';    err_schema:='db_log';    err_table:='medication';
                 SELECT count(1) INTO data_count
                 FROM db_log.medication target_record
                 WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
@@ -1183,6 +1262,7 @@ BEGIN
                       COALESCE(target_record.med_ingredient_isactive::text,'#NULL#') = COALESCE(current_record.med_ingredient_isactive::text,'#NULL#')
                       ;
 
+                err_section:='medication-15';    err_schema:='db_log';    err_table:='medication';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -1316,10 +1396,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='medication-20';    err_schema:='cds2db_in';    err_table:='medication';
                     DELETE FROM cds2db_in.medication WHERE medication_id = current_record.medication_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.medication target_record
+                    err_section:='medication-25';    err_schema:='db_log';    err_table:='medication';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.medication target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -1383,19 +1465,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='medication-30';    err_schema:='cds2db_in';    err_table:='medication';
                     DELETE FROM cds2db_in.medication WHERE medication_id = current_record.medication_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='medication-35';    err_schema:='cds2db_in';    err_table:='medication';
                     UPDATE cds2db_in.medication
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medication_id = current_record.medication_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='medication-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT medication_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medication' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medication d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -1404,6 +1499,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='medication-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -1418,20 +1514,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medication', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='medication-50';    err_schema:='/';    err_table:='/';
     -- END medication
     -----------------------------------------------------------------------------------------------------------------------
     -- Start medicationrequest
+    err_section:='medicationrequest-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - medicationrequest'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationrequest; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='medicationrequest-05';    err_schema:='cds2db_in';    err_table:='medicationrequest';
+
     FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='medicationrequest-10';    err_schema:='db_log';    err_table:='medicationrequest';
                 SELECT count(1) INTO data_count
                 FROM db_log.medicationrequest target_record
                 WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
@@ -1659,6 +1761,7 @@ BEGIN
                       COALESCE(target_record.medreq_substitution_reason_text::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_text::text,'#NULL#')
                       ;
 
+                err_section:='medicationrequest-15';    err_schema:='db_log';    err_table:='medicationrequest';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -2124,10 +2227,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='medicationrequest-20';    err_schema:='cds2db_in';    err_table:='medicationrequest';
                     DELETE FROM cds2db_in.medicationrequest WHERE medicationrequest_id = current_record.medicationrequest_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.medicationrequest target_record
+                    err_section:='medicationrequest-25';    err_schema:='db_log';    err_table:='medicationrequest';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.medicationrequest target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -2357,19 +2462,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='medicationrequest-30';    err_schema:='cds2db_in';    err_table:='medicationrequest';
                     DELETE FROM cds2db_in.medicationrequest WHERE medicationrequest_id = current_record.medicationrequest_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='medicationrequest-35';    err_schema:='cds2db_in';    err_table:='medicationrequest';
                     UPDATE cds2db_in.medicationrequest
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medicationrequest_id = current_record.medicationrequest_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='medicationrequest-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -2378,6 +2496,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='medicationrequest-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -2392,20 +2511,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationrequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='medicationrequest-50';    err_schema:='/';    err_table:='/';
     -- END medicationrequest
     -----------------------------------------------------------------------------------------------------------------------
     -- Start medicationadministration
+    err_section:='medicationadministration-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - medicationadministration'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationadministration; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='medicationadministration-05';    err_schema:='cds2db_in';    err_table:='medicationadministration';
+
     FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='medicationadministration-10';    err_schema:='db_log';    err_table:='medicationadministration';
                 SELECT count(1) INTO data_count
                 FROM db_log.medicationadministration target_record
                 WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
@@ -2519,6 +2644,7 @@ BEGIN
                       COALESCE(target_record.medadm_dosage_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_code::text,'#NULL#')
                       ;
 
+                err_section:='medicationadministration-15';    err_schema:='db_log';    err_table:='medicationadministration';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -2756,10 +2882,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='medicationadministration-20';    err_schema:='cds2db_in';    err_table:='medicationadministration';
                     DELETE FROM cds2db_in.medicationadministration WHERE medicationadministration_id = current_record.medicationadministration_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.medicationadministration target_record
+                    err_section:='medicationadministration-25';    err_schema:='db_log';    err_table:='medicationadministration';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.medicationadministration target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -2875,19 +3003,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='medicationadministration-30';    err_schema:='cds2db_in';    err_table:='medicationadministration';
                     DELETE FROM cds2db_in.medicationadministration WHERE medicationadministration_id = current_record.medicationadministration_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='medicationadministration-35';    err_schema:='cds2db_in';    err_table:='medicationadministration';
                     UPDATE cds2db_in.medicationadministration
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medicationadministration_id = current_record.medicationadministration_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='medicationadministration-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -2896,6 +3037,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='medicationadministration-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -2910,20 +3052,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationadministration', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='medicationadministration-50';    err_schema:='/';    err_table:='/';
     -- END medicationadministration
     -----------------------------------------------------------------------------------------------------------------------
     -- Start medicationstatement
+    err_section:='medicationstatement-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - medicationstatement'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationstatement; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='medicationstatement-05';    err_schema:='cds2db_in';    err_table:='medicationstatement';
+
     FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='medicationstatement-10';    err_schema:='db_log';    err_table:='medicationstatement';
                 SELECT count(1) INTO data_count
                 FROM db_log.medicationstatement target_record
                 WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
@@ -3138,6 +3286,7 @@ BEGIN
                       COALESCE(target_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
                       ;
 
+                err_section:='medicationstatement-15';    err_schema:='db_log';    err_table:='medicationstatement';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -3577,10 +3726,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='medicationstatement-20';    err_schema:='cds2db_in';    err_table:='medicationstatement';
                     DELETE FROM cds2db_in.medicationstatement WHERE medicationstatement_id = current_record.medicationstatement_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.medicationstatement target_record
+                    err_section:='medicationstatement-25';    err_schema:='db_log';    err_table:='medicationstatement';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.medicationstatement target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -3797,19 +3948,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='medicationstatement-30';    err_schema:='cds2db_in';    err_table:='medicationstatement';
                     DELETE FROM cds2db_in.medicationstatement WHERE medicationstatement_id = current_record.medicationstatement_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='medicationstatement-35';    err_schema:='cds2db_in';    err_table:='medicationstatement';
                     UPDATE cds2db_in.medicationstatement
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medicationstatement_id = current_record.medicationstatement_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='medicationstatement-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -3818,6 +3982,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='medicationstatement-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -3832,20 +3997,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationstatement', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='medicationstatement-50';    err_schema:='/';    err_table:='/';
     -- END medicationstatement
     -----------------------------------------------------------------------------------------------------------------------
     -- Start observation
+    err_section:='observation-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - observation'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.observation; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='observation-05';    err_schema:='cds2db_in';    err_table:='observation';
+
     FOR current_record IN (SELECT * FROM cds2db_in.observation)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='observation-10';    err_schema:='db_log';    err_table:='observation';
                 SELECT count(1) INTO data_count
                 FROM db_log.observation target_record
                 WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
@@ -3981,6 +4152,7 @@ BEGIN
                       COALESCE(target_record.obs_hasmember_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_display::text,'#NULL#')
                       ;
 
+                err_section:='observation-15';    err_schema:='db_log';    err_table:='observation';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -4262,10 +4434,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='observation-20';    err_schema:='cds2db_in';    err_table:='observation';
                     DELETE FROM cds2db_in.observation WHERE observation_id = current_record.observation_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.observation target_record
+                    err_section:='observation-25';    err_schema:='db_log';    err_table:='observation';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.observation target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -4403,19 +4577,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='observation-30';    err_schema:='cds2db_in';    err_table:='observation';
                     DELETE FROM cds2db_in.observation WHERE observation_id = current_record.observation_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='observation-35';    err_schema:='cds2db_in';    err_table:='observation';
                     UPDATE cds2db_in.observation
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE observation_id = current_record.observation_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='observation-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT observation_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'observation' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.observation d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -4424,6 +4611,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='observation-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -4438,20 +4626,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'observation', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='observation-50';    err_schema:='/';    err_table:='/';
     -- END observation
     -----------------------------------------------------------------------------------------------------------------------
     -- Start diagnosticreport
+    err_section:='diagnosticreport-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - diagnosticreport'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.diagnosticreport; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='diagnosticreport-05';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
+
     FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='diagnosticreport-10';    err_schema:='db_log';    err_table:='diagnosticreport';
                 SELECT count(1) INTO data_count
                 FROM db_log.diagnosticreport target_record
                 WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
@@ -4500,6 +4694,7 @@ BEGIN
                       COALESCE(target_record.diagrep_conclusioncode_text::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_text::text,'#NULL#')
                       ;
 
+                err_section:='diagnosticreport-15';    err_schema:='db_log';    err_table:='diagnosticreport';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -4607,10 +4802,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='diagnosticreport-20';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
                     DELETE FROM cds2db_in.diagnosticreport WHERE diagnosticreport_id = current_record.diagnosticreport_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.diagnosticreport target_record
+                    err_section:='diagnosticreport-25';    err_schema:='db_log';    err_table:='diagnosticreport';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.diagnosticreport target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -4661,19 +4858,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='diagnosticreport-30';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
                     DELETE FROM cds2db_in.diagnosticreport WHERE diagnosticreport_id = current_record.diagnosticreport_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='diagnosticreport-35';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
                     UPDATE cds2db_in.diagnosticreport
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE diagnosticreport_id = current_record.diagnosticreport_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='diagnosticreport-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -4682,6 +4892,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='diagnosticreport-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -4696,20 +4907,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'diagnosticreport', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='diagnosticreport-50';    err_schema:='/';    err_table:='/';
     -- END diagnosticreport
     -----------------------------------------------------------------------------------------------------------------------
     -- Start servicerequest
+    err_section:='servicerequest-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - servicerequest'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.servicerequest; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='servicerequest-05';    err_schema:='cds2db_in';    err_table:='servicerequest';
+
     FOR current_record IN (SELECT * FROM cds2db_in.servicerequest)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='servicerequest-10';    err_schema:='db_log';    err_table:='servicerequest';
                 SELECT count(1) INTO data_count
                 FROM db_log.servicerequest target_record
                 WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
@@ -4772,6 +4989,7 @@ BEGIN
                       COALESCE(target_record.servreq_locationcode_text::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_text::text,'#NULL#')
                       ;
 
+                err_section:='servicerequest-15';    err_schema:='db_log';    err_table:='servicerequest';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -4907,10 +5125,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='servicerequest-20';    err_schema:='cds2db_in';    err_table:='servicerequest';
                     DELETE FROM cds2db_in.servicerequest WHERE servicerequest_id = current_record.servicerequest_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.servicerequest target_record
+                    err_section:='servicerequest-25';    err_schema:='db_log';    err_table:='servicerequest';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.servicerequest target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -4975,19 +5195,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='servicerequest-30';    err_schema:='cds2db_in';    err_table:='servicerequest';
                     DELETE FROM cds2db_in.servicerequest WHERE servicerequest_id = current_record.servicerequest_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='servicerequest-35';    err_schema:='cds2db_in';    err_table:='servicerequest';
                     UPDATE cds2db_in.servicerequest
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE servicerequest_id = current_record.servicerequest_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='servicerequest-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT servicerequest_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'servicerequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.servicerequest d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -4996,6 +5229,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='servicerequest-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -5010,20 +5244,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'servicerequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='servicerequest-50';    err_schema:='/';    err_table:='/';
     -- END servicerequest
     -----------------------------------------------------------------------------------------------------------------------
     -- Start procedure
+    err_section:='procedure-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - procedure'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.procedure; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='procedure-05';    err_schema:='cds2db_in';    err_table:='procedure';
+
     FOR current_record IN (SELECT * FROM cds2db_in.procedure)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='procedure-10';    err_schema:='db_log';    err_table:='procedure';
                 SELECT count(1) INTO data_count
                 FROM db_log.procedure target_record
                 WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
@@ -5096,6 +5336,7 @@ BEGIN
                       COALESCE(target_record.proc_note_text::text,'#NULL#') = COALESCE(current_record.proc_note_text::text,'#NULL#')
                       ;
 
+                err_section:='procedure-15';    err_schema:='db_log';    err_table:='procedure';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -5251,10 +5492,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='procedure-20';    err_schema:='cds2db_in';    err_table:='procedure';
                     DELETE FROM cds2db_in.procedure WHERE procedure_id = current_record.procedure_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.procedure target_record
+                    err_section:='procedure-25';    err_schema:='db_log';    err_table:='procedure';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.procedure target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -5329,19 +5572,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='procedure-30';    err_schema:='cds2db_in';    err_table:='procedure';
                     DELETE FROM cds2db_in.procedure WHERE procedure_id = current_record.procedure_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='procedure-35';    err_schema:='cds2db_in';    err_table:='procedure';
                     UPDATE cds2db_in.procedure
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE procedure_id = current_record.procedure_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='procedure-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT procedure_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'procedure' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.procedure d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -5350,6 +5606,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='procedure-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -5364,20 +5621,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'procedure', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='procedure-50';    err_schema:='/';    err_table:='/';
     -- END procedure
     -----------------------------------------------------------------------------------------------------------------------
     -- Start consent
+    err_section:='consent-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - consent'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.consent; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='consent-05';    err_schema:='cds2db_in';    err_table:='consent';
+
     FOR current_record IN (SELECT * FROM cds2db_in.consent)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='consent-10';    err_schema:='db_log';    err_table:='consent';
                 SELECT count(1) INTO data_count
                 FROM db_log.consent target_record
                 WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
@@ -5416,6 +5679,7 @@ BEGIN
                       COALESCE(target_record.cons_provision_dataperiod_end::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_end::text,'#NULL#')
                       ;
 
+                err_section:='consent-15';    err_schema:='db_log';    err_table:='consent';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -5503,10 +5767,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='consent-20';    err_schema:='cds2db_in';    err_table:='consent';
                     DELETE FROM cds2db_in.consent WHERE consent_id = current_record.consent_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.consent target_record
+                    err_section:='consent-25';    err_schema:='db_log';    err_table:='consent';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.consent target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -5547,19 +5813,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='consent-30';    err_schema:='cds2db_in';    err_table:='consent';
                     DELETE FROM cds2db_in.consent WHERE consent_id = current_record.consent_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='consent-35';    err_schema:='cds2db_in';    err_table:='consent';
                     UPDATE cds2db_in.consent
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE consent_id = current_record.consent_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='consent-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT consent_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'consent' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.consent d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -5568,6 +5847,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='consent-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -5582,20 +5862,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'consent', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='consent-50';    err_schema:='/';    err_table:='/';
     -- END consent
     -----------------------------------------------------------------------------------------------------------------------
     -- Start location
+    err_section:='location-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - location'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.location; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='location-05';    err_schema:='cds2db_in';    err_table:='location';
+
     FOR current_record IN (SELECT * FROM cds2db_in.location)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='location-10';    err_schema:='db_log';    err_table:='location';
                 SELECT count(1) INTO data_count
                 FROM db_log.location target_record
                 WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
@@ -5615,6 +5901,7 @@ BEGIN
                       COALESCE(target_record.loc_alias::text,'#NULL#') = COALESCE(current_record.loc_alias::text,'#NULL#')
                       ;
 
+                err_section:='location-15';    err_schema:='db_log';    err_table:='location';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -5664,10 +5951,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='location-20';    err_schema:='cds2db_in';    err_table:='location';
                     DELETE FROM cds2db_in.location WHERE location_id = current_record.location_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.location target_record
+                    err_section:='location-25';    err_schema:='db_log';    err_table:='location';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.location target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -5689,19 +5978,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='location-30';    err_schema:='cds2db_in';    err_table:='location';
                     DELETE FROM cds2db_in.location WHERE location_id = current_record.location_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='location-35';    err_schema:='cds2db_in';    err_table:='location';
                     UPDATE cds2db_in.location
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE location_id = current_record.location_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='location-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT location_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'location' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.location d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -5710,6 +6012,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='location-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -5724,26 +6027,33 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'location', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='location-50';    err_schema:='/';    err_table:='/';
     -- END location
     -----------------------------------------------------------------------------------------------------------------------
     -- Start pids_per_ward
+    err_section:='pids_per_ward-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log - pids_per_ward'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.pids_per_ward; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='pids_per_ward-05';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
+
     FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='pids_per_ward-10';    err_schema:='db_log';    err_table:='pids_per_ward';
                 SELECT count(1) INTO data_count
                 FROM db_log.pids_per_ward target_record
                 WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
                       COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
                       ;
 
+                err_section:='pids_per_ward-15';    err_schema:='db_log';    err_table:='pids_per_ward';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -5767,10 +6077,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='pids_per_ward-20';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
                     DELETE FROM cds2db_in.pids_per_ward WHERE pids_per_ward_id = current_record.pids_per_ward_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.pids_per_ward target_record
+                    err_section:='pids_per_ward-25';    err_schema:='db_log';    err_table:='pids_per_ward';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.pids_per_ward target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -5779,19 +6091,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='pids_per_ward-30';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
                     DELETE FROM cds2db_in.pids_per_ward WHERE pids_per_ward_id = current_record.pids_per_ward_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='pids_per_ward-35';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
                     UPDATE cds2db_in.pids_per_ward
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_type_cds_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE pids_per_ward_id = current_record.pids_per_ward_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='pids_per_ward-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -5800,6 +6125,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='pids_per_ward-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -5814,8 +6140,11 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'pids_per_ward', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='pids_per_ward-50';    err_schema:='/';    err_table:='/';
     -- END pids_per_ward
     -----------------------------------------------------------------------------------------------------------------------
+
+    err_section:='BOTTON-01';  err_schema:='db_log';    err_table:='data_import_hist';
 
     -- Collect and save counts for the function
     IF data_count_pro_all>0 THEN
@@ -5830,6 +6159,19 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_type_cds_in_to_db_log', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     END IF;
+    err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        SELECT db.error_log(
+            err_schema,                     -- Schema, in dem der Fehler auftrat
+            'db.copy_type_cds_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+            err_section,                    -- Zeilennummer oder Abschnitt
+            PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+            last_pro_nr                     -- Letzte Verarbeitungsnummer
+        );
 END;
 $$ LANGUAGE plpgsql;
 

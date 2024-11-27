@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 14:21:24
+-- Rights definition file last update : 2024-11-11 08:18:58
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-25 13:53:21
+-- Create time: 2024-11-26 23:46:44
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -50,26 +50,36 @@ DECLARE
     timestamp_end varchar;
     timestamp_ent_start varchar;
     timestamp_ent_end varchar;
+    err_section varchar;
+    err_schema varchar;
+    err_table varchar;
 BEGIN
+    err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
     -- set start time
 	SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
 
     -- Copy Functionname: copy_fe_fe_in_to_db_log - From: db2frontend_in -> To: db_log
+    err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
     -- Start patient_fe
+    err_section:='patient_fe-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - patient_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.patient_fe; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='patient_fe-05';    err_schema:='db2frontend_in';    err_table:='patient_fe';
+
     FOR current_record IN (SELECT * FROM db2frontend_in.patient_fe)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='patient_fe-10';    err_schema:='db_log';    err_table:='patient_fe';
                 SELECT count(1) INTO data_count
                 FROM db_log.patient_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -87,6 +97,7 @@ BEGIN
                       COALESCE(target_record.patient_complete::text,'#NULL#') = COALESCE(current_record.patient_complete::text,'#NULL#')
                       ;
 
+                err_section:='patient_fe-15';    err_schema:='db_log';    err_table:='patient_fe';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -130,10 +141,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='patient_fe-20';    err_schema:='db2frontend_in';    err_table:='patient_fe';
                     DELETE FROM db2frontend_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.patient_fe target_record
+                    err_section:='patient_fe-25';    err_schema:='db_log';    err_table:='patient_fe';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.patient_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -153,19 +166,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='patient_fe-30';    err_schema:='db2frontend_in';    err_table:='patient_fe';
                     DELETE FROM db2frontend_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='patient_fe-35';    err_schema:='db2frontend_in';    err_table:='patient_fe';
                     UPDATE db2frontend_in.patient_fe
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_fe_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE patient_fe_id = current_record.patient_fe_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='patient_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT patient_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_fe_in_to_db_log' AS function_name FROM db_log.patient_fe d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -174,6 +200,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='patient_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -188,20 +215,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='patient_fe-50';    err_schema:='/';    err_table:='/';
     -- END patient_fe
     -----------------------------------------------------------------------------------------------------------------------
     -- Start fall_fe
+    err_section:='fall_fe-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - fall_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.fall_fe; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='fall_fe-05';    err_schema:='db2frontend_in';    err_table:='fall_fe';
+
     FOR current_record IN (SELECT * FROM db2frontend_in.fall_fe)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='fall_fe-10';    err_schema:='db_log';    err_table:='fall_fe';
                 SELECT count(1) INTO data_count
                 FROM db_log.fall_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -242,6 +275,7 @@ BEGIN
                       COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
                       ;
 
+                err_section:='fall_fe-15';    err_schema:='db_log';    err_table:='fall_fe';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -331,10 +365,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='fall_fe-20';    err_schema:='db2frontend_in';    err_table:='fall_fe';
                     DELETE FROM db2frontend_in.fall_fe WHERE fall_fe_id = current_record.fall_fe_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.fall_fe target_record
+                    err_section:='fall_fe-25';    err_schema:='db_log';    err_table:='fall_fe';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.fall_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -377,19 +413,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='fall_fe-30';    err_schema:='db2frontend_in';    err_table:='fall_fe';
                     DELETE FROM db2frontend_in.fall_fe WHERE fall_fe_id = current_record.fall_fe_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='fall_fe-35';    err_schema:='db2frontend_in';    err_table:='fall_fe';
                     UPDATE db2frontend_in.fall_fe
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_fe_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE fall_fe_id = current_record.fall_fe_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='fall_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT fall_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_fe_in_to_db_log' AS function_name FROM db_log.fall_fe d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -398,6 +447,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='fall_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -412,20 +462,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='fall_fe-50';    err_schema:='/';    err_table:='/';
     -- END fall_fe
     -----------------------------------------------------------------------------------------------------------------------
     -- Start medikationsanalyse_fe
+    err_section:='medikationsanalyse_fe-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - medikationsanalyse_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.medikationsanalyse_fe; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='medikationsanalyse_fe-05';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
+
     FOR current_record IN (SELECT * FROM db2frontend_in.medikationsanalyse_fe)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='medikationsanalyse_fe-10';    err_schema:='db_log';    err_table:='medikationsanalyse_fe';
                 SELECT count(1) INTO data_count
                 FROM db_log.medikationsanalyse_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -447,6 +503,7 @@ BEGIN
                       COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
                       ;
 
+                err_section:='medikationsanalyse_fe-15';    err_schema:='db_log';    err_table:='medikationsanalyse_fe';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -498,10 +555,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='medikationsanalyse_fe-20';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
                     DELETE FROM db2frontend_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.medikationsanalyse_fe target_record
+                    err_section:='medikationsanalyse_fe-25';    err_schema:='db_log';    err_table:='medikationsanalyse_fe';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.medikationsanalyse_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -525,19 +584,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='medikationsanalyse_fe-30';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
                     DELETE FROM db2frontend_in.medikationsanalyse_fe WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='medikationsanalyse_fe-35';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
                     UPDATE db2frontend_in.medikationsanalyse_fe
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_fe_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='medikationsanalyse_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_fe_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -546,6 +618,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='medikationsanalyse_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -560,20 +633,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='medikationsanalyse_fe-50';    err_schema:='/';    err_table:='/';
     -- END medikationsanalyse_fe
     -----------------------------------------------------------------------------------------------------------------------
     -- Start mrpdokumentation_validierung_fe
+    err_section:='mrpdokumentation_validierung_fe-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - mrpdokumentation_validierung_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.mrpdokumentation_validierung_fe; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='mrpdokumentation_validierung_fe-05';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
+
     FOR current_record IN (SELECT * FROM db2frontend_in.mrpdokumentation_validierung_fe)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='mrpdokumentation_validierung_fe-10';    err_schema:='db_log';    err_table:='mrpdokumentation_validierung_fe';
                 SELECT count(1) INTO data_count
                 FROM db_log.mrpdokumentation_validierung_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -704,6 +783,7 @@ BEGIN
                       COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
                       ;
 
+                err_section:='mrpdokumentation_validierung_fe-15';    err_schema:='db_log';    err_table:='mrpdokumentation_validierung_fe';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -973,10 +1053,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='mrpdokumentation_validierung_fe-20';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
                     DELETE FROM db2frontend_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.mrpdokumentation_validierung_fe target_record
+                    err_section:='mrpdokumentation_validierung_fe-25';    err_schema:='db_log';    err_table:='mrpdokumentation_validierung_fe';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.mrpdokumentation_validierung_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -1109,19 +1191,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='mrpdokumentation_validierung_fe-30';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
                     DELETE FROM db2frontend_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='mrpdokumentation_validierung_fe-35';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
                     UPDATE db2frontend_in.mrpdokumentation_validierung_fe
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_fe_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='mrpdokumentation_validierung_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_fe_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -1130,6 +1225,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='mrpdokumentation_validierung_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -1144,20 +1240,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='mrpdokumentation_validierung_fe-50';    err_schema:='/';    err_table:='/';
     -- END mrpdokumentation_validierung_fe
     -----------------------------------------------------------------------------------------------------------------------
     -- Start risikofaktor_fe
+    err_section:='risikofaktor_fe-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - risikofaktor_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.risikofaktor_fe; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='risikofaktor_fe-05';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
+
     FOR current_record IN (SELECT * FROM db2frontend_in.risikofaktor_fe)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='risikofaktor_fe-10';    err_schema:='db_log';    err_table:='risikofaktor_fe';
                 SELECT count(1) INTO data_count
                 FROM db_log.risikofaktor_fe target_record
                 WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
@@ -1179,6 +1281,7 @@ BEGIN
                       COALESCE(target_record.risikofaktor_complete::text,'#NULL#') = COALESCE(current_record.risikofaktor_complete::text,'#NULL#')
                       ;
 
+                err_section:='risikofaktor_fe-15';    err_schema:='db_log';    err_table:='risikofaktor_fe';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -1230,10 +1333,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='risikofaktor_fe-20';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
                     DELETE FROM db2frontend_in.risikofaktor_fe WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.risikofaktor_fe target_record
+                    err_section:='risikofaktor_fe-25';    err_schema:='db_log';    err_table:='risikofaktor_fe';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.risikofaktor_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -1257,19 +1362,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='risikofaktor_fe-30';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
                     DELETE FROM db2frontend_in.risikofaktor_fe WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='risikofaktor_fe-35';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
                     UPDATE db2frontend_in.risikofaktor_fe
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_fe_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='risikofaktor_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_fe_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -1278,6 +1396,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='risikofaktor_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -1292,20 +1411,26 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='risikofaktor_fe-50';    err_schema:='/';    err_table:='/';
     -- END risikofaktor_fe
     -----------------------------------------------------------------------------------------------------------------------
     -- Start trigger_fe
+    err_section:='trigger_fe-01';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
     PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - trigger_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.trigger_fe; -- Counting new records in the source
     data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
+
+    err_section:='trigger_fe-05';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
+
     FOR current_record IN (SELECT * FROM db2frontend_in.trigger_fe)
         LOOP
             BEGIN
                 IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
 
+                err_section:='trigger_fe-10';    err_schema:='db_log';    err_table:='trigger_fe';
                 SELECT count(1) INTO data_count
                 FROM db_log.trigger_fe target_record
                 WHERE COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
@@ -1335,6 +1460,7 @@ BEGIN
                       COALESCE(target_record.trigger_complete::text,'#NULL#') = COALESCE(current_record.trigger_complete::text,'#NULL#')
                       ;
 
+                err_section:='trigger_fe-15';    err_schema:='db_log';    err_table:='trigger_fe';
                 IF data_count = 0
                 THEN
                     data_count_new:=data_count_new+1;
@@ -1402,10 +1528,12 @@ BEGIN
                     );
 
                     -- Delete importet datasets
+                    err_section:='trigger_fe-20';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
                     DELETE FROM db2frontend_in.trigger_fe WHERE trigger_fe_id = current_record.trigger_fe_id;
                 ELSE
-                data_count_update:=data_count_update+1;
-                UPDATE db_log.trigger_fe target_record
+                    err_section:='trigger_fe-25';    err_schema:='db_log';    err_table:='trigger_fe';
+                    data_count_update:=data_count_update+1;
+                    UPDATE db_log.trigger_fe target_record
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                     , last_processing_nr = last_pro_nr
@@ -1437,19 +1565,32 @@ BEGIN
                     ;
 
                     -- Delete updatet datasets
+                    err_section:='trigger_fe-30';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
                     DELETE FROM db2frontend_in.trigger_fe WHERE trigger_fe_id = current_record.trigger_fe_id;
                 END IF;
             EXCEPTION
                 WHEN OTHERS THEN
+                    err_section:='trigger_fe-35';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
                     UPDATE db2frontend_in.trigger_fe
                     SET last_check_datetime = last_pro_datetime
                     , current_dataset_status = 'ERROR func: copy_fe_fe_in_to_db_log'
                     , last_processing_nr = last_pro_nr
                     WHERE trigger_fe_id = current_record.trigger_fe_id;
+
+                    SELECT db.error_log(
+                        err_schema,                     -- Schema, in dem der Fehler auftrat
+                        'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+                        err_section,                    -- Zeilennummer oder Abschnitt
+                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        last_pro_nr                     -- Letzte Verarbeitungsnummer
+                    );
             END;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
+        err_section:='trigger_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_fe_in_to_db_log' AS function_name FROM db_log.trigger_fe d WHERE d.last_processing_nr=last_pro_nr
         EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
@@ -1458,6 +1599,7 @@ BEGIN
 
     -- Collect and save counts for the entity
     IF data_count_all>0 THEN -- only if where are new data
+        err_section:='trigger_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
         SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
@@ -1472,8 +1614,11 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_all', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_all, tmp_sec, temp);
     END IF;
+    err_section:='trigger_fe-50';    err_schema:='/';    err_table:='/';
     -- END trigger_fe
     -----------------------------------------------------------------------------------------------------------------------
+
+    err_section:='BOTTON-01';  err_schema:='db_log';    err_table:='data_import_hist';
 
     -- Collect and save counts for the function
     IF data_count_pro_all>0 THEN
@@ -1488,6 +1633,19 @@ BEGIN
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_fe_fe_in_to_db_log', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     END IF;
+    err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        SELECT db.error_log(
+            err_schema,                     -- Schema, in dem der Fehler auftrat
+            'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+            err_section,                    -- Zeilennummer oder Abschnitt
+            PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+            last_pro_nr                     -- Letzte Verarbeitungsnummer
+        );
 END;
 $$ LANGUAGE plpgsql;
 
