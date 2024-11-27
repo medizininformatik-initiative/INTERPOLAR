@@ -73,7 +73,7 @@
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;

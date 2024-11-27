@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-27 08:55:55
+-- Create time: 2024-11-27 09:04:11
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -420,7 +420,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -593,7 +593,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -1150,7 +1150,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -1483,7 +1483,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -2480,7 +2480,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -3021,7 +3021,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -3966,7 +3966,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -4595,7 +4595,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -4876,7 +4876,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -5213,7 +5213,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -5590,7 +5590,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -5831,7 +5831,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -5996,7 +5996,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
@@ -6109,7 +6109,7 @@ BEGIN
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
             END;
