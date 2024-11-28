@@ -887,3 +887,41 @@ completeTable <- function(table, table_description) {
   d <- data.table::rbindlist(list(empty_table, table), fill = TRUE, use.names = TRUE)
   d[, lapply(.SD, function(x) methods::as(x, 'character'))]
 }
+
+#' Create or Store a Resource Table
+#'
+#' This function initializes an empty `data.table` based on a given table description.
+#' It can either return the table directly or store it in a specified collection under a given key.
+#'
+#' @param table_description A description object containing table column names.
+#'                          Expected to have a `@cols@names` attribute with column names.
+#' @param resource_key (Optional) A character string specifying the key under which the table should
+#'                     be stored in the `resource_collection`.
+#' @param resource_collection (Optional) A named list to store the table. If provided with
+#'                             `resource_key`, the table will be added to this collection.
+#'
+#' @return If both `resource_key` and `resource_collection` are provided, returns the updated
+#'         `resource_collection`. Otherwise, returns the initialized `data.table`.
+#'
+#' @export
+createResourceTable <- function(
+    table_description,
+    resource_key = NULL,
+    resource_collection = NULL
+) {
+  # Extract column names from the table description object
+  column_names <- table_description@cols@names
+  # Create an empty data.table with the appropriate number of columns
+  resource_table <- data.table::data.table(matrix(ncol = length(column_names), nrow = 0))
+  # Set the column names for the table
+  data.table::setnames(resource_table, column_names)
+  # Convert all columns to character type
+  resource_table[, (column_names) := lapply(.SD, as.character), .SDcols = column_names]
+  # If a resource_key and resource_collection are provided, store the table in the collection
+  if (!is.null(resource_key) && !is.null(resource_collection)) {
+    resource_collection[[resource_key]] <- resource_table
+    return(resource_collection)
+  }
+  # Otherwise, return the resource_table directly
+  return(resource_table)
+}
