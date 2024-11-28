@@ -689,11 +689,9 @@ loadFHIRResourcesByOwnID <- function(ids, table_description, last_updated = NA, 
       verbose = VERBOSE
     )
   } else {
-    # if there are no IDs -> create an empt table with all needed columns as character columns
-    column_names <- table_description@cols@names
-    resource_table <- data.table(matrix(ncol = length(column_names), nrow = 0))
-    data.table::setnames(resource_table, column_names)
-    resource_table[, (column_names) := lapply(.SD, as.character), .SDcols = column_names]
+    # if there are no IDs -> create an empty table with all needed columns as character columns
+    resource_table <- createResourceTable(table_description)
+
   }
   return(resource_table)
 }
@@ -769,28 +767,40 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descrip
       } else {
         additional_search_parameter <- NULL
       }
-      # Load and process FHIR resources for the current patient IDs and resource_name type
-      resource_table <- loadFHIRResourcesByPID(date_to_pids[[i]], table_description, last_updated, additional_search_parameter)
-      # If `resource_table` is valid (not NA), add it to `resource_name_to_resources`
-      if (!isSimpleNA(resource_table)) {
-        # Combine resources for each resource type across multiple patient IDs
-        if (!is.null(resource_name_to_resources[[resource_name]])) {
-          if (nrow(resource_table)) {
-            # Append new resources to existing ones with rbind
-            resource_name_to_resources[[resource_name]] <- rbind(
-              resource_name_to_resources[[resource_name]],
-              resource_table
-            )
+      if (!nchar(additional_search_parameter) == 0 || is.null(additional_search_parameter)) {
+        # Load and process FHIR resources for the current patient IDs and resource_name type
+        resource_table <- loadFHIRResourcesByPID(date_to_pids[[i]], table_description, last_updated, additional_search_parameter)
+        # If `resource_table` is valid (not NA), add it to `resource_name_to_resources`
+        if (!isSimpleNA(resource_table)) {
+          # Combine resources for each resource type across multiple patient IDs
+          if (!is.null(resource_name_to_resources[[resource_name]])) {
+            if (nrow(resource_table)) {
+              # Append new resources to existing ones with rbind
+              resource_name_to_resources[[resource_name]] <- rbind(
+                resource_name_to_resources[[resource_name]],
+                resource_table
+              )
+            }
+          } else {
+            # If this is the first occurrence, simply assign the table (even if nrow is 0)
+            resource_name_to_resources[[resource_name]] <- resource_table
           }
-        } else {
-          # If this is the first occurrence, simply assign the table (even if nrow is 0)
-          resource_name_to_resources[[resource_name]] <- resource_table
         }
+      } else {
+        # if there are no IDs -> create an empty table with all needed columns as character columns
+        resource_name <- table_description@resource@.Data
+        resource_name_to_resources <- createResourceTable(
+          table_description,
+          resource_key = resource_name,
+          resource_collection = resource_name_to_resources
+        )
       }
     }
     resource_table <- resource_name_to_resources[[resource_name]]
     if (!is.null(resource_table) && nrow(resource_table)) {
       printAllTables(resource_table, resource_name)
+    } else if (!nchar(additional_search_parameter) && !is.null(additional_search_parameter)) {
+      catInfoMessage(paste("Info: No", resource_name, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
     } else {
       catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs.\n"))
     }

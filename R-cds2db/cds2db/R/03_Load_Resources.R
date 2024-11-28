@@ -258,7 +258,6 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
 
   # Load all data of relevant patients from FHIR server
-  #browser()
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
   # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
@@ -325,7 +324,28 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
       referenced_ids <- getAfterLastSlash(referenced_ids)
       referenced_ids <- unique(referenced_ids)
 
-      resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids, referenced_table_description)
+      resource_name <- referenced_table_description@resource@.Data
+      if (!(resource_name %in% names(resources_add_search_parameter)) ||
+          nchar(resources_add_search_parameter[[resource_name]]) != 0) {
+        resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids,
+                                                                                referenced_table_description,
+                                                                                additional_search_parameter = resources_add_search_parameter)
+      } else {
+        # if there are no IDs -> create an empty table with all needed columns as character columns
+        resource_tables <- etlutils::createResourceTable(
+          referenced_table_description,
+          resource_key = resource_name,
+          resource_collection = resource_tables
+        )
+      }
+      if (!is.null(resource_tables[[resource_name]]) && nrow(resource_tables[[resource_name]])) {
+        printAllTables(resource_tables[[resource_name]], resource_name)
+      } else if (resource_name %in% names(resources_add_search_parameter) &&
+                 nchar(resources_add_search_parameter[[resource_name]]) == 0) {
+        catInfoMessage(paste("Info: No", resource_name, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
+      } else {
+        catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs.\n"))
+      }
     }
   }
   return(resource_tables)

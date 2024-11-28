@@ -192,6 +192,8 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # These parameters can set additional FHIR-search parameters for downloading Requests. It is possible
 # to set parameters for each FHIR resource or set specific parameters for all FHIR resources with the
 # parameter DEBUG_ADD_FHIR_SEARCH_GENERAL. Several parameters can be customised by linking the FHIR
+# search parameters with an ‘&’. If the parameter is set to an empty string "", then the resource is
+# not downloaded.
 # search parameters with an ‘&’.
 #
 # ATTENTION: Which specific FHIR search requests result from the following DEBUG_ADD_FHIR_SEARCH
