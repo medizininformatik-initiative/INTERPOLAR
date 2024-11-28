@@ -49,7 +49,7 @@ GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
         INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-        VALUES ('semaphor_cron_job_data_transfer','pause','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
+        VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
 -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
 
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
