@@ -462,6 +462,47 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
       }
     }
   }
+
+  if (exists("DEBUG_RESOURCE_COUNT_OBSERVATION_RAW")) {
+    required_obs_count <- as.numeric(DEBUG_RESOURCE_COUNT_OBSERVATION_RAW)
+
+    if (nrow(resource_tables$Observation) == 0) {
+      stop("There are no Observations to duplicate ", required_obs_count, " times!")
+    }
+
+    extendObservationTable <- function(table_obs, debug_resource_count) {
+      # Calculate the number of rows needed
+      original_rows <- nrow(table_obs)
+      required_rows <- debug_resource_count
+      if (original_rows == required_rows) {
+        return(table_obs)
+      }
+      if (original_rows > required_rows) {
+        return(table_obs[1:required_rows]) # truncate superflous rows
+      }
+
+      # Calculate the number of full duplications and the remaining rows
+      num_full_copies <- (required_rows - original_rows) %/% original_rows
+      remainder <- (required_rows - original_rows) %% original_rows
+
+      # Duplicate the table as needed
+      duplicated_table <- table_obs[
+        rep(seq_len(original_rows), times = num_full_copies + 1)[1:(required_rows - original_rows)]
+      ]
+
+      # Create new obs_id values for duplicates
+      duplicated_table[, obs_id := paste0(obs_id, "_DUP_", seq_len(.N))]
+
+      # Combine the original table with the duplicated rows
+      extended_table <- rbind(table_obs, duplicated_table)
+
+      return(extended_table)
+    }
+
+    resource_tables$Observation <- extendObservationTable(resource_tables$Observation, required_obs_count)
+  }
+
+
   #######################
   # END: FOR DEBUG ONLY #
   #######################

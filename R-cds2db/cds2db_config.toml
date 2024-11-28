@@ -243,6 +243,10 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #DEBUG_FILTER_PROCEDURE = ""
 #DEBUG_FILTER_SERVICEREQUEST = ""
 
+# This debug parameter ensures that the observation RAW table has exactly as many entries as
+# specified here. If there are too few, they are duplicated. If there are more, they are truncated.
+# This can be used to test the performance of large amounts of data.
+#DEBUG_RESOURCE_COUNT_OBSERVATION_RAW = 1000
 
 #################
 # This debug parameter restricts the table pids_per_ward by filtering out all patients who have
