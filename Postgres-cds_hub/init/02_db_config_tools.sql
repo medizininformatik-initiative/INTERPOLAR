@@ -48,8 +48,9 @@ GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
 GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
-insert into db_config.db_process_control (pc_name, pc_value, pc_description)
-values ('semaphor_cron_job_data_transfer','ready','semaphore to control the cron_job_data_transfer job, contains the current processing status - ongoing / pause / ready / interrupted'); -- Normal Status are: ready --> ongoing --> pause --> ready
+        INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+        VALUES ('semaphor_cron_job_data_transfer','pause','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
+-- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
 
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
 values ('timepoint_1_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function started) Format: YYYY-MM-DD HH24:MI:SS.US');
