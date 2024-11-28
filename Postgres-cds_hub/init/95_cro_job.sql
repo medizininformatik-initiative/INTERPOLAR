@@ -6,6 +6,7 @@ DECLARE
     temp varchar;
     status varchar;
     num int;
+    num2 int;
     err_section varchar;
     err_schema varchar;
     err_table varchar;
@@ -42,13 +43,18 @@ BEGIN
 
         -- Bisher Zeitspanne seit letztem start von ongoing - in Parametern angegebene Minuten überschritten
         err_section:='cron_job_data_transfer-20';    err_schema:='db_config';    err_table:='db_process_control';
-        SELECT CASE WHEN round(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-last_change_timestamp))) > (60*num) THEN 0 ELSE 1 END INTO num
+        SELECT round(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-last_change_timestamp))) INTO num2
         FROM db_config.db_process_control WHERE pc_name = 'semaphor_cron_job_data_transfer';
+
+        err_section:='cron_job_data_transfer-20';    err_schema:='db_config';    err_table:='db_process_control';
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Ongoing since '||num2||' sec - '||(num*60)||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoint_3_cron_job_data_transfer''');
         
-        If num=1 THEN
+        If num2>=(num*60) THEN
             status:='WaitForCronJob';
+            err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         END IF;
     END IF;
+    err_section:='cron_job_data_transfer-22';    err_schema:='/';    err_table:='/';
 
     IF status in ('WaitForCronJob') THEN
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
@@ -114,6 +120,23 @@ BEGIN
         err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
     END IF;
     err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
+
+
+    IF status in ('ReadyToConnect') THEN
+        -- ReadyToConnect (Pause) durchführen
+        err_section:='cron_job_data_transfer-65';    err_schema:='db_config';    err_table:='db_parameter';
+
+        SELECT CAST(parameter_value AS NUMERIC) INTO num FROM db_config.db_parameter WHERE parameter_name='pause_after_process_execution';
+        If num<5 then num:=5; END IF; -- Wenn kleiner als 10 sec - Mindestwartedauer um chance für externe intervention zu geben
+        If num>45 then num:=40; END IF; -- Wenn größer als JobInterval - kleiner setzen um wieder in Takt zu kommen
+
+        SELECT pg_sleep(num) INTO temp;
+    
+        -- Semaphore wieder frei geben - ohne Rückgabe der SubProzessID
+        err_section:='cron_job_data_transfer-70';    err_schema:='db_config';    err_table:='db_process_control';
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Ongoing%'' and pc_value=''ReadyToConnect'' and pc_name=''semaphor_cron_job_data_transfer''');
+    END IF;
+    err_section:='cron_job_data_transfer-80';    err_schema:='/';    err_table:='/';
 
 /*
 EXCEPTION
