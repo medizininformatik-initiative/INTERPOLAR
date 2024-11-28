@@ -83,7 +83,7 @@ importRedcap2DB <- function() {
     for (i in seq_along(tables2Export)) {
       table_name <- paste0(names(tables2Export)[i], "_fe")
       tables2Export[[i]] <- adjustTableToDBTable(db_connection, tables2Export[[i]], table_name)
-      etlutils::dbAddContent(db_connection, table_name, tables2Export[[i]])
+      etlutils::dbAddContent(db_connection, table_name, tables2Export[[i]], lock_id = "db2frontend.importRedcap2DB()")
     }
 
     #disconnect from db

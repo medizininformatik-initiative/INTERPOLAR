@@ -79,13 +79,11 @@ retrieve <- function(debug_path2config_toml = NA) {
 
       if (!all_empty_fhir) {
         # Write raw tables to database
-        etlutils::runLevel2("Write raw tables to database", {
-          writeTablesToDatabase(resource_tables, stop_if_table_not_empty = TRUE)
-        })
-
-        # Wait until the copy cron job runs after insertion
-        etlutils::runLevel2(paste0("Wait until the cron job in database has moved data from input schema to database core (", DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING, " minute(s))") , {
-          etlutils::waitWithDelay(DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING)
+        etlutils::runLevel2("Write RAW tables to database", {
+          writeTablesToDatabase(
+            tables = resource_tables,
+            stop_if_table_not_empty = TRUE,
+            lock_id = paste("cds2db: Write RAW tables to database"))
         })
       }
 
@@ -104,8 +102,11 @@ retrieve <- function(debug_path2config_toml = NA) {
         all_table_names_raw_diff <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
         all_table_names_raw_diff <- paste0("v_", all_table_names_raw_diff, "_diff")
 
-        resource_tables_raw_diff <- readTablesFromDatabase(all_table_names_raw_diff)
-        all_empty_raw <- all(sapply(resource_tables, function(dt) nrow(dt) == 0))
+        resource_tables_raw_diff <- readTablesFromDatabase(
+          table_names = all_table_names_raw_diff,
+          lock_id = "cds2db:Load untyped RAW tables from database")
+
+        all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
         if (all_empty_raw) {
           etlutils::catWarningMessage("No (new) untyped RAW tables found in database")
           cat("Note: This warning only means that only data already in the database has been loaded from the FHIR server.\n")
@@ -120,15 +121,11 @@ retrieve <- function(debug_path2config_toml = NA) {
         })
 
         etlutils::runLevel2("Write typed tables to database", {
-          writeTablesToDatabase(resource_tables, stop_if_table_not_empty = TRUE)
+          writeTablesToDatabase(
+            tables = resource_tables,
+            stop_if_table_not_empty = TRUE,
+            lock_id = "cds2db: Write typed tables to database")
         })
-
-        # Wait until the copy cron job runs after insertion
-        if (!etlutils::isDefinedAndTrue("SKIP_DELAY_AT_END")) {
-          etlutils::runLevel2(paste0("Wait until the cron job in database has moved data from input schema to database core (", DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING, " minute(s))") , {
-            etlutils::waitWithDelay(DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING)
-          })
-        }
 
       }
     }

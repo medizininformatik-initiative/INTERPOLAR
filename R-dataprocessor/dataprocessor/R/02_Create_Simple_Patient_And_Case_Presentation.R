@@ -9,12 +9,15 @@
 #'         records in the `db_log.data_import_hist` table.
 #'
 getLastProcessingNumber <- function() {
-  db_connection_read <- getDatabaseReadConnection()
   statement <- "SELECT MAX(last_processing_nr)
                 FROM db_log.data_import_hist
                 WHERE function_name = 'copy_type_cds_in_to_db_log'
                   AND schema_name = 'db_log' AND table_name NOT LIKE '%_raw';"
-  etlutils::dbGetQuery(db_connection_read, statement)
+  etlutils::dbGetQuery(
+    db_connection = getDatabaseReadConnection(),
+    query = statement,
+    lock_id = "dataprocessor.getLastProcessingNumber()",
+    readonly = TRUE)
 }
 
 #' Load All Data with Last Timestamp from Database
@@ -26,7 +29,6 @@ getLastProcessingNumber <- function() {
 #' @return A data frame containing the records with the most recent timestamp from the specified table.
 #'
 loadLastImportedDatasetsFromDB <- function(table_name) {
-  db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
   # Create the SQL query to get the records with the maximum last_processing_nr
   statement <- paste0("SELECT * FROM ", table_name, "\n",
@@ -35,7 +37,11 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
   if (is.na(last_processing_nr)) {
     stop(paste0("In table ", table_name, " the content of column last_processing_nr in the database is NA, so the following SQL query will return an error:\n", statement, "\nPlease wait at least 1 minute before starting the dataprocessor!"))
   }
-  etlutils::dbGetQuery(db_connection_read, statement)
+  etlutils::dbGetQuery(
+    db_connection = getDatabaseReadConnection(),
+    query = statement,
+    lock_id = "dataprocessor.loadLastImportedDatasetsFromDB()",
+    readonly = TRUE)
 }
 
 #' Get Current Datetime
@@ -134,7 +140,6 @@ getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name))
 #' @return A character string representing the SQL query.
 #'
 getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
-  db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
   table_name <- getFullTableName(resource_name)
@@ -183,13 +188,19 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
 #' @param filter_column The column on which to apply the filter.
 #' @param ids A vector of IDs to filter on.
 #' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
+loadResourcesFromDB <- function(resource_name, filter_column, ids, log = TRUE, lock_id) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
   statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
-  db_connection_read <- getDatabaseReadConnection()
-  etlutils::dbGetQuery(db_connection_read, statement, log)
+  etlutils::dbGetQuery(
+    db_connection = getDatabaseReadConnection(),
+    query = statement,
+    log = log,
+    lock_id = lock_id,
+    readonly = TRUE)
 }
 
 #' Retrieve the last status of load resources from the database.
@@ -205,8 +216,12 @@ runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
 #'
 loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
   statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
-  db_connection_read <- getDatabaseReadConnection()
-  etlutils::dbGetQuery(db_connection_read, statement, log)
+  etlutils::dbGetQuery(
+    db_connection = getDatabaseReadConnection(),
+    query = statement,
+    log = log,
+    lock_id = "dataprcessor.loadResourcesLastStatusFromDB()",
+    readonly = TRUE)
 }
 
 #' Retrieve the last status of load resources from the database by their own IDs.
@@ -223,7 +238,12 @@ loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
 #'
 loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids, log = TRUE) {
   id_column <- getIDColumn(resource_name)
-  runQuery(resource_name, id_column, ids, log)
+  loadResourcesFromDB(
+    resource_name = resource_name,
+    filter_column = id_column,
+    ids = ids,
+    log = log,
+    lock_id = paste0("dataprcessor.loadResourcesLastStatusByOwnIDFromDB(",resource_name,")"))
 }
 
 #' Retrieve the last status of load resources from the database by PID.
@@ -243,7 +263,12 @@ loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids, log = TRUE) 
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, pids, log))
   }
   pid_column <- getPIDColumn(resource_name)
-  runQuery(resource_name, pid_column, pids, log)
+  loadResourcesFromDB(
+    resource_name = resource_name,
+    filter_column = pid_column,
+    ids = pids,
+    log = log,
+    lock_id = paste0("dataprcessor.loadResourcesLastStatusByPIDFromDB(",resource_name,")"))
 }
 
 #' Load Resources Last Status By Encounter ID From Database
@@ -266,7 +291,12 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids, log = T
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, enc_ids, log))
   }
   enc_id_column <- getPIDColumn(resource_name)
-  runQuery(resource_name, enc_id_column, enc_ids, log)
+  loadResourcesFromDB(
+    resource_name = resource_name,
+    filter_column = enc_id_column,
+    ids = enc_ids,
+    log = log,
+    lock_id = paste0("dataprcessor.loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
 }
 
 #' This function creates frontend tables for displaying patient and encounter information.
@@ -381,7 +411,6 @@ createFrontendTables <- function() {
     # load Encounters for all PIDs
     query_datetime <- getQueryDatetime()
     query_ids <- getQueryList(pids_per_ward$patient_id)
-    db_read_connection <- getDatabaseReadConnection()
     table_name <- getFullTableName("encounter")
 
     enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
@@ -402,7 +431,12 @@ createFrontendTables <- function() {
                      enc_class_codes
     )
 
-    encounters <- etlutils::dbGetQuery(db_read_connection, query, query_log)
+    encounters <- etlutils::dbGetQuery(
+      db_connection = getDatabaseReadConnection(),
+      query = query,
+      log = query_log,
+      lock_id = "dataprocessor.createEncounterFrontendTable()[1]",
+      readonly = TRUE)
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
@@ -410,7 +444,13 @@ createFrontendTables <- function() {
     table_name <- getFullTableName("condition")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
-    conditions <- etlutils::dbGetQuery(db_read_connection, query, query_log)
+
+    conditions <- etlutils::dbGetQuery(
+      db_connection = getDatabaseReadConnection(),
+      query = query,
+      log = query_log,
+      lock_id = "dataprocessor.createEncounterFrontendTable()[2]",
+      readonly = TRUE)
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
@@ -496,7 +536,12 @@ createFrontendTables <- function() {
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
-          observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query, query_log)
+          observations <- etlutils::dbGetQuery(
+            db_connection = getDatabaseReadConnection(),
+            query = query,
+            log = query_log,
+            lock_id = "dataprocessor.getObservation()[1]",
+            readonly = TRUE)
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
           if (!nrow(observations)) {
@@ -506,7 +551,12 @@ createFrontendTables <- function() {
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_datetime, "'\n")
-            observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query, query_log)
+            observations <- etlutils::dbGetQuery(
+              db_connection = getDatabaseReadConnection(),
+              query = query,
+              log = query_log,
+              lock_id = "dataprocessor.getObservation()[2]",
+              readonly = TRUE)
           }
           if (nrow(observations)) {
             # take the very frist Observation with the latest date (should be only 1 but sure is sure)

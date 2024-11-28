@@ -9,7 +9,9 @@
 #' @param stop_if_table_not_empty A logical value indicating whether to check if each target table
 #'                        in the database is empty before writing. If `TRUE`, the function will stop
 #'                        with an error if any table already contains data. Default is `FALSE`.
-writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE) {
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' write access under this name
+writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE, lock_id) {
   etlutils::createConnectionAndWriteTablesToDatabase(tables,
                                                      dbname = DB_GENERAL_NAME,
                                                      host = DB_GENERAL_HOST,
@@ -17,7 +19,8 @@ writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE) {
                                                      user = DB_CDS2DB_USER,
                                                      password = DB_CDS2DB_PASSWORD,
                                                      schema = DB_CDS2DB_SCHEMA_IN,
-                                                     stop_if_table_not_empty = stop_if_table_not_empty)
+                                                     stop_if_table_not_empty = stop_if_table_not_empty,
+                                                     lock_id = lock_id)
 }
 
 #' Retrieve Untyped RAW Data from Database
@@ -26,17 +29,20 @@ writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE) {
 #' the data as a list of data frames.
 #'
 #' @param table_names names of the tables or views to load
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' read access under this name
 #'
 #' @return A list of data frames where each data frame corresponds to a table from the database.
 #'
-readTablesFromDatabase <- function(table_names) {
+readTablesFromDatabase <- function(table_names, lock_id) {
   etlutils::createConnectionAndReadTablesFromDatabase(dbname = DB_GENERAL_NAME,
                                                       host = DB_GENERAL_HOST,
                                                       port = DB_GENERAL_PORT,
                                                       user = DB_CDS2DB_USER,
                                                       password = DB_CDS2DB_PASSWORD,
                                                       schema = DB_CDS2DB_SCHEMA_OUT,
-                                                      table_names = table_names)
+                                                      table_names = table_names,
+                                                      lock_id = lock_id)
 }
 
 #' Retrieve Data from Database using a Predefined Connection Configuration
@@ -48,11 +54,17 @@ readTablesFromDatabase <- function(table_names) {
 #' @param params A list of parameters to be safely inserted into the SQL query, allowing for
 #'        parameterized queries. If NA, no parameters will be used. This is useful for preventing
 #'        SQL injection and handling dynamic query inputs.
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' access under this name
+#' @param readonly Logical value indicating whether the database was changed with the query. This should
+#' be used to trigger a database internal cron job which copies the changed data in the database core.
+#' If the query has not changed anything then set this paramter to TRUE to prevent the expensive cron
+#' job execution.
 #'
 #' @return A data.table containing the result of the SQL query.
 #'
 #' @export
-getQueryFromDatabase <- function(query, params = NULL) {
+getQueryFromDatabase <- function(query, params = NULL, lock_id, readonly) {
   etlutils::dbConnectAndGetQuery(dbname = DB_GENERAL_NAME,
                                  host = DB_GENERAL_HOST,
                                  port = DB_GENERAL_PORT,
@@ -60,5 +72,7 @@ getQueryFromDatabase <- function(query, params = NULL) {
                                  password = DB_CDS2DB_PASSWORD,
                                  schema = DB_CDS2DB_SCHEMA_OUT,
                                  query = query,
-                                 params = params)
+                                 params = params,
+                                 lock_id = lock_id,
+                                 readonly = readonly)
 }
