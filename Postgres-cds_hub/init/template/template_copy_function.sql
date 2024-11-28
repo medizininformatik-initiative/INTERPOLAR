@@ -23,12 +23,13 @@ DECLARE
     err_section varchar;
     err_schema varchar;
     err_table varchar;
+    err_pid varchar;
 BEGIN
     err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
     -- set start time
-	SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
-
+	SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
+ 
     -- Copy Functionname: <%COPY_FUNC_NAME%> - From: <%SCHEMA_2%> -> To: <%OWNER_SCHEMA%>
     err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
@@ -52,6 +53,7 @@ BEGIN
     END IF;
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
+/*
 EXCEPTION
     WHEN OTHERS THEN
         SELECT db.error_log(
@@ -63,6 +65,7 @@ EXCEPTION
             PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
+*/
 END;
 $$ LANGUAGE plpgsql;
 

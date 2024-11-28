@@ -9,6 +9,7 @@ DECLARE
     err_section varchar;
     err_schema varchar;
     err_table varchar;
+    err_pid varchar;
 BEGIN
     -- Doppelt angelegte Cron-Jobs deaktivieren
     err_section:='cron_job_data_transfer-01';    err_schema:='cron';    err_table:='job';
@@ -51,7 +52,7 @@ BEGIN
 
     IF status in ('ready') THEN
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
-        status='ongoing - 1/5 db.copy_raw_cds_in_to_db_log()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        status='ongoing - 1/5 db.copy_raw_cds_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-25';    err_schema:='db';    err_table:='copy_raw_cds_in_to_db_log()';
 
         -- FHIR Data
@@ -60,7 +61,7 @@ BEGIN
         SELECT pg_sleep(1) INTO temp;
     
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
-        status='ongoing - 2/5 db.copy_type_cds_in_to_db_log()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        status='ongoing - 2/5 db.copy_type_cds_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
 
         SELECT db.copy_type_cds_in_to_db_log() INTO temp;
@@ -68,7 +69,7 @@ BEGIN
         SELECT pg_sleep(1) INTO temp;
 
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
-        status='ongoing - 3/5 db.take_over_last_check_date()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        status='ongoing - 3/5 db.take_over_last_check_date()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
     
         SELECT db.take_over_last_check_date() INTO temp;
@@ -76,7 +77,7 @@ BEGIN
         SELECT pg_sleep(1) INTO temp;
     
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
-        status='ongoing - 4/5 db.copy_fe_dp_in_to_db_log()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        status='ongoing - 4/5 db.copy_fe_dp_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-40';    err_schema:='db';    err_table:='copy_fe_dp_in_to_db_log()';
 
         -- Study data
@@ -85,7 +86,7 @@ BEGIN
         SELECT pg_sleep(1) INTO temp;
     
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
-        status='ongoing - 5/5 db.copy_fe_fe_in_to_db_log()'; PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        status='ongoing - 5/5 db.copy_fe_fe_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-45';    err_schema:='db';    err_table:='copy_fe_fe_in_to_db_log()';
 
         SELECT db.copy_fe_fe_in_to_db_log() INTO temp;
@@ -103,17 +104,18 @@ BEGIN
         If num>45 then num:=40; END IF; -- Wenn größer als JobInterval - kleiner setzen um wieder in Takt zu kommen
 
         -- Semaphore setzen das Pause gemacht werden kann - ohne Rückgabe der SubProzessID
-        PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''pause'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''pause'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-55';    err_schema:='db_config';    err_table:='db_parameter';
 
         SELECT pg_sleep(num) INTO temp;
     
         -- Semaphore wieder frei geben - ohne Rückgabe der SubProzessID
-        PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''ongoing%'' and pc_value=''pause'' and pc_name=''semaphor_cron_job_data_transfer''');
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''ongoing%'' and pc_value=''pause'' and pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
     END IF;
     err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
 
+/*
 EXCEPTION
     WHEN OTHERS THEN
         SELECT db.error_log(
@@ -125,6 +127,7 @@ EXCEPTION
             PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             0                               -- Letzte Verarbeitungsnummer
         );
+*/
 END;
 $$ LANGUAGE plpgsql;
 
@@ -142,6 +145,7 @@ DECLARE
     err_section varchar;
     err_schema varchar;
     err_table varchar;
+    err_pid varchar;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
     err_section:='db.data_transfer_stop-01';    err_schema:='db_config';    err_table:='db_process_control';
@@ -159,7 +163,7 @@ BEGIN
         -- Semaphore setzen - ohne Rückgabe der SubProzessID - optinal mit übergeben Text
         err_section:='db.data_transfer_stop-15';    err_schema:='db_config';    err_table:='db_process_control';
         status='ongoing - '||msg;
-        PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
     	RETURN TRUE;
     ELSE
         err_section:='db.data_transfer_stop-20';    err_schema:='db_config';    err_table:='db_process_control';
@@ -170,6 +174,7 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
+/*
         SELECT db.error_log(
             err_schema,                     -- Schema, in dem der Fehler auftrat
             'db.data_transfer_stop() - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
@@ -179,6 +184,8 @@ EXCEPTION
             PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             0                               -- Letzte Verarbeitungsnummer
         );
+*/
+    RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -188,7 +195,7 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_stop(varchar) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(varchar) TO db_user;
 
 -- Funktion zum steuern des cron-jobs für Externe - Starten
-CREATE OR REPLACE FUNCTION db.data_transfer_start(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben')
+CREATE OR REPLACE FUNCTION db.data_transfer_start(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben', read_only Boolean DEFAULT FALSE)
 RETURNS BOOLEAN
 SECURITY DEFINER
 AS $$
@@ -198,6 +205,7 @@ DECLARE
     err_section varchar;
     err_schema varchar;
     err_table varchar;
+    err_pid varchar;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
     err_section:='db.data_transfer_start-01';    err_schema:='db_config';    err_table:='db_process_control';
@@ -211,10 +219,15 @@ BEGIN
     END IF;
 
     err_section:='db.data_transfer_start-10';    err_schema:='db_config';    err_table:='db_process_control';
-    IF status like 'ongoing%'||msg THEN -- Prozess ruht von diesem Aufruf(Schlüssel) - also kann er blokiert werden
-        -- Semaphore setzen - ohne Rückgabe der SubProzessID
-        err_section:='db.data_transfer_start-15';    err_schema:='db_config';    err_table:='db_process_control';
-        PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+    IF status='ongoing - '||msg THEN -- Prozess ruht von diesem Aufruf(Schlüssel) - also kann er blokiert werden
+        -- Semaphore setzen
+        IF read_only THEN -- Zugriff war nur lesend, also keine Datenänderung - Datenstand gleich wieder verfügbar
+            err_section:='db.data_transfer_start-15';    err_schema:='db_config';    err_table:='db_process_control';
+            err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''pause'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        ELSE
+            err_section:='db.data_transfer_start-17';    err_schema:='db_config';    err_table:='db_process_control';
+            err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''ready'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+        END IF;
 	    RETURN TRUE;
     ELSE
         err_section:='db.data_transfer_start-20';    err_schema:='db_config';    err_table:='db_process_control';
@@ -225,6 +238,7 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
+/*
         SELECT db.error_log(
             err_schema,                     -- Schema, in dem der Fehler auftrat
             'db.data_transfer_start() - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
@@ -234,13 +248,15 @@ EXCEPTION
             PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             0                               -- Letzte Verarbeitungsnummer
         );
+*/
+    RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
 
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar) TO db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db_user;
 
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.data_transfer_status()
@@ -259,6 +275,7 @@ BEGIN
     RETURN status;
 EXCEPTION
     WHEN OTHERS THEN
+/*
         SELECT db.error_log(
             'db_config',                    -- Schema, in dem der Fehler auftrat
             'db.data_transfer_status() - db_process_control', -- Objekt (Tabelle, Funktion, etc.)
@@ -268,6 +285,8 @@ EXCEPTION
             PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             0                               -- Letzte Verarbeitungsnummer
         );
+*/
+    RETURN 'Fehler ist Aufgetreten';
 END;
 $$ LANGUAGE plpgsql;
 

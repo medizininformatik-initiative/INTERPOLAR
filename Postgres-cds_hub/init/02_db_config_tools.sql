@@ -153,9 +153,11 @@ CREATE OR REPLACE FUNCTION db.error_log(
 RETURNS VOID
 SECURITY DEFINER
 AS $$
+DECLARE
+    err_pid varchar;
 BEGIN
-    PERFORM pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
-    VALUES ('''||err_schema||''','''||err_objekt||''','''||err_user||''','''||err_msg||''','''||err_line||''','''||err_variables||''','||last_processing_nr||')');
+    err_pid:=public.pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
+    VALUES ('||quote_literal(err_schema)||','||quote_literal(err_objekt)||','||quote_literal(err_user)||','||quote_literal(err_msg)||','||quote_literal(err_line)||','||quote_literal(err_variables)||','||last_processing_nr||')');
 EXCEPTION
     WHEN OTHERS THEN
         INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)

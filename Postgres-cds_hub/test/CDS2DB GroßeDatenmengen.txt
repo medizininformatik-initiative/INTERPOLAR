@@ -1,8 +1,9 @@
 DECLARE
-	faktor int:=1; -- Faktor mit dem die Anzahl der Datensätze Multipliziert wird - einfache Datensätze nur Patient-ID
+	faktor int; -- Faktor mit dem die Anzahl der Datensätze Multipliziert wird - einfache Datensätze nur Patient-ID
 BEGIN
+    faktor:=1;
     -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW 
-    -- Patient 100 * x
+    -- Patient 50 * x
     INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
     VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
     INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
@@ -18,21 +19,21 @@ BEGIN
     INSERT INTO cds2db_in.patient_raw (pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode)
     (select rn||
     pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode
-    from cds2db_in.patient_raw a, (SELECT generate_series(1, 20*faktor) AS rn) b)
+    from cds2db_in.patient_raw a, (SELECT generate_series(1, 10*faktor) AS rn) b)
     ;
 
-    -- Fälle 200 * x
-    insert into cds2db_in.encounter_raw (enc_patient_id) (SELECT generate_series(1, 200*faktor));
+    -- Fälle 100 * x
+    insert into cds2db_in.encounter_raw (enc_patient_id) (SELECT generate_series(1, 100*faktor));
 
-    -- Observation 30000 * x
-    insert into cds2db_in.observation_raw (obs_patient_id) (SELECT generate_series(1, 30000*faktor));
+    -- Observation 10000 * x
+    insert into cds2db_in.observation_raw (obs_patient_id) (SELECT generate_series(1, 10000*faktor));
 
 
-    -- Medicationrequest 10000 * x
-    insert into cds2db_in.medicationrequest_raw (medreq_patient_id) (SELECT generate_series(1, 10000*faktor));
+    -- Medicationrequest 5000 * x
+    insert into cds2db_in.medicationrequest_raw (medreq_patient_id) (SELECT generate_series(1, 5000*faktor));
 --------------------------------------------------------------------------------------------------------------------------------
     -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED
-    -- Patient 100 * x
+    -- Patient 50 * x
     INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
     VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
     INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
@@ -48,17 +49,17 @@ BEGIN
     INSERT INTO cds2db_in.patient (pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode)
     (select rn||
     pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode
-    from cds2db_in.patient_raw a, (SELECT generate_series(1, 20*faktor) AS rn) b)
+    from cds2db_in.patient_raw a, (SELECT generate_series(1, 10*faktor) AS rn) b)
     ;
 
-    -- Fälle 200 * x
-    insert into cds2db_in.encounter (enc_patient_id) (SELECT generate_series(1, 200*faktor));
+    -- Fälle 100 * x
+    insert into cds2db_in.encounter (enc_patient_id) (SELECT generate_series(1, 100*faktor));
 
-    -- Observation 30000 * x
-    insert into cds2db_in.observation (obs_patient_id) (SELECT generate_series(1, 30000*faktor));
+    -- Observation 10000 * x
+    insert into cds2db_in.observation (obs_patient_id) (SELECT generate_series(1, 10000*faktor));
 
 
-    -- Medicationrequest 10000 * x
-    insert into cds2db_in.medicationrequest (medreq_patient_id) (SELECT generate_series(1, 10000*faktor));
+    -- Medicationrequest 5000 * x
+    insert into cds2db_in.medicationrequest (medreq_patient_id) (SELECT generate_series(1, 5000*faktor));
 --------------------------------------------------------------------------------------------------------------------------------
 END;
