@@ -152,6 +152,45 @@ adjustNames <- function(variables, prefix, valid_names) {
   return(variables)
 }
 
+#########################
+# START: FOR DEBUG ONLY #
+#########################
+debugSetResourcesAddSearchParameter <- function(
+    global_debug_filter_variable_prefix = "DEBUG_ADD_FHIR_SEARCH_",
+    table_descriptions,
+    debug_general_variable = "DEBUG_ADD_FHIR_SEARCH_GENERAL"
+) {
+  # Get global filter variables with the specified prefix
+  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
+
+  # Initialize result
+  resources_add_search_parameter <- NULL
+
+  # Load FHIR resources based on the presence of global filter variables
+  if (length(global_filter_variables)) {
+    # Adjust the names of the global variables
+    resources_add_search_parameter <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
+
+    # Check if the general debug variable exists
+    if (exists(debug_general_variable)) {
+      # Prepend value of 'GENERAL' for all resources
+      for (name in names(table_descriptions)) {
+        full_value <- resources_add_search_parameter[["GENERAL"]]
+        if (name %in% names(resources_add_search_parameter)) {
+          full_value <- paste0(full_value, "&", resources_add_search_parameter[[name]])
+        }
+        resources_add_search_parameter[[name]] <- full_value
+      }
+    }
+  }
+
+  # Return the resulting resource search parameters
+  return(resources_add_search_parameter)
+}
+#######################
+# END: FOR DEBUG ONLY #
+#######################
+
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
@@ -193,26 +232,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   #########################
 
   # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+  resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions)
 
-  # Define the prefix for global debug filter variables
-  global_debug_filter_variable_prefix <- "DEBUG_ADD_FHIR_SEARCH_"
-  # Get global filter variables with the specified prefix
-  global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
-
-  # Load FHIR resources based on the presence of global filter variables
-  if (length(global_filter_variables)) {
-    resources_add_search_parameter <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
-    if (exists("DEBUG_ADD_FHIR_SEARCH_GENERAL")) {
-      # Prepend value of 'GENERAL' for all resources
-      for (name in names(table_descriptions)) {
-        full_value <- resources_add_search_parameter[["GENERAL"]]
-        if (name %in% names(resources_add_search_parameter)) {
-          full_value <- paste0(full_value, "&", resources_add_search_parameter[[name]])
-        }
-        resources_add_search_parameter[[name]] <- full_value
-      }
-    }
-  }
   #######################
   # END: FOR DEBUG ONLY #
   #######################
@@ -323,6 +344,17 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
       referenced_ids <- unlist(strsplit(referenced_ids, table_description_sep, fixed = TRUE))
       referenced_ids <- getAfterLastSlash(referenced_ids)
       referenced_ids <- unique(referenced_ids)
+
+      #########################
+      # START: FOR DEBUG ONLY #
+      #########################
+
+      # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+      resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions$pid_independant)
+
+      #######################
+      # END: FOR DEBUG ONLY #
+      #######################
 
       resource_name <- referenced_table_description@resource@.Data
       if (!(resource_name %in% names(resources_add_search_parameter)) ||
