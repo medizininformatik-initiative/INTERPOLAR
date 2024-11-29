@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-27 08:56:18
+-- Create time: 2024-11-28 09:12:47
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -53,20 +53,21 @@ DECLARE
     err_section varchar;
     err_schema varchar;
     err_table varchar;
+    err_pid varchar;
 BEGIN
     err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
     -- set start time
-	SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
-
+	SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
+ 
     -- Copy Functionname: copy_fe_fe_in_to_db_log - From: db2frontend_in -> To: db_log
     err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
     -- Start patient_fe
     err_section:='patient_fe-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - patient_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.patient_fe; -- Counting new records in the source
@@ -178,15 +179,17 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE patient_fe_id = current_record.patient_fe_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -203,7 +206,7 @@ BEGIN
         err_section:='patient_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -220,8 +223,8 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
     -- Start fall_fe
     err_section:='fall_fe-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - fall_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.fall_fe; -- Counting new records in the source
@@ -425,15 +428,17 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE fall_fe_id = current_record.fall_fe_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -450,7 +455,7 @@ BEGIN
         err_section:='fall_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -467,8 +472,8 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
     -- Start medikationsanalyse_fe
     err_section:='medikationsanalyse_fe-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - medikationsanalyse_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.medikationsanalyse_fe; -- Counting new records in the source
@@ -596,15 +601,17 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -621,7 +628,7 @@ BEGIN
         err_section:='medikationsanalyse_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -638,8 +645,8 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
     -- Start mrpdokumentation_validierung_fe
     err_section:='mrpdokumentation_validierung_fe-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - mrpdokumentation_validierung_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.mrpdokumentation_validierung_fe; -- Counting new records in the source
@@ -1203,15 +1210,17 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -1228,7 +1237,7 @@ BEGIN
         err_section:='mrpdokumentation_validierung_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -1245,8 +1254,8 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
     -- Start risikofaktor_fe
     err_section:='risikofaktor_fe-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - risikofaktor_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.risikofaktor_fe; -- Counting new records in the source
@@ -1374,15 +1383,17 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -1399,7 +1410,7 @@ BEGIN
         err_section:='risikofaktor_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -1416,8 +1427,8 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------------------
     -- Start trigger_fe
     err_section:='trigger_fe-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log - trigger_fe'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM db2frontend_in.trigger_fe; -- Counting new records in the source
@@ -1577,15 +1588,17 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE trigger_fe_id = current_record.trigger_fe_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -1602,7 +1615,7 @@ BEGIN
         err_section:='trigger_fe-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -1635,6 +1648,7 @@ BEGIN
     END IF;
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
+/*
 EXCEPTION
     WHEN OTHERS THEN
         SELECT db.error_log(
@@ -1646,6 +1660,7 @@ EXCEPTION
             PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
+*/
 END;
 $$ LANGUAGE plpgsql;
 

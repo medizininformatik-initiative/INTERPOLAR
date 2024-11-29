@@ -1,10 +1,10 @@
-FROM postgres:15
+FROM postgres:17
 
 RUN apt-get update && \
-	apt-get -y install postgresql-15-cron
+	apt-get -y install postgresql-17-cron
 
 RUN apt-get update && \
-	apt-get -y install build-essential git postgresql-server-dev-15 libkrb5-dev
+	apt-get -y install build-essential git postgresql-server-dev-17 libkrb5-dev
 
 RUN git clone https://github.com/vibhorkum/pg_background.git /usr/src/pg_background
 

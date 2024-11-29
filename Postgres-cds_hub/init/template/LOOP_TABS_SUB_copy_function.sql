@@ -1,7 +1,7 @@
     -- Start <%TABLE_NAME%>
     err_section:='<%TABLE_NAME%>-01';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-    PERFORM pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%> - <%TABLE_NAME%>'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+    SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
 
     data_count:=0; data_count_update:=0; data_count_new:=0;
     SELECT COUNT(1) INTO data_count_all FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>; -- Counting new records in the source
@@ -67,15 +67,17 @@
                     , last_processing_nr = last_pro_nr
                     WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
 
+/*
                     SELECT db.error_log(
                         err_schema,                     -- Schema, in dem der Fehler auftrat
                         'db.<%COPY_FUNC_NAME%> - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
                         current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
                         SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
                         err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT            -- Debug-Informationen zu Variablen
+                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
                         last_pro_nr                     -- Letzte Verarbeitungsnummer
                     );
+*/
             END;
     END LOOP;
 
@@ -92,7 +94,7 @@
         err_section:='<%TABLE_NAME%>-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)

@@ -1,20 +1,65 @@
--- Testdatensätze am Beispiel Patient - RAW -> Prinzipielle Kopierfunktion cds_in to log
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
-SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+DECLARE
+	faktor int; -- Faktor mit dem die Anzahl der Datensätze Multipliziert wird - einfache Datensätze nur Patient-ID
+BEGIN
+    faktor:=1;
+    -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW -- RAW 
+    -- Patient 50 * x
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+    SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+    
+    INSERT INTO cds2db_in.patient_raw (pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode)
+    (select rn||
+    pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode
+    from cds2db_in.patient_raw a, (SELECT generate_series(1, 10*faktor) AS rn) b)
+    ;
 
-INSERT INTO cds2db_in.patient_raw (pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode)
-(select rn||
-pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode
-from cds2db_in.patient_raw a, (SELECT generate_series(1, 20000) AS rn) b)
-;
+    -- Fälle 100 * x
+    insert into cds2db_in.encounter_raw (enc_patient_id) (SELECT generate_series(1, 100*faktor));
+
+    -- Observation 10000 * x
+    insert into cds2db_in.observation_raw (obs_patient_id) (SELECT generate_series(1, 10000*faktor));
 
 
+    -- Medicationrequest 5000 * x
+    insert into cds2db_in.medicationrequest_raw (medreq_patient_id) (SELECT generate_series(1, 5000*faktor));
+--------------------------------------------------------------------------------------------------------------------------------
+    -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED -- TYPED
+    -- Patient 50 * x
+    INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+    INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+    SELECT pg_sleep(2); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+    INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+    INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+    INSERT INTO cds2db_in.patient (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+    
+    INSERT INTO cds2db_in.patient (pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode)
+    (select rn||
+    pat_id,pat_name_text,pat_name_family,pat_gender,pat_birthdate,pat_address_postalcode
+    from cds2db_in.patient_raw a, (SELECT generate_series(1, 10*faktor) AS rn) b)
+    ;
+
+    -- Fälle 100 * x
+    insert into cds2db_in.encounter (enc_patient_id) (SELECT generate_series(1, 100*faktor));
+
+    -- Observation 10000 * x
+    insert into cds2db_in.observation (obs_patient_id) (SELECT generate_series(1, 10000*faktor));
+
+
+    -- Medicationrequest 5000 * x
+    insert into cds2db_in.medicationrequest (medreq_patient_id) (SELECT generate_series(1, 5000*faktor));
+--------------------------------------------------------------------------------------------------------------------------------
+END;

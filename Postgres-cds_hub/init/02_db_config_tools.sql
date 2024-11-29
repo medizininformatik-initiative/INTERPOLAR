@@ -48,8 +48,9 @@ GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
 GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
-insert into db_config.db_process_control (pc_name, pc_value, pc_description)
-values ('semaphor_cron_job_data_transfer','ready','semaphore to control the cron_job_data_transfer job, contains the current processing status - ongoing / pause / ready / interrupted'); -- Normal Status are: ready --> ongoing --> pause --> ready
+        INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+        VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
+-- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
 
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
 values ('timepoint_1_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function started) Format: YYYY-MM-DD HH24:MI:SS.US');
@@ -153,9 +154,11 @@ CREATE OR REPLACE FUNCTION db.error_log(
 RETURNS VOID
 SECURITY DEFINER
 AS $$
+DECLARE
+    err_pid varchar;
 BEGIN
-    PERFORM pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
-    VALUES ('''||err_schema||''','''||err_objekt||''','''||err_user||''','''||err_msg||''','''||err_line||''','''||err_variables||''','||last_processing_nr||')');
+    err_pid:=public.pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
+    VALUES ('||quote_literal(err_schema)||','||quote_literal(err_objekt)||','||quote_literal(err_user)||','||quote_literal(err_msg)||','||quote_literal(err_line)||','||quote_literal(err_variables)||','||last_processing_nr||')');
 EXCEPTION
     WHEN OTHERS THEN
         INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
