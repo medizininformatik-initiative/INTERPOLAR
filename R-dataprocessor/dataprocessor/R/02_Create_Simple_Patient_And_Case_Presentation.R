@@ -433,12 +433,7 @@ createFrontendTables <- function() {
                      enc_class_codes
     )
 
-    encounters <- etlutils::dbGetQuery(
-      db_connection = getDatabaseReadConnection(),
-      query = query,
-      log = query_log,
-      lock_id = "dataprocessor.createEncounterFrontendTable()[1]",
-      readonly = TRUE)
+    encounters <- getReadQuery(query, lock_id = "dataprocessor.createEncounterFrontendTable()[1]")
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
@@ -447,12 +442,7 @@ createFrontendTables <- function() {
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
 
-    conditions <- etlutils::dbGetQuery(
-      db_connection = getDatabaseReadConnection(),
-      query = query,
-      log = query_log,
-      lock_id = "dataprocessor.createEncounterFrontendTable()[2]",
-      readonly = TRUE)
+    conditions <- getReadQuery(query, lock_id = "dataprocessor.createEncounterFrontendTable()[2]")
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
@@ -538,12 +528,8 @@ createFrontendTables <- function() {
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
-          observations <- etlutils::dbGetQuery(
-            db_connection = getDatabaseReadConnection(),
-            query = query,
-            log = query_log,
-            lock_id = "dataprocessor.getObservation()[1]",
-            readonly = TRUE)
+          observations <- getReadQuery(query, lock_id = "dataprocessor.getObservation()[1]")
+
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
           if (!nrow(observations)) {
@@ -553,12 +539,7 @@ createFrontendTables <- function() {
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_datetime, "'\n")
-            observations <- etlutils::dbGetQuery(
-              db_connection = getDatabaseReadConnection(),
-              query = query,
-              log = query_log,
-              lock_id = "dataprocessor.getObservation()[2]",
-              readonly = TRUE)
+            observations <- getReadQuery(query, lock_id = "dataprocessor.getObservation()[2]")
           }
           if (nrow(observations)) {
             # take the very frist Observation with the latest date (should be only 1 but sure is sure)

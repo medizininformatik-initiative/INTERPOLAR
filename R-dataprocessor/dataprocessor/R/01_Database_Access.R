@@ -58,3 +58,29 @@ closeAllDatabaseConnections <- function() {
   }
 }
 
+#' Execute a Read-Only Query with Logging
+#'
+#' This function executes a read-only SQL query on a database connection,
+#' with optional logging and a locking mechanism for safe execution.
+#'
+#' @param query A string representing the SQL query to be executed.
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' access under this name
+#'
+#' @return A data frame containing the result of the executed query.
+#'
+#' @details
+#' The function uses the `etlutils::dbGetQuery` function to interact with the database.
+#' It automatically establishes a read-only database connection using
+#' `getDatabaseReadConnection()`. If verbose logging is enabled (configured via `VERBOSE`),
+#' the query execution details are logged when `VERBOSE` is set to at least `VL_90_FHIR_RESPONSE`.
+#'
+#' @export
+getReadQuery <- function(query, lock_id) {
+  etlutils::dbGetQuery(
+    db_connection = getDatabaseReadConnection(),
+    query = query,
+    log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    lock_id = lock_id,
+    readonly = TRUE)
+}

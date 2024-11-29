@@ -373,40 +373,6 @@ dbGetQuery <- function(db_connection, query, params = NULL, log = TRUE, lock_id 
   return(table)
 }
 
-#' Execute a SQL Query on a Database with Automatic Connection Management
-#'
-#' This function establishes a database connection using the provided credentials,
-#' executes the specified SQL query, and then disconnects from the database.
-#'
-#' @param dbname A string representing the name of the database.
-#' @param host A string representing the database host.
-#' @param port An integer representing the port number to connect to.
-#' @param user A string representing the username for authentication.
-#' @param password A string representing the password for authentication.
-#' @param schema A string representing the schema to be used within the database.
-#' @param query A string representing the SQL query to be executed.
-#' @param log A logical value indicating whether the SQL statement should be logged to the console.
-#'        Default is TRUE.
-#' @param params A list of parameters to be safely inserted into the SQL query, allowing for
-#'        parameterized queries. If NA, no parameters will be used. This is useful for preventing
-#'        SQL injection and handling dynamic query inputs.
-#' @param lock_id A string representation as ID for the process to lock the database during the
-#' access under this name
-#' @param readonly Logical value indicating whether the database was changed with the query. This should
-#' be used to trigger a database internal cron job which copies the changed data in the database core.
-#' If the query has not changed anything then set this paramter to TRUE to prevent the expensive cron
-#' job execution.
-#'
-#' @return A data.table containing the result of the SQL query.
-#'
-#' @export
-dbConnectAndGetQuery <- function(dbname, host, port, user, password, schema, query, log = TRUE, params = NULL, lock_id = NULL, readonly = FALSE) {
-  db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  result <- dbGetQuery(db_connection, query, log, params, lock_id, readonly)
-  dbDisconnect(db_connection)
-  return(result)
-}
-
 #' Read a Table from a PostgreSQL Database
 #'
 #' This function reads a table from a PostgreSQL database and returns it as a data table.
@@ -439,32 +405,6 @@ dbReadTable <- function(db_connection, table_name, log = TRUE, lock_id = NULL) {
   table <- data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
   dbUnlock(db_connection, log, lock_id, readonly = TRUE)
   return(table)
-}
-
-#' Write Multiple Tables to Database
-#'
-#' This function writes multiple tables to a specified database schema. It can optionally clear
-#' existing content before inserting new data.
-#'
-#' @param tables A named list of data frames representing the tables to be written to the database.
-#' @param dbname A string representing the name of the database.
-#' @param host A string representing the database host.
-#' @param port An integer representing the port number to connect to the database.
-#' @param user A string representing the database user name.
-#' @param password A string representing the database user password.
-#' @param schema A string representing the database schema.
-#' @param stop_if_table_not_empty A logical value indicating whether to check if each target table
-#'                        in the database is empty before writing. If `TRUE`, the function will stop
-#'                        with an error if any table already contains data. Default is `FALSE`.
-#' @param lock_id A string representation as ID for the process to lock the database during the
-#' access under this name
-#'
-#' @return NULL. The function is used for its side effects of writing data to the database.
-#'
-#' @export
-createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port, user, password, schema, stop_if_table_not_empty = FALSE, lock_id = NULL) {
-  db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  writeTablesToDatabase(tables, db_connection, stop_if_table_not_empty, close_db_connection = TRUE, lock_id = lock_id)
 }
 
 #' Check if a Database Table is Empty
@@ -599,42 +539,7 @@ writeTableToDatabase <- function(table, db_connection, table_name = NA, stop_if_
   }
   tables <- list(table)
   names(tables) <- table_name
-  writeTablesToDatabase(tables, db_connection, stop_if_table_not_empty, close_db_connection, lock_id = lock_id)
-}
-
-#' Read Multiple Tables from Database
-#'
-#' This function reads multiple tables from a specified database schema. If no table names are provided,
-#' it reads all available tables in the schema.
-#'
-#' @param dbname A string representing the name of the database.
-#' @param host A string representing the database host.
-#' @param port An integer representing the port number to connect to the database.
-#' @param user A string representing the database user name.
-#' @param password A string representing the database user password.
-#' @param schema A string representing the database schema.
-#' @param table_names A character vector of table names to read. If NA, all tables are read.
-#' @param lock_id A string representation as ID for the process to lock the database during the
-#' access under this name
-#'
-#' @return A named list of data frames representing the tables read from the database.
-#'
-#' @examples
-#' \dontrun{
-#' tables <- readTablesFromDatabase(
-#'   dbname = "dbname",
-#'   host = "host",
-#'   port = 5432,
-#'   user = "user",
-#'   password = "password",
-#'   schema = "schema"
-#' )
-#' }
-#'
-#' @export
-createConnectionAndReadTablesFromDatabase <- function(dbname, host, port, user, password, schema, table_names = NA, lock_id = NULL) {
-  db_connection <- dbConnect(dbname, host, port, user, password, schema)
-  readTablesFromDatabase(db_connection, table_names, close_db_connection = TRUE, lock_id = lock_id)
+  writeTablesToDatabase(tables, db_connection, stop_if_table_not_empty, close_db_connection, log = log, lock_id = lock_id)
 }
 
 #' Read Multiple Tables from Database

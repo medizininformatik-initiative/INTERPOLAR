@@ -130,6 +130,10 @@ retrieve <- function(debug_path2config_toml = NA) {
       }
     }
 
+    etlutils::runLevel2("Close database connections", {
+      closeAllDatabaseConnections()
+    })
+
   }))
 
   if (etlutils::isErrorOccured()) {
