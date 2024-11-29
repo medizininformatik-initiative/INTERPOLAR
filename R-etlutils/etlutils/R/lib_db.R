@@ -17,13 +17,35 @@ getStatusFromDB <- function(db_connection, query, log = TRUE) {
   if (!is.null(status)) status <- status[1, ][[1]] # the functions answer is a table with 1 row and 1 column
 }
 
+#' Check Database Semaphore Status
+#'
+#' This function checks whether the current database status starts with a specified status prefix.
+#'
+#' @param db_connection A database connection object used to query the database.
+#' @param status_prefix A string specifying the prefix to check against the current database status.
+#'
+#' @return A logical value (`TRUE` or `FALSE`), indicating whether the database status starts
+#'         with the given `status_prefix`.
+#'
 hasSemaphoreStatus <- function(db_connection, status_prefix) {
   status <- getStatusFromDB(db_connection, "SELECT db.data_transfer_status();")
   cat("Current database status:", status, "\n")
   return(startsWith(tolower(status), tolower(status_prefix)))
 }
 
-dbLock <- function(db_connection, lock_id = NULL, log = TRUE) {
+#' Lock a Database for Write Access
+#'
+#' This function attempts to lock the database for write access using a specified lock ID.
+#' It ensures that recursive locking attempts are managed, and it waits for the database to
+#' become ready before applying the lock.
+#'
+#' @param db_connection A database connection object used to interact with the database.
+#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
+#' @param lock_id A string specifying the unique identifier for the lock. If `NULL`, no locking is performed.
+#'
+#' @return The function does not return a value. It either successfully locks the database
+#'         or throws an error if locking fails due to excessive recursive attempts or other issues.
+#'
 dbLock <- function(db_connection, log = TRUE, lock_id = NULL) {
   if (!is.null(lock_id)) {
     # increase the recursive call counter 'db_lock_depth'
@@ -65,7 +87,19 @@ dbLock <- function(db_connection, log = TRUE, lock_id = NULL) {
   }
 }
 
-dbUnlock <- function(db_connection, lock_id, log = TRUE, readonly = FALSE) {
+#' Unlock a Database for Read or Write Access
+#'
+#' This function attempts to unlock the database using a specified lock ID.
+#' It ensures proper handling of read-only or read-write access during the unlocking process.
+#'
+#' @param db_connection A database connection object used to interact with the database.
+#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
+#' @param lock_id A string specifying the unique identifier for the lock. If `NULL`, no unlocking is performed.
+#' @param readonly A logical value (`TRUE` or `FALSE`). If `TRUE`, the database is unlocked in read-only mode.
+#'
+#' @return The function does not return a value. It either successfully unlocks the database
+#'         or throws an error if unlocking fails.
+#'
 dbUnlock <- function(db_connection, log = TRUE, lock_id, readonly = FALSE) {
   if (!is.null(lock_id)) {
     if (log) {
