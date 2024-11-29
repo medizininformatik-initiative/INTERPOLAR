@@ -614,8 +614,6 @@ readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_con
     tables[[resource_table_name]] <- dbReadTable(db_connection, table_name)
   }
   dbUnlock(db_connection, log, lock_id, readonly = TRUE)
-  dbUnlock(db_connection, lock_id, readonly = TRUE)
-  dbDisconnect(db_connection)
   return(tables)
 }
 
