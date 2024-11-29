@@ -81,13 +81,9 @@ getQueryDatetime <- function() {
 getActiveEncounterPIDsFromDB <- function() {
   # Get current or debug datetime
   query_datetime <- getQueryDatetime()
-
-  # Create the SQL-Query
-  # query <- paste0("SELECT enc_patient_id FROM v_encounter\n",
-  #                 "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
-  #                 "   (enc_period_end is NULL OR enc_period_end > '", query_datetime[["start_datetime"]], "');")
   datetime <- query_datetime[["start_datetime"]]
 
+  # Create the SQL-Query
   query <- paste0(
     "WITH latest_encounter AS (\n",
     "  SELECT\n",
@@ -256,7 +252,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     # Create the corrct format for the Postgres Parameter Array
     params <- list(paste0("{", paste(patient_ids, collapse = ","), "}"))
     # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
-    result <- getQueryFromDatabase(query, params = params, lock_id = "cds2db: getLastPatientUpdateDate()", readonly = TRUE)
+    result <- getQueryFromDatabase(query, params = params, lock_id = "cds2db.getLastPatientUpdateDate()[1]", readonly = TRUE)
 
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- as.Date(rep(NA, length(patient_ids)))
@@ -284,7 +280,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
   table_names <- paste0(names(table_descriptions), "_raw_last")
   # Read the tables from the database using the generated table names
-  db_resource_tables <- readTablesFromDatabase(table_names, lock_id = "cds2db: getLastPatientUpdateDate()")
+  db_resource_tables <- readTablesFromDatabase(table_names, lock_id = "cds2db.getLastPatientUpdateDate()[2]")
   # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
   names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
   # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
