@@ -16,6 +16,7 @@ getLastProcessingNumber <- function() {
   etlutils::dbGetQuery(
     db_connection = getDatabaseReadConnection(),
     query = statement,
+    log = VERBOSE >= VL_90_FHIR_RESPONSE,
     lock_id = "dataprocessor.getLastProcessingNumber()",
     readonly = TRUE)
 }
@@ -40,6 +41,7 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
   etlutils::dbGetQuery(
     db_connection = getDatabaseReadConnection(),
     query = statement,
+    log = VERBOSE >= VL_90_FHIR_RESPONSE,
     lock_id = "dataprocessor.loadLastImportedDatasetsFromDB()",
     readonly = TRUE)
 }
@@ -670,6 +672,7 @@ createFrontendTables <- function() {
   etlutils::writeTableToDatabase(patient_frontend_table,
                                  getDatabaseWriteConnection(),
                                  table_name = "patient_fe",
+                                 log = VERBOSE >= VL_90_FHIR_RESPONSE,
                                  stop_if_table_not_empty = TRUE)
 
   # Create frontend table for encounters
@@ -678,6 +681,7 @@ createFrontendTables <- function() {
   etlutils::writeTableToDatabase(encounter_frontend_table,
                                  getDatabaseWriteConnection(),
                                  table_name = "fall_fe",
+                                 log = VERBOSE >= VL_90_FHIR_RESPONSE,
                                  stop_if_table_not_empty = TRUE)
 }
 

@@ -8,12 +8,12 @@
 #'
 #' @param db_connection A valid database connection object.
 #' @param query A character string representing the SQL query to execute.
+#' @param log logical. If TRUE then all tables names will be printed to the console. Default is TRUE.
 #'
 #' @return The first value from the query result, or \code{NULL} if the result is empty.
 #'
-#' @export
-getStatusFromDB <- function(db_connection, query) {
-  status <- dbGetQuery(db_connection, query, readonly = TRUE)
+getStatusFromDB <- function(db_connection, query, log = TRUE) {
+  status <- dbGetQuery(db_connection, query, log = log, readonly = TRUE)
   if (!is.null(status)) status <- status[1, ][[1]] # the functions answer is a table with 1 row and 1 column
 }
 
@@ -24,6 +24,7 @@ hasSemaphoreStatus <- function(db_connection, status_prefix) {
 }
 
 dbLock <- function(db_connection, lock_id = NULL, log = TRUE) {
+dbLock <- function(db_connection, log = TRUE, lock_id = NULL) {
   if (!is.null(lock_id)) {
     # increase the recursive call counter 'db_lock_depth'
     db_lock_depth <- .lib_db_env[[lock_id]]
@@ -51,10 +52,12 @@ dbLock <- function(db_connection, lock_id = NULL, log = TRUE) {
       # TODO alle Minute eine Rückmeldung geben "Warte immer noch darauf, die DB locken zu dürfen..."
     }
 
-    lock_sucessful <- getStatusFromDB(db_connection, paste0("SELECT db.data_transfer_stop('", lock_id, "');"))
-    cat(paste("DB status on lock:", lock_sucessful, "\n"))
+    lock_sucessful <- getStatusFromDB(db_connection, paste0("SELECT db.data_transfer_stop('", lock_id, "');"), log)
+    if (log) {
+      cat(paste("DB status on lock:", lock_sucessful, "\n"))
+    }
     if (!lock_sucessful) {
-      dbLock(db_connection, lock_id)
+      dbLock(db_connection, log, lock_id)
     }
 
     # decrease the recursive call counter 'db_lock_depth'
@@ -63,11 +66,12 @@ dbLock <- function(db_connection, lock_id = NULL, log = TRUE) {
 }
 
 dbUnlock <- function(db_connection, lock_id, log = TRUE, readonly = FALSE) {
+dbUnlock <- function(db_connection, log = TRUE, lock_id, readonly = FALSE) {
   if (!is.null(lock_id)) {
     if (log) {
       cat(paste0("Try to unlock database with lock_id: '", lock_id, "' and readonly: ", readonly, "\n"))
     }
-    unlock_sucessful <- getStatusFromDB(db_connection, paste0("SELECT db.data_transfer_start('", lock_id, "', ", readonly, ");"))
+    unlock_sucessful <- getStatusFromDB(db_connection, paste0("SELECT db.data_transfer_start('", lock_id, "', ", readonly, ");"), log)
     if (!unlock_sucessful) {
       status <- getSemaphoreStatus(db_connection)
       stop("Could not unlock the database for lock_did:\n",
@@ -187,6 +191,7 @@ dbListTableNames <- function(db_connection, log = TRUE) {
 #' @param db_connection A DBI connection object to the PostgreSQL database.
 #' @param table_name A character string specifying the name of the table to check.
 #' @param table A data frame representing the table to be checked.
+#' @param log logical. If TRUE then all tables names will be printed to the console. Default is TRUE.
 #'
 #' @details This function converts the table name to lowercase for PostgreSQL compatibility,
 #' then constructs a SQL query to retrieve the column widths (maximum length for VARCHAR columns)
@@ -198,7 +203,7 @@ dbListTableNames <- function(db_connection, log = TRUE) {
 #' @return A logical value indicating whether the table content meets the length constraints.
 #'
 #' @export
-dbCheckContent <- function(db_connection, table_name, table) {
+dbCheckContent <- function(db_connection, table_name, table, log = TRUE) {
   # Convert table name to lowercase for PostgreSQL compatibility
   table_name <- tolower(table_name)
 
@@ -206,6 +211,10 @@ dbCheckContent <- function(db_connection, table_name, table) {
   sql_query <- paste0("SELECT column_name, character_maximum_length
                      FROM information_schema.columns
                      WHERE table_name = '", table_name, "'")
+
+  if (log) {
+    cat(paste0("dbCheckContent:\n", sql_query, "\n"))
+  }
 
   # Retrieve column widths
   column_widths <- DBI::dbGetQuery(db_connection, sql_query)
@@ -258,11 +267,13 @@ dbCheckContent <- function(db_connection, table_name, table) {
 #' @param table_name The name of the target table in the PostgreSQL database where rows will be inserted.
 #'                   The table name is automatically converted to lower case.
 #' @param table A `data.table` or `data.frame` containing the rows to be inserted into the specified table.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #'
 #' @export
-dbAddContent <- function(db_connection, table_name, table, lock_id = NULL) {
+dbAddContent <- function(db_connection, table_name, table, log = TRUE, lock_id = NULL) {
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
   # Measure start time
@@ -271,9 +282,9 @@ dbAddContent <- function(db_connection, table_name, table, lock_id = NULL) {
   row_count <- nrow(table)
   if (row_count > 0) {
     # Append table content
-    dbLock(db_connection, lock_id)
+    dbLock(db_connection, log, lock_id)
     RPostgres::dbAppendTable(db_connection, table_name, table)
-    dbUnlock(db_connection, lock_id)
+    dbUnlock(db_connection, log, lock_id)
   }
   # Calculate and print duration of operation
   duration <- difftime(Sys.time(), time0, units = 'secs')
@@ -291,6 +302,8 @@ dbAddContent <- function(db_connection, table_name, table, lock_id = NULL) {
 #'                      the deletion to work.
 #' @param table_name The name of the table from which all rows should be deleted. The table name
 #'                   will be converted to lower case to comply with PostgreSQL naming conventions.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #'
@@ -299,12 +312,12 @@ dbAddContent <- function(db_connection, table_name, table, lock_id = NULL) {
 #'         to deletion.
 #'
 #' @export
-dbDeleteContent <- function(db_connection, table_name, lock_id = NULL) {
+dbDeleteContent <- function(db_connection, table_name, log = TRUE, lock_id = NULL) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
-  dbLock(db_connection, lock_id)
+  dbLock(db_connection, log, lock_id)
   DBI::dbExecute(db_connection, paste0('DELETE FROM ', table_name, ';'))
-  dbUnlock(db_connection, lock_id)
+  dbUnlock(db_connection, log, lock_id)
 }
 
 #' Execute a SQL Statement on a Database Connection
@@ -323,11 +336,11 @@ dbDeleteContent <- function(db_connection, table_name, lock_id = NULL) {
 #' @export
 dbExecute <- function(db_connection, statement, log = TRUE, lock_id = NULL) {
   if (log) {
-    cat(statement, "\n")
+    cat(paste0("dbExecute:\n", statement, "\n"))
   }
-  dbLock(db_connection, lock_id)
+  dbLock(db_connection, log, lock_id)
   DBI::dbExecute(db_connection, statement)
-  dbUnlock(db_connection, lock_id)
+  dbUnlock(db_connection, log, lock_id)
 }
 
 #' Execute a SQL Query on a Database Connection
@@ -350,13 +363,13 @@ dbExecute <- function(db_connection, statement, log = TRUE, lock_id = NULL) {
 #' @return The result of the SQL query as a data.table.
 #'
 #' @export
-dbGetQuery <- function(db_connection, query, log = TRUE, params = NULL, lock_id = NULL, readonly = FALSE) {
+dbGetQuery <- function(db_connection, query, params = NULL, log = TRUE, lock_id = NULL, readonly = FALSE) {
   if (log) {
-    cat(query, "\n")
+    cat(paste0("dbGetQuery:\n", query, "\n"))
   }
-  dbLock(db_connection, lock_id, log)
+  dbLock(db_connection, log, lock_id)
   table <- data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
-  dbUnlock(db_connection, lock_id, log, readonly)
+  dbUnlock(db_connection, log, lock_id, readonly)
   return(table)
 }
 
@@ -402,6 +415,8 @@ dbConnectAndGetQuery <- function(dbname, host, port, user, password, schema, que
 #' @param db_connection A DBI connection object to the PostgreSQL database.
 #' @param table_name A character string specifying the name of the table to read.
 #'        The table name will be converted to lower case.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #'
@@ -416,12 +431,13 @@ dbConnectAndGetQuery <- function(dbname, host, port, user, password, schema, que
 #'   DBI::dbDisconnect(con)
 #' }
 #' @export
-dbReadTable <- function(db_connection, table_name, lock_id = NULL) {
+dbReadTable <- function(db_connection, table_name, log = TRUE, lock_id = NULL) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
-  dbLock(db_connection, lock_id)
+  dbLock(db_connection, log, lock_id)
+
   table <- data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
-  dbUnlock(db_connection, lock_id, readonly = TRUE)
+  dbUnlock(db_connection, log, lock_id, readonly = TRUE)
   return(table)
 }
 
@@ -458,12 +474,17 @@ createConnectionAndWriteTablesToDatabase <- function(tables, dbname, host, port,
 #'
 #' @param db_connection A database connection object created using `DBI::dbConnect()`.
 #' @param table_name A character string specifying the name of the table to check.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #'
 #' @return A logical value: `TRUE` if the table is empty, `FALSE` otherwise.
 #'
-dbIsTableEmpty <- function(db_connection, table_name) {
+dbIsTableEmpty <- function(db_connection, table_name, log = TRUE) {
   # SQL query to count rows in the table
   query <- paste0("SELECT COUNT(*) FROM ", table_name)
+  if (log) {
+    cat(paste0("dbIsTableEmpty:\n", query, "\n"))
+  }
   # Execute the query and fetch the result
   result <- dbGetQuery(db_connection, query, log = FALSE, readonly = TRUE)
   # Return TRUE if the count is 0, indicating the table is empty
@@ -485,9 +506,9 @@ dbIsTableEmpty <- function(db_connection, table_name) {
 #'                                are not empty. Default is `FALSE`.
 #' @param close_db_connection A logical value indicating whether to close the database connection
 #'                            after executing the function. Default is `FALSE`.
+#' @param log A logical value indicating whether to log the database access steps
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
-#' @param log A logical value indicating whether to log the database access steps
 #'
 #' @return NULL. This function is used for its side effects of writing data to the database and,
 #'         optionally, closing the connection.
@@ -502,7 +523,7 @@ dbIsTableEmpty <- function(db_connection, table_name) {
 #' - If `close_db_connection` is `TRUE`, the database connection will be closed at the end of the process.
 #'
 #' @export
-writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, lock_id = NULL, log = TRUE) {
+writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, log = TRUE, lock_id = NULL) {
   table_names <- names(tables)
   db_table_names <- dbListTableNames(db_connection)
 
@@ -532,15 +553,15 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
     }
   }
 
-  dbLock(db_connection, lock_id)
+  dbLock(db_connection, log, lock_id)
   # 2. Write tables to DB (only if all tables are empty or if `stop_if_table_not_empty` is FALSE)
   for (table_name in table_names) {
     table <- tables[[table_name]]
     # Proceed with writing table data to the database
     dbCheckContent(db_connection, table_name, table)  # Check column widths
-    dbAddContent(db_connection, table_name, table)    # Add table content
+    dbAddContent(db_connection, table_name, table, log)    # Add table content
   }
-  dbUnlock(db_connection, lock_id)
+  dbUnlock(db_connection, log, lock_id)
 
   if (close_db_connection) {
     dbDisconnect(db_connection)
@@ -564,13 +585,15 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
 #'                                are not empty. Default is `FALSE`.
 #' @param close_db_connection If TRUE, the database connection will be closed at the end of the
 #'                            process. Default is FALSE.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #'
 #' @return NULL. The function is used for its side effects of writing data to the database.
 #'
 #' @export
-writeTableToDatabase <- function(table, db_connection, table_name = NA, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, lock_id = NULL) {
+writeTableToDatabase <- function(table, db_connection, table_name = NA, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, log = TRUE, lock_id = NULL) {
   if (is.na(table_name)) {
     table_name <- as.character(sys.call()[2]) # get the table variable name
   }
@@ -624,21 +647,22 @@ createConnectionAndReadTablesFromDatabase <- function(dbname, host, port, user, 
 #' read.
 #' @param close_db_connection If TRUE the database connection will be closed at the end of the
 #' process. Default is FALSE.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #'
 #' @return A named list of data frames representing the tables read from the database.
 #'
 #' @export
-readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_connection = FALSE, lock_id = NULL) {
-
+readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_connection = FALSE, log = TRUE, lock_id = NULL) {
   db_table_names <- dbListTableNames(db_connection)
   if (isSimpleNA(table_names)) {
     table_names <- db_table_names
   }
 
   tables <- list()
-  dbLock(db_connection, lock_id)
+  dbLock(db_connection, log, lock_id)
   for (table_name in table_names) {
     # If the database tables here are tables of a View, then they have (per convention) the prefix
     # "v_" -> add this prefix in this cases
@@ -650,6 +674,7 @@ readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_con
     }
     tables[[resource_table_name]] <- dbReadTable(db_connection, table_name)
   }
+  dbUnlock(db_connection, log, lock_id, readonly = TRUE)
   dbUnlock(db_connection, lock_id, readonly = TRUE)
   dbDisconnect(db_connection)
   return(tables)
@@ -692,14 +717,19 @@ dbPrintTimeAndTimezone <- function(db_connection) {
 #' schema that is currently in use by the connection.
 #'
 #' @param db_connection A valid PostgreSQL connection object from the RPostgres package.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #'
 #' @return A string representing the name of the current schema.
 #'
-getCurrentSchema <- function(db_connection) {
+getCurrentSchema <- function(db_connection, log = TRUE) {
   # SQL query to retrieve the current schema
   query <- "SELECT current_schema();"
+  if (log) {
+    cat(paste0("getCurrentSchema:\n", query, "\n"))
+  }
   # Execute the query and store the result
-  result <- dbGetQuery(db_connection, query, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, log, readonly = TRUE)
   # Return the schema name from the first row and column
   return(result$current_schema[1])
 }
@@ -713,6 +743,8 @@ getCurrentSchema <- function(db_connection) {
 #'   using an appropriate database driver.
 #' @param table_name A character string representing the name of the table for
 #'   which the column information is to be retrieved.
+#' @param log A logical value indicating whether the SQL statement should be logged to the console.
+#'        Default is TRUE.
 #'
 #' @return A data.frame containing two columns:
 #'   \itemize{
@@ -721,9 +753,10 @@ getCurrentSchema <- function(db_connection) {
 #'   }
 #'
 #' @export
-getDBTableColumns <- function(db_connection, table_name) {
+#'
+getDBTableColumns <- function(db_connection, table_name, log = TRUE) {
   # Get the current schema using the helper function
-  schema <- getCurrentSchema(db_connection)
+  schema <- getCurrentSchema(db_connection, log)
   # SQL query to retrieve column names and data types for the specified table in the current schema
   query <- paste0(
     "SELECT column_name, data_type
@@ -731,8 +764,11 @@ getDBTableColumns <- function(db_connection, table_name) {
      WHERE table_name = '", table_name, "'
      AND table_schema = '", schema, "'"
   )
+  if (log) {
+    cat(paste0("getDBTableColumns:\n", query, "\n"))
+  }
   # Execute the query and return the result as a data frame
-  result <- dbGetQuery(db_connection, query, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, log, readonly = TRUE)
   return(result)
 }
 
