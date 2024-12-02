@@ -1,9 +1,11 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.cron_job_data_transfer()
 RETURNS VOID
 SECURITY DEFINER
 AS $$
 DECLARE
     temp varchar;
+    erg TEXT;
     status varchar;
     num int;
     num2 int;
@@ -13,13 +15,13 @@ DECLARE
     err_pid varchar;
 BEGIN
     -- Doppelt angelegte Cron-Jobs deaktivieren
-    err_section:='cron_job_data_transfer-01';    err_schema:='cron';    err_table:='job';
+    err_section:='cron_job_data_transfer_break-01';    err_schema:='cron';    err_table:='job';
     UPDATE cron.job m SET active = FALSE WHERE m.command in
     (select i.command as t from (select command, count(1) anz from cron.job group by command) i where anz>1)
     and m.jobid not in (select min(f.jobid) from cron.job f where f.command in (select i.command as t from (select command, count(1) anz from cron.job group by       command) i where anz>1));
 
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
-    err_section:='cron_job_data_transfer-05';    err_schema:='db_config';    err_table:='db_process_control';
+    err_section:='cron_job_data_transfer_break-05';    err_schema:='db_config';    err_table:='db_process_control';
     SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     IF num=1 THEN
         SELECT pc_value INTO status FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
@@ -48,7 +50,6 @@ BEGIN
 
         err_section:='cron_job_data_transfer-20';    err_schema:='db_config';    err_table:='db_process_control';
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Ongoing since '||num2||' sec - '||(num*60)||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoint_3_cron_job_data_transfer''');
-        
         If num2>=(num*60) THEN
             status:='WaitForCronJob';
             err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
@@ -56,13 +57,19 @@ BEGIN
     END IF;
     err_section:='cron_job_data_transfer-22';    err_schema:='/';    err_table:='/';
 
+--select CURRENT_TIMESTAMP into num;
+
     IF status in ('WaitForCronJob') THEN
+        -- Langzeit Ongoin Info wieder zurück setzen
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Normal Ongoing'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoint_3_cron_job_data_transfer''');
+
         -- Semaphore setzen - ohne Rückgabe der SubProzessID
         status='Ongoing - 1/5 db.copy_raw_cds_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-25';    err_schema:='db';    err_table:='copy_raw_cds_in_to_db_log()';
 
         -- FHIR Data
-        SELECT db.copy_raw_cds_in_to_db_log() INTO temp;
+        err_pid:=public.pg_background_launch('SELECT db.copy_raw_cds_in_to_db_log()');
+        --SELECT db.copy_raw_cds_in_to_db_log() AS  INTO temp;
     
         SELECT pg_sleep(1) INTO temp;
     
@@ -70,7 +77,8 @@ BEGIN
         status='Ongoing - 2/5 db.copy_type_cds_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
 
-        SELECT db.copy_type_cds_in_to_db_log() INTO temp;
+        err_pid:=public.pg_background_launch('SELECT db.copy_type_cds_in_to_db_log()');
+        --SELECT db.copy_type_cds_in_to_db_log() INTO temp;
     
         SELECT pg_sleep(1) INTO temp;
 
@@ -78,7 +86,8 @@ BEGIN
         status='Ongoing - 3/5 db.take_over_last_check_date()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
     
-        SELECT db.take_over_last_check_date() INTO temp;
+        err_pid:=public.pg_background_launch('SELECT db.take_over_last_check_date()');
+        --SELECT db.take_over_last_check_date() INTO temp;
     
         SELECT pg_sleep(1) INTO temp;
     
@@ -87,7 +96,8 @@ BEGIN
         err_section:='cron_job_data_transfer-40';    err_schema:='db';    err_table:='copy_fe_dp_in_to_db_log()';
 
         -- Study data
-        SELECT db.copy_fe_dp_in_to_db_log() INTO temp;
+        err_pid:=public.pg_background_launch('SELECT db.copy_fe_dp_in_to_db_log()');
+        --SELECT db.copy_fe_dp_in_to_db_log() INTO temp;
     
         SELECT pg_sleep(1) INTO temp;
     
@@ -95,7 +105,8 @@ BEGIN
         status='Ongoing - 5/5 db.copy_fe_fe_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-45';    err_schema:='db';    err_table:='copy_fe_fe_in_to_db_log()';
 
-        SELECT db.copy_fe_fe_in_to_db_log() INTO temp;
+        err_pid:=public.pg_background_launch('SELECT db.copy_fe_fe_in_to_db_log()');
+        --SELECT db.copy_fe_fe_in_to_db_log() INTO temp;
 
         -- ReadyToConnect (Pause) durchführen
         err_section:='cron_job_data_transfer-50';    err_schema:='db_config';    err_table:='db_parameter';
@@ -138,25 +149,17 @@ BEGIN
     END IF;
     err_section:='cron_job_data_transfer-80';    err_schema:='/';    err_table:='/';
 
-/*
+
 EXCEPTION
     WHEN OTHERS THEN
-        SELECT db.error_log(
-            err_schema,                     -- Schema, in dem der Fehler auftrat
-            'db.cron_job_data_transfer() - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            0                               -- Letzte Verarbeitungsnummer
-        );
-*/
+    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.cron_job_data_transfer()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid);
 END;
 $$ LANGUAGE plpgsql;
 
 -- Datatransfer Job anlegen
 SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Anhalten
 CREATE OR REPLACE FUNCTION db.data_transfer_stop(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben')
 RETURNS BOOLEAN
@@ -217,6 +220,7 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_stop(varchar) TO db2dataprocessor_use
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(varchar) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(varchar) TO db_user;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten
 CREATE OR REPLACE FUNCTION db.data_transfer_start(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben', read_only Boolean DEFAULT FALSE)
 RETURNS BOOLEAN
@@ -281,6 +285,7 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2dataproc
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db_user;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.data_transfer_status()
 RETURNS TEXT
