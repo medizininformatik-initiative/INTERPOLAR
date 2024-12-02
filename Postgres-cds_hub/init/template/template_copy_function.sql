@@ -1,6 +1,8 @@
 ------------------------------
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
-RETURNS VOID AS $$
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 DECLARE
     record_count INT:=0;
     current_record record;
@@ -53,6 +55,7 @@ BEGIN
     END IF;
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
+    RETURN 'Done db.<%COPY_FUNC_NAME%>';
 /*
 EXCEPTION
     WHEN OTHERS THEN
@@ -66,6 +69,7 @@ EXCEPTION
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
 */
+    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
 

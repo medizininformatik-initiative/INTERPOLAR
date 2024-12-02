@@ -1,6 +1,8 @@
 ------------------------------
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
-RETURNS VOID AS $$
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync
@@ -15,6 +17,22 @@ BEGIN
 
 <%LOOP_TABS_SUB_take_over_check_date_function%>
 
+    RETURN 'Done db.<%COPY_FUNC_NAME%>';
+
+/*
+EXCEPTION
+    WHEN OTHERS THEN
+        SELECT db.error_log(
+            err_schema,                     -- Schema, in dem der Fehler auftrat
+            'db.<%COPY_FUNC_NAME%> - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+            err_section,                    -- Zeilennummer oder Abschnitt
+            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
+            last_pro_nr                     -- Letzte Verarbeitungsnummer
+        );
+*/
+    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-28 09:12:30
+-- Create time: 2024-12-02 15:33:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -32,7 +32,9 @@
 
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_type_cds_in_to_db_log()
-RETURNS VOID AS $$
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 DECLARE
     record_count INT:=0;
     current_record record;
@@ -6190,6 +6192,7 @@ BEGIN
     END IF;
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
+    RETURN 'Done db.copy_type_cds_in_to_db_log';
 /*
 EXCEPTION
     WHEN OTHERS THEN
@@ -6203,6 +6206,7 @@ EXCEPTION
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
 */
+    RETURN 'Fehler db.copy_type_cds_in_to_db_log - '||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
 

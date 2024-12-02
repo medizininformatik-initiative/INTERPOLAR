@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 14:21:24
+-- Rights definition file last update : 2024-11-11 08:18:58
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-25 13:53:18
+-- Create time: 2024-12-02 15:33:30
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -29,7 +29,9 @@
 
 ------------------------------
 CREATE OR REPLACE FUNCTION db.take_over_last_check_date()
-RETURNS VOID AS $$
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync
@@ -715,6 +717,22 @@ BEGIN
     -- End pids_per_ward
     -----------------------------------------------------------------------------------------------------------------
 
+    RETURN 'Done db.take_over_last_check_date';
+
+/*
+EXCEPTION
+    WHEN OTHERS THEN
+        SELECT db.error_log(
+            err_schema,                     -- Schema, in dem der Fehler auftrat
+            'db.take_over_last_check_date - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
+            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
+            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
+            err_section,                    -- Zeilennummer oder Abschnitt
+            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
+            last_pro_nr                     -- Letzte Verarbeitungsnummer
+        );
+*/
+    RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
 

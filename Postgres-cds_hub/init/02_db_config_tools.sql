@@ -61,6 +61,9 @@ values ('timepoint_2_cron_job_data_transfer','none','start time that needs to be
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
 values ('timepoint_3_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
 
+insert into db_config.db_process_control (pc_name, pc_value, pc_description)
+values ('waitpoint_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
+
 -- Table "data_import_hist" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
@@ -159,7 +162,7 @@ DECLARE
 BEGIN
     err_pid:=public.pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
     VALUES ('||quote_literal(err_schema)||','||quote_literal(err_objekt)||','||quote_literal(err_user)||','||quote_literal(err_msg)||','||quote_literal(err_line)||','||quote_literal(err_variables)||','||last_processing_nr||')');
-EXCEPTION
+EXCEPTION	
     WHEN OTHERS THEN
         INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
         VALUES (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr);
