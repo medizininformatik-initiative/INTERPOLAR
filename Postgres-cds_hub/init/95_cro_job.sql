@@ -63,109 +63,39 @@ BEGIN
         -- Langzeit Ongoin Info wieder zurück setzen
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Normal Ongoing'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoint_3_cron_job_data_transfer''');
 
-        -- Semaphore setzen - ohne Rückgabe der SubProzessID
+        -- Semaphore setzen -----------------------------------------
         status='Ongoing - 1/5 db.copy_raw_cds_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-25';    err_schema:='db';    err_table:='copy_raw_cds_in_to_db_log()';
 
-        -- FHIR Data
-        err_pid:=public.pg_background_launch('SELECT db.copy_raw_cds_in_to_db_log()');
-        --SELECT db.copy_raw_cds_in_to_db_log() AS  INTO temp;
-
-    	LOOP    -- Warten auf den Abschluss des Prozesses
-        	BEGIN   -- Abfrage des Status
-            		SELECT public.pg_background_result(err_pid) INTO erg;
-            		EXIT; -- Falls ein Ergebnis vorliegt, verlasse die Schleife
-        	EXCEPTION
-            		WHEN others THEN
-                    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Wait 1 for '||status||' - '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''waitpoint_cron_job_data_transfer''');
-                	PERFORM pg_sleep(1); -- Falls der Prozess noch läuft, kurz warten und erneut versuchen
-        	END;
-    	END LOOP;
+        -- FHIR Data cds2db_in -> db_log
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.copy_raw_cds_in_to_db_log()')) AS t(res TEXT) INTO erg;
     
-        --SELECT pg_sleep(1) INTO temp;
-    
-        -- Semaphore setzen - ohne Rückgabe der SubProzessID
+        -- Semaphore setzen -----------------------------------------
         status='Ongoing - 2/5 db.copy_type_cds_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
 
-        err_pid:=public.pg_background_launch('SELECT db.copy_type_cds_in_to_db_log()');
-        --SELECT db.copy_type_cds_in_to_db_log() INTO temp;
-    
-    	LOOP    -- Warten auf den Abschluss des Prozesses
-        	BEGIN   -- Abfrage des Status
-            		SELECT public.pg_background_result(err_pid) INTO erg;
-            		EXIT; -- Falls ein Ergebnis vorliegt, verlasse die Schleife
-        	EXCEPTION
-            		WHEN others THEN
-                    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Wait 1 for '||status||' - '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''waitpoint_cron_job_data_transfer''');
-                	PERFORM pg_sleep(1); -- Falls der Prozess noch läuft, kurz warten und erneut versuchen
-        	END;
-    	END LOOP;
-    
-        --SELECT pg_sleep(1) INTO temp;
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.copy_type_cds_in_to_db_log()')) AS t(res TEXT) INTO erg;
 
-        -- Semaphore setzen - ohne Rückgabe der SubProzessID
+        -- Semaphore setzen -----------------------------------------
         status='Ongoing - 3/5 db.take_over_last_check_date()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
     
-        err_pid:=public.pg_background_launch('SELECT db.take_over_last_check_date()');
-        --SELECT db.take_over_last_check_date() INTO temp;
-    
-    	LOOP    -- Warten auf den Abschluss des Prozesses
-        	BEGIN   -- Abfrage des Status
-            		SELECT public.pg_background_result(err_pid) INTO erg;
-            		EXIT; -- Falls ein Ergebnis vorliegt, verlasse die Schleife
-        	EXCEPTION
-            		WHEN others THEN
-                    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Wait 1 for '||status||' - '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''waitpoint_cron_job_data_transfer''');
-                	PERFORM pg_sleep(1); -- Falls der Prozess noch läuft, kurz warten und erneut versuchen
-        	END; 
-    	END LOOP;
-    
-        --SELECT pg_sleep(1) INTO temp;
-    
-        -- Semaphore setzen - ohne Rückgabe der SubProzessID
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.take_over_last_check_date()')) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
         status='Ongoing - 4/5 db.copy_fe_dp_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-40';    err_schema:='db';    err_table:='copy_fe_dp_in_to_db_log()';
 
         -- Study data
-        err_pid:=public.pg_background_launch('SELECT db.copy_fe_dp_in_to_db_log()');
-        --SELECT db.copy_fe_dp_in_to_db_log() INTO temp;
-    
-    	LOOP    -- Warten auf den Abschluss des Prozesses
-        	BEGIN   -- Abfrage des Status
-            		SELECT public.pg_background_result(err_pid) INTO erg;
-            		EXIT; -- Falls ein Ergebnis vorliegt, verlasse die Schleife
-        	EXCEPTION
-            		WHEN others THEN
-                    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Wait 1 for '||status||' - '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''waitpoint_cron_job_data_transfer''');
-                	PERFORM pg_sleep(1); -- Falls der Prozess noch läuft, kurz warten und erneut versuchen
-        	END;
-    	END LOOP;
-    
-        --SELECT pg_sleep(1) INTO temp;
-    
-        -- Semaphore setzen - ohne Rückgabe der SubProzessID
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.copy_fe_dp_in_to_db_log()')) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
         status='Ongoing - 5/5 db.copy_fe_fe_in_to_db_log()'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-45';    err_schema:='db';    err_table:='copy_fe_fe_in_to_db_log()';
 
-        err_pid:=public.pg_background_launch('SELECT db.copy_fe_fe_in_to_db_log()');
-        SELECT db.copy_fe_fe_in_to_db_log() INTO temp;
+        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.copy_fe_fe_in_to_db_log()')) AS t(res TEXT) INTO erg;
 
-    	LOOP    -- Warten auf den Abschluss des Prozesses
-        	BEGIN   -- Abfrage des Status
-            		SELECT public.pg_background_result(err_pid) INTO erg;
-            		EXIT; -- Falls ein Ergebnis vorliegt, verlasse die Schleife
-        	EXCEPTION
-            		WHEN others THEN
-                    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Wait 1 for '||status||' - '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''waitpoint_cron_job_data_transfer''');
-                	PERFORM pg_sleep(1); -- Falls der Prozess noch läuft, kurz warten und erneut versuchen
-        	END;
-    	END LOOP;
-    
-        --SELECT pg_sleep(1) INTO temp;
-
-        -- ReadyToConnect (Pause) durchführen
+        -- ReadyToConnect (Pause) durchführen -----------------------
         err_section:='cron_job_data_transfer-50';    err_schema:='db_config';    err_table:='db_parameter';
         SELECT count(1) INTO num FROM db_config.db_parameter WHERE parameter_name='pause_after_process_execution';
         If num=0 THEN -- falls Parameter fehlt - initial setzen
@@ -189,7 +119,6 @@ BEGIN
     END IF;
     err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
 
-
     IF status in ('ReadyToConnect') THEN
         -- ReadyToConnect (Pause) durchführen
         err_section:='cron_job_data_transfer-65';    err_schema:='db_config';    err_table:='db_parameter';
@@ -209,7 +138,7 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.cron_job_data_transfer()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid);
+    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.cron_job_data_transfer()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid||' erg:'||erg);
 END;
 $$ LANGUAGE plpgsql;
 

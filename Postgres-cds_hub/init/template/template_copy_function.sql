@@ -55,7 +55,7 @@ BEGIN
     END IF;
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
-    RETURN 'Done db.<%COPY_FUNC_NAME%>';
+    RETURN 'Done db.<%COPY_FUNC_NAME%> - last_pro_nr:'||last_pro_nr;
 /*
 EXCEPTION
     WHEN OTHERS THEN
@@ -69,7 +69,7 @@ EXCEPTION
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
 */
-    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE;
+    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
 
