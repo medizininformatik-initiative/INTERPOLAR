@@ -415,23 +415,24 @@ createFrontendTables <- function() {
     query_ids <- getQueryList(pids_per_ward$patient_id)
     table_name <- getFullTableName("encounter")
 
-    enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
-
-    # create additional condition if there are class codes defined for the accepted encounters
-    enc_class_codes <- if (all(is.na(enc_class_codes)) || length(enc_class_codes) < 1) {
-      ""
-    } else {
-      # Additional condition only if enc_class_codes is not empty
-      paste0("  AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "')\n")
-    }
-
     query <- paste0( "SELECT * FROM ", table_name, "\n",
                      "  WHERE enc_patient_id IN (", query_ids, ")\n",
                      "  AND enc_partof_id IS NULL\n",
                      "  AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
-                     "  AND enc_period_start <= '", query_datetime, "'\n",
-                     enc_class_codes
+                     "  AND enc_period_start <= '", query_datetime, "'"
     )
+
+    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
+      enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
+      # create additional condition if there are class codes defined for the accepted encounters
+      if (enc_class_codes == "") {
+        additional_class_code_query <- ""
+      } else {
+        # Additional condition only if enc_class_codes is not empty
+        additional_class_code_query <- paste0(" AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "');")
+      }
+      query <- paste0(query, additional_class_code_query)
+    }
 
     encounters <- getReadQuery(query, lock_id = "dataprocessor.createEncounterFrontendTable()[1]")
 
