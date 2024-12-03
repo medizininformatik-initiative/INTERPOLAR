@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-03 10:24:18
+-- Create time: 2024-12-03 11:02:18
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1651,9 +1651,10 @@ BEGIN
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
     RETURN 'Done db.copy_fe_fe_in_to_db_log - last_pro_nr:'||last_pro_nr;
-/*
+
 EXCEPTION
     WHEN OTHERS THEN
+/*
         SELECT db.error_log(
             err_schema,                     -- Schema, in dem der Fehler auftrat
             'db.copy_fe_fe_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
@@ -1664,6 +1665,7 @@ EXCEPTION
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
 */
+    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.copy_fe_fe_in_to_db_log()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid);
     RETURN 'Fehler db.copy_fe_fe_in_to_db_log - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;

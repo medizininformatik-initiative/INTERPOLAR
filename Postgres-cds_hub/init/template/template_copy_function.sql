@@ -56,9 +56,10 @@ BEGIN
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
     RETURN 'Done db.<%COPY_FUNC_NAME%> - last_pro_nr:'||last_pro_nr;
-/*
+
 EXCEPTION
     WHEN OTHERS THEN
+/*
         SELECT db.error_log(
             err_schema,                     -- Schema, in dem der Fehler auftrat
             'db.<%COPY_FUNC_NAME%> - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
@@ -69,6 +70,7 @@ EXCEPTION
             last_pro_nr                     -- Letzte Verarbeitungsnummer
         );
 */
+    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.<%COPY_FUNC_NAME%>()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid);
     RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
