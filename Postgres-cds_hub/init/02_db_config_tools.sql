@@ -138,7 +138,7 @@ GRANT UPDATE ON db_config.db_error_log TO db_user;
 -- View "v_db_error_log" in "db_config"
 ----------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_db_error_log as
-select input_datetime, id, err_schema, err_objekt, err_line, err_msg, err_variables, err_user from db_config.db_error_log
+select input_datetime, id, err_schema, err_objekt, err_line, err_msg, err_variables, err_user, last_processing_nr from db_config.db_error_log
 order by input_datetime desc, id desc;
 
 GRANT SELECT ON db_config.v_db_error_log TO db_user;
@@ -158,14 +158,33 @@ RETURNS VOID
 SECURITY DEFINER
 AS $$
 DECLARE
-    err_pid varchar;
+    erg TEXT;
 BEGIN
-    err_pid:=public.pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
-    VALUES ('||quote_literal(err_schema)||','||quote_literal(err_objekt)||','||quote_literal(err_user)||','||quote_literal(err_msg)||','||quote_literal(err_line)||','||quote_literal(err_variables)||','||last_processing_nr||')');
+/* Asynchrones schreiben der fehler später
+    SELECT res 
+    FROM public.pg_background_result(
+        public.pg_background_launch(
+            'INSERT INTO db_config.db_error_log (
+                err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr
+            ) VALUES (' || 
+                quote_literal('innen '||err_schema) || ', ' ||
+                quote_literal(err_objekt) || ', ' ||
+                quote_literal(err_user) || ', ' ||
+                quote_literal(err_msg) || ', ' ||
+                quote_literal(err_line) || ', ' ||
+                quote_literal(err_variables) || ', ' ||
+                COALESCE(last_processing_nr::text, 'NULL') || '); commit;'
+        )
+    ) AS t(res TEXT) INTO erg;
+*/
+    -- Fehler dokumentieren
+    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
+    VALUES (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr);
 EXCEPTION	
     WHEN OTHERS THEN
-        INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
-        VALUES (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr);
+        -- Dokumentieren das beim schreiben des Fehlers ein Fehler entstanden ist
+        INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_msg)
+        VALUES ('Fehler bei Fehler schreiben', CAST('db.error_log' AS  varchar), CAST(SQLSTATE||' - '||SQLERRM AS varchar));
 END;
 $$ LANGUAGE plpgsql;
 

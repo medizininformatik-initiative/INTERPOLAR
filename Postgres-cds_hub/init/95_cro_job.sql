@@ -57,8 +57,6 @@ BEGIN
     END IF;
     err_section:='cron_job_data_transfer-22';    err_schema:='/';    err_table:='/';
 
---select CURRENT_TIMESTAMP into num;
-
     IF status in ('WaitForCronJob') THEN
         -- Langzeit Ongoin Info wieder zurück setzen
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Normal Ongoing'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoint_3_cron_job_data_transfer''');
@@ -134,11 +132,20 @@ BEGIN
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Ongoing%'' and pc_value=''ReadyToConnect'' and pc_name=''semaphor_cron_job_data_transfer''');
     END IF;
     err_section:='cron_job_data_transfer-80';    err_schema:='/';    err_table:='/';
-
-
 EXCEPTION
     WHEN OTHERS THEN
-    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.cron_job_data_transfer()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid||' erg:'||erg);
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.cron_job_data_transfer()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
+    -- Semapohore wegen Fehler anhalten
+    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''Interrupted wegen Fehler in '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Interrupted%'' and pc_name=''semaphor_cron_job_data_transfer''');
 END;
 $$ LANGUAGE plpgsql;
 
@@ -158,6 +165,7 @@ DECLARE
     err_schema varchar;
     err_table varchar;
     err_pid varchar;
+    temp varchar;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
     err_section:='db.data_transfer_stop-01';    err_schema:='db_config';    err_table:='db_process_control';
@@ -186,17 +194,16 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
-/*
-        SELECT db.error_log(
-            err_schema,                     -- Schema, in dem der Fehler auftrat
-            'db.data_transfer_stop() - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            0                               -- Letzte Verarbeitungsnummer
-        );
-*/
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.data_transfer_stop()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table||' Key:'||msg AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
     RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
@@ -219,6 +226,7 @@ DECLARE
     err_schema varchar;
     err_table varchar;
     err_pid varchar;
+    temp varchar;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
     err_section:='db.data_transfer_start-01';    err_schema:='db_config';    err_table:='db_process_control';
@@ -251,17 +259,16 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
-/*
-        SELECT db.error_log(
-            err_schema,                     -- Schema, in dem der Fehler auftrat
-            'db.data_transfer_start() - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            0                               -- Letzte Verarbeitungsnummer
-        );
-*/
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.data_transfer_start()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table||' Key:'||msg AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
     RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
@@ -279,6 +286,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
     status TEXT;
+    temp varchar;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
     SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||' Reporttime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
@@ -289,18 +297,17 @@ BEGIN
     RETURN status;
 EXCEPTION
     WHEN OTHERS THEN
-/*
-        SELECT db.error_log(
-            'db_config',                    -- Schema, in dem der Fehler auftrat
-            'db.data_transfer_status() - db_process_control', -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            '/',                            -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            0                               -- Letzte Verarbeitungsnummer
-        );
-*/
-    RETURN 'Fehler ist Aufgetreten';
+    SELECT db.error_log(
+        err_schema => CAST('db_config' AS varchar),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.data_transfer_stop()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST('db.data_transfer_status-01' AS varchar),    -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: db_process_control' AS varchar),  -- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+    
+    RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -59,18 +59,16 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-/*
-        SELECT db.error_log(
-            err_schema,                     -- Schema, in dem der Fehler auftrat
-            'db.<%COPY_FUNC_NAME%> - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            last_pro_nr                     -- Letzte Verarbeitungsnummer
-        );
-*/
-    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.<%COPY_FUNC_NAME%>()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid);
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.<%COPY_FUNC_NAME%>()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
     RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;

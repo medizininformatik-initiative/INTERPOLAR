@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15119 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-03 11:02:02
+-- Create time: 2024-12-04 10:18:16
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -809,18 +809,16 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-/*
-        SELECT db.error_log(
-            err_schema,                     -- Schema, in dem der Fehler auftrat
-            'db.take_over_last_check_date - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            last_pro_nr                     -- Letzte Verarbeitungsnummer
-        );
-*/
-    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table||' last pid:'||err_pid);
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(last_raw_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
     RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE||' - last_raw_pro_nr:'||last_raw_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
@@ -828,5 +826,4 @@ $$ LANGUAGE plpgsql;
 -- CopyJob CDS in 2 DB_log
 -- Move to copy function - SELECT cron.schedule('*/1 * * * *', 'SELECT db.take_over_last_check_date();');
 -----------------------------
-
 
