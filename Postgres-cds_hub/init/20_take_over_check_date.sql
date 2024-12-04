@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 08:18:58
--- Rights definition file size        : 15119 Byte
+-- Rights definition file last update : 2024-12-04 14:36:29
+-- Rights definition file size        : 15121 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-04 10:18:16
+-- Create time: 2024-12-04 16:23:23
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -35,8 +35,8 @@ AS $$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync
-    max_last_pro_nr INT; -- Last processing number in core data
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
+    max_last_pro_nr INT; -- Last processing number over all entities
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
     temp varchar; -- Temporary variable for interim results
@@ -62,23 +62,130 @@ BEGIN
     err_section:='HEAD-10';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
+    -- Get the last processing number across all data to mark current data across the board
+    err_section:='HEAD-15';    err_schema:='db_log';    err_table:='- all_entitys -';
+    SELECT MAX(last_processing_nr) INTO max_last_pro_nr
+    FROM ( SELECT 0 AS last_processing_nr
+        UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.encounter_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
+            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.encounter)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.encounter)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.patient_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
+            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.patient)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.patient)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.condition_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
+            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.condition)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.condition)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.medication_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
+            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medication)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medication)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
+            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
+            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
+            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.observation_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
+            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.observation)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.observation)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
+            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.servicerequest_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
+            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.servicerequest)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.servicerequest)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.procedure_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
+            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.procedure)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.procedure)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.consent_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
+            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.consent)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.consent)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.location_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
+            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.location)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.location)
+    UNION SELECT DISTINCT last_processing_nr
+    FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
+            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward)
+
+    );
+
+    err_section:='HEAD-20';    err_schema:='db_log';    err_table:='/';
 
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.encounter_raw to db_log.encounter
 
     -- Start encounter
     err_section:='encounter-01';    err_schema:='db_log';    err_table:='encounter';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.encounter;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT encounter_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.encounter_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
-            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr
+            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.encounter)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.encounter) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -100,7 +207,15 @@ BEGIN
                 WHERE encounter_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -120,17 +235,18 @@ BEGIN
 
     -- Start patient
     err_section:='patient-01';    err_schema:='db_log';    err_table:='patient';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.patient;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT patient_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.patient_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
-            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr
+            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.patient)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.patient) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -152,7 +268,15 @@ BEGIN
                 WHERE patient_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -172,17 +296,18 @@ BEGIN
 
     -- Start condition
     err_section:='condition-01';    err_schema:='db_log';    err_table:='condition';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.condition;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT condition_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.condition_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
-            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr
+            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.condition)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.condition) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -204,7 +329,15 @@ BEGIN
                 WHERE condition_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -224,17 +357,18 @@ BEGIN
 
     -- Start medication
     err_section:='medication-01';    err_schema:='db_log';    err_table:='medication';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.medication;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT medication_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medication_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
-            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medication)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medication) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -256,7 +390,15 @@ BEGIN
                 WHERE medication_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -276,17 +418,18 @@ BEGIN
 
     -- Start medicationrequest
     err_section:='medicationrequest-01';    err_schema:='db_log';    err_table:='medicationrequest';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.medicationrequest;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT medicationrequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
-            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -308,7 +451,15 @@ BEGIN
                 WHERE medicationrequest_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -328,17 +479,18 @@ BEGIN
 
     -- Start medicationadministration
     err_section:='medicationadministration-01';    err_schema:='db_log';    err_table:='medicationadministration';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.medicationadministration;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT medicationadministration_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
-            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -360,7 +512,15 @@ BEGIN
                 WHERE medicationadministration_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -380,17 +540,18 @@ BEGIN
 
     -- Start medicationstatement
     err_section:='medicationstatement-01';    err_schema:='db_log';    err_table:='medicationstatement';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.medicationstatement;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT medicationstatement_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
-            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr
+            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -412,7 +573,15 @@ BEGIN
                 WHERE medicationstatement_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -432,17 +601,18 @@ BEGIN
 
     -- Start observation
     err_section:='observation-01';    err_schema:='db_log';    err_table:='observation';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.observation;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT observation_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.observation_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
-            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr
+            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.observation)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.observation) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -464,7 +634,15 @@ BEGIN
                 WHERE observation_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -484,17 +662,18 @@ BEGIN
 
     -- Start diagnosticreport
     err_section:='diagnosticreport-01';    err_schema:='db_log';    err_table:='diagnosticreport';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.diagnosticreport;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT diagnosticreport_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
-            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr
+            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -516,7 +695,15 @@ BEGIN
                 WHERE diagnosticreport_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -536,17 +723,18 @@ BEGIN
 
     -- Start servicerequest
     err_section:='servicerequest-01';    err_schema:='db_log';    err_table:='servicerequest';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.servicerequest;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT servicerequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.servicerequest_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
-            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr
+            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.servicerequest)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.servicerequest) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -568,7 +756,15 @@ BEGIN
                 WHERE servicerequest_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -588,17 +784,18 @@ BEGIN
 
     -- Start procedure
     err_section:='procedure-01';    err_schema:='db_log';    err_table:='procedure';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.procedure;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT procedure_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.procedure_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
-            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr
+            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.procedure)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.procedure) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -620,7 +817,15 @@ BEGIN
                 WHERE procedure_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -640,17 +845,18 @@ BEGIN
 
     -- Start consent
     err_section:='consent-01';    err_schema:='db_log';    err_table:='consent';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.consent;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT consent_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.consent_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
-            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr
+            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.consent)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.consent) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -672,7 +878,15 @@ BEGIN
                 WHERE consent_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -692,17 +906,18 @@ BEGIN
 
     -- Start location
     err_section:='location-01';    err_schema:='db_log';    err_table:='location';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.location;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT location_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.location_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
-            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr
+            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.location)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.location) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -724,7 +939,15 @@ BEGIN
                 WHERE location_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -744,17 +967,18 @@ BEGIN
 
     -- Start pids_per_ward
     err_section:='pids_per_ward-01';    err_schema:='db_log';    err_table:='pids_per_ward';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM db_log.pids_per_ward;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT pids_per_ward_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
-            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr
+            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -776,7 +1000,15 @@ BEGIN
                 WHERE pids_per_ward_raw_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.take_over_last_check_date()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.take_over_last_check_date()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -792,7 +1024,6 @@ BEGIN
     -- End pids_per_ward
     -----------------------------------------------------------------------------------------------------------------
 
-
     -- calculation of the time period
     err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
     SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_end;
@@ -802,7 +1033,7 @@ BEGIN
 
     err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
     INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
-    VALUES ( last_raw_pro_nr,'data_count_pro_all', 'db_log', 'take_over_last_check_date', last_pro_datetime, 'take_over_last_check_date', -1, tmp_sec, 'Count all Datasetzs '||temp );
+    VALUES ( last_raw_pro_nr,'data_count_pro_all', 'db_log', 'take_over_last_check_date', last_pro_datetime, 'take_over_last_check_date', 0, tmp_sec, 'Count all Datasetzs '||temp );
 
     err_section:='BOTTOM-20';    err_schema:='/';    err_table:='/';
     RETURN 'Done db.take_over_last_check_date - last_raw_pro_nr:'||last_raw_pro_nr;
@@ -816,7 +1047,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(last_raw_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE||' - last_raw_pro_nr:'||last_raw_pro_nr;

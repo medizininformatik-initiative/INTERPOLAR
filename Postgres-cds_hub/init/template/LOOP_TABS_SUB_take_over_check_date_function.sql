@@ -3,17 +3,18 @@
 
     -- Start <%TABLE_NAME_2%>
     err_section:='<%TABLE_NAME_2%>-01';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT <%TABLE_NAME%>_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE <%TABLE_NAME%>_id IN 
-            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=max_last_pro_nr
+            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
             )
          )
-    AND last_processing_nr!=max_last_pro_nr -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>) -- if not yet compared and brought to the same level
+	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
+        )
     )
         LOOP
             BEGIN
@@ -35,7 +36,15 @@
                 WHERE <%TABLE_NAME%>_id = current_record.id;
             EXCEPTION
                 WHEN OTHERS THEN
-                    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_line,err_msg, err_user, err_variables)  VALUES (err_schema,'db.<%COPY_FUNC_NAME%>()',err_section, SQLSTATE||' - '||SQLERRM, current_user, err_table);
+                    SELECT db.error_log(
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.<%COPY_FUNC_NAME%>()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 

@@ -6,8 +6,8 @@ AS $$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync
-    max_last_pro_nr INT; -- Last processing number in core data
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
+    max_last_pro_nr INT; -- Last processing number over all entities
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
     temp varchar; -- Temporary variable for interim results
@@ -33,9 +33,17 @@ BEGIN
     err_section:='HEAD-10';    err_schema:='db_config';    err_table:='db_parameter';
     SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
+    -- Get the last processing number across all data to mark current data across the board
+    err_section:='HEAD-15';    err_schema:='db_log';    err_table:='- all_entitys -';
+    SELECT MAX(last_processing_nr) INTO max_last_pro_nr
+    FROM ( SELECT 0 AS last_processing_nr
+    <%LOOP_TABS_SUB_take_over_check_date_function2%>
+
+    );
+
+    err_section:='HEAD-20';    err_schema:='db_log';    err_table:='/';
 
 <%LOOP_TABS_SUB_take_over_check_date_function%>
-
 
     -- calculation of the time period
     err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
@@ -46,7 +54,7 @@ BEGIN
 
     err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
     INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
-    VALUES ( last_raw_pro_nr,'data_count_pro_all', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', -1, tmp_sec, 'Count all Datasetzs '||temp );
+    VALUES ( last_raw_pro_nr,'data_count_pro_all', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', 0, tmp_sec, 'Count all Datasetzs '||temp );
 
     err_section:='BOTTOM-20';    err_schema:='/';    err_table:='/';
     RETURN 'Done db.<%COPY_FUNC_NAME%> - last_raw_pro_nr:'||last_raw_pro_nr;
@@ -60,7 +68,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(last_raw_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_raw_pro_nr:'||last_raw_pro_nr;
