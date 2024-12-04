@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 08:18:58
--- Rights definition file size        : 15119 Byte
+-- Rights definition file last update : 2024-12-04 14:36:29
+-- Rights definition file size        : 15121 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-04 10:18:23
+-- Create time: 2024-12-04 16:23:31
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -181,17 +181,16 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE patient_fe_id = current_record.patient_fe_id;
 
-/*
+
                     SELECT db.error_log(
-                        err_schema,                     -- Schema, in dem der Fehler auftrat
-                        'db.copy_fe_dp_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-                        err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-                        last_pro_nr                     -- Letzte Verarbeitungsnummer
-                    );
-*/
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.copy_fe_dp_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -430,17 +429,16 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE fall_fe_id = current_record.fall_fe_id;
 
-/*
+
                     SELECT db.error_log(
-                        err_schema,                     -- Schema, in dem der Fehler auftrat
-                        'db.copy_fe_dp_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-                        err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-                        last_pro_nr                     -- Letzte Verarbeitungsnummer
-                    );
-*/
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.copy_fe_dp_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -603,17 +601,16 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
 
-/*
+
                     SELECT db.error_log(
-                        err_schema,                     -- Schema, in dem der Fehler auftrat
-                        'db.copy_fe_dp_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-                        err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-                        last_pro_nr                     -- Letzte Verarbeitungsnummer
-                    );
-*/
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.copy_fe_dp_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -1212,17 +1209,16 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
 
-/*
+
                     SELECT db.error_log(
-                        err_schema,                     -- Schema, in dem der Fehler auftrat
-                        'db.copy_fe_dp_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-                        err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-                        last_pro_nr                     -- Letzte Verarbeitungsnummer
-                    );
-*/
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.copy_fe_dp_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -1385,17 +1381,16 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
 
-/*
+
                     SELECT db.error_log(
-                        err_schema,                     -- Schema, in dem der Fehler auftrat
-                        'db.copy_fe_dp_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-                        err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-                        last_pro_nr                     -- Letzte Verarbeitungsnummer
-                    );
-*/
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.copy_fe_dp_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
@@ -1590,17 +1585,16 @@ BEGIN
                     , last_processing_nr = last_pro_nr
                     WHERE trigger_fe_id = current_record.trigger_fe_id;
 
-/*
+
                     SELECT db.error_log(
-                        err_schema,                     -- Schema, in dem der Fehler auftrat
-                        'db.copy_fe_dp_in_to_db_log - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-                        current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-                        SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-                        err_section,                    -- Zeilennummer oder Abschnitt
-                        PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-                        last_pro_nr                     -- Letzte Verarbeitungsnummer
-                    );
-*/
+                        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+                        err_objekt => CAST('db.copy_fe_dp_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+                        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+                        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+                        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+                        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+                        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+                    ) INTO temp;
             END;
     END LOOP;
 
