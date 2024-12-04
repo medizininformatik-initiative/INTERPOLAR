@@ -318,37 +318,9 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion um aktuellen Status zu erfahren
-CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
-RETURNS TEXT
-SECURITY DEFINER
-AS $$
-DECLARE
-    erg TEXT;
-    temp varchar;
-BEGIN
-    -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
-    select CAST(MAX(last_processing_nr) AS TEXT) INTO erg
-    from db_log.data_import_hist
-    where last_processing_nr is not null 
-    and table_name not like '%_raw';
+-- CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
 
-    RETURN erg;
-EXCEPTION
-    WHEN OTHERS THEN
-    SELECT db.error_log(
-        err_schema => CAST('db' AS varchar),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat
-        err_objekt => CAST('db.get_last_processing_nr_typed' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
-        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
-        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
-        err_line => CAST('db.get_last_processing_nr_typed-01' AS varchar),    -- err_line (varchar) Zeilennummer oder Abschnitt
-        err_variables => CAST('Tab: data_import_hist' AS varchar),  -- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
-    ) INTO temp;
-    
-    RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
-END;
-$$ LANGUAGE plpgsql;
-
+-- Vergabe der Berechtigungen zur generierten Funktion
 GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db2dataprocessor_user;
 GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db2frontend_user;
