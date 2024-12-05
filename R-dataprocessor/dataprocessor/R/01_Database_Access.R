@@ -75,7 +75,6 @@ closeAllDatabaseConnections <- function() {
 #' `getDatabaseReadConnection()`. If verbose logging is enabled (configured via `VERBOSE`),
 #' the query execution details are logged when `VERBOSE` is set to at least `VL_90_FHIR_RESPONSE`.
 #'
-#' @export
 getReadQuery <- function(query, lock_id) {
   etlutils::dbGetQuery(
     db_connection = getDatabaseReadConnection(),
