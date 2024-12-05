@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 14:21:24
--- Rights definition file size        : 15119 Byte
+-- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-25 13:53:03
+-- Create time: 2024-12-05 09:41:45
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -107,10 +107,11 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   enc_serviceprovider_identifier_type_display varchar,   -- serviceProvider/identifier/type/coding/display (varchar)
   enc_serviceprovider_identifier_type_text varchar,   -- serviceProvider/identifier/type/text (varchar)
   enc_serviceprovider_display varchar,   -- serviceProvider/display (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "patient_raw" in schema "db_log"
@@ -134,10 +135,11 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   pat_gender varchar,   -- gender (varchar)
   pat_birthdate varchar,   -- birthDate (varchar)
   pat_address_postalcode varchar,   -- address/postalCode (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "condition_raw" in schema "db_log"
@@ -257,10 +259,11 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   con_note_authorreference_display varchar,   -- note/authorReference/display (varchar)
   con_note_time varchar,   -- note/time (varchar)
   con_note_text varchar,   -- note/text (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "medication_raw" in schema "db_log"
@@ -324,10 +327,11 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   med_ingredient_itemreference_identifier_type_text varchar,   -- ingredient/itemReference/identifier/type/text (varchar)
   med_ingredient_itemreference_display varchar,   -- ingredient/itemReference/display (varchar)
   med_ingredient_isactive varchar,   -- ingredient/isActive (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "medicationrequest_raw" in schema "db_log"
@@ -557,10 +561,11 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medreq_substitution_reason_code varchar,   -- substitution/reason/coding/code (varchar)
   medreq_substitution_reason_display varchar,   -- substitution/reason/coding/display (varchar)
   medreq_substitution_reason_text varchar,   -- substitution/reason/text (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "medicationadministration_raw" in schema "db_log"
@@ -676,10 +681,11 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medadm_dosage_ratequantity_unit varchar,   -- dosage/rateQuantity/unit (varchar)
   medadm_dosage_ratequantity_system varchar,   -- dosage/rateQuantity/system (varchar)
   medadm_dosage_ratequantity_code varchar,   -- dosage/rateQuantity/code (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "medicationstatement_raw" in schema "db_log"
@@ -896,10 +902,11 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   medstat_dosage_maxdoseperlifetime_unit varchar,   -- dosage/maxDosePerLifetime/unit (varchar)
   medstat_dosage_maxdoseperlifetime_system varchar,   -- dosage/maxDosePerLifetime/system (varchar)
   medstat_dosage_maxdoseperlifetime_code varchar,   -- dosage/maxDosePerLifetime/code (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "observation_raw" in schema "db_log"
@@ -1037,10 +1044,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   obs_hasmember_identifier_type_display varchar,   -- hasMember/identifier/type/coding/display (varchar)
   obs_hasmember_identifier_type_text varchar,   -- hasMember/identifier/type/text (varchar)
   obs_hasmember_display varchar,   -- hasMember/display (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "diagnosticreport_raw" in schema "db_log"
@@ -1091,10 +1099,11 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagrep_conclusioncode_code varchar,   -- conclusionCode/coding/code (varchar)
   diagrep_conclusioncode_display varchar,   -- conclusionCode/coding/display (varchar)
   diagrep_conclusioncode_text varchar,   -- conclusionCode/text (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "servicerequest_raw" in schema "db_log"
@@ -1159,10 +1168,11 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servreq_locationcode_code varchar,   -- locationCode/coding/code (varchar)
   servreq_locationcode_display varchar,   -- locationCode/coding/display (varchar)
   servreq_locationcode_text varchar,   -- locationCode/text (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "procedure_raw" in schema "db_log"
@@ -1237,10 +1247,11 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   proc_note_authorreference_display varchar,   -- note/authorReference/display (varchar)
   proc_note_time varchar,   -- note/time (varchar)
   proc_note_text varchar,   -- note/text (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "consent_raw" in schema "db_log"
@@ -1281,10 +1292,11 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   cons_provision_code_text varchar,   -- provision/code/text (varchar)
   cons_provision_dataperiod_start varchar,   -- provision/dataPeriod/start (varchar)
   cons_provision_dataperiod_end varchar,   -- provision/dataPeriod/end (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "location_raw" in schema "db_log"
@@ -1306,10 +1318,11 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
   loc_name varchar,   -- name (varchar)
   loc_description varchar,   -- description (varchar)
   loc_alias varchar,   -- alias (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "pids_per_ward_raw" in schema "db_log"
@@ -1318,10 +1331,11 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 

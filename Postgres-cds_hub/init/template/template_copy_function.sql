@@ -1,6 +1,8 @@
 ------------------------------
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
-RETURNS VOID AS $$
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 DECLARE
     record_count INT:=0;
     current_record record;
@@ -53,19 +55,21 @@ BEGIN
     END IF;
     err_section:='BOTTON-10';  err_schema:='/';    err_table:='/';
 
-/*
+    RETURN 'Done db.<%COPY_FUNC_NAME%> - last_pro_nr:'||last_pro_nr;
+
 EXCEPTION
     WHEN OTHERS THEN
-        SELECT db.error_log(
-            err_schema,                     -- Schema, in dem der Fehler auftrat
-            'db.<%COPY_FUNC_NAME%> - '||err_table, -- Objekt (Tabelle, Funktion, etc.)
-            current_user,                   -- Benutzer (kann durch current_user ersetzt werden)
-            SQLSTATE||' - '||SQLERRM,       -- Fehlernachricht
-            err_section,                    -- Zeilennummer oder Abschnitt
-            PG_EXCEPTION_CONTEXT,           -- Debug-Informationen zu Variablen
-            last_pro_nr                     -- Letzte Verarbeitungsnummer
-        );
-*/
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.<%COPY_FUNC_NAME%>()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
+    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
 

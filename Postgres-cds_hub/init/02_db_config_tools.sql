@@ -61,6 +61,9 @@ values ('timepoint_2_cron_job_data_transfer','none','start time that needs to be
 insert into db_config.db_process_control (pc_name, pc_value, pc_description)
 values ('timepoint_3_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
 
+insert into db_config.db_process_control (pc_name, pc_value, pc_description)
+values ('waitpoint_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
+
 -- Table "data_import_hist" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
@@ -100,6 +103,7 @@ from
     WHEN function_name = 'copy_type_cds_in_to_db_log' THEN 'CDS2DB_IN (Typed) -> DB_LOG'
     WHEN function_name = 'copy_fe_dp_in_to_db_log' THEN 'DP (Typed) -> DB_LOG-Frontend'
     WHEN function_name = 'copy_fe_fe_in_to_db_log' THEN 'DB_LOG-Frontend -> DB_LOG'
+    WHEN function_name = 'take_over_last_check_date' THEN 'DB_LOG (internal) - Synchronization of the last imported data sets'
     ELSE 'NichtDefinierteFunktion'
 END dataflow
 , sum(dataset_count) dataset_count_all_ds, round(sum(copy_time_in_sec)) copy_time_in_sec
@@ -110,6 +114,7 @@ left join (select to_char(import_hist_cre_at,'YYYY-MM-DD') day_sum, function_nam
 , round(sum(dataset_count)/sum(copy_time_in_sec)) new_ds_per_sec from db_log.data_import_hist a
 where variable_name='data_count_pro_new' group by function_name, to_char(import_hist_cre_at,'YYYY-MM-DD')
 ) b on (a.day_sum=b.day_sum and a.function_name=b.function_name)
+ORDER BY day_sum DESC, function_name
 ;
 
 GRANT SELECT ON db_config.v_data_count_report TO db_user;
@@ -135,7 +140,7 @@ GRANT UPDATE ON db_config.db_error_log TO db_user;
 -- View "v_db_error_log" in "db_config"
 ----------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_db_error_log as
-select input_datetime, id, err_schema, err_objekt, err_line, err_msg, err_variables, err_user from db_config.db_error_log
+select input_datetime, id, err_schema, err_objekt, err_line, err_msg, err_variables, err_user, last_processing_nr from db_config.db_error_log
 order by input_datetime desc, id desc;
 
 GRANT SELECT ON db_config.v_db_error_log TO db_user;
@@ -155,14 +160,33 @@ RETURNS VOID
 SECURITY DEFINER
 AS $$
 DECLARE
-    err_pid varchar;
+    erg TEXT;
 BEGIN
-    err_pid:=public.pg_background_launch('INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
-    VALUES ('||quote_literal(err_schema)||','||quote_literal(err_objekt)||','||quote_literal(err_user)||','||quote_literal(err_msg)||','||quote_literal(err_line)||','||quote_literal(err_variables)||','||last_processing_nr||')');
-EXCEPTION
+/* Asynchrones schreiben der fehler später
+    SELECT res 
+    FROM public.pg_background_result(
+        public.pg_background_launch(
+            'INSERT INTO db_config.db_error_log (
+                err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr
+            ) VALUES (' || 
+                quote_literal('innen '||err_schema) || ', ' ||
+                quote_literal(err_objekt) || ', ' ||
+                quote_literal(err_user) || ', ' ||
+                quote_literal(err_msg) || ', ' ||
+                quote_literal(err_line) || ', ' ||
+                quote_literal(err_variables) || ', ' ||
+                COALESCE(last_processing_nr::text, 'NULL') || '); commit;'
+        )
+    ) AS t(res TEXT) INTO erg;
+*/
+    -- Fehler dokumentieren
+    INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
+    VALUES (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr);
+EXCEPTION	
     WHEN OTHERS THEN
-        INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr)
-        VALUES (err_schema, err_objekt, err_user, err_msg, err_line, err_variables, last_processing_nr);
+        -- Dokumentieren das beim schreiben des Fehlers ein Fehler entstanden ist
+        INSERT INTO db_config.db_error_log (err_schema, err_objekt, err_msg)
+        VALUES ('Fehler bei Fehler schreiben', CAST('db.error_log' AS  varchar), CAST(SQLSTATE||' - '||SQLERRM AS varchar));
 END;
 $$ LANGUAGE plpgsql;
 
