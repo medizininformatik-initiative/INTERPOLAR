@@ -9,10 +9,8 @@
 #'         records in the `db_log.data_import_hist` table.
 #'
 getLastProcessingNumber <- function() {
-  statement <- "SELECT MAX(last_processing_nr)
-                FROM db_log.data_import_hist
-                WHERE function_name = 'copy_type_cds_in_to_db_log'
-                  AND schema_name = 'db_log' AND table_name NOT LIKE '%_raw';"
+  statement <- "SELECT db.get_last_processing_nr_typed();"
+
   etlutils::dbGetQuery(
     db_connection = getDatabaseReadConnection(),
     query = statement,
