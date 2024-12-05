@@ -103,6 +103,7 @@ from
     WHEN function_name = 'copy_type_cds_in_to_db_log' THEN 'CDS2DB_IN (Typed) -> DB_LOG'
     WHEN function_name = 'copy_fe_dp_in_to_db_log' THEN 'DP (Typed) -> DB_LOG-Frontend'
     WHEN function_name = 'copy_fe_fe_in_to_db_log' THEN 'DB_LOG-Frontend -> DB_LOG'
+    WHEN function_name = 'take_over_last_check_date' THEN 'DB_LOG (internal) - Synchronization of the last imported data sets'
     ELSE 'NichtDefinierteFunktion'
 END dataflow
 , sum(dataset_count) dataset_count_all_ds, round(sum(copy_time_in_sec)) copy_time_in_sec
@@ -113,6 +114,7 @@ left join (select to_char(import_hist_cre_at,'YYYY-MM-DD') day_sum, function_nam
 , round(sum(dataset_count)/sum(copy_time_in_sec)) new_ds_per_sec from db_log.data_import_hist a
 where variable_name='data_count_pro_new' group by function_name, to_char(import_hist_cre_at,'YYYY-MM-DD')
 ) b on (a.day_sum=b.day_sum and a.function_name=b.function_name)
+ORDER BY day_sum DESC, function_name
 ;
 
 GRANT SELECT ON db_config.v_data_count_report TO db_user;
