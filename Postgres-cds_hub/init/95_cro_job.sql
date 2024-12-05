@@ -279,6 +279,73 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2frontend
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Funktion zum steuern des cron-jobs für Externe - Starten im Fehlerfall - schreiben eines Errorlog Eintrages
+CREATE OR REPLACE FUNCTION db.reset_semaphor(msg varchar DEFAULT 'InterpolarModul_Bitte_Angeben')
+RETURNS BOOLEAN
+SECURITY DEFINER
+AS $$
+DECLARE
+    num int;
+    status varchar;
+    err_section varchar;
+    err_schema varchar;
+    err_table varchar;
+    err_pid varchar;
+    temp varchar;
+BEGIN
+    -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
+    err_section:='db.reset_semaphor-01';    err_schema:='db_config';    err_table:='db_process_control';
+    SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
+    IF num=1 THEN
+        SELECT pc_value INTO status FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
+    END IF;
+
+    err_section:='db.reset_semaphor-10';    err_schema:='db';    err_table:='error_log';
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('EXTERN --> db.reset_semaphor()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST('Aktuelle Semaphore:'||status||' ExternerKey:'||msg AS varchar), -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table||' Key:'||msg AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
+    err_section:='db.reset_semaphor-10';    err_schema:='db_config';    err_table:='db_process_control';
+    IF status='Ongoing - '||msg THEN -- Prozess ruht von diesem Aufruf(Schlüssel) - also kann er blokiert werden
+        -- Semaphore setzen
+        err_section:='db.data_transfer_start-17';    err_schema:='db_config';    err_table:='db_process_control';
+        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
+	    RETURN TRUE;
+    ELSE
+        err_section:='db.reset_semaphor-20';    err_schema:='db_config';    err_table:='db_process_control';
+	    RETURN FALSE;
+    END IF;
+
+    err_section:='db.reset_semaphor-25';    err_schema:='/';    err_table:='/';
+    RETURN FALSE;
+EXCEPTION
+    WHEN OTHERS THEN
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.reset_semaphor()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table||' Key:'||msg AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION db.reset_semaphor(varchar) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.reset_semaphor(varchar) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.reset_semaphor(varchar) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.reset_semaphor(varchar) TO db_user;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.data_transfer_status()
 RETURNS TEXT
@@ -299,7 +366,7 @@ EXCEPTION
     WHEN OTHERS THEN
     SELECT db.error_log(
         err_schema => CAST('db_config' AS varchar),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat
-        err_objekt => CAST('db.data_transfer_stop()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_objekt => CAST('db.data_transfer_status()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
         err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST('db.data_transfer_status-01' AS varchar),    -- err_line (varchar) Zeilennummer oder Abschnitt
