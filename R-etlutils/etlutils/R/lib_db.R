@@ -17,6 +17,19 @@ getStatusFromDB <- function(db_connection, query, log = TRUE) {
   if (!is.null(status)) status <- status[1, ][[1]] # the functions answer is a table with 1 row and 1 column
 }
 
+#' Retrieve Database Semaphore Status
+#'
+#' This function retrieves the current semaphore status from the database by executing
+#' a predefined query.
+#'
+#' @param db_connection A database connection object used to execute the query.
+#'
+#' @return A character string representing the current semaphore status in the database.
+#'
+getSemaphoreStatus <- function(db_connection) {
+  getStatusFromDB(db_connection, "SELECT db.data_transfer_status();")
+}
+
 #' Check Database Semaphore Status
 #'
 #' This function checks whether the current database status starts with a specified status prefix.
@@ -28,8 +41,7 @@ getStatusFromDB <- function(db_connection, query, log = TRUE) {
 #'         with the given `status_prefix`.
 #'
 hasSemaphoreStatus <- function(db_connection, status_prefix) {
-  status <- getStatusFromDB(db_connection, "SELECT db.data_transfer_status();")
-  cat("Current database status:", status, "\n")
+  status <- getSemaphoreStatus(db_connection)
   return(startsWith(tolower(status), tolower(status_prefix)))
 }
 
@@ -89,6 +101,39 @@ dbLock <- function(db_connection, log = TRUE, lock_id = NULL) {
 
 #' Unlock a Database for Read or Write Access
 #'
+#' This function attempts to unlock the database using a specified lock ID. It ensures proper handling
+#' of read-only or read-write access during the unlocking process and logs messages if requested.
+#'
+#' @param db_connection A database connection object used to interact with the database.
+#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
+#' @param unlock_request A string representing the SQL query or command used to request unlocking
+#'        the database.
+#' @param lock_id A string specifying the unique identifier for the lock. If `NULL`, no unlocking
+#'        is performed.
+#' @param readonly A logical value (`TRUE` or `FALSE`). If `TRUE`, the database is unlocked in
+#'        read-only mode.
+#'
+#' @return The function does not return a value. It either successfully unlocks the database or
+#'         throws an error if unlocking fails.
+#'
+dbUnlockInternal <- function(db_connection, log = TRUE, unlock_request, lock_id, readonly = FALSE) {
+  if (!is.null(lock_id)) {
+    if (log) {
+      cat(paste0("Try to unlock database with lock_id: '", lock_id, "' and readonly: ", readonly, "\n"))
+    }
+    unlock_sucessful <- getStatusFromDB(db_connection, unlock_request, log)
+    if (!unlock_sucessful) {
+      status <- getSemaphoreStatus(db_connection)
+      stop("Could not unlock the database for lock_did:\n",
+           lock_id, "\n",
+           "The current status is: " , status, "\n",
+           dbGetInfo(db_connection))
+    }
+  }
+}
+
+#' Unlock a Database for Read or Write Access
+#'
 #' This function attempts to unlock the database using a specified lock ID.
 #' It ensures proper handling of read-only or read-write access during the unlocking process.
 #'
@@ -101,19 +146,62 @@ dbLock <- function(db_connection, log = TRUE, lock_id = NULL) {
 #'         or throws an error if unlocking fails.
 #'
 dbUnlock <- function(db_connection, log = TRUE, lock_id, readonly = FALSE) {
-  if (!is.null(lock_id)) {
-    if (log) {
-      cat(paste0("Try to unlock database with lock_id: '", lock_id, "' and readonly: ", readonly, "\n"))
-    }
-    unlock_sucessful <- getStatusFromDB(db_connection, paste0("SELECT db.data_transfer_start('", lock_id, "', ", readonly, ");"), log)
-    if (!unlock_sucessful) {
-      status <- getSemaphoreStatus(db_connection)
-      stop("Could not unlock the database for lock_did:\n",
-           lock_id, "\n",
-           "The current status is: " , status, "\n",
-           dbGetInfo(db_connection))
-    }
+  unlock_request <- paste0("SELECT db.data_transfer_start('", lock_id, "', ", readonly, ");")
+  return(dbUnlockInternal(db_connection, log, unlock_request, lock_id, readonly))
+}
+
+#' Forcefully Unlock a Database for a Project
+#'
+#' This function attempts to forcibly unlock a database for a specified project by checking the
+#' semaphore status and issuing a hard reset if the project lock is active.
+#'
+#' @param db_connection A database connection object used to interact with the database.
+#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
+#' @param project_name A string representing the name of the project whose lock should be forcibly reset.
+#'
+#' @return The function does not return a value. It either successfully resets the semaphore or
+#'         throws an error if the process fails.
+#'
+#' @export
+dbUnlockHard <- function(db_connection, log = TRUE, project_name) {
+  if (hasSemaphoreStatus(db_connection, status_prefix = project_name)) {
+    status <- getSemaphoreStatus(db_connection)
+    browser()
+    unlock_request <- paste0("SELECT db.reset_semaphor('", lock_id, "');")
+    dbUnlockInternal(db_connection, log, unlock_request, lock_id)
   }
+}
+
+#' Create a Lock ID
+#'
+#' This function generates a lock ID by combining a project name with a variable number of
+#' arguments for the lock ID message, concatenated and separated by a colon (`:`).
+#'
+#' @param project_name A string representing the name of the project.
+#' @param ... A variable number of strings to be concatenated as the lock ID message.
+#'
+#' @return A character string representing the combined lock ID in the format
+#'         `<project_name>:<lock_id_message>`.
+#'
+#' @export
+createLockID <- function(project_name, ...) {
+  lock_id_message <- paste0(...)
+  paste0(project_name, ":", lock_id_message)
+}
+
+#' Check for a Lock in the Database
+#'
+#' This function checks whether a lock exists in the database for a specified project name.
+#'
+#' @param db_connection A database connection object used to query the lock status.
+#' @param project_name A string representing the name of the project to check for a lock.
+#'
+#' @return A logical value (`TRUE` or `FALSE`), indicating whether a lock exists for the
+#'         specified project name.
+#'
+#' @export
+hasLock <- function(db_connection, project_name) {
+  hasSemaphoreStatus(db_connection, project_name)
 }
 
 #' Establish a Connection to a PostgreSQL Database

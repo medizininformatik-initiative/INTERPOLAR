@@ -15,7 +15,7 @@ getLastProcessingNumber <- function() {
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = VERBOSE >= VL_90_FHIR_RESPONSE,
-    lock_id = "dataprocessor.getLastProcessingNumber()",
+    lock_id = createLockID("getLastProcessingNumber()"),
     readonly = TRUE)
 }
 
@@ -40,7 +40,7 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = VERBOSE >= VL_90_FHIR_RESPONSE,
-    lock_id = "dataprocessor.loadLastImportedDatasetsFromDB()",
+    lock_id = createLockID("loadLastImportedDatasetsFromDB()"),
     readonly = TRUE)
 }
 
@@ -220,7 +220,7 @@ loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = log,
-    lock_id = "dataprcessor.loadResourcesLastStatusFromDB()",
+    lock_id = createLockID("loadResourcesLastStatusFromDB()"),
     readonly = TRUE)
 }
 
@@ -243,7 +243,7 @@ loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids, log = TRUE)
     filter_column = id_column,
     ids = ids,
     log = log,
-    lock_id = paste0("dataprcessor.loadResourcesLastStatusByOwnIDFromDB(",resource_name,")"))
+    lock_id = createLockID("loadResourcesLastStatusByOwnIDFromDB(", resource_name, ")"))
 }
 
 #' Retrieve the last status of load resources from the database by PID.
@@ -268,7 +268,7 @@ loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids, log = TRUE) 
     filter_column = pid_column,
     ids = pids,
     log = log,
-    lock_id = paste0("dataprcessor.loadResourcesLastStatusByPIDFromDB(",resource_name,")"))
+    lock_id = createLockID("loadResourcesLastStatusByPIDFromDB(",resource_name,")"))
 }
 
 #' Load Resources Last Status By Encounter ID From Database
@@ -296,7 +296,7 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids, log = T
     filter_column = enc_id_column,
     ids = enc_ids,
     log = log,
-    lock_id = paste0("dataprcessor.loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
+    lock_id = createLockID("loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
 }
 
 #' This function creates frontend tables for displaying patient and encounter information.
@@ -432,7 +432,7 @@ createFrontendTables <- function() {
       query <- paste0(query, additional_class_code_query)
     }
 
-    encounters <- getReadQuery(query, lock_id = "dataprocessor.createEncounterFrontendTable()[1]")
+    encounters <- getReadQuery(query, lock_id = createLockID("createEncounterFrontendTable()[1]"))
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
@@ -441,7 +441,7 @@ createFrontendTables <- function() {
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
 
-    conditions <- getReadQuery(query, lock_id = "dataprocessor.createEncounterFrontendTable()[2]")
+    conditions <- getReadQuery(query, lock_id = createLockID("createEncounterFrontendTable()[2]"))
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
@@ -527,7 +527,7 @@ createFrontendTables <- function() {
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
-          observations <- getReadQuery(query, lock_id = "dataprocessor.getObservation()[1]")
+          observations <- getReadQuery(query, lock_id = createLockID("getObservation()[1]"))
 
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
@@ -538,7 +538,7 @@ createFrontendTables <- function() {
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_datetime, "'\n")
-            observations <- getReadQuery(query, lock_id = "dataprocessor.getObservation()[2]")
+            observations <- getReadQuery(query, lock_id = createLockID("getObservation()[2]"))
           }
           if (nrow(observations)) {
             # take the very frist Observation with the latest date (should be only 1 but sure is sure)

@@ -83,7 +83,7 @@ retrieve <- function(debug_path2config_toml = NA) {
           writeTablesToDatabase(
             tables = resource_tables,
             stop_if_table_not_empty = TRUE,
-            lock_id = paste("cds2db: Write RAW tables to database"))
+            lock_id = createLockID("Write RAW tables to database"))
         })
       }
 
@@ -104,7 +104,7 @@ retrieve <- function(debug_path2config_toml = NA) {
 
         resource_tables_raw_diff <- readTablesFromDatabase(
           table_names = all_table_names_raw_diff,
-          lock_id = "cds2db:Load untyped RAW tables from database")
+          lock_id = createLockID("Load untyped RAW tables from database"))
 
         all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
         if (all_empty_raw) {
@@ -124,11 +124,15 @@ retrieve <- function(debug_path2config_toml = NA) {
           writeTablesToDatabase(
             tables = resource_tables,
             stop_if_table_not_empty = TRUE,
-            lock_id = "cds2db: Write typed tables to database")
+            lock_id = createLockID("Write typed tables to database"))
         })
 
       }
     }
+
+  }))
+
+  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
 
     etlutils::runLevel2("Close database connections", {
       closeAllDatabaseConnections()
