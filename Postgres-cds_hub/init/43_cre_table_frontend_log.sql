@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-11-11 14:21:24
--- Rights definition file size        : 15119 Byte
+-- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-11-25 13:53:20
+-- Create time: 2024-12-05 09:42:44
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -49,10 +49,11 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "fall_fe" in schema "db_log"
@@ -95,10 +96,11 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat date,   -- Entlassdatum (date)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "medikationsanalyse_fe" in schema "db_log"
@@ -122,10 +124,11 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   meda_aufwand_zeit_and int,   -- genaue Dauer in Minuten (int)
   meda_notiz varchar,   -- Notizfeld (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
@@ -258,10 +261,11 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_merp_info___1 varchar,   -- descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "risikofaktor_fe" in schema "db_log"
@@ -285,10 +289,11 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   rskfk_entern varchar,   -- ent. Ern. (varchar)
   rskfkt_anz_rskamklassen varchar,   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 -- Table "trigger_fe" in schema "db_log"
@@ -320,10 +325,11 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
   trg_krea varchar,   -- Krea↑ (varchar)
   trg_egfr varchar,   -- eGFR<30 (varchar)
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',  -- Processing status of the data record
-  last_processing_nr int -- Last processing number of the data record
+  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr int,                                      -- (First) Processing number of the data record
+  last_processing_nr int                                        -- Last processing number of the data record
 );
 
 
