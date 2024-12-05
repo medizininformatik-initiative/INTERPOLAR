@@ -37,7 +37,7 @@ MAX_DIR_COUNT = 5
 # This date must match the data in the database. Only Encounters whose start
 # date is before this date and whose end date is not set or is after this date
 # are loaded from the database.
-#DEBUG_CURRENT_DATETIME = "2020-07-31 21:25:00"
+#DEBUG_ENCOUNTER_DATETIME = "2020-07-31 21:25:00"
 
 [analyse]
 
@@ -71,6 +71,12 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
 # is commented out then every value will be accepted). To match the start and end of the exact
 # value, use caret (^) and dollar ($) symbols.
 #FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+
+# Only Encounters that have one of the entries specified here as a class attribute are displayed
+# in the frontend. This match must be exact, i.e. no patterns may be specified here.
+# This can be used to ensure that, for example, no outpatient Encounters are displayed even though
+# they have not yet ended.
+FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 
 
 # The codes for height, weight and BMI can be customised here. If several codes

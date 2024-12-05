@@ -4,7 +4,7 @@
 #' with columns for date_time, ward, and pid. Each row represents a unique combination
 #' of date, ward, and patient ID extracted from the provided list.
 #'
-#' @param patientIDsPerWard A list of patient IDs, where each element corresponds to a ward.
+#' @param patient_ids_per_ward A list of patient IDs, where each element corresponds to a ward.
 #'
 #' @return A data.table with columns date_time, ward, and pid, representing the date, ward,
 #'   and patient ID for each combination extracted from the provided list.
@@ -13,57 +13,102 @@
 #' \dontrun{
 #'   library(data.table)
 #'   # Example: A list of patient IDs per ward
-#'   patientIDsPerWard <- list(
+#'   patient_ids_per_ward <- list(
 #'     Ward_A = c("PID_A001", "PID_A002", "PID_A003"),
 #'     Ward_B = c("PID_B001", "PID_B002"),
 #'     Ward_C = c("PID_C001", "PID_C002", "PID_C003", "PID_C004")
 #'   )
 #'
 #'   # Applying the function
-#'   result_table <- createWardPatientIDPerDateTable(patientIDsPerWard)
+#'   result_table <- createWardPatientIDPerDateTable(patient_ids_per_ward)
 #'
 #'   # Displaying the result
 #'   print(result_table)
 #' }
 #'
-createWardPatientIDPerDateTable <- function(patientIDsPerWard) {
-  ward_names <- names(patientIDsPerWard)
-  patient_ids <- unlist(patientIDsPerWard)
-  wardPatientIDPerDate <- data.table::data.table(
-    ward_name = rep(ward_names, lengths(patientIDsPerWard)),
+createWardPatientIDPerDateTable <- function(patient_ids_per_ward) {
+  ward_names <- names(patient_ids_per_ward)
+  patient_ids <- unlist(patient_ids_per_ward)
+  ward_patient_id_per_date <- data.table::data.table(
+    ward_name = rep(ward_names, lengths(patient_ids_per_ward)),
     patient_id = patient_ids
   )
-  return(wardPatientIDPerDate)
+  return(ward_patient_id_per_date)
 }
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME_START` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME_START` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME_START` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
   start_datetime <- as.POSIXct(Sys.time())
-  if (exists('DEBUG_CURRENT_DATETIME_START')) {
-    start_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_START)
-    if (exists('DEBUG_CURRENT_DATETIME_END')) {
-      end_datetime <- as.POSIXct(DEBUG_CURRENT_DATETIME_END)
+  if (exists('DEBUG_ENCOUNTER_DATETIME_START')) {
+    start_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_START)
+    if (exists('DEBUG_ENCOUNTER_DATETIME_END') && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
+      end_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_END)
       return(c(start_datetime = start_datetime, end_datetime = end_datetime))
     }
   }
   return(c(start_datetime = start_datetime))
 }
 
-#' Get Query Datetime
+#' Get the current datetime formatted for SQL queries
 #'
-#' This function returns the current datetime formatted for SQL queries.
-#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
+#' This function retrieves the current datetime using the \code{getCurrentDatetime} function
+#' and formats it as a string in the "YYYY-MM-DD HH:MM:SS" format, which is appropriate for SQL queries.
+#' It handles both regular and debug modes, depending on the environment.
 #'
-#' @return A character string representing the current datetime formatted for SQL queries.
+#' @return A character string representing the current datetime, formatted for SQL queries.
 #'
 getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
+}
+
+#' Get active encounter patient IDs from the database
+#'
+#' This function retrieves patient IDs from encounters that are active based on the current query date.
+#' An encounter is considered active if its start date is less than or equal to the current date and
+#' either has no end date or its end date is greater than the current date.
+#'
+#' The function retrieves the current datetime using \code{getQueryDatetime()} and then constructs and executes
+#' a SQL query to fetch the active patient IDs from the database.
+#'
+#' @return A vector of patient IDs with active encounters.
+#'
+getActiveEncounterPIDsFromDB <- function() {
+  # Get current or debug datetime
+  query_datetime <- getQueryDatetime()
+  datetime <- query_datetime[["start_datetime"]]
+
+  # Create the SQL-Query
+  query <- paste0(
+    "WITH latest_encounter AS (\n",
+    "  SELECT\n",
+    "    enc_id,\n",
+    "    enc_patient_ref,\n",
+    "    enc_period_start,\n",
+    "    enc_period_end,\n",
+    "    ROW_NUMBER() OVER (\n",
+    "      PARTITION BY enc_id\n",
+    "      ORDER BY input_datetime DESC\n",
+    "    ) AS row_num\n",
+    "  FROM v_encounter\n",
+    "  WHERE input_datetime <= '", datetime, "'\n",
+    ")\n",
+    "SELECT DISTINCT enc_patient_ref\n",
+    "FROM latest_encounter\n",
+    "WHERE row_num = 1\n",
+    "  AND enc_period_start <= '", datetime, "'\n",
+    "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
+  )
+
+  # Run the SQL query and return patient IDs
+  patient_ids_active <- getQueryFromDatabase(query, lock_id = "cds2db.getActiveEncounterPIDsFromDB()", readonly = TRUE)
+
+  return(patient_ids_active$enc_patient_id)
 }
 
 #' Adjusts the names of a vector or list by removing a specified prefix and matching them
@@ -103,53 +148,27 @@ adjustNames <- function(variables, prefix, valid_names) {
   return(variables)
 }
 
-#' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
-#'
-#' This function takes a list of patient IDs per ward, extracts unique patient IDs,
-#' loads FHIR resources for those patient IDs from the FHIR server using the provided
-#' `TABLE_DESCRIPTION`, and creates an additional table of ward-patient ID per date. The
-#' result is a list of data.tables, where each element contains FHIR resources for a specific
-#' patient, and the last element is a table representing the ward and patient ID per date.
-#'
-#' @param patient_IDs_per_ward A list of patient IDs, where each element corresponds to a ward.
-#' @param table_descriptions the fhircrackr table descriptions of the result tables
-#' @return A list of data.tables, each containing FHIR resources for a specific patient,
-#'   and the last element is a table representing the ward and patient ID per date.
-#'
-loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
-  # Get current or debug datetime
-  query_datetime <- getQueryDatetime()
-  # Filtering patients who are no longer on a relevant ward, but the case is still not closed.
-  # Load all patient IDs from Encounters with startdate lower equal current date and no enddate or
-  # an enddate greater current date.
-  query <- paste0("SELECT enc_patient_id FROM v_encounter_all\n",
-                  "   WHERE enc_period_start <= '", query_datetime[["start_datetime"]], "' AND\n",
-                  "   (enc_period_end is NULL OR enc_period_end > '",
-                  query_datetime[["start_datetime"]], "');")
-  patientIDsActive <- getQueryFromDatabase(query)
-  # Unify and unique all patient IDs
-  patientIDs <- unique(unlist(patient_IDs_per_ward))
-  patientIDs <- unique(c(patientIDs, patientIDsActive$enc_patient_id))
-
-  # This parameter should only be changed via DEBUG variables to set additional test filters for
-  # the FHIR-search request.
-  resources_add_search_parameter <- NA
-
-  #########################
-  # START: FOR DEBUG ONLY #
-  #########################
-
-  # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
-
-  # Define the prefix for global debug filter variables
-  global_debug_filter_variable_prefix <- "DEBUG_ADD_FHIR_SEARCH_"
+#########################
+# START: FOR DEBUG ONLY #
+#########################
+debugSetResourcesAddSearchParameter <- function(
+    global_debug_filter_variable_prefix = "DEBUG_ADD_FHIR_SEARCH_",
+    table_descriptions,
+    debug_general_variable = "DEBUG_ADD_FHIR_SEARCH_GENERAL"
+) {
   # Get global filter variables with the specified prefix
   global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
 
+  # Initialize result
+  resources_add_search_parameter <- NULL
+
   # Load FHIR resources based on the presence of global filter variables
   if (length(global_filter_variables)) {
+    # Adjust the names of the global variables
     resources_add_search_parameter <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, names(table_descriptions))
-    if (exists("DEBUG_ADD_FHIR_SEARCH_GENERAL")) {
+
+    # Check if the general debug variable exists
+    if (exists(debug_general_variable)) {
       # Prepend value of 'GENERAL' for all resources
       for (name in names(table_descriptions)) {
         full_value <- resources_add_search_parameter[["GENERAL"]]
@@ -160,33 +179,125 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_IDs_per_ward, table_d
       }
     }
   }
-  #######################
-  # END: FOR DEBUG ONLY #
-  #######################
 
-  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(patientIDs, table_descriptions, resources_add_search_parameter)
+  # Return the resulting resource search parameters
+  return(resources_add_search_parameter)
+}
+#######################
+# END: FOR DEBUG ONLY #
+#######################
+
+#' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
+#'
+#' This function takes a list of patient IDs per ward, extracts unique patient IDs,
+#' loads FHIR resources for those patient IDs from the FHIR server using the provided
+#' `TABLE_DESCRIPTION`, and creates an additional table of ward-patient ID per date. The
+#' result is a list of data.tables, where each element contains FHIR resources for a specific
+#' patient, and the last element is a table representing the ward and patient ID per date.
+#'
+#' @param patient_ids_per_ward A list of patient IDs, where each element corresponds to a ward.
+#' @param table_descriptions the fhircrackr table descriptions of the result tables
+#' @return A list of data.tables, each containing FHIR resources for a specific patient,
+#'   and the last element is a table representing the ward and patient ID per date.
+#'
+loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
+
+  # Load all encounters from the database which, according to the database, have not yet ended on the
+  # ‘current’ date and determine the PIDs.
+  # Background: We want to track all cases that have ever been on a relevant station until they are completed.
+  patient_ids_db <- getActiveEncounterPIDsFromDB()
+
+  if (!length(patient_ids_db)) {
+    etlutils::catWarningMessage(paste(
+      "No active patient IDs in encounter table found in database. \n",
+      "HINT: This message appears if no active encounters were written to the database during",
+      "the last run of the CDS tool chain. This should only happen if the CDS tool chain is",
+      "running for the first time."))
+  }
+
+  # Unify and unique all patient IDs
+  patient_ids_fhir <- unique(unlist(patient_ids_per_ward))
+  patient_ids <- unique(c(patient_ids_fhir, patient_ids_db))
+
+  # This parameter should only be changed via DEBUG variables to set additional test filters for
+  # the FHIR-search request.
+  resources_add_search_parameter <- NA
 
   #########################
   # START: FOR DEBUG ONLY #
   #########################
-  # NOTE: only works correctly with very specific test data
-  if (etlutils::isDefinedAndTrue("DEBUG_ADD_PATIENT_IDENTIFIER")) {
-    # adds a second patient identifier
-    debugAddPatientIdentifier(resource_tables)
-    # adds a new Patient
-    result <- debugAddPatient(resource_tables$Patient, patient_IDs_per_ward)
-    resource_tables$Patient <- result$Patient
-    patient_IDs_per_ward <- result$patient_IDs_per_ward
-    rm(result)
-  }
+
+  # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+  resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions)
+
   #######################
   # END: FOR DEBUG ONLY #
   #######################
 
-  # Add additional table of ward-patient ID per date
-  resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_IDs_per_ward)
+  # Get the date for every PID when the Patient resource was written to the database the last time
+  getLastPatientUpdateDate <- function(patient_ids) {
 
-  return(resource_tables)
+    # Ensure these are IDs and not references
+    patient_ids <- getAfterLastSlash(patient_ids)
+
+    # Create the query for the last insert/update date for every ID
+    query <- paste0(
+      "SELECT pat_id,\n",
+      "       COALESCE(MAX(last_check_datetime), MAX(input_datetime)) AS last_insert_datetime\n",
+      "FROM v_patient\n",
+      "WHERE pat_id = ANY($1::text[])\n",
+      "GROUP BY pat_id;"
+    )
+
+    # Create the corrct format for the Postgres Parameter Array
+    params <- list(paste0("{", paste(patient_ids, collapse = ","), "}"))
+    # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
+    result <- getQueryFromDatabase(query, params = params, lock_id = "cds2db.getLastPatientUpdateDate()[1]", readonly = TRUE)
+
+    # Create an empty result vector with NAs for patient IDs not found in the database
+    last_insert_dates <- as.Date(rep(NA, length(patient_ids)))
+
+    # Map the retrieved data to the corresponding patient IDs
+    for (i in seq_along(patient_ids)) {
+      matching_row <- result[result$pat_id == patient_ids[i], ]
+      if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
+        last_insert_dates[i] <- as.Date(as.POSIXct(max(matching_row$last_insert_datetime)))
+      }
+    }
+
+    # Reduce the original date by at least 1 day to prevent time gaps
+    last_insert_dates <- last_insert_dates - 1
+
+    setNames(as.list(patient_ids), last_insert_dates)
+  }
+
+  # Get the date for every PID when the Patient resource was written to the database the last time
+  pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+
+  # Load all data of relevant patients from FHIR server
+  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
+
+  # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
+  table_names <- paste0(names(table_descriptions), "_raw_last")
+  # Read the tables from the database using the generated table names
+  db_resource_tables <- readTablesFromDatabase(table_names, lock_id = "cds2db.getLastPatientUpdateDate()[2]")
+  # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
+  names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
+  # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
+  full_tables <- mergeTablesUnion(resource_tables, db_resource_tables)
+
+  # Loop through each table name in the `full_tables` list
+  for (full_table_name in names(full_tables)) {
+    # Extract the column names from the corresponding entry in `table_descriptions`
+    full_table_columns <- table_descriptions[[full_table_name]]@cols@names
+    # Subset the columns of the current table in `full_tables` to match the columns from `table_descriptions`
+    full_tables[[full_table_name]] <- full_tables[[full_table_name]][, ..full_table_columns]
+  }
+
+  # Add additional table of ward-patient ID per date
+  full_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+
+  return(full_tables)
 }
 
 #' Load Referenced Resources by Own ID from FHIR Server
@@ -229,7 +340,39 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
       referenced_ids <- getAfterLastSlash(referenced_ids)
       referenced_ids <- unique(referenced_ids)
 
-      resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids, referenced_table_description)
+      #########################
+      # START: FOR DEBUG ONLY #
+      #########################
+
+      # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+      resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions$pid_independant)
+
+      #######################
+      # END: FOR DEBUG ONLY #
+      #######################
+
+      resource_name <- referenced_table_description@resource@.Data
+      if (!(resource_name %in% names(resources_add_search_parameter)) ||
+          nchar(resources_add_search_parameter[[resource_name]]) != 0) {
+        resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids,
+                                                                                referenced_table_description,
+                                                                                additional_search_parameter = resources_add_search_parameter)
+      } else {
+        # if there are no IDs -> create an empty table with all needed columns as character columns
+        resource_tables <- etlutils::createResourceTable(
+          referenced_table_description,
+          resource_key = resource_name,
+          resource_collection = resource_tables
+        )
+      }
+      if (!is.null(resource_tables[[resource_name]]) && nrow(resource_tables[[resource_name]])) {
+        printAllTables(resource_tables[[resource_name]], resource_name)
+      } else if (resource_name %in% names(resources_add_search_parameter) &&
+                 nchar(resources_add_search_parameter[[resource_name]]) == 0) {
+        catInfoMessage(paste("Info: No", resource_name, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
+      } else {
+        catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs.\n"))
+      }
     }
   }
   return(resource_tables)
@@ -244,7 +387,7 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #' `loadReferencedResourcesByOwnIDFromFHIRServer`. The results are then saved as RData files, with
 #' filenames derived from the resource names.
 #'
-#' @param patient_IDs_per_ward A list of patient IDs, where each element corresponds to a ward and
+#' @param patient_ids_per_ward A list of patient IDs, where each element corresponds to a ward and
 #'   contains patient IDs associated with that ward.
 #' @param table_descriptions A list containing two elements: `pid_dependant` and
 #'   `pid_independant`, each of which describes table structures for resources that are dependent
@@ -254,8 +397,8 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   RData files using `writeRData`. The filenames are derived by converting the names of the
 #'   resources in the `resource_tables` list to lowercase.
 #'
-loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions) {
-  resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_IDs_per_ward, table_descriptions$pid_dependant)
+loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
+  resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_ids_per_ward, table_descriptions$pid_dependant)
   resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
 
   #########################
@@ -304,7 +447,7 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
                                              paste0(invalid_indices[(l-5):l], collapse = ", "))
           }
           etlutils::catWarningMessage(paste0(
-            "Check '", debug_parameter_name, "': The following indices are invalid for resource ",
+            "Check '", debug_parameter_name, "': The following indices in debug filter are invalid for resource ",
             name, ". The table has only ", rows_count, " rows. Invalid indices: ",
             paste(invalid_indices_string, collapse = ", ")))
         }
@@ -314,6 +457,47 @@ loadResourcesFromFHIRServer <- function(patient_IDs_per_ward, table_descriptions
       }
     }
   }
+
+  if (exists("DEBUG_RESOURCE_COUNT_OBSERVATION_RAW")) {
+    required_obs_count <- as.numeric(DEBUG_RESOURCE_COUNT_OBSERVATION_RAW)
+
+    if (nrow(resource_tables$Observation) == 0) {
+      stop("There are no Observations to duplicate ", required_obs_count, " times!")
+    }
+
+    extendObservationTable <- function(table_obs, debug_resource_count) {
+      # Calculate the number of rows needed
+      original_rows <- nrow(table_obs)
+      required_rows <- debug_resource_count
+      if (original_rows == required_rows) {
+        return(table_obs)
+      }
+      if (original_rows > required_rows) {
+        return(table_obs[1:required_rows]) # truncate superflous rows
+      }
+
+      # Calculate the number of full duplications and the remaining rows
+      num_full_copies <- (required_rows - original_rows) %/% original_rows
+      remainder <- (required_rows - original_rows) %% original_rows
+
+      # Duplicate the table as needed
+      duplicated_table <- table_obs[
+        rep(seq_len(original_rows), times = num_full_copies + 1)[1:(required_rows - original_rows)]
+      ]
+
+      # Create new obs_id values for duplicates
+      duplicated_table[, obs_id := paste0(obs_id, "_DUP_", seq_len(.N))]
+
+      # Combine the original table with the duplicated rows
+      extended_table <- rbind(table_obs, duplicated_table)
+
+      return(extended_table)
+    }
+
+    resource_tables$Observation <- extendObservationTable(resource_tables$Observation, required_obs_count)
+  }
+
+
   #######################
   # END: FOR DEBUG ONLY #
   #######################

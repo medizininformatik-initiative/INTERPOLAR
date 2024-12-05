@@ -54,7 +54,12 @@ importDB2Redcap <- function() {
       query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
 
       # Fetch data from the database
-      data_from_db <- etlutils::dbGetQuery(db_connection, query)
+      data_from_db <- etlutils::dbGetQuery(
+        db_connection = db_connection,
+        query = query,
+        log = VERBOSE >= VL_90_FHIR_RESPONSE,
+        lock_id = "db2frontend.importDB2Redcap()",
+        readonly = TRUE)
 
       # Import data to REDCap
       tryCatch({

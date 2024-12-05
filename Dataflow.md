@@ -83,7 +83,7 @@ Die Tabelle "fall_fe" sollte eine Liste aller Fälle enthalten, die für Patient
 
 *Voraussetzung*: Das aktuelle Datum muss zu den Start- und Enddaten der Encounter passen. Es werden nur Fälle gefunden, deren Startdatum vor dem aktuellen Datum liegt und deren Enddatum nach dem aktuellen Datum liegt oder nicht gesetzt ist. 
 
-Will man hier für Daten aus der Vergangenheit irgendwas sehen, dann muss in der Konfigurationsdatei für den Dataprocessor ([dataprocessor_cofig.toml](R-dataprocessor)) unter der Variable  ["DEBUG_CURRENT_DATETIME"](R-dataprocessor/dataprocessor_config.toml#L40) ein entsprechend zu den Daten passendes Datum eingestellt werden. Alle Variablen, die im Echtbetrieb deaktiviert sein sollten, haben den Präfix "DEBUG_".
+Will man hier für Daten aus der Vergangenheit irgendwas sehen, dann muss in der Konfigurationsdatei für den Dataprocessor ([dataprocessor_cofig.toml](R-dataprocessor)) unter der Variable  ["DEBUG_ENCOUNTER_DATETIME"](R-dataprocessor/dataprocessor_config.toml#L40) ein entsprechend zu den Daten passendes Datum eingestellt werden. Alle Variablen, die im Echtbetrieb deaktiviert sein sollten, haben den Präfix "DEBUG_".
 
 
 #### Module "db2frontend" und "frontend"

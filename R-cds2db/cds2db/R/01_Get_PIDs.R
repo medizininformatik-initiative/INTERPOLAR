@@ -182,17 +182,6 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
   return(pids_per_ward)
 }
 
-#' Checks whether this start of the application is the very first start.
-#'
-#' @return TRUE when this application fills the database for the first time. This is recognized by whether the
-#' Encounter table is still completely empty. If there is already something in this table, FALSE is returned,
-#' as this cannot be the initial start.
-#'
-isEncounterTableEmpty <- function() {
-  # TODO: implement check if Encounter table in database is empty
-  TRUE
-}
-
 #' Get unique patient IDs per ward based on filter patterns.
 #'
 #' This function takes a list of encounters and a corresponding list of filter patterns for each ward.
@@ -217,9 +206,9 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
   }
 
-  if (exists("DEBUG_PATIENT_ID_PATTERN")) {
+  if (exists("DEBUG_FILTER_PIDS_PATTERN")) {
     for (ward in names(pids_per_ward)) {
-      pids_per_ward[[ward]] <- pids_per_ward[[ward]][grepl(DEBUG_PATIENT_ID_PATTERN, pids_per_ward[[ward]])]
+      pids_per_ward[[ward]] <- pids_per_ward[[ward]][grepl(DEBUG_FILTER_PIDS_PATTERN, pids_per_ward[[ward]])]
     }
   }
   return(pids_per_ward)
@@ -257,13 +246,13 @@ getEncounters <- function(table_description, current_datetime) {
       # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
       # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
       # at 2)
-      if (exists("DEBUG_CURRENT_DATETIME_START") && exists("DEBUG_CURRENT_DATETIME_END")) {
+      if (exists("DEBUG_ENCOUNTER_DATETIME_START") && exists("DEBUG_ENCOUNTER_DATETIME_END") && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
         encounter_dates <- c(
           "date"   = paste0("sa", current_datetime[["start_datetime"]]),
           "date"   = paste0("eb", current_datetime[["end_datetime"]])
         )
       # If there is no end date given, but a start date, then we search with 'lower than' (lt).
-      # If in the toml file a start date is given (parameter DEBUG_CURRENT_DATETIME_START) then
+      # If in the toml file a start date is given (parameter DEBUG_ENCOUNTER_DATETIME_START) then
       # this date replaces the current date of the system.
       } else {
         encounter_dates <- c(
@@ -293,21 +282,29 @@ getEncounters <- function(table_description, current_datetime) {
         encounter_locations <- paste(FHIR_SEARCH_LOCATION_IDS, collapse = ",")
       }
 
+      parameters <- c(
+        encounter_dates,
+        "status" = encounter_status,
+        "class" = encounter_class,
+        "location" = encounter_locations)
+
+      if (exists("DEBUG_ENCOUNTER_ACCEPTED_PIDS") && length(DEBUG_ENCOUNTER_ACCEPTED_PIDS) > 0) {
+        encounter_pids <- DEBUG_ENCOUNTER_ACCEPTED_PIDS
+        encounter_pids <- ifelse(grepl("/", encounter_pids), encounter_pids, paste0("Patient/", encounter_pids))
+        encounter_pids <- paste(encounter_pids, collapse = ",")
+        parameters <- c(parameters, "subject" = encounter_pids)
+      }
+
+      parameters <- etlutils::addParamToFHIRRequest(parameters)
+
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,
         resource   = "Encounter",
-        parameters = etlutils::addParamToFHIRRequest(
-          c(
-            encounter_dates,
-            "status" = encounter_status,
-            "class" = encounter_class,
-            "location" = encounter_locations
-          )
-        )
+        parameters = parameters
       )
 
       # stop the execution and print the current result of FHIR search request (DEBUG)
-      checkDebugTestError("DEBUG_TEST_ENCOUNTER_REQUEST", request_encounter)
+      checkDebugTestError("DEBUG_ENCOUNTER_REQUEST_TEST", request_encounter)
 
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
                                                            table_description = table_description,

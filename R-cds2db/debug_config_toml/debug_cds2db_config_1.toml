@@ -1,0 +1,14 @@
+# If the DEBUG_ENCOUNTER_DATETIME_START parameter is activated, only Encounters whose start date is
+# before this date are searched for.
+# If it is not activated, the current date is automatically assumed.
+# If in addition (!) to DEBUG_ENCOUNTER_DATETIME_START the parameter DEBUG_ENCOUNTER_DATETIME_END is
+# also set, then only Encounters whose start date (Encounter.period.start) is after the
+# DEBUG_ENCOUNTER_DATETIME_START and before the DEBUG_ENCOUNTER_DATETIME_END are found.
+# Since the end date of Encounters cannot be queried without a FHIR Custom Search parameter, all
+# queries for the Encounter date always refer to its start date.
+#DEBUG_ENCOUNTER_DATETIME_START = "2020-07-08 21:25:00"
+#DEBUG_ENCOUNTER_DATETIME_END = ""
+
+# If this parameter is activated, only those whose subject ID is in this list are found in the initial
+# encounter request.
+#DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0010"]
