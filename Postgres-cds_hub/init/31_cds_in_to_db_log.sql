@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file last update : 2024-12-05 09:58:05
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-05 09:42:28
+-- Create time: 2024-12-05 10:04:09
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -90,8 +90,8 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.encounter target_record
                     WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
-                          COALESCE(target_record.enc_patient_id::text,'#NULL#') = COALESCE(current_record.enc_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.enc_partof_id::text,'#NULL#') = COALESCE(current_record.enc_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_patient_ref::text,'#NULL#') = COALESCE(current_record.enc_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.enc_partof_ref::text,'#NULL#') = COALESCE(current_record.enc_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.enc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.enc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_version::text,'#NULL#') AND
@@ -119,7 +119,7 @@ BEGIN
                           COALESCE(target_record.enc_servicetype_text::text,'#NULL#') = COALESCE(current_record.enc_servicetype_text::text,'#NULL#') AND
                           COALESCE(target_record.enc_period_start::text,'#NULL#') = COALESCE(current_record.enc_period_start::text,'#NULL#') AND
                           COALESCE(target_record.enc_period_end::text,'#NULL#') = COALESCE(current_record.enc_period_end::text,'#NULL#') AND
-                          COALESCE(target_record.enc_diagnosis_condition_id::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_condition_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_diagnosis_condition_ref::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_condition_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_diagnosis_use_system::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_system::text,'#NULL#') AND
                           COALESCE(target_record.enc_diagnosis_use_version::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_version::text,'#NULL#') AND
                           COALESCE(target_record.enc_diagnosis_use_code::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_code::text,'#NULL#') AND
@@ -136,7 +136,7 @@ BEGIN
                           COALESCE(target_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') AND
                           COALESCE(target_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') AND
                           COALESCE(target_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') AND
-                          COALESCE(target_record.enc_location_id::text,'#NULL#') = COALESCE(current_record.enc_location_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_location_ref::text,'#NULL#') = COALESCE(current_record.enc_location_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_type::text,'#NULL#') = COALESCE(current_record.enc_location_type::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_system::text,'#NULL#') AND
@@ -151,7 +151,7 @@ BEGIN
                           COALESCE(target_record.enc_location_physicaltype_code::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_code::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_physicaltype_display::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_display::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_physicaltype_text::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_text::text,'#NULL#') AND
-                          COALESCE(target_record.enc_serviceprovider_id::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_serviceprovider_ref::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_serviceprovider_type::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_type::text,'#NULL#') AND
                           COALESCE(target_record.enc_serviceprovider_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') AND
@@ -170,8 +170,8 @@ BEGIN
                             encounter_id,
                             encounter_raw_id,
                             enc_id,
-                            enc_patient_id,
-                            enc_partof_id,
+                            enc_patient_ref,
+                            enc_partof_ref,
                             enc_identifier_use,
                             enc_identifier_type_system,
                             enc_identifier_type_version,
@@ -199,7 +199,7 @@ BEGIN
                             enc_servicetype_text,
                             enc_period_start,
                             enc_period_end,
-                            enc_diagnosis_condition_id,
+                            enc_diagnosis_condition_ref,
                             enc_diagnosis_use_system,
                             enc_diagnosis_use_version,
                             enc_diagnosis_use_code,
@@ -216,7 +216,7 @@ BEGIN
                             enc_hospitalization_dischargedisposition_code,
                             enc_hospitalization_dischargedisposition_display,
                             enc_hospitalization_dischargedisposition_text,
-                            enc_location_id,
+                            enc_location_ref,
                             enc_location_type,
                             enc_location_identifier_use,
                             enc_location_identifier_type_system,
@@ -231,7 +231,7 @@ BEGIN
                             enc_location_physicaltype_code,
                             enc_location_physicaltype_display,
                             enc_location_physicaltype_text,
-                            enc_serviceprovider_id,
+                            enc_serviceprovider_ref,
                             enc_serviceprovider_type,
                             enc_serviceprovider_identifier_use,
                             enc_serviceprovider_identifier_type_system,
@@ -249,8 +249,8 @@ BEGIN
                             current_record.encounter_id,
                             current_record.encounter_raw_id,
                             current_record.enc_id,
-                            current_record.enc_patient_id,
-                            current_record.enc_partof_id,
+                            current_record.enc_patient_ref,
+                            current_record.enc_partof_ref,
                             current_record.enc_identifier_use,
                             current_record.enc_identifier_type_system,
                             current_record.enc_identifier_type_version,
@@ -278,7 +278,7 @@ BEGIN
                             current_record.enc_servicetype_text,
                             current_record.enc_period_start,
                             current_record.enc_period_end,
-                            current_record.enc_diagnosis_condition_id,
+                            current_record.enc_diagnosis_condition_ref,
                             current_record.enc_diagnosis_use_system,
                             current_record.enc_diagnosis_use_version,
                             current_record.enc_diagnosis_use_code,
@@ -295,7 +295,7 @@ BEGIN
                             current_record.enc_hospitalization_dischargedisposition_code,
                             current_record.enc_hospitalization_dischargedisposition_display,
                             current_record.enc_hospitalization_dischargedisposition_text,
-                            current_record.enc_location_id,
+                            current_record.enc_location_ref,
                             current_record.enc_location_type,
                             current_record.enc_location_identifier_use,
                             current_record.enc_location_identifier_type_system,
@@ -310,7 +310,7 @@ BEGIN
                             current_record.enc_location_physicaltype_code,
                             current_record.enc_location_physicaltype_display,
                             current_record.enc_location_physicaltype_text,
-                            current_record.enc_serviceprovider_id,
+                            current_record.enc_serviceprovider_ref,
                             current_record.enc_serviceprovider_type,
                             current_record.enc_serviceprovider_identifier_use,
                             current_record.enc_serviceprovider_identifier_type_system,
@@ -336,8 +336,8 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
-                          COALESCE(target_record.enc_patient_id::text,'#NULL#') = COALESCE(current_record.enc_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.enc_partof_id::text,'#NULL#') = COALESCE(current_record.enc_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_patient_ref::text,'#NULL#') = COALESCE(current_record.enc_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.enc_partof_ref::text,'#NULL#') = COALESCE(current_record.enc_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.enc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.enc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_version::text,'#NULL#') AND
@@ -365,7 +365,7 @@ BEGIN
                           COALESCE(target_record.enc_servicetype_text::text,'#NULL#') = COALESCE(current_record.enc_servicetype_text::text,'#NULL#') AND
                           COALESCE(target_record.enc_period_start::text,'#NULL#') = COALESCE(current_record.enc_period_start::text,'#NULL#') AND
                           COALESCE(target_record.enc_period_end::text,'#NULL#') = COALESCE(current_record.enc_period_end::text,'#NULL#') AND
-                          COALESCE(target_record.enc_diagnosis_condition_id::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_condition_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_diagnosis_condition_ref::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_condition_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_diagnosis_use_system::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_system::text,'#NULL#') AND
                           COALESCE(target_record.enc_diagnosis_use_version::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_version::text,'#NULL#') AND
                           COALESCE(target_record.enc_diagnosis_use_code::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_code::text,'#NULL#') AND
@@ -382,7 +382,7 @@ BEGIN
                           COALESCE(target_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') AND
                           COALESCE(target_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') AND
                           COALESCE(target_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') AND
-                          COALESCE(target_record.enc_location_id::text,'#NULL#') = COALESCE(current_record.enc_location_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_location_ref::text,'#NULL#') = COALESCE(current_record.enc_location_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_type::text,'#NULL#') = COALESCE(current_record.enc_location_type::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_system::text,'#NULL#') AND
@@ -397,7 +397,7 @@ BEGIN
                           COALESCE(target_record.enc_location_physicaltype_code::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_code::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_physicaltype_display::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_display::text,'#NULL#') AND
                           COALESCE(target_record.enc_location_physicaltype_text::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_text::text,'#NULL#') AND
-                          COALESCE(target_record.enc_serviceprovider_id::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_id::text,'#NULL#') AND
+                          COALESCE(target_record.enc_serviceprovider_ref::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_ref::text,'#NULL#') AND
                           COALESCE(target_record.enc_serviceprovider_type::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_type::text,'#NULL#') AND
                           COALESCE(target_record.enc_serviceprovider_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') AND
@@ -664,8 +664,8 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.condition target_record
                     WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
-                          COALESCE(target_record.con_encounter_id::text,'#NULL#') = COALESCE(current_record.con_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.con_patient_id::text,'#NULL#') = COALESCE(current_record.con_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_encounter_ref::text,'#NULL#') = COALESCE(current_record.con_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.con_patient_ref::text,'#NULL#') = COALESCE(current_record.con_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_identifier_use::text,'#NULL#') = COALESCE(current_record.con_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.con_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_identifier_type_version::text,'#NULL#') AND
@@ -727,7 +727,7 @@ BEGIN
                           COALESCE(target_record.con_abatementrange_high_code::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_code::text,'#NULL#') AND
                           COALESCE(target_record.con_abatementstring::text,'#NULL#') = COALESCE(current_record.con_abatementstring::text,'#NULL#') AND
                           COALESCE(target_record.con_recordeddate::text,'#NULL#') = COALESCE(current_record.con_recordeddate::text,'#NULL#') AND
-                          COALESCE(target_record.con_recorder_id::text,'#NULL#') = COALESCE(current_record.con_recorder_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_recorder_ref::text,'#NULL#') = COALESCE(current_record.con_recorder_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_type::text,'#NULL#') = COALESCE(current_record.con_recorder_type::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_identifier_use::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_system::text,'#NULL#') AND
@@ -736,7 +736,7 @@ BEGIN
                           COALESCE(target_record.con_recorder_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_display::text,'#NULL#') = COALESCE(current_record.con_recorder_display::text,'#NULL#') AND
-                          COALESCE(target_record.con_asserter_id::text,'#NULL#') = COALESCE(current_record.con_asserter_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_asserter_ref::text,'#NULL#') = COALESCE(current_record.con_asserter_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_asserter_type::text,'#NULL#') = COALESCE(current_record.con_asserter_type::text,'#NULL#') AND
                           COALESCE(target_record.con_asserter_identifier_use::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_asserter_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_system::text,'#NULL#') AND
@@ -750,7 +750,7 @@ BEGIN
                           COALESCE(target_record.con_stage_summary_code::text,'#NULL#') = COALESCE(current_record.con_stage_summary_code::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_summary_display::text,'#NULL#') = COALESCE(current_record.con_stage_summary_display::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_summary_text::text,'#NULL#') = COALESCE(current_record.con_stage_summary_text::text,'#NULL#') AND
-                          COALESCE(target_record.con_stage_assessment_id::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_stage_assessment_ref::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_assessment_type::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_type::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_assessment_identifier_use::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_assessment_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_system::text,'#NULL#') AND
@@ -765,7 +765,7 @@ BEGIN
                           COALESCE(target_record.con_stage_type_display::text,'#NULL#') = COALESCE(current_record.con_stage_type_display::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_type_text::text,'#NULL#') = COALESCE(current_record.con_stage_type_text::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorstring::text,'#NULL#') = COALESCE(current_record.con_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.con_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -786,8 +786,8 @@ BEGIN
                             condition_id,
                             condition_raw_id,
                             con_id,
-                            con_encounter_id,
-                            con_patient_id,
+                            con_encounter_ref,
+                            con_patient_ref,
                             con_identifier_use,
                             con_identifier_type_system,
                             con_identifier_type_version,
@@ -849,7 +849,7 @@ BEGIN
                             con_abatementrange_high_code,
                             con_abatementstring,
                             con_recordeddate,
-                            con_recorder_id,
+                            con_recorder_ref,
                             con_recorder_type,
                             con_recorder_identifier_use,
                             con_recorder_identifier_type_system,
@@ -858,7 +858,7 @@ BEGIN
                             con_recorder_identifier_type_display,
                             con_recorder_identifier_type_text,
                             con_recorder_display,
-                            con_asserter_id,
+                            con_asserter_ref,
                             con_asserter_type,
                             con_asserter_identifier_use,
                             con_asserter_identifier_type_system,
@@ -872,7 +872,7 @@ BEGIN
                             con_stage_summary_code,
                             con_stage_summary_display,
                             con_stage_summary_text,
-                            con_stage_assessment_id,
+                            con_stage_assessment_ref,
                             con_stage_assessment_type,
                             con_stage_assessment_identifier_use,
                             con_stage_assessment_identifier_type_system,
@@ -887,7 +887,7 @@ BEGIN
                             con_stage_type_display,
                             con_stage_type_text,
                             con_note_authorstring,
-                            con_note_authorreference_id,
+                            con_note_authorreference_ref,
                             con_note_authorreference_type,
                             con_note_authorreference_identifier_use,
                             con_note_authorreference_identifier_type_system,
@@ -907,8 +907,8 @@ BEGIN
                             current_record.condition_id,
                             current_record.condition_raw_id,
                             current_record.con_id,
-                            current_record.con_encounter_id,
-                            current_record.con_patient_id,
+                            current_record.con_encounter_ref,
+                            current_record.con_patient_ref,
                             current_record.con_identifier_use,
                             current_record.con_identifier_type_system,
                             current_record.con_identifier_type_version,
@@ -970,7 +970,7 @@ BEGIN
                             current_record.con_abatementrange_high_code,
                             current_record.con_abatementstring,
                             current_record.con_recordeddate,
-                            current_record.con_recorder_id,
+                            current_record.con_recorder_ref,
                             current_record.con_recorder_type,
                             current_record.con_recorder_identifier_use,
                             current_record.con_recorder_identifier_type_system,
@@ -979,7 +979,7 @@ BEGIN
                             current_record.con_recorder_identifier_type_display,
                             current_record.con_recorder_identifier_type_text,
                             current_record.con_recorder_display,
-                            current_record.con_asserter_id,
+                            current_record.con_asserter_ref,
                             current_record.con_asserter_type,
                             current_record.con_asserter_identifier_use,
                             current_record.con_asserter_identifier_type_system,
@@ -993,7 +993,7 @@ BEGIN
                             current_record.con_stage_summary_code,
                             current_record.con_stage_summary_display,
                             current_record.con_stage_summary_text,
-                            current_record.con_stage_assessment_id,
+                            current_record.con_stage_assessment_ref,
                             current_record.con_stage_assessment_type,
                             current_record.con_stage_assessment_identifier_use,
                             current_record.con_stage_assessment_identifier_type_system,
@@ -1008,7 +1008,7 @@ BEGIN
                             current_record.con_stage_type_display,
                             current_record.con_stage_type_text,
                             current_record.con_note_authorstring,
-                            current_record.con_note_authorreference_id,
+                            current_record.con_note_authorreference_ref,
                             current_record.con_note_authorreference_type,
                             current_record.con_note_authorreference_identifier_use,
                             current_record.con_note_authorreference_identifier_type_system,
@@ -1036,8 +1036,8 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
-                          COALESCE(target_record.con_encounter_id::text,'#NULL#') = COALESCE(current_record.con_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.con_patient_id::text,'#NULL#') = COALESCE(current_record.con_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_encounter_ref::text,'#NULL#') = COALESCE(current_record.con_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.con_patient_ref::text,'#NULL#') = COALESCE(current_record.con_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_identifier_use::text,'#NULL#') = COALESCE(current_record.con_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.con_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_identifier_type_version::text,'#NULL#') AND
@@ -1099,7 +1099,7 @@ BEGIN
                           COALESCE(target_record.con_abatementrange_high_code::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_code::text,'#NULL#') AND
                           COALESCE(target_record.con_abatementstring::text,'#NULL#') = COALESCE(current_record.con_abatementstring::text,'#NULL#') AND
                           COALESCE(target_record.con_recordeddate::text,'#NULL#') = COALESCE(current_record.con_recordeddate::text,'#NULL#') AND
-                          COALESCE(target_record.con_recorder_id::text,'#NULL#') = COALESCE(current_record.con_recorder_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_recorder_ref::text,'#NULL#') = COALESCE(current_record.con_recorder_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_type::text,'#NULL#') = COALESCE(current_record.con_recorder_type::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_identifier_use::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_system::text,'#NULL#') AND
@@ -1108,7 +1108,7 @@ BEGIN
                           COALESCE(target_record.con_recorder_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.con_recorder_display::text,'#NULL#') = COALESCE(current_record.con_recorder_display::text,'#NULL#') AND
-                          COALESCE(target_record.con_asserter_id::text,'#NULL#') = COALESCE(current_record.con_asserter_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_asserter_ref::text,'#NULL#') = COALESCE(current_record.con_asserter_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_asserter_type::text,'#NULL#') = COALESCE(current_record.con_asserter_type::text,'#NULL#') AND
                           COALESCE(target_record.con_asserter_identifier_use::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_asserter_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_system::text,'#NULL#') AND
@@ -1122,7 +1122,7 @@ BEGIN
                           COALESCE(target_record.con_stage_summary_code::text,'#NULL#') = COALESCE(current_record.con_stage_summary_code::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_summary_display::text,'#NULL#') = COALESCE(current_record.con_stage_summary_display::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_summary_text::text,'#NULL#') = COALESCE(current_record.con_stage_summary_text::text,'#NULL#') AND
-                          COALESCE(target_record.con_stage_assessment_id::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_stage_assessment_ref::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_assessment_type::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_type::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_assessment_identifier_use::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_assessment_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_system::text,'#NULL#') AND
@@ -1137,7 +1137,7 @@ BEGIN
                           COALESCE(target_record.con_stage_type_display::text,'#NULL#') = COALESCE(current_record.con_stage_type_display::text,'#NULL#') AND
                           COALESCE(target_record.con_stage_type_text::text,'#NULL#') = COALESCE(current_record.con_stage_type_text::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorstring::text,'#NULL#') = COALESCE(current_record.con_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.con_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.con_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.con_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -1273,7 +1273,7 @@ BEGIN
                           COALESCE(target_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') AND
-                          COALESCE(target_record.med_ingredient_itemreference_id::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.med_ingredient_itemreference_ref::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemreference_type::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_type::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') AND
@@ -1339,7 +1339,7 @@ BEGIN
                             med_ingredient_itemcodeableconcept_code,
                             med_ingredient_itemcodeableconcept_display,
                             med_ingredient_itemcodeableconcept_text,
-                            med_ingredient_itemreference_id,
+                            med_ingredient_itemreference_ref,
                             med_ingredient_itemreference_type,
                             med_ingredient_itemreference_identifier_use,
                             med_ingredient_itemreference_identifier_type_system,
@@ -1404,7 +1404,7 @@ BEGIN
                             current_record.med_ingredient_itemcodeableconcept_code,
                             current_record.med_ingredient_itemcodeableconcept_display,
                             current_record.med_ingredient_itemcodeableconcept_text,
-                            current_record.med_ingredient_itemreference_id,
+                            current_record.med_ingredient_itemreference_ref,
                             current_record.med_ingredient_itemreference_type,
                             current_record.med_ingredient_itemreference_identifier_use,
                             current_record.med_ingredient_itemreference_identifier_type_system,
@@ -1477,7 +1477,7 @@ BEGIN
                           COALESCE(target_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') AND
-                          COALESCE(target_record.med_ingredient_itemreference_id::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.med_ingredient_itemreference_ref::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemreference_type::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_type::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') AND
@@ -1566,8 +1566,8 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.medicationrequest target_record
                     WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_encounter_id::text,'#NULL#') = COALESCE(current_record.medreq_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_patient_id::text,'#NULL#') = COALESCE(current_record.medreq_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.medreq_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_patient_ref::text,'#NULL#') = COALESCE(current_record.medreq_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_version::text,'#NULL#') AND
@@ -1578,7 +1578,7 @@ BEGIN
                           COALESCE(target_record.medreq_identifier_value::text,'#NULL#') = COALESCE(current_record.medreq_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_start::text,'#NULL#') = COALESCE(current_record.medreq_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_end::text,'#NULL#') = COALESCE(current_record.medreq_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_medicationreference_id::text,'#NULL#') = COALESCE(current_record.medreq_medicationreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_medicationreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_status::text,'#NULL#') = COALESCE(current_record.medreq_status::text,'#NULL#') AND
                           COALESCE(target_record.medreq_statusreason_system::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_system::text,'#NULL#') AND
                           COALESCE(target_record.medreq_statusreason_version::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_version::text,'#NULL#') AND
@@ -1593,7 +1593,7 @@ BEGIN
                           COALESCE(target_record.medreq_category_text::text,'#NULL#') = COALESCE(current_record.medreq_category_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_priority::text,'#NULL#') = COALESCE(current_record.medreq_priority::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedboolean::text,'#NULL#') = COALESCE(current_record.medreq_reportedboolean::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_reportedreference_id::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_reportedreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') AND
@@ -1607,7 +1607,7 @@ BEGIN
                           COALESCE(target_record.medreq_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_code::text,'#NULL#') AND
                           COALESCE(target_record.medreq_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_text::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_supportinginformation_id::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') AND
@@ -1617,7 +1617,7 @@ BEGIN
                           COALESCE(target_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_display::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_authoredon::text,'#NULL#') = COALESCE(current_record.medreq_authoredon::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_requester_id::text,'#NULL#') = COALESCE(current_record.medreq_requester_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_requester_ref::text,'#NULL#') = COALESCE(current_record.medreq_requester_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_requester_type::text,'#NULL#') = COALESCE(current_record.medreq_requester_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_system::text,'#NULL#') AND
@@ -1631,7 +1631,7 @@ BEGIN
                           COALESCE(target_record.medreq_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_reasonreference_id::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -1640,7 +1640,7 @@ BEGIN
                           COALESCE(target_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_display::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_basedon_id::text,'#NULL#') = COALESCE(current_record.medreq_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.medreq_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_type::text,'#NULL#') = COALESCE(current_record.medreq_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_system::text,'#NULL#') AND
@@ -1650,7 +1650,7 @@ BEGIN
                           COALESCE(target_record.medreq_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_display::text,'#NULL#') = COALESCE(current_record.medreq_basedon_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorstring::text,'#NULL#') = COALESCE(current_record.medreq_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -1798,8 +1798,8 @@ BEGIN
                             medicationrequest_id,
                             medicationrequest_raw_id,
                             medreq_id,
-                            medreq_encounter_id,
-                            medreq_patient_id,
+                            medreq_encounter_ref,
+                            medreq_patient_ref,
                             medreq_identifier_use,
                             medreq_identifier_type_system,
                             medreq_identifier_type_version,
@@ -1810,7 +1810,7 @@ BEGIN
                             medreq_identifier_value,
                             medreq_identifier_start,
                             medreq_identifier_end,
-                            medreq_medicationreference_id,
+                            medreq_medicationreference_ref,
                             medreq_status,
                             medreq_statusreason_system,
                             medreq_statusreason_version,
@@ -1825,7 +1825,7 @@ BEGIN
                             medreq_category_text,
                             medreq_priority,
                             medreq_reportedboolean,
-                            medreq_reportedreference_id,
+                            medreq_reportedreference_ref,
                             medreq_reportedreference_type,
                             medreq_reportedreference_identifier_use,
                             medreq_reportedreference_identifier_type_system,
@@ -1839,7 +1839,7 @@ BEGIN
                             medreq_medicationcodeableconcept_code,
                             medreq_medicationcodeableconcept_display,
                             medreq_medicationcodeableconcept_text,
-                            medreq_supportinginformation_id,
+                            medreq_supportinginformation_ref,
                             medreq_supportinginformation_type,
                             medreq_supportinginformation_identifier_use,
                             medreq_supportinginformation_identifier_type_system,
@@ -1849,7 +1849,7 @@ BEGIN
                             medreq_supportinginformation_identifier_type_text,
                             medreq_supportinginformation_display,
                             medreq_authoredon,
-                            medreq_requester_id,
+                            medreq_requester_ref,
                             medreq_requester_type,
                             medreq_requester_identifier_use,
                             medreq_requester_identifier_type_system,
@@ -1863,7 +1863,7 @@ BEGIN
                             medreq_reasoncode_code,
                             medreq_reasoncode_display,
                             medreq_reasoncode_text,
-                            medreq_reasonreference_id,
+                            medreq_reasonreference_ref,
                             medreq_reasonreference_type,
                             medreq_reasonreference_identifier_use,
                             medreq_reasonreference_identifier_type_system,
@@ -1872,7 +1872,7 @@ BEGIN
                             medreq_reasonreference_identifier_type_display,
                             medreq_reasonreference_identifier_type_text,
                             medreq_reasonreference_display,
-                            medreq_basedon_id,
+                            medreq_basedon_ref,
                             medreq_basedon_type,
                             medreq_basedon_identifier_use,
                             medreq_basedon_identifier_type_system,
@@ -1882,7 +1882,7 @@ BEGIN
                             medreq_basedon_identifier_type_text,
                             medreq_basedon_display,
                             medreq_note_authorstring,
-                            medreq_note_authorreference_id,
+                            medreq_note_authorreference_ref,
                             medreq_note_authorreference_type,
                             medreq_note_authorreference_identifier_use,
                             medreq_note_authorreference_identifier_type_system,
@@ -2029,8 +2029,8 @@ BEGIN
                             current_record.medicationrequest_id,
                             current_record.medicationrequest_raw_id,
                             current_record.medreq_id,
-                            current_record.medreq_encounter_id,
-                            current_record.medreq_patient_id,
+                            current_record.medreq_encounter_ref,
+                            current_record.medreq_patient_ref,
                             current_record.medreq_identifier_use,
                             current_record.medreq_identifier_type_system,
                             current_record.medreq_identifier_type_version,
@@ -2041,7 +2041,7 @@ BEGIN
                             current_record.medreq_identifier_value,
                             current_record.medreq_identifier_start,
                             current_record.medreq_identifier_end,
-                            current_record.medreq_medicationreference_id,
+                            current_record.medreq_medicationreference_ref,
                             current_record.medreq_status,
                             current_record.medreq_statusreason_system,
                             current_record.medreq_statusreason_version,
@@ -2056,7 +2056,7 @@ BEGIN
                             current_record.medreq_category_text,
                             current_record.medreq_priority,
                             current_record.medreq_reportedboolean,
-                            current_record.medreq_reportedreference_id,
+                            current_record.medreq_reportedreference_ref,
                             current_record.medreq_reportedreference_type,
                             current_record.medreq_reportedreference_identifier_use,
                             current_record.medreq_reportedreference_identifier_type_system,
@@ -2070,7 +2070,7 @@ BEGIN
                             current_record.medreq_medicationcodeableconcept_code,
                             current_record.medreq_medicationcodeableconcept_display,
                             current_record.medreq_medicationcodeableconcept_text,
-                            current_record.medreq_supportinginformation_id,
+                            current_record.medreq_supportinginformation_ref,
                             current_record.medreq_supportinginformation_type,
                             current_record.medreq_supportinginformation_identifier_use,
                             current_record.medreq_supportinginformation_identifier_type_system,
@@ -2080,7 +2080,7 @@ BEGIN
                             current_record.medreq_supportinginformation_identifier_type_text,
                             current_record.medreq_supportinginformation_display,
                             current_record.medreq_authoredon,
-                            current_record.medreq_requester_id,
+                            current_record.medreq_requester_ref,
                             current_record.medreq_requester_type,
                             current_record.medreq_requester_identifier_use,
                             current_record.medreq_requester_identifier_type_system,
@@ -2094,7 +2094,7 @@ BEGIN
                             current_record.medreq_reasoncode_code,
                             current_record.medreq_reasoncode_display,
                             current_record.medreq_reasoncode_text,
-                            current_record.medreq_reasonreference_id,
+                            current_record.medreq_reasonreference_ref,
                             current_record.medreq_reasonreference_type,
                             current_record.medreq_reasonreference_identifier_use,
                             current_record.medreq_reasonreference_identifier_type_system,
@@ -2103,7 +2103,7 @@ BEGIN
                             current_record.medreq_reasonreference_identifier_type_display,
                             current_record.medreq_reasonreference_identifier_type_text,
                             current_record.medreq_reasonreference_display,
-                            current_record.medreq_basedon_id,
+                            current_record.medreq_basedon_ref,
                             current_record.medreq_basedon_type,
                             current_record.medreq_basedon_identifier_use,
                             current_record.medreq_basedon_identifier_type_system,
@@ -2113,7 +2113,7 @@ BEGIN
                             current_record.medreq_basedon_identifier_type_text,
                             current_record.medreq_basedon_display,
                             current_record.medreq_note_authorstring,
-                            current_record.medreq_note_authorreference_id,
+                            current_record.medreq_note_authorreference_ref,
                             current_record.medreq_note_authorreference_type,
                             current_record.medreq_note_authorreference_identifier_use,
                             current_record.medreq_note_authorreference_identifier_type_system,
@@ -2268,8 +2268,8 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_encounter_id::text,'#NULL#') = COALESCE(current_record.medreq_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_patient_id::text,'#NULL#') = COALESCE(current_record.medreq_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.medreq_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_patient_ref::text,'#NULL#') = COALESCE(current_record.medreq_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_version::text,'#NULL#') AND
@@ -2280,7 +2280,7 @@ BEGIN
                           COALESCE(target_record.medreq_identifier_value::text,'#NULL#') = COALESCE(current_record.medreq_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_start::text,'#NULL#') = COALESCE(current_record.medreq_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.medreq_identifier_end::text,'#NULL#') = COALESCE(current_record.medreq_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_medicationreference_id::text,'#NULL#') = COALESCE(current_record.medreq_medicationreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_medicationreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_status::text,'#NULL#') = COALESCE(current_record.medreq_status::text,'#NULL#') AND
                           COALESCE(target_record.medreq_statusreason_system::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_system::text,'#NULL#') AND
                           COALESCE(target_record.medreq_statusreason_version::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_version::text,'#NULL#') AND
@@ -2295,7 +2295,7 @@ BEGIN
                           COALESCE(target_record.medreq_category_text::text,'#NULL#') = COALESCE(current_record.medreq_category_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_priority::text,'#NULL#') = COALESCE(current_record.medreq_priority::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedboolean::text,'#NULL#') = COALESCE(current_record.medreq_reportedboolean::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_reportedreference_id::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_reportedreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') AND
@@ -2309,7 +2309,7 @@ BEGIN
                           COALESCE(target_record.medreq_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_code::text,'#NULL#') AND
                           COALESCE(target_record.medreq_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_text::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_supportinginformation_id::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') AND
@@ -2319,7 +2319,7 @@ BEGIN
                           COALESCE(target_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_supportinginformation_display::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_authoredon::text,'#NULL#') = COALESCE(current_record.medreq_authoredon::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_requester_id::text,'#NULL#') = COALESCE(current_record.medreq_requester_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_requester_ref::text,'#NULL#') = COALESCE(current_record.medreq_requester_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_requester_type::text,'#NULL#') = COALESCE(current_record.medreq_requester_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_system::text,'#NULL#') AND
@@ -2333,7 +2333,7 @@ BEGIN
                           COALESCE(target_record.medreq_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_reasonreference_id::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -2342,7 +2342,7 @@ BEGIN
                           COALESCE(target_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_display::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_basedon_id::text,'#NULL#') = COALESCE(current_record.medreq_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.medreq_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_type::text,'#NULL#') = COALESCE(current_record.medreq_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_system::text,'#NULL#') AND
@@ -2352,7 +2352,7 @@ BEGIN
                           COALESCE(target_record.medreq_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medreq_basedon_display::text,'#NULL#') = COALESCE(current_record.medreq_basedon_display::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorstring::text,'#NULL#') = COALESCE(current_record.medreq_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.medreq_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medreq_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -2569,9 +2569,9 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.medicationadministration target_record
                     WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_encounter_id::text,'#NULL#') = COALESCE(current_record.medadm_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_patient_id::text,'#NULL#') = COALESCE(current_record.medadm_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_partof_id::text,'#NULL#') = COALESCE(current_record.medadm_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_encounter_ref::text,'#NULL#') = COALESCE(current_record.medadm_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_patient_ref::text,'#NULL#') = COALESCE(current_record.medadm_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_partof_ref::text,'#NULL#') = COALESCE(current_record.medadm_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.medadm_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_version::text,'#NULL#') AND
@@ -2593,13 +2593,13 @@ BEGIN
                           COALESCE(target_record.medadm_category_code::text,'#NULL#') = COALESCE(current_record.medadm_category_code::text,'#NULL#') AND
                           COALESCE(target_record.medadm_category_display::text,'#NULL#') = COALESCE(current_record.medadm_category_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_category_text::text,'#NULL#') = COALESCE(current_record.medadm_category_text::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_medicationreference_id::text,'#NULL#') = COALESCE(current_record.medadm_medicationreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_medicationreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_system::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_version::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_code::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_text::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_supportinginformation_id::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_type::text,'#NULL#') AND
                           COALESCE(target_record.medadm_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') AND
@@ -2621,7 +2621,7 @@ BEGIN
                           COALESCE(target_record.medadm_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_reasonreference_id::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -2630,9 +2630,9 @@ BEGIN
                           COALESCE(target_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_display::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_request_id::text,'#NULL#') = COALESCE(current_record.medadm_request_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_request_ref::text,'#NULL#') = COALESCE(current_record.medadm_request_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorstring::text,'#NULL#') = COALESCE(current_record.medadm_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -2687,9 +2687,9 @@ BEGIN
                             medicationadministration_id,
                             medicationadministration_raw_id,
                             medadm_id,
-                            medadm_encounter_id,
-                            medadm_patient_id,
-                            medadm_partof_id,
+                            medadm_encounter_ref,
+                            medadm_patient_ref,
+                            medadm_partof_ref,
                             medadm_identifier_use,
                             medadm_identifier_type_system,
                             medadm_identifier_type_version,
@@ -2711,13 +2711,13 @@ BEGIN
                             medadm_category_code,
                             medadm_category_display,
                             medadm_category_text,
-                            medadm_medicationreference_id,
+                            medadm_medicationreference_ref,
                             medadm_medicationcodeableconcept_system,
                             medadm_medicationcodeableconcept_version,
                             medadm_medicationcodeableconcept_code,
                             medadm_medicationcodeableconcept_display,
                             medadm_medicationcodeableconcept_text,
-                            medadm_supportinginformation_id,
+                            medadm_supportinginformation_ref,
                             medadm_supportinginformation_type,
                             medadm_supportinginformation_identifier_use,
                             medadm_supportinginformation_identifier_type_system,
@@ -2739,7 +2739,7 @@ BEGIN
                             medadm_reasoncode_code,
                             medadm_reasoncode_display,
                             medadm_reasoncode_text,
-                            medadm_reasonreference_id,
+                            medadm_reasonreference_ref,
                             medadm_reasonreference_type,
                             medadm_reasonreference_identifier_use,
                             medadm_reasonreference_identifier_type_system,
@@ -2748,9 +2748,9 @@ BEGIN
                             medadm_reasonreference_identifier_type_display,
                             medadm_reasonreference_identifier_type_text,
                             medadm_reasonreference_display,
-                            medadm_request_id,
+                            medadm_request_ref,
                             medadm_note_authorstring,
-                            medadm_note_authorreference_id,
+                            medadm_note_authorreference_ref,
                             medadm_note_authorreference_type,
                             medadm_note_authorreference_identifier_use,
                             medadm_note_authorreference_identifier_type_system,
@@ -2804,9 +2804,9 @@ BEGIN
                             current_record.medicationadministration_id,
                             current_record.medicationadministration_raw_id,
                             current_record.medadm_id,
-                            current_record.medadm_encounter_id,
-                            current_record.medadm_patient_id,
-                            current_record.medadm_partof_id,
+                            current_record.medadm_encounter_ref,
+                            current_record.medadm_patient_ref,
+                            current_record.medadm_partof_ref,
                             current_record.medadm_identifier_use,
                             current_record.medadm_identifier_type_system,
                             current_record.medadm_identifier_type_version,
@@ -2828,13 +2828,13 @@ BEGIN
                             current_record.medadm_category_code,
                             current_record.medadm_category_display,
                             current_record.medadm_category_text,
-                            current_record.medadm_medicationreference_id,
+                            current_record.medadm_medicationreference_ref,
                             current_record.medadm_medicationcodeableconcept_system,
                             current_record.medadm_medicationcodeableconcept_version,
                             current_record.medadm_medicationcodeableconcept_code,
                             current_record.medadm_medicationcodeableconcept_display,
                             current_record.medadm_medicationcodeableconcept_text,
-                            current_record.medadm_supportinginformation_id,
+                            current_record.medadm_supportinginformation_ref,
                             current_record.medadm_supportinginformation_type,
                             current_record.medadm_supportinginformation_identifier_use,
                             current_record.medadm_supportinginformation_identifier_type_system,
@@ -2856,7 +2856,7 @@ BEGIN
                             current_record.medadm_reasoncode_code,
                             current_record.medadm_reasoncode_display,
                             current_record.medadm_reasoncode_text,
-                            current_record.medadm_reasonreference_id,
+                            current_record.medadm_reasonreference_ref,
                             current_record.medadm_reasonreference_type,
                             current_record.medadm_reasonreference_identifier_use,
                             current_record.medadm_reasonreference_identifier_type_system,
@@ -2865,9 +2865,9 @@ BEGIN
                             current_record.medadm_reasonreference_identifier_type_display,
                             current_record.medadm_reasonreference_identifier_type_text,
                             current_record.medadm_reasonreference_display,
-                            current_record.medadm_request_id,
+                            current_record.medadm_request_ref,
                             current_record.medadm_note_authorstring,
-                            current_record.medadm_note_authorreference_id,
+                            current_record.medadm_note_authorreference_ref,
                             current_record.medadm_note_authorreference_type,
                             current_record.medadm_note_authorreference_identifier_use,
                             current_record.medadm_note_authorreference_identifier_type_system,
@@ -2929,9 +2929,9 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_encounter_id::text,'#NULL#') = COALESCE(current_record.medadm_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_patient_id::text,'#NULL#') = COALESCE(current_record.medadm_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_partof_id::text,'#NULL#') = COALESCE(current_record.medadm_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_encounter_ref::text,'#NULL#') = COALESCE(current_record.medadm_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_patient_ref::text,'#NULL#') = COALESCE(current_record.medadm_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_partof_ref::text,'#NULL#') = COALESCE(current_record.medadm_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.medadm_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_version::text,'#NULL#') AND
@@ -2953,13 +2953,13 @@ BEGIN
                           COALESCE(target_record.medadm_category_code::text,'#NULL#') = COALESCE(current_record.medadm_category_code::text,'#NULL#') AND
                           COALESCE(target_record.medadm_category_display::text,'#NULL#') = COALESCE(current_record.medadm_category_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_category_text::text,'#NULL#') = COALESCE(current_record.medadm_category_text::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_medicationreference_id::text,'#NULL#') = COALESCE(current_record.medadm_medicationreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_medicationreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_system::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_version::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_code::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_text::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_supportinginformation_id::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_type::text,'#NULL#') AND
                           COALESCE(target_record.medadm_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') AND
@@ -2981,7 +2981,7 @@ BEGIN
                           COALESCE(target_record.medadm_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_reasonreference_id::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -2990,9 +2990,9 @@ BEGIN
                           COALESCE(target_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medadm_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_display::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_request_id::text,'#NULL#') = COALESCE(current_record.medadm_request_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_request_ref::text,'#NULL#') = COALESCE(current_record.medadm_request_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorstring::text,'#NULL#') = COALESCE(current_record.medadm_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.medadm_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medadm_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -3126,10 +3126,10 @@ BEGIN
                           COALESCE(target_record.medstat_identifier_value::text,'#NULL#') = COALESCE(current_record.medstat_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.medstat_identifier_start::text,'#NULL#') = COALESCE(current_record.medstat_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.medstat_identifier_end::text,'#NULL#') = COALESCE(current_record.medstat_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_encounter_id::text,'#NULL#') = COALESCE(current_record.medstat_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_patient_id::text,'#NULL#') = COALESCE(current_record.medstat_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_partof_id::text,'#NULL#') = COALESCE(current_record.medstat_partof_id::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_basedon_id::text,'#NULL#') = COALESCE(current_record.medstat_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_encounter_ref::text,'#NULL#') = COALESCE(current_record.medstat_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_patient_ref::text,'#NULL#') = COALESCE(current_record.medstat_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_partof_ref::text,'#NULL#') = COALESCE(current_record.medstat_partof_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_basedon_ref::text,'#NULL#') = COALESCE(current_record.medstat_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_basedon_type::text,'#NULL#') = COALESCE(current_record.medstat_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_system::text,'#NULL#') AND
@@ -3149,7 +3149,7 @@ BEGIN
                           COALESCE(target_record.medstat_category_code::text,'#NULL#') = COALESCE(current_record.medstat_category_code::text,'#NULL#') AND
                           COALESCE(target_record.medstat_category_display::text,'#NULL#') = COALESCE(current_record.medstat_category_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_category_text::text,'#NULL#') = COALESCE(current_record.medstat_category_text::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_medicationreference_id::text,'#NULL#') = COALESCE(current_record.medstat_medicationreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_medicationreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_system::text,'#NULL#') AND
                           COALESCE(target_record.medstat_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_version::text,'#NULL#') AND
                           COALESCE(target_record.medstat_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_code::text,'#NULL#') AND
@@ -3159,7 +3159,7 @@ BEGIN
                           COALESCE(target_record.medstat_effectiveperiod_start::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_start::text,'#NULL#') AND
                           COALESCE(target_record.medstat_effectiveperiod_end::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_end::text,'#NULL#') AND
                           COALESCE(target_record.medstat_dateasserted::text,'#NULL#') = COALESCE(current_record.medstat_dateasserted::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_informationsource_id::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_informationsource_ref::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_type::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_system::text,'#NULL#') AND
@@ -3168,7 +3168,7 @@ BEGIN
                           COALESCE(target_record.medstat_informationsource_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_display::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_derivedfrom_id::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_derivedfrom_ref::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_derivedfrom_type::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_derivedfrom_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') AND
@@ -3182,7 +3182,7 @@ BEGIN
                           COALESCE(target_record.medstat_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_reasonreference_id::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -3192,7 +3192,7 @@ BEGIN
                           COALESCE(target_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorstring::text,'#NULL#') = COALESCE(current_record.medstat_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -3345,10 +3345,10 @@ BEGIN
                             medstat_identifier_value,
                             medstat_identifier_start,
                             medstat_identifier_end,
-                            medstat_encounter_id,
-                            medstat_patient_id,
-                            medstat_partof_id,
-                            medstat_basedon_id,
+                            medstat_encounter_ref,
+                            medstat_patient_ref,
+                            medstat_partof_ref,
+                            medstat_basedon_ref,
                             medstat_basedon_type,
                             medstat_basedon_identifier_use,
                             medstat_basedon_identifier_type_system,
@@ -3368,7 +3368,7 @@ BEGIN
                             medstat_category_code,
                             medstat_category_display,
                             medstat_category_text,
-                            medstat_medicationreference_id,
+                            medstat_medicationreference_ref,
                             medstat_medicationcodeableconcept_system,
                             medstat_medicationcodeableconcept_version,
                             medstat_medicationcodeableconcept_code,
@@ -3378,7 +3378,7 @@ BEGIN
                             medstat_effectiveperiod_start,
                             medstat_effectiveperiod_end,
                             medstat_dateasserted,
-                            medstat_informationsource_id,
+                            medstat_informationsource_ref,
                             medstat_informationsource_type,
                             medstat_informationsource_identifier_use,
                             medstat_informationsource_identifier_type_system,
@@ -3387,7 +3387,7 @@ BEGIN
                             medstat_informationsource_identifier_type_display,
                             medstat_informationsource_identifier_type_text,
                             medstat_informationsource_display,
-                            medstat_derivedfrom_id,
+                            medstat_derivedfrom_ref,
                             medstat_derivedfrom_type,
                             medstat_derivedfrom_identifier_use,
                             medstat_derivedfrom_identifier_type_system,
@@ -3401,7 +3401,7 @@ BEGIN
                             medstat_reasoncode_code,
                             medstat_reasoncode_display,
                             medstat_reasoncode_text,
-                            medstat_reasonreference_id,
+                            medstat_reasonreference_ref,
                             medstat_reasonreference_type,
                             medstat_reasonreference_identifier_use,
                             medstat_reasonreference_identifier_type_system,
@@ -3411,7 +3411,7 @@ BEGIN
                             medstat_reasonreference_identifier_type_text,
                             medstat_reasonreference_display,
                             medstat_note_authorstring,
-                            medstat_note_authorreference_id,
+                            medstat_note_authorreference_ref,
                             medstat_note_authorreference_type,
                             medstat_note_authorreference_identifier_use,
                             medstat_note_authorreference_identifier_type_system,
@@ -3563,10 +3563,10 @@ BEGIN
                             current_record.medstat_identifier_value,
                             current_record.medstat_identifier_start,
                             current_record.medstat_identifier_end,
-                            current_record.medstat_encounter_id,
-                            current_record.medstat_patient_id,
-                            current_record.medstat_partof_id,
-                            current_record.medstat_basedon_id,
+                            current_record.medstat_encounter_ref,
+                            current_record.medstat_patient_ref,
+                            current_record.medstat_partof_ref,
+                            current_record.medstat_basedon_ref,
                             current_record.medstat_basedon_type,
                             current_record.medstat_basedon_identifier_use,
                             current_record.medstat_basedon_identifier_type_system,
@@ -3586,7 +3586,7 @@ BEGIN
                             current_record.medstat_category_code,
                             current_record.medstat_category_display,
                             current_record.medstat_category_text,
-                            current_record.medstat_medicationreference_id,
+                            current_record.medstat_medicationreference_ref,
                             current_record.medstat_medicationcodeableconcept_system,
                             current_record.medstat_medicationcodeableconcept_version,
                             current_record.medstat_medicationcodeableconcept_code,
@@ -3596,7 +3596,7 @@ BEGIN
                             current_record.medstat_effectiveperiod_start,
                             current_record.medstat_effectiveperiod_end,
                             current_record.medstat_dateasserted,
-                            current_record.medstat_informationsource_id,
+                            current_record.medstat_informationsource_ref,
                             current_record.medstat_informationsource_type,
                             current_record.medstat_informationsource_identifier_use,
                             current_record.medstat_informationsource_identifier_type_system,
@@ -3605,7 +3605,7 @@ BEGIN
                             current_record.medstat_informationsource_identifier_type_display,
                             current_record.medstat_informationsource_identifier_type_text,
                             current_record.medstat_informationsource_display,
-                            current_record.medstat_derivedfrom_id,
+                            current_record.medstat_derivedfrom_ref,
                             current_record.medstat_derivedfrom_type,
                             current_record.medstat_derivedfrom_identifier_use,
                             current_record.medstat_derivedfrom_identifier_type_system,
@@ -3619,7 +3619,7 @@ BEGIN
                             current_record.medstat_reasoncode_code,
                             current_record.medstat_reasoncode_display,
                             current_record.medstat_reasoncode_text,
-                            current_record.medstat_reasonreference_id,
+                            current_record.medstat_reasonreference_ref,
                             current_record.medstat_reasonreference_type,
                             current_record.medstat_reasonreference_identifier_use,
                             current_record.medstat_reasonreference_identifier_type_system,
@@ -3629,7 +3629,7 @@ BEGIN
                             current_record.medstat_reasonreference_identifier_type_text,
                             current_record.medstat_reasonreference_display,
                             current_record.medstat_note_authorstring,
-                            current_record.medstat_note_authorreference_id,
+                            current_record.medstat_note_authorreference_ref,
                             current_record.medstat_note_authorreference_type,
                             current_record.medstat_note_authorreference_identifier_use,
                             current_record.medstat_note_authorreference_identifier_type_system,
@@ -3789,10 +3789,10 @@ BEGIN
                           COALESCE(target_record.medstat_identifier_value::text,'#NULL#') = COALESCE(current_record.medstat_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.medstat_identifier_start::text,'#NULL#') = COALESCE(current_record.medstat_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.medstat_identifier_end::text,'#NULL#') = COALESCE(current_record.medstat_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_encounter_id::text,'#NULL#') = COALESCE(current_record.medstat_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_patient_id::text,'#NULL#') = COALESCE(current_record.medstat_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_partof_id::text,'#NULL#') = COALESCE(current_record.medstat_partof_id::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_basedon_id::text,'#NULL#') = COALESCE(current_record.medstat_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_encounter_ref::text,'#NULL#') = COALESCE(current_record.medstat_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_patient_ref::text,'#NULL#') = COALESCE(current_record.medstat_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_partof_ref::text,'#NULL#') = COALESCE(current_record.medstat_partof_ref::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_basedon_ref::text,'#NULL#') = COALESCE(current_record.medstat_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_basedon_type::text,'#NULL#') = COALESCE(current_record.medstat_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_system::text,'#NULL#') AND
@@ -3812,7 +3812,7 @@ BEGIN
                           COALESCE(target_record.medstat_category_code::text,'#NULL#') = COALESCE(current_record.medstat_category_code::text,'#NULL#') AND
                           COALESCE(target_record.medstat_category_display::text,'#NULL#') = COALESCE(current_record.medstat_category_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_category_text::text,'#NULL#') = COALESCE(current_record.medstat_category_text::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_medicationreference_id::text,'#NULL#') = COALESCE(current_record.medstat_medicationreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_medicationreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_system::text,'#NULL#') AND
                           COALESCE(target_record.medstat_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_version::text,'#NULL#') AND
                           COALESCE(target_record.medstat_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_code::text,'#NULL#') AND
@@ -3822,7 +3822,7 @@ BEGIN
                           COALESCE(target_record.medstat_effectiveperiod_start::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_start::text,'#NULL#') AND
                           COALESCE(target_record.medstat_effectiveperiod_end::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_end::text,'#NULL#') AND
                           COALESCE(target_record.medstat_dateasserted::text,'#NULL#') = COALESCE(current_record.medstat_dateasserted::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_informationsource_id::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_informationsource_ref::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_type::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_system::text,'#NULL#') AND
@@ -3831,7 +3831,7 @@ BEGIN
                           COALESCE(target_record.medstat_informationsource_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medstat_informationsource_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_display::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_derivedfrom_id::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_derivedfrom_ref::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_derivedfrom_type::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_derivedfrom_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') AND
@@ -3845,7 +3845,7 @@ BEGIN
                           COALESCE(target_record.medstat_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_reasonreference_id::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -3855,7 +3855,7 @@ BEGIN
                           COALESCE(target_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.medstat_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_display::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorstring::text,'#NULL#') = COALESCE(current_record.medstat_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.medstat_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.medstat_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -4067,9 +4067,9 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.observation target_record
                     WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
-                          COALESCE(target_record.obs_encounter_id::text,'#NULL#') = COALESCE(current_record.obs_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.obs_patient_id::text,'#NULL#') = COALESCE(current_record.obs_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.obs_partof_id::text,'#NULL#') = COALESCE(current_record.obs_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_encounter_ref::text,'#NULL#') = COALESCE(current_record.obs_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.obs_patient_ref::text,'#NULL#') = COALESCE(current_record.obs_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.obs_partof_ref::text,'#NULL#') = COALESCE(current_record.obs_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_version::text,'#NULL#') AND
@@ -4080,7 +4080,7 @@ BEGIN
                           COALESCE(target_record.obs_identifier_value::text,'#NULL#') = COALESCE(current_record.obs_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_start::text,'#NULL#') = COALESCE(current_record.obs_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_end::text,'#NULL#') = COALESCE(current_record.obs_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.obs_basedon_id::text,'#NULL#') = COALESCE(current_record.obs_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_basedon_ref::text,'#NULL#') = COALESCE(current_record.obs_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_basedon_type::text,'#NULL#') = COALESCE(current_record.obs_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_system::text,'#NULL#') AND
@@ -4136,7 +4136,7 @@ BEGIN
                           COALESCE(target_record.obs_dataabsentreason_display::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_display::text,'#NULL#') AND
                           COALESCE(target_record.obs_dataabsentreason_text::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_text::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorstring::text,'#NULL#') = COALESCE(current_record.obs_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.obs_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -4152,7 +4152,7 @@ BEGIN
                           COALESCE(target_record.obs_method_code::text,'#NULL#') = COALESCE(current_record.obs_method_code::text,'#NULL#') AND
                           COALESCE(target_record.obs_method_display::text,'#NULL#') = COALESCE(current_record.obs_method_display::text,'#NULL#') AND
                           COALESCE(target_record.obs_method_text::text,'#NULL#') = COALESCE(current_record.obs_method_text::text,'#NULL#') AND
-                          COALESCE(target_record.obs_performer_id::text,'#NULL#') = COALESCE(current_record.obs_performer_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_performer_ref::text,'#NULL#') = COALESCE(current_record.obs_performer_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_performer_type::text,'#NULL#') = COALESCE(current_record.obs_performer_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_system::text,'#NULL#') AND
@@ -4188,7 +4188,7 @@ BEGIN
                           COALESCE(target_record.obs_referencerange_age_high_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_system::text,'#NULL#') AND
                           COALESCE(target_record.obs_referencerange_age_high_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_code::text,'#NULL#') AND
                           COALESCE(target_record.obs_referencerange_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_text::text,'#NULL#') AND
-                          COALESCE(target_record.obs_hasmember_id::text,'#NULL#') = COALESCE(current_record.obs_hasmember_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_hasmember_ref::text,'#NULL#') = COALESCE(current_record.obs_hasmember_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_hasmember_type::text,'#NULL#') = COALESCE(current_record.obs_hasmember_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_hasmember_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_hasmember_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_system::text,'#NULL#') AND
@@ -4207,9 +4207,9 @@ BEGIN
                             observation_id,
                             observation_raw_id,
                             obs_id,
-                            obs_encounter_id,
-                            obs_patient_id,
-                            obs_partof_id,
+                            obs_encounter_ref,
+                            obs_patient_ref,
+                            obs_partof_ref,
                             obs_identifier_use,
                             obs_identifier_type_system,
                             obs_identifier_type_version,
@@ -4220,7 +4220,7 @@ BEGIN
                             obs_identifier_value,
                             obs_identifier_start,
                             obs_identifier_end,
-                            obs_basedon_id,
+                            obs_basedon_ref,
                             obs_basedon_type,
                             obs_basedon_identifier_use,
                             obs_basedon_identifier_type_system,
@@ -4276,7 +4276,7 @@ BEGIN
                             obs_dataabsentreason_display,
                             obs_dataabsentreason_text,
                             obs_note_authorstring,
-                            obs_note_authorreference_id,
+                            obs_note_authorreference_ref,
                             obs_note_authorreference_type,
                             obs_note_authorreference_identifier_use,
                             obs_note_authorreference_identifier_type_system,
@@ -4292,7 +4292,7 @@ BEGIN
                             obs_method_code,
                             obs_method_display,
                             obs_method_text,
-                            obs_performer_id,
+                            obs_performer_ref,
                             obs_performer_type,
                             obs_performer_identifier_use,
                             obs_performer_identifier_type_system,
@@ -4328,7 +4328,7 @@ BEGIN
                             obs_referencerange_age_high_system,
                             obs_referencerange_age_high_code,
                             obs_referencerange_text,
-                            obs_hasmember_id,
+                            obs_hasmember_ref,
                             obs_hasmember_type,
                             obs_hasmember_identifier_use,
                             obs_hasmember_identifier_type_system,
@@ -4346,9 +4346,9 @@ BEGIN
                             current_record.observation_id,
                             current_record.observation_raw_id,
                             current_record.obs_id,
-                            current_record.obs_encounter_id,
-                            current_record.obs_patient_id,
-                            current_record.obs_partof_id,
+                            current_record.obs_encounter_ref,
+                            current_record.obs_patient_ref,
+                            current_record.obs_partof_ref,
                             current_record.obs_identifier_use,
                             current_record.obs_identifier_type_system,
                             current_record.obs_identifier_type_version,
@@ -4359,7 +4359,7 @@ BEGIN
                             current_record.obs_identifier_value,
                             current_record.obs_identifier_start,
                             current_record.obs_identifier_end,
-                            current_record.obs_basedon_id,
+                            current_record.obs_basedon_ref,
                             current_record.obs_basedon_type,
                             current_record.obs_basedon_identifier_use,
                             current_record.obs_basedon_identifier_type_system,
@@ -4415,7 +4415,7 @@ BEGIN
                             current_record.obs_dataabsentreason_display,
                             current_record.obs_dataabsentreason_text,
                             current_record.obs_note_authorstring,
-                            current_record.obs_note_authorreference_id,
+                            current_record.obs_note_authorreference_ref,
                             current_record.obs_note_authorreference_type,
                             current_record.obs_note_authorreference_identifier_use,
                             current_record.obs_note_authorreference_identifier_type_system,
@@ -4431,7 +4431,7 @@ BEGIN
                             current_record.obs_method_code,
                             current_record.obs_method_display,
                             current_record.obs_method_text,
-                            current_record.obs_performer_id,
+                            current_record.obs_performer_ref,
                             current_record.obs_performer_type,
                             current_record.obs_performer_identifier_use,
                             current_record.obs_performer_identifier_type_system,
@@ -4467,7 +4467,7 @@ BEGIN
                             current_record.obs_referencerange_age_high_system,
                             current_record.obs_referencerange_age_high_code,
                             current_record.obs_referencerange_text,
-                            current_record.obs_hasmember_id,
+                            current_record.obs_hasmember_ref,
                             current_record.obs_hasmember_type,
                             current_record.obs_hasmember_identifier_use,
                             current_record.obs_hasmember_identifier_type_system,
@@ -4493,9 +4493,9 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
-                          COALESCE(target_record.obs_encounter_id::text,'#NULL#') = COALESCE(current_record.obs_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.obs_patient_id::text,'#NULL#') = COALESCE(current_record.obs_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.obs_partof_id::text,'#NULL#') = COALESCE(current_record.obs_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_encounter_ref::text,'#NULL#') = COALESCE(current_record.obs_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.obs_patient_ref::text,'#NULL#') = COALESCE(current_record.obs_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.obs_partof_ref::text,'#NULL#') = COALESCE(current_record.obs_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_version::text,'#NULL#') AND
@@ -4506,7 +4506,7 @@ BEGIN
                           COALESCE(target_record.obs_identifier_value::text,'#NULL#') = COALESCE(current_record.obs_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_start::text,'#NULL#') = COALESCE(current_record.obs_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.obs_identifier_end::text,'#NULL#') = COALESCE(current_record.obs_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.obs_basedon_id::text,'#NULL#') = COALESCE(current_record.obs_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_basedon_ref::text,'#NULL#') = COALESCE(current_record.obs_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_basedon_type::text,'#NULL#') = COALESCE(current_record.obs_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_system::text,'#NULL#') AND
@@ -4562,7 +4562,7 @@ BEGIN
                           COALESCE(target_record.obs_dataabsentreason_display::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_display::text,'#NULL#') AND
                           COALESCE(target_record.obs_dataabsentreason_text::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_text::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorstring::text,'#NULL#') = COALESCE(current_record.obs_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.obs_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -4578,7 +4578,7 @@ BEGIN
                           COALESCE(target_record.obs_method_code::text,'#NULL#') = COALESCE(current_record.obs_method_code::text,'#NULL#') AND
                           COALESCE(target_record.obs_method_display::text,'#NULL#') = COALESCE(current_record.obs_method_display::text,'#NULL#') AND
                           COALESCE(target_record.obs_method_text::text,'#NULL#') = COALESCE(current_record.obs_method_text::text,'#NULL#') AND
-                          COALESCE(target_record.obs_performer_id::text,'#NULL#') = COALESCE(current_record.obs_performer_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_performer_ref::text,'#NULL#') = COALESCE(current_record.obs_performer_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_performer_type::text,'#NULL#') = COALESCE(current_record.obs_performer_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_system::text,'#NULL#') AND
@@ -4614,7 +4614,7 @@ BEGIN
                           COALESCE(target_record.obs_referencerange_age_high_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_system::text,'#NULL#') AND
                           COALESCE(target_record.obs_referencerange_age_high_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_code::text,'#NULL#') AND
                           COALESCE(target_record.obs_referencerange_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_text::text,'#NULL#') AND
-                          COALESCE(target_record.obs_hasmember_id::text,'#NULL#') = COALESCE(current_record.obs_hasmember_id::text,'#NULL#') AND
+                          COALESCE(target_record.obs_hasmember_ref::text,'#NULL#') = COALESCE(current_record.obs_hasmember_ref::text,'#NULL#') AND
                           COALESCE(target_record.obs_hasmember_type::text,'#NULL#') = COALESCE(current_record.obs_hasmember_type::text,'#NULL#') AND
                           COALESCE(target_record.obs_hasmember_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.obs_hasmember_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_system::text,'#NULL#') AND
@@ -4702,9 +4702,9 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.diagnosticreport target_record
                     WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_encounter_id::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_patient_id::text,'#NULL#') = COALESCE(current_record.diagrep_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_partof_id::text,'#NULL#') = COALESCE(current_record.diagrep_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_encounter_ref::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_patient_ref::text,'#NULL#') = COALESCE(current_record.diagrep_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_partof_ref::text,'#NULL#') = COALESCE(current_record.diagrep_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_type_version::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_version::text,'#NULL#') AND
@@ -4715,8 +4715,8 @@ BEGIN
                           COALESCE(target_record.diagrep_identifier_value::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_start::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_end::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_result_id::text,'#NULL#') = COALESCE(current_record.diagrep_result_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_basedon_id::text,'#NULL#') = COALESCE(current_record.diagrep_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_result_ref::text,'#NULL#') = COALESCE(current_record.diagrep_result_ref::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_basedon_ref::text,'#NULL#') = COALESCE(current_record.diagrep_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_status::text,'#NULL#') = COALESCE(current_record.diagrep_status::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_category_system::text,'#NULL#') = COALESCE(current_record.diagrep_category_system::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_category_version::text,'#NULL#') = COALESCE(current_record.diagrep_category_version::text,'#NULL#') AND
@@ -4730,7 +4730,7 @@ BEGIN
                           COALESCE(target_record.diagrep_code_text::text,'#NULL#') = COALESCE(current_record.diagrep_code_text::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_effectivedatetime::text,'#NULL#') = COALESCE(current_record.diagrep_effectivedatetime::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_issued::text,'#NULL#') = COALESCE(current_record.diagrep_issued::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_performer_id::text,'#NULL#') = COALESCE(current_record.diagrep_performer_id::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_performer_ref::text,'#NULL#') = COALESCE(current_record.diagrep_performer_ref::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_performer_type::text,'#NULL#') = COALESCE(current_record.diagrep_performer_type::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_system::text,'#NULL#') AND
@@ -4755,9 +4755,9 @@ BEGIN
                             diagnosticreport_id,
                             diagnosticreport_raw_id,
                             diagrep_id,
-                            diagrep_encounter_id,
-                            diagrep_patient_id,
-                            diagrep_partof_id,
+                            diagrep_encounter_ref,
+                            diagrep_patient_ref,
+                            diagrep_partof_ref,
                             diagrep_identifier_use,
                             diagrep_identifier_type_system,
                             diagrep_identifier_type_version,
@@ -4768,8 +4768,8 @@ BEGIN
                             diagrep_identifier_value,
                             diagrep_identifier_start,
                             diagrep_identifier_end,
-                            diagrep_result_id,
-                            diagrep_basedon_id,
+                            diagrep_result_ref,
+                            diagrep_basedon_ref,
                             diagrep_status,
                             diagrep_category_system,
                             diagrep_category_version,
@@ -4783,7 +4783,7 @@ BEGIN
                             diagrep_code_text,
                             diagrep_effectivedatetime,
                             diagrep_issued,
-                            diagrep_performer_id,
+                            diagrep_performer_ref,
                             diagrep_performer_type,
                             diagrep_performer_identifier_use,
                             diagrep_performer_identifier_type_system,
@@ -4807,9 +4807,9 @@ BEGIN
                             current_record.diagnosticreport_id,
                             current_record.diagnosticreport_raw_id,
                             current_record.diagrep_id,
-                            current_record.diagrep_encounter_id,
-                            current_record.diagrep_patient_id,
-                            current_record.diagrep_partof_id,
+                            current_record.diagrep_encounter_ref,
+                            current_record.diagrep_patient_ref,
+                            current_record.diagrep_partof_ref,
                             current_record.diagrep_identifier_use,
                             current_record.diagrep_identifier_type_system,
                             current_record.diagrep_identifier_type_version,
@@ -4820,8 +4820,8 @@ BEGIN
                             current_record.diagrep_identifier_value,
                             current_record.diagrep_identifier_start,
                             current_record.diagrep_identifier_end,
-                            current_record.diagrep_result_id,
-                            current_record.diagrep_basedon_id,
+                            current_record.diagrep_result_ref,
+                            current_record.diagrep_basedon_ref,
                             current_record.diagrep_status,
                             current_record.diagrep_category_system,
                             current_record.diagrep_category_version,
@@ -4835,7 +4835,7 @@ BEGIN
                             current_record.diagrep_code_text,
                             current_record.diagrep_effectivedatetime,
                             current_record.diagrep_issued,
-                            current_record.diagrep_performer_id,
+                            current_record.diagrep_performer_ref,
                             current_record.diagrep_performer_type,
                             current_record.diagrep_performer_identifier_use,
                             current_record.diagrep_performer_identifier_type_system,
@@ -4867,9 +4867,9 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_encounter_id::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_patient_id::text,'#NULL#') = COALESCE(current_record.diagrep_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_partof_id::text,'#NULL#') = COALESCE(current_record.diagrep_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_encounter_ref::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_patient_ref::text,'#NULL#') = COALESCE(current_record.diagrep_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_partof_ref::text,'#NULL#') = COALESCE(current_record.diagrep_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_type_version::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_version::text,'#NULL#') AND
@@ -4880,8 +4880,8 @@ BEGIN
                           COALESCE(target_record.diagrep_identifier_value::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_start::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_identifier_end::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_result_id::text,'#NULL#') = COALESCE(current_record.diagrep_result_id::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_basedon_id::text,'#NULL#') = COALESCE(current_record.diagrep_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_result_ref::text,'#NULL#') = COALESCE(current_record.diagrep_result_ref::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_basedon_ref::text,'#NULL#') = COALESCE(current_record.diagrep_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_status::text,'#NULL#') = COALESCE(current_record.diagrep_status::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_category_system::text,'#NULL#') = COALESCE(current_record.diagrep_category_system::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_category_version::text,'#NULL#') = COALESCE(current_record.diagrep_category_version::text,'#NULL#') AND
@@ -4895,7 +4895,7 @@ BEGIN
                           COALESCE(target_record.diagrep_code_text::text,'#NULL#') = COALESCE(current_record.diagrep_code_text::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_effectivedatetime::text,'#NULL#') = COALESCE(current_record.diagrep_effectivedatetime::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_issued::text,'#NULL#') = COALESCE(current_record.diagrep_issued::text,'#NULL#') AND
-                          COALESCE(target_record.diagrep_performer_id::text,'#NULL#') = COALESCE(current_record.diagrep_performer_id::text,'#NULL#') AND
+                          COALESCE(target_record.diagrep_performer_ref::text,'#NULL#') = COALESCE(current_record.diagrep_performer_ref::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_performer_type::text,'#NULL#') = COALESCE(current_record.diagrep_performer_type::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.diagrep_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_system::text,'#NULL#') AND
@@ -4989,8 +4989,8 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.servicerequest target_record
                     WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_encounter_id::text,'#NULL#') = COALESCE(current_record.servreq_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_patient_id::text,'#NULL#') = COALESCE(current_record.servreq_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.servreq_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_patient_ref::text,'#NULL#') = COALESCE(current_record.servreq_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_version::text,'#NULL#') AND
@@ -5001,7 +5001,7 @@ BEGIN
                           COALESCE(target_record.servreq_identifier_value::text,'#NULL#') = COALESCE(current_record.servreq_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_start::text,'#NULL#') = COALESCE(current_record.servreq_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_end::text,'#NULL#') = COALESCE(current_record.servreq_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_basedon_id::text,'#NULL#') = COALESCE(current_record.servreq_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.servreq_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_basedon_type::text,'#NULL#') = COALESCE(current_record.servreq_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.servreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_system::text,'#NULL#') AND
@@ -5023,7 +5023,7 @@ BEGIN
                           COALESCE(target_record.servreq_code_display::text,'#NULL#') = COALESCE(current_record.servreq_code_display::text,'#NULL#') AND
                           COALESCE(target_record.servreq_code_text::text,'#NULL#') = COALESCE(current_record.servreq_code_text::text,'#NULL#') AND
                           COALESCE(target_record.servreq_authoredon::text,'#NULL#') = COALESCE(current_record.servreq_authoredon::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_requester_id::text,'#NULL#') = COALESCE(current_record.servreq_requester_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_requester_ref::text,'#NULL#') = COALESCE(current_record.servreq_requester_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_type::text,'#NULL#') = COALESCE(current_record.servreq_requester_type::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_system::text,'#NULL#') AND
@@ -5032,7 +5032,7 @@ BEGIN
                           COALESCE(target_record.servreq_requester_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_display::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_performer_id::text,'#NULL#') = COALESCE(current_record.servreq_performer_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_performer_ref::text,'#NULL#') = COALESCE(current_record.servreq_performer_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_performer_type::text,'#NULL#') = COALESCE(current_record.servreq_performer_type::text,'#NULL#') AND
                           COALESCE(target_record.servreq_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_system::text,'#NULL#') AND
@@ -5056,8 +5056,8 @@ BEGIN
                             servicerequest_id,
                             servicerequest_raw_id,
                             servreq_id,
-                            servreq_encounter_id,
-                            servreq_patient_id,
+                            servreq_encounter_ref,
+                            servreq_patient_ref,
                             servreq_identifier_use,
                             servreq_identifier_type_system,
                             servreq_identifier_type_version,
@@ -5068,7 +5068,7 @@ BEGIN
                             servreq_identifier_value,
                             servreq_identifier_start,
                             servreq_identifier_end,
-                            servreq_basedon_id,
+                            servreq_basedon_ref,
                             servreq_basedon_type,
                             servreq_basedon_identifier_use,
                             servreq_basedon_identifier_type_system,
@@ -5090,7 +5090,7 @@ BEGIN
                             servreq_code_display,
                             servreq_code_text,
                             servreq_authoredon,
-                            servreq_requester_id,
+                            servreq_requester_ref,
                             servreq_requester_type,
                             servreq_requester_identifier_use,
                             servreq_requester_identifier_type_system,
@@ -5099,7 +5099,7 @@ BEGIN
                             servreq_requester_identifier_type_display,
                             servreq_requester_identifier_type_text,
                             servreq_requester_display,
-                            servreq_performer_id,
+                            servreq_performer_ref,
                             servreq_performer_type,
                             servreq_performer_identifier_use,
                             servreq_performer_identifier_type_system,
@@ -5122,8 +5122,8 @@ BEGIN
                             current_record.servicerequest_id,
                             current_record.servicerequest_raw_id,
                             current_record.servreq_id,
-                            current_record.servreq_encounter_id,
-                            current_record.servreq_patient_id,
+                            current_record.servreq_encounter_ref,
+                            current_record.servreq_patient_ref,
                             current_record.servreq_identifier_use,
                             current_record.servreq_identifier_type_system,
                             current_record.servreq_identifier_type_version,
@@ -5134,7 +5134,7 @@ BEGIN
                             current_record.servreq_identifier_value,
                             current_record.servreq_identifier_start,
                             current_record.servreq_identifier_end,
-                            current_record.servreq_basedon_id,
+                            current_record.servreq_basedon_ref,
                             current_record.servreq_basedon_type,
                             current_record.servreq_basedon_identifier_use,
                             current_record.servreq_basedon_identifier_type_system,
@@ -5156,7 +5156,7 @@ BEGIN
                             current_record.servreq_code_display,
                             current_record.servreq_code_text,
                             current_record.servreq_authoredon,
-                            current_record.servreq_requester_id,
+                            current_record.servreq_requester_ref,
                             current_record.servreq_requester_type,
                             current_record.servreq_requester_identifier_use,
                             current_record.servreq_requester_identifier_type_system,
@@ -5165,7 +5165,7 @@ BEGIN
                             current_record.servreq_requester_identifier_type_display,
                             current_record.servreq_requester_identifier_type_text,
                             current_record.servreq_requester_display,
-                            current_record.servreq_performer_id,
+                            current_record.servreq_performer_ref,
                             current_record.servreq_performer_type,
                             current_record.servreq_performer_identifier_use,
                             current_record.servreq_performer_identifier_type_system,
@@ -5196,8 +5196,8 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_encounter_id::text,'#NULL#') = COALESCE(current_record.servreq_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_patient_id::text,'#NULL#') = COALESCE(current_record.servreq_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.servreq_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_patient_ref::text,'#NULL#') = COALESCE(current_record.servreq_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_version::text,'#NULL#') AND
@@ -5208,7 +5208,7 @@ BEGIN
                           COALESCE(target_record.servreq_identifier_value::text,'#NULL#') = COALESCE(current_record.servreq_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_start::text,'#NULL#') = COALESCE(current_record.servreq_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.servreq_identifier_end::text,'#NULL#') = COALESCE(current_record.servreq_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_basedon_id::text,'#NULL#') = COALESCE(current_record.servreq_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.servreq_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_basedon_type::text,'#NULL#') = COALESCE(current_record.servreq_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.servreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_system::text,'#NULL#') AND
@@ -5230,7 +5230,7 @@ BEGIN
                           COALESCE(target_record.servreq_code_display::text,'#NULL#') = COALESCE(current_record.servreq_code_display::text,'#NULL#') AND
                           COALESCE(target_record.servreq_code_text::text,'#NULL#') = COALESCE(current_record.servreq_code_text::text,'#NULL#') AND
                           COALESCE(target_record.servreq_authoredon::text,'#NULL#') = COALESCE(current_record.servreq_authoredon::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_requester_id::text,'#NULL#') = COALESCE(current_record.servreq_requester_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_requester_ref::text,'#NULL#') = COALESCE(current_record.servreq_requester_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_type::text,'#NULL#') = COALESCE(current_record.servreq_requester_type::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_system::text,'#NULL#') AND
@@ -5239,7 +5239,7 @@ BEGIN
                           COALESCE(target_record.servreq_requester_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_display::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.servreq_requester_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_display::text,'#NULL#') AND
-                          COALESCE(target_record.servreq_performer_id::text,'#NULL#') = COALESCE(current_record.servreq_performer_id::text,'#NULL#') AND
+                          COALESCE(target_record.servreq_performer_ref::text,'#NULL#') = COALESCE(current_record.servreq_performer_ref::text,'#NULL#') AND
                           COALESCE(target_record.servreq_performer_type::text,'#NULL#') = COALESCE(current_record.servreq_performer_type::text,'#NULL#') AND
                           COALESCE(target_record.servreq_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.servreq_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_system::text,'#NULL#') AND
@@ -5332,9 +5332,9 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.procedure target_record
                     WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
-                          COALESCE(target_record.proc_encounter_id::text,'#NULL#') = COALESCE(current_record.proc_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.proc_patient_id::text,'#NULL#') = COALESCE(current_record.proc_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.proc_partof_id::text,'#NULL#') = COALESCE(current_record.proc_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_encounter_ref::text,'#NULL#') = COALESCE(current_record.proc_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.proc_patient_ref::text,'#NULL#') = COALESCE(current_record.proc_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.proc_partof_ref::text,'#NULL#') = COALESCE(current_record.proc_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_version::text,'#NULL#') AND
@@ -5345,7 +5345,7 @@ BEGIN
                           COALESCE(target_record.proc_identifier_value::text,'#NULL#') = COALESCE(current_record.proc_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_start::text,'#NULL#') = COALESCE(current_record.proc_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_end::text,'#NULL#') = COALESCE(current_record.proc_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.proc_basedon_id::text,'#NULL#') = COALESCE(current_record.proc_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_basedon_ref::text,'#NULL#') = COALESCE(current_record.proc_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_basedon_type::text,'#NULL#') = COALESCE(current_record.proc_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.proc_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_system::text,'#NULL#') AND
@@ -5378,7 +5378,7 @@ BEGIN
                           COALESCE(target_record.proc_reasoncode_code::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasoncode_display::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasoncode_text::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.proc_reasonreference_id::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_type::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -5388,7 +5388,7 @@ BEGIN
                           COALESCE(target_record.proc_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_display::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_display::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorstring::text,'#NULL#') = COALESCE(current_record.proc_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.proc_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -5409,9 +5409,9 @@ BEGIN
                             procedure_id,
                             procedure_raw_id,
                             proc_id,
-                            proc_encounter_id,
-                            proc_patient_id,
-                            proc_partof_id,
+                            proc_encounter_ref,
+                            proc_patient_ref,
+                            proc_partof_ref,
                             proc_identifier_use,
                             proc_identifier_type_system,
                             proc_identifier_type_version,
@@ -5422,7 +5422,7 @@ BEGIN
                             proc_identifier_value,
                             proc_identifier_start,
                             proc_identifier_end,
-                            proc_basedon_id,
+                            proc_basedon_ref,
                             proc_basedon_type,
                             proc_basedon_identifier_use,
                             proc_basedon_identifier_type_system,
@@ -5455,7 +5455,7 @@ BEGIN
                             proc_reasoncode_code,
                             proc_reasoncode_display,
                             proc_reasoncode_text,
-                            proc_reasonreference_id,
+                            proc_reasonreference_ref,
                             proc_reasonreference_type,
                             proc_reasonreference_identifier_use,
                             proc_reasonreference_identifier_type_system,
@@ -5465,7 +5465,7 @@ BEGIN
                             proc_reasonreference_identifier_type_text,
                             proc_reasonreference_display,
                             proc_note_authorstring,
-                            proc_note_authorreference_id,
+                            proc_note_authorreference_ref,
                             proc_note_authorreference_type,
                             proc_note_authorreference_identifier_use,
                             proc_note_authorreference_identifier_type_system,
@@ -5485,9 +5485,9 @@ BEGIN
                             current_record.procedure_id,
                             current_record.procedure_raw_id,
                             current_record.proc_id,
-                            current_record.proc_encounter_id,
-                            current_record.proc_patient_id,
-                            current_record.proc_partof_id,
+                            current_record.proc_encounter_ref,
+                            current_record.proc_patient_ref,
+                            current_record.proc_partof_ref,
                             current_record.proc_identifier_use,
                             current_record.proc_identifier_type_system,
                             current_record.proc_identifier_type_version,
@@ -5498,7 +5498,7 @@ BEGIN
                             current_record.proc_identifier_value,
                             current_record.proc_identifier_start,
                             current_record.proc_identifier_end,
-                            current_record.proc_basedon_id,
+                            current_record.proc_basedon_ref,
                             current_record.proc_basedon_type,
                             current_record.proc_basedon_identifier_use,
                             current_record.proc_basedon_identifier_type_system,
@@ -5531,7 +5531,7 @@ BEGIN
                             current_record.proc_reasoncode_code,
                             current_record.proc_reasoncode_display,
                             current_record.proc_reasoncode_text,
-                            current_record.proc_reasonreference_id,
+                            current_record.proc_reasonreference_ref,
                             current_record.proc_reasonreference_type,
                             current_record.proc_reasonreference_identifier_use,
                             current_record.proc_reasonreference_identifier_type_system,
@@ -5541,7 +5541,7 @@ BEGIN
                             current_record.proc_reasonreference_identifier_type_text,
                             current_record.proc_reasonreference_display,
                             current_record.proc_note_authorstring,
-                            current_record.proc_note_authorreference_id,
+                            current_record.proc_note_authorreference_ref,
                             current_record.proc_note_authorreference_type,
                             current_record.proc_note_authorreference_identifier_use,
                             current_record.proc_note_authorreference_identifier_type_system,
@@ -5569,9 +5569,9 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
-                          COALESCE(target_record.proc_encounter_id::text,'#NULL#') = COALESCE(current_record.proc_encounter_id::text,'#NULL#') AND
-                          COALESCE(target_record.proc_patient_id::text,'#NULL#') = COALESCE(current_record.proc_patient_id::text,'#NULL#') AND
-                          COALESCE(target_record.proc_partof_id::text,'#NULL#') = COALESCE(current_record.proc_partof_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_encounter_ref::text,'#NULL#') = COALESCE(current_record.proc_encounter_ref::text,'#NULL#') AND
+                          COALESCE(target_record.proc_patient_ref::text,'#NULL#') = COALESCE(current_record.proc_patient_ref::text,'#NULL#') AND
+                          COALESCE(target_record.proc_partof_ref::text,'#NULL#') = COALESCE(current_record.proc_partof_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_version::text,'#NULL#') AND
@@ -5582,7 +5582,7 @@ BEGIN
                           COALESCE(target_record.proc_identifier_value::text,'#NULL#') = COALESCE(current_record.proc_identifier_value::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_start::text,'#NULL#') = COALESCE(current_record.proc_identifier_start::text,'#NULL#') AND
                           COALESCE(target_record.proc_identifier_end::text,'#NULL#') = COALESCE(current_record.proc_identifier_end::text,'#NULL#') AND
-                          COALESCE(target_record.proc_basedon_id::text,'#NULL#') = COALESCE(current_record.proc_basedon_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_basedon_ref::text,'#NULL#') = COALESCE(current_record.proc_basedon_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_basedon_type::text,'#NULL#') = COALESCE(current_record.proc_basedon_type::text,'#NULL#') AND
                           COALESCE(target_record.proc_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_system::text,'#NULL#') AND
@@ -5615,7 +5615,7 @@ BEGIN
                           COALESCE(target_record.proc_reasoncode_code::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_code::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasoncode_display::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_display::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasoncode_text::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_text::text,'#NULL#') AND
-                          COALESCE(target_record.proc_reasonreference_id::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_type::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_type::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_system::text,'#NULL#') AND
@@ -5625,7 +5625,7 @@ BEGIN
                           COALESCE(target_record.proc_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_text::text,'#NULL#') AND
                           COALESCE(target_record.proc_reasonreference_display::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_display::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorstring::text,'#NULL#') = COALESCE(current_record.proc_note_authorstring::text,'#NULL#') AND
-                          COALESCE(target_record.proc_note_authorreference_id::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_id::text,'#NULL#') AND
+                          COALESCE(target_record.proc_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_ref::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_type::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') AND
@@ -5715,7 +5715,7 @@ BEGIN
                     SELECT count(1) INTO data_count
                     FROM db_log.consent target_record
                     WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
-                          COALESCE(target_record.cons_patient_id::text,'#NULL#') = COALESCE(current_record.cons_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.cons_patient_ref::text,'#NULL#') = COALESCE(current_record.cons_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.cons_identifier_use::text,'#NULL#') = COALESCE(current_record.cons_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.cons_identifier_type_system::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.cons_identifier_type_version::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_version::text,'#NULL#') AND
@@ -5758,7 +5758,7 @@ BEGIN
                             consent_id,
                             consent_raw_id,
                             cons_id,
-                            cons_patient_id,
+                            cons_patient_ref,
                             cons_identifier_use,
                             cons_identifier_type_system,
                             cons_identifier_type_version,
@@ -5800,7 +5800,7 @@ BEGIN
                             current_record.consent_id,
                             current_record.consent_raw_id,
                             current_record.cons_id,
-                            current_record.cons_patient_id,
+                            current_record.cons_patient_ref,
                             current_record.cons_identifier_use,
                             current_record.cons_identifier_type_system,
                             current_record.cons_identifier_type_version,
@@ -5850,7 +5850,7 @@ BEGIN
                         , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                         , last_processing_nr = last_pro_nr
                         WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
-                          COALESCE(target_record.cons_patient_id::text,'#NULL#') = COALESCE(current_record.cons_patient_id::text,'#NULL#') AND
+                          COALESCE(target_record.cons_patient_ref::text,'#NULL#') = COALESCE(current_record.cons_patient_ref::text,'#NULL#') AND
                           COALESCE(target_record.cons_identifier_use::text,'#NULL#') = COALESCE(current_record.cons_identifier_use::text,'#NULL#') AND
                           COALESCE(target_record.cons_identifier_type_system::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_system::text,'#NULL#') AND
                           COALESCE(target_record.cons_identifier_type_version::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_version::text,'#NULL#') AND

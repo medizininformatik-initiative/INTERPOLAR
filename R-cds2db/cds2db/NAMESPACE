@@ -3,7 +3,6 @@
 export(DB_TABLE_DESCRIPTION_COLNAMES)
 export(FHIR_TABLE_DESCRIPTION_COLNAMES)
 export(getQueryFromDatabase)
-export(getReadQuery)
 export(initDatabaseScripts)
 export(initTableDescription)
 export(initTableDescriptionAndDatabaseScripts)

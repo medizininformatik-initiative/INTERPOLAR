@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file last update : 2024-12-05 09:58:05
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2024-12-05 09:41:33
+-- Create time: 2024-12-05 10:03:51
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -37,8 +37,8 @@
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   enc_id varchar,   -- id (varchar)
-  enc_patient_id varchar,   -- subject/reference (varchar)
-  enc_partof_id varchar,   -- partOf/reference (varchar)
+  enc_patient_ref varchar,   -- subject/reference (varchar)
+  enc_partof_ref varchar,   -- partOf/reference (varchar)
   enc_identifier_use varchar,   -- identifier/use (varchar)
   enc_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   enc_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_servicetype_text varchar,   -- serviceType/text (varchar)
   enc_period_start varchar,   -- period/start (varchar)
   enc_period_end varchar,   -- period/end (varchar)
-  enc_diagnosis_condition_id varchar,   -- diagnosis/condition/reference (varchar)
+  enc_diagnosis_condition_ref varchar,   -- diagnosis/condition/reference (varchar)
   enc_diagnosis_use_system varchar,   -- diagnosis/use/coding/system (varchar)
   enc_diagnosis_use_version varchar,   -- diagnosis/use/coding/version (varchar)
   enc_diagnosis_use_code varchar,   -- diagnosis/use/coding/code (varchar)
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_hospitalization_dischargedisposition_code varchar,   -- hospitalization/dischargeDisposition/coding/code (varchar)
   enc_hospitalization_dischargedisposition_display varchar,   -- hospitalization/dischargeDisposition/coding/display (varchar)
   enc_hospitalization_dischargedisposition_text varchar,   -- hospitalization/dischargeDisposition/text (varchar)
-  enc_location_id varchar,   -- location/location/reference (varchar)
+  enc_location_ref varchar,   -- location/location/reference (varchar)
   enc_location_type varchar,   -- location/location/type (varchar)
   enc_location_identifier_use varchar,   -- location/location/identifier/use (varchar)
   enc_location_identifier_type_system varchar,   -- location/location/identifier/type/coding/system (varchar)
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_location_physicaltype_code varchar,   -- location/location/physicalType/coding/code (varchar)
   enc_location_physicaltype_display varchar,   -- location/location/physicalType/coding/display (varchar)
   enc_location_physicaltype_text varchar,   -- location/location/physicalType/text (varchar)
-  enc_serviceprovider_id varchar,   -- serviceProvider/reference (varchar)
+  enc_serviceprovider_ref varchar,   -- serviceProvider/reference (varchar)
   enc_serviceprovider_type varchar,   -- serviceProvider/type (varchar)
   enc_serviceprovider_identifier_use varchar,   -- serviceProvider/identifier/use (varchar)
   enc_serviceprovider_identifier_type_system varchar,   -- serviceProvider/identifier/type/coding/system (varchar)
@@ -147,8 +147,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   con_id varchar,   -- id (varchar)
-  con_encounter_id varchar,   -- encounter/reference (varchar)
-  con_patient_id varchar,   -- subject/reference (varchar)
+  con_encounter_ref varchar,   -- encounter/reference (varchar)
+  con_patient_ref varchar,   -- subject/reference (varchar)
   con_identifier_use varchar,   -- identifier/use (varchar)
   con_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   con_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -210,7 +210,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_abatementrange_high_code varchar,   -- abatementRange/high/code (varchar)
   con_abatementstring varchar,   -- abatementString (varchar)
   con_recordeddate varchar,   -- recordedDate (varchar)
-  con_recorder_id varchar,   -- recorder/reference (varchar)
+  con_recorder_ref varchar,   -- recorder/reference (varchar)
   con_recorder_type varchar,   -- recorder/type (varchar)
   con_recorder_identifier_use varchar,   -- recorder/identifier/use (varchar)
   con_recorder_identifier_type_system varchar,   -- recorder/identifier/type/coding/system (varchar)
@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_recorder_identifier_type_display varchar,   -- recorder/identifier/type/coding/display (varchar)
   con_recorder_identifier_type_text varchar,   -- recorder/identifier/type/text (varchar)
   con_recorder_display varchar,   -- recorder/display (varchar)
-  con_asserter_id varchar,   -- asserter/reference (varchar)
+  con_asserter_ref varchar,   -- asserter/reference (varchar)
   con_asserter_type varchar,   -- asserter/type (varchar)
   con_asserter_identifier_use varchar,   -- asserter/identifier/use (varchar)
   con_asserter_identifier_type_system varchar,   -- asserter/identifier/type/coding/system (varchar)
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_stage_summary_code varchar,   -- stage/summary/coding/code (varchar)
   con_stage_summary_display varchar,   -- stage/summary/coding/display (varchar)
   con_stage_summary_text varchar,   -- stage/summary/text (varchar)
-  con_stage_assessment_id varchar,   -- stage/assessment/reference (varchar)
+  con_stage_assessment_ref varchar,   -- stage/assessment/reference (varchar)
   con_stage_assessment_type varchar,   -- stage/assessment/type (varchar)
   con_stage_assessment_identifier_use varchar,   -- stage/assessment/identifier/use (varchar)
   con_stage_assessment_identifier_type_system varchar,   -- stage/assessment/identifier/type/coding/system (varchar)
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_stage_type_display varchar,   -- stage/type/coding/display (varchar)
   con_stage_type_text varchar,   -- stage/type/text (varchar)
   con_note_authorstring varchar,   -- note/authorString (varchar)
-  con_note_authorreference_id varchar,   -- note/authorReference/reference (varchar)
+  con_note_authorreference_ref varchar,   -- note/authorReference/reference (varchar)
   con_note_authorreference_type varchar,   -- note/authorReference/type (varchar)
   con_note_authorreference_identifier_use varchar,   -- note/authorReference/identifier/use (varchar)
   con_note_authorreference_identifier_type_system varchar,   -- note/authorReference/identifier/type/coding/system (varchar)
@@ -317,7 +317,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   med_ingredient_itemcodeableconcept_code varchar,   -- ingredient/itemCodeableConcept/coding/code (varchar)
   med_ingredient_itemcodeableconcept_display varchar,   -- ingredient/itemCodeableConcept/coding/display (varchar)
   med_ingredient_itemcodeableconcept_text varchar,   -- ingredient/itemCodeableConcept/text (varchar)
-  med_ingredient_itemreference_id varchar,   -- ingredient/itemReference/reference (varchar)
+  med_ingredient_itemreference_ref varchar,   -- ingredient/itemReference/reference (varchar)
   med_ingredient_itemreference_type varchar,   -- ingredient/itemReference/type (varchar)
   med_ingredient_itemreference_identifier_use varchar,   -- ingredient/itemReference/identifier/use (varchar)
   med_ingredient_itemreference_identifier_type_system varchar,   -- ingredient/itemReference/identifier/type/coding/system (varchar)
@@ -339,8 +339,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medreq_id varchar,   -- id (varchar)
-  medreq_encounter_id varchar,   -- encounter/reference (varchar)
-  medreq_patient_id varchar,   -- subject/reference (varchar)
+  medreq_encounter_ref varchar,   -- encounter/reference (varchar)
+  medreq_patient_ref varchar,   -- subject/reference (varchar)
   medreq_identifier_use varchar,   -- identifier/use (varchar)
   medreq_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   medreq_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_identifier_value varchar,   -- identifier/value (varchar)
   medreq_identifier_start varchar,   -- identifier/start (varchar)
   medreq_identifier_end varchar,   -- identifier/end (varchar)
-  medreq_medicationreference_id varchar,   -- medicationReference/reference (varchar)
+  medreq_medicationreference_ref varchar,   -- medicationReference/reference (varchar)
   medreq_status varchar,   -- status (varchar)
   medreq_statusreason_system varchar,   -- statusReason/coding/system (varchar)
   medreq_statusreason_version varchar,   -- statusReason/coding/version (varchar)
@@ -366,7 +366,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_category_text varchar,   -- category/text (varchar)
   medreq_priority varchar,   -- priority (varchar)
   medreq_reportedboolean varchar,   -- reportedBoolean (varchar)
-  medreq_reportedreference_id varchar,   -- reportedReference/reference (varchar)
+  medreq_reportedreference_ref varchar,   -- reportedReference/reference (varchar)
   medreq_reportedreference_type varchar,   -- reportedReference/type (varchar)
   medreq_reportedreference_identifier_use varchar,   -- reportedReference/identifier/use (varchar)
   medreq_reportedreference_identifier_type_system varchar,   -- reportedReference/identifier/type/coding/system (varchar)
@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_medicationcodeableconcept_code varchar,   -- medicationCodeableConcept/coding/code (varchar)
   medreq_medicationcodeableconcept_display varchar,   -- medicationCodeableConcept/coding/display (varchar)
   medreq_medicationcodeableconcept_text varchar,   -- medicationCodeableConcept/text (varchar)
-  medreq_supportinginformation_id varchar,   -- supportingInformation/reference (varchar)
+  medreq_supportinginformation_ref varchar,   -- supportingInformation/reference (varchar)
   medreq_supportinginformation_type varchar,   -- supportingInformation/type (varchar)
   medreq_supportinginformation_identifier_use varchar,   -- supportingInformation/identifier/use (varchar)
   medreq_supportinginformation_identifier_type_system varchar,   -- supportingInformation/identifier/type/coding/system (varchar)
@@ -390,7 +390,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_supportinginformation_identifier_type_text varchar,   -- supportingInformation/identifier/type/text (varchar)
   medreq_supportinginformation_display varchar,   -- supportingInformation/display (varchar)
   medreq_authoredon varchar,   -- authoredOn (varchar)
-  medreq_requester_id varchar,   -- requester/reference (varchar)
+  medreq_requester_ref varchar,   -- requester/reference (varchar)
   medreq_requester_type varchar,   -- requester/type (varchar)
   medreq_requester_identifier_use varchar,   -- requester/identifier/use (varchar)
   medreq_requester_identifier_type_system varchar,   -- requester/identifier/type/coding/system (varchar)
@@ -404,7 +404,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_reasoncode_code varchar,   -- reasonCode/coding/code (varchar)
   medreq_reasoncode_display varchar,   -- reasonCode/coding/display (varchar)
   medreq_reasoncode_text varchar,   -- reasonCode/text (varchar)
-  medreq_reasonreference_id varchar,   -- reasonReference/reference (varchar)
+  medreq_reasonreference_ref varchar,   -- reasonReference/reference (varchar)
   medreq_reasonreference_type varchar,   -- reasonReference/type (varchar)
   medreq_reasonreference_identifier_use varchar,   -- reasonReference/identifier/use (varchar)
   medreq_reasonreference_identifier_type_system varchar,   -- reasonReference/identifier/type/coding/system (varchar)
@@ -413,7 +413,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_reasonreference_identifier_type_display varchar,   -- reasonReference/identifier/type/coding/display (varchar)
   medreq_reasonreference_identifier_type_text varchar,   -- reasonReference/identifier/type/text (varchar)
   medreq_reasonreference_display varchar,   -- reasonReference/display (varchar)
-  medreq_basedon_id varchar,   -- basedOn/reference (varchar)
+  medreq_basedon_ref varchar,   -- basedOn/reference (varchar)
   medreq_basedon_type varchar,   -- basedOn/type (varchar)
   medreq_basedon_identifier_use varchar,   -- basedOn/identifier/use (varchar)
   medreq_basedon_identifier_type_system varchar,   -- basedOn/identifier/type/coding/system (varchar)
@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_basedon_identifier_type_text varchar,   -- basedOn/identifier/type/text (varchar)
   medreq_basedon_display varchar,   -- basedOn/display (varchar)
   medreq_note_authorstring varchar,   -- note/authorString (varchar)
-  medreq_note_authorreference_id varchar,   -- note/authorReference/reference (varchar)
+  medreq_note_authorreference_ref varchar,   -- note/authorReference/reference (varchar)
   medreq_note_authorreference_type varchar,   -- note/authorReference/type (varchar)
   medreq_note_authorreference_identifier_use varchar,   -- note/authorReference/identifier/use (varchar)
   medreq_note_authorreference_identifier_type_system varchar,   -- note/authorReference/identifier/type/coding/system (varchar)
@@ -573,9 +573,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medadm_id varchar,   -- id (varchar)
-  medadm_encounter_id varchar,   -- context/reference (varchar)
-  medadm_patient_id varchar,   -- subject/reference (varchar)
-  medadm_partof_id varchar,   -- partOf/reference (varchar)
+  medadm_encounter_ref varchar,   -- context/reference (varchar)
+  medadm_patient_ref varchar,   -- subject/reference (varchar)
+  medadm_partof_ref varchar,   -- partOf/reference (varchar)
   medadm_identifier_use varchar,   -- identifier/use (varchar)
   medadm_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   medadm_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -597,13 +597,13 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_category_code varchar,   -- category/coding/code (varchar)
   medadm_category_display varchar,   -- category/coding/display (varchar)
   medadm_category_text varchar,   -- category/text (varchar)
-  medadm_medicationreference_id varchar,   -- medicationReference/reference (varchar)
+  medadm_medicationreference_ref varchar,   -- medicationReference/reference (varchar)
   medadm_medicationcodeableconcept_system varchar,   -- medicationCodeableConcept/coding/system (varchar)
   medadm_medicationcodeableconcept_version varchar,   -- medicationCodeableConcept/coding/version (varchar)
   medadm_medicationcodeableconcept_code varchar,   -- medicationCodeableConcept/coding/code (varchar)
   medadm_medicationcodeableconcept_display varchar,   -- medicationCodeableConcept/coding/display (varchar)
   medadm_medicationcodeableconcept_text varchar,   -- medicationCodeableConcept/text (varchar)
-  medadm_supportinginformation_id varchar,   -- supportingInformation/reference (varchar)
+  medadm_supportinginformation_ref varchar,   -- supportingInformation/reference (varchar)
   medadm_supportinginformation_type varchar,   -- supportingInformation/type (varchar)
   medadm_supportinginformation_identifier_use varchar,   -- supportingInformation/identifier/use (varchar)
   medadm_supportinginformation_identifier_type_system varchar,   -- supportingInformation/identifier/type/coding/system (varchar)
@@ -625,7 +625,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_reasoncode_code varchar,   -- reasonCode/coding/code (varchar)
   medadm_reasoncode_display varchar,   -- reasonCode/coding/display (varchar)
   medadm_reasoncode_text varchar,   -- reasonCode/text (varchar)
-  medadm_reasonreference_id varchar,   -- reasonReference/reference (varchar)
+  medadm_reasonreference_ref varchar,   -- reasonReference/reference (varchar)
   medadm_reasonreference_type varchar,   -- reasonReference/type (varchar)
   medadm_reasonreference_identifier_use varchar,   -- reasonReference/identifier/use (varchar)
   medadm_reasonreference_identifier_type_system varchar,   -- reasonReference/identifier/type/coding/system (varchar)
@@ -634,9 +634,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_reasonreference_identifier_type_display varchar,   -- reasonReference/identifier/type/coding/display (varchar)
   medadm_reasonreference_identifier_type_text varchar,   -- reasonReference/identifier/type/text (varchar)
   medadm_reasonreference_display varchar,   -- reasonReference/display (varchar)
-  medadm_request_id varchar,   -- request/reference (varchar)
+  medadm_request_ref varchar,   -- request/reference (varchar)
   medadm_note_authorstring varchar,   -- note/authorString (varchar)
-  medadm_note_authorreference_id varchar,   -- note/authorReference/reference (varchar)
+  medadm_note_authorreference_ref varchar,   -- note/authorReference/reference (varchar)
   medadm_note_authorreference_type varchar,   -- note/authorReference/type (varchar)
   medadm_note_authorreference_identifier_use varchar,   -- note/authorReference/identifier/use (varchar)
   medadm_note_authorreference_identifier_type_system varchar,   -- note/authorReference/identifier/type/coding/system (varchar)
@@ -703,10 +703,10 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_identifier_value varchar,   -- identifier/value (varchar)
   medstat_identifier_start varchar,   -- identifier/start (varchar)
   medstat_identifier_end varchar,   -- identifier/end (varchar)
-  medstat_encounter_id varchar,   -- context/reference (varchar)
-  medstat_patient_id varchar,   -- subject/reference (varchar)
-  medstat_partof_id varchar,   -- partOf/reference (varchar)
-  medstat_basedon_id varchar,   -- basedOn/reference (varchar)
+  medstat_encounter_ref varchar,   -- context/reference (varchar)
+  medstat_patient_ref varchar,   -- subject/reference (varchar)
+  medstat_partof_ref varchar,   -- partOf/reference (varchar)
+  medstat_basedon_ref varchar,   -- basedOn/reference (varchar)
   medstat_basedon_type varchar,   -- basedOn/type (varchar)
   medstat_basedon_identifier_use varchar,   -- basedOn/identifier/use (varchar)
   medstat_basedon_identifier_type_system varchar,   -- basedOn/identifier/type/coding/system (varchar)
@@ -726,7 +726,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_category_code varchar,   -- category/coding/code (varchar)
   medstat_category_display varchar,   -- category/coding/display (varchar)
   medstat_category_text varchar,   -- category/text (varchar)
-  medstat_medicationreference_id varchar,   -- medicationReference/reference (varchar)
+  medstat_medicationreference_ref varchar,   -- medicationReference/reference (varchar)
   medstat_medicationcodeableconcept_system varchar,   -- medicationCodeableConcept/coding/system (varchar)
   medstat_medicationcodeableconcept_version varchar,   -- medicationCodeableConcept/coding/version (varchar)
   medstat_medicationcodeableconcept_code varchar,   -- medicationCodeableConcept/coding/code (varchar)
@@ -736,7 +736,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_effectiveperiod_start varchar,   -- effectivePeriod/start (varchar)
   medstat_effectiveperiod_end varchar,   -- effectivePeriod/end (varchar)
   medstat_dateasserted varchar,   -- dateAsserted (varchar)
-  medstat_informationsource_id varchar,   -- informationSource/reference (varchar)
+  medstat_informationsource_ref varchar,   -- informationSource/reference (varchar)
   medstat_informationsource_type varchar,   -- informationSource/type (varchar)
   medstat_informationsource_identifier_use varchar,   -- informationSource/identifier/use (varchar)
   medstat_informationsource_identifier_type_system varchar,   -- informationSource/identifier/type/coding/system (varchar)
@@ -745,7 +745,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_informationsource_identifier_type_display varchar,   -- informationSource/identifier/type/coding/display (varchar)
   medstat_informationsource_identifier_type_text varchar,   -- informationSource/identifier/type/text (varchar)
   medstat_informationsource_display varchar,   -- informationSource/display (varchar)
-  medstat_derivedfrom_id varchar,   -- derivedFrom/reference (varchar)
+  medstat_derivedfrom_ref varchar,   -- derivedFrom/reference (varchar)
   medstat_derivedfrom_type varchar,   -- derivedFrom/type (varchar)
   medstat_derivedfrom_identifier_use varchar,   -- derivedFrom/identifier/use (varchar)
   medstat_derivedfrom_identifier_type_system varchar,   -- derivedFrom/identifier/type/coding/system (varchar)
@@ -759,7 +759,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_reasoncode_code varchar,   -- reasonCode/coding/code (varchar)
   medstat_reasoncode_display varchar,   -- reasonCode/coding/display (varchar)
   medstat_reasoncode_text varchar,   -- reasonCode/text (varchar)
-  medstat_reasonreference_id varchar,   -- reasonReference/reference (varchar)
+  medstat_reasonreference_ref varchar,   -- reasonReference/reference (varchar)
   medstat_reasonreference_type varchar,   -- reasonReference/type (varchar)
   medstat_reasonreference_identifier_use varchar,   -- reasonReference/identifier/use (varchar)
   medstat_reasonreference_identifier_type_system varchar,   -- reasonReference/identifier/type/coding/system (varchar)
@@ -769,7 +769,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_reasonreference_identifier_type_text varchar,   -- reasonReference/identifier/type/text (varchar)
   medstat_reasonreference_display varchar,   -- reasonReference/display (varchar)
   medstat_note_authorstring varchar,   -- note/authorString (varchar)
-  medstat_note_authorreference_id varchar,   -- note/authorReference/reference (varchar)
+  medstat_note_authorreference_ref varchar,   -- note/authorReference/reference (varchar)
   medstat_note_authorreference_type varchar,   -- note/authorReference/type (varchar)
   medstat_note_authorreference_identifier_use varchar,   -- note/authorReference/identifier/use (varchar)
   medstat_note_authorreference_identifier_type_system varchar,   -- note/authorReference/identifier/type/coding/system (varchar)
@@ -914,9 +914,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   obs_id varchar,   -- id (varchar)
-  obs_encounter_id varchar,   -- encounter/reference (varchar)
-  obs_patient_id varchar,   -- subject/reference (varchar)
-  obs_partof_id varchar,   -- partOf/reference (varchar)
+  obs_encounter_ref varchar,   -- encounter/reference (varchar)
+  obs_patient_ref varchar,   -- subject/reference (varchar)
+  obs_partof_ref varchar,   -- partOf/reference (varchar)
   obs_identifier_use varchar,   -- identifier/use (varchar)
   obs_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   obs_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -927,7 +927,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_identifier_value varchar,   -- identifier/value (varchar)
   obs_identifier_start varchar,   -- identifier/start (varchar)
   obs_identifier_end varchar,   -- identifier/end (varchar)
-  obs_basedon_id varchar,   -- basedOn/reference (varchar)
+  obs_basedon_ref varchar,   -- basedOn/reference (varchar)
   obs_basedon_type varchar,   -- basedOn/type (varchar)
   obs_basedon_identifier_use varchar,   -- basedOn/identifier/use (varchar)
   obs_basedon_identifier_type_system varchar,   -- basedOn/identifier/type/coding/system (varchar)
@@ -983,7 +983,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_dataabsentreason_display varchar,   -- dataAbsentReason/coding/display (varchar)
   obs_dataabsentreason_text varchar,   -- dataAbsentReason/text (varchar)
   obs_note_authorstring varchar,   -- note/authorString (varchar)
-  obs_note_authorreference_id varchar,   -- note/authorReference/reference (varchar)
+  obs_note_authorreference_ref varchar,   -- note/authorReference/reference (varchar)
   obs_note_authorreference_type varchar,   -- note/authorReference/type (varchar)
   obs_note_authorreference_identifier_use varchar,   -- note/authorReference/identifier/use (varchar)
   obs_note_authorreference_identifier_type_system varchar,   -- note/authorReference/identifier/type/coding/system (varchar)
@@ -999,7 +999,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_method_code varchar,   -- method/coding/code (varchar)
   obs_method_display varchar,   -- method/coding/display (varchar)
   obs_method_text varchar,   -- method/text (varchar)
-  obs_performer_id varchar,   -- performer/reference (varchar)
+  obs_performer_ref varchar,   -- performer/reference (varchar)
   obs_performer_type varchar,   -- performer/type (varchar)
   obs_performer_identifier_use varchar,   -- performer/identifier/use (varchar)
   obs_performer_identifier_type_system varchar,   -- performer/identifier/type/coding/system (varchar)
@@ -1035,7 +1035,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_referencerange_age_high_system varchar,   -- referenceRange/age/high/system (varchar)
   obs_referencerange_age_high_code varchar,   -- referenceRange/age/high/code (varchar)
   obs_referencerange_text varchar,   -- referenceRange/text (varchar)
-  obs_hasmember_id varchar,   -- hasMember/reference (varchar)
+  obs_hasmember_ref varchar,   -- hasMember/reference (varchar)
   obs_hasmember_type varchar,   -- hasMember/type (varchar)
   obs_hasmember_identifier_use varchar,   -- hasMember/identifier/use (varchar)
   obs_hasmember_identifier_type_system varchar,   -- hasMember/identifier/type/coding/system (varchar)
@@ -1056,9 +1056,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagrep_id varchar,   -- id (varchar)
-  diagrep_encounter_id varchar,   -- encounter/reference (varchar)
-  diagrep_patient_id varchar,   -- subject/reference (varchar)
-  diagrep_partof_id varchar,   -- partOf/reference (varchar)
+  diagrep_encounter_ref varchar,   -- encounter/reference (varchar)
+  diagrep_patient_ref varchar,   -- subject/reference (varchar)
+  diagrep_partof_ref varchar,   -- partOf/reference (varchar)
   diagrep_identifier_use varchar,   -- identifier/use (varchar)
   diagrep_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   diagrep_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -1069,8 +1069,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_identifier_value varchar,   -- identifier/value (varchar)
   diagrep_identifier_start varchar,   -- identifier/start (varchar)
   diagrep_identifier_end varchar,   -- identifier/end (varchar)
-  diagrep_result_id varchar,   -- result/reference (varchar)
-  diagrep_basedon_id varchar,   -- basedOn/reference (varchar)
+  diagrep_result_ref varchar,   -- result/reference (varchar)
+  diagrep_basedon_ref varchar,   -- basedOn/reference (varchar)
   diagrep_status varchar,   -- status (varchar)
   diagrep_category_system varchar,   -- category/coding/system (varchar)
   diagrep_category_version varchar,   -- category/coding/version (varchar)
@@ -1084,7 +1084,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_code_text varchar,   -- code/text (varchar)
   diagrep_effectivedatetime varchar,   -- effectiveDateTime (varchar)
   diagrep_issued varchar,   -- issued (varchar)
-  diagrep_performer_id varchar,   -- performer/reference (varchar)
+  diagrep_performer_ref varchar,   -- performer/reference (varchar)
   diagrep_performer_type varchar,   -- performer/type (varchar)
   diagrep_performer_identifier_use varchar,   -- performer/identifier/use (varchar)
   diagrep_performer_identifier_type_system varchar,   -- performer/identifier/type/coding/system (varchar)
@@ -1111,8 +1111,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servreq_id varchar,   -- id (varchar)
-  servreq_encounter_id varchar,   -- encounter/reference (varchar)
-  servreq_patient_id varchar,   -- subject/reference (varchar)
+  servreq_encounter_ref varchar,   -- encounter/reference (varchar)
+  servreq_patient_ref varchar,   -- subject/reference (varchar)
   servreq_identifier_use varchar,   -- identifier/use (varchar)
   servreq_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   servreq_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -1123,7 +1123,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_identifier_value varchar,   -- identifier/value (varchar)
   servreq_identifier_start varchar,   -- identifier/start (varchar)
   servreq_identifier_end varchar,   -- identifier/end (varchar)
-  servreq_basedon_id varchar,   -- basedOn/reference (varchar)
+  servreq_basedon_ref varchar,   -- basedOn/reference (varchar)
   servreq_basedon_type varchar,   -- basedOn/type (varchar)
   servreq_basedon_identifier_use varchar,   -- basedOn/identifier/use (varchar)
   servreq_basedon_identifier_type_system varchar,   -- basedOn/identifier/type/coding/system (varchar)
@@ -1145,7 +1145,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_code_display varchar,   -- code/coding/display (varchar)
   servreq_code_text varchar,   -- code/text (varchar)
   servreq_authoredon varchar,   -- authoredOn (varchar)
-  servreq_requester_id varchar,   -- requester/reference (varchar)
+  servreq_requester_ref varchar,   -- requester/reference (varchar)
   servreq_requester_type varchar,   -- requester/type (varchar)
   servreq_requester_identifier_use varchar,   -- requester/identifier/use (varchar)
   servreq_requester_identifier_type_system varchar,   -- requester/identifier/type/coding/system (varchar)
@@ -1154,7 +1154,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_requester_identifier_type_display varchar,   -- requester/identifier/type/coding/display (varchar)
   servreq_requester_identifier_type_text varchar,   -- requester/identifier/type/text (varchar)
   servreq_requester_display varchar,   -- requester/display (varchar)
-  servreq_performer_id varchar,   -- performer/reference (varchar)
+  servreq_performer_ref varchar,   -- performer/reference (varchar)
   servreq_performer_type varchar,   -- performer/type (varchar)
   servreq_performer_identifier_use varchar,   -- performer/identifier/use (varchar)
   servreq_performer_identifier_type_system varchar,   -- performer/identifier/type/coding/system (varchar)
@@ -1180,9 +1180,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   proc_id varchar,   -- id (varchar)
-  proc_encounter_id varchar,   -- encounter/reference (varchar)
-  proc_patient_id varchar,   -- subject/reference (varchar)
-  proc_partof_id varchar,   -- partOf/reference (varchar)
+  proc_encounter_ref varchar,   -- encounter/reference (varchar)
+  proc_patient_ref varchar,   -- subject/reference (varchar)
+  proc_partof_ref varchar,   -- partOf/reference (varchar)
   proc_identifier_use varchar,   -- identifier/use (varchar)
   proc_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   proc_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -1193,7 +1193,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_identifier_value varchar,   -- identifier/value (varchar)
   proc_identifier_start varchar,   -- identifier/start (varchar)
   proc_identifier_end varchar,   -- identifier/end (varchar)
-  proc_basedon_id varchar,   -- basedOn/reference (varchar)
+  proc_basedon_ref varchar,   -- basedOn/reference (varchar)
   proc_basedon_type varchar,   -- basedOn/type (varchar)
   proc_basedon_identifier_use varchar,   -- basedOn/identifier/use (varchar)
   proc_basedon_identifier_type_system varchar,   -- basedOn/identifier/type/coding/system (varchar)
@@ -1226,7 +1226,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_reasoncode_code varchar,   -- reasonCode/coding/code (varchar)
   proc_reasoncode_display varchar,   -- reasonCode/coding/display (varchar)
   proc_reasoncode_text varchar,   -- reasonCode/text (varchar)
-  proc_reasonreference_id varchar,   -- reasonReference/reference (varchar)
+  proc_reasonreference_ref varchar,   -- reasonReference/reference (varchar)
   proc_reasonreference_type varchar,   -- reasonReference/type (varchar)
   proc_reasonreference_identifier_use varchar,   -- reasonReference/identifier/use (varchar)
   proc_reasonreference_identifier_type_system varchar,   -- reasonReference/identifier/type/coding/system (varchar)
@@ -1236,7 +1236,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_reasonreference_identifier_type_text varchar,   -- reasonReference/identifier/type/text (varchar)
   proc_reasonreference_display varchar,   -- reasonReference/display (varchar)
   proc_note_authorstring varchar,   -- note/authorString (varchar)
-  proc_note_authorreference_id varchar,   -- note/authorReference/reference (varchar)
+  proc_note_authorreference_ref varchar,   -- note/authorReference/reference (varchar)
   proc_note_authorreference_type varchar,   -- note/authorReference/type (varchar)
   proc_note_authorreference_identifier_use varchar,   -- note/authorReference/identifier/use (varchar)
   proc_note_authorreference_identifier_type_system varchar,   -- note/authorReference/identifier/type/coding/system (varchar)
@@ -1259,7 +1259,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   cons_id varchar,   -- id (varchar)
-  cons_patient_id varchar,   -- patient/reference (varchar)
+  cons_patient_ref varchar,   -- patient/reference (varchar)
   cons_identifier_use varchar,   -- identifier/use (varchar)
   cons_identifier_type_system varchar,   -- identifier/type/coding/system (varchar)
   cons_identifier_type_version varchar,   -- identifier/type/coding/version (varchar)
@@ -1478,8 +1478,8 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward_raw TO db_
 
 comment on column cds2db_in.encounter_raw.encounter_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.encounter_raw.enc_id is 'id (varchar)';
-comment on column cds2db_in.encounter_raw.enc_patient_id is 'subject/reference (varchar)';
-comment on column cds2db_in.encounter_raw.enc_partof_id is 'partOf/reference (varchar)';
+comment on column cds2db_in.encounter_raw.enc_patient_ref is 'subject/reference (varchar)';
+comment on column cds2db_in.encounter_raw.enc_partof_ref is 'partOf/reference (varchar)';
 comment on column cds2db_in.encounter_raw.enc_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.encounter_raw.enc_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.encounter_raw.enc_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -1507,7 +1507,7 @@ comment on column cds2db_in.encounter_raw.enc_servicetype_display is 'serviceTyp
 comment on column cds2db_in.encounter_raw.enc_servicetype_text is 'serviceType/text (varchar)';
 comment on column cds2db_in.encounter_raw.enc_period_start is 'period/start (varchar)';
 comment on column cds2db_in.encounter_raw.enc_period_end is 'period/end (varchar)';
-comment on column cds2db_in.encounter_raw.enc_diagnosis_condition_id is 'diagnosis/condition/reference (varchar)';
+comment on column cds2db_in.encounter_raw.enc_diagnosis_condition_ref is 'diagnosis/condition/reference (varchar)';
 comment on column cds2db_in.encounter_raw.enc_diagnosis_use_system is 'diagnosis/use/coding/system (varchar)';
 comment on column cds2db_in.encounter_raw.enc_diagnosis_use_version is 'diagnosis/use/coding/version (varchar)';
 comment on column cds2db_in.encounter_raw.enc_diagnosis_use_code is 'diagnosis/use/coding/code (varchar)';
@@ -1524,7 +1524,7 @@ comment on column cds2db_in.encounter_raw.enc_hospitalization_dischargedispositi
 comment on column cds2db_in.encounter_raw.enc_hospitalization_dischargedisposition_code is 'hospitalization/dischargeDisposition/coding/code (varchar)';
 comment on column cds2db_in.encounter_raw.enc_hospitalization_dischargedisposition_display is 'hospitalization/dischargeDisposition/coding/display (varchar)';
 comment on column cds2db_in.encounter_raw.enc_hospitalization_dischargedisposition_text is 'hospitalization/dischargeDisposition/text (varchar)';
-comment on column cds2db_in.encounter_raw.enc_location_id is 'location/location/reference (varchar)';
+comment on column cds2db_in.encounter_raw.enc_location_ref is 'location/location/reference (varchar)';
 comment on column cds2db_in.encounter_raw.enc_location_type is 'location/location/type (varchar)';
 comment on column cds2db_in.encounter_raw.enc_location_identifier_use is 'location/location/identifier/use (varchar)';
 comment on column cds2db_in.encounter_raw.enc_location_identifier_type_system is 'location/location/identifier/type/coding/system (varchar)';
@@ -1539,7 +1539,7 @@ comment on column cds2db_in.encounter_raw.enc_location_physicaltype_version is '
 comment on column cds2db_in.encounter_raw.enc_location_physicaltype_code is 'location/location/physicalType/coding/code (varchar)';
 comment on column cds2db_in.encounter_raw.enc_location_physicaltype_display is 'location/location/physicalType/coding/display (varchar)';
 comment on column cds2db_in.encounter_raw.enc_location_physicaltype_text is 'location/location/physicalType/text (varchar)';
-comment on column cds2db_in.encounter_raw.enc_serviceprovider_id is 'serviceProvider/reference (varchar)';
+comment on column cds2db_in.encounter_raw.enc_serviceprovider_ref is 'serviceProvider/reference (varchar)';
 comment on column cds2db_in.encounter_raw.enc_serviceprovider_type is 'serviceProvider/type (varchar)';
 comment on column cds2db_in.encounter_raw.enc_serviceprovider_identifier_use is 'serviceProvider/identifier/use (varchar)';
 comment on column cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_system is 'serviceProvider/identifier/type/coding/system (varchar)';
@@ -1576,8 +1576,8 @@ comment on column cds2db_in.patient_raw.current_dataset_status is 'Processing st
 
 comment on column cds2db_in.condition_raw.condition_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.condition_raw.con_id is 'id (varchar)';
-comment on column cds2db_in.condition_raw.con_encounter_id is 'encounter/reference (varchar)';
-comment on column cds2db_in.condition_raw.con_patient_id is 'subject/reference (varchar)';
+comment on column cds2db_in.condition_raw.con_encounter_ref is 'encounter/reference (varchar)';
+comment on column cds2db_in.condition_raw.con_patient_ref is 'subject/reference (varchar)';
 comment on column cds2db_in.condition_raw.con_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.condition_raw.con_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.condition_raw.con_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -1639,7 +1639,7 @@ comment on column cds2db_in.condition_raw.con_abatementrange_high_system is 'aba
 comment on column cds2db_in.condition_raw.con_abatementrange_high_code is 'abatementRange/high/code (varchar)';
 comment on column cds2db_in.condition_raw.con_abatementstring is 'abatementString (varchar)';
 comment on column cds2db_in.condition_raw.con_recordeddate is 'recordedDate (varchar)';
-comment on column cds2db_in.condition_raw.con_recorder_id is 'recorder/reference (varchar)';
+comment on column cds2db_in.condition_raw.con_recorder_ref is 'recorder/reference (varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_type is 'recorder/type (varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_identifier_use is 'recorder/identifier/use (varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_identifier_type_system is 'recorder/identifier/type/coding/system (varchar)';
@@ -1648,7 +1648,7 @@ comment on column cds2db_in.condition_raw.con_recorder_identifier_type_code is '
 comment on column cds2db_in.condition_raw.con_recorder_identifier_type_display is 'recorder/identifier/type/coding/display (varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_identifier_type_text is 'recorder/identifier/type/text (varchar)';
 comment on column cds2db_in.condition_raw.con_recorder_display is 'recorder/display (varchar)';
-comment on column cds2db_in.condition_raw.con_asserter_id is 'asserter/reference (varchar)';
+comment on column cds2db_in.condition_raw.con_asserter_ref is 'asserter/reference (varchar)';
 comment on column cds2db_in.condition_raw.con_asserter_type is 'asserter/type (varchar)';
 comment on column cds2db_in.condition_raw.con_asserter_identifier_use is 'asserter/identifier/use (varchar)';
 comment on column cds2db_in.condition_raw.con_asserter_identifier_type_system is 'asserter/identifier/type/coding/system (varchar)';
@@ -1662,7 +1662,7 @@ comment on column cds2db_in.condition_raw.con_stage_summary_version is 'stage/su
 comment on column cds2db_in.condition_raw.con_stage_summary_code is 'stage/summary/coding/code (varchar)';
 comment on column cds2db_in.condition_raw.con_stage_summary_display is 'stage/summary/coding/display (varchar)';
 comment on column cds2db_in.condition_raw.con_stage_summary_text is 'stage/summary/text (varchar)';
-comment on column cds2db_in.condition_raw.con_stage_assessment_id is 'stage/assessment/reference (varchar)';
+comment on column cds2db_in.condition_raw.con_stage_assessment_ref is 'stage/assessment/reference (varchar)';
 comment on column cds2db_in.condition_raw.con_stage_assessment_type is 'stage/assessment/type (varchar)';
 comment on column cds2db_in.condition_raw.con_stage_assessment_identifier_use is 'stage/assessment/identifier/use (varchar)';
 comment on column cds2db_in.condition_raw.con_stage_assessment_identifier_type_system is 'stage/assessment/identifier/type/coding/system (varchar)';
@@ -1677,7 +1677,7 @@ comment on column cds2db_in.condition_raw.con_stage_type_code is 'stage/type/cod
 comment on column cds2db_in.condition_raw.con_stage_type_display is 'stage/type/coding/display (varchar)';
 comment on column cds2db_in.condition_raw.con_stage_type_text is 'stage/type/text (varchar)';
 comment on column cds2db_in.condition_raw.con_note_authorstring is 'note/authorString (varchar)';
-comment on column cds2db_in.condition_raw.con_note_authorreference_id is 'note/authorReference/reference (varchar)';
+comment on column cds2db_in.condition_raw.con_note_authorreference_ref is 'note/authorReference/reference (varchar)';
 comment on column cds2db_in.condition_raw.con_note_authorreference_type is 'note/authorReference/type (varchar)';
 comment on column cds2db_in.condition_raw.con_note_authorreference_identifier_use is 'note/authorReference/identifier/use (varchar)';
 comment on column cds2db_in.condition_raw.con_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (varchar)';
@@ -1740,7 +1740,7 @@ comment on column cds2db_in.medication_raw.med_ingredient_itemcodeableconcept_ve
 comment on column cds2db_in.medication_raw.med_ingredient_itemcodeableconcept_code is 'ingredient/itemCodeableConcept/coding/code (varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_itemcodeableconcept_display is 'ingredient/itemCodeableConcept/coding/display (varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_itemcodeableconcept_text is 'ingredient/itemCodeableConcept/text (varchar)';
-comment on column cds2db_in.medication_raw.med_ingredient_itemreference_id is 'ingredient/itemReference/reference (varchar)';
+comment on column cds2db_in.medication_raw.med_ingredient_itemreference_ref is 'ingredient/itemReference/reference (varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_itemreference_type is 'ingredient/itemReference/type (varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_itemreference_identifier_use is 'ingredient/itemReference/identifier/use (varchar)';
 comment on column cds2db_in.medication_raw.med_ingredient_itemreference_identifier_type_system is 'ingredient/itemReference/identifier/type/coding/system (varchar)';
@@ -1756,8 +1756,8 @@ comment on column cds2db_in.medication_raw.current_dataset_status is 'Processing
 
 comment on column cds2db_in.medicationrequest_raw.medicationrequest_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationrequest_raw.medreq_id is 'id (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_encounter_id is 'encounter/reference (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_patient_id is 'subject/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_encounter_ref is 'encounter/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_patient_ref is 'subject/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -1768,7 +1768,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_identifier_system is 'i
 comment on column cds2db_in.medicationrequest_raw.medreq_identifier_value is 'identifier/value (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_identifier_start is 'identifier/start (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_identifier_end is 'identifier/end (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_medicationreference_id is 'medicationReference/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_medicationreference_ref is 'medicationReference/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_status is 'status (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_statusreason_system is 'statusReason/coding/system (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_statusreason_version is 'statusReason/coding/version (varchar)';
@@ -1783,7 +1783,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_category_display is 'ca
 comment on column cds2db_in.medicationrequest_raw.medreq_category_text is 'category/text (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_priority is 'priority (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reportedboolean is 'reportedBoolean (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_reportedreference_id is 'reportedReference/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_reportedreference_ref is 'reportedReference/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reportedreference_type is 'reportedReference/type (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_use is 'reportedReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_type_system is 'reportedReference/identifier/type/coding/system (varchar)';
@@ -1797,7 +1797,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_medicationcodeableconce
 comment on column cds2db_in.medicationrequest_raw.medreq_medicationcodeableconcept_code is 'medicationCodeableConcept/coding/code (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_medicationcodeableconcept_display is 'medicationCodeableConcept/coding/display (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_medicationcodeableconcept_text is 'medicationCodeableConcept/text (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_id is 'supportingInformation/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_ref is 'supportingInformation/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_type is 'supportingInformation/type (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_use is 'supportingInformation/identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_system is 'supportingInformation/identifier/type/coding/system (varchar)';
@@ -1807,7 +1807,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_i
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_text is 'supportingInformation/identifier/type/text (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_supportinginformation_display is 'supportingInformation/display (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_authoredon is 'authoredOn (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_requester_id is 'requester/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_requester_ref is 'requester/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_requester_type is 'requester/type (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_requester_identifier_use is 'requester/identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_requester_identifier_type_system is 'requester/identifier/type/coding/system (varchar)';
@@ -1821,7 +1821,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_reasoncode_version is '
 comment on column cds2db_in.medicationrequest_raw.medreq_reasoncode_code is 'reasonCode/coding/code (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasoncode_display is 'reasonCode/coding/display (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasoncode_text is 'reasonCode/text (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_id is 'reasonReference/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_ref is 'reasonReference/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_type is 'reasonReference/type (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_use is 'reasonReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_type_system is 'reasonReference/identifier/type/coding/system (varchar)';
@@ -1830,7 +1830,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_identif
 comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_type_display is 'reasonReference/identifier/type/coding/display (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_type_text is 'reasonReference/identifier/type/text (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_reasonreference_display is 'reasonReference/display (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_basedon_id is 'basedOn/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_basedon_ref is 'basedOn/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_basedon_type is 'basedOn/type (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_basedon_identifier_use is 'basedOn/identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type_system is 'basedOn/identifier/type/coding/system (varchar)';
@@ -1840,7 +1840,7 @@ comment on column cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type
 comment on column cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type_text is 'basedOn/identifier/type/text (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_basedon_display is 'basedOn/display (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_note_authorstring is 'note/authorString (varchar)';
-comment on column cds2db_in.medicationrequest_raw.medreq_note_authorreference_id is 'note/authorReference/reference (varchar)';
+comment on column cds2db_in.medicationrequest_raw.medreq_note_authorreference_ref is 'note/authorReference/reference (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_note_authorreference_type is 'note/authorReference/type (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_use is 'note/authorReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (varchar)';
@@ -1984,9 +1984,9 @@ comment on column cds2db_in.medicationrequest_raw.current_dataset_status is 'Pro
 
 comment on column cds2db_in.medicationadministration_raw.medicationadministration_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.medicationadministration_raw.medadm_id is 'id (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_encounter_id is 'context/reference (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_patient_id is 'subject/reference (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_partof_id is 'partOf/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_encounter_ref is 'context/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_patient_ref is 'subject/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_partof_ref is 'partOf/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -2008,13 +2008,13 @@ comment on column cds2db_in.medicationadministration_raw.medadm_category_version
 comment on column cds2db_in.medicationadministration_raw.medadm_category_code is 'category/coding/code (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_category_display is 'category/coding/display (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_category_text is 'category/text (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_medicationreference_id is 'medicationReference/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_medicationreference_ref is 'medicationReference/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_medicationcodeableconcept_system is 'medicationCodeableConcept/coding/system (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_medicationcodeableconcept_version is 'medicationCodeableConcept/coding/version (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_medicationcodeableconcept_code is 'medicationCodeableConcept/coding/code (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_medicationcodeableconcept_display is 'medicationCodeableConcept/coding/display (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_medicationcodeableconcept_text is 'medicationCodeableConcept/text (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_id is 'supportingInformation/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_ref is 'supportingInformation/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_type is 'supportingInformation/type (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_use is 'supportingInformation/identifier/use (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_type_system is 'supportingInformation/identifier/type/coding/system (varchar)';
@@ -2036,7 +2036,7 @@ comment on column cds2db_in.medicationadministration_raw.medadm_reasoncode_versi
 comment on column cds2db_in.medicationadministration_raw.medadm_reasoncode_code is 'reasonCode/coding/code (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasoncode_display is 'reasonCode/coding/display (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasoncode_text is 'reasonCode/text (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_id is 'reasonReference/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_ref is 'reasonReference/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_type is 'reasonReference/type (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_use is 'reasonReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_type_system is 'reasonReference/identifier/type/coding/system (varchar)';
@@ -2045,9 +2045,9 @@ comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_
 comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_type_display is 'reasonReference/identifier/type/coding/display (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_type_text is 'reasonReference/identifier/type/text (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_reasonreference_display is 'reasonReference/display (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_request_id is 'request/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_request_ref is 'request/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_note_authorstring is 'note/authorString (varchar)';
-comment on column cds2db_in.medicationadministration_raw.medadm_note_authorreference_id is 'note/authorReference/reference (varchar)';
+comment on column cds2db_in.medicationadministration_raw.medadm_note_authorreference_ref is 'note/authorReference/reference (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_note_authorreference_type is 'note/authorReference/type (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_use is 'note/authorReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (varchar)';
@@ -2108,10 +2108,10 @@ comment on column cds2db_in.medicationstatement_raw.medstat_identifier_system is
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_value is 'identifier/value (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_start is 'identifier/start (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_identifier_end is 'identifier/end (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_encounter_id is 'context/reference (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_patient_id is 'subject/reference (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_partof_id is 'partOf/reference (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_basedon_id is 'basedOn/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_encounter_ref is 'context/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_patient_ref is 'subject/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_partof_ref is 'partOf/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_basedon_ref is 'basedOn/reference (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_basedon_type is 'basedOn/type (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_basedon_identifier_use is 'basedOn/identifier/use (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_basedon_identifier_type_system is 'basedOn/identifier/type/coding/system (varchar)';
@@ -2131,7 +2131,7 @@ comment on column cds2db_in.medicationstatement_raw.medstat_category_version is 
 comment on column cds2db_in.medicationstatement_raw.medstat_category_code is 'category/coding/code (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_category_display is 'category/coding/display (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_category_text is 'category/text (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_medicationreference_id is 'medicationReference/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_medicationreference_ref is 'medicationReference/reference (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableconcept_system is 'medicationCodeableConcept/coding/system (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableconcept_version is 'medicationCodeableConcept/coding/version (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_medicationcodeableconcept_code is 'medicationCodeableConcept/coding/code (varchar)';
@@ -2141,7 +2141,7 @@ comment on column cds2db_in.medicationstatement_raw.medstat_effectivedatetime is
 comment on column cds2db_in.medicationstatement_raw.medstat_effectiveperiod_start is 'effectivePeriod/start (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_effectiveperiod_end is 'effectivePeriod/end (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_dateasserted is 'dateAsserted (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_id is 'informationSource/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_ref is 'informationSource/reference (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_type is 'informationSource/type (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_use is 'informationSource/identifier/use (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_type_system is 'informationSource/identifier/type/coding/system (varchar)';
@@ -2150,7 +2150,7 @@ comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_id
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_type_display is 'informationSource/identifier/type/coding/display (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_type_text is 'informationSource/identifier/type/text (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_informationsource_display is 'informationSource/display (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_derivedfrom_id is 'derivedFrom/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_derivedfrom_ref is 'derivedFrom/reference (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_derivedfrom_type is 'derivedFrom/type (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_use is 'derivedFrom/identifier/use (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_type_system is 'derivedFrom/identifier/type/coding/system (varchar)';
@@ -2164,7 +2164,7 @@ comment on column cds2db_in.medicationstatement_raw.medstat_reasoncode_version i
 comment on column cds2db_in.medicationstatement_raw.medstat_reasoncode_code is 'reasonCode/coding/code (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_reasoncode_display is 'reasonCode/coding/display (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_reasoncode_text is 'reasonCode/text (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_id is 'reasonReference/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_ref is 'reasonReference/reference (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_type is 'reasonReference/type (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_use is 'reasonReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_type_system is 'reasonReference/identifier/type/coding/system (varchar)';
@@ -2174,7 +2174,7 @@ comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_iden
 comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_type_text is 'reasonReference/identifier/type/text (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_reasonreference_display is 'reasonReference/display (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_note_authorstring is 'note/authorString (varchar)';
-comment on column cds2db_in.medicationstatement_raw.medstat_note_authorreference_id is 'note/authorReference/reference (varchar)';
+comment on column cds2db_in.medicationstatement_raw.medstat_note_authorreference_ref is 'note/authorReference/reference (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_note_authorreference_type is 'note/authorReference/type (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_use is 'note/authorReference/identifier/use (varchar)';
 comment on column cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (varchar)';
@@ -2313,9 +2313,9 @@ comment on column cds2db_in.medicationstatement_raw.current_dataset_status is 'P
 
 comment on column cds2db_in.observation_raw.observation_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.observation_raw.obs_id is 'id (varchar)';
-comment on column cds2db_in.observation_raw.obs_encounter_id is 'encounter/reference (varchar)';
-comment on column cds2db_in.observation_raw.obs_patient_id is 'subject/reference (varchar)';
-comment on column cds2db_in.observation_raw.obs_partof_id is 'partOf/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_encounter_ref is 'encounter/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_patient_ref is 'subject/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_partof_ref is 'partOf/reference (varchar)';
 comment on column cds2db_in.observation_raw.obs_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.observation_raw.obs_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.observation_raw.obs_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -2326,7 +2326,7 @@ comment on column cds2db_in.observation_raw.obs_identifier_system is 'identifier
 comment on column cds2db_in.observation_raw.obs_identifier_value is 'identifier/value (varchar)';
 comment on column cds2db_in.observation_raw.obs_identifier_start is 'identifier/start (varchar)';
 comment on column cds2db_in.observation_raw.obs_identifier_end is 'identifier/end (varchar)';
-comment on column cds2db_in.observation_raw.obs_basedon_id is 'basedOn/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_basedon_ref is 'basedOn/reference (varchar)';
 comment on column cds2db_in.observation_raw.obs_basedon_type is 'basedOn/type (varchar)';
 comment on column cds2db_in.observation_raw.obs_basedon_identifier_use is 'basedOn/identifier/use (varchar)';
 comment on column cds2db_in.observation_raw.obs_basedon_identifier_type_system is 'basedOn/identifier/type/coding/system (varchar)';
@@ -2382,7 +2382,7 @@ comment on column cds2db_in.observation_raw.obs_dataabsentreason_code is 'dataAb
 comment on column cds2db_in.observation_raw.obs_dataabsentreason_display is 'dataAbsentReason/coding/display (varchar)';
 comment on column cds2db_in.observation_raw.obs_dataabsentreason_text is 'dataAbsentReason/text (varchar)';
 comment on column cds2db_in.observation_raw.obs_note_authorstring is 'note/authorString (varchar)';
-comment on column cds2db_in.observation_raw.obs_note_authorreference_id is 'note/authorReference/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_note_authorreference_ref is 'note/authorReference/reference (varchar)';
 comment on column cds2db_in.observation_raw.obs_note_authorreference_type is 'note/authorReference/type (varchar)';
 comment on column cds2db_in.observation_raw.obs_note_authorreference_identifier_use is 'note/authorReference/identifier/use (varchar)';
 comment on column cds2db_in.observation_raw.obs_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (varchar)';
@@ -2398,7 +2398,7 @@ comment on column cds2db_in.observation_raw.obs_method_version is 'method/coding
 comment on column cds2db_in.observation_raw.obs_method_code is 'method/coding/code (varchar)';
 comment on column cds2db_in.observation_raw.obs_method_display is 'method/coding/display (varchar)';
 comment on column cds2db_in.observation_raw.obs_method_text is 'method/text (varchar)';
-comment on column cds2db_in.observation_raw.obs_performer_id is 'performer/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_performer_ref is 'performer/reference (varchar)';
 comment on column cds2db_in.observation_raw.obs_performer_type is 'performer/type (varchar)';
 comment on column cds2db_in.observation_raw.obs_performer_identifier_use is 'performer/identifier/use (varchar)';
 comment on column cds2db_in.observation_raw.obs_performer_identifier_type_system is 'performer/identifier/type/coding/system (varchar)';
@@ -2434,7 +2434,7 @@ comment on column cds2db_in.observation_raw.obs_referencerange_age_high_unit is 
 comment on column cds2db_in.observation_raw.obs_referencerange_age_high_system is 'referenceRange/age/high/system (varchar)';
 comment on column cds2db_in.observation_raw.obs_referencerange_age_high_code is 'referenceRange/age/high/code (varchar)';
 comment on column cds2db_in.observation_raw.obs_referencerange_text is 'referenceRange/text (varchar)';
-comment on column cds2db_in.observation_raw.obs_hasmember_id is 'hasMember/reference (varchar)';
+comment on column cds2db_in.observation_raw.obs_hasmember_ref is 'hasMember/reference (varchar)';
 comment on column cds2db_in.observation_raw.obs_hasmember_type is 'hasMember/type (varchar)';
 comment on column cds2db_in.observation_raw.obs_hasmember_identifier_use is 'hasMember/identifier/use (varchar)';
 comment on column cds2db_in.observation_raw.obs_hasmember_identifier_type_system is 'hasMember/identifier/type/coding/system (varchar)';
@@ -2449,9 +2449,9 @@ comment on column cds2db_in.observation_raw.current_dataset_status is 'Processin
 
 comment on column cds2db_in.diagnosticreport_raw.diagnosticreport_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_id is 'id (varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_encounter_id is 'encounter/reference (varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_patient_id is 'subject/reference (varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_partof_id is 'partOf/reference (varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_encounter_ref is 'encounter/reference (varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_patient_ref is 'subject/reference (varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_partof_ref is 'partOf/reference (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -2462,8 +2462,8 @@ comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_system is 'i
 comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_value is 'identifier/value (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_start is 'identifier/start (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_identifier_end is 'identifier/end (varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_result_id is 'result/reference (varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_basedon_id is 'basedOn/reference (varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_result_ref is 'result/reference (varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_basedon_ref is 'basedOn/reference (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_status is 'status (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_category_system is 'category/coding/system (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_category_version is 'category/coding/version (varchar)';
@@ -2477,7 +2477,7 @@ comment on column cds2db_in.diagnosticreport_raw.diagrep_code_display is 'code/c
 comment on column cds2db_in.diagnosticreport_raw.diagrep_code_text is 'code/text (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_effectivedatetime is 'effectiveDateTime (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_issued is 'issued (varchar)';
-comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_id is 'performer/reference (varchar)';
+comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_ref is 'performer/reference (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_type is 'performer/type (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_use is 'performer/identifier/use (varchar)';
 comment on column cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_type_system is 'performer/identifier/type/coding/system (varchar)';
@@ -2498,8 +2498,8 @@ comment on column cds2db_in.diagnosticreport_raw.current_dataset_status is 'Proc
 
 comment on column cds2db_in.servicerequest_raw.servicerequest_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.servicerequest_raw.servreq_id is 'id (varchar)';
-comment on column cds2db_in.servicerequest_raw.servreq_encounter_id is 'encounter/reference (varchar)';
-comment on column cds2db_in.servicerequest_raw.servreq_patient_id is 'subject/reference (varchar)';
+comment on column cds2db_in.servicerequest_raw.servreq_encounter_ref is 'encounter/reference (varchar)';
+comment on column cds2db_in.servicerequest_raw.servreq_patient_ref is 'subject/reference (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -2510,7 +2510,7 @@ comment on column cds2db_in.servicerequest_raw.servreq_identifier_system is 'ide
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_value is 'identifier/value (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_start is 'identifier/start (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_identifier_end is 'identifier/end (varchar)';
-comment on column cds2db_in.servicerequest_raw.servreq_basedon_id is 'basedOn/reference (varchar)';
+comment on column cds2db_in.servicerequest_raw.servreq_basedon_ref is 'basedOn/reference (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_basedon_type is 'basedOn/type (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_basedon_identifier_use is 'basedOn/identifier/use (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_basedon_identifier_type_system is 'basedOn/identifier/type/coding/system (varchar)';
@@ -2532,7 +2532,7 @@ comment on column cds2db_in.servicerequest_raw.servreq_code_code is 'code/coding
 comment on column cds2db_in.servicerequest_raw.servreq_code_display is 'code/coding/display (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_code_text is 'code/text (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_authoredon is 'authoredOn (varchar)';
-comment on column cds2db_in.servicerequest_raw.servreq_requester_id is 'requester/reference (varchar)';
+comment on column cds2db_in.servicerequest_raw.servreq_requester_ref is 'requester/reference (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_type is 'requester/type (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_identifier_use is 'requester/identifier/use (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_identifier_type_system is 'requester/identifier/type/coding/system (varchar)';
@@ -2541,7 +2541,7 @@ comment on column cds2db_in.servicerequest_raw.servreq_requester_identifier_type
 comment on column cds2db_in.servicerequest_raw.servreq_requester_identifier_type_display is 'requester/identifier/type/coding/display (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_identifier_type_text is 'requester/identifier/type/text (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_requester_display is 'requester/display (varchar)';
-comment on column cds2db_in.servicerequest_raw.servreq_performer_id is 'performer/reference (varchar)';
+comment on column cds2db_in.servicerequest_raw.servreq_performer_ref is 'performer/reference (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_performer_type is 'performer/type (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_performer_identifier_use is 'performer/identifier/use (varchar)';
 comment on column cds2db_in.servicerequest_raw.servreq_performer_identifier_type_system is 'performer/identifier/type/coding/system (varchar)';
@@ -2561,9 +2561,9 @@ comment on column cds2db_in.servicerequest_raw.current_dataset_status is 'Proces
 
 comment on column cds2db_in.procedure_raw.procedure_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.procedure_raw.proc_id is 'id (varchar)';
-comment on column cds2db_in.procedure_raw.proc_encounter_id is 'encounter/reference (varchar)';
-comment on column cds2db_in.procedure_raw.proc_patient_id is 'subject/reference (varchar)';
-comment on column cds2db_in.procedure_raw.proc_partof_id is 'partOf/reference (varchar)';
+comment on column cds2db_in.procedure_raw.proc_encounter_ref is 'encounter/reference (varchar)';
+comment on column cds2db_in.procedure_raw.proc_patient_ref is 'subject/reference (varchar)';
+comment on column cds2db_in.procedure_raw.proc_partof_ref is 'partOf/reference (varchar)';
 comment on column cds2db_in.procedure_raw.proc_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.procedure_raw.proc_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.procedure_raw.proc_identifier_type_version is 'identifier/type/coding/version (varchar)';
@@ -2574,7 +2574,7 @@ comment on column cds2db_in.procedure_raw.proc_identifier_system is 'identifier/
 comment on column cds2db_in.procedure_raw.proc_identifier_value is 'identifier/value (varchar)';
 comment on column cds2db_in.procedure_raw.proc_identifier_start is 'identifier/start (varchar)';
 comment on column cds2db_in.procedure_raw.proc_identifier_end is 'identifier/end (varchar)';
-comment on column cds2db_in.procedure_raw.proc_basedon_id is 'basedOn/reference (varchar)';
+comment on column cds2db_in.procedure_raw.proc_basedon_ref is 'basedOn/reference (varchar)';
 comment on column cds2db_in.procedure_raw.proc_basedon_type is 'basedOn/type (varchar)';
 comment on column cds2db_in.procedure_raw.proc_basedon_identifier_use is 'basedOn/identifier/use (varchar)';
 comment on column cds2db_in.procedure_raw.proc_basedon_identifier_type_system is 'basedOn/identifier/type/coding/system (varchar)';
@@ -2607,7 +2607,7 @@ comment on column cds2db_in.procedure_raw.proc_reasoncode_version is 'reasonCode
 comment on column cds2db_in.procedure_raw.proc_reasoncode_code is 'reasonCode/coding/code (varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasoncode_display is 'reasonCode/coding/display (varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasoncode_text is 'reasonCode/text (varchar)';
-comment on column cds2db_in.procedure_raw.proc_reasonreference_id is 'reasonReference/reference (varchar)';
+comment on column cds2db_in.procedure_raw.proc_reasonreference_ref is 'reasonReference/reference (varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasonreference_type is 'reasonReference/type (varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasonreference_identifier_use is 'reasonReference/identifier/use (varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasonreference_identifier_type_system is 'reasonReference/identifier/type/coding/system (varchar)';
@@ -2617,7 +2617,7 @@ comment on column cds2db_in.procedure_raw.proc_reasonreference_identifier_type_d
 comment on column cds2db_in.procedure_raw.proc_reasonreference_identifier_type_text is 'reasonReference/identifier/type/text (varchar)';
 comment on column cds2db_in.procedure_raw.proc_reasonreference_display is 'reasonReference/display (varchar)';
 comment on column cds2db_in.procedure_raw.proc_note_authorstring is 'note/authorString (varchar)';
-comment on column cds2db_in.procedure_raw.proc_note_authorreference_id is 'note/authorReference/reference (varchar)';
+comment on column cds2db_in.procedure_raw.proc_note_authorreference_ref is 'note/authorReference/reference (varchar)';
 comment on column cds2db_in.procedure_raw.proc_note_authorreference_type is 'note/authorReference/type (varchar)';
 comment on column cds2db_in.procedure_raw.proc_note_authorreference_identifier_use is 'note/authorReference/identifier/use (varchar)';
 comment on column cds2db_in.procedure_raw.proc_note_authorreference_identifier_type_system is 'note/authorReference/identifier/type/coding/system (varchar)';
@@ -2634,7 +2634,7 @@ comment on column cds2db_in.procedure_raw.current_dataset_status is 'Processing 
 
 comment on column cds2db_in.consent_raw.consent_raw_id is 'Primary key of the entity';
 comment on column cds2db_in.consent_raw.cons_id is 'id (varchar)';
-comment on column cds2db_in.consent_raw.cons_patient_id is 'patient/reference (varchar)';
+comment on column cds2db_in.consent_raw.cons_patient_ref is 'patient/reference (varchar)';
 comment on column cds2db_in.consent_raw.cons_identifier_use is 'identifier/use (varchar)';
 comment on column cds2db_in.consent_raw.cons_identifier_type_system is 'identifier/type/coding/system (varchar)';
 comment on column cds2db_in.consent_raw.cons_identifier_type_version is 'identifier/type/coding/version (varchar)';

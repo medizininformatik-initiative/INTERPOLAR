@@ -414,8 +414,8 @@ createFrontendTables <- function() {
     table_name <- getFullTableName("encounter")
 
     query <- paste0( "SELECT * FROM ", table_name, "\n",
-                     "  WHERE enc_patient_id IN (", query_ids, ")\n",
-                     "  AND enc_partof_id IS NULL\n",
+                     "  WHERE enc_patient_ref IN (", query_ids, ")\n",
+                     "  AND enc_partof_ref IS NULL\n",
                      "  AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
                      "  AND enc_period_start <= '", query_datetime, "'"
     )
@@ -446,7 +446,7 @@ createFrontendTables <- function() {
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
       pid <- pids_per_ward$patient_id[pid_index]
-      pid_encounters <- encounters[enc_patient_id == pid]
+      pid_encounters <- encounters[enc_patient_ref == pid]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
@@ -523,7 +523,7 @@ createFrontendTables <- function() {
           table_name <- getFullTableName("observation")
           # Extract the Observations by direct encounter references
           query <- paste0("SELECT * FROM ", table_name, "\n",
-                          "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
+                          "  WHERE obs_encounter_ref = 'Encounter/", enc_id, "' AND\n",
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
@@ -533,7 +533,7 @@ createFrontendTables <- function() {
           # Observations by time overlap with the encounter period start and current date
           if (!nrow(observations)) {
             query <- paste0("SELECT * FROM ", table_name, "\n",
-                            "  WHERE obs_patient_id = '", pid, "' AND\n",
+                            "  WHERE obs_patient_ref = '", pid, "' AND\n",
                             "        obs_code_code IN (", codes, ") AND\n",
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
