@@ -3,6 +3,7 @@
 
     -- Start <%TABLE_NAME_2%>
     err_section:='<%TABLE_NAME_2%>-01';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -34,6 +35,9 @@
                 UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%>
                 SET last_processing_nr = new_last_pro_nr
                 WHERE <%TABLE_NAME%>_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(

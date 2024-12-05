@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 14:36:29
--- Rights definition file size        : 15121 Byte
+-- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-04 16:23:23
+-- Create time: 2024-12-05 09:42:34
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -40,6 +40,8 @@ DECLARE
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
     temp varchar; -- Temporary variable for interim results
+    data_count_pro_all INT:=0; -- Counting all records in this run
+    data_count_update INT:=0;
     timestamp_start varchar;
     timestamp_end varchar;
     tmp_sec double precision:=0; -- Temporary variable to store execution time
@@ -168,12 +170,15 @@ BEGIN
     );
 
     err_section:='HEAD-20';    err_schema:='db_log';    err_table:='/';
+    
+    IF max_last_pro_nr>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
 
-    -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
+        -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.encounter_raw to db_log.encounter
 
     -- Start encounter
     err_section:='encounter-01';    err_schema:='db_log';    err_table:='encounter';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -205,6 +210,9 @@ BEGIN
                 UPDATE db_log.encounter_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE encounter_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -235,6 +243,7 @@ BEGIN
 
     -- Start patient
     err_section:='patient-01';    err_schema:='db_log';    err_table:='patient';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -266,6 +275,9 @@ BEGIN
                 UPDATE db_log.patient_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE patient_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -296,6 +308,7 @@ BEGIN
 
     -- Start condition
     err_section:='condition-01';    err_schema:='db_log';    err_table:='condition';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -327,6 +340,9 @@ BEGIN
                 UPDATE db_log.condition_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE condition_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -357,6 +373,7 @@ BEGIN
 
     -- Start medication
     err_section:='medication-01';    err_schema:='db_log';    err_table:='medication';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -388,6 +405,9 @@ BEGIN
                 UPDATE db_log.medication_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medication_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -418,6 +438,7 @@ BEGIN
 
     -- Start medicationrequest
     err_section:='medicationrequest-01';    err_schema:='db_log';    err_table:='medicationrequest';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -449,6 +470,9 @@ BEGIN
                 UPDATE db_log.medicationrequest_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medicationrequest_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -479,6 +503,7 @@ BEGIN
 
     -- Start medicationadministration
     err_section:='medicationadministration-01';    err_schema:='db_log';    err_table:='medicationadministration';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -510,6 +535,9 @@ BEGIN
                 UPDATE db_log.medicationadministration_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medicationadministration_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -540,6 +568,7 @@ BEGIN
 
     -- Start medicationstatement
     err_section:='medicationstatement-01';    err_schema:='db_log';    err_table:='medicationstatement';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -571,6 +600,9 @@ BEGIN
                 UPDATE db_log.medicationstatement_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medicationstatement_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -601,6 +633,7 @@ BEGIN
 
     -- Start observation
     err_section:='observation-01';    err_schema:='db_log';    err_table:='observation';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -632,6 +665,9 @@ BEGIN
                 UPDATE db_log.observation_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE observation_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -662,6 +698,7 @@ BEGIN
 
     -- Start diagnosticreport
     err_section:='diagnosticreport-01';    err_schema:='db_log';    err_table:='diagnosticreport';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -693,6 +730,9 @@ BEGIN
                 UPDATE db_log.diagnosticreport_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE diagnosticreport_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -723,6 +763,7 @@ BEGIN
 
     -- Start servicerequest
     err_section:='servicerequest-01';    err_schema:='db_log';    err_table:='servicerequest';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -754,6 +795,9 @@ BEGIN
                 UPDATE db_log.servicerequest_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE servicerequest_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -784,6 +828,7 @@ BEGIN
 
     -- Start procedure
     err_section:='procedure-01';    err_schema:='db_log';    err_table:='procedure';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -815,6 +860,9 @@ BEGIN
                 UPDATE db_log.procedure_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE procedure_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -845,6 +893,7 @@ BEGIN
 
     -- Start consent
     err_section:='consent-01';    err_schema:='db_log';    err_table:='consent';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -876,6 +925,9 @@ BEGIN
                 UPDATE db_log.consent_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE consent_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -906,6 +958,7 @@ BEGIN
 
     -- Start location
     err_section:='location-01';    err_schema:='db_log';    err_table:='location';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -937,6 +990,9 @@ BEGIN
                 UPDATE db_log.location_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE location_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -967,6 +1023,7 @@ BEGIN
 
     -- Start pids_per_ward
     err_section:='pids_per_ward-01';    err_schema:='db_log';    err_table:='pids_per_ward';
+    data_count_update:=0;
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
@@ -998,6 +1055,9 @@ BEGIN
                 UPDATE db_log.pids_per_ward_raw
                 SET last_processing_nr = new_last_pro_nr
                 WHERE pids_per_ward_raw_id = current_record.id;
+
+                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
                     SELECT db.error_log(
@@ -1024,19 +1084,24 @@ BEGIN
     -- End pids_per_ward
     -----------------------------------------------------------------------------------------------------------------
 
-    -- calculation of the time period
-    err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
-    SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_end;
-
-    err_section:='BOTTOM-05';    err_schema:='/';    err_table:='/';
-    SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
-
-    err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
-    INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
-    VALUES ( last_raw_pro_nr,'data_count_pro_all', 'db_log', 'take_over_last_check_date', last_pro_datetime, 'take_over_last_check_date', 0, tmp_sec, 'Count all Datasetzs '||temp );
+    END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+    
+    -- Collect and save counts for the function
+    IF data_count_pro_all>0 THEN
+        -- calculation of the time period
+        err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
+        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_end;
+    
+        err_section:='BOTTOM-05';    err_schema:='/';    err_table:='/';
+        SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
+    
+        err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
+        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        VALUES ( new_last_pro_nr,'data_count_pro_all', 'db_log', 'take_over_last_check_date', last_pro_datetime, 'take_over_last_check_date', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
+    END IF;
 
     err_section:='BOTTOM-20';    err_schema:='/';    err_table:='/';
-    RETURN 'Done db.take_over_last_check_date - last_raw_pro_nr:'||last_raw_pro_nr;
+    RETURN 'Done db.take_over_last_check_date - last_raw_pro_nr:'||new_last_pro_nr;
 
 EXCEPTION
     WHEN OTHERS THEN
