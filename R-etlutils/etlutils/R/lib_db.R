@@ -666,7 +666,7 @@ getCurrentSchema <- function(db_connection, log = TRUE) {
     cat(paste0("getCurrentSchema:\n", query, "\n"))
   }
   # Execute the query and store the result
-  result <- dbGetQuery(db_connection, query, log, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, params = NULL, log, readonly = TRUE)
   # Return the schema name from the first row and column
   return(result$current_schema[1])
 }
@@ -705,7 +705,7 @@ getDBTableColumns <- function(db_connection, table_name, log = TRUE) {
     cat(paste0("getDBTableColumns:\n", query, "\n"))
   }
   # Execute the query and return the result as a data frame
-  result <- dbGetQuery(db_connection, query, log, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, params = NULL, log, readonly = TRUE)
   return(result)
 }
 
