@@ -27,7 +27,7 @@ BEGIN
         SELECT pc_value INTO status FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     ELSE
         INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-        VALUES ('semaphor_cron_job_data_transfer','ReadyToConnect','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted'); -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
+        VALUES ('semaphor_cron_job_data_transfer','ReadyToConnect','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted'); -- Normal Status are: WaitForCronJob--> Ongoing --> ReadyToConnect --> WaitForCronJob
         status='ReadyToConnect';
     END IF;
 
@@ -38,7 +38,7 @@ BEGIN
         If num=1 THEN
             SELECT CAST(parameter_value AS NUMERIC) INTO num FROM db_config.db_parameter WHERE parameter_name='max_process_time_set_ready';
         END IF;
-    
+
         If num=0 THEN -- falls Parameter fehlt - initial setzen
             num:=5;
         END IF;
@@ -67,7 +67,7 @@ BEGIN
 
         -- FHIR Data cds2db_in -> db_log
         SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.copy_raw_cds_in_to_db_log()')) AS t(res TEXT) INTO erg;
-    
+
         -- Semaphore setzen -----------------------------------------
         status='Ongoing - 2/5 db.copy_type_cds_in_to_db_log() (#db.cron_job_data_transfer#)'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
@@ -77,7 +77,7 @@ BEGIN
         -- Semaphore setzen -----------------------------------------
         status='Ongoing - 3/5 db.take_over_last_check_date() (#db.cron_job_data_transfer#)'; err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
-    
+
         SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT db.take_over_last_check_date()')) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
@@ -110,7 +110,7 @@ BEGIN
         err_section:='cron_job_data_transfer-55';    err_schema:='db_config';    err_table:='db_parameter';
 
         SELECT pg_sleep(num) INTO temp;
-    
+
         -- Semaphore wieder frei geben - ohne Rückgabe der SubProzessID
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Ongoing%'' and pc_value=''ReadyToConnect'' and pc_name=''semaphor_cron_job_data_transfer''');
         err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
@@ -126,7 +126,7 @@ BEGIN
         If num>45 then num:=40; END IF; -- Wenn größer als JobInterval - kleiner setzen um wieder in Takt zu kommen
 
         SELECT pg_sleep(num) INTO temp;
-    
+
         -- Semaphore wieder frei geben - ohne Rückgabe der SubProzessID
         err_section:='cron_job_data_transfer-70';    err_schema:='db_config';    err_table:='db_process_control';
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Ongoing%'' and pc_value=''ReadyToConnect'' and pc_name=''semaphor_cron_job_data_transfer''');
@@ -247,7 +247,7 @@ BEGIN
         SELECT pc_value INTO status FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     ELSE
         INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-        VALUES ('semaphor_cron_job_data_transfer','ReadyToConnect','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted'); -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
+        VALUES ('semaphor_cron_job_data_transfer','ReadyToConnect','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted'); -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob
         status='ReadyToConnect';
     END IF;
 
@@ -317,7 +317,7 @@ EXCEPTION
         err_variables => CAST('Tab: db_process_control' AS varchar),  -- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
-    
+
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
@@ -329,7 +329,7 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten im Fehlerfall - schreiben eines Errorlog Eintrages
-CREATE OR REPLACE FUNCTION db.data_transfer_reset_semaphor(module varchar DEFAULT 'Interpolar_Module_bitte_angeben')
+CREATE OR REPLACE FUNCTION db.data_transfer_reset_lock(module varchar DEFAULT 'Interpolar_Module_bitte_angeben')
 RETURNS BOOLEAN
 SECURITY DEFINER
 AS $$
@@ -343,47 +343,47 @@ DECLARE
     temp varchar;
 BEGIN
     -- Übergebene Variablen auf vollständigkeit prüfen
-    err_section:='db.data_transfer_reset_semaphor-01';    err_schema:='/';    err_table:='/';
+    err_section:='db.data_transfer_reset_lock-01';    err_schema:='/';    err_table:='/';
     IF module='Interpolar_Module_bitte_angeben' OR module='' THEN
         RETURN FALSE;
     END IF;
 
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden - ansonsten value setzen
-    err_section:='db.data_transfer_reset_semaphor-05';    err_schema:='db_config';    err_table:='db_process_control';
+    err_section:='db.data_transfer_reset_lock-05';    err_schema:='db_config';    err_table:='db_process_control';
     SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     IF num=1 THEN
         SELECT pc_value INTO status FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     END IF;
 
-    err_section:='db.data_transfer_reset_semaphor-10';    err_schema:='db';    err_table:='error_log';
+    err_section:='db.data_transfer_reset_lock-10';    err_schema:='db';    err_table:='error_log';
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
-        err_objekt => CAST('EXTERN --> db.data_transfer_reset_semaphor()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_objekt => CAST('EXTERN --> db.data_transfer_reset_lock()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
         err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
-        err_msg => CAST('Semaphore wurde durch Modul #'||module||'# in db.data_transfer_reset_semaphor zurück gesetzt.' AS varchar),     -- err_msg (varchar) Fehlernachricht
+        err_msg => CAST('Semaphore wurde durch Modul #'||module||'# in db.data_transfer_reset_lock zurück gesetzt.' AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST('Aktuelle Semaphore:'||status||' Modul:'||module AS varchar), -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table||' Modul:'||module AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
-    err_section:='db.data_transfer_reset_semaphor-10';    err_schema:='db_config';    err_table:='db_process_control';
+    err_section:='db.data_transfer_reset_lock-10';    err_schema:='db_config';    err_table:='db_process_control';
     IF status like 'Ongoing%#'||module||'#%' THEN -- Prozess ruht von diesem Aufruf(Schlüssel) - also kann er blokiert werden
         -- Semaphore setzen
-        err_section:='db.data_transfer_reset_semaphor-17';    err_schema:='db_config';    err_table:='db_process_control';
+        err_section:='db.data_transfer_reset_lock-17';    err_schema:='db_config';    err_table:='db_process_control';
         err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer''');
 	    RETURN TRUE;
     ELSE
-        err_section:='db.data_transfer_reset_semaphor-20';    err_schema:='db_config';    err_table:='db_process_control';
+        err_section:='db.data_transfer_reset_lock-20';    err_schema:='db_config';    err_table:='db_process_control';
 	    RETURN FALSE;
     END IF;
 
-    err_section:='db.data_transfer_reset_semaphor-25';    err_schema:='/';    err_table:='/';
+    err_section:='db.data_transfer_reset_lock-25';    err_schema:='/';    err_table:='/';
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
-        err_objekt => CAST('db.data_transfer_reset_semaphor()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_objekt => CAST('db.data_transfer_reset_lock()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
         err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
@@ -395,10 +395,10 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_semaphor(varchar) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_semaphor(varchar) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_semaphor(varchar) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_semaphor(varchar) TO db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(varchar) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(varchar) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(varchar) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(varchar) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion um aktuellen Status zu erfahren
@@ -428,7 +428,7 @@ EXCEPTION
         err_variables => CAST('Tab: db_process_control' AS varchar),  -- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
-    
+
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
