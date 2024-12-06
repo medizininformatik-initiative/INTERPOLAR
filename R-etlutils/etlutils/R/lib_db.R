@@ -30,18 +30,27 @@ getSemaphoreStatus <- function(db_connection) {
   getStatusFromDB(db_connection, "SELECT db.data_transfer_status();")
 }
 
+getSemaphoreStatusLockID <- function(db_connection) {
+  status <- getSemaphoreStatus(db_connection)
+  # Status can have an irrelevant prefix, which ends with " - ", remove it.
+  status <- sub(".* - ", "", status)
+  status <- sub()
+}
+
 #' Check Database Semaphore Status
 #'
 #' This function checks whether the current database status starts with a specified status prefix.
 #'
 #' @param db_connection A database connection object used to query the database.
 #' @param status_prefix A string specifying the prefix to check against the current database status.
+#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
 #'
 #' @return A logical value (`TRUE` or `FALSE`), indicating whether the database status starts
 #'         with the given `status_prefix`.
 #'
-hasSemaphoreStatus <- function(db_connection, status_prefix) {
-  status <- getSemaphoreStatus(db_connection)
+hasSemaphoreStatus <- function(db_connection, status_prefix, log = TRUE) {
+  status <- getSemaphoreStatusLockID(db_connection)
+  if (log) cat("Current database status:", status, "\n")
   return(startsWith(tolower(status), tolower(status_prefix)))
 }
 
@@ -81,7 +90,7 @@ dbLock <- function(db_connection, log = TRUE, lock_id = NULL) {
     }
 
     # if the database is ready for a new connection then the status message starts with "ReadyToConnect"
-    while (!hasSemaphoreStatus(db_connection, "ReadyToConnect")) {
+    while (!hasSemaphoreStatus(db_connection, "ReadyToConnect", log)) {
       Sys.sleep(4) # wait for 4 seconds
       # TODO alle Minute eine Rückmeldung geben "Warte immer noch darauf, die DB locken zu dürfen..."
     }
@@ -164,9 +173,8 @@ dbUnlock <- function(db_connection, log = TRUE, lock_id, readonly = FALSE) {
 #'
 #' @export
 dbUnlockHard <- function(db_connection, log = TRUE, project_name) {
-  if (hasSemaphoreStatus(db_connection, status_prefix = project_name)) {
-    status <- getSemaphoreStatus(db_connection)
-    browser()
+  if (hasSemaphoreStatus(db_connection, status_prefix = project_name, log)) {
+    status <- getSemaphoreStatusLockID(db_connection)
     unlock_request <- paste0("SELECT db.reset_semaphor('", lock_id, "');")
     dbUnlockInternal(db_connection, log, unlock_request, lock_id)
   }
@@ -195,13 +203,14 @@ createLockID <- function(project_name, ...) {
 #'
 #' @param db_connection A database connection object used to query the lock status.
 #' @param project_name A string representing the name of the project to check for a lock.
+#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
 #'
 #' @return A logical value (`TRUE` or `FALSE`), indicating whether a lock exists for the
 #'         specified project name.
 #'
 #' @export
-hasLock <- function(db_connection, project_name) {
-  hasSemaphoreStatus(db_connection, project_name)
+hasLock <- function(db_connection, project_name, log = TRUE) {
+  hasSemaphoreStatus(db_connection, project_name, log)
 }
 
 #' Establish a Connection to a PostgreSQL Database
