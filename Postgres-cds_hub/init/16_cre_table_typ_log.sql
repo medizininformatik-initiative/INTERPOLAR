@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-05 09:58:05
+-- Rights definition file last update : 2024-12-04 16:58:23
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-05 10:04:05
+-- Create time: 2024-12-06 13:45:51
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -53,10 +53,10 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
   enc_identifier_start timestamp,   -- identifier/start (timestamp)
   enc_identifier_end timestamp,   -- identifier/end (timestamp)
   enc_status varchar,   -- status (varchar)
-  enc_class_system varchar,   -- class/coding/system (varchar)
-  enc_class_version varchar,   -- class/coding/version (varchar)
-  enc_class_code varchar,   -- class/coding/code (varchar)
-  enc_class_display varchar,   -- class/coding/display (varchar)
+  enc_class_system varchar,   -- class/system (varchar)
+  enc_class_version varchar,   -- class/version (varchar)
+  enc_class_code varchar,   -- class/code (varchar)
+  enc_class_display varchar,   -- class/display (varchar)
   enc_type_system varchar,   -- type/coding/system (varchar)
   enc_type_version varchar,   -- type/coding/version (varchar)
   enc_type_code varchar,   -- type/coding/code (varchar)
@@ -1522,10 +1522,10 @@ comment on column db_log.encounter.enc_identifier_value is 'identifier/value (va
 comment on column db_log.encounter.enc_identifier_start is 'identifier/start (timestamp)';
 comment on column db_log.encounter.enc_identifier_end is 'identifier/end (timestamp)';
 comment on column db_log.encounter.enc_status is 'status (varchar)';
-comment on column db_log.encounter.enc_class_system is 'class/coding/system (varchar)';
-comment on column db_log.encounter.enc_class_version is 'class/coding/version (varchar)';
-comment on column db_log.encounter.enc_class_code is 'class/coding/code (varchar)';
-comment on column db_log.encounter.enc_class_display is 'class/coding/display (varchar)';
+comment on column db_log.encounter.enc_class_system is 'class/system (varchar)';
+comment on column db_log.encounter.enc_class_version is 'class/version (varchar)';
+comment on column db_log.encounter.enc_class_code is 'class/code (varchar)';
+comment on column db_log.encounter.enc_class_display is 'class/display (varchar)';
 comment on column db_log.encounter.enc_type_system is 'type/coding/system (varchar)';
 comment on column db_log.encounter.enc_type_version is 'type/coding/version (varchar)';
 comment on column db_log.encounter.enc_type_code is 'type/coding/code (varchar)';
