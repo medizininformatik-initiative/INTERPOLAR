@@ -134,6 +134,8 @@ BEGIN
     err_section:='cron_job_data_transfer-80';    err_schema:='/';    err_table:='/';
 EXCEPTION
     WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
         err_objekt => CAST('db.cron_job_data_transfer()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -141,7 +143,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     -- Semapohore wegen Fehler anhalten
@@ -200,6 +202,8 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
         err_objekt => CAST('db.data_transfer_stop()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -207,7 +211,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table||' Key:'||msg AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN FALSE;
@@ -271,6 +275,8 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
         err_objekt => CAST('db.data_transfer_start()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -278,7 +284,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table||' Key:'||msg AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN FALSE;
@@ -299,6 +305,7 @@ AS $$
 DECLARE
     status TEXT;
     temp varchar;
+    num int;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
     SELECT  split_part(pc_value,'#',2) INTO status
@@ -308,6 +315,8 @@ BEGIN
     RETURN status;
 EXCEPTION
     WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
     SELECT db.error_log(
         err_schema => CAST('db_config' AS varchar),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat
         err_objekt => CAST('db.data_transfer_get_lock_module()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -315,7 +324,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST('db.data_transfer_get_lock_module-01' AS varchar),    -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: db_process_control' AS varchar),  -- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
@@ -355,6 +364,10 @@ BEGIN
         SELECT pc_value INTO status FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer';
     END IF;
 
+
+    err_section:='db.data_transfer_reset_lock-07';    err_schema:='db_log';    err_table:='data_import_hist';
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist;
+    
     err_section:='db.data_transfer_reset_lock-10';    err_schema:='db';    err_table:='error_log';
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -363,10 +376,10 @@ BEGIN
         err_msg => CAST('Semaphore wurde durch Modul #'||module||'# in db.data_transfer_reset_lock zurück gesetzt.' AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST('Aktuelle Semaphore:'||status||' Modul:'||module AS varchar), -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table||' Modul:'||module AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
-    err_section:='db.data_transfer_reset_lock-10';    err_schema:='db_config';    err_table:='db_process_control';
+    err_section:='db.data_transfer_reset_lock-15';    err_schema:='db_config';    err_table:='db_process_control';
     IF status like 'Ongoing%#'||module||'#%' THEN -- Prozess ruht von diesem Aufruf(Schlüssel) - also kann er blokiert werden
         -- Semaphore setzen
         err_section:='db.data_transfer_reset_lock-17';    err_schema:='db_config';    err_table:='db_process_control';
@@ -381,6 +394,8 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
     SELECT db.error_log(
         err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
         err_objekt => CAST('db.data_transfer_reset_lock()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -388,7 +403,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: ' || err_table||' Modul:'||module AS varchar),-- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN FALSE;
@@ -409,6 +424,7 @@ AS $$
 DECLARE
     status TEXT;
     temp varchar;
+    num int;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
     SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||' Reporttime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
@@ -419,6 +435,8 @@ BEGIN
     RETURN status;
 EXCEPTION
     WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
     SELECT db.error_log(
         err_schema => CAST('db_config' AS varchar),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat
         err_objekt => CAST('db.data_transfer_status()' AS varchar),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -426,7 +444,7 @@ EXCEPTION
         err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
         err_line => CAST('db.data_transfer_status-01' AS varchar),    -- err_line (varchar) Zeilennummer oder Abschnitt
         err_variables => CAST('Tab: db_process_control' AS varchar),  -- err_variables (varchar) Debug-Informationen zu Variablen
-        last_processing_nr => CAST(0 AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+        last_processing_nr => CAST(num AS int)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
