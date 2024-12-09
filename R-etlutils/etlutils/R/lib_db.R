@@ -148,7 +148,8 @@ dbLock <- function(db_connection, log = TRUE, project_name, lock_id = NULL) {
 
     lock_sucessful <- dbGetSingleValue(db_connection, paste0("SELECT db.data_transfer_stop('", project_name, "', '", lock_id, "');"), log, project_name)
     if (log) {
-      cat(paste("DB status on lock:", lock_sucessful, "\n"))
+      status <- dbGetStatus(db_connection, log)
+      cat(paste("DB lock sucessfull =", lock_sucessful, "with status on lock:", status, "\n"))
     }
     if (!lock_sucessful) {
       dbLock(db_connection, log, project_name, lock_id)
@@ -187,9 +188,13 @@ dbUnlock <- function(db_connection, log = TRUE, project_name, lock_id, readonly 
     }
     unlock_request <- paste0("SELECT db.data_transfer_start('", project_name, "', '", lock_id, "', ", readonly, ");")
     unlock_sucessful <- dbGetSingleValue(db_connection, unlock_request, log, project_name)
+    if (log) {
+      status <- dbGetStatus(db_connection, log)
+      cat("Current database status:", status, "\n")
+    }
     if (!unlock_sucessful) {
       status <- dbGetStatus(db_connection, log, project_name)
-      stop("Could not unlock the database for lock_did:\n",
+      stop("Could not unlock the database for lock_id:\n",
            lock_id, "\n",
            "The current status is: " , status, "\n",
            dbGetInfo(db_connection))
