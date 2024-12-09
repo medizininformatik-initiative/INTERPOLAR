@@ -17,7 +17,7 @@
 #'
 #' @return The first value from the query result, or `NULL` if the result is empty.
 #'
-dbGetSingleValue <- function(db_connection, query, log = TRUE, project_name) {
+dbGetSingleValue <- function(db_connection, query, log = TRUE, project_name = NULL) {
   status <- dbGetQuery(db_connection, query, log = log, project_name = project_name, readonly = TRUE)
   if (!is.null(status)) status <- status[1, ][[1]] # the functions answer is a table with 1 row and 1 column
 }
@@ -33,13 +33,12 @@ dbGetSingleValue <- function(db_connection, query, log = TRUE, project_name) {
 #' @param db_connection A database connection object used to execute the query.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, messages about the query execution
 #'        are logged to the console. Default is `TRUE`.
-#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return A character string representing the current semaphore status in the database, or `NULL`
 #'         if no status is available.
 #'
-dbGetStatus <- function(db_connection, log = TRUE, project_name) {
-  dbGetSingleValue(db_connection, "SELECT db.data_transfer_status();", log, project_name)
+dbGetStatus <- function(db_connection, log = TRUE) {
+  dbGetSingleValue(db_connection, "SELECT db.data_transfer_status();", log)
 }
 
 #' Check Database Semaphore Status
@@ -52,13 +51,12 @@ dbGetStatus <- function(db_connection, log = TRUE, project_name) {
 #' @param status_prefix A string specifying the prefix to check against the current database status.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs the current database
 #'        status to the console. Default is `TRUE`.
-#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return A logical value (`TRUE` or `FALSE`), indicating whether the database status starts
 #'         with the given `status_prefix`.
 #'
-dbHasStatus <- function(db_connection, status_prefix, log = TRUE, project_name) {
-  status <- dbGetStatus(db_connection, log, project_name)
+dbHasStatus <- function(db_connection, status_prefix, log = TRUE) {
+  status <- dbGetStatus(db_connection, log)
   if (log) cat("Current database status:", status, "\n")
   return(startsWith(tolower(status), tolower(status_prefix)))
 }
@@ -72,14 +70,13 @@ dbHasStatus <- function(db_connection, status_prefix, log = TRUE, project_name) 
 #' @param db_connection A database connection object used to query the database.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages about
 #'        the query execution to the console. Default is `TRUE`.
-#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return A character string representing the name of the module that set the semaphore, or
 #'         `NULL` if no module is found.
 #'
 #' @export
-dbGetLockModule <- function(db_connection, log = TRUE, project_name) {
-  dbGetSingleValue(db_connection, "select db.data_transfer_get_lock_module();", log, project_name)
+dbGetLockModule <- function(db_connection, log = TRUE) {
+  dbGetSingleValue(db_connection, "select db.data_transfer_get_lock_module();", log)
 }
 
 #' Check for a Lock in the Database by Module
@@ -98,7 +95,7 @@ dbGetLockModule <- function(db_connection, log = TRUE, project_name) {
 #'
 #' @export
 dbIsLockedBy <- function(db_connection, log = TRUE, project_name) {
-  dbGetLockModule(db_connection, log, project_name) == project_name
+  dbGetLockModule(db_connection, log) == project_name
 }
 
 #' Lock a Database for Write Access
@@ -118,7 +115,7 @@ dbIsLockedBy <- function(db_connection, log = TRUE, project_name) {
 #' @return The function does not return a value. It either successfully locks the database or
 #'         throws an error if locking fails due to excessive recursive attempts or other issues.
 #'
-dbLock <- function(db_connection, log = TRUE, project_name, lock_id = NULL) {
+dbLock <- function(db_connection, log = TRUE, project_name, lock_id) {
   if (!is.null(lock_id)) {
     # increase the recursive call counter 'db_lock_depth'
     db_lock_depth <- .lib_db_env[[lock_id]]
@@ -141,7 +138,7 @@ dbLock <- function(db_connection, log = TRUE, project_name, lock_id = NULL) {
     }
 
     # if the database is ready for a new connection then the status message starts with "ReadyToConnect"
-    while (!dbHasStatus(db_connection, "ReadyToConnect", log, project_name)) {
+    while (!dbHasStatus(db_connection, "ReadyToConnect", log)) {
       Sys.sleep(4) # wait for 4 seconds
       # TODO alle Minute eine Rückmeldung geben "Warte immer noch darauf, die DB locken zu dürfen..."
     }
@@ -193,7 +190,7 @@ dbUnlock <- function(db_connection, log = TRUE, project_name, lock_id, readonly 
       cat("Current database status:", status, "\n")
     }
     if (!unlock_sucessful) {
-      status <- dbGetStatus(db_connection, log, project_name)
+      status <- dbGetStatus(db_connection, log)
       stop("Could not unlock the database for lock_id:\n",
            lock_id, "\n",
            "The current status is: " , status, "\n",
@@ -223,7 +220,7 @@ dbResetLock <- function(db_connection, log = TRUE, project_name) {
     unlock_request <- paste0("SELECT db.data_transfer_reset_lock('", project_name, "');")
     unlock_sucessful <- dbGetSingleValue(db_connection, unlock_request, log, project_name)
     if (!unlock_sucessful) {
-      status <- dbGetStatus(db_connectionm, log, project_name)
+      status <- dbGetStatus(db_connectionm, log)
       stop("Could not reset database lock for module:\n",
            project_name, "\n",
            "The current status is: " , status, "\n",
@@ -555,7 +552,7 @@ dbExecute <- function(db_connection, statement, log = TRUE, project_name, lock_i
 #' - Converts the query result into a `data.table` for ease of use.
 #'
 #' @export
-dbGetQuery <- function(db_connection, query, params = NULL, log = TRUE, project_name, lock_id = NULL, readonly = FALSE) {
+dbGetQuery <- function(db_connection, query, params = NULL, log = TRUE, project_name = NULL, lock_id = NULL, readonly = FALSE) {
   if (log) {
     cat(paste0("dbGetQuery:\n", query, "\n"))
   }
