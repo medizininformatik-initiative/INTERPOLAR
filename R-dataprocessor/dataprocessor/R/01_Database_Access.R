@@ -65,14 +65,21 @@ getDatabaseWriteConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_
 #' It iterates through all the connection objects in the environment, disconnects them, and removes them from the environment.
 #'
 closeAllDatabaseConnections <- function() {
+  resetRemainingDatabaseLock()
   for (db_connection_variable_name in ls(.db_connections_env)) {
     db_connection <- get(db_connection_variable_name, envir = .db_connections_env)
     if (etlutils::dbIsValid(db_connection)) {
-      etlutils::dbUnlockHard(db_connection, log = VERBOSE >= VL_90_FHIR_RESPONSE, project_name = PROJECT_NAME)
       etlutils::dbDisconnect(db_connection)
     }
     rm(list = db_connection_variable_name, envir = .db_connections_env)
   }
+}
+
+resetRemainingDatabaseLock <- function() {
+  etlutils::dbResetLock(
+    db_connection = getDatabaseWriteConnection(),
+    log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    project_name = PROJECT_NAME)
 }
 
 #' Execute a Read-Only Query with Logging
@@ -97,6 +104,7 @@ getReadQuery <- function(query, lock_id) {
     db_connection = getDatabaseReadConnection(),
     query = query,
     log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    project_name = PROJECT_NAME,
     lock_id = lock_id,
     readonly = TRUE)
 }

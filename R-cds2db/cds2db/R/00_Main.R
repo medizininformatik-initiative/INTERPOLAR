@@ -49,6 +49,11 @@ retrieve <- function(debug_path2config_toml = NA) {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
+    # Reset lock from unfinished previous cds2db run
+    etlutils::runLevel2("Reset lock from unfinished previous cds2db run", {
+      resetRemainingDatabaseLock()
+    })
+
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
       patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists("PATH_TO_PID_LIST_FILE"), PATH_TO_PID_LIST_FILE, NA))
@@ -133,11 +138,9 @@ retrieve <- function(debug_path2config_toml = NA) {
   }))
 
   try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
-
     etlutils::runLevel2("Close database connections", {
       closeAllDatabaseConnections()
     })
-
   }))
 
   if (etlutils::isErrorOccured()) {
