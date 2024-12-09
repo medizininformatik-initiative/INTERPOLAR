@@ -78,7 +78,7 @@ closeAllDatabaseConnections <- function() {
 resetRemainingDatabaseLock <- function() {
   etlutils::dbResetLock(
     db_connection = getDatabaseWriteConnection(),
-    log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    log = LOG_DB_QUERIES,
     project_name = PROJECT_NAME)
 }
 
@@ -103,7 +103,7 @@ getReadQuery <- function(query, lock_id) {
   etlutils::dbGetQuery(
     db_connection = getDatabaseReadConnection(),
     query = query,
-    log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    log = LOG_DB_QUERIES,
     project_name = PROJECT_NAME,
     lock_id = lock_id,
     readonly = TRUE)

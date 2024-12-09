@@ -32,6 +32,10 @@ processData <- function() {
 
                           ))
 
+  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
+    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
+  }
+
   ###
   # Read the DB configuration toml file
   ###
