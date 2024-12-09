@@ -15,6 +15,7 @@ getLastProcessingNumber <- function() {
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    project_name = PROJECT_NAME,
     lock_id = createLockID("getLastProcessingNumber()"),
     readonly = TRUE)
 }
@@ -40,6 +41,7 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    project_name = PROJECT_NAME,
     lock_id = createLockID("loadLastImportedDatasetsFromDB()"),
     readonly = TRUE)
 }
@@ -199,6 +201,7 @@ loadResourcesFromDB <- function(resource_name, filter_column, ids, log = TRUE, l
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = log,
+    project_name = PROJECT_NAME,
     lock_id = lock_id,
     readonly = TRUE)
 }
@@ -220,6 +223,7 @@ loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
     db_connection = getDatabaseReadConnection(),
     query = statement,
     log = log,
+    project_name = PROJECT_NAME,
     lock_id = createLockID("loadResourcesLastStatusFromDB()"),
     readonly = TRUE)
 }

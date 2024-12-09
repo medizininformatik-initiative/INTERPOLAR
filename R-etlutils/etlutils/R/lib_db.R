@@ -13,11 +13,12 @@
 #' @param query A character string representing the SQL query to execute.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, messages about the query execution
 #'        are logged to the console. Default is `TRUE`.
+#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return The first value from the query result, or `NULL` if the result is empty.
 #'
-dbGetSingleValue <- function(db_connection, query, log = TRUE) {
-  status <- dbGetQuery(db_connection, query, log = log, readonly = TRUE)
+dbGetSingleValue <- function(db_connection, query, log = TRUE, project_name) {
+  status <- dbGetQuery(db_connection, query, log = log, project_name = project_name, readonly = TRUE)
   if (!is.null(status)) status <- status[1, ][[1]] # the functions answer is a table with 1 row and 1 column
 }
 
@@ -32,12 +33,13 @@ dbGetSingleValue <- function(db_connection, query, log = TRUE) {
 #' @param db_connection A database connection object used to execute the query.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, messages about the query execution
 #'        are logged to the console. Default is `TRUE`.
+#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return A character string representing the current semaphore status in the database, or `NULL`
 #'         if no status is available.
 #'
-dbGetStatus <- function(db_connection, log = TRUE) {
-  dbGetSingleValue(db_connection, "SELECT db.data_transfer_status();", log)
+dbGetStatus <- function(db_connection, log = TRUE, project_name) {
+  dbGetSingleValue(db_connection, "SELECT db.data_transfer_status();", log, project_name)
 }
 
 #' Check Database Semaphore Status
@@ -50,33 +52,16 @@ dbGetStatus <- function(db_connection, log = TRUE) {
 #' @param status_prefix A string specifying the prefix to check against the current database status.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs the current database
 #'        status to the console. Default is `TRUE`.
+#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return A logical value (`TRUE` or `FALSE`), indicating whether the database status starts
 #'         with the given `status_prefix`.
 #'
-dbHasStatus <- function(db_connection, status_prefix, log = TRUE) {
-  status <- dbGetStatus(db_connection, log)
+dbHasStatus <- function(db_connection, status_prefix, log = TRUE, project_name) {
+  status <- dbGetStatus(db_connection, log, project_name)
   if (log) cat("Current database status:", status, "\n")
   return(startsWith(tolower(status), tolower(status_prefix)))
 }
-
-#' Check Database Semaphore Status
-#'
-#' This function checks whether the current database status starts with a specified status prefix.
-#'
-#' @param db_connection A database connection object used to query the database.
-#' @param status_prefix A string specifying the prefix to check against the current database status.
-#' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages to the console.
-#'
-#' @return A logical value (`TRUE` or `FALSE`), indicating whether the database status starts
-#'         with the given `status_prefix`.
-#'
-dbHasStatus <- function(db_connection, status_prefix, log = TRUE) {
-  status <- dbGetStatus(db_connection, log)
-  if (log) cat("Current database status:", status, "\n")
-  return(startsWith(tolower(status), tolower(status_prefix)))
-}
-
 
 #' Get Name of Module That Set the Database Semaphore
 #'
@@ -87,13 +72,14 @@ dbHasStatus <- function(db_connection, status_prefix, log = TRUE) {
 #' @param db_connection A database connection object used to query the database.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the function logs messages about
 #'        the query execution to the console. Default is `TRUE`.
+#' @param project_name A string representing the name of the project to check for a lock.
 #'
 #' @return A character string representing the name of the module that set the semaphore, or
 #'         `NULL` if no module is found.
 #'
 #' @export
-dbGetLockModule <- function(db_connection, log = TRUE) {
-  dbGetSingleValue(db_connection, "select db.data_transfer_get_lock_module();", log)
+dbGetLockModule <- function(db_connection, log = TRUE, project_name) {
+  dbGetSingleValue(db_connection, "select db.data_transfer_get_lock_module();", log, project_name)
 }
 
 #' Check for a Lock in the Database by Module
@@ -112,7 +98,7 @@ dbGetLockModule <- function(db_connection, log = TRUE) {
 #'
 #' @export
 dbIsLockedBy <- function(db_connection, log = TRUE, project_name) {
-  dbGetLockModule(db_connection, log) == project_name
+  dbGetLockModule(db_connection, log, project_name) == project_name
 }
 
 #' Lock a Database for Write Access
@@ -155,12 +141,12 @@ dbLock <- function(db_connection, log = TRUE, project_name, lock_id = NULL) {
     }
 
     # if the database is ready for a new connection then the status message starts with "ReadyToConnect"
-    while (!dbHasStatus(db_connection, "ReadyToConnect", log)) {
+    while (!dbHasStatus(db_connection, "ReadyToConnect", log, project_name)) {
       Sys.sleep(4) # wait for 4 seconds
       # TODO alle Minute eine Rückmeldung geben "Warte immer noch darauf, die DB locken zu dürfen..."
     }
 
-    lock_sucessful <- dbGetSingleValue(db_connection, paste0("SELECT db.data_transfer_stop('", project_name, "', '", lock_id, "');"), log)
+    lock_sucessful <- dbGetSingleValue(db_connection, paste0("SELECT db.data_transfer_stop('", project_name, "', '", lock_id, "');"), log, project_name)
     if (log) {
       cat(paste("DB status on lock:", lock_sucessful, "\n"))
     }
@@ -200,9 +186,9 @@ dbUnlock <- function(db_connection, log = TRUE, project_name, lock_id, readonly 
       cat(paste0("Try to unlock database with lock_id: '", lock_id, "' and readonly: ", readonly, "\n"))
     }
     unlock_request <- paste0("SELECT db.data_transfer_start('", project_name, "', '", lock_id, "', ", readonly, ");")
-    unlock_sucessful <- dbGetSingleValue(db_connection, unlock_request, log)
+    unlock_sucessful <- dbGetSingleValue(db_connection, unlock_request, log, project_name)
     if (!unlock_sucessful) {
-      status <- dbGetStatus(db_connection)
+      status <- dbGetStatus(db_connection, log, project_name)
       stop("Could not unlock the database for lock_did:\n",
            lock_id, "\n",
            "The current status is: " , status, "\n",
@@ -230,9 +216,9 @@ dbResetLock <- function(db_connection, log = TRUE, project_name) {
   unlock_sucessful <- FALSE
   if (dbIsLockedBy(db_connection, log, project_name)) {
     unlock_request <- paste0("SELECT db.data_transfer_reset_lock('", project_name, "');")
-    unlock_sucessful <- dbGetSingleValue(db_connection, unlock_request, log)
+    unlock_sucessful <- dbGetSingleValue(db_connection, unlock_request, log, project_name)
     if (!unlock_sucessful) {
-      status <- dbGetStatus(db_connection)
+      status <- dbGetStatus(db_connectionm, log, project_name)
       stop("Could not reset database lock for module:\n",
            project_name, "\n",
            "The current status is: " , status, "\n",
@@ -614,6 +600,7 @@ dbReadTable <- function(db_connection, table_name, log = TRUE, project_name, loc
 #' @param table_name A string specifying the name of the table to check.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the SQL query is logged to the console.
 #'        Default is `TRUE`.
+#' @param project_name A string representing the name of the project whose lock should be reset.
 #'
 #' @return A logical value: `TRUE` if the table is empty, `FALSE` otherwise.
 #'
@@ -622,14 +609,14 @@ dbReadTable <- function(db_connection, table_name, log = TRUE, project_name, loc
 #' - If the query returns zero, the function returns `TRUE`; otherwise, it returns `FALSE`.
 #'
 #' @export
-dbIsTableEmpty <- function(db_connection, table_name, log = TRUE) {
+dbIsTableEmpty <- function(db_connection, table_name, log = TRUE, project_name) {
   # SQL query to count rows in the table
   query <- paste0("SELECT COUNT(*) FROM ", table_name)
   if (log) {
     cat(paste0("dbIsTableEmpty:\n", query, "\n"))
   }
   # Execute the query and fetch the result
-  result <- dbGetQuery(db_connection, query, log = FALSE, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, log = FALSE, project_name = project_name, readonly = TRUE)
   # Return TRUE if the count is 0, indicating the table is empty
   return(result[1, 1] == 0)
 }
@@ -680,7 +667,7 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
   non_empty_tables <- c()
   if (stop_if_table_not_empty) {
     for (table_name in table_names) {
-      if (!dbIsTableEmpty(db_connection, table_name)) {
+      if (!dbIsTableEmpty(db_connection, table_name, log, project_name)) {
         non_empty_tables <- c(non_empty_tables, table_name)
       }
     }
@@ -840,6 +827,7 @@ dbPrintTimeAndTimezone <- function(db_connection) {
 #' @param db_connection A valid database connection object to the PostgreSQL database.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the executed SQL query is logged
 #'        to the console. Default is `TRUE`.
+#' @param project_name A string representing the project associated with this database operation.
 #'
 #' @return A string representing the name of the current schema.
 #'
@@ -847,14 +835,14 @@ dbPrintTimeAndTimezone <- function(db_connection) {
 #' - Logs the executed query if `log = TRUE`.
 #' - Uses the schema to identify tables and other database objects accessible in the connection.
 #'
-getCurrentSchema <- function(db_connection, log = TRUE) {
+getCurrentSchema <- function(db_connection, log = TRUE, project_name) {
   # SQL query to retrieve the current schema
   query <- "SELECT current_schema();"
   if (log) {
     cat(paste0("getCurrentSchema:\n", query, "\n"))
   }
   # Execute the query and store the result
-  result <- dbGetQuery(db_connection, query, params = NULL, log, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, params = NULL, log, project_name, lock_id = NULL, readonly = TRUE)
   # Return the schema name from the first row and column
   return(result$current_schema[1])
 }
@@ -869,6 +857,7 @@ getCurrentSchema <- function(db_connection, log = TRUE) {
 #' @param table_name A string specifying the name of the table for which column information is retrieved.
 #' @param log A logical value (`TRUE` or `FALSE`). If `TRUE`, the executed SQL query is logged to
 #'        the console. Default is `TRUE`.
+#' @param project_name A string representing the project associated with this database operation.
 #'
 #' @return A `data.frame` with two columns:
 #'         - `column_name`: The names of the columns in the specified table.
@@ -879,9 +868,9 @@ getCurrentSchema <- function(db_connection, log = TRUE) {
 #' - Logs the executed SQL query if `log = TRUE`.
 #'
 #' @export
-getDBTableColumns <- function(db_connection, table_name, log = TRUE) {
+getDBTableColumns <- function(db_connection, table_name, log = TRUE, project_name) {
   # Get the current schema using the helper function
-  schema <- getCurrentSchema(db_connection, log)
+  schema <- getCurrentSchema(db_connection, log, project_name)
   # SQL query to retrieve column names and data types for the specified table in the current schema
   query <- paste0(
     "SELECT column_name, data_type
@@ -893,7 +882,7 @@ getDBTableColumns <- function(db_connection, table_name, log = TRUE) {
     cat(paste0("getDBTableColumns:\n", query, "\n"))
   }
   # Execute the query and return the result as a data frame
-  result <- dbGetQuery(db_connection, query, params = NULL, log, readonly = TRUE)
+  result <- dbGetQuery(db_connection, query, params = NULL, log, project_name, lock_id = NULL, readonly = TRUE)
   return(result)
 }
 

@@ -58,6 +58,7 @@ importDB2Redcap <- function() {
         db_connection = db_connection,
         query = query,
         log = VERBOSE >= VL_90_FHIR_RESPONSE,
+        project_name = PROJECT_NAME,
         lock_id = createLockID("importDB2Redcap()"),
         readonly = TRUE)
 
