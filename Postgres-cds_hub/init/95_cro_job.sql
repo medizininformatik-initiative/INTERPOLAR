@@ -161,13 +161,13 @@ BEGIN
 
         SELECT pg_sleep(num) INTO temp;
 
-        status:='WaitForCronJob';
-
         -- Semaphore wieder frei geben
         err_section:='cron_job_data_transfer-55';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Ongoing%'' and pc_value=''ReadyToConnect'' and pc_name=''semaphor_cron_job_data_transfer'''
         )) AS t(res TEXT) INTO erg;
+
+        status:='WaitForCronJob';
 
         err_section:='cron_job_data_transfer-60';    err_schema:='/';    err_table:='/';
     END IF;
@@ -607,6 +607,47 @@ EXCEPTION
     RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql; -- db.data_transfer_reset_lock
+
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db_user;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Funktion um aktuellen Status zu erfahren
+CREATE OR REPLACE FUNCTION db.data_transfer_status()
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+DECLARE
+    status TEXT;
+    temp VARCHAR;
+    num INT;
+BEGIN
+    -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
+    SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||' Reporttime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
+    INTO status
+    FROM db_config.db_process_control
+    WHERE pc_name = 'semaphor_cron_job_data_transfer';
+
+    RETURN status;
+EXCEPTION
+    WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
+    SELECT db.error_log(
+        err_schema => CAST('db_config' AS VARCHAR),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.data_transfer_stop()' AS VARCHAR),     -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS VARCHAR),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS VARCHAR),     -- err_msg (varchar) Fehlernachricht
+        err_line => CAST('db.data_transfer_status-01' AS VARCHAR),    -- err_line (varchar) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: db_process_control' AS VARCHAR),  -- err_variables (varchar) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(num AS INT)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+    
+    RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
+END;
+$$ LANGUAGE plpgsql; --db.data_transfer_status
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db2dataprocessor_user;
