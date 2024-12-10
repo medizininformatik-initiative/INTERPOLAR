@@ -61,7 +61,7 @@ BEGIN
         If num2>=(num*60) THEN
             status:='WaitForCronJob';
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
-            'UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'' and pc_value!='''||status||''''
+            'UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'' and pc_value!='''||status||''''
             ) ) AS t(res TEXT) INTO erg;
         END IF;
     END IF;
@@ -71,13 +71,13 @@ BEGIN
         -- Langzeit Ongoin Info wieder zurück setzen
 
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Normal Ongoing'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'''
+        'UPDATE db_config.db_process_control SET pc_value=''Normal Ongoing'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
         status:='1/5 db.copy_raw_cds_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'''
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
         err_section:='cron_job_data_transfer-25';    err_schema:='db';    err_table:='copy_raw_cds_in_to_db_log()';
@@ -90,7 +90,7 @@ BEGIN
         -- Semaphore setzen -----------------------------------------
         status:='2/5 db.copy_raw_cds_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'''
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
         err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
@@ -102,7 +102,7 @@ BEGIN
         -- Semaphore setzen -----------------------------------------
         status:='3/5 db.copy_raw_cds_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'''
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
         err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
@@ -114,7 +114,7 @@ BEGIN
         -- Semaphore setzen -----------------------------------------
         status:='4/5 db.copy_raw_cds_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'''
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
         err_section:='cron_job_data_transfer-40';    err_schema:='db';    err_table:='copy_fe_dp_in_to_db_log()';
@@ -127,7 +127,7 @@ BEGIN
         -- Semaphore setzen -----------------------------------------
         status:='5/5 db.copy_raw_cds_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''timepoINT_3_cron_job_data_transfer'''
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
         err_section:='cron_job_data_transfer-45';    err_schema:='db';    err_table:='copy_fe_fe_in_to_db_log()';
@@ -152,8 +152,12 @@ BEGIN
         err_section:='cron_job_data_transfer-54';    err_schema:='db_config';    err_table:='db_process_control';
 
         -- Semaphore setzen das ReadyToConnect (Pause) gemacht werden kann weil alle Verarbeitungsschritte abgearbeitet sind
-        set_sem_erg:= db.data_transfer_start('db.cron_job_data_transfer'::VARCHAR, status::VARCHAR, TRUE);
+--        set_sem_erg:= db.data_transfer_start('db.cron_job_data_transfer'::VARCHAR, status::VARCHAR, TRUE);
         status:='ReadyToConnect';
+        -- Semaphore setzen -----------------------------------------
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
 
         SELECT pg_sleep(num) INTO temp;
 
