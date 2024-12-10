@@ -57,7 +57,7 @@ importDB2Redcap <- function() {
       data_from_db <- etlutils::dbGetQuery(
         db_connection = db_connection,
         query = query,
-        log = VERBOSE >= VL_90_FHIR_RESPONSE,
+        log = LOG_DB_QUERIES,
         project_name = PROJECT_NAME,
         lock_id = createLockID("importDB2Redcap()"),
         readonly = TRUE)
