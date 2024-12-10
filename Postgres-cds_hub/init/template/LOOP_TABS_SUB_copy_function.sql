@@ -3,8 +3,13 @@
     SELECT COUNT(1) INTO data_count_all FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -96,7 +101,10 @@
         err_section:='<%TABLE_NAME%>-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -112,4 +120,3 @@
     err_section:='<%TABLE_NAME%>-50';    err_schema:='/';    err_table:='/';
     -- END <%TABLE_NAME%>
     -----------------------------------------------------------------------------------------------------------------------
-

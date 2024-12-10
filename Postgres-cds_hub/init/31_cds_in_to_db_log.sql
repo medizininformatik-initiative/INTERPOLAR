@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-05 09:58:05
+-- Rights definition file last update : 2024-12-04 16:58:23
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-05 10:04:09
+-- Create time: 2024-12-10 01:21:42
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -45,24 +45,29 @@ DECLARE
     data_count_pro_all INT:=0; -- Counting all records in this run
     data_count_pro_new INT:=0; -- Counting all new inserted records in this run
     last_pro_nr INT; -- Last processing number
-    temp varchar; -- Temporary variable for interim results
+    temp VARCHAR; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
-    tmp_sec double precision:=0; -- Temporary variable to store execution time
+    tmp_sec DOUBLE PRECISION:=0; -- Temporary variable to store execution time
     session_id TEXT; -- session id
-    timestamp_start varchar;
-    timestamp_end varchar;
-    timestamp_ent_start varchar;
-    timestamp_ent_end varchar;
-    err_section varchar;
-    err_schema varchar;
-    err_table varchar;
-    err_pid varchar;
+    timestamp_start VARCHAR;
+    timestamp_end VARCHAR;
+    timestamp_ent_start VARCHAR;
+    timestamp_ent_end VARCHAR;
+    err_section VARCHAR;
+    err_schema VARCHAR;
+    err_table VARCHAR;
+    erg VARCHAR;
 BEGIN
     err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
     -- set start time
-	SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_start;
-    err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer''');
+	SELECT res FROM public.pg_background_result(public.pg_background_launch(
+    'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+    ))  AS t(res TEXT) INTO timestamp_start;
+ 
+    SELECT res FROM public.pg_background_result(public.pg_background_launch(
+    'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
+    ) ) AS t(res TEXT) INTO erg;
  
     -- Copy Functionname: copy_type_cds_in_to_db_log - From: cds2db_in -> To: db_log
     err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
@@ -73,8 +78,13 @@ BEGIN
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.encounter; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -446,7 +456,10 @@ BEGIN
         err_section:='encounter-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -462,14 +475,18 @@ BEGIN
     err_section:='encounter-50';    err_schema:='/';    err_table:='/';
     -- END encounter
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start patient
     err_section:='patient-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.patient; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -625,7 +642,10 @@ BEGIN
         err_section:='patient-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -641,14 +661,18 @@ BEGIN
     err_section:='patient-50';    err_schema:='/';    err_table:='/';
     -- END patient
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start condition
     err_section:='condition-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.condition; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -1188,7 +1212,10 @@ BEGIN
         err_section:='condition-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -1204,14 +1231,18 @@ BEGIN
     err_section:='condition-50';    err_schema:='/';    err_table:='/';
     -- END condition
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start medication
     err_section:='medication-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medication; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -1527,7 +1558,10 @@ BEGIN
         err_section:='medication-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -1543,14 +1577,18 @@ BEGIN
     err_section:='medication-50';    err_schema:='/';    err_table:='/';
     -- END medication
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start medicationrequest
     err_section:='medicationrequest-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationrequest; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -2530,7 +2568,10 @@ BEGIN
         err_section:='medicationrequest-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -2546,14 +2587,18 @@ BEGIN
     err_section:='medicationrequest-50';    err_schema:='/';    err_table:='/';
     -- END medicationrequest
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start medicationadministration
     err_section:='medicationadministration-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationadministration; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -3077,7 +3122,10 @@ BEGIN
         err_section:='medicationadministration-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -3093,14 +3141,18 @@ BEGIN
     err_section:='medicationadministration-50';    err_schema:='/';    err_table:='/';
     -- END medicationadministration
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start medicationstatement
     err_section:='medicationstatement-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationstatement; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -4028,7 +4080,10 @@ BEGIN
         err_section:='medicationstatement-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -4044,14 +4099,18 @@ BEGIN
     err_section:='medicationstatement-50';    err_schema:='/';    err_table:='/';
     -- END medicationstatement
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start observation
     err_section:='observation-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.observation; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -4663,7 +4722,10 @@ BEGIN
         err_section:='observation-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -4679,14 +4741,18 @@ BEGIN
     err_section:='observation-50';    err_schema:='/';    err_table:='/';
     -- END observation
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start diagnosticreport
     err_section:='diagnosticreport-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.diagnosticreport; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -4950,7 +5016,10 @@ BEGIN
         err_section:='diagnosticreport-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -4966,14 +5035,18 @@ BEGIN
     err_section:='diagnosticreport-50';    err_schema:='/';    err_table:='/';
     -- END diagnosticreport
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start servicerequest
     err_section:='servicerequest-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.servicerequest; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -5293,7 +5366,10 @@ BEGIN
         err_section:='servicerequest-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -5309,14 +5385,18 @@ BEGIN
     err_section:='servicerequest-50';    err_schema:='/';    err_table:='/';
     -- END servicerequest
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start procedure
     err_section:='procedure-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.procedure; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -5676,7 +5756,10 @@ BEGIN
         err_section:='procedure-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -5692,14 +5775,18 @@ BEGIN
     err_section:='procedure-50';    err_schema:='/';    err_table:='/';
     -- END procedure
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start consent
     err_section:='consent-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.consent; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -5923,7 +6010,10 @@ BEGIN
         err_section:='consent-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -5939,14 +6029,18 @@ BEGIN
     err_section:='consent-50';    err_schema:='/';    err_table:='/';
     -- END consent
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start location
     err_section:='location-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.location; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -6094,7 +6188,10 @@ BEGIN
         err_section:='location-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -6110,14 +6207,18 @@ BEGIN
     err_section:='location-50';    err_schema:='/';    err_table:='/';
     -- END location
     -----------------------------------------------------------------------------------------------------------------------
-
     -- Start pids_per_ward
     err_section:='pids_per_ward-01';
     SELECT COUNT(1) INTO data_count_all FROM cds2db_in.pids_per_ward; -- Counting new records in the source
 
     IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_start;
-        err_pid:=public.pg_background_launch('UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer''');
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_start;
+        
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_type_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
     
         data_count:=0; data_count_update:=0; data_count_new:=0;
         data_count_pro_all:=data_count_pro_all+data_count_all; -- Adding the new records
@@ -6213,7 +6314,10 @@ BEGIN
         err_section:='pids_per_ward-45';    err_schema:='db_log';    err_table:='data_import_hist';
         data_count_pro_new:=data_count_pro_new+data_count_new;
         -- calculation of the time period
-        SELECT res FROM public.pg_background_result(public.pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_ent_end;    
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
+        ))  AS t(res TEXT) INTO timestamp_ent_end;    
+        
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
     
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
@@ -6230,13 +6334,14 @@ BEGIN
     -- END pids_per_ward
     -----------------------------------------------------------------------------------------------------------------------
 
-
     err_section:='BOTTON-01';  err_schema:='db_log';    err_table:='data_import_hist';
 
     -- Collect and save counts for the function
     IF data_count_pro_all>0 THEN
         -- calculation of the time period
-        SELECT res FROM pg_background_result(pg_background_launch('SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'))  AS t(res TEXT) INTO timestamp_end;
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US''
+        )'))  AS t(res TEXT) INTO timestamp_end;
 
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
     
@@ -6253,12 +6358,12 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
     SELECT db.error_log(
-        err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
-        err_objekt => CAST('db.copy_type_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
-        err_user => CAST(current_user AS varchar),                    -- err_user (varchar) Benutzer (kann durch current_user ersetzt werden)
-        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS varchar),     -- err_msg (varchar) Fehlernachricht
-        err_line => CAST(err_section AS varchar),                     -- err_line (varchar) Zeilennummer oder Abschnitt
-        err_variables => CAST('Tab: ' || err_table AS varchar),       -- err_variables (varchar) Debug-Informationen zu Variablen
+        err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.copy_type_cds_in_to_db_log()' AS VARCHAR),     -- err_objekt (VARCHAR) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS VARCHAR),                    -- err_user (VARCHAR) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS VARCHAR),     -- err_msg (VARCHAR) Fehlernachricht
+        err_line => CAST(err_section AS VARCHAR),                     -- err_line (VARCHAR) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' || err_table||' e:'||erg AS VARCHAR),       -- err_variables (VARCHAR) Debug-Informationen zu Variablen
         last_processing_nr => CAST(last_pro_nr AS int)                -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
