@@ -32,14 +32,6 @@ getDBTableAndColumnNames <- function() {
 #'
 importDB2Redcap <- function() {
 
-    # Establish connection to the database
-    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                         host = DB_GENERAL_HOST,
-                                         port = DB_GENERAL_PORT,
-                                         user = DB_DB2FRONTEND_USER,
-                                         password = DB_DB2FRONTEND_PASSWORD,
-                                         schema = DB_DB2FRONTEND_SCHEMA_OUT)
-
     # Connect to REDCap
     frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
 
@@ -54,14 +46,7 @@ importDB2Redcap <- function() {
       query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
 
       # Fetch data from the database
-      data_from_db <- etlutils::dbGetQuery(
-        db_connection = db_connection,
-        query = query,
-        log = LOG_DB_QUERIES,
-        project_name = PROJECT_NAME,
-        lock_id = createLockID("importDB2Redcap()"),
-        readonly = TRUE)
-
+      data_from_db <- dbReadQuery(query, "importDB2Redcap()")
       # Import data to REDCap
       tryCatch({
         redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
@@ -72,8 +57,5 @@ importDB2Redcap <- function() {
       })
 
     }
-
-    # Disconnect from the database
-    etlutils::dbDisconnect(db_connection)
 
 }

@@ -217,13 +217,7 @@ loadResourcesFromDB <- function(resource_name, filter_column, ids, lock_id) {
 #'
 loadResourcesLastStatusFromDB <- function(resource_name) {
   statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
-  etlutils::dbGetQuery(
-    db_connection = getDatabaseReadConnection(),
-    query = statement,
-    log = LOG_DB_QUERIES,
-    project_name = PROJECT_NAME,
-    lock_id = createLockID("loadResourcesLastStatusFromDB()"),
-    readonly = TRUE)
+  dbReadQuery(statement, "loadResourcesLastStatusFromDB()")
 }
 
 #' Retrieve the last status of load resources from the database by their own IDs.
@@ -425,7 +419,7 @@ createFrontendTables <- function() {
       query <- paste0(query, additional_class_code_query)
     }
 
-    encounters <- getReadQuery(query, lock_id = createLockID("createEncounterFrontendTable()[1]"))
+    encounters <- dbReadQuery(query, "createEncounterFrontendTable()[1]")
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
@@ -434,7 +428,7 @@ createFrontendTables <- function() {
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
 
-    conditions <- getReadQuery(query, lock_id = createLockID("createEncounterFrontendTable()[2]"))
+    conditions <- dbReadQuery(query, "createEncounterFrontendTable()[2]")
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
@@ -520,7 +514,7 @@ createFrontendTables <- function() {
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
-          observations <- getReadQuery(query, lock_id = createLockID("getObservation()[1]"))
+          observations <- dbReadQuery(query, "getObservation()[1]")
 
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
@@ -531,7 +525,7 @@ createFrontendTables <- function() {
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_datetime, "'\n")
-            observations <- getReadQuery(query, lock_id = createLockID("getObservation()[2]"))
+            observations <- dbReadQuery(query, "getObservation()[2]")
           }
           if (nrow(observations)) {
             # take the very frist Observation with the latest date (should be only 1 but sure is sure)

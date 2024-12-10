@@ -71,12 +71,7 @@ importRedcap2DB <- function() {
     }
 
     #establish connection to db
-    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                         host = DB_GENERAL_HOST,
-                                         port = DB_GENERAL_PORT,
-                                         user = DB_DB2FRONTEND_USER,
-                                         password = DB_DB2FRONTEND_PASSWORD,
-                                         schema = DB_DB2FRONTEND_SCHEMA_IN)
+    db_connection <- getDatabaseWriteConnection()
 
 
     # write tables to database
@@ -91,6 +86,4 @@ importRedcap2DB <- function() {
                              lock_id = createLockID("importRedcap2DB()"))
     }
 
-    #disconnect from db
-    etlutils::dbDisconnect(db_connection)
 }
