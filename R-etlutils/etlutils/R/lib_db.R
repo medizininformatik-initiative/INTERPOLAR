@@ -155,8 +155,6 @@ dbLock <- function(db_connection, log = TRUE, project_name, lock_id) {
     # decrease the recursive call counter 'db_lock_depth'
     .lib_db_env[[lock_id]] <- .lib_db_env[[lock_id]] - 1
 
-    #stop("Testerror")
-
   }
 }
 
@@ -250,7 +248,7 @@ dbResetLock <- function(db_connection, log = TRUE, project_name) {
 #'         `<project_name>:<lock_id_message>`.
 #'
 #' @export
-createLockID <- function(project_name, ...) {
+dbCreateLockID <- function(project_name, ...) {
   lock_id_message <- paste0(...)
   paste0(project_name, ":", lock_id_message)
 }

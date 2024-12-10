@@ -14,7 +14,7 @@
 #'         `<PROJECT_NAME>:<lock_id_message>`.
 #'
 createLockID <- function(...) {
-  etlutils::createLockID(PROJECT_NAME, ...)
+  etlutils::dbCreateLockID(PROJECT_NAME, ...)
 }
 
 #' Get Database Connection
