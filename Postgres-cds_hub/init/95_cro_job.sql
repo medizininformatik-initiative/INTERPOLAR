@@ -88,7 +88,7 @@ BEGIN
         )) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
-        status:='2/5 db.copy_raw_cds_in_to_db_log()';
+        status:='2/5 db.copy_type_cds_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
@@ -100,7 +100,7 @@ BEGIN
         )) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
-        status:='3/5 db.copy_raw_cds_in_to_db_log()';
+        status:='3/5 db.take_over_last_check_date()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
@@ -112,7 +112,7 @@ BEGIN
         )) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
-        status:='4/5 db.copy_raw_cds_in_to_db_log()';
+        status:='4/5 db.copy_fe_dp_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
@@ -125,7 +125,7 @@ BEGIN
         )) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
-        status:='5/5 db.copy_raw_cds_in_to_db_log()';
+        status:='5/5 db.copy_fe_fe_in_to_db_log()';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
@@ -625,7 +625,7 @@ DECLARE
     num INT;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
-    SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||' Reporttime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
+    SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||' ReportTime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
     INTO status
     FROM db_config.db_process_control
     WHERE pc_name = 'semaphor_cron_job_data_transfer';
