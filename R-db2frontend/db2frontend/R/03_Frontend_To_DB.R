@@ -25,7 +25,7 @@ getFrontendTableNames <- function() {
 #'
 adjustTableToDBTable <- function(con, dt, table_name) {
   # 1. Get the PostgreSQL table columns and types
-  db_columns <- etlutils::getDBTableColumns(con, table_name, log = VERBOSE >= VL_90_FHIR_RESPONSE)
+  db_columns <- etlutils::getDBTableColumns(con, table_name, log = LOG_DB_QUERIES, project_name = PROJECT_NAME)
   # 2. Convert the R data.table columns to match the PostgreSQL types
   adjusted_dt <- etlutils::convertToDBTypes(dt, db_columns)
   return(adjusted_dt)
@@ -71,21 +71,19 @@ importRedcap2DB <- function() {
     }
 
     #establish connection to db
-    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                         host = DB_GENERAL_HOST,
-                                         port = DB_GENERAL_PORT,
-                                         user = DB_DB2FRONTEND_USER,
-                                         password = DB_DB2FRONTEND_PASSWORD,
-                                         schema = DB_DB2FRONTEND_SCHEMA_IN)
+    db_connection <- getDatabaseWriteConnection()
 
 
     # write tables to database
     for (i in seq_along(tables2Export)) {
       table_name <- paste0(names(tables2Export)[i], "_fe")
       tables2Export[[i]] <- adjustTableToDBTable(db_connection, tables2Export[[i]], table_name)
-      etlutils::dbAddContent(db_connection, table_name, tables2Export[[i]], log = VERBOSE >= VL_90_FHIR_RESPONSE, lock_id = "db2frontend.importRedcap2DB()")
+      etlutils::dbAddContent(db_connection = db_connection,
+                             table_name = table_name,
+                             table = tables2Export[[i]],
+                             log = LOG_DB_QUERIES,
+                             project_name = PROJECT_NAME,
+                             lock_id = createLockID("importRedcap2DB()"))
     }
 
-    #disconnect from db
-    etlutils::dbDisconnect(db_connection)
 }

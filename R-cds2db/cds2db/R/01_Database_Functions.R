@@ -1,6 +1,22 @@
 # Environment for saving the db_connnections
 .db_connections_env <- new.env()
 
+#' Create a Lock ID with Default Project Name
+#'
+#' This function generates a lock ID by combining a predefined project name with a variable number
+#' of arguments for the lock ID message. The arguments are concatenated and combined with the
+#' project name, separated by a colon (`:`). The project name is sourced from the global constant
+#' `PROJECT_NAME`.
+#'
+#' @param ... A variable number of strings to be concatenated as the lock ID message.
+#'
+#' @return A character string representing the combined lock ID in the format
+#'         `<PROJECT_NAME>:<lock_id_message>`.
+#'
+createLockID <- function(...) {
+  etlutils::createLockID(PROJECT_NAME, ...)
+}
+
 #' Get Database Connection
 #'
 #' This function retrieves a database connection for the specified schema.
@@ -49,6 +65,7 @@ getDatabaseWriteConnection <- function() getDatabaseConnection(DB_CDS2DB_SCHEMA_
 #' It iterates through all the connection objects in the environment, disconnects them, and removes them from the environment.
 #'
 closeAllDatabaseConnections <- function() {
+  resetRemainingDatabaseLock()
   for (db_connection_variable_name in ls(.db_connections_env)) {
     db_connection <- get(db_connection_variable_name, envir = .db_connections_env)
     if (etlutils::dbIsValid(db_connection)) {
@@ -56,6 +73,19 @@ closeAllDatabaseConnections <- function() {
     }
     rm(list = db_connection_variable_name, envir = .db_connections_env)
   }
+}
+
+#' Reset Remaining Database Lock
+#'
+#' This function resets any remaining database locks for a given project. It utilizes
+#' the `dbResetLock` function from the `etlutils` package, using the database write
+#' connection and project-specific configurations.
+#'
+resetRemainingDatabaseLock <- function() {
+  etlutils::dbResetLock(
+    db_connection = getDatabaseWriteConnection(),
+    log = LOG_DB_QUERIES,
+    project_name = PROJECT_NAME)
 }
 
 #' Write Data Tables to a Database
@@ -76,7 +106,8 @@ writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE, lock_
                                   db_connection = getDatabaseWriteConnection(),
                                   stop_if_table_not_empty = stop_if_table_not_empty,
                                   close_db_connection = FALSE,
-                                  log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                                  log = LOG_DB_QUERIES,
+                                  project_name = PROJECT_NAME,
                                   lock_id = lock_id)
 }
 
@@ -95,7 +126,8 @@ readTablesFromDatabase <- function(table_names, lock_id) {
   etlutils::readTablesFromDatabase(db_connection = getDatabaseReadConnection(),
                                  table_names = table_names,
                                  close_db_connection = FALSE,
-                                 log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                                 log = LOG_DB_QUERIES,
+                                 project_name = PROJECT_NAME,
                                  lock_id = lock_id)
 }
 
@@ -120,9 +152,10 @@ readTablesFromDatabase <- function(table_names, lock_id) {
 getQueryFromDatabase <- function(query, params = NULL, lock_id, readonly) {
   db_connection <- if (readonly) getDatabaseReadConnection() else getDatabaseWriteConnection()
   etlutils::dbGetQuery(db_connection = db_connection,
-                      query = query,
-                      params = params,
-                      log = VERBOSE >= VL_90_FHIR_RESPONSE,
-                      lock_id = lock_id,
-                      readonly = readonly)
+                       query = query,
+                       params = params,
+                       log = LOG_DB_QUERIES,
+                       project_name = PROJECT_NAME,
+                       lock_id = lock_id,
+                       readonly = readonly)
 }

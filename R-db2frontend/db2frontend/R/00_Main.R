@@ -11,6 +11,13 @@ retrieve <- function() {
   config <- etlutils::initConstants(path2config_toml)
 
   ###
+  # Add global DB log variable
+  ###
+  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
+    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
+  }
+
+  ###
   # Read the DB configuration toml file
   ###
   etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
@@ -37,6 +44,11 @@ retrieve <- function() {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
+    # Reset lock from unfinished previous cds2db run
+    etlutils::runLevel2("Reset lock from unfinished previous cds2db run", {
+      resetRemainingDatabaseLock()
+    })
+
     # Import Data from Database to Frontend
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
       importDB2Redcap()
@@ -47,6 +59,12 @@ retrieve <- function() {
       importRedcap2DB()
     })
 
+  }))
+
+  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
+    etlutils::runLevel2("Close database connections", {
+      closeAllDatabaseConnections()
+    })
   }))
 
   if (etlutils::isErrorOccured()) {

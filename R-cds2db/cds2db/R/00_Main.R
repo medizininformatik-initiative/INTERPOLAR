@@ -13,6 +13,13 @@ retrieve <- function(debug_path2config_toml = NA) {
   config <- etlutils::initConstants(path2config_toml)
 
   ###
+  # Add global DB log variable
+  ###
+  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
+    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
+  }
+
+  ###
   # Read the optional given debug config.toml file.
   ###
   if (!is.na(debug_path2config_toml)) {
@@ -49,6 +56,11 @@ retrieve <- function(debug_path2config_toml = NA) {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
+    # Reset lock from unfinished previous cds2db run
+    etlutils::runLevel2("Reset lock from unfinished previous cds2db run", {
+      resetRemainingDatabaseLock()
+    })
+
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
       patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists("PATH_TO_PID_LIST_FILE"), PATH_TO_PID_LIST_FILE, NA))
@@ -83,7 +95,7 @@ retrieve <- function(debug_path2config_toml = NA) {
           writeTablesToDatabase(
             tables = resource_tables,
             stop_if_table_not_empty = TRUE,
-            lock_id = paste("cds2db: Write RAW tables to database"))
+            lock_id = createLockID("Write RAW tables to database"))
         })
       }
 
@@ -104,7 +116,7 @@ retrieve <- function(debug_path2config_toml = NA) {
 
         resource_tables_raw_diff <- readTablesFromDatabase(
           table_names = all_table_names_raw_diff,
-          lock_id = "cds2db:Load untyped RAW tables from database")
+          lock_id = createLockID("Load untyped RAW tables from database"))
 
         all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
         if (all_empty_raw) {
@@ -124,16 +136,18 @@ retrieve <- function(debug_path2config_toml = NA) {
           writeTablesToDatabase(
             tables = resource_tables,
             stop_if_table_not_empty = TRUE,
-            lock_id = "cds2db: Write typed tables to database")
+            lock_id = createLockID("Write typed tables to database"))
         })
 
       }
     }
 
+  }))
+
+  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
     etlutils::runLevel2("Close database connections", {
       closeAllDatabaseConnections()
     })
-
   }))
 
   if (etlutils::isErrorOccured()) {

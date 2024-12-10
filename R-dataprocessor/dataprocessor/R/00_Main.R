@@ -33,6 +33,13 @@ processData <- function() {
                           ))
 
   ###
+  # Add global DB log variable
+  ###
+  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
+    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
+  }
+
+  ###
   # Read the DB configuration toml file
   ###
   etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
@@ -59,14 +66,21 @@ processData <- function() {
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
+    # Reset lock from unfinished previous dataprocessor run
+    etlutils::runLevel2(paste("Reset lock from unfinished previous", PROJECT_NAME, "run"), {
+      resetRemainingDatabaseLock()
+    })
+
     etlutils::runLevel2("Create Frontend Tables for Patient and Encounter", {
       createFrontendTables()
     })
 
+  }))
+
+  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
     etlutils::runLevel2("Close database connections", {
       closeAllDatabaseConnections()
     })
-
   }))
 
   if (etlutils::isErrorOccured()) {

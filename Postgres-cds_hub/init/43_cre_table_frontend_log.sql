@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-05 09:58:05
+-- Rights definition file last update : 2024-12-04 16:58:23
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-05 10:04:14
+-- Create time: 2024-12-10 01:21:57
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -49,13 +49,12 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
-  input_processing_nr int,                                      -- (First) Processing number of the data record
-  last_processing_nr int                                        -- Last processing number of the data record
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
 );
-
 -- Table "fall_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.fall_fe (
@@ -96,13 +95,12 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat date,   -- Entlassdatum (date)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
-  input_processing_nr int,                                      -- (First) Processing number of the data record
-  last_processing_nr int                                        -- Last processing number of the data record
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
 );
-
 -- Table "medikationsanalyse_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
@@ -124,13 +122,12 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   meda_aufwand_zeit_and int,   -- genaue Dauer in Minuten (int)
   meda_notiz varchar,   -- Notizfeld (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
-  input_processing_nr int,                                      -- (First) Processing number of the data record
-  last_processing_nr int                                        -- Last processing number of the data record
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
 );
-
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
@@ -261,13 +258,12 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_merp_info___1 varchar,   -- descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
-  input_processing_nr int,                                      -- (First) Processing number of the data record
-  last_processing_nr int                                        -- Last processing number of the data record
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
 );
-
 -- Table "risikofaktor_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
@@ -289,13 +285,12 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   rskfk_entern varchar,   -- ent. Ern. (varchar)
   rskfkt_anz_rskamklassen varchar,   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
-  input_processing_nr int,                                      -- (First) Processing number of the data record
-  last_processing_nr int                                        -- Last processing number of the data record
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
 );
-
 -- Table "trigger_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
@@ -325,13 +320,12 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
   trg_krea varchar,   -- Krea↑ (varchar)
   trg_egfr varchar,   -- eGFR<30 (varchar)
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
-  input_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
-  last_check_datetime timestamp DEFAULT NULL,                   -- Time at which data record was last checked
-  current_dataset_status varchar DEFAULT 'input',               -- Processing status of the data record
-  input_processing_nr int,                                      -- (First) Processing number of the data record
-  last_processing_nr int                                        -- Last processing number of the data record
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
 );
-
 
 ------------------------------------------------------
 -- SQL Role / Trigger in Schema "db_log" --
@@ -398,269 +392,281 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_user; -- A
 -- Output off
 \o /dev/null
 
-comment on column db_log.patient_fe.patient_fe_id is 'Primary key of the entity';
-comment on column db_log.patient_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db_log.patient_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
-comment on column db_log.patient_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
-comment on column db_log.patient_fe.pat_header is 'descriptive item only for frontend (varchar)';
-comment on column db_log.patient_fe.pat_id is 'Patient-identifier FHIR Daten (varchar)';
-comment on column db_log.patient_fe.pat_femb_1 is 'descriptive item only for frontend - Fieldembedding (femb) der Variablen pat_cis_pid, pat_name, pat_vorname, pat_gebdat,pat_geschlecht (varchar)';
-comment on column db_log.patient_fe.pat_cis_pid is 'Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)';
-comment on column db_log.patient_fe.pat_name is 'Patientenname (varchar)';
-comment on column db_log.patient_fe.pat_vorname is 'Patientenvorname (varchar)';
-comment on column db_log.patient_fe.pat_gebdat is 'Geburtsdatum (date)';
-comment on column db_log.patient_fe.pat_aktuell_alter is 'aktuelles Patientenalter (Jahre) (double precision)';
-comment on column db_log.patient_fe.pat_geschlecht is 'Geschlecht (wie in FHIR) (varchar)';
-comment on column db_log.patient_fe.patient_complete is 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-comment on column db_log.patient_fe.input_datetime is 'Time at which the data record is inserted';
-comment on column db_log.patient_fe.last_check_datetime is 'Time at which data record was last checked';
-comment on column db_log.patient_fe.current_dataset_status is 'Processing status of the data record';
+COMMENT ON COLUMN db_log.patient_fe.patient_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db_log.patient_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_header IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_id IS 'Patient-identifier FHIR Daten (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_femb_1 IS 'descriptive item only for frontend - Fieldembedding (femb) der Variablen pat_cis_pid, pat_name, pat_vorname, pat_gebdat,pat_geschlecht (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_cis_pid IS 'Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_name IS 'Patientenname (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_vorname IS 'Patientenvorname (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_gebdat IS 'Geburtsdatum (date)';
+COMMENT ON COLUMN db_log.patient_fe.pat_aktuell_alter IS 'aktuelles Patientenalter (Jahre) (double precision)';
+COMMENT ON COLUMN db_log.patient_fe.pat_geschlecht IS 'Geschlecht (wie in FHIR) (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.patient_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db_log.patient_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db_log.patient_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db_log.patient_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db_log.patient_fe.last_processing_nr IS 'Last processing number of the data record';
 
-comment on column db_log.fall_fe.fall_fe_id is 'Primary key of the entity';
-comment on column db_log.fall_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db_log.fall_fe.fall_header is 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)';
-comment on column db_log.fall_fe.fall_id is 'Fall-ID RedCap FHIR Daten (varchar)';
-comment on column db_log.fall_fe.fall_pat_id is 'Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)';
-comment on column db_log.fall_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-comment on column db_log.fall_fe.fall_femb_1 is 'descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)';
-comment on column db_log.fall_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :   fall (varchar)';
-comment on column db_log.fall_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
-comment on column db_log.fall_fe.fall_studienphase is 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)';
-comment on column db_log.fall_fe.fall_station is 'Station wie vom DIZ Definiert (varchar)';
-comment on column db_log.fall_fe.fall_zimmernr is 'Zimmernummer wie vom DIZ Definiert (varchar)';
-comment on column db_log.fall_fe.fall_aufn_dat is 'Aufnahmedatum (date)';
-comment on column db_log.fall_fe.fall_aufn_diag is 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)';
-comment on column db_log.fall_fe.fall_gewicht_aktuell is 'aktuelles Gewicht (Kg) (double precision)';
-comment on column db_log.fall_fe.fall_gewicht_aktl_einheit is 'Einheit des Gewichts (varchar)';
-comment on column db_log.fall_fe.fall_groesse is 'Größe (cm) (double precision)';
-comment on column db_log.fall_fe.fall_groesse_einheit is 'Einheit der Größe (varchar)';
-comment on column db_log.fall_fe.fall_bmi is 'BMI (double precision)';
-comment on column db_log.fall_fe.fall_femb_2 is 'descriptive item only for frontend - femb der Variablen fall_nieren_insuf_chron, fall_nieren_insuf_ausmass_lbl, fall_nieren_insuf_ausmass (varchar)';
-comment on column db_log.fall_fe.fall_femb_3 is 'descriptive item only for frontend - femb der Variablen fall_nieren_insuf_dialysev_lbl, fall_nieren_insuf_dialysev (varchar)';
-comment on column db_log.fall_fe.fall_femb_4 is 'descriptive item only for frontend - femb der Variablen fall_leber_insuf, fall_leber_insuf_ausmass_lbl, fall_leber_insuf_ausmass (varchar)';
-comment on column db_log.fall_fe.fall_femb_5 is 'descriptive item only for frontend - femb der Variablen fall_schwanger_mo_lbl, fall_schwanger_mo (varchar)';
-comment on column db_log.fall_fe.fall_femb_6 is 'descriptive item only for frontend - femb der Variablen fall_status, fall_ent_dat (varchar)';
-comment on column db_log.fall_fe.fall_nieren_insuf_chron is '1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (varchar)';
-comment on column db_log.fall_fe.fall_nieren_insuf_ausmass_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.fall_fe.fall_nieren_insuf_ausmass is 'aktuelles Ausmaß - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 (varchar)';
-comment on column db_log.fall_fe.fall_nieren_insuf_dialysev_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.fall_fe.fall_nieren_insuf_dialysev is 'Nierenersatzverfahren - 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (varchar)';
-comment on column db_log.fall_fe.fall_leber_insuf is 'Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (varchar)';
-comment on column db_log.fall_fe.fall_leber_insuf_ausmass_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.fall_fe.fall_leber_insuf_ausmass is 'aktuelles Ausmaß -1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß  (varchar)';
-comment on column db_log.fall_fe.fall_schwanger_mo is 'Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)';
-comment on column db_log.fall_fe.fall_schwanger_mo_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.fall_fe.fall_status is 'Status des Falls (varchar)';
-comment on column db_log.fall_fe.fall_ent_dat is 'Entlassdatum (date)';
-comment on column db_log.fall_fe.fall_complete is 'Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)';
-comment on column db_log.fall_fe.input_datetime is 'Time at which the data record is inserted';
-comment on column db_log.fall_fe.last_check_datetime is 'Time at which data record was last checked';
-comment on column db_log.fall_fe.current_dataset_status is 'Processing status of the data record';
+COMMENT ON COLUMN db_log.fall_fe.fall_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db_log.fall_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_id IS 'Fall-ID RedCap FHIR Daten (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_pat_id IS 'Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
+COMMENT ON COLUMN db_log.fall_fe.fall_femb_1 IS 'descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :   fall (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_studienphase IS 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_station IS 'Station wie vom DIZ Definiert (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_zimmernr IS 'Zimmernummer wie vom DIZ Definiert (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (date)';
+COMMENT ON COLUMN db_log.fall_fe.fall_aufn_diag IS 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_gewicht_aktuell IS 'aktuelles Gewicht (Kg) (double precision)';
+COMMENT ON COLUMN db_log.fall_fe.fall_gewicht_aktl_einheit IS 'Einheit des Gewichts (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_groesse IS 'Größe (cm) (double precision)';
+COMMENT ON COLUMN db_log.fall_fe.fall_groesse_einheit IS 'Einheit der Größe (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_bmi IS 'BMI (double precision)';
+COMMENT ON COLUMN db_log.fall_fe.fall_femb_2 IS 'descriptive item only for frontend - femb der Variablen fall_nieren_insuf_chron, fall_nieren_insuf_ausmass_lbl, fall_nieren_insuf_ausmass (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_femb_3 IS 'descriptive item only for frontend - femb der Variablen fall_nieren_insuf_dialysev_lbl, fall_nieren_insuf_dialysev (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_femb_4 IS 'descriptive item only for frontend - femb der Variablen fall_leber_insuf, fall_leber_insuf_ausmass_lbl, fall_leber_insuf_ausmass (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_femb_5 IS 'descriptive item only for frontend - femb der Variablen fall_schwanger_mo_lbl, fall_schwanger_mo (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_femb_6 IS 'descriptive item only for frontend - femb der Variablen fall_status, fall_ent_dat (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_nieren_insuf_chron IS '1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_nieren_insuf_ausmass_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_nieren_insuf_ausmass IS 'aktuelles Ausmaß - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_nieren_insuf_dialysev_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_nieren_insuf_dialysev IS 'Nierenersatzverfahren - 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_leber_insuf IS 'Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_leber_insuf_ausmass_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_leber_insuf_ausmass IS 'aktuelles Ausmaß -1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß  (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_schwanger_mo IS 'Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_schwanger_mo_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_status IS 'Status des Falls (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_ent_dat IS 'Entlassdatum (date)';
+COMMENT ON COLUMN db_log.fall_fe.fall_complete IS 'Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db_log.fall_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db_log.fall_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db_log.fall_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db_log.fall_fe.last_processing_nr IS 'Last processing number of the data record';
 
-comment on column db_log.medikationsanalyse_fe.medikationsanalyse_fe_id is 'Primary key of the entity';
-comment on column db_log.medikationsanalyse_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_header is 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_femb_1 is 'descriptive item only for frontend - femb der Variable meda_dat (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_femb_2 is 'descriptive item only for frontend - femb der Variable meda_ma_thueberw (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_femb_3 is 'descriptive item only for frontend - femb der Variablen meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (varchar)';
-comment on column db_log.medikationsanalyse_fe.fall_fe_id is 'Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)';
-comment on column db_log.medikationsanalyse_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (varchar)';
-comment on column db_log.medikationsanalyse_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_dat is 'Datum der Medikationsanalyse (date)';
-comment on column db_log.medikationsanalyse_fe.meda_typ is 'Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_ma_thueberw is 'Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_mrp_detekt is 'MRP detektiert? - 1, Ja|0, Nein (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_aufwand_zeit is 'Zeitaufwand Medikationsanalyse - 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (varchar)';
-comment on column db_log.medikationsanalyse_fe.meda_aufwand_zeit_and_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (int)';
-comment on column db_log.medikationsanalyse_fe.meda_aufwand_zeit_and is 'genaue Dauer in Minuten (int)';
-comment on column db_log.medikationsanalyse_fe.meda_notiz is 'Notizfeld (varchar)';
-comment on column db_log.medikationsanalyse_fe.medikationsanalyse_complete is 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-comment on column db_log.medikationsanalyse_fe.input_datetime is 'Time at which the data record is inserted';
-comment on column db_log.medikationsanalyse_fe.last_check_datetime is 'Time at which data record was last checked';
-comment on column db_log.medikationsanalyse_fe.current_dataset_status is 'Processing status of the data record';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.medikationsanalyse_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_femb_1 IS 'descriptive item only for frontend - femb der Variable meda_dat (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_femb_2 IS 'descriptive item only for frontend - femb der Variable meda_ma_thueberw (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_femb_3 IS 'descriptive item only for frontend - femb der Variablen meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.fall_fe_id IS 'Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (date)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_typ IS 'Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_ma_thueberw IS 'Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_mrp_detekt IS 'MRP detektiert? - 1, Ja|0, Nein (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit IS 'Zeitaufwand Medikationsanalyse - 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit_and_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (int)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit_and IS 'genaue Dauer in Minuten (int)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_notiz IS 'Notizfeld (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.medikationsanalyse_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.last_processing_nr IS 'Last processing number of the data record';
 
-comment on column db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id is 'Primary key of the entity';
-comment on column db_log.mrpdokumentation_validierung_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.meda_fe_id is 'Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)';
-comment on column db_log.mrpdokumentation_validierung_fe.redcap_repeat_instrument is 'Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.redcap_repeat_instance is 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_header is 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_1 is 'descriptive item only for frontend - femb der Variable mrp_entd_dat (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_2 is 'descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_3 is 'descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pi_info is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pi_info___1 is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_mf_info is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_mf_info___1 is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pi_info_txt is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_mf_info_txt is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_4 is 'descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_5 is 'descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_6 is 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_entd_dat is 'Datum des MRP (date)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_kurzbeschr is 'Kurzbeschreibung des MRPs (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch is 'MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber_lbl is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber is 'Hinweisgeber auf das MRP (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewissheit_lbl is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewissheit is 'Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_22 is 'descriptive item only for frontend - femb der Variablen (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewissheit_oth is 'Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_23 is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth is 'Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_lbl is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl is 'Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, Sonstiges (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst_lbl is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst is 'Bitte näher beschreiben (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_7 is 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_sonst_lbl, mrp_gewiss_grund_abl_sonst (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_8 is 'descriptive item only for frontend - femb der Variable mrp_wirkstoff (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_9 is 'descriptive item only for frontend - femb der Variablen mrp_atc1_lbl, mrp_atc1 (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_10 is 'descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_11 is 'descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_12 is 'descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_wirkstoff is 'Wirkstoff betroffen? - 1, Ja | 0, Nein (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc1_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc1 is '1. Medikament ATC / Name- https://www.bfarm.de/SharedDocs/Downloads/DE/Kodiersysteme/ATC/atc-ddd-amtlich-2024.pdf?__blob=publicationFile (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc2_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc2 is '2. Medikament ATC / Name (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc3_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc3 is '3. Medikament ATC / Name (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc4_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc4 is '4. Medikament ATC / Name (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc5_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_atc5 is '5. Medikament ATC / Name (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_13 is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_med_prod is 'Medizinprodukt betroffen? - 1, Ja | 0, Nein, (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_med_prod_sonst_lbl is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_med_prod_sonst is 'Bezeichnung Präparat (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_dokup_fehler is 'Frage / Fehlerbeschreibung (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_dokup_intervention is 'Intervention / Vorschlag zur Fehlervermeldung (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_14 is 'descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund is 'PI-Grund (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___1 is '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___2 is '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___3 is '3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___4 is '4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___5 is '5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___6 is '6 - AM: Übertragungsfehler (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___7 is '7 - AM: Substitution aut idem/aut simile (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___8 is '8 - AM: (Klare) Indikation, aber kein Medikament angeordnet (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___9 is '9 - AM: Stellfehler (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___10 is '10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___11 is '11 - AM: Doppelverordnung (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___12 is '12 - ANW: Applikation (Dauer) (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___13 is '13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___14 is '14 - ANW: Applikation (Art) (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___15 is '15 - ANW: Anfrage zur Administration/Kompatibilität (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___16 is '16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___17 is '17 - D: (Fehlerhafte) Dosis (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___18 is '18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___19 is '19 - D: (Fehlerhaftes) Dosisinterval (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___20 is '20 - Interaktion (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___21 is '21 - Kontraindikation (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___22 is '22 - Nebenwirkungen (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___23 is '23 - S: Beratung/Auswahl eines Arzneistoffs (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___24 is '24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___25 is '25 - S: Beschaffung/Kosten (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___26 is '26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_pigrund___27 is '27 - S: Schulung/Beratung eines Patienten (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_15 is 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse is 'MRP-Klasse (INTERPOLAR) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___1 is '1 - Drug - Drug (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___2 is '2 - Drug - Drug-Group (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___3 is '3 - Drug - Disease (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___4 is '4 - Drug - Labor (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___5 is '5 - Drug - Age (Priscus 2.0 o. Dosis) (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_16 is 'descriptive item only for frontend - femb der Variable mrp_ip_klasse (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_17 is 'descriptive item only for frontend - femb der Variable mrp_ip_klasse_disease (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease is 'Disease (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor is 'Labor (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_18 is 'descriptive item only for frontend - femb der Variable mrp_ip_klasse_labor (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am is 'AM: Arzneimitte (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___1 is '1 - Anweisung für die Applikation geben (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___2 is '2 - Arzneimittel ändern (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___3 is '3 - Arzneimittel stoppen/pausieren (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___4 is '4 - Arzneimittel neu ansetzen (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___5 is '5 - Dosierung ändern (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___6 is '6 - Formulierung ändern (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___7 is '7 - Hilfe bei Beschaffung (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___8 is '8 - Information an Arzt/Pflege (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___9 is '9 - Information an Patient (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_am___10 is '10 - TDM oder Laborkontrolle emfohlen (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_19 is 'descriptive item only for frontend - femb der Variable mrp_massn_am (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga is 'ORGA: Organisatorisch (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___1 is '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___2 is '2 - CIRS-/AMK-Meldung (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___3 is '3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___4 is '4 - Etablierung einer Doppelkontrolle (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___5 is '5 - Lieferantenwechsel (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___6 is '6 - Optimierung der internen und externene Kommunikation (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___7 is '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___8 is '8 - Sensibilisierung/Schulung (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_20 is 'descriptive item only for frontend - femb der Variable mrp_massn_orga (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_notiz is 'Notiz (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_femb_21 is 'descriptive item only for frontend - femb der Variable mrp_notiz (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz is 'Handlungsempfehlung akzeptiert? - 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4 , Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_merp is 'NCC MERP Score - A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I  (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_merp_info is 'descriptive item only for frontend (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_merp_info___1 is 'descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrp_merp_txt is 'descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete is 'Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-comment on column db_log.mrpdokumentation_validierung_fe.input_datetime is 'Time at which the data record is inserted';
-comment on column db_log.mrpdokumentation_validierung_fe.last_check_datetime is 'Time at which data record was last checked';
-comment on column db_log.mrpdokumentation_validierung_fe.current_dataset_status is 'Processing status of the data record';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.meda_fe_id IS 'Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_1 IS 'descriptive item only for frontend - femb der Variable mrp_entd_dat (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_2 IS 'descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_3 IS 'descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pi_info IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pi_info___1 IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_mf_info IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_mf_info___1 IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pi_info_txt IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_mf_info_txt IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_4 IS 'descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_5 IS 'descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_6 IS 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (date)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber_lbl IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber IS 'Hinweisgeber auf das MRP (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewissheit_lbl IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewissheit IS 'Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_22 IS 'descriptive item only for frontend - femb der Variablen (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewissheit_oth IS 'Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_23 IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth IS 'Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_lbl IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl IS 'Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, Sonstiges (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst_lbl IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst IS 'Bitte näher beschreiben (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_7 IS 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_sonst_lbl, mrp_gewiss_grund_abl_sonst (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_8 IS 'descriptive item only for frontend - femb der Variable mrp_wirkstoff (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_9 IS 'descriptive item only for frontend - femb der Variablen mrp_atc1_lbl, mrp_atc1 (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_10 IS 'descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_11 IS 'descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_12 IS 'descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_wirkstoff IS 'Wirkstoff betroffen? - 1, Ja | 0, Nein (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc1_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc1 IS '1. Medikament ATC / Name- https://www.bfarm.de/SharedDocs/Downloads/DE/Kodiersysteme/ATC/atc-ddd-amtlich-2024.pdf?__blob=publicationFile (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc2_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc2 IS '2. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc3_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc3 IS '3. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc4_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc4 IS '4. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc5_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc5 IS '5. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_13 IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod IS 'Medizinprodukt betroffen? - 1, Ja | 0, Nein, (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod_sonst_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod_sonst IS 'Bezeichnung Präparat (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_intervention IS 'Intervention / Vorschlag zur Fehlervermeldung (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_14 IS 'descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund IS 'PI-Grund (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___1 IS '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___2 IS '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___3 IS '3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___4 IS '4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___5 IS '5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___6 IS '6 - AM: Übertragungsfehler (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___7 IS '7 - AM: Substitution aut idem/aut simile (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___8 IS '8 - AM: (Klare) Indikation, aber kein Medikament angeordnet (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___9 IS '9 - AM: Stellfehler (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___10 IS '10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___11 IS '11 - AM: Doppelverordnung (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___12 IS '12 - ANW: Applikation (Dauer) (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___13 IS '13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___14 IS '14 - ANW: Applikation (Art) (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___15 IS '15 - ANW: Anfrage zur Administration/Kompatibilität (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___16 IS '16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___17 IS '17 - D: (Fehlerhafte) Dosis (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___18 IS '18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___19 IS '19 - D: (Fehlerhaftes) Dosisinterval (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___20 IS '20 - Interaktion (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___21 IS '21 - Kontraindikation (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___22 IS '22 - Nebenwirkungen (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___23 IS '23 - S: Beratung/Auswahl eines Arzneistoffs (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___24 IS '24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___25 IS '25 - S: Beschaffung/Kosten (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___26 IS '26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___27 IS '27 - S: Schulung/Beratung eines Patienten (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_15 IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___1 IS '1 - Drug - Drug (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___2 IS '2 - Drug - Drug-Group (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___3 IS '3 - Drug - Disease (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___4 IS '4 - Drug - Labor (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse___5 IS '5 - Drug - Age (Priscus 2.0 o. Dosis) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_16 IS 'descriptive item only for frontend - femb der Variable mrp_ip_klasse (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_17 IS 'descriptive item only for frontend - femb der Variable mrp_ip_klasse_disease (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease IS 'Disease (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor IS 'Labor (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_18 IS 'descriptive item only for frontend - femb der Variable mrp_ip_klasse_labor (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am IS 'AM: Arzneimitte (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___1 IS '1 - Anweisung für die Applikation geben (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___2 IS '2 - Arzneimittel ändern (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___5 IS '5 - Dosierung ändern (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___6 IS '6 - Formulierung ändern (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___7 IS '7 - Hilfe bei Beschaffung (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___8 IS '8 - Information an Arzt/Pflege (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___9 IS '9 - Information an Patient (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_19 IS 'descriptive item only for frontend - femb der Variable mrp_massn_am (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga IS 'ORGA: Organisatorisch (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___3 IS '3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___5 IS '5 - Lieferantenwechsel (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___8 IS '8 - Sensibilisierung/Schulung (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_20 IS 'descriptive item only for frontend - femb der Variable mrp_massn_orga (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_notiz IS 'Notiz (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_21 IS 'descriptive item only for frontend - femb der Variable mrp_notiz (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz IS 'Handlungsempfehlung akzeptiert? - 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4 , Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp IS 'NCC MERP Score - A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I  (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp_info IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp_info___1 IS 'descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp_txt IS 'descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete IS 'Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
 
-comment on column db_log.risikofaktor_fe.risikofaktor_fe_id is 'Primary key of the entity';
-comment on column db_log.risikofaktor_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db_log.risikofaktor_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-comment on column db_log.risikofaktor_fe.rskfk_gerhemmer is 'Ger.hemmer (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_tah is 'TAH (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_immunsupp is 'Immunsupp. (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_tumorth is 'Tumorth. (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_opiat is 'Opiat (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_atcn is 'ATC N (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_ait is 'AIT (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_anzam is 'Anz AM (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_priscus is 'PRISCUS (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_qtc is 'QTc (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_meld is 'MELD (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_dialyse is 'Dialyse (varchar)';
-comment on column db_log.risikofaktor_fe.rskfk_entern is 'ent. Ern. (varchar)';
-comment on column db_log.risikofaktor_fe.rskfkt_anz_rskamklassen is 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)';
-comment on column db_log.risikofaktor_fe.risikofaktor_complete is 'Frontend Complete-Status (varchar)';
-comment on column db_log.risikofaktor_fe.input_datetime is 'Time at which the data record is inserted';
-comment on column db_log.risikofaktor_fe.last_check_datetime is 'Time at which data record was last checked';
-comment on column db_log.risikofaktor_fe.current_dataset_status is 'Processing status of the data record';
+COMMENT ON COLUMN db_log.risikofaktor_fe.risikofaktor_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db_log.risikofaktor_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_gerhemmer IS 'Ger.hemmer (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_tah IS 'TAH (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_immunsupp IS 'Immunsupp. (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_tumorth IS 'Tumorth. (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_opiat IS 'Opiat (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_atcn IS 'ATC N (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_ait IS 'AIT (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_anzam IS 'Anz AM (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_priscus IS 'PRISCUS (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_qtc IS 'QTc (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_meld IS 'MELD (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_dialyse IS 'Dialyse (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_entern IS 'ent. Ern. (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.rskfkt_anz_rskamklassen IS 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.risikofaktor_complete IS 'Frontend Complete-Status (varchar)';
+COMMENT ON COLUMN db_log.risikofaktor_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db_log.risikofaktor_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db_log.risikofaktor_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db_log.risikofaktor_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db_log.risikofaktor_fe.last_processing_nr IS 'Last processing number of the data record';
 
-comment on column db_log.trigger_fe.trigger_fe_id is 'Primary key of the entity';
-comment on column db_log.trigger_fe.patient_id_fk is 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-comment on column db_log.trigger_fe.record_id is 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-comment on column db_log.trigger_fe.trg_ast is 'AST (varchar)';
-comment on column db_log.trigger_fe.trg_alt is 'ALT↑ (varchar)';
-comment on column db_log.trigger_fe.trg_crp is 'CRP↑ (varchar)';
-comment on column db_log.trigger_fe.trg_leuk_penie is 'Leuko↓ (varchar)';
-comment on column db_log.trigger_fe.trg_leuk_ose is 'Leuko↑ (varchar)';
-comment on column db_log.trigger_fe.trg_thrmb_penie is 'Thrombo↓ (varchar)';
-comment on column db_log.trigger_fe.trg_aptt is 'aPTT (varchar)';
-comment on column db_log.trigger_fe.trg_hyp_haem is 'Hb↓ (varchar)';
-comment on column db_log.trigger_fe.trg_hypo_glyk is 'Glc↓ (varchar)';
-comment on column db_log.trigger_fe.trg_hyper_glyk is 'Glc↑ (varchar)';
-comment on column db_log.trigger_fe.trg_hyper_bilirbnm is 'Bili↑ (varchar)';
-comment on column db_log.trigger_fe.trg_ck is 'CK↑ (varchar)';
-comment on column db_log.trigger_fe.trg_hypo_serablmn is 'Alb↓ (varchar)';
-comment on column db_log.trigger_fe.trg_hypo_nat is 'Na+↓ (varchar)';
-comment on column db_log.trigger_fe.trg_hyper_nat is 'Na+↑ (varchar)';
-comment on column db_log.trigger_fe.trg_hyper_kal is 'K+↓ (varchar)';
-comment on column db_log.trigger_fe.trg_hypo_kal is 'K+↑ (varchar)';
-comment on column db_log.trigger_fe.trg_inr_ern is 'INR Antikoag↓ (varchar)';
-comment on column db_log.trigger_fe.trg_inr_erh is 'INR ↑ (varchar)';
-comment on column db_log.trigger_fe.trg_inr_erh_antikoa is 'INR Antikoag↑ (varchar)';
-comment on column db_log.trigger_fe.trg_krea is 'Krea↑ (varchar)';
-comment on column db_log.trigger_fe.trg_egfr is 'eGFR<30 (varchar)';
-comment on column db_log.trigger_fe.trigger_complete is 'Frontend Complete-Status (varchar)';
-comment on column db_log.trigger_fe.input_datetime is 'Time at which the data record is inserted';
-comment on column db_log.trigger_fe.last_check_datetime is 'Time at which data record was last checked';
-comment on column db_log.trigger_fe.current_dataset_status is 'Processing status of the data record';
+COMMENT ON COLUMN db_log.trigger_fe.trigger_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db_log.trigger_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
+COMMENT ON COLUMN db_log.trigger_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_ast IS 'AST (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_alt IS 'ALT↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_crp IS 'CRP↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_leuk_penie IS 'Leuko↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_leuk_ose IS 'Leuko↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_thrmb_penie IS 'Thrombo↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_aptt IS 'aPTT (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hyp_haem IS 'Hb↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_glyk IS 'Glc↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_glyk IS 'Glc↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_bilirbnm IS 'Bili↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_ck IS 'CK↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_serablmn IS 'Alb↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_nat IS 'Na+↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_nat IS 'Na+↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_kal IS 'K+↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_kal IS 'K+↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_inr_ern IS 'INR Antikoag↓ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_inr_erh IS 'INR ↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_inr_erh_antikoa IS 'INR Antikoag↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_krea IS 'Krea↑ (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trg_egfr IS 'eGFR<30 (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.trigger_complete IS 'Frontend Complete-Status (varchar)';
+COMMENT ON COLUMN db_log.trigger_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db_log.trigger_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db_log.trigger_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db_log.trigger_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db_log.trigger_fe.last_processing_nr IS 'Last processing number of the data record';
 
 
 -- Output on

@@ -106,7 +106,7 @@ getActiveEncounterPIDsFromDB <- function() {
   )
 
   # Run the SQL query and return patient IDs
-  patient_ids_active <- getQueryFromDatabase(query, lock_id = "cds2db.getActiveEncounterPIDsFromDB()", readonly = TRUE)
+  patient_ids_active <- getQueryFromDatabase(query, lock_id = createLockID("getActiveEncounterPIDsFromDB()"), readonly = TRUE)
 
   return(patient_ids_active$enc_patient_id)
 }
@@ -252,7 +252,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     # Create the corrct format for the Postgres Parameter Array
     params <- list(paste0("{", paste(patient_ids, collapse = ","), "}"))
     # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
-    result <- getQueryFromDatabase(query, params = params, lock_id = "cds2db.getLastPatientUpdateDate()[1]", readonly = TRUE)
+    result <- getQueryFromDatabase(query, params = params, lock_id = createLockID("getLastPatientUpdateDate()[1]"), readonly = TRUE)
 
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- as.Date(rep(NA, length(patient_ids)))
@@ -280,7 +280,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
   table_names <- paste0(names(table_descriptions), "_raw_last")
   # Read the tables from the database using the generated table names
-  db_resource_tables <- readTablesFromDatabase(table_names, lock_id = "cds2db.getLastPatientUpdateDate()[2]")
+  db_resource_tables <- readTablesFromDatabase(table_names, lock_id = createLockID("getLastPatientUpdateDate()[2]"))
   # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
   names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
   # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
