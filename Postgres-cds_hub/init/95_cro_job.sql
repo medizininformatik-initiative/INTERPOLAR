@@ -15,6 +15,8 @@ DECLARE
     err_pid VARCHAR;
     set_sem_erg BOOLEAN;
 BEGIN
+    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+
     -- Doppelt angelegte Cron-Jobs deaktivieren
     err_section:='cron_job_data_transfer_break-01';    err_schema:='cron';    err_table:='job';
     UPDATE cron.job m SET active = FALSE WHERE m.command in
@@ -250,6 +252,10 @@ BEGIN
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         )) AS t(res TEXT) INTO temp;
+
+	SELECT pg_sleep(1) INTO temp; -- Time to write
+	
+	RETURN TRUE;
     ELSE
         err_section:='db.data_transfer_stop-20';    err_schema:='db_config';    err_table:='db_process_control';
         RETURN FALSE;
@@ -328,7 +334,10 @@ BEGIN
             'UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'' and pc_value!=''WaitForCronJob'''
             )) AS t(res TEXT) INTO temp;
         END IF;
-	    RETURN TRUE;
+
+	SELECT pg_sleep(1) INTO temp; -- Time to write
+
+        RETURN TRUE;
     ELSE
         err_section:='db.data_transfer_start-20';    err_schema:='db_config';    err_table:='db_process_control';
 	    RETURN FALSE;
@@ -450,7 +459,9 @@ BEGIN
         'UPDATE db_config.db_process_control SET pc_value=''WaitForCronJob'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'' and pc_value!=''WaitForCronJob'''
         )) AS t(res TEXT) INTO temp;
 
-	    RETURN TRUE;
+	SELECT pg_sleep(1) INTO temp; -- Time to write
+
+	RETURN TRUE;
     ELSE
         err_section:='db.data_transfer_reset_lock-20';    err_schema:='db_config';    err_table:='db_process_control';
 	    RETURN FALSE;
