@@ -13,6 +13,13 @@ retrieve <- function(debug_path2config_toml = NA) {
   config <- etlutils::initConstants(path2config_toml)
 
   ###
+  # Add global DB log variable
+  ###
+  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
+    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
+  }
+
+  ###
   # Read the optional given debug config.toml file.
   ###
   if (!is.na(debug_path2config_toml)) {
