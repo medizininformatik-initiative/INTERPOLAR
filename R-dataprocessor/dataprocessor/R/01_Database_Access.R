@@ -75,6 +75,12 @@ closeAllDatabaseConnections <- function() {
   }
 }
 
+#' Reset Remaining Database Lock
+#'
+#' This function resets any remaining database locks for a given project. It utilizes
+#' the `dbResetLock` function from the `etlutils` package, using the database write
+#' connection and project-specific configurations.
+#'
 resetRemainingDatabaseLock <- function() {
   etlutils::dbResetLock(
     db_connection = getDatabaseWriteConnection(),
@@ -92,12 +98,6 @@ resetRemainingDatabaseLock <- function() {
 #' access under this name
 #'
 #' @return A data frame containing the result of the executed query.
-#'
-#' @details
-#' The function uses the `etlutils::dbGetQuery` function to interact with the database.
-#' It automatically establishes a read-only database connection using
-#' `getDatabaseReadConnection()`. If verbose logging is enabled (configured via `VERBOSE`),
-#' the query execution details are logged when `VERBOSE` is set to at least `VL_90_FHIR_RESPONSE`.
 #'
 getReadQuery <- function(query, lock_id) {
   etlutils::dbGetQuery(
