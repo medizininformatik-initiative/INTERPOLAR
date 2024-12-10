@@ -25,7 +25,7 @@ getFrontendTableNames <- function() {
 #'
 adjustTableToDBTable <- function(con, dt, table_name) {
   # 1. Get the PostgreSQL table columns and types
-  db_columns <- etlutils::getDBTableColumns(con, table_name, log = VERBOSE >= VL_90_FHIR_RESPONSE, project_name = PROJECT_NAME)
+  db_columns <- etlutils::getDBTableColumns(con, table_name, log = LOG_DB_QUERIES, project_name = PROJECT_NAME)
   # 2. Convert the R data.table columns to match the PostgreSQL types
   adjusted_dt <- etlutils::convertToDBTypes(dt, db_columns)
   return(adjusted_dt)
@@ -86,7 +86,7 @@ importRedcap2DB <- function() {
       etlutils::dbAddContent(db_connection = db_connection,
                              table_name = table_name,
                              table = tables2Export[[i]],
-                             log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                             log = LOG_DB_QUERIES,
                              project_name = PROJECT_NAME,
                              lock_id = createLockID("importRedcap2DB()"))
     }

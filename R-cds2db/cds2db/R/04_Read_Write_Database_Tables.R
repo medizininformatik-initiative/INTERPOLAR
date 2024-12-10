@@ -75,10 +75,16 @@ closeAllDatabaseConnections <- function() {
   }
 }
 
+#' Reset Remaining Database Lock
+#'
+#' This function resets any remaining database locks for a given project. It utilizes
+#' the `dbResetLock` function from the `etlutils` package, using the database write
+#' connection and project-specific configurations.
+#'
 resetRemainingDatabaseLock <- function() {
   etlutils::dbResetLock(
     db_connection = getDatabaseWriteConnection(),
-    log = VERBOSE >= VL_90_FHIR_RESPONSE,
+    log = LOG_DB_QUERIES,
     project_name = PROJECT_NAME)
 }
 
@@ -100,7 +106,7 @@ writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE, lock_
                                   db_connection = getDatabaseWriteConnection(),
                                   stop_if_table_not_empty = stop_if_table_not_empty,
                                   close_db_connection = FALSE,
-                                  log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                                  log = LOG_DB_QUERIES,
                                   project_name = PROJECT_NAME,
                                   lock_id = lock_id)
 }
@@ -120,7 +126,7 @@ readTablesFromDatabase <- function(table_names, lock_id) {
   etlutils::readTablesFromDatabase(db_connection = getDatabaseReadConnection(),
                                  table_names = table_names,
                                  close_db_connection = FALSE,
-                                 log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                                 log = LOG_DB_QUERIES,
                                  project_name = PROJECT_NAME,
                                  lock_id = lock_id)
 }
@@ -148,7 +154,7 @@ getQueryFromDatabase <- function(query, params = NULL, lock_id, readonly) {
   etlutils::dbGetQuery(db_connection = db_connection,
                        query = query,
                        params = params,
-                       log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                       log = LOG_DB_QUERIES,
                        project_name = PROJECT_NAME,
                        lock_id = lock_id,
                        readonly = readonly)

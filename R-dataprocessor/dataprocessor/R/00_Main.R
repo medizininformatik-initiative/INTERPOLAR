@@ -32,6 +32,9 @@ processData <- function() {
 
                           ))
 
+  ###
+  # Add global DB log variable
+  ###
   if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
     assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
   }
