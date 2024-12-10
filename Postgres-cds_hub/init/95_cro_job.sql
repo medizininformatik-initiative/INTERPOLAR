@@ -217,7 +217,7 @@ SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Anhalten
-CREATE OR REPLACE FUNCTION db.data_transfer_stop(module VARCHAR DEFAULT 'INTerpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'INTerpolar_Aufrufposition_bitte_angeben')
+CREATE OR REPLACE FUNCTION db.data_transfer_stop(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'Interpolar_Aufrufposition_bitte_angeben')
 RETURNS BOOLEAN
 SECURITY DEFINER
 AS $$
@@ -233,7 +233,7 @@ DECLARE
 BEGIN
     -- Übergebene Variablen auf vollständigkeit prüfen
     err_section:='db.data_transfer_stop-01';    err_schema:='/';    err_table:='/';
-    IF module='INTerpolar_Module_bitte_angeben' OR msg='INTerpolar_Aufrufposition_bitte_angeben' OR module='' OR msg='' THEN
+    IF module='Interpolar_Module_bitte_angeben' OR msg='Interpolar_Aufrufposition_bitte_angeben' OR module='' OR msg='' THEN
         RETURN FALSE;
     END IF;
 
@@ -330,7 +330,7 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten
-CREATE OR REPLACE FUNCTION db.data_transfer_start(module VARCHAR DEFAULT 'INTerpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'INTerpolar_Aufrufposition_bitte_angeben', read_only BOOLEAN DEFAULT FALSE)
+CREATE OR REPLACE FUNCTION db.data_transfer_start(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'Interpolar_Aufrufposition_bitte_angeben', read_only BOOLEAN DEFAULT FALSE)
 RETURNS BOOLEAN
 SECURITY DEFINER
 AS $$
@@ -346,7 +346,7 @@ DECLARE
 BEGIN
     -- Übergebene Variablen auf vollständigkeit prüfen
     err_section:='db.data_transfer_start-01';    err_schema:='/';    err_table:='/';
-    IF module='INTerpolar_Module_bitte_angeben' OR msg='INTerpolar_Aufrufposition_bitte_angeben' OR module='' OR msg='' THEN
+    IF module='Interpolar_Module_bitte_angeben' OR msg='Interpolar_Aufrufposition_bitte_angeben' OR module='' OR msg='' THEN
         RETURN FALSE;
     END IF;
 
@@ -492,7 +492,7 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten im Fehlerfall - schreiben eines Errorlog EINTrages
-CREATE OR REPLACE FUNCTION db.data_transfer_reset_lock(module VARCHAR DEFAULT 'INTerpolar_Module_bitte_angeben')
+CREATE OR REPLACE FUNCTION db.data_transfer_reset_lock(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben')
 RETURNS BOOLEAN
 SECURITY DEFINER
 AS $$
@@ -508,7 +508,7 @@ DECLARE
 BEGIN
     -- Übergebene Variablen auf vollständigkeit prüfen
     err_section:='db.data_transfer_reset_lock-01';    err_schema:='/';    err_table:='/';
-    IF module='INTerpolar_Module_bitte_angeben' OR module='' THEN
+    IF module='Interpolar_Module_bitte_angeben' OR module='' THEN
         RETURN FALSE;
     END IF;
 
@@ -608,10 +608,10 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql; -- db.data_transfer_reset_lock
 
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(varchar,Boolean) TO db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion um aktuellen Status zu erfahren
