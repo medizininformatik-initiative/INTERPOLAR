@@ -649,7 +649,7 @@ dbIsTableEmpty <- function(db_connection, table_name, log = TRUE, project_name) 
 #' - Optionally closes the database connection after the operation.
 #'
 #' @export
-writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, log = TRUE, project_name, lock_id = NULL) {
+dbWriteTables <- function(tables, db_connection, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, log = TRUE, project_name, lock_id = NULL) {
   table_names <- names(tables)
   db_table_names <- dbListTableNames(db_connection)
 
@@ -723,13 +723,13 @@ writeTablesToDatabase <- function(tables, db_connection, stop_if_table_not_empty
 #' - Optionally closes the database connection after the operation.
 #'
 #' @export
-writeTableToDatabase <- function(table, db_connection, table_name = NA, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, log = TRUE, lock_id = NULL) {
+dbWriteTable <- function(table, db_connection, table_name = NA, stop_if_table_not_empty = FALSE, close_db_connection = FALSE, log = TRUE, lock_id = NULL) {
   if (is.na(table_name)) {
     table_name <- as.character(sys.call()[2]) # get the table variable name
   }
   tables <- list(table)
   names(tables) <- table_name
-  writeTablesToDatabase(tables, db_connection, stop_if_table_not_empty, close_db_connection, log = log, lock_id = lock_id)
+  dbWriteTables(tables, db_connection, stop_if_table_not_empty, close_db_connection, log = log, lock_id = lock_id)
 }
 
 #' Read Multiple Tables from a PostgreSQL Database
@@ -758,7 +758,7 @@ writeTableToDatabase <- function(table, db_connection, table_name = NA, stop_if_
 #' - Locks the database during the operation and unlocks it afterward.
 #'
 #' @export
-readTablesFromDatabase <- function(db_connection, table_names = NA, close_db_connection = FALSE, log = TRUE, project_name, lock_id = NULL) {
+dbReadTables <- function(db_connection, table_names = NA, close_db_connection = FALSE, log = TRUE, project_name, lock_id = NULL) {
   db_table_names <- dbListTableNames(db_connection)
   if (isSimpleNA(table_names)) {
     table_names <- db_table_names
@@ -835,11 +835,11 @@ dbPrintTimeAndTimezone <- function(db_connection) {
 #' - Logs the executed query if `log = TRUE`.
 #' - Uses the schema to identify tables and other database objects accessible in the connection.
 #'
-getCurrentSchema <- function(db_connection, log = TRUE, project_name) {
+dbGetCurrentSchema <- function(db_connection, log = TRUE, project_name) {
   # SQL query to retrieve the current schema
   query <- "SELECT current_schema();"
   if (log) {
-    cat(paste0("getCurrentSchema:\n", query, "\n"))
+    cat(paste0("dbGetCurrentSchema:\n", query, "\n"))
   }
   # Execute the query and store the result
   result <- dbGetQuery(db_connection, query, params = NULL, log, project_name, lock_id = NULL, readonly = TRUE)
@@ -868,9 +868,9 @@ getCurrentSchema <- function(db_connection, log = TRUE, project_name) {
 #' - Logs the executed SQL query if `log = TRUE`.
 #'
 #' @export
-getDBTableColumns <- function(db_connection, table_name, log = TRUE, project_name) {
+dbGetTableColumns <- function(db_connection, table_name, log = TRUE, project_name) {
   # Get the current schema using the helper function
-  schema <- getCurrentSchema(db_connection, log, project_name)
+  schema <- dbGetCurrentSchema(db_connection, log, project_name)
   # SQL query to retrieve column names and data types for the specified table in the current schema
   query <- paste0(
     "SELECT column_name, data_type
@@ -879,7 +879,7 @@ getDBTableColumns <- function(db_connection, table_name, log = TRUE, project_nam
      AND table_schema = '", schema, "'"
   )
   if (log) {
-    cat(paste0("getDBTableColumns:\n", query, "\n"))
+    cat(paste0("dbGetTableColumns:\n", query, "\n"))
   }
   # Execute the query and return the result as a data frame
   result <- dbGetQuery(db_connection, query, params = NULL, log, project_name, lock_id = NULL, readonly = TRUE)
@@ -907,7 +907,7 @@ getDBTableColumns <- function(db_connection, table_name, log = TRUE, project_nam
 #'   character strings, dates, and timestamps.
 #'
 #' @export
-convertToDBTypes <- function(dt, db_columns) {
+dbConvertToDBTypes <- function(dt, db_columns) {
   # Iterate over each column in the database schema
   for (i in seq_along(db_columns$column_name)) {
     col_name <- db_columns$column_name[i]
@@ -1000,4 +1000,3 @@ dbGetInfo <- function(db_connection) {
   # Return the log message
   return(log_message)
 }
-

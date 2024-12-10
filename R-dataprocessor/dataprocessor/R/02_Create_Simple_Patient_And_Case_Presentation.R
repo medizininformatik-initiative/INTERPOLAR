@@ -636,20 +636,20 @@ createFrontendTables <- function() {
   # Create frontend table for patients
   patient_frontend_table <- createPatientFrontendTable(patients_from_database)
   # Write patient frontend table to the database
-  etlutils::writeTableToDatabase(patient_frontend_table,
-                                 getDatabaseWriteConnection(),
-                                 table_name = "patient_fe",
-                                 log = LOG_DB_QUERIES,
-                                 stop_if_table_not_empty = TRUE)
+  etlutils::dbWriteTable(patient_frontend_table,
+                         getDatabaseWriteConnection(),
+                         table_name = "patient_fe",
+                         log = LOG_DB_QUERIES,
+                         stop_if_table_not_empty = TRUE)
 
   # Create frontend table for encounters
   encounter_frontend_table <- createEncounterFrontendTable(pids_per_ward, patients_from_database)
   # Write encounter frontend table to the database
-  etlutils::writeTableToDatabase(encounter_frontend_table,
-                                 getDatabaseWriteConnection(),
-                                 table_name = "fall_fe",
-                                 log = LOG_DB_QUERIES,
-                                 stop_if_table_not_empty = TRUE)
+  etlutils::dbWriteTable(encounter_frontend_table,
+                         getDatabaseWriteConnection(),
+                         table_name = "fall_fe",
+                         log = LOG_DB_QUERIES,
+                         stop_if_table_not_empty = TRUE)
 }
 
 # List with resource abbreviations

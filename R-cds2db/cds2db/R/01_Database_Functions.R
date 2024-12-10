@@ -102,13 +102,13 @@ resetRemainingDatabaseLock <- function() {
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' write access under this name
 writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE, lock_id) {
-  etlutils::writeTablesToDatabase(tables = tables,
-                                  db_connection = getDatabaseWriteConnection(),
-                                  stop_if_table_not_empty = stop_if_table_not_empty,
-                                  close_db_connection = FALSE,
-                                  log = LOG_DB_QUERIES,
-                                  project_name = PROJECT_NAME,
-                                  lock_id = lock_id)
+  etlutils::dbWriteTables(tables = tables,
+                          db_connection = getDatabaseWriteConnection(),
+                          stop_if_table_not_empty = stop_if_table_not_empty,
+                          close_db_connection = FALSE,
+                          log = LOG_DB_QUERIES,
+                          project_name = PROJECT_NAME,
+                          lock_id = lock_id)
 }
 
 #' Retrieve Untyped RAW Data from Database
@@ -123,12 +123,12 @@ writeTablesToDatabase <- function(tables, stop_if_table_not_empty = FALSE, lock_
 #' @return A list of data frames where each data frame corresponds to a table from the database.
 #'
 readTablesFromDatabase <- function(table_names, lock_id) {
-  etlutils::readTablesFromDatabase(db_connection = getDatabaseReadConnection(),
-                                 table_names = table_names,
-                                 close_db_connection = FALSE,
-                                 log = LOG_DB_QUERIES,
-                                 project_name = PROJECT_NAME,
-                                 lock_id = lock_id)
+  etlutils::dbReadTables(db_connection = getDatabaseReadConnection(),
+                         table_names = table_names,
+                         close_db_connection = FALSE,
+                         log = LOG_DB_QUERIES,
+                         project_name = PROJECT_NAME,
+                         lock_id = lock_id)
 }
 
 #' Retrieve Data from Database using a Predefined Connection Configuration

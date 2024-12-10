@@ -25,9 +25,9 @@ getFrontendTableNames <- function() {
 #'
 adjustTableToDBTable <- function(con, dt, table_name) {
   # 1. Get the PostgreSQL table columns and types
-  db_columns <- etlutils::getDBTableColumns(con, table_name, log = LOG_DB_QUERIES, project_name = PROJECT_NAME)
+  db_columns <- etlutils::dbGetTableColumns(con, table_name, log = LOG_DB_QUERIES, project_name = PROJECT_NAME)
   # 2. Convert the R data.table columns to match the PostgreSQL types
-  adjusted_dt <- etlutils::convertToDBTypes(dt, db_columns)
+  adjusted_dt <- etlutils::dbConvertToDBTypes(dt, db_columns)
   return(adjusted_dt)
 }
 
