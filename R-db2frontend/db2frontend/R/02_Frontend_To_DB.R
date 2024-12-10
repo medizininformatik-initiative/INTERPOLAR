@@ -87,6 +87,7 @@ importRedcap2DB <- function() {
                              table_name = table_name,
                              table = tables2Export[[i]],
                              log = VERBOSE >= VL_90_FHIR_RESPONSE,
+                             project_name = PROJECT_NAME,
                              lock_id = createLockID("importRedcap2DB()"))
     }
 
