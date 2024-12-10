@@ -146,7 +146,7 @@ dbLock <- function(db_connection, log = TRUE, project_name, lock_id) {
     lock_sucessful <- dbGetSingleValue(db_connection, paste0("SELECT db.data_transfer_stop('", project_name, "', '", lock_id, "');"), log, project_name)
     if (log) {
       status <- dbGetStatus(db_connection, log)
-      cat(paste("DB lock sucessfull =", lock_sucessful, "with status on lock:", status, "\n"))
+      cat(paste("DB lock sucessful =", lock_sucessful, "with status on lock:", status, "\n"))
     }
     if (!lock_sucessful) {
       dbLock(db_connection, log, project_name, lock_id)
