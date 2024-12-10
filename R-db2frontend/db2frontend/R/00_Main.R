@@ -44,6 +44,11 @@ retrieve <- function() {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
+    # Reset lock from unfinished previous cds2db run
+    etlutils::runLevel2("Reset lock from unfinished previous cds2db run", {
+      resetRemainingDatabaseLock()
+    })
+
     # Import Data from Database to Frontend
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
       importDB2Redcap()
@@ -54,6 +59,12 @@ retrieve <- function() {
       importRedcap2DB()
     })
 
+  }))
+
+  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
+    etlutils::runLevel2("Close database connections", {
+      closeAllDatabaseConnections()
+    })
   }))
 
   if (etlutils::isErrorOccured()) {
