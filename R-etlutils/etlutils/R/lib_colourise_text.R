@@ -204,7 +204,7 @@ catErrorMessage <- function(msg = "ERROR\n", bg = NULL) {
 #'
 #' @export
 catWarningMessage <- function(msg, bg = NULL) {
-  catColorBrown(msg, bg = bg)
+  catColorBrown(paste("WARNING:", msg), bg = bg)
 }
 
 #' Print text in Cyan Color

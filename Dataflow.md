@@ -83,7 +83,7 @@ Die Tabelle "fall_fe" sollte eine Liste aller Fälle enthalten, die für Patient
 
 *Voraussetzung*: Das aktuelle Datum muss zu den Start- und Enddaten der Encounter passen. Es werden nur Fälle gefunden, deren Startdatum vor dem aktuellen Datum liegt und deren Enddatum nach dem aktuellen Datum liegt oder nicht gesetzt ist. 
 
-Will man hier für Daten aus der Vergangenheit irgendwas sehen, dann muss in der Konfigurationsdatei für den Dataprocessor ([dataprocessor_cofig.toml](R-dataprocessor)) unter der Variable  ["DEBUG_CURRENT_DATETIME"](R-dataprocessor/dataprocessor_config.toml#L40) ein entsprechend zu den Daten passendes Datum eingestellt werden. Alle Variablen, die im Echtbetrieb deaktiviert sein sollten, haben den Präfix "DEBUG_".
+Will man hier für Daten aus der Vergangenheit irgendwas sehen, dann muss in der Konfigurationsdatei für den Dataprocessor ([dataprocessor_cofig.toml](R-dataprocessor)) unter der Variable  ["DEBUG_ENCOUNTER_DATETIME"](R-dataprocessor/dataprocessor_config.toml#L40) ein entsprechend zu den Daten passendes Datum eingestellt werden. Alle Variablen, die im Echtbetrieb deaktiviert sein sollten, haben den Präfix "DEBUG_".
 
 
 #### Module "db2frontend" und "frontend"
@@ -93,3 +93,24 @@ Nach der Ausführung des jeweiligen Skripts (R-Skript) zum Datenaustausch mit de
 Danach können neue bzw. geänderte Daten im Schema "db2frontend_in" wieder in die "CDS Hub DB" geschrieben werden (Verbindungen 8 und 9 in der Grafik). Dies erfolgt analog zum Modul "dataprocessor" und am Ende werden die Daten in den zugehörigen Tabellen im Schema "db_log" dauerhaft gespeichert.
 
 Auch in diesem Modul werden Primärschlüssel der "Quell"-Datensätze an das Frontend mit übergeben, um beim Reimport der geänderten Daten einen Zusammenhang herstellen zu können.
+
+### Steuerung innerhalb der Datenbank (Semaphore)
+In der Datenbank erfolgt die Übertragung von Daten zwischen den verschiedenen Modulen und dem Datenbankkern automatisch durch einen Cron-Job. Damit neue Daten stets in ihrem zeitlichen Zusammenhang verarbeitet werden (nur vollständige Übertragungen) und einem konsistenten Zeitpunkt zugeordnet werden können (identische Processing-Nummer), wurde ein Semaphore-Mechanismus eingeführt. Dieser ermöglicht es, dass R-Skripte in den Modulen den Cron-Job pausieren und wieder starten können (siehe 95_cron_job.sql).
+
+Die Semaphore kennt die folgenden Zustände:
+#### 1. WaitForCronJob
+In diesem Zustand müssen alle Übertragungsaktionen durchgeführt werden. Die Verarbeitung startet automatisch mit der nächsten Instanz des Cron-Jobs (Standardintervall: jede Minute).
+
+#### 2. Ongoing
+Die Übertragungsaktionen werden aktuell ausgeführt. Alternativ kann ein externer Prozess die Verarbeitung angehalten haben, um auf einen konsistenten Datenstand lesend oder schreibend zuzugreifen.
+
+#### 3. ReadyToConnect
+Ein externer Prozess kann diesen Zustand setzen, um die Verarbeitung zu pausieren. Die Dauer der Pause ist über die Parameter konfigurierbar (siehe 03_db_parameter.sql).
+
+#### 4. Interrupted
+In diesem Zustand wurde die Verarbeitung vollständig durch einen Administrator unterbrochen.
+
+Mit dieser Mechanik wird sichergestellt, dass die Datenintegrität während der Verarbeitung gewährleistet bleibt, insbesondere bei parallelen Zugriffs- und Schreiboperationen.
+
+
+

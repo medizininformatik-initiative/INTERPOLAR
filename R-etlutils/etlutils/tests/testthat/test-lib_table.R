@@ -1230,3 +1230,79 @@ test_that("All values in the column are replaced correctly", {
   replaceColumnValues(dt, "a", "x", "z")
   expect_equal(dt$a, c("z", "z", "z"))
 })
+
+####################
+# mergeTablesUnion #
+####################
+
+# Test 1: Table exists only in list1
+test_that("mergeTablesUnion correctly handles tables present only in list1", {
+  list1 <- list(tableA = data.table(x = 1:3, y = 4:6))
+  list2 <- list(tableB = data.table(x = 7:9, z = 10:12))
+
+  # Perform the merge
+  merged_tables <- mergeTablesUnion(list1, list2)
+
+  # Check if tableA from list1 is retained without modification
+  expect_equal(nrow(merged_tables$tableA), 3)
+  expect_equal(colnames(merged_tables$tableA), c("x", "y"))
+
+  # Check if tableB from list2 is retained without modification
+  expect_equal(nrow(merged_tables$tableB), 3)
+  expect_equal(colnames(merged_tables$tableB), c("x", "z"))
+})
+
+# Test 2: Table exists only in list2
+test_that("mergeTablesUnion correctly handles tables present only in list2", {
+  list1 <- list(tableA = data.table(x = 1:3, y = 4:6))
+  list2 <- list(tableB = data.table(x = 7:9, z = 10:12))
+
+  # Perform the merge
+  merged_tables <- mergeTablesUnion(list1, list2)
+
+  # Check if tableA from list1 is retained without modification
+  expect_equal(nrow(merged_tables$tableA), 3)
+  expect_equal(colnames(merged_tables$tableA), c("x", "y"))
+
+  # Check if tableB from list2 is retained without modification
+  expect_equal(nrow(merged_tables$tableB), 3)
+  expect_equal(colnames(merged_tables$tableB), c("x", "z"))
+})
+
+# Test 3: Empty lists
+test_that("mergeTablesUnion correctly handles empty lists", {
+  list1 <- list()
+  list2 <- list()
+
+  # Perform the merge
+  merged_tables <- mergeTablesUnion(list1, list2)
+
+  # Check that the result is an empty list
+  expect_equal(length(merged_tables), 0)
+})
+
+# Test 4: Different column order
+test_that("mergeTablesUnion correctly merges tables with different column orders", {
+  list1 <- list(tableA = data.table(x = 1:3, y = 4:6))
+  list2 <- list(tableA = data.table(y = 7:9, x = 10:12))
+
+  # Perform the merge
+  merged_tables <- mergeTablesUnion(list1, list2)
+
+  # Ensure the columns are merged correctly, regardless of order
+  expect_equal(colnames(merged_tables$tableA), c("x", "y"))
+  expect_equal(nrow(merged_tables$tableA), 6)  # Should have 6 rows
+})
+
+# Test 5: Tables with more rows in both lists
+test_that("mergeTablesUnion correctly merges tables with different numbers of rows", {
+  list1 <- list(tableA = data.table(x = 1:3, y = 4:6))
+  list2 <- list(tableA = data.table(x = 4:6, y = 7:9))
+
+  # Perform the merge
+  merged_tables <- mergeTablesUnion(list1, list2)
+
+  # Check the number of rows (should be 6)
+  expect_equal(nrow(merged_tables$tableA), 6)
+  expect_equal(colnames(merged_tables$tableA), c("x", "y"))  # Only common columns
+})

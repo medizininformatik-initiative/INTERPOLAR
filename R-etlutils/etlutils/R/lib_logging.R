@@ -106,7 +106,6 @@ logBlockFooter <- function(verbose = VERBOSE, len = 104) {
 #'
 #' @param lastLogMessage A character string containing the final log message to be printed. Defaults to NA.
 #' @export
-
 finalize <- function(lastLogMessage = NA) {
   printClock()
   warnings()
@@ -129,6 +128,46 @@ finalize <- function(lastLogMessage = NA) {
 #' @export
 isErrorOccured <- function() {
   exists("ERROR_MESSAGE", envir = .lib_logging_env)
+}
+
+#' Check if the Error Message Indicates an Intentional Debug Test Error
+#'
+#' This function checks whether the provided error message, or the error message retrieved
+#' by `getErrorMessage()` if none is provided, contains the string "DEBUG_TEST_". This indicates
+#' that the error is an intentional debug test error.
+#'
+#' @param err An optional character string representing the error message to check. If not
+#' provided, the function retrieves the error message using `getErrorMessage()`.
+#'
+#' @return A logical value: \code{TRUE} if the error message contains "DEBUG_TEST_";
+#' \code{FALSE} otherwise.
+#'
+#' @export
+isDebugTestError <- function(err = NA) {
+  if (all(is.na(err))) {
+    err <- getErrorMessage()
+  }
+  grepl("DEBUG_TEST_", err)
+}
+
+#' Check for Debug Test Error
+#'
+#' This function checks if a specified debug test variable is defined and set to \code{TRUE}.
+#' If so, it raises an error with the provided debug message and the variable name.
+#'
+#' @param debug_test_variable_name A character string representing the name of the debug
+#' test variable to check.
+#' @param debug_message A character string representing the debug message to include in the
+#' error output if the condition is met.
+#'
+#' @return None. The function stops execution and throws an error if the debug test variable
+#' is defined and set to \code{TRUE}.
+#'
+#' @export
+checkDebugTestError <- function(debug_test_variable_name, debug_message) {
+  if (etlutils::isDefinedAndTrue(debug_test_variable_name)) {
+    stop(paste0(debug_test_variable_name, ":\n", debug_message, "\n"))
+  }
 }
 
 #' Print the error message if an error has occurred
@@ -204,7 +243,10 @@ runProcessInternal <- function(
         return(process_result)
       },
       expr_err = {
-        error_message <- catErrorMessage(process_result)
+        if (!isDebugTestError(process_result)) {
+          error_message <- catErrorMessage(process_result)
+        } else if (single_line) catOkMessage() else catColourised('OK\n', fg = 'light blue')
+        error_message <- process_result
         logBlockFooter()
         if (throw_exception) {
           # This process was the very first to generate an error
