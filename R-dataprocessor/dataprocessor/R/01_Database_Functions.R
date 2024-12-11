@@ -1,6 +1,22 @@
 # Environment for saving the db_connnections
 .db_connections_env <- new.env()
 
+#' Create a Lock ID with Default Project Name
+#'
+#' This function generates a lock ID by combining a predefined project name with a variable number
+#' of arguments for the lock ID message. The arguments are concatenated and combined with the
+#' project name, separated by a colon (`:`). The project name is sourced from the global constant
+#' `PROJECT_NAME`.
+#'
+#' @param ... A variable number of strings to be concatenated as the lock ID message.
+#'
+#' @return A character string representing the combined lock ID in the format
+#'         `<PROJECT_NAME>:<lock_id_message>`.
+#'
+createLockID <- function(...) {
+  etlutils::createLockID(PROJECT_NAME, ...)
+}
+
 #' Get Database Connection
 #'
 #' This function retrieves a database connection for the specified schema.
@@ -49,6 +65,7 @@ getDatabaseWriteConnection <- function() getDatabaseConnection(DB_DATAPROCESSOR_
 #' It iterates through all the connection objects in the environment, disconnects them, and removes them from the environment.
 #'
 closeAllDatabaseConnections <- function() {
+  resetRemainingDatabaseLock()
   for (db_connection_variable_name in ls(.db_connections_env)) {
     db_connection <- get(db_connection_variable_name, envir = .db_connections_env)
     if (etlutils::dbIsValid(db_connection)) {
@@ -58,45 +75,36 @@ closeAllDatabaseConnections <- function() {
   }
 }
 
-#' Get Tables with Name Part
+#' Reset Remaining Database Lock
 #'
-#' This function retrieves the names of tables in a database connection that contain a specific part in their name.
-#' The search is case-insensitive.
+#' This function resets any remaining database locks for a given project. It utilizes
+#' the `dbResetLock` function from the `etlutils` package, using the database write
+#' connection and project-specific configurations.
 #'
-#' @param db_connection A database connection object.
-#' @param name_part A string representing the part of the table name to search for.
-#'
-#' @return A character vector containing the names of the tables that match the specified name part.
-#'
-getTablesWithNamePart <- function(db_connection, name_part) {
-  name_part <- tolower(name_part)
-  table_names <- etlutils::dbListTableNames(db_connection, FALSE)
-  return(grep(name_part, table_names, fixed = TRUE, value = TRUE))
+resetRemainingDatabaseLock <- function() {
+  etlutils::dbResetLock(
+    db_connection = getDatabaseWriteConnection(),
+    log = LOG_DB_QUERIES,
+    project_name = PROJECT_NAME)
 }
 
-#' Get First Table with Name Part
+#' Execute a Read-Only Query
 #'
-#' This function retrieves the first table name in a database connection that contains a specific part in its name.
-#' If there are multiple tables that match the name part, an error is thrown. If no tables match, an error is thrown
-#' depending on the `stop_on_empty_result` parameter.
+#' This function executes a read-only SQL query on a database connection,
+#' with a locking mechanism for safe execution.
 #'
-#' @param db_connection A database connection object.
-#' @param name_part A string representing the part of the table name to search for.
-#' @param stop_on_empty_result A logical value indicating whether to stop with an error if no tables match the name part.
-#'        Default is \code{TRUE}.
-#' @return A character string representing the first table name that matches the specified name part, if exactly one match is found.
+#' @param query A string representing the SQL query to be executed.
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' access under this name
 #'
-getFirstTableWithNamePart <- function(db_connection, name_part, stop_on_empty_result = TRUE) {
-  table_names <- getTablesWithNamePart(db_connection, name_part)
-  if (length(table_names) == 1) {
-    return(table_names[1])
-  } else if (length(table_names) > 1) {
-    connection_display <- etlutils::getPrintString(db_connection)
-    stop(paste0("There are multiple tables with name part '", name_part, "' found for DB connection ", connection_display, "\n",
-                            "Tables: ", paste0(table_names, collapse = ","), "\n",
-                            "Hint: choose the namepart so that the result tablename is unique."))
-  } else if (stop_on_empty_result) {
-    connection_display <- etlutils::getPrintString(db_connection)
-    stop(paste0("No table with name part '", name_part, "' found for DB connection ", connection_display, "\n"))
-  }
+#' @return A data frame containing the result of the executed query.
+#'
+dbReadQuery <- function(query, lock_id) {
+  etlutils::dbGetQuery(
+    db_connection = getDatabaseReadConnection(),
+    query = query,
+    log = LOG_DB_QUERIES,
+    project_name = PROJECT_NAME,
+    lock_id = createLockID(lock_id),
+    readonly = TRUE)
 }

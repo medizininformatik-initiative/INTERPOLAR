@@ -948,27 +948,6 @@ dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
   )
 }
 
-#' Complete Table with Missing Columns
-#'
-#' This function completes a table by adding missing columns based on the specified table description.
-#'
-#' @param table A data.table representing the table to be completed.
-#' @param table_description A description of the expected table structure.
-#'
-#' @return A completed data.table with missing columns added.
-#' @export
-completeTable <- function(table, table_description) {
-  # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
-  .SD <- NULL
-  col_names <- names(table_description@cols)
-  empty_table <- data.table::setnames(
-    data.table::data.table(matrix(ncol = length(col_names), nrow = 0)),
-    new = col_names
-  )
-  d <- data.table::rbindlist(list(empty_table, table), fill = TRUE, use.names = TRUE)
-  d[, lapply(.SD, function(x) methods::as(x, 'character'))]
-}
-
 #' Fill NA Values with Last Observed Value in Specified Columns of a data.table
 #'
 #' This function fills NA values in a data.table by carrying forward the last observed value.
@@ -1119,4 +1098,59 @@ replaceColumnValues <- function(dt, column_name, old_type, new_type) {
   } else {
     dt[get(column_name) == old_type, (column_name) := new_type]
   }
+}
+
+#' Merge Two Lists of Tables by Combining Rows with Shared Table Names
+#'
+#' This function merges two lists of data tables, uniting table names from both lists.
+#' If a table is present in both lists, it combines rows while retaining only columns common to both tables.
+#' Tables that exist in only one list are directly added to the final output without modification.
+#'
+#' @param list1 A named list of data.table objects representing the first set of tables for merging.
+#' @param list2 A named list of data.table objects representing the second set of tables for merging.
+#'
+#' @details The function iterates over each unique table name in both input lists.
+#' If a table appears in both lists, it keeps only the common columns, combines rows using `rbind`,
+#' and adds the merged table to the final output. If a table is present in only one list, it is
+#' included in the final list as-is.
+#'
+#' @return A list containing the merged tables. Each table has only columns common to both lists,
+#' if applicable. Tables that appear in only one list are included in the final output without alteration.
+#'
+#' @examples
+#' library(data.table)
+#' # Define two example lists with overlapping table names and distinct columns
+#' list1 <- list(tableA = data.table(x = 1:3, y = 4:6, z = 7:9),
+#'               tableB = data.table(x = 7:9, z = 10:12))
+#' list2 <- list(tableA = data.table(x = 10:12, y = 13:15),
+#'               tableC = data.table(w = 1:3))
+#' # Merge tables from both lists
+#' merged_tables <- mergeTablesUnion(list1, list2)
+#'
+#' @export
+mergeTablesUnion <- function(list1, list2) {
+  # Initialize the combined list to store the merged tables
+  combined_list <- list()
+  # Create a set of all unique table names across both lists
+  all_table_names <- union(names(list1), names(list2))
+  # Iterate over each table name in the combined set
+  for (table_name in all_table_names) {
+    # Case 1: Table exists in both lists
+    if (table_name %in% names(list1) && table_name %in% names(list2)) {
+      # Extract the corresponding tables from each list
+      table1 <- list1[[table_name]]
+      table2 <- list2[[table_name]]
+      # Combine the tables using rbind
+      combined_table <- rbind(table1, table2, fill = TRUE)
+    } else if (table_name %in% names(list1)) {
+      # Case 2: Table exists only in list1
+      combined_table <- list1[[table_name]]
+    } else {
+      # Case 3: Table exists only in list2
+      combined_table <- list2[[table_name]]
+    }
+    # Add the combined (or single) table to the result list
+    combined_list[[table_name]] <- combined_table
+  }
+  return(combined_list)
 }

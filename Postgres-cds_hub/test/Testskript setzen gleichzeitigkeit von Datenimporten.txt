@@ -1,0 +1,168 @@
+-- Ziel ist es zu testen ob bei verschiedenen Importreihenfolgen die Gesamtheit der Datensätze dem richtigen Zeitpunkt zugeordnet werden
+-- Test 1 bei teilweisen einfügen vorhandener Datensätze 
+-- Test 2 was ist wenn es andere Entitäten sind die dazu kommen (Schritt 2)
+-- initialiesieren
+    delete from db_log.patient_raw where pat_id like 'Test%';
+    delete from db_log.observation_raw where obs_id like 'T%';
+    delete from db_log.patient where pat_id like 'Test%';
+    delete from db_log.observation where obs_id like 'T%';
+
+-- Für Erweiterten Test - bei zweiten Import DS einfügen die vorher nicht dabei waren
+    delete from db_log.location where loc_id like 'T%';
+    delete from db_log.location_raw where loc_id like 'T%';
+
+-- Warten auf connect
+    select db.data_transfer_status();
+
+-- Stop
+    update db_config.db_process_control set pc_value='Ongoing' where pc_name='semaphor_cron_job_data_transfer';
+
+-- Einfügen 1 - sollten selbe P Nr bekommen
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T1');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T2');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T3');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T4');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T5');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T6');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T7');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T8');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T9');
+
+    update db_config.db_process_control set pc_value='WaitForCronJob' where pc_name='semaphor_cron_job_data_transfer';
+
+    select db.data_transfer_status();
+  
+-- Frage - sind alle beim selben DIFF? -> selbe pnr bei 5 pat / 9 obs (siehe insert oben)
+    select last_processing_nr, 'pat_raw', count(1) anz from db_log.patient_raw where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_t', count(1) anz from db_log.patient where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_diff', count(1) anz from cds2db_out.v_patient_raw_diff where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'obs_raw', count(1) anz from db_log.observation_raw where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_t', count(1) anz from db_log.observation where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_diff', count(1) anz from cds2db_out.v_observation_raw_diff where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_raw', count(1) anz from db_log.location_raw where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_t', count(1) anz from db_log.location where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_diff', count(1) anz from cds2db_out.v_location_raw_diff where loc_id like 'T%' group by last_processing_nr
+    order by last_processing_nr desc, 2
+    ;
+
+    select db.data_transfer_status();
+
+-- Stop
+    update db_config.db_process_control set pc_value='Ongoing' where pc_name='semaphor_cron_job_data_transfer';
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_out.v_patient_raw_diff where pat_id like 'Test%');
+    insert into cds2db_in.observation (obs_id,observation_raw_id) (select obs_id,observation_raw_id from cds2db_out.v_observation_raw_diff where obs_id like 'T%');
+
+    update db_config.db_process_control set pc_value='WaitForCronJob' where pc_name='semaphor_cron_job_data_transfer';
+
+    select db.data_transfer_status();
+  
+-- Frage - sind alle beim selben DIFF? -> selbe pnr bei 5 pat / 9 obs (siehe insert oben)
+    select last_processing_nr, 'pat_raw', count(1) anz from db_log.patient_raw where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_t', count(1) anz from db_log.patient where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_diff', count(1) anz from cds2db_out.v_patient_raw_diff where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'obs_raw', count(1) anz from db_log.observation_raw where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_t', count(1) anz from db_log.observation where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_diff', count(1) anz from cds2db_out.v_observation_raw_diff where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_raw', count(1) anz from db_log.location_raw where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_t', count(1) anz from db_log.location where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_diff', count(1) anz from cds2db_out.v_location_raw_diff where loc_id like 'T%' group by last_processing_nr
+    order by last_processing_nr desc, 2
+    ;
+
+    select db.data_transfer_status();
+-- Einfügen 2 - so wie bei Einfügen 1 + extra Datensätze in nur einer Entität observen)
+-- Stop
+    update db_config.db_process_control set pc_value='Ongoing' where pc_name='semaphor_cron_job_data_transfer';
+
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)     VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)     VALUES ('Test_Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)     VALUES ('Test_Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)     VALUES ('Test_Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)     VALUES ('Test_Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T1');    
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T2');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T3');    
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T4');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T5');    
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T6');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T7');    
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T8');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('T9');
+    -- zusätzlich
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('TA');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('TB');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('TC');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('TD');
+    INSERT INTO cds2db_in.observation_raw (obs_id) VALUES ('TE');
+
+-- zweiter Test - zusätzlich noch unabhängige Datensätze
+    INSERT INTO cds2db_in.location_raw (loc_id) VALUES ('TA');
+    INSERT INTO cds2db_in.location_raw (loc_id) VALUES ('TB');
+    INSERT INTO cds2db_in.location_raw (loc_id) VALUES ('TC');
+    INSERT INTO cds2db_in.location_raw (loc_id) VALUES ('TD');
+    INSERT INTO cds2db_in.location_raw (loc_id) VALUES ('TE');
+
+-- CronJob starten
+    update db_config.db_process_control set pc_value='WaitForCronJob' where pc_name='semaphor_cron_job_data_transfer';
+
+    select db.data_transfer_status();
+
+-- Frage - Stand jetzt sollte sein : typed und raw selber max pid  - obs_raw:14 obs_t:9 obs_diff_5  pat_t/raw:5
+    select last_processing_nr, 'pat_raw', count(1) anz from db_log.patient_raw where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_t', count(1) anz from db_log.patient where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_diff', count(1) anz from cds2db_out.v_patient_raw_diff where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'obs_raw', count(1) anz from db_log.observation_raw where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_t', count(1) anz from db_log.observation where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_diff', count(1) anz from cds2db_out.v_observation_raw_diff where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_raw', count(1) anz from db_log.location_raw where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_t', count(1) anz from db_log.location where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_diff', count(1) anz from cds2db_out.v_location_raw_diff where loc_id like 'T%' group by last_processing_nr
+    order by last_processing_nr desc, 2
+    ;
+
+-- Melten simulieren indem alle raw nach typt übernommen werden - pat sollte leer sein - obs sollten die 5 neuen sein
+    update db_config.db_process_control set pc_value='Ongoing' where pc_name='semaphor_cron_job_data_transfer';
+
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_out.v_patient_raw_diff where pat_id like 'Test%');
+    insert into cds2db_in.observation (obs_id,observation_raw_id) (select obs_id,observation_raw_id from cds2db_out.v_observation_raw_diff where obs_id like 'T%');
+    insert into cds2db_in.location (loc_id,location_raw_id) (select loc_id,location_raw_id from cds2db_out.v_location_raw_diff where loc_id like 'T%');
+
+    select db.data_transfer_status();
+
+    update db_config.db_process_control set pc_value='WaitForCronJob' where pc_name='semaphor_cron_job_data_transfer';
+    update db_config.db_process_control set pc_value='Stop' where pc_name='semaphor_cron_job_data_transfer';
+
+    select db.data_transfer_status();
+
+-- Frage - Stand jetzt sollte sein : typed und raw von pat und obs (und location) sollten alle die selbe pid haben
+    select last_processing_nr, 'pat_raw', count(1) anz from db_log.patient_raw where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_t', count(1) anz from db_log.patient where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'pat_diff', count(1) anz from cds2db_out.v_patient_raw_diff where pat_id like 'Test%' group by last_processing_nr
+    union select last_processing_nr, 'obs_raw', count(1) anz from db_log.observation_raw where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_t', count(1) anz from db_log.observation where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'obs_diff', count(1) anz from cds2db_out.v_observation_raw_diff where obs_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_raw', count(1) anz from db_log.location_raw where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_t', count(1) anz from db_log.location where loc_id like 'T%' group by last_processing_nr
+    union select last_processing_nr, 'loc_diff', count(1) anz from cds2db_out.v_location_raw_diff where loc_id like 'T%' group by last_processing_nr
+    order by last_processing_nr desc, 2
+    ;
+
+
+
+
+
+

@@ -7,10 +7,10 @@
 #'
 #' @return A character of length one containing the human readable duration.
 #' @examples
-#' human_readable_duration(time_in_secs = 11 * 24 * 3600 + 1 * 3600 + 1 * 60 + 1.001001001)
+#' humanReadableDuration(time_in_secs = 11 * 24 * 3600 + 1 * 3600 + 1 * 60 + 1.001001001)
 #'
 #' @export
-human_readable_duration <- function(
+humanReadableDuration <- function(
     time_in_secs = c(
       0 * 24 * 3600 + 1 * 3600 + 1 * 60 + 1.001001001,
       0 * 24 * 3600 + 1 * 3600 + 0 * 60 + 1.001001001
@@ -265,9 +265,10 @@ Clock = setRefClass(
       # find row of current running process
       last_row <- max(which(.history$state == 'RUNNING'))
       # add end time, error and state to this row
+      is_error <- inherits(err, 'try-error') && !isDebugTestError(err)
       .history[last_row, 'end'] <<- now_
-      .history[last_row, 'error'] <<- if (inherits(err, 'try-error')) err else ''
-      .history[last_row, 'state'] <<- if (inherits(err, 'try-error')) 'ERROR' else 'OK'
+      .history[last_row, 'error'] <<- if (is_error) err else ''
+      .history[last_row, 'state'] <<- if (is_error) 'ERROR' else 'OK'
       # if 0 < verbose print some messages
       if (0 < verbose) {
         cat(paste0('finish   ', message, ': ', .history[last_row, end], '\n'))
@@ -289,7 +290,7 @@ Clock = setRefClass(
       h <- data.table::copy(x = .history)
       h <- base::cbind(
         h[,c('msg', 'id', 'state')],
-        h[, human_readable_duration(time_in_secs = as.double(difftime(end, start, 'secs')))],
+        h[, humanReadableDuration(time_in_secs = as.double(difftime(end, start, 'secs')))],
         h[,c('start', 'end', 'error')]
       )
       h[,id := stringr::str_pad(string = id, width = max(nchar(id)), side = 'right', pad = ' ')]

@@ -54,78 +54,6 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, co
   return(dt)
 }
 
-#' Melt the Table According to a Given Schema
-#'
-#' This function melts the table according to a given schema.
-#'
-#' @param indexed_data_table A data.table containing the indexed data to be melted.
-#' @param fhir_table_description An object describing the schema of the FHIR table.
-#' @param column_name_separator A character string that separates the column names. Defaults to "/".
-#'
-#' @return A melted data.table.
-#'
-fhirMeltFull <- function(indexed_data_table, fhir_table_description, column_name_separator = "/") {
-
-  getEscaped <- function(string) {
-    if (nchar(string) == 0) {
-      return(string)
-    } else if (nchar(string) == 1) {
-      return(paste0("\\", string))
-    } else {
-      chars <- strsplit(string, "")[[1]]
-      escaped_string <- paste0("\\", chars, collapse = "")
-      return(escaped_string)
-    }
-  }
-
-  getColumns <- function(prefix) {
-    grep(paste0("^", prefix, "$|^", prefix, getEscaped(column_name_separator)), column_names, value = TRUE)
-  }
-
-  melted_data <- indexed_data_table
-  column_names <- fhir_table_description@cols@.Data
-  brackets <- fhir_table_description@brackets
-  sep <- fhir_table_description@sep
-
-  getUniquePrefixes <- function(step) {
-    # Split each column name by the separator
-    split_names <- strsplit(column_names, getEscaped(column_name_separator))
-
-    # Initialize a vector to store the prefixes
-    prefixes <- c()
-
-    for (name_parts in split_names) {
-      # Check if the number of parts is sufficient for the given step
-      if (length(name_parts) >= step) {
-        # Create the prefix by joining the first `step` parts with the separator
-        prefix <- paste(name_parts[1:step], collapse = column_name_separator)
-        prefixes <- c(prefixes, prefix)
-      }
-    }
-    # Get unique prefixes
-    prefixes <- unique(prefixes)
-    return(prefixes)
-  }
-
-  step <- 1
-  repeat {
-    prefixes <- getUniquePrefixes(step)
-    if (!rlang::is_empty(prefixes)) {
-      for (prefix in prefixes) {
-        columns <- getColumns(prefix)
-        melted_data <- fhircrackr::fhir_melt(melted_data, columns, brackets, sep, all_columns = TRUE)
-      }
-    } else {
-      break
-    }
-    step <- step + 1
-  }
-
-  melted_data <- fhircrackr::fhir_rm_indices(melted_data, brackets, column_names)
-  melted_data[, resource_identifier := NULL]
-  return(melted_data)
-}
-
 #' Join Unmeltable Multi-Entries in Resource Tables
 #'
 #' This function joins specific multi-entry columns in the patient resource table
@@ -158,12 +86,11 @@ joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions)
 #' index pattern, otherwise `FALSE`.
 #'
 #' @param dt A `data.table` object to be checked.
-#' @param fhir_table_description An object containing the table description, including the brackets used for indexing.
+#' @param brackets A character vector of length two, defining the brackets used for the indices.
 #'
 #' @return A logical value indicating whether the data table is indexed (`TRUE`) or not (`FALSE`).
 #'
-isIndexedTable <- function(dt, fhir_table_description) {
-  brackets <- fhir_table_description@brackets
+isIndexedTable <- function(dt, brackets) {
   indices_pattern <- paste0("^\\", brackets[1], ".*\\", brackets[2])
   for (col in seq_len(ncol(dt))) {
     if (is.character(dt[[col]])) {
@@ -192,12 +119,18 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
-    if (!is.null(fhir_table_description) && isIndexedTable(resource_tables[[i]], fhir_table_description)) {
-      print(paste0("Melt table ", resource_name))
-      nrow_before_melt <- nrow(resource_tables[[i]])
-      resource_tables[[i]] <- fhirMeltFull(resource_tables[[i]], fhir_table_description)
-      nrow_after_melt <- nrow(resource_tables[[i]])
-      print(paste("Resource table", resource_name, nrow_before_melt, "rows to", nrow_after_melt, "rows."))
+    if (!is.null(fhir_table_description)) {
+      brackets <- fhir_table_description@brackets
+      if (isIndexedTable(resource_tables[[i]], brackets)) {
+        print(paste0("Melt table ", resource_name))
+        nrow_before_melt <- nrow(resource_tables[[i]])
+        sep <- fhir_table_description@sep
+        time0 <- Sys.time()
+        resource_tables[[i]] <- fhircrackr::fhir_melt_all(resource_tables[[i]], brackets, sep, column_name_separator = "/")
+        duration <- difftime(Sys.time(), time0, units = 'secs')
+        nrow_after_melt <- nrow(resource_tables[[i]])
+        print(paste("Resource table", resource_name, nrow_before_melt, "rows to", nrow_after_melt, "rows in", duration, "seconds."))
+      }
     }
   }
   return(resource_tables)
@@ -238,6 +171,7 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #' @param resource_tables A list of data tables representing resources.
 #' @param fhir_table_descriptions A named list of all relevant FHIR table descriptions (named with
 #'                                resource name).
+#' @param resource_tables_suffix A suffix for resource_tables, default: "_raw_diff".
 #'
 #' @details This function takes a list of data tables \code{resource_tables} as input.
 #' It converts the data types of columns in these tables based on predefined mappings:
@@ -250,8 +184,9 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #'
 #' @return This function modifies the input resource tables by converting the data types of columns.
 #'
-convertTypes <- function(resource_tables, fhir_table_descriptions) {
-
+convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tables_suffix = "_raw_diff") {
+  # remove _raw_diff suffix in resource_table names
+  names(resource_tables) <- sub(resource_tables_suffix, "", names(resource_tables))
   # rename the database column names in style of something like 'con_identifier_code' back
   # to 'identifier/code'. This we need for correct working of the following join and melt.
   resource_tables <- replaceTablesColumnNames(resource_tables, fhir_table_descriptions, TRUE)

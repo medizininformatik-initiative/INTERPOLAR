@@ -208,14 +208,15 @@ catList <- function(list, prefix = "", suffix = "", hide_value_pattern = "") {
     value <- list[[name]]
     # Only apply hide_value_pattern logic if it's non-empty
     if (hide_value_pattern != "") {
+      hide_value <- grepl(hide_value_pattern, name, perl = TRUE)
       if (is.list(value)) {
         # If it's a list, check the elements for the hide_value_pattern
-        if (grepl(hide_value_pattern, name)) {
+        if (hide_value) {
           value <- "<Not empty list>"
         } else {
           value <- getPrintString(value)
         }
-      } else if (grepl(hide_value_pattern, name) && nchar(value)) {
+      } else if (hide_value && nchar(value)) {
         # If it's not a list, check if the value matches the hide_value_pattern
         value <- paste("<Not empty", typeof(value), "value>")
       }
