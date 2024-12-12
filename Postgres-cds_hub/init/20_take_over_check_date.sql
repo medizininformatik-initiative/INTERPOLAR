@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-10 01:21:48
+-- Create time: 2024-12-12 23:17:09
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -41,7 +41,10 @@ DECLARE
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
     temp VARCHAR; -- Temporary variable for INTerim results
     data_count_pro_all INT:=0; -- Counting all records in this run
-    data_count_update INT:=0;
+    data_count_update INT:=0; -- Counting updated per resource
+    data_count_pro_processed INT:=0; -- Counting all records in this run which processed
+    data_count_last_status_set INT:=0; -- Number of data records since the status was last set
+    data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
     timestamp_start VARCHAR;
     timestamp_end VARCHAR;
     tmp_sec double precision:=0; -- Temporary variable to store execution time
@@ -67,14 +70,138 @@ BEGIN
     err_section:='HEAD-05';    err_schema:='db_log';    err_table:='data_import_hist';
     SELECT MAX(last_processing_nr) INTO last_raw_pro_nr FROM db_log.data_import_hist WHERE table_name like '%_raw' AND schema_name='db_log';
 
-    err_section:='HEAD-10';    err_schema:='db_config';    err_table:='db_parameter';
-    SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
+    -- Counting datasets
+    err_section:='HEAD-10';    err_schema:='db_log';    err_table:='- all_entitys -';
+    SELECT SUM(anz) INTO data_count_pro_all
+    FROM ( SELECT 0::INT AS anz
+        UNION SELECT COUNT(1) AS anz
+    FROM db_log.encounter_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
+            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.encounter)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.encounter)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.patient_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
+            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.patient)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.patient)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.condition_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
+            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.condition)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.condition)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.medication_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
+            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medication)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medication)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
+            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
+            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
+            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.observation_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
+            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.observation)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.observation)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
+            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.servicerequest_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
+            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.servicerequest)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.servicerequest)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.procedure_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
+            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.procedure)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.procedure)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.consent_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
+            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.consent)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.consent)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.location_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
+            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.location)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.location)
+    UNION SELECT COUNT(1) AS anz
+    FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
+        (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
+            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward)
+            )
+         )
+    AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward)
 
-    -- Get the last processing number across all data to mark current data across the board
-    err_section:='HEAD-15';    err_schema:='db_log';    err_table:='- all_entitys -';
-    SELECT MAX(last_processing_nr) INTO max_last_pro_nr
-    FROM ( SELECT 0 AS last_processing_nr
-        UNION SELECT DISTINCT last_processing_nr
+    );
+
+    IF data_count_pro_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+        err_section:='HEAD-15';    err_schema:='db_config';    err_table:='db_parameter';
+	-- Get value for documentation of each individual data record
+        SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';
+
+    	-- Number of data records then status have to be set
+    	SELECT parameter_value::INT INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+
+        err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
+        -- Set current executed function and total number of records
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'UPDATE db_config.db_process_control set pc_value=''db.take_over_last_check_date()'' WHERE pc_name=''current_executed_function'''
+        ))  AS t(res TEXT) INTO erg;
+
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_all||''' WHERE pc_name=''current_total_number_of_records_in_the_function'''
+        ))  AS t(res TEXT) INTO erg;
+
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'UPDATE db_config.db_process_control set pc_value=''0'' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+        ))  AS t(res TEXT) INTO erg;
+
+        -- Get the last processing number across all data to mark current data across the board
+        err_section:='HEAD-25';    err_schema:='db_log';    err_table:='- all_entitys -';
+        SELECT MAX(last_processing_nr) INTO max_last_pro_nr
+        FROM ( SELECT 0 AS last_processing_nr
+        	    UNION SELECT DISTINCT last_processing_nr
     FROM db_log.encounter_raw WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
             (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM db_log.encounter)
@@ -172,14 +299,12 @@ BEGIN
             )
          )
     AND last_processing_nr!=(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward)
-
-    );
-
-    err_section:='HEAD-20';    err_schema:='db_log';    err_table:='/';
     
-    IF max_last_pro_nr>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+        );
 
-        -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
+        err_section:='HEAD-30';    err_schema:='db_log';    err_table:='/';
+    
+    	    -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.encounter_raw to db_log.encounter
 
     -- Start encounter
@@ -217,7 +342,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE encounter_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='encounter-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -231,6 +358,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='encounter-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -282,7 +417,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE patient_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='patient-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -296,6 +433,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='patient-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -347,7 +492,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE condition_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='condition-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -361,6 +508,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='condition-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -412,7 +567,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medication_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='medication-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -426,6 +583,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='medication-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -477,7 +642,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medicationrequest_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='medicationrequest-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -491,6 +658,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='medicationrequest-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -542,7 +717,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medicationadministration_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='medicationadministration-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -556,6 +733,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='medicationadministration-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -607,7 +792,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE medicationstatement_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='medicationstatement-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -621,6 +808,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='medicationstatement-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -672,7 +867,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE observation_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='observation-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -686,6 +883,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='observation-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -737,7 +942,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE diagnosticreport_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='diagnosticreport-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -751,6 +958,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='diagnosticreport-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -802,7 +1017,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE servicerequest_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='servicerequest-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -816,6 +1033,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='servicerequest-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -867,7 +1092,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE procedure_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='procedure-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -881,6 +1108,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='procedure-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -932,7 +1167,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE consent_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='consent-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -946,6 +1183,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='consent-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -997,7 +1242,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE location_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='location-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -1011,6 +1258,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='location-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -1062,7 +1317,9 @@ BEGIN
                 SET last_processing_nr = new_last_pro_nr
                 WHERE pids_per_ward_raw_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='pids_per_ward-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -1076,6 +1333,14 @@ BEGIN
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='pids_per_ward-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -1106,10 +1371,26 @@ BEGIN
         err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( new_last_pro_nr,'data_count_pro_all', 'db_log', 'take_over_last_check_date', last_pro_datetime, 'take_over_last_check_date', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
+
+        -- Cleer current executed function and total number of records
+        err_section:='BOTTOM-15';    err_schema:='db_log';    err_table:='db_process_control';
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'UPDATE db_config.db_process_control set pc_value='''' WHERE pc_name=''current_executed_function'''
+        ))  AS t(res TEXT) INTO erg;
+
+        err_section:='BOTTOM-20';    err_schema:='db_log';    err_table:='db_process_control';
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'UPDATE db_config.db_process_control set pc_value='''' WHERE pc_name=''current_total_number_of_records_in_the_function'''
+        ))  AS t(res TEXT) INTO erg;
+
+        err_section:='BOTTOM-25';    err_schema:='db_log';    err_table:='db_process_control';
+        SELECT res FROM pg_background_result(pg_background_launch(
+        'UPDATE db_config.db_process_control set pc_value=''0'' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+        ))  AS t(res TEXT) INTO erg;
     END IF;
 
-    err_section:='BOTTOM-20';    err_schema:='/';    err_table:='/';
-    RETURN 'Done db.take_over_last_check_date - last_raw_pro_nr:'||new_last_pro_nr;
+    err_section:='BOTTOM-30';    err_schema:='/';    err_table:='/';
+    RETURN 'Done db.take_over_last_check_date - new_last_pro_nr:'||new_last_pro_nr;
 
 EXCEPTION
     WHEN OTHERS THEN
