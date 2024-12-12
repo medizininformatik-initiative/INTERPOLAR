@@ -14,22 +14,17 @@ RUN apt-get update && apt-get install -y -q \
 	msmtp msmtp-mta \
 	mailutils
 
-# PHP-Erweiterungen iconv, mcrypt, gd, zip, mysqli, imagick installieren
+# PHP-Erweiterungen iconv, gd, zip, mysqli, imagick installieren
 RUN apt-get install -y \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libmcrypt-dev \
-        libpng-dev \
-	libzip-dev \
-	libmagickwand-dev \
-	imagemagick
+		libfreetype6-dev \
+		libjpeg62-turbo-dev \
+		libpng-dev \
+		libzip-dev \
+		libmagickwand-dev
 
 # Erweiterung für PHP: iconv
 RUN docker-php-ext-configure iconv \
     && docker-php-ext-install -j$(nproc) iconv
-
-# PECL Erweiterung für PHP: mcrypt
-RUN pecl install mcrypt && docker-php-ext-enable mcrypt
 
 # Erweiterung für PHP: gd
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
