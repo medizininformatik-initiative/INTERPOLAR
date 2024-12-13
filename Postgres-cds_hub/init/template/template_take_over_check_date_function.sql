@@ -34,7 +34,8 @@ BEGIN
     ))  AS t(res TEXT) INTO timestamp_start;
     
     SELECT res FROM public.pg_background_result(public.pg_background_launch(
-    'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'' WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
+    'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'', last_change_timestamp=CURRENT_TIMESTAMP
+    WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
     ) ) AS t(res TEXT) INTO erg;
 
     -- Last import Nr in raw-data
@@ -55,20 +56,23 @@ BEGIN
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';
 
     	-- Number of data records then status have to be set
-    	SELECT parameter_value::INT INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+    	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
         err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value=''db.<%COPY_FUNC_NAME%>()'' WHERE pc_name=''current_executed_function'''
+        'UPDATE db_config.db_process_control set pc_value=''db.<%COPY_FUNC_NAME%>()'', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_executed_function'''
         ))  AS t(res TEXT) INTO erg;
 
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_all||''' WHERE pc_name=''current_total_number_of_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_all||''', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_total_number_of_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value=''0'' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value=''0'', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
         -- Get the last processing number across all data to mark current data across the board
@@ -82,12 +86,8 @@ BEGIN
         err_section:='HEAD-30';    err_schema:='db_log';    err_table:='/';
     
     	<%LOOP_TABS_SUB_take_over_check_date_function%>
-
-    END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
-    -- Collect and save counts for the function
-    IF data_count_pro_all>0 THEN
-        -- calculation of the time period
+  
+        -- Collect and save counts for the function
         err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
         SELECT res FROM pg_background_result(pg_background_launch(
         'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
@@ -103,19 +103,22 @@ BEGIN
         -- Cleer current executed function and total number of records
         err_section:='BOTTOM-15';    err_schema:='db_log';    err_table:='db_process_control';
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value='''' WHERE pc_name=''current_executed_function'''
+        'UPDATE db_config.db_process_control set pc_value='''', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_executed_function'''
         ))  AS t(res TEXT) INTO erg;
 
         err_section:='BOTTOM-20';    err_schema:='db_log';    err_table:='db_process_control';
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value='''' WHERE pc_name=''current_total_number_of_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value='''', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_total_number_of_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
         err_section:='BOTTOM-25';    err_schema:='db_log';    err_table:='db_process_control';
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value=''0'' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value=''0'', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
-    END IF;
+    END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
 
     err_section:='BOTTOM-30';    err_schema:='/';    err_table:='/';
     RETURN 'Done db.take_over_last_check_date - new_last_pro_nr:'||new_last_pro_nr;

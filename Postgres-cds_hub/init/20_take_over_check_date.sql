@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-12 23:17:09
+-- Create time: 2024-12-13 23:53:51
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -63,7 +63,8 @@ BEGIN
     ))  AS t(res TEXT) INTO timestamp_start;
     
     SELECT res FROM public.pg_background_result(public.pg_background_launch(
-    'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' take_over_last_check_date'' WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
+    'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' take_over_last_check_date'', last_change_timestamp=CURRENT_TIMESTAMP
+    WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
     ) ) AS t(res TEXT) INTO erg;
 
     -- Last import Nr in raw-data
@@ -181,20 +182,23 @@ BEGIN
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';
 
     	-- Number of data records then status have to be set
-    	SELECT parameter_value::INT INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+    	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
         err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value=''db.take_over_last_check_date()'' WHERE pc_name=''current_executed_function'''
+        'UPDATE db_config.db_process_control set pc_value=''db.take_over_last_check_date()'', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_executed_function'''
         ))  AS t(res TEXT) INTO erg;
 
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_all||''' WHERE pc_name=''current_total_number_of_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_all||''', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_total_number_of_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value=''0'' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value=''0'', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
         -- Get the last processing number across all data to mark current data across the board
@@ -307,7 +311,7 @@ BEGIN
     	    -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.encounter_raw to db_log.encounter
 
-    -- Start encounter
+    -- Start encounter    ----   encounter    ----    encounter
     err_section:='encounter-01';    err_schema:='db_log';    err_table:='encounter';
     data_count_update:=0;
 
@@ -362,7 +366,8 @@ BEGIN
             err_section:='encounter-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -377,12 +382,13 @@ BEGIN
         ( SELECT encounter_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'encounter' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.encounter
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End encounter
-    -----------------------------------------------------------------------------------------------------------------
+    -- END encounter  --------  encounter  --------  encounter  --------  encounter
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.patient_raw to db_log.patient
 
-    -- Start patient
+    -- Start patient    ----   patient    ----    patient
     err_section:='patient-01';    err_schema:='db_log';    err_table:='patient';
     data_count_update:=0;
 
@@ -437,7 +443,8 @@ BEGIN
             err_section:='patient-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -452,12 +459,13 @@ BEGIN
         ( SELECT patient_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'patient' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.patient
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End patient
-    -----------------------------------------------------------------------------------------------------------------
+    -- END patient  --------  patient  --------  patient  --------  patient
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.condition_raw to db_log.condition
 
-    -- Start condition
+    -- Start condition    ----   condition    ----    condition
     err_section:='condition-01';    err_schema:='db_log';    err_table:='condition';
     data_count_update:=0;
 
@@ -512,7 +520,8 @@ BEGIN
             err_section:='condition-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -527,12 +536,13 @@ BEGIN
         ( SELECT condition_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'condition' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.condition
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End condition
-    -----------------------------------------------------------------------------------------------------------------
+    -- END condition  --------  condition  --------  condition  --------  condition
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.medication_raw to db_log.medication
 
-    -- Start medication
+    -- Start medication    ----   medication    ----    medication
     err_section:='medication-01';    err_schema:='db_log';    err_table:='medication';
     data_count_update:=0;
 
@@ -587,7 +597,8 @@ BEGIN
             err_section:='medication-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -602,12 +613,13 @@ BEGIN
         ( SELECT medication_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medication' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medication
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End medication
-    -----------------------------------------------------------------------------------------------------------------
+    -- END medication  --------  medication  --------  medication  --------  medication
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.medicationrequest_raw to db_log.medicationrequest
 
-    -- Start medicationrequest
+    -- Start medicationrequest    ----   medicationrequest    ----    medicationrequest
     err_section:='medicationrequest-01';    err_schema:='db_log';    err_table:='medicationrequest';
     data_count_update:=0;
 
@@ -662,7 +674,8 @@ BEGIN
             err_section:='medicationrequest-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -677,12 +690,13 @@ BEGIN
         ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationrequest
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End medicationrequest
-    -----------------------------------------------------------------------------------------------------------------
+    -- END medicationrequest  --------  medicationrequest  --------  medicationrequest  --------  medicationrequest
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.medicationadministration_raw to db_log.medicationadministration
 
-    -- Start medicationadministration
+    -- Start medicationadministration    ----   medicationadministration    ----    medicationadministration
     err_section:='medicationadministration-01';    err_schema:='db_log';    err_table:='medicationadministration';
     data_count_update:=0;
 
@@ -737,7 +751,8 @@ BEGIN
             err_section:='medicationadministration-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -752,12 +767,13 @@ BEGIN
         ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationadministration
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End medicationadministration
-    -----------------------------------------------------------------------------------------------------------------
+    -- END medicationadministration  --------  medicationadministration  --------  medicationadministration  --------  medicationadministration
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.medicationstatement_raw to db_log.medicationstatement
 
-    -- Start medicationstatement
+    -- Start medicationstatement    ----   medicationstatement    ----    medicationstatement
     err_section:='medicationstatement-01';    err_schema:='db_log';    err_table:='medicationstatement';
     data_count_update:=0;
 
@@ -812,7 +828,8 @@ BEGIN
             err_section:='medicationstatement-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -827,12 +844,13 @@ BEGIN
         ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.medicationstatement
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End medicationstatement
-    -----------------------------------------------------------------------------------------------------------------
+    -- END medicationstatement  --------  medicationstatement  --------  medicationstatement  --------  medicationstatement
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.observation_raw to db_log.observation
 
-    -- Start observation
+    -- Start observation    ----   observation    ----    observation
     err_section:='observation-01';    err_schema:='db_log';    err_table:='observation';
     data_count_update:=0;
 
@@ -887,7 +905,8 @@ BEGIN
             err_section:='observation-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -902,12 +921,13 @@ BEGIN
         ( SELECT observation_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'observation' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.observation
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End observation
-    -----------------------------------------------------------------------------------------------------------------
+    -- END observation  --------  observation  --------  observation  --------  observation
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.diagnosticreport_raw to db_log.diagnosticreport
 
-    -- Start diagnosticreport
+    -- Start diagnosticreport    ----   diagnosticreport    ----    diagnosticreport
     err_section:='diagnosticreport-01';    err_schema:='db_log';    err_table:='diagnosticreport';
     data_count_update:=0;
 
@@ -962,7 +982,8 @@ BEGIN
             err_section:='diagnosticreport-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -977,12 +998,13 @@ BEGIN
         ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.diagnosticreport
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End diagnosticreport
-    -----------------------------------------------------------------------------------------------------------------
+    -- END diagnosticreport  --------  diagnosticreport  --------  diagnosticreport  --------  diagnosticreport
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.servicerequest_raw to db_log.servicerequest
 
-    -- Start servicerequest
+    -- Start servicerequest    ----   servicerequest    ----    servicerequest
     err_section:='servicerequest-01';    err_schema:='db_log';    err_table:='servicerequest';
     data_count_update:=0;
 
@@ -1037,7 +1059,8 @@ BEGIN
             err_section:='servicerequest-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -1052,12 +1075,13 @@ BEGIN
         ( SELECT servicerequest_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'servicerequest' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.servicerequest
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End servicerequest
-    -----------------------------------------------------------------------------------------------------------------
+    -- END servicerequest  --------  servicerequest  --------  servicerequest  --------  servicerequest
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.procedure_raw to db_log.procedure
 
-    -- Start procedure
+    -- Start procedure    ----   procedure    ----    procedure
     err_section:='procedure-01';    err_schema:='db_log';    err_table:='procedure';
     data_count_update:=0;
 
@@ -1112,7 +1136,8 @@ BEGIN
             err_section:='procedure-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -1127,12 +1152,13 @@ BEGIN
         ( SELECT procedure_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'procedure' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.procedure
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End procedure
-    -----------------------------------------------------------------------------------------------------------------
+    -- END procedure  --------  procedure  --------  procedure  --------  procedure
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.consent_raw to db_log.consent
 
-    -- Start consent
+    -- Start consent    ----   consent    ----    consent
     err_section:='consent-01';    err_schema:='db_log';    err_table:='consent';
     data_count_update:=0;
 
@@ -1187,7 +1213,8 @@ BEGIN
             err_section:='consent-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -1202,12 +1229,13 @@ BEGIN
         ( SELECT consent_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'consent' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.consent
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End consent
-    -----------------------------------------------------------------------------------------------------------------
+    -- END consent  --------  consent  --------  consent  --------  consent
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.location_raw to db_log.location
 
-    -- Start location
+    -- Start location    ----   location    ----    location
     err_section:='location-01';    err_schema:='db_log';    err_table:='location';
     data_count_update:=0;
 
@@ -1262,7 +1290,8 @@ BEGIN
             err_section:='location-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -1277,12 +1306,13 @@ BEGIN
         ( SELECT location_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'location' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.location
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End location
-    -----------------------------------------------------------------------------------------------------------------
+    -- END location  --------  location  --------  location  --------  location
+    -----------------------------------------------------------------------------------------------------------------------
+
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  db_log.pids_per_ward_raw to db_log.pids_per_ward
 
-    -- Start pids_per_ward
+    -- Start pids_per_ward    ----   pids_per_ward    ----    pids_per_ward
     err_section:='pids_per_ward-01';    err_schema:='db_log';    err_table:='pids_per_ward';
     data_count_update:=0;
 
@@ -1337,7 +1367,8 @@ BEGIN
             err_section:='pids_per_ward-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -1352,14 +1383,11 @@ BEGIN
         ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr, 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM db_log.pids_per_ward
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End pids_per_ward
-    -----------------------------------------------------------------------------------------------------------------
+    -- END pids_per_ward  --------  pids_per_ward  --------  pids_per_ward  --------  pids_per_ward
+    -----------------------------------------------------------------------------------------------------------------------
 
-    END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
-    -- Collect and save counts for the function
-    IF data_count_pro_all>0 THEN
-        -- calculation of the time period
+  
+        -- Collect and save counts for the function
         err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
         SELECT res FROM pg_background_result(pg_background_launch(
         'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
@@ -1375,19 +1403,22 @@ BEGIN
         -- Cleer current executed function and total number of records
         err_section:='BOTTOM-15';    err_schema:='db_log';    err_table:='db_process_control';
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value='''' WHERE pc_name=''current_executed_function'''
+        'UPDATE db_config.db_process_control set pc_value='''', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_executed_function'''
         ))  AS t(res TEXT) INTO erg;
 
         err_section:='BOTTOM-20';    err_schema:='db_log';    err_table:='db_process_control';
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value='''' WHERE pc_name=''current_total_number_of_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value='''', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''current_total_number_of_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
         err_section:='BOTTOM-25';    err_schema:='db_log';    err_table:='db_process_control';
         SELECT res FROM pg_background_result(pg_background_launch(
-        'UPDATE db_config.db_process_control set pc_value=''0'' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+        'UPDATE db_config.db_process_control set pc_value=''0'', last_change_timestamp=CURRENT_TIMESTAMP
+        WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
-    END IF;
+    END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
 
     err_section:='BOTTOM-30';    err_schema:='/';    err_table:='/';
     RETURN 'Done db.take_over_last_check_date - new_last_pro_nr:'||new_last_pro_nr;

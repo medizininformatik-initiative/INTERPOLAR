@@ -1,7 +1,7 @@
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  <%OWNER_SCHEMA%>.<%TABLE_NAME%> to <%SCHEMA_2%>.<%TABLE_NAME_2%>
 
-    -- Start <%TABLE_NAME_2%>
+    -- Start <%TABLE_NAME_2%>    ----   <%TABLE_NAME_2%>    ----    <%TABLE_NAME_2%>
     err_section:='<%TABLE_NAME_2%>-01';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
     data_count_update:=0;
 
@@ -56,7 +56,8 @@
             err_section:='<%TABLE_NAME_2%>-25';    err_schema:='db_config';    err_table:='db_process_control';
             IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
                 SELECT res FROM pg_background_result(pg_background_launch(
-                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''' WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
                 ))  AS t(res TEXT) INTO erg;
                 data_count_last_status_set:=0;
             END IF;
@@ -71,5 +72,6 @@
         ( SELECT <%TABLE_NAME_2%>_id AS table_primary_key, last_processing_nr, '<%SCHEMA_2%>' AS schema_name, '<%TABLE_NAME_2%>' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End <%TABLE_NAME_2%>
-    -----------------------------------------------------------------------------------------------------------------
+    -- END <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>
+    -----------------------------------------------------------------------------------------------------------------------
+
