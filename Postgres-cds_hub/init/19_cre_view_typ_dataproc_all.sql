@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file last update : 2024-12-12 08:47:47
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2024-12-10 01:21:48
+-- Create time: 2024-12-13 10:21:41
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  19_cre_view_typ_dataproc_all.sql
 -- TEMPLATE:  template_cre_view2.sql
