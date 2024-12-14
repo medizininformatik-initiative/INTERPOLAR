@@ -2,42 +2,19 @@
 #' Starts the retrieval for this project. This is the main start function start the ETL job
 #' from FHIR to Database
 #'
-#' @param debug_path2config_toml Debug parameter for loading an optional debug config.toml file
+#' @param debug_path_to_config_toml Debug parameter for loading an optional debug config.toml file
 #'
 #' @export
-retrieve <- function(debug_path2config_toml = NA) {
-  ###
-  # Read the module configuration toml file.
-  ###
-  path2config_toml <- "./R-cds2db/cds2db_config.toml"
-  config <- etlutils::initConstants(path2config_toml)
+retrieve <- function(debug_path_to_config_toml = NA) {
 
   ###
-  # Add global DB log variable
+  # Init module constants
   ###
-  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
-    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
-  }
-
-  ###
-  # Read the optional given debug config.toml file.
-  ###
-  if (!is.na(debug_path2config_toml)) {
-    debug_config <- etlutils::initConstants(debug_path2config_toml)
-    for (i in seq_along(debug_config)) {
-      config[[names(debug_config)[i]]] <- debug_config[[i]]
-    }
-  }
-
-  ###
-  # Read the DB configuration toml file
-  ###
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
-
-  ###
-  # Set the project name to 'cds2db'
-  PROJECT_NAME <<- "cds2db"
-  ###
+  config <- etlutils::initModuleConstants(
+    module_name = "cds2db",
+    path_to_toml = "./R-cds2db/cds2db_config.toml",
+    debug_path_to_config_toml = debug_path_to_config_toml
+  )
 
   etlutils::createDIRS(PROJECT_NAME)
 
@@ -56,9 +33,9 @@ retrieve <- function(debug_path2config_toml = NA) {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
-    # Reset lock from unfinished previous cds2db run
-    etlutils::runLevel2("Reset lock from unfinished previous cds2db run", {
-      resetRemainingDatabaseLock()
+    # Reset database lock from unfinished previous cds2db run
+    etlutils::runLevel2("Reset database lock from unfinished previous run", {
+      etlutils::dbResetLock()
     })
 
     # Extract Patient IDs
@@ -92,10 +69,10 @@ retrieve <- function(debug_path2config_toml = NA) {
       if (!all_empty_fhir) {
         # Write raw tables to database
         etlutils::runLevel2("Write RAW tables to database", {
-          writeTablesToDatabase(
+          etlutils::dbWriteTables(
             tables = resource_tables,
-            stop_if_table_not_empty = TRUE,
-            lock_id = createLockID("Write RAW tables to database"))
+            lock_id = "Write RAW tables to database",
+            stop_if_table_not_empty = TRUE)
         })
       }
 
@@ -114,9 +91,9 @@ retrieve <- function(debug_path2config_toml = NA) {
         all_table_names_raw_diff <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
         all_table_names_raw_diff <- paste0("v_", all_table_names_raw_diff, "_diff")
 
-        resource_tables_raw_diff <- readTablesFromDatabase(
+        resource_tables_raw_diff <- etlutils::dbReadTables(
           table_names = all_table_names_raw_diff,
-          lock_id = createLockID("Load untyped RAW tables from database"))
+          lock_id = "Load untyped RAW tables from database")
 
         all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
         if (all_empty_raw) {
@@ -133,10 +110,10 @@ retrieve <- function(debug_path2config_toml = NA) {
         })
 
         etlutils::runLevel2("Write typed tables to database", {
-          writeTablesToDatabase(
+          etlutils::dbWriteTables(
             tables = resource_tables,
-            stop_if_table_not_empty = TRUE,
-            lock_id = createLockID("Write typed tables to database"))
+            lock_id = "Write typed tables to database",
+            stop_if_table_not_empty = TRUE)
         })
 
       }
@@ -146,7 +123,7 @@ retrieve <- function(debug_path2config_toml = NA) {
 
   try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
     etlutils::runLevel2("Close database connections", {
-      closeAllDatabaseConnections()
+      etlutils::dbCloseAllConnections()
     })
   }))
 
