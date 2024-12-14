@@ -421,6 +421,24 @@ createFrontendTables <- function() {
 
     encounters <- dbReadQuery(query, "createEncounterFrontendTable()[1]")
 
+    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")) {
+      #TODO AXS prüfen ob dieser Code durch die Funktion convertFilterPatterns aus cds2db ersetzt werden kann
+      encounter_filter_patterns <- etlutils::getVarByNameOrDefaultIfMissing("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")
+      filter_patterns <- list()
+      for (filter_pattern in encounter_filter_patterns) {
+        and_conditions <- list()
+        filter_pattern_conditions <- unlist(strsplit(filter_pattern, "\\+"))
+        for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
+          condition_key_value <- unlist(strsplit(condition, "="))
+          condition_column <- trimws(condition_key_value[1])
+          condition_value <- etlutils::getBetweenQuotes(condition_key_value[2])
+          and_conditions[[condition_column]] <- condition_value
+        }
+        filter_patterns[[paste0("Condition_", length(filter_patterns) + 1)]] <- and_conditions
+      }
+      encounters <- etlutils::filterResources(encounters, filter_patterns)
+    }
+
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
     query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
@@ -472,7 +490,7 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        enc_id <- pid_encounters[[i]]$enc_id[1]
+        enc_id <- pid_encounters[[i]]$enc_identifier_value[1]
         enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
         enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
         enc_status <- pid_encounters[[i]]$enc_status[1]

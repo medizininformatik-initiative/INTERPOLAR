@@ -77,69 +77,6 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
   )
 }
 
-#' Filters the given resources table by the given filter patterns.
-#'
-#' This function filters a resources table based on the provided filter patterns.
-#'
-#' @param resources A data.table representing the resources table to be filtered.
-#' @param filter_patterns A list of filter conditions. Each condition is a character string containing multiple
-#' subconditions separated by '+'.
-#'
-#' @return A filtered data.table based on the given filter patterns.
-#'
-#' @details
-#' This function applies an OR operation across the filter patterns, meaning that a row will be retained if at
-#' least one condition is fulfilled.
-#' However, within each individual condition (subconditions separated by '+'), an AND operation is applied,
-#' requiring all subconditions to be met for the condition to be satisfied.
-#'
-filterResources <- function(resources, filter_patterns) {
-
-  # nothing todo
-  if (!length(filter_patterns)) {
-    return(resources)
-  }
-
-  # Temporarily stores which columns should be kept (initialized with FALSE, meaning all columns should be removed)
-  resources[, Filter_Column_Keep := FALSE]
-
-  # Check if a row fulfills a given condition
-  #
-  # This function checks if a row meets a given condition based on grep patterns for each column.
-  #
-  # @param row A row (list or data.frame) to be checked against the condition.
-  # @param condition A list where each element is a grep pattern, and the name corresponds to the column in the row.
-  # @return TRUE if the row fulfills the condition, FALSE otherwise.
-  #
-  fulfills_condition <- function(row, condition) {
-    subConditionColumns <- names(condition)
-    for (i in 1:length(condition)) { # i <- 1
-      subConditionColumn <- subConditionColumns[[i]]
-      subCondition <- condition[[i]]
-      if (!grepl(subCondition, row[[subConditionColumn]], ignore.case = TRUE, perl = TRUE)) {
-        return(FALSE)
-      }
-    }
-    return(TRUE)
-  }
-
-  # filterPatterns can have a list of conditions in this style:
-  # "type/coding/code = 'Abteilungskontakt' + serviceType/coding/code = '0100|0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
-  # Such a condition means that 3 subconditions must be fulfilled (separated by '+').
-  for (condition in filter_patterns) { # condition <- filter_patterns[[1]]
-    resources[, Filter_Column_Keep_Subcondition := FALSE]
-    for (i in seq_len(nrow(resources))) {
-      resources[i, Filter_Column_Keep := resources[i, Filter_Column_Keep] || fulfills_condition(resources[i], condition)]
-    }
-  }
-
-  resources[, Filter_Column_Keep_Subcondition := NULL]
-  filtered_resources <- resources[Filter_Column_Keep == TRUE]
-  filtered_resources[, Filter_Column_Keep := NULL]
-  resources[, Filter_Column_Keep := NULL]
-  return(filtered_resources)
-}
-
 #' Parse and interpolate patient IDs from a file.
 #'
 #' This function reads patient IDs from a file specified by the provided path.
@@ -200,7 +137,7 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
   pids_per_ward <- list()
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
-    ward_encounters <- filterResources(encounters, ward_filter_patterns)
+    ward_encounters <- etlutils::filterResources(encounters, ward_filter_patterns)
     writeRData(ward_encounters, "pid_source_encounter_filtered")
     pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
     names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
@@ -352,8 +289,8 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
     etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
       filter_patterns <- convertFilterPatterns()
       # the subject reference is needed in every case to extract them if the encounter matches the pattern
-      # the period end is needed to check if the Encounter is still finsihed
-      # maybe some other columns (state or something like this) could be importent, so we had to add them here in future
+      # the period end is needed to check if the Encounter is still finished
+      # maybe some other columns (state or something like this) could be important, so we had to add them here in future
       filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, "id", "subject/reference", "period/start", "period/end", "status")
       # Get current or debug datetime
       current_datetime <- getQueryDatetime()

@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
+-- Rights definition file last update : 2024-12-12 08:47:47
 -- Rights definition file size        : 15179 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-10 01:20:55
+-- Create time: 2024-12-13 10:21:26
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -92,12 +92,12 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   enc_location_identifier_type_display VARCHAR,   -- location/location/identifier/type/coding/display (VARCHAR)
   enc_location_identifier_type_text VARCHAR,   -- location/location/identifier/type/text (VARCHAR)
   enc_location_display VARCHAR,   -- location/location/display (VARCHAR)
-  enc_location_status VARCHAR,   -- location/location/status (VARCHAR)
-  enc_location_physicaltype_system VARCHAR,   -- location/location/physicalType/coding/system (VARCHAR)
-  enc_location_physicaltype_version VARCHAR,   -- location/location/physicalType/coding/version (VARCHAR)
-  enc_location_physicaltype_code VARCHAR,   -- location/location/physicalType/coding/code (VARCHAR)
-  enc_location_physicaltype_display VARCHAR,   -- location/location/physicalType/coding/display (VARCHAR)
-  enc_location_physicaltype_text VARCHAR,   -- location/location/physicalType/text (VARCHAR)
+  enc_location_status VARCHAR,   -- location/status (VARCHAR)
+  enc_location_physicaltype_system VARCHAR,   -- location/physicalType/coding/system (VARCHAR)
+  enc_location_physicaltype_version VARCHAR,   -- location/physicalType/coding/version (VARCHAR)
+  enc_location_physicaltype_code VARCHAR,   -- location/physicalType/coding/code (VARCHAR)
+  enc_location_physicaltype_display VARCHAR,   -- location/physicalType/coding/display (VARCHAR)
+  enc_location_physicaltype_text VARCHAR,   -- location/physicalType/text (VARCHAR)
   enc_serviceprovider_ref VARCHAR,   -- serviceProvider/reference (VARCHAR)
   enc_serviceprovider_type VARCHAR,   -- serviceProvider/type (VARCHAR)
   enc_serviceprovider_identifier_use VARCHAR,   -- serviceProvider/identifier/use (VARCHAR)
@@ -1519,12 +1519,12 @@ COMMENT ON COLUMN db_log.encounter_raw.enc_location_identifier_type_code IS 'loc
 COMMENT ON COLUMN db_log.encounter_raw.enc_location_identifier_type_display IS 'location/location/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_location_identifier_type_text IS 'location/location/identifier/type/text (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_location_display IS 'location/location/display (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_location_status IS 'location/location/status (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_system IS 'location/location/physicalType/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_version IS 'location/location/physicalType/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_code IS 'location/location/physicalType/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_display IS 'location/location/physicalType/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_text IS 'location/location/physicalType/text (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_location_status IS 'location/status (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_system IS 'location/physicalType/coding/system (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_version IS 'location/physicalType/coding/version (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_code IS 'location/physicalType/coding/code (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_display IS 'location/physicalType/coding/display (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_location_physicaltype_text IS 'location/physicalType/text (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_serviceprovider_ref IS 'serviceProvider/reference (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_serviceprovider_type IS 'serviceProvider/type (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_serviceprovider_identifier_use IS 'serviceProvider/identifier/use (varchar)';
