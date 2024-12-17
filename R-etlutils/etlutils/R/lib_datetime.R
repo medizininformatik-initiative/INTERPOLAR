@@ -84,9 +84,9 @@ normalizeAllPOSIXctToUTC <- function(dt) {
 convertTimeFormat <- function(dt, columns) {
   for (column in columns) {
     # Convert string in POSIXct object
-    dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "UTC"), .SDcols = column]
+    dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "Europe/Berlin"), .SDcols = column]
     # Set date to '1970-01-01'
-    dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "UTC")]
+    dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "Europe/Berlin")]
   }
 }
 
