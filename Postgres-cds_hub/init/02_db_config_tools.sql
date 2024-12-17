@@ -2,9 +2,9 @@
 ----------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_cron_jobs AS
 SELECT command, count(1) anzahl
-,  (SELECT to_char(max(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHEREs.command=m.command AND s.status='succeeded') last_succeeded_run
-,  (SELECT to_char(min(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHEREs.command=m.command AND s.status='succeeded') first_succeeded_run
-,  (SELECT to_char(max(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHEREs.command=m.command AND s.status!='succeeded') last_faild_run
+,  (SELECT to_char(max(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHERE command=m.command AND s.status='succeeded') last_succeeded_run
+,  (SELECT to_char(min(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHERE command=m.command AND s.status='succeeded') first_succeeded_run
+,  (SELECT to_char(max(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHERE command=m.command AND s.status!='succeeded') last_faild_run
 FROM cron.job_run_details m group by command ORDER BY 3 desc;
 
 GRANT SELECT ON db_config.v_cron_jobs TO db_user;
