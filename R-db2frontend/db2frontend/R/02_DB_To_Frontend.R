@@ -12,7 +12,7 @@ getDBTableAndColumnNames <- function() {
                   "fall_station", "fall_aufn_dat", "fall_aufn_diag", "fall_gewicht_aktuell",
                   "fall_gewicht_aktl_einheit", "fall_groesse", "fall_groesse_einheit",
                   "fall_status", "fall_ent_dat", "fall_complete")
-      )
+  )
 }
 
 #' Copy Database Content to Frontend
@@ -32,47 +32,31 @@ getDBTableAndColumnNames <- function() {
 #'
 importDB2Redcap <- function() {
 
-    # Establish connection to the database
-    db_connection <- etlutils::dbConnect(dbname = DB_GENERAL_NAME,
-                                         host = DB_GENERAL_HOST,
-                                         port = DB_GENERAL_PORT,
-                                         user = DB_DB2FRONTEND_USER,
-                                         password = DB_DB2FRONTEND_PASSWORD,
-                                         schema = DB_DB2FRONTEND_SCHEMA_OUT)
+  # Connect to REDCap
+  frontend_connection <- getRedcapConnection()
 
-    # Connect to REDCap
-    frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+  # Get table and column names
+  db_table_and_columns <- getDBTableAndColumnNames()
 
-    # Get table and column names
-    db_table_and_columns <- getDBTableAndColumnNames()
+  # Iterate over tables and columns to fetch and send data
+  for (table_name in names(db_table_and_columns)) {
+    columns <- db_table_and_columns[[table_name]]
 
-    # Iterate over tables and columns to fetch and send data
-    for (table_name in names(db_table_and_columns)) {
-      columns <- db_table_and_columns[[table_name]]
+    # Create SQL query dynamically based on columns
+    query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
 
-      # Create SQL query dynamically based on columns
-      query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
+    # Fetch data from the database
+    data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
 
-      # Fetch data from the database
-      data_from_db <- etlutils::dbGetQuery(
-        db_connection = db_connection,
-        query = query,
-        log = VERBOSE >= VL_90_FHIR_RESPONSE,
-        lock_id = "db2frontend.importDB2Redcap()",
-        readonly = TRUE)
+    # Import data to REDCap
+    tryCatch({
+      redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
+    }, error = function(e) {
+      message("This error may have occurred because the user preferences in the Redcap project ",
+              "have been changed. Use the default values if possible.")
+      stop(e$message)
+    })
 
-      # Import data to REDCap
-      tryCatch({
-        redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
-      }, error = function(e) {
-        message("This error may have occurred because the user preferences in the Redcap project
-                have been changed. Use the default values if possible.")
-        stop(e$message)
-      })
-
-    }
-
-    # Disconnect from the database
-    etlutils::dbDisconnect(db_connection)
+  }
 
 }

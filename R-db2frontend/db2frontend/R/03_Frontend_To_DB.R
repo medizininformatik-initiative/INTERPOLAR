@@ -1,0 +1,51 @@
+#' Retrieve Frontend Table Names
+#'
+#' This function returns a vector of predefined frontend table names used in the REDCap export
+#' process.
+#'
+getFrontendTableNames <- function() {
+  # TODO: Read this information from frontend_table_desciptin.xlsx
+  c("patient", "fall", "medikationsanalyse", "mrpdokumentation_validierung")
+}
+
+#' Copy REDCap Content to Database
+#'
+#' This function retrieves data from an existing REDCap project and imports this data into
+#' the table in a database (defined in the schema `_in`).
+#' It establishes a connection to the REDCap project using API credentials and fetches relevant
+#' patient, case, medication analysis and MRP data,
+#' then connects a PostgreSQL database  to  import the data into it.
+#'
+#' Note: Database and REDCap connection details (e.g., credentials, table names) are
+#' required to be predefined or passed as arguments (not included in this example for
+#' security reasons).
+#'
+#' @return Invisible. The function is called for its side effects: exporting data
+#' out of REDCap and does not return a value.
+#'
+importRedcap2DB <- function() {
+
+    # Connect to REDCap
+    frontend_connection <- getRedcapConnection()
+
+    form_names <- getFrontendTableNames()
+
+    tables2Export <- list()
+
+    # Get data from REDCap
+    for (form_name in form_names) {
+      dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
+      redcapAPI::reviewInvalidRecords(dt)
+      data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
+      tables2Export[[form_name]] <- dt
+    }
+
+    # Write tables to database
+    tables <- list()
+    for (i in seq_along(tables2Export)) {
+      table_name <- paste0(names(tables2Export)[i], "_fe")
+      tables2Export[[i]] <- etlutils::dbConvertToDBTypes(tables2Export[[i]], table_name)
+      tables[[table_name]] <- tables2Export[[i]]
+    }
+    etlutils::dbWriteTables(tables, lock_id = "importRedcap2DB()")
+}

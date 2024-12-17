@@ -2,23 +2,19 @@
 #' Starts the retrieval for this project. This is the main start function start the ETL job
 #' from Database to Frontend and back.
 #'
+#' @param debug_path_to_config_toml Debug parameter for loading an optional debug config.toml file
+#'
 #' @export
-retrieve <- function() {
-  ###
-  # Read the module configuration toml file.
-  ###
-  path2config_toml <- "./R-db2frontend/db2frontend_config.toml"
-  config <- etlutils::initConstants(path2config_toml)
+retrieve <- function(debug_path_to_config_toml = NA) {
 
   ###
-  # Read the DB configuration toml file
+  # Init module constants
   ###
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
-
-  ###
-  # Set the project name to 'db2frontend'
-  PROJECT_NAME <<- "db2frontend"
-  ###
+  config <- etlutils::initModuleConstants(
+    module_name = "db2frontend",
+    path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+    debug_path_to_config_toml = debug_path_to_config_toml
+  )
 
   etlutils::createDIRS(PROJECT_NAME)
 
@@ -37,6 +33,11 @@ retrieve <- function() {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
+    # Reset database lock from unfinished previous db2frontend run
+    etlutils::runLevel2("Reset database lock from unfinished previous run", {
+      etlutils::dbResetLock()
+    })
+
     # Import Data from Database to Frontend
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
       importDB2Redcap()
@@ -47,6 +48,12 @@ retrieve <- function() {
       importRedcap2DB()
     })
 
+  }))
+
+  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
+    etlutils::runLevel2("Close database connections", {
+      etlutils::dbCloseAllConnections()
+    })
   }))
 
   if (etlutils::isErrorOccured()) {
