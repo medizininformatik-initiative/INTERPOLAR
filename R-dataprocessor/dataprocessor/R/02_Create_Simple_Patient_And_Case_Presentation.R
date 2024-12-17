@@ -473,12 +473,13 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        enc_id <- pid_encounters[[i]]$enc_identifier_value[1]
+        enc_id <- pid_encounters[[i]]$enc_id[1]
+        enc_identifier_value <- pid_encounters[[i]]$enc_identifier_value[1]
         enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
         enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
         enc_status <- pid_encounters[[i]]$enc_status[1]
         data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
-        data.table::set(enc_frontend_table, target_index, "fall_id", enc_id)
+        data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
