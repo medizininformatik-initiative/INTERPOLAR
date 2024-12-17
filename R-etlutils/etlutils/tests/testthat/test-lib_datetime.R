@@ -100,10 +100,10 @@ test_that("convertTimeFormat converts polar time representations to POSIXct", {
   # Call the function
   suppressMessages(convertTimeFormat(dt, "time_column"))
   # Check specific time values
-  expect_equal(dt$time_column[1], as.POSIXct("1970-01-01 12:30:45", tz = "UTC"))
-  expect_equal(dt$time_column[2], as.POSIXct("1970-01-01 08:15:00", tz = "UTC"))
-  expect_equal(dt$time_column[3], as.POSIXct("1970-01-01 23:59:59", tz = "UTC"))
-  expect_equal(dt$time_column[4], as.POSIXct("1970-01-01 13:45:22", tz = "UTC"))
+  expect_equal(dt$time_column[1], as.POSIXct("1970-01-01 12:30:45", tz = "Europe/Berlin"))
+  expect_equal(dt$time_column[2], as.POSIXct("1970-01-01 08:15:00", tz = "Europe/Berlin"))
+  expect_equal(dt$time_column[3], as.POSIXct("1970-01-01 23:59:59", tz = "Europe/Berlin"))
+  expect_equal(dt$time_column[4], as.POSIXct("1970-01-01 13:45:22", tz = "Europe/Berlin"))
   expect_true(is.na(dt$time_column[5]))  # Check NA value
   expect_true(is.na(dt$time_column[6]))  # Check NA value
 })
