@@ -16,7 +16,6 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
     schema_in = constants[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
     schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
     log = log)
-
 }
 
 #' Set the Database Connection Context
@@ -390,7 +389,7 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
       stop("Could not unlock the database for lock_id:\n",
            full_lock_id, "\n",
            "The current status is: " , status, "\n",
-           dbGetInfo(db_connection))
+           dbGetInfo(readonly))
     }
   }
   return(unlock_successful)
@@ -473,7 +472,7 @@ dbListTableNames <- function(db_connection) {
   # Display the table names
   dbLog("The following tables are found in database: ", paste(db_table_names, collapse = ", "))
   if (length(db_table_names) == 0) {
-    warning("There are no tables found in database for connection\n", dbGetInfo(db_connection))
+    warning("There are no tables found in database for connection\n", dbGetInfoInternal(db_connection))
   }
   return(db_table_names)
 }
@@ -694,6 +693,25 @@ dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
   # Unlock the database
   dbUnlock(lock_id, readonly)
   return(table)
+}
+
+#' Execute a Read-Only SQL Query on a PostgreSQL Database
+#'
+#' This function executes a read-only SQL query on a PostgreSQL database.
+#' It is a wrapper around `dbGetQuery`, ensuring that the query is always
+#' executed in read-only mode.
+#'
+#' @param query A character string representing the SQL query to be executed.
+#' @param params A named list of query parameters to prevent SQL injection.
+#'        These parameters are passed to `DBI::dbGetQuery()`. Default is `NULL`.
+#' @param lock_id A character string specifying the lock ID used during the
+#'        database operation. Default is `NULL`.
+#'
+#' @return A `data.table` containing the results of the query.
+#'
+#' @export
+dbGetReadOnlyQuery <- function(query, params = NULL, lock_id = NULL) {
+  dbGetQuery(query, params = params, lock_id = lock_id, readonly = TRUE)
 }
 
 #' Read a Table from a PostgreSQL Database
@@ -1083,7 +1101,7 @@ dbConvertToDBTypes <- function(dt, table_name) {
 #'   such as IP address, port, and version.
 #' - Formats the retrieved details into a human-readable log message.
 #'
-dbGetInfo <- function(db_connection = dbGetReadConnection()) {
+dbGetInfoInternal <- function(db_connection = dbGetReadConnection()) {
   # Retrieve standard connection information
   info <- DBI::dbGetInfo(db_connection)
 
@@ -1127,4 +1145,29 @@ dbGetInfo <- function(db_connection = dbGetReadConnection()) {
 
   # Return the log message
   return(log_message)
+}
+
+#' Retrieve Detailed Database Connection Information
+#'
+#' This function retrieves and formats metadata about a PostgreSQL database connection.
+#' It includes standard connection details such as the database name, user, host, and port.
+#' For PostgreSQL-specific connections, additional details like IP address and server version
+#' are fetched using SQL queries.
+#'
+#' @param readonly Logical. If `TRUE`, a read-only connection is used. If `FALSE`,
+#'        a write-enabled connection is established. Default is `TRUE`.
+#'
+#' @return A character string containing formatted connection details, including driver information,
+#'         host, port, database name, user, and additional PostgreSQL-specific details if available.
+#'
+#' @details
+#' - Retrieves standard connection metadata using `DBI::dbGetInfo`.
+#' - For PostgreSQL connections, executes additional SQL queries to fetch server-specific details,
+#'   such as IP address, port, and server version.
+#' - Formats the retrieved details into a human-readable log message.
+#'
+#' @export
+dbGetInfo <- function(readonly = TRUE) {
+  db_connection <- dbGetConnection(readonly)
+  return(dbGetInfoInternal(db_connection))
 }

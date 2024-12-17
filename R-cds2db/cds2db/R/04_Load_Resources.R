@@ -106,7 +106,7 @@ getActiveEncounterPIDsFromDB <- function() {
   )
 
   # Run the SQL query and return patient IDs
-  patient_ids_active <- etlutils::dbGetQuery(query, lock_id = "getActiveEncounterPIDsFromDB()", readonly = TRUE)
+  patient_ids_active <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getActiveEncounterPIDsFromDB()")
 
   return(patient_ids_active$enc_patient_id)
 }
@@ -252,7 +252,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     # Create the corrct format for the Postgres Parameter Array
     params <- list(paste0("{", paste(patient_ids, collapse = ","), "}"))
     # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
-    result <- etlutils::dbGetQuery(query, params = params, lock_id = "getLastPatientUpdateDate()[1]", readonly = TRUE)
+    result <- etlutils::dbGetReadOnlyQuery(query, params = params, lock_id = "getLastPatientUpdateDate()[1]")
 
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- as.Date(rep(NA, length(patient_ids)))

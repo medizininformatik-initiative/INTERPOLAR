@@ -20,7 +20,6 @@ readTomlAsNamedList <- function(path_to_toml) {
   return(flatten_config)
 }
 
-
 #' Initialize Constants from a TOML File
 #'
 #' This function reads configuration values from a TOML file and assigns them
