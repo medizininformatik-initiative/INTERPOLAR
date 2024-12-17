@@ -2,9 +2,9 @@
 # General database settings for all users/schemes #
 ###################################################
 
-DB_GENERAL_HOST = "cds_hub"
-DB_GENERAL_PORT = 5432
-DB_GENERAL_NAME = "cds_hub_db"
+DB_HOST = "cds_hub"
+DB_PORT = 5432
+DB_NAME = "cds_hub_db"
 
 ##########################
 # CDS2DB module settings #

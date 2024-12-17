@@ -12,7 +12,7 @@ getDBTableAndColumnNames <- function() {
                   "fall_station", "fall_aufn_dat", "fall_aufn_diag", "fall_gewicht_aktuell",
                   "fall_gewicht_aktl_einheit", "fall_groesse", "fall_groesse_einheit",
                   "fall_status", "fall_ent_dat", "fall_complete")
-      )
+  )
 }
 
 #' Copy Database Content to Frontend
@@ -32,30 +32,31 @@ getDBTableAndColumnNames <- function() {
 #'
 importDB2Redcap <- function() {
 
-    # Connect to REDCap
-    frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+  # Connect to REDCap
+  frontend_connection <- getRedcapConnection()
 
-    # Get table and column names
-    db_table_and_columns <- getDBTableAndColumnNames()
+  # Get table and column names
+  db_table_and_columns <- getDBTableAndColumnNames()
 
-    # Iterate over tables and columns to fetch and send data
-    for (table_name in names(db_table_and_columns)) {
-      columns <- db_table_and_columns[[table_name]]
+  # Iterate over tables and columns to fetch and send data
+  for (table_name in names(db_table_and_columns)) {
+    columns <- db_table_and_columns[[table_name]]
 
-      # Create SQL query dynamically based on columns
-      query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
+    # Create SQL query dynamically based on columns
+    query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
 
-      # Fetch data from the database
-      data_from_db <- dbReadQuery(query, "importDB2Redcap()")
-      # Import data to REDCap
-      tryCatch({
-        redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
-      }, error = function(e) {
-        message("This error may have occurred because the user preferences in the Redcap project
-                have been changed. Use the default values if possible.")
-        stop(e$message)
-      })
+    # Fetch data from the database
+    data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
 
-    }
+    # Import data to REDCap
+    tryCatch({
+      redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
+    }, error = function(e) {
+      message("This error may have occurred because the user preferences in the Redcap project ",
+              "have been changed. Use the default values if possible.")
+      stop(e$message)
+    })
+
+  }
 
 }
