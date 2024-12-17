@@ -1051,6 +1051,7 @@ dbGetTableColumnTypes <- function(table_name, readonly = FALSE) {
 #'   strings, dates, and timestamps, to corresponding R types.
 #' - Columns not present in the table schema remain unchanged.
 #'
+#' @export
 dbConvertToDBTypes <- function(dt, table_name) {
   # Get the database connection and table schema
   db_columns <- dbGetTableColumnTypes(table_name)
