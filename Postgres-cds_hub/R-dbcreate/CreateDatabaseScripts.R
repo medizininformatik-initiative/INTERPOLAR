@@ -14,4 +14,4 @@ rm(list = ls())
 library(etlutils)
 library(dbcreate)
 
-#cds2db::initDatabaseScripts()
+dbcreate::initDatabaseScripts()
