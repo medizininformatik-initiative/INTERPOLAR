@@ -625,10 +625,20 @@ DECLARE
     num INT;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
-    SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||' ReportTime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
+    SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')
+    ||' ReportTime: '||to_char(CURRENT_TIMESTAMP,'HH24:MI:SS')
     INTO status
     FROM db_config.db_process_control
     WHERE pc_name = 'semaphor_cron_job_data_transfer';
+
+
+    IF status LIKE 'Ongo%' THEN
+        SELECT CASE WHEN LENGTH(pc_value)<1 THEN 'n.a.' ELSE pc_value END INTO temp FROM db_config.db_process_control WHERE pc_name='current_total_number_of_records_in_the_function';
+
+        IF temp!='n.a.' THEN
+            SELECT status||' ( '||(SELECT CASE WHEN LENGTH(pc_value)<1 THEN 'n.a.' ELSE pc_value END FROM db_config.db_process_control WHERE pc_name='currently_processed_number_of_data_records_in_the_function')||' / '||temp||' datasets )' INTO status;
+        END IF;
+    END IF;
 
     RETURN status;
 EXCEPTION

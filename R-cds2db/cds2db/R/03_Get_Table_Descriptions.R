@@ -8,18 +8,6 @@ BRACKETS <- c("[", "]")
 #' Brackets for the fhir table descriptions
 SEP      <- " ~ "
 
-#' Load Table Description Excel File
-#'
-#' This function loads a table description excel file
-#'
-#' @return A data table with table descriptions
-#'
-loadTableDescriptionFile <- function() {
-  table_description_file_path <- system.file("extdata", "Table_Description.xlsx", package = "cds2db")
-  table_description <- etlutils::readExcelFileAsTableList(table_description_file_path)[['table_description']]
-  return(table_description)
-}
-
 #' Get a table with the Table Descriptions for all fhir resources from Excel file
 #'
 #' This function reads the "Table_Description.xlsx" file from the "extdata" directory
@@ -31,7 +19,7 @@ loadTableDescriptionFile <- function() {
 #' @return A data table with the table descriptions.
 #'
 getTableDescriptionsTable <- function(columns = NA) {
-  table_description <- loadTableDescriptionFile()
+  table_description <- etlutils::loadTableDescriptionFile()
   # remove all rows with NA in column 'FHIR_EXPRESSION'
   table_description <- table_description[!is.na(FHIR_EXPRESSION), ]
   # fill RESOURCE NA column with the last valid (non NA) value above
