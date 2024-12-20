@@ -465,30 +465,61 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
       stop("There are no Observations to duplicate ", required_obs_count, " times!")
     }
 
+    #' Extend Observation Table
+    #'
+    #' This function ensures that a given observation table (`table_obs`) has exactly
+    #' `debug_resource_count` rows. If the table has fewer rows, it duplicates the rows
+    #' of the table to meet the required count. If the table has more rows, it truncates
+    #' it to the required size. Duplicated rows will have a modified `obs_id` to ensure
+    #' uniqueness by appending a `_DUP_` suffix with a unique number. Existing rows with
+    #' `_DUP_` in their `obs_id` are preserved and not further modified.
+    #'
+    #' @param table_obs A data.table containing observations with a column named `obs_id`.
+    #'                  The `obs_id` column is used as a unique identifier for each row.
+    #' @param debug_resource_count An integer specifying the required number of rows
+    #'                              in the output table.
+    #' @return A data.table with exactly `debug_resource_count` rows. Rows are either
+    #'         truncated or duplicated to meet the required count, and new rows are
+    #'         assigned unique `obs_id` values.
+    #'
     extendObservationTable <- function(table_obs, debug_resource_count) {
       # Calculate the number of rows needed
       original_rows <- nrow(table_obs)
       required_rows <- debug_resource_count
       if (original_rows == required_rows) {
-        return(table_obs)
+        return(table_obs) # Return as-is if the row count matches
       }
       if (original_rows > required_rows) {
-        return(table_obs[1:required_rows]) # truncate superflous rows
+        return(table_obs[1:required_rows]) # Truncate superfluous rows
       }
 
-      # Calculate the number of full duplications and the remaining rows
+      # Separate rows without and with `DUP` in their `obs_id`
+      is_dup <- grepl("_DUP_\\d+$", table_obs$obs_id)
+      original_table <- table_obs[!is_dup]  # Rows without DUP suffix
+      dup_table <- table_obs[is_dup]       # Rows with DUP suffix
+
+      # Determine the highest existing DUP number
+      max_dup_number <- ifelse(
+        nrow(dup_table) > 0,
+        max(as.integer(gsub(".*_DUP_(\\d+)$", "\\1", dup_table$obs_id)), na.rm = TRUE),
+        0
+      )
+
+      # Calculate full duplications and remaining rows needed
+      original_rows <- nrow(original_table)
       num_full_copies <- (required_rows - original_rows) %/% original_rows
       remainder <- (required_rows - original_rows) %% original_rows
 
-      # Duplicate the table as needed
-      duplicated_table <- table_obs[
-        rep(seq_len(original_rows), times = num_full_copies + 1)[1:(required_rows - original_rows)]
-      ]
+      # Duplicate rows from the original table to meet the required count
+      duplication_indices <- rep(seq_len(original_rows), times = num_full_copies + 1)[1:(required_rows - original_rows)]
+      duplicated_table <- original_table[duplication_indices]
 
-      # Create new obs_id values for duplicates
-      duplicated_table[, obs_id := paste0(obs_id, "_DUP_", seq_len(.N))]
+      # Generate new unique `obs_id` values for duplicated rows
+      duplicated_table[, obs_id := paste0(
+        obs_id, "_DUP_", seq_len(.N) + max_dup_number
+      )]
 
-      # Combine the original table with the duplicated rows
+      # Combine the original table, existing DUP rows, and newly duplicated rows
       extended_table <- rbind(table_obs, duplicated_table)
 
       return(extended_table)
