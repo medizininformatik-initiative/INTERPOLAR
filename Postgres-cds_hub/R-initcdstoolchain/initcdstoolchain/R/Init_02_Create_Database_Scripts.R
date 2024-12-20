@@ -484,12 +484,3 @@ createDatabaseScriptsFromTemplates <- function() {
   }
 
 }
-
-# INIT_DATABASE_SCRIPTS <<- TRUE
-if (exists("INIT_DATABASE_SCRIPTS") && INIT_DATABASE_SCRIPTS) {
-  while(!grepl("/interpolar$", getwd())) {
-    setwd("..")
-  }
-  source("./R-cds2db/cds2db/R/Init_00.R")
-  createDatabaseScriptsFromTemplates()
-}
