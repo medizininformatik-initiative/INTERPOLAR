@@ -244,6 +244,12 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
     table_description_file_path <- paste0('./R-cds2db/cds2db/inst/extdata/', table_description_collapsed_excel_simple_filename)
   } else {
     table_description_file_path <- system.file('extdata', table_description_collapsed_excel_simple_filename, package = 'cds2db')
+  # Check if files exists
+  if (!file.exists(table_description_file_path) || table_description_file_path == "") {
+    current_dir <- getwd()
+    stop("Error: The specified file path '", table_description_file_path,
+         "' is invalid or the file does not exist.\nCurrent working directory: '",
+         current_dir, "'")
   }
 
   tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
