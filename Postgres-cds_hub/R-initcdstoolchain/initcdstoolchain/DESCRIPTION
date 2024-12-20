@@ -1,4 +1,4 @@
-Package: dbcreate
+Package: initcdstoolchain
 Title: Initializes the Table Description and Database Scripts
 Version: 0.0.1
 Authors@R: 

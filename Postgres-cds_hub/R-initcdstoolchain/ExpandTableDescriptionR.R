@@ -5,13 +5,13 @@
 ####################################################################################
 
 # chance the working directory to the main directory
-if (grepl('/dbcreate$', getwd())) setwd("../..")
-if (grepl('/R-dbcreate$', getwd())) setwd("../")
+if (grepl('/initcdstoolchain$', getwd())) setwd("../..")
+if (grepl('/R-initcdstoolchain$', getwd())) setwd("../")
 
 # free memory
 rm(list = ls())
 
 library(etlutils)
-library(dbcreate)
+library(initcdstoolchain)
 
-dbcreate::initDatabaseScripts()
+#initcdstoolchain::

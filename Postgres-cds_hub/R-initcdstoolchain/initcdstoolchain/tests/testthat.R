@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(dbcreate)
+library(initcdstoolchain)
 
-test_check("dbcreate")
+test_check("initcdstoolchain")
