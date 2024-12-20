@@ -3,51 +3,38 @@
 #' Starts the retrieval for this project. This is the main start function start the Data Processor
 #' job
 #'
+#' @param debug_path_to_config_toml Debug parameter for loading an optional debug config.toml file
+#'
 #' @export
-processData <- function() {
+processData <- function(debug_path_to_config_toml = NA) {
   ###
   # Read the module configuration toml file.
   ###
-  path2config_toml <- "./R-dataprocessor/dataprocessor_config.toml"
-  config <- etlutils::initConstants(path2config_toml,
-                          c(MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30,
+  config <- etlutils::initModuleConstants(
+    module_name <- "dataprocessor",
+    path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+    defaults = c(
+      MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30,
 
-                            # default medication resource should be MedicationRequest and its
-                            # timestamps
-                            MEDICATION_REQUEST_RESOURCE = "MedicationRequest",
-                            MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id",
-                            MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id",
-                            MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event",
-                            MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start",
-                            MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end",
+      # default medication resource should be MedicationRequest and its
+      # timestamps
+      MEDICATION_REQUEST_RESOURCE = "MedicationRequest",
+      MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id",
+      MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id",
+      MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event",
+      MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start",
+      MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end",
 
-                            # The default for the FHIR 'system', the 'type/coding/system' and
-                            # 'type/coding/code' of the PID entry in the frontend
-                            # result table for patients are empty strings, so all Identifiers
-                            # found in the FHIR data will be displayed in the frontend tables
-                            # (multiple values will be separated by semicolon)
-                            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = "",
-                            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "",
-                            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ""
-
-                          ))
-
-  ###
-  # Add global DB log variable
-  ###
-  if (!exists("LOG_DB_QUERIES", envir = .GlobalEnv)) {
-    assign("LOG_DB_QUERIES", VERBOSE >= VL_90_FHIR_RESPONSE, envir = .GlobalEnv)
-  }
-
-  ###
-  # Read the DB configuration toml file
-  ###
-  etlutils::initConstants(PATH_TO_DB_CONFIG_TOML)
-
-  ###
-  # Set the project name to 'dataprocessor'
-  PROJECT_NAME <<- "dataprocessor"
-  ###
+      # The default for the FHIR 'system', the 'type/coding/system' and
+      # 'type/coding/code' of the PID entry in the frontend
+      # result table for patients are empty strings, so all Identifiers
+      # found in the FHIR data will be displayed in the frontend tables
+      # (multiple values will be separated by semicolon)
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = "",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ""
+    )
+  )
 
   etlutils::createDIRS(PROJECT_NAME)
 
@@ -67,8 +54,8 @@ processData <- function() {
   try(etlutils::runLevel1("Run Dataprocessor", {
 
     # Reset lock from unfinished previous dataprocessor run
-    etlutils::runLevel2(paste("Reset lock from unfinished previous", PROJECT_NAME, "run"), {
-      resetRemainingDatabaseLock()
+    etlutils::runLevel2("Reset database lock from unfinished previous run", {
+      etlutils::dbResetLock()
     })
 
     etlutils::runLevel2("Create Frontend Tables for Patient and Encounter", {
@@ -79,7 +66,7 @@ processData <- function() {
 
   try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
     etlutils::runLevel2("Close database connections", {
-      closeAllDatabaseConnections()
+      etlutils::dbCloseAllConnections()
     })
   }))
 

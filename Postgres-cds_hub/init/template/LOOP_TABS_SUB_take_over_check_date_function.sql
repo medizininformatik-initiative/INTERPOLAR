@@ -1,7 +1,7 @@
     -- Transfer last check date, last_processing_nr (new) from raw to data - if no data changes have occurred
     -- from  <%OWNER_SCHEMA%>.<%TABLE_NAME%> to <%SCHEMA_2%>.<%TABLE_NAME_2%>
 
-    -- Start <%TABLE_NAME_2%>
+    -- Start <%TABLE_NAME_2%>    ----   <%TABLE_NAME_2%>    ----    <%TABLE_NAME_2%>
     err_section:='<%TABLE_NAME_2%>-01';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
     data_count_update:=0;
 
@@ -36,7 +36,9 @@
                 SET last_processing_nr = new_last_pro_nr
                 WHERE <%TABLE_NAME%>_id = current_record.id;
 
-                data_count_pro_all:=data_count_pro_all+1; -- Add up how many data records from the last import run are set with a processing number
+                err_section:='<%TABLE_NAME_2%>-25';    err_schema:='/';    err_table:='</';
+                data_count_pro_processed:=data_count_pro_processed+1; -- Add up how many data records from the last import run are set with a processing number
+                data_count_last_status_set:=data_count_last_status_set+1;
                 data_count_update:=data_count_update+1;   -- count for these entity
             EXCEPTION
                 WHEN OTHERS THEN
@@ -50,6 +52,15 @@
                         last_processing_nr => CAST(new_last_pro_nr AS int)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
                     ) INTO temp;
             END;
+
+            err_section:='<%TABLE_NAME_2%>-25';    err_schema:='db_config';    err_table:='db_process_control';
+            IF data_count_last_status_set>=data_count_last_status_max THEN -- Info ausgeben
+                SELECT res FROM pg_background_result(pg_background_launch(
+                'UPDATE db_config.db_process_control set pc_value='''||data_count_pro_processed||''', last_change_timestamp=CURRENT_TIMESTAMP
+                WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
+                ))  AS t(res TEXT) INTO erg;
+                data_count_last_status_set:=0;
+            END IF;
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
@@ -61,5 +72,6 @@
         ( SELECT <%TABLE_NAME_2%>_id AS table_primary_key, last_processing_nr, '<%SCHEMA_2%>' AS schema_name, '<%TABLE_NAME_2%>' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>
         EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
     END IF;
-    -- End <%TABLE_NAME_2%>
-    -----------------------------------------------------------------------------------------------------------------
+    -- END <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>
+    -----------------------------------------------------------------------------------------------------------------------
+

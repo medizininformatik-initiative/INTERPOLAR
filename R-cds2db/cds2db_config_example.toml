@@ -40,16 +40,6 @@ MAX_DIR_COUNT = 5
 
 [retrieve]
 
-#################
-# Number of minutes to wait between inserting the data into the RAW tables and starting the
-# typing process.
-# This time must be greater than the time for the cron jobs of the copy functions in the database
-# (defined in database init script 30, at the bottom).
-# Default is 1 minute.
-#################
-DELAY_MINUTES_BETWEEN_RAW_INSERT_AND_START_TYPING = 1
-
-
 [retrieve.fhir_server]
 
 # If you use self-signed certificates to secure the FHIR server (SSL/TLS), please configure
