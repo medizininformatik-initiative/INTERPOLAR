@@ -187,8 +187,8 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       for (expanded_row_index in 1:nrow(expansion_table)) {
         replaced_row_index <- as.integer(row + expanded_row_index - 1)
         if (nchar(replace_prefix_column_name)) {
-          new_value <- paste0(replace_prefix_column_name, gsub('/', '_', expansion_table$FHIR_EXPRESSION[expanded_row_index]))
-          data.table::set(new_table, replaced_row_index, 'COLUMN_NAME', new_value)
+          new_value <- paste0(replace_prefix_column_name, gsub("/", "_", expansion_table$FHIR_EXPRESSION[expanded_row_index]))
+          data.table::set(new_table, replaced_row_index, "COLUMN_NAME", new_value)
         }
         if (nchar(replace_prefix_fhir_expression)) {
           data.table::set(new_table, replaced_row_index, 'FHIR_EXPRESSION', paste(replace_prefix_fhir_expression, new_table$FHIR_EXPRESSION[replaced_row_index], sep = "/"))
@@ -210,7 +210,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   }
 
   # set the column 'COLUMN_NAME' directly in front of column 'FHIR_EXPRESSION'
-  etlutils::moveColumnBefore(table, 'COLUMN_NAME', 'FHIR_EXPRESSION')
+  etlutils::moveColumnBefore(table, "COLUMN_NAME", "FHIR_EXPRESSION")
   # remove column RESOURCE_PREFIX
   table[, RESOURCE_PREFIX := NULL]
   # set all column_name entries to lower case
@@ -237,21 +237,29 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
 #'
 #' @seealso \code{\link[etlutils]{readExcelFileAsTableList}}, \code{\link{expandTableDescription}}
 expandTableDescriptionFromFile <- function(table_description_collapsed_excel_simple_filename) {
-  if (!grepl('.xlsx$', table_description_collapsed_excel_simple_filename)) {
-    table_description_collapsed_excel_simple_filename <- paste0(table_description_collapsed_excel_simple_filename, '.xlsx')
+  if (!grepl(".xlsx$", table_description_collapsed_excel_simple_filename)) {
+    table_description_collapsed_excel_simple_filename <- paste0(table_description_collapsed_excel_simple_filename, ".xlsx")
   }
   if (interactive()) {
-    table_description_file_path <- paste0('./R-cds2db/cds2db/inst/extdata/', table_description_collapsed_excel_simple_filename)
+    table_description_file_path <- paste0("./R-cds2db/cds2db/inst/extdata/", table_description_collapsed_excel_simple_filename)
   } else {
-    table_description_file_path <- system.file('extdata', table_description_collapsed_excel_simple_filename, package = 'cds2db')
+    table_description_file_path <- system.file("extdata", table_description_collapsed_excel_simple_filename, package = "cds2db")
+  }
+
+  # Check if files exists
+  if (!file.exists(table_description_file_path) || table_description_file_path == "") {
+    current_dir <- getwd()
+    stop("Error: The specified file path '", table_description_file_path,
+         "' is invalid or the file does not exist.\nCurrent working directory: '",
+         current_dir, "'")
   }
 
   tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
 
   # extract the collapsed table description
-  table_description_collapsed <- tables[['table_description_collapsed']]
+  table_description_collapsed <- tables[["table_description_collapsed"]]
   # delete the extracted collapsed table description from tables list
-  tables[['table_description_collapsed']] <- NULL
+  tables[["table_description_collapsed"]] <- NULL
   expandTableDescriptionInternal(table_description_collapsed, tables)
 }
 
@@ -283,9 +291,9 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
 #'
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
-  expanded_table_description <- expandTableDescriptionFromFile('Table_Description_Definition.xlsx')
+  expanded_table_description <- expandTableDescriptionFromFile("Table_Description_Definition.xlsx")
   if (checkResult(expanded_table_description)) {
-    message('All result columns could be transformed or expanded.')
+    message("All result columns could be transformed or expanded.")
     # Add the "This file is generated..." header to the resut file
     header <- c(
       "Hint",
@@ -295,9 +303,9 @@ expandTableDescription <- function() {
     )
     expanded_table_description <- etlutils::addTextHeaderToTable(expanded_table_description, header, insert_column_names_below_header = TRUE)
 
-    table_description_file_name <- './R-cds2db/cds2db/inst/extdata/Table_Description.xlsx'
-    etlutils::writeExcelFile(list('table_description' = expanded_table_description), './R-cds2db/cds2db/inst/extdata/Table_Description.xlsx', with_column_names = FALSE)
-    message('Expanded Table Description is written to ', normalizePath(table_description_file_name))
+    table_description_file_name <- "./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx"
+    etlutils::writeExcelFile(list("table_description" = expanded_table_description), "./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx", with_column_names = FALSE)
+    message("Expanded Table Description is written to ", normalizePath(table_description_file_name))
   }
 }
 
@@ -331,7 +339,7 @@ checkResult <- function(expanded_table_description) {
   # check that there are no column names which exceeds the maximum length of 64 characters in Postgres DBs
   max_column_name_chars <- max(nchar(na.omit(expanded_table_description$COLUMN_NAME)))
   if (max_column_name_chars > 64) {
-    message('ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.')
+    message("ERROR: Some result column names are longer than the maximum of 64 chars, which are allowed for column names in Postgres databases.")
     for (s in expanded_table_description$COLUMN_NAME[which(nchar(na.omit(expanded_table_description$COLUMN_NAME)) > 64)]) {
       message(paste0("\t", s))
     }

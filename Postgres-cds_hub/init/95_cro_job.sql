@@ -631,9 +631,13 @@ BEGIN
     FROM db_config.db_process_control
     WHERE pc_name = 'semaphor_cron_job_data_transfer';
 
+
     IF status LIKE 'Ongo%' THEN
-        SELECT status||' ( '||(SELECT COALESCE(pc_value,'n.a.') FROM db_config.db_process_control WHERE pc_name='currently_processed_number_of_data_records_in_the_function')||' / '
-        ||(SELECT COALESCE(pc_value,'n.a.') FROM db_config.db_process_control WHERE pc_name='current_total_number_of_records_in_the_function')||' datasets )' INTO status;
+        SELECT CASE WHEN LENGTH(pc_value)<1 THEN 'n.a.' ELSE pc_value END INTO temp FROM db_config.db_process_control WHERE pc_name='current_total_number_of_records_in_the_function';
+
+        IF temp!='n.a.' THEN
+            SELECT status||' ( '||(SELECT CASE WHEN LENGTH(pc_value)<1 THEN 'n.a.' ELSE pc_value END FROM db_config.db_process_control WHERE pc_name='currently_processed_number_of_data_records_in_the_function')||' / '||temp||' datasets )' INTO status;
+        END IF;
     END IF;
 
     RETURN status;
