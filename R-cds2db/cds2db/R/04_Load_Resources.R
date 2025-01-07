@@ -55,13 +55,14 @@ getCurrentDatetime <- function() {
   return(c(start_datetime = start_datetime))
 }
 
-#' Get the current datetime formatted for SQL queries
+#' Get Query Datetime
 #'
-#' This function retrieves the current datetime using the \code{getCurrentDatetime} function
-#' and formats it as a string in the "YYYY-MM-DD HH:MM:SS" format, which is appropriate for SQL queries.
-#' It handles both regular and debug modes, depending on the environment.
+#' This function returns the current datetime formatted for SQL queries.
+#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
 #'
-#' @return A character string representing the current datetime, formatted for SQL queries.
+#' @return A character string representing the current datetime formatted for SQL queries.
+#'
+#' @export
 #'
 getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
