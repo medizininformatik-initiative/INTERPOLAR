@@ -402,18 +402,6 @@ createFrontendTables <- function() {
       query <- paste0(query, additional_class_code_query)
     }
 
-    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
-      enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
-      # create additional condition if there are class codes defined for the accepted encounters
-      if (enc_class_codes == "") {
-        additional_class_code_query <- ""
-      } else {
-        # Additional condition only if enc_class_codes is not empty
-        additional_class_code_query <- paste0(" AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "');")
-      }
-      query <- paste0(query, additional_class_code_query)
-    }
-
     encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
 
     if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")) {
