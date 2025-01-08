@@ -1,28 +1,3 @@
-#' Generate a filter statement for a SQL query.
-#'
-#' This function generates a filter statement to be used in a SQL query based on the
-#' provided filter column and filter column values. It quotes each value and collapses
-#' them into a comma-separated string. If the filter column is the resource ID column,
-#' it adjusts the filter column values accordingly to handle references.
-#'
-#' @param resource_name The name of the resource table.
-#' @param filter_column The column on which to apply the filter.
-#' @param filter_column_values A vector of values to filter on.
-#'
-#' @return A character string representing the filter statement for the SQL query.
-#'
-getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
-  resource_id_column <- etlutils::getIDColumn(resource_name)
-  if (filter_column == resource_id_column) {
-    # remove resource name and the slash if the IDs are references and not pure IDs
-    filter_column_values <- gsub(paste0("^", resource_name, "/"), "", filter_column_values)
-  }
-  # quote every pid and collapse the vector comma separated
-  filter_column_values <- paste0("'", filter_column_values, "'", collapse = ",")
-  filter_line <- paste0("AND a.", filter_column, " IN (", filter_column_values, ")\n")
-  return(filter_line)
-}
-
 #' This function creates frontend tables for displaying patient and encounter information.
 #'
 #' The function retrieves data from the database regarding patient and encounter information

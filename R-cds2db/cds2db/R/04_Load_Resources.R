@@ -466,23 +466,23 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
       stop("There are no Observations to duplicate ", required_obs_count, " times!")
     }
 
-    #' Extend Observation Table
-    #'
-    #' This function ensures that a given observation table (`table_obs`) has exactly
-    #' `debug_resource_count` rows. If the table has fewer rows, it duplicates the rows
-    #' of the table to meet the required count. If the table has more rows, it truncates
-    #' it to the required size. Duplicated rows will have a modified `obs_id` to ensure
-    #' uniqueness by appending a `_DUP_` suffix with a unique number. Existing rows with
-    #' `_DUP_` in their `obs_id` are preserved and not further modified.
-    #'
-    #' @param table_obs A data.table containing observations with a column named `obs_id`.
-    #'                  The `obs_id` column is used as a unique identifier for each row.
-    #' @param debug_resource_count An integer specifying the required number of rows
-    #'                              in the output table.
-    #' @return A data.table with exactly `debug_resource_count` rows. Rows are either
-    #'         truncated or duplicated to meet the required count, and new rows are
-    #'         assigned unique `obs_id` values.
-    #'
+    # Extend Observation Table
+    #
+    # This function ensures that a given observation table (`table_obs`) has exactly
+    # `debug_resource_count` rows. If the table has fewer rows, it duplicates the rows
+    # of the table to meet the required count. If the table has more rows, it truncates
+    # it to the required size. Duplicated rows will have a modified `obs_id` to ensure
+    # uniqueness by appending a `_DUP_` suffix with a unique number. Existing rows with
+    # `_DUP_` in their `obs_id` are preserved and not further modified.
+    #
+    # @param table_obs A data.table containing observations with a column named `obs_id`.
+    #                  The `obs_id` column is used as a unique identifier for each row.
+    # @param debug_resource_count An integer specifying the required number of rows
+    #                              in the output table.
+    # @return A data.table with exactly `debug_resource_count` rows. Rows are either
+    #         truncated or duplicated to meet the required count, and new rows are
+    #         assigned unique `obs_id` values.
+    #
     extendObservationTable <- function(table_obs, debug_resource_count) {
       # Calculate the number of rows needed
       original_rows <- nrow(table_obs)

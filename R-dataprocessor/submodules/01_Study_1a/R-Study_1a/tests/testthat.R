@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(01_Study_1a)
+library(study1a)
 
-test_check("01_Study_1a")
+test_check("study1a")

@@ -3,6 +3,8 @@
 .Rhistory
 .tar.gz
 *etlutils*.tar.gz
+*initcdstoolchain*.tar.gz
+*cds2db*.tar.gz
 *Rcheck*
 .project
 *.core.prefs
@@ -15,3 +17,4 @@ REDCap-app/html/redcapdocs
 REDCap-app/log
 *.~lock.*.xlsx\#
 Input-Repo/*.xlsx
+*- Kopie*
