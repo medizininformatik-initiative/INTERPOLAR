@@ -802,7 +802,7 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descrip
     } else if (!nchar(additional_search_parameter) && !is.null(additional_search_parameter)) {
       catInfoMessage(paste("Info: No", resource_name, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
     } else {
-      catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs.\n"))
+      catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs and their last import dates.\n"))
     }
   }
   # Return the list of resource data tables, with resource types as the keys
