@@ -1,5 +1,5 @@
 # List with resource abbreviations
-column_prefixes <- list(
+resource_to_abbreviation <- list(
   condition = "con",
   consent = "cons",
   diagnosticreport = "diagrep",
@@ -23,9 +23,10 @@ column_prefixes <- list(
 #'
 #' @return A character string containing the abbreviation for the specified resource name.
 #'
+#' @export
 getResourceAbbreviation <- function(resource_name) {
   resource_name <- tolower(resource_name)
-  column_prefixes[[resource_name]]
+  resource_to_abbreviation[[resource_name]]
 }
 
 #' Get ID Column for Resource
@@ -36,6 +37,7 @@ getResourceAbbreviation <- function(resource_name) {
 #'
 #' @return A character string containing the name of the ID column for the specified resource.
 #'
+#' @export
 getIDColumn <- function(resource_name) {
   resource_name <- tolower(resource_name)
   id_column <- paste0(getResourceAbbreviation(resource_name), "_id")
@@ -75,6 +77,7 @@ getForeignIDColumn <- function(resource_name, foreign_resource_name) {
 #'
 #' @return A character string containing the name of the PID column for the specified resource.
 #'
+#' @export
 getPIDColumn <- function(resource_name) {
   getForeignIDColumn(resource_name, "patient")
 }
@@ -88,69 +91,9 @@ getPIDColumn <- function(resource_name) {
 #'
 #' @return A character string containing the name of the Encounter ID column for the specified resource.
 #'
+#' @export
 getEncIDColumn <- function(resource_name) {
   getForeignIDColumn(resource_name, "encounter")
-}
-
-#' Get Resources for Specific Patient ID
-#'
-#' This function filters rows from a resource table based on a specific patient ID.
-#'
-#' @param resource_name A character string specifying the name of the resource.
-#' @param pid A character string representing the specific patient ID to filter for.
-#'
-#' @return A filtered data.table containing resource information for the specified patient ID.
-#'
-getResourcesByPID <- function(resource_name, pid) {
-  # get PID Column name
-  pid_column_name <- getPIDColumn(resource_name)
-  # load resource table
-  resource_table <- loadResourceTable(resource_name)
-  # only for resource patient relevant, append string "Patient/"
-  if (tolower(resource_name) == "patient" && startsWith(pid[1], "Patient/")) {
-    resource_table[, pat_id := paste0("Patient/", pat_id)]
-  }
-  # extract rows from resource table with match patient id
-  return(resource_table[get(pid_column_name) == pid])
-}
-
-#' Get Resources for Specific Resource IDs
-#'
-#' This function filters rows from a resource table based on resource IDs.
-#'
-#' @param resource_name A character string specifying the name of the resource.
-#' @param ids A vector of character string representing the specific resource ID to filter for.
-#'
-#' @return A filtered data.table containing resource information for the resource IDs.
-#'
-getResourcesByIDs <- function(resource_name, ids) {
-  id_column_name <- getIDColumn(resource_name)
-  # load resource table
-  resource_table <- loadResourceTable(resource_table_name)
-  # We need a relative ID here without the resource name. If a resource name appears before the
-  # actual ID, it is removed.
-  ids <- etlutils::getAfterLastSlash(ids)
-  # extract rows from resource table with match patient id
-  return(resource_table[get(id_column_name) %in% ids])
-}
-
-#' Get Resources by ID or PID
-#'
-#' This function retrieves resource information based on either a resource ID or a patient ID.
-#'
-#' @param resource_name A character string specifying the name of the resource.
-#' @param ids_or_pid A character string representing either a resource ID or a patient ID.
-#'
-#' @return A filtered data.table containing resource information based on the provided ID or PID.
-#'
-getResources <- function(resource_name, ids_or_pid) {
-  if (startsWith(ids_or_pid[1], "Patient/")) {
-    resources <- getResourcesByPID(resource_name, ids_or_pid)
-  } else {
-    resources <- getResourcesByIDs(resource_name, ids_or_pid)
-  }
-  etlutils::normalizeAllPOSIXctToUTC(resources)
-  return(resources)
 }
 
 #' Retrieve the Last Processing Number from the Database
@@ -163,13 +106,10 @@ getResources <- function(resource_name, ids_or_pid) {
 #' @return A data frame containing the maximum `last_processing_nr` from the specified
 #'         records in the `db_log.data_import_hist` table.
 #'
+#' @export
 getLastProcessingNumber <- function() {
-  db_connection_read <- getDatabaseReadConnection()
-  statement <- "SELECT MAX(last_processing_nr)
-                FROM db_log.data_import_hist
-                WHERE function_name = 'copy_type_cds_in_to_db_log'
-                  AND schema_name = 'db_log' AND table_name NOT LIKE '%_raw';"
-  etlutils::dbGetQuery(db_connection_read, statement)
+  query <- "SELECT db.get_last_processing_nr_typed();"
+  etlutils::dbGetReadOnlyQuery(query, lock_id = "getLastProcessingNumber()")
 }
 
 #' Load All Data with Last Timestamp from Database
@@ -177,28 +117,35 @@ getLastProcessingNumber <- function() {
 #' This function loads all data from a database table that has the most recent timestamp.
 #' It constructs a SQL query to fetch records where the timestamp is the latest in the table.
 #'
-#' @param table_name the table name
+#' @param table_name The table name.
 #' @return A data frame containing the records with the most recent timestamp from the specified table.
 #'
+#' @export
 loadLastImportedDatasetsFromDB <- function(table_name) {
-  db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
   # Create the SQL query to get the records with the maximum last_processing_nr
-  statement <- paste0("SELECT * FROM ", table_name, "\n",
-                      " WHERE last_processing_nr = ", last_processing_nr, ";")
-  etlutils::dbGetQuery(db_connection_read, statement)
+  query <- paste0("SELECT * FROM ", table_name, "\n",
+                  " WHERE last_processing_nr = ", last_processing_nr, ";")
+  # This only occurs if the database has been reset and the dataprocessor was executed too quickly
+  if (is.na(last_processing_nr)) {
+    stop(paste0("In table ", table_name, " the content of column last_processing_nr in the ",
+                "database is NA, so the following SQL query will return an error:\n", statement,
+                "\nThis should never happen..."))
+  }
+  etlutils::dbGetReadOnlyQuery(query, lock_id = "loadLastImportedDatasetsFromDB()")
 }
 
 #' Get Current Datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_CURRENT_DATETIME` exists, it returns its value as a POSIXct object.
+#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME` exists, it returns its value as a POSIXct object.
 #' Otherwise, it returns the current system time.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_CURRENT_DATETIME` if it exists.
+#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME` if it exists.
 #'
+#' @export
 getCurrentDatetime <- function() {
-  if (exists("DEBUG_CURRENT_DATETIME")) {
-    return(as.POSIXct(DEBUG_CURRENT_DATETIME))
+  if (exists("DEBUG_ENCOUNTER_DATETIME")) {
+    return(as.POSIXct(DEBUG_ENCOUNTER_DATETIME))
   }
   return(as.POSIXct(Sys.time()))
 }
@@ -210,6 +157,7 @@ getCurrentDatetime <- function() {
 #'
 #' @return A character string representing the current datetime formatted for SQL queries.
 #'
+#' @export
 getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
@@ -221,6 +169,7 @@ getQueryDatetime <- function() {
 #' @param references A character vector of references from which to extract IDs.
 #' @return A character vector containing the extracted IDs.
 #'
+#' @export
 extractIDsFromReferences <- function(references) {
   etlutils::getAfterLastSlash(references)
 }
@@ -235,6 +184,7 @@ extractIDsFromReferences <- function(references) {
 #' @param remove_ref_type Logical indicating whether to remove reference types.
 #' Default is \code{FALSE}.
 #'
+#' @export
 getQueryList <- function(collection, remove_ref_type = FALSE) {
   if (remove_ref_type) {
     collection <- extractIDsFromReferences(collection)
@@ -253,6 +203,7 @@ getQueryList <- function(collection, remove_ref_type = FALSE) {
 #'
 #' @return A vector containing the parsed elements from the query list string.
 #'
+#' @export
 parseQueryList <- function(list_string, split = " ") {
   splitted <- unlist(strsplit(list_string, split))
   getQueryList(splitted)
@@ -271,8 +222,8 @@ parseQueryList <- function(list_string, split = " ") {
 #'
 #' @return A character string containing the full table name for the specified resource.
 #'
-getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name), "_all")
-
+#' @export
+getViewTableName <- function(resource_name) paste0("v_", tolower(resource_name))
 
 #' Load Resources Last Status From Database Query
 #'
@@ -285,19 +236,19 @@ getFullTableName <- function(resource_name) paste0("v_", tolower(resource_name),
 #'
 #' @return A character string representing the SQL query.
 #'
+#' @export
 getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
-  db_connection_read <- getDatabaseReadConnection()
   last_processing_nr <- getLastProcessingNumber()
-  # this should be view tables named in a style like 'v_patient_all' for resource_name Patient
-  table_name <- getFullTableName(resource_name)
+  # this should be view tables named in a style like 'v_patient' for resource_name Patient
+  table_name <- getViewTableName(resource_name)
   id_column <- getIDColumn(resource_name)
-  statement <-paste0(
+  query <-paste0(
     "SELECT * FROM ", table_name, " a\n",
     " WHERE last_processing_nr = ", last_processing_nr,
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
-  return(statement)
+  return(query)
 }
 
 #' Generate a filter statement for a SQL query.
@@ -313,6 +264,7 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
 #'
 #' @return A character string representing the filter statement for the SQL query.
 #'
+#' @export
 getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
   resource_id_column <- getIDColumn(resource_name)
   if (filter_column == resource_id_column) {
@@ -334,14 +286,15 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
 #' @param resource_name The name of the resource table.
 #' @param filter_column The column on which to apply the filter.
 #' @param ids A vector of IDs to filter on.
-#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
+#' @param lock_id A string representation as ID for the process to lock the database during the
+#' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
+#' @export
+loadResourcesFromDB <- function(resource_name, filter_column, ids, lock_id) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
-  statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
-  db_connection_read <- getDatabaseReadConnection()
-  etlutils::dbGetQuery(db_connection_read, statement, log)
+  query <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
+  etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 }
 
 #' Retrieve the last status of load resources from the database.
@@ -351,14 +304,13 @@ runQuery <- function(resource_name, filter_column, ids, log = TRUE) {
 #' to construct the query statement.
 #'
 #' @param resource_name The name of the resource table.
-#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
 #'
 #' @return A data frame containing the last status of load resources.
 #'
-loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
-  statement <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
-  db_connection_read <- getDatabaseReadConnection()
-  etlutils::dbGetQuery(db_connection_read, statement, log)
+#' @export
+loadResourcesLastStatusFromDB <- function(resource_name) {
+  query <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
+  etlutils::dbGetReadOnlyQuery(query, lock_id = "loadResourcesLastStatusFromDB()")
 }
 
 #' Retrieve the last status of load resources from the database by their own IDs.
@@ -369,13 +321,17 @@ loadResourcesLastStatusFromDB <- function(resource_name, log = TRUE) {
 #'
 #' @param resource_name The name of the resource table.
 #' @param ids A vector of IDs to retrieve the last status for.
-#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
 #'
 #' @return A data frame containing the last status of load resources.
 #'
-loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids, log = TRUE) {
+#' @export
+loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids) {
   id_column <- getIDColumn(resource_name)
-  runQuery(resource_name, id_column, ids, log)
+  loadResourcesFromDB(
+    resource_name = resource_name,
+    filter_column = id_column,
+    ids = ids,
+    lock_id = paste0("loadResourcesLastStatusByOwnIDFromDB(", resource_name, ")"))
 }
 
 #' Retrieve the last status of load resources from the database by PID.
@@ -387,15 +343,19 @@ loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids, log = TRUE)
 #'
 #' @param resource_name The name of the resource table.
 #' @param pids A vector of Patient IDs (PIDs) or related IDs to retrieve the last status for.
-#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
 #' @return A data frame containing the last status of load resources.
 #'
-loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids, log = TRUE) {
+#' @export
+loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids) {
   if (tolower(resource_name) %in% "patient") {
-    return(loadResourcesLastStatusByOwnIDFromDB(resource_name, pids, log))
+    return(loadResourcesLastStatusByOwnIDFromDB(resource_name, pids))
   }
   pid_column <- getPIDColumn(resource_name)
-  runQuery(resource_name, pid_column, pids, log)
+  loadResourcesFromDB(
+    resource_name = resource_name,
+    filter_column = pid_column,
+    ids = pids,
+    lock_id = paste0("loadResourcesLastStatusByPIDFromDB(",resource_name,")"))
 }
 
 #' Load Resources Last Status By Encounter ID From Database
@@ -410,13 +370,117 @@ loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids, log = TRUE) 
 #'
 #' @param resource_name The name of the resource table.
 #' @param enc_ids A vector of Encounter IDs to retrieve the last status for.
-#' @param log Logical indicating whether to log the query execution. Default is \code{TRUE}.
 #' @return A data frame containing the last status of load resources.
 #'
-loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids, log = TRUE) {
+#' @export
+loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
   if (tolower(resource_name) %in% "encounter") {
-    return(loadResourcesLastStatusByOwnIDFromDB(resource_name, enc_ids, log))
+    return(loadResourcesLastStatusByOwnIDFromDB(resource_name, enc_ids))
   }
   enc_id_column <- getPIDColumn(resource_name)
-  runQuery(resource_name, enc_id_column, enc_ids, log)
+  loadResourcesFromDB(
+    resource_name = resource_name,
+    filter_column = enc_id_column,
+    ids = enc_ids,
+    lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
+}
+
+#' Checks whether strings in a vector of ICD codes match specified patterns.
+#'
+#' This function takes a vector of ICD (International Classification of Diseases)
+#' codes and checks whether the strings in this vector match predefined patterns.
+#' The patterns are retrieved from an external data frame named SIMPLE_ICD_PATTERN.
+#'
+#' @param codes A vector of strings containing the ICD codes to be checked.
+#' @return A logical vector that returns TRUE for strings that match the patterns
+#' and FALSE for strings that do not match the patterns.
+#' @seealso SIMPLE_ICD_PATTERN This data frame contains the predefined patterns
+#' for ICD codes.
+#'
+#' @examples
+#' codes <- c('H77+M55.2', 'H77', 'XXX', 'X+X', 'X+XXXXX')
+#' isICDCode(codes)
+#'
+#' @export
+isICDCode <- function(codes) {
+  icd_pattern <- paste(paste0('(', SIMPLE_ICD_PATTERN$ICD1, ')'), paste0('(', SIMPLE_ICD_PATTERN$ICD2_3, ')'), paste0('(', SIMPLE_ICD_PATTERN$ICD4_6, ')'), sep = '|')
+  full_icd_pattern <- paste0('(','^','(', icd_pattern,')', '$', ')', '|', '(', '^', '(', icd_pattern,')', '\\+{1}', '(', icd_pattern, '){1}', '$', ')')
+  grepl(full_icd_pattern, codes, perl = TRUE)
+}
+
+#' Clean and Validate ICD Code
+#'
+#' This function cleans and validates an ICD code by converting it to uppercase,
+#' removing trailing non-alphanumeric characters, and checking if the resulting
+#' code is a valid ICD code.
+#'
+#' @param icd A character vector representing the ICD code.
+#'
+#' @return A character vector containing the cleaned and validated ICD code,
+#'         or NULL if the input is not a valid ICD code.
+#' @examples
+#' cleanICD("A11")
+#' cleanICD(" B1.2 ")
+#' cleanICD("C23-") # This will return NULL as it's not a valid ICD code.
+#'
+#' @export
+cleanICD <- function(icd) {
+  icd <- toupper(etlutils::removeLastCharsIfNotAlphanumeric(trimws(icd)))
+  icd[isICDCode(icd)]
+}
+
+#' Reads the file path of an Excel file
+#'
+#' This function constructs the file path for an Excel file with the given file name.
+#'
+#' @param simpleExcelFileName The name of the Excel file without file extension.
+#'
+#' @return The full file path of the Excel file.
+#'
+#' @export
+readExcelFilePath <- function(simpleExcelFileName) {
+  paste0("./R-dataprocessor/dataprocessor/inst/extdata/", simpleExcelFileName, ".xlsx")
+}
+
+#' Read an Excel file and import each sheet as a separate data.table.
+#'
+#' This function reads an Excel file specified by the 'simpleExcelFileName' parameter
+#' from internal directory './inst/extdata/' and imports each sheet as a separate
+#' data.table. It returns a list of imported sheets.
+#'
+#' @param simpleExcelFileName The file name of the Excel file without extension.
+#'
+#' @return A list of imported sheets as data.tables.
+#'
+#' @export
+readExcelFileAsTableListFromExtData <- function(simpleExcelFileName) {
+  etlutils::readExcelFileAsTableList(readExcelFilePath(simpleExcelFileName))
+}
+
+#' Calculate Maximum Future Time to Check for MRPs
+#'
+#' This function calculates the maximum future time to check for Medication-Related Problems (MRPs)
+#' based on the current time and a defined number of days into the future. The number of days to look ahead
+#' is specified in the configuration file (`dataprocessor_config.toml`). This configuration sets
+#' the interval end as a certain number of days from the current time, converted to seconds.
+#'
+#' @param current_time The current time as a POSIXct object, representing the starting point
+#'   for the calculation.
+#'
+#' @return Returns a POSIXct object representing the maximum future time up to which MRPs should
+#'   be checked, based on the current time and the configuration.
+#'
+#' @examples
+#' MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE <- 30
+#' current_time <- Sys.time()
+#' future_time <- getMaxTimeInFutureToCheckForMRPs(current_time)
+#' print(paste(current_time, " -> ", future_time))
+#'
+#' @export
+getMaxTimeInFutureToCheckForMRPs <- function(current_time) {
+  # MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE is defined in the dataprocessor_config.toml file
+  max_seconds_checked_for_mrps_in_future <- MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE * 3600 * 24
+  # every interval will end MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE days in the from current_time
+  general_max_time <- current_time + max_seconds_checked_for_mrps_in_future
+  return(general_max_time)
 }

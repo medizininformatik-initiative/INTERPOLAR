@@ -293,7 +293,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       # maybe some other columns (state or something like this) could be important, so we had to add them here in future
       filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns, "id", "subject/reference", "period/start", "period/end", "status")
       # Get current or debug datetime
-      current_datetime <- getQueryDatetime()
+      current_datetime <- etlutils::getQueryDatetime()
       # Replace space with 'T' in timestamp for correct time format
       current_datetime <- gsub(" ", "T", current_datetime)
       # Download the Encounters and crack them in a table with the columns of the xpaths in

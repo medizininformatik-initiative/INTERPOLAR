@@ -17,9 +17,9 @@ createFrontendTables <- function() {
   # This function constructs an error or warning message with optional additional
   # information such as related tables and database connection details. It can be
   # used to provide more context when reporting errors or warnings.
-  getErrorOrWarningMessage <- function(text, tables = NA, db_connection = getDatabaseReadConnection()) {
+  getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
     tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
-    db_connection <- if (!etlutils::isSimpleNA(db_connection)) paste0(" DB connection: ", etlutils::getPrintString(db_connection)) else ""
+    db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
     text <- paste0(text, tables, db_connection)
     return(text)
   }
@@ -33,11 +33,10 @@ createFrontendTables <- function() {
     # too! This error has to be fixed by the DIZ at the beginning of the process (preventing same
     # patient multiple times on the same or different wards)
     pids <- unique(pids_per_ward$patient_id)
-    pids <- extractIDsFromReferences(pids)
-    patients <- loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
+    pids <- etlutils::extractIDsFromReferences(pids)
+    patients <- etlutils::loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
     return(patients)
   }
-
 
   # This function creates a table for frontend display containing patient information
   # based on the provided patient IDs per ward. It retrieves patient information from
@@ -49,9 +48,9 @@ createFrontendTables <- function() {
 
     # Initialize an empty data table to store patient information
     patient_frontend_table <- data.table::data.table(
-      record_id = rep(NA_character_, times = pids_count), # v_patient_all -> patient_id
-      patient_fe_id = NA_character_, # v_patient_all -> patient_id
-      pat_id = NA_character_, # v_patient_all -> pat_id
+      record_id = rep(NA_character_, times = pids_count), # v_patient -> patient_id
+      patient_fe_id = NA_character_, # v_patient -> patient_id
+      pat_id = NA_character_, # v_patient -> pat_id
       pat_cis_pid = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
@@ -83,11 +82,11 @@ createFrontendTables <- function() {
   createEncounterFrontendTable <- function(pids_per_ward, patients) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table::data.table(
-      record_id	= character(), # v_patient_all -> patient_id
-      fall_id	= character(), # v_encounter_all -> enc_id
-      fall_pat_id	= character(), # v_patient_all -> pat_id
-      patient_id_fk	= character(), # v_patient_all -> patient_id
-      fall_fe_id	= character(), # v_encounter_all -> encounter_id
+      record_id	= character(), # v_patient -> patient_id
+      fall_id	= character(), # v_encounter -> enc_id
+      fall_pat_id	= character(), # v_patient -> pat_id
+      patient_id_fk	= character(), # v_patient -> patient_id
+      fall_fe_id	= character(), # v_encounter -> encounter_id
       redcap_repeat_instrument = character(),
       redcap_repeat_instance = character(),
       fall_studienphase = character(),
@@ -104,33 +103,63 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
-    # Enable/Disable query log
-    query_log <- if (VERBOSE >= 9) TRUE else FALSE
-
     # load Encounters for all PIDs
-    query_datetime <- getQueryDatetime()
-    query_ids <- getQueryList(pids_per_ward$patient_id)
-    db_read_connection <- getDatabaseReadConnection()
-    table_name <- getFullTableName("encounter")
-    query <- paste0("SELECT * FROM ", table_name, "\n",
-                    "  WHERE enc_patient_id IN (", query_ids, ") AND\n",
-                    "  enc_partof_id IS NULL AND\n",
-                    "  (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "') AND\n",
-                    "  enc_period_start <= '", query_datetime, "'\n")
-    encounters <- etlutils::dbGetQuery(db_read_connection, query, query_log)
+    query_datetime <- etlutils::getQueryDatetime()
+    query_ids <- etlutils::getQueryList(pids_per_ward$patient_id)
+    table_name <- etlutils::getViewTableName("encounter")
+
+    query <- paste0( "SELECT * FROM ", table_name, "\n",
+                     "  WHERE enc_patient_ref IN (", query_ids, ")\n",
+                     "    AND enc_partof_ref IS NULL\n",
+                     "    AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
+                     "    AND enc_period_start <= '", query_datetime, "'"
+    )
+
+    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
+      enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
+      # create additional condition if there are class codes defined for the accepted encounters
+      if (enc_class_codes == "") {
+        additional_class_code_query <- ""
+      } else {
+        # Additional condition only if enc_class_codes is not empty
+        additional_class_code_query <- paste0(" AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "');")
+      }
+      query <- paste0(query, additional_class_code_query)
+    }
+
+    encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
+
+    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")) {
+      #TODO AXS prüfen ob dieser Code durch die Funktion convertFilterPatterns aus cds2db ersetzt werden kann
+      encounter_filter_patterns <- etlutils::getVarByNameOrDefaultIfMissing("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")
+      filter_patterns <- list()
+      for (filter_pattern in encounter_filter_patterns) {
+        and_conditions <- list()
+        filter_pattern_conditions <- unlist(strsplit(filter_pattern, "\\+"))
+        for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
+          condition_key_value <- unlist(strsplit(condition, "="))
+          condition_column <- trimws(condition_key_value[1])
+          condition_value <- etlutils::getBetweenQuotes(condition_key_value[2])
+          and_conditions[[condition_column]] <- condition_value
+        }
+        filter_patterns[[paste0("Condition_", length(filter_patterns) + 1)]] <- and_conditions
+      }
+      encounters <- etlutils::filterResources(encounters, filter_patterns)
+    }
 
     # load Conditions referenced by Encounters
     condition_ids <- encounters$enc_diagnosis_condition_id
-    query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
-    table_name <- getFullTableName("condition")
+    query_ids <- etlutils::getQueryList(condition_ids, remove_ref_type = TRUE)
+    table_name <- etlutils::getViewTableName("condition")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
-    conditions <- etlutils::dbGetQuery(db_read_connection, query, query_log)
+
+    conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
 
     for (pid_index in seq_len(nrow(pids_per_ward))) {
 
       pid <- pids_per_ward$patient_id[pid_index]
-      pid_encounters <- encounters[enc_patient_id == pid]
+      pid_encounters <- encounters[enc_patient_ref == pid]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
@@ -150,7 +179,7 @@ createFrontendTables <- function() {
       # highlighted here.
       pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
 
-      pid_patient <- patients[pat_id == extractIDsFromReferences(pid)]
+      pid_patient <- patients[pat_id == etlutils::extractIDsFromReferences(pid)]
 
       # check errors no patient resource found for PID
       if (!nrow(pid_patient)) { # no Patient resource found for PID
@@ -170,11 +199,12 @@ createFrontendTables <- function() {
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
         enc_id <- pid_encounters[[i]]$enc_id[1]
+        enc_identifier_value <- pid_encounters[[i]]$enc_identifier_value[1]
         enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
         enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
         enc_status <- pid_encounters[[i]]$enc_status[1]
         data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
-        data.table::set(enc_frontend_table, target_index, "fall_id", enc_id)
+        data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
@@ -195,7 +225,7 @@ createFrontendTables <- function() {
         # Extract the admission diagnosis
         admission_diagnoses <- pid_encounters[[i]][enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
         admission_diagnoses <- unique(admission_diagnoses)
-        admission_diagnoses <- extractIDsFromReferences(admission_diagnoses)
+        admission_diagnoses <- etlutils::extractIDsFromReferences(admission_diagnoses)
         admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
@@ -203,25 +233,26 @@ createFrontendTables <- function() {
 
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA) {
-          codes <- parseQueryList(codes)
-          table_name <- getFullTableName("Observation")
+          codes <- etlutils::parseQueryList(codes)
+          table_name <- etlutils::getViewTableName("observation")
           # Extract the Observations by direct encounter references
           query <- paste0("SELECT * FROM ", table_name, "\n",
-                          "  WHERE obs_encounter_id = 'Encounter/", enc_id, "' AND\n",
+                          "  WHERE obs_encounter_ref = 'Encounter/", enc_id, "' AND\n",
                           "        obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "'\n")
-          observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query, query_log)
+          observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
+
           # we found no Observations with the direct encounter link so identify potencial
           # Observations by time overlap with the encounter period start and current date
           if (!nrow(observations)) {
             query <- paste0("SELECT * FROM ", table_name, "\n",
-                            "  WHERE obs_patient_id = '", pid, "' AND\n",
+                            "  WHERE obs_patient_ref = '", pid, "' AND\n",
                             "        obs_code_code IN (", codes, ") AND\n",
                             "        obs_code_system = '", system, "' AND\n",
                             "        obs_effectivedatetime > '", enc_period_start, "' AND\n",
                             "        obs_effectivedatetime < '", query_datetime, "'\n")
-            observations <- etlutils::dbGetQuery(getDatabaseReadConnection(), query, query_log)
+            observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
           }
           if (nrow(observations)) {
             # take the very frist Observation with the latest date (should be only 1 but sure is sure)
@@ -248,14 +279,14 @@ createFrontendTables <- function() {
     }
     return(enc_frontend_table)
   }
-  pids_per_ward_table_name <- getFullTableName("pids_per_ward")
-  pids_per_ward <- loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
+  pids_per_ward_table_name <- etlutils::getViewTableName("pids_per_ward")
+  pids_per_ward <- etlutils::loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
-    message <- paste0("WARNING: The pids_per_ward table is empty.\n",
-                      "Hint: Please ensure there was enoungh time between the 'cds2db' module and the 'dataprocessor' module. At least a little bit more than 1 minute.")
-    message <- getErrorOrWarningMessage(message, pids_per_ward_table_name)
+    message <- getErrorOrWarningMessage(
+      text = "WARNING: The pids_per_ward table is empty.\n",
+      tables = "pids_per_ward")
     stop(message)
   }
 
@@ -328,19 +359,12 @@ createFrontendTables <- function() {
   # delimited by "; " in one row
   patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
 
-  # Create frontend table for patients
-  patient_frontend_table <- createPatientFrontendTable(patients_from_database)
-  # Write patient frontend table to the database
-  etlutils::writeTableToDatabase(patient_frontend_table,
-                                 getDatabaseWriteConnection(),
-                                 table_name = "patient_fe",
-                                 clear_before_insert = TRUE)
+  patient_fe <- createPatientFrontendTable(patients_from_database)
+  fall_fe <- createEncounterFrontendTable(pids_per_ward, patients_from_database)
+  # Create and write frontend table for patients and encounters
+  etlutils::dbWriteTables(
+    tables = etlutils::namedListByParam(patient_fe, fall_fe),
+    lock_id = "createFrontendTables()",
+    stop_if_table_not_empty = TRUE)
 
-  # Create frontend table for encounters
-  encounter_frontend_table <- createEncounterFrontendTable(pids_per_ward, patients_from_database)
-  # Write encounter frontend table to the database
-  etlutils::writeTableToDatabase(encounter_frontend_table,
-                                 getDatabaseWriteConnection(),
-                                 table_name = "fall_fe",
-                                 clear_before_insert = TRUE)
 }

@@ -16,10 +16,10 @@ library(cds2db)
 
 
 # Set path for Debug config toml files
-#DEBUG_PATHS_TO_CONFIG_TOMLS <- c("./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"#,
-#                                 #"./debug_config_toml/debug_cds2db_config_2.toml",
-#                                 #"./debug_config_toml/debug_cds2db_config_3.toml"
-#                                 )
+DEBUG_PATHS_TO_CONFIG_TOMLS <- c("./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"#,
+                                 #"./debug_config_toml/debug_cds2db_config_2.toml",
+                                 #"./debug_config_toml/debug_cds2db_config_3.toml"
+                                 )
 
 if (exists("DEBUG_PATHS_TO_CONFIG_TOMLS") && length(DEBUG_PATHS_TO_CONFIG_TOMLS) > 0) {
   for (debug_config_toml in DEBUG_PATHS_TO_CONFIG_TOMLS) {
