@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-01-09 18:57:40
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-01-09 17:42:49
+-- Create time: 2025-01-09 18:58:44
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -18,7 +18,7 @@
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
--- GRANT_TARGET_USER (3):  db_user
+-- GRANT_TARGET_USER (2):  db_user
 -- COPY_FUNC_SCRIPTNAME:  60_dp_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_fe_dp_in_to_db_log
@@ -339,7 +339,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_user; -- Additional authorizations for testing
 
 -- Table "fall_fe" in schema "db_log"
@@ -348,7 +347,6 @@ GRANT TRIGGER ON db_log.fall_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_user; -- Additional authorizations for testing
 
@@ -359,7 +357,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_user; -- Additional authorizations for testing
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
@@ -368,7 +365,6 @@ GRANT TRIGGER ON db_log.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
 
@@ -379,7 +375,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_user; -- Additional authorizations for testing
 
 -- Table "trigger_fe" in schema "db_log"
@@ -388,7 +383,6 @@ GRANT TRIGGER ON db_log.trigger_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_user; -- Additional authorizations for testing
 
