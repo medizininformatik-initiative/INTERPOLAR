@@ -1,9 +1,10 @@
 .env*
 .Rproj.user
 .Rhistory
-.tar.gz
+*.tar.gz
 *etlutils*.tar.gz
 *initcdstoolchain*.tar.gz
+*statisticalreports*.tar.gz
 *cds2db*.tar.gz
 *Rcheck*
 .project
