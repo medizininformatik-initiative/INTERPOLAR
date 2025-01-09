@@ -8,7 +8,7 @@
 #'         fetched data from the database query (`v_condition`) to the console.
 #'
 #' @export
-createReport <- function() {
+createStatisticalReport <- function() {
   query <- paste0("SELECT * FROM v_condition\n")
   conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "statistical reports[1]")
   print(conditions)
