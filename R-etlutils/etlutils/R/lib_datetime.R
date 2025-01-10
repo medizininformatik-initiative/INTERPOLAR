@@ -148,6 +148,6 @@ convertDateFormat <- function(dt, columns) {
 #' @export
 convertDateTimeFormat <- function(dt, columns) {
   for (column in columns) {
-    dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
+    dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = GLOBAL_TIMEZONE)]
   }
 }

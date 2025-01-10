@@ -74,3 +74,8 @@ VL_80_COI_PROCESSING      <- 8
 #' @export
 VL_90_FHIR_RESPONSE       <- 9
 
+
+#' A character string representing the global timezone.
+#'
+#' @export
+GLOBAL_TIMEZONE <- "Europe/Berlin"
