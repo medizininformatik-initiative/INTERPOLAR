@@ -1071,9 +1071,11 @@ dbConvertToDBTypes <- function(dt, table_name) {
       } else if (db_type %in% c("character varying", "character", "text")) {
         dt[, (col_name) := as.character(get(col_name))]
       } else if (db_type == "date") {
-        dt[, (col_name) := as.Date(get(col_name))]
+        # It may be that data from the frontend that should actually be of the type “date” is
+        # returned as a “timestamp”. This function fix it.
+        dt[, (col_name) := as.DateWithTimezone(get(col_name))]
       } else if (db_type %in% c("timestamp without time zone", "timestamp with time zone")) {
-        dt[, (col_name) := as.POSIXct(get(col_name), tz = "Europe/Berlin")]
+        dt[, (col_name) := as.POSIXctWithTimezone(get(col_name))]
       } else if (db_type == "boolean") {
         dt[, (col_name) := as.logical(get(col_name))]
       } else {

@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-01-09 18:57:40
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-10 01:21:53
+-- Create time: 2025-01-09 18:58:44
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -18,7 +18,7 @@
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
--- GRANT_TARGET_USER (3):  db_user
+-- GRANT_TARGET_USER (2):  db_user
 -- COPY_FUNC_SCRIPTNAME:  60_dp_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_fe_dp_in_to_db_log
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_studienphase varchar,   -- Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)
   fall_station varchar,   -- Station wie vom DIZ Definiert (varchar)
   fall_zimmernr varchar,   -- Zimmernummer wie vom DIZ Definiert (varchar)
-  fall_aufn_dat date,   -- Aufnahmedatum (date)
+  fall_aufn_dat timestamp,   -- Aufnahmedatum (timestamp)
   fall_aufn_diag varchar,   -- Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)
   fall_gewicht_aktuell double precision,   -- aktuelles Gewicht (Kg) (double precision)
   fall_gewicht_aktl_einheit varchar,   -- Einheit des Gewichts (varchar)
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_schwanger_mo varchar,   -- Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)
   fall_schwanger_mo_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   fall_status varchar,   -- Status des Falls (varchar)
-  fall_ent_dat date,   -- Entlassdatum (date)
+  fall_ent_dat timestamp,   -- Entlassdatum (timestamp)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   fall_fe_id int,   -- Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (varchar)
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
-  meda_dat date,   -- Datum der Medikationsanalyse (date)
+  meda_dat timestamp,   -- Datum der Medikationsanalyse (timestamp)
   meda_typ varchar,   -- Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (varchar)
   meda_ma_thueberw varchar,   -- Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (varchar)
   meda_mrp_detekt varchar,   -- MRP detektiert? - 1, Ja|0, Nein (varchar)
@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_femb_4 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (varchar)
   mrp_femb_5 varchar,   -- descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (varchar)
   mrp_femb_6 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (varchar)
-  mrp_entd_dat date,   -- Datum des MRP (date)
+  mrp_entd_dat timestamp,   -- Datum des MRP (timestamp)
   mrp_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
   mrp_entd_algorithmisch varchar,   -- MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (varchar)
   mrp_hinweisgeber_lbl varchar,   -- descriptive item only for frontend (varchar)
@@ -339,7 +339,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_user; -- Additional authorizations for testing
 
 -- Table "fall_fe" in schema "db_log"
@@ -348,7 +347,6 @@ GRANT TRIGGER ON db_log.fall_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_user; -- Additional authorizations for testing
 
@@ -359,7 +357,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_user; -- Additional authorizations for testing
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
@@ -368,7 +365,6 @@ GRANT TRIGGER ON db_log.mrpdokumentation_validierung_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
 
@@ -379,7 +375,6 @@ GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_user; -- Additional authorizations for testing
 
 -- Table "trigger_fe" in schema "db_log"
@@ -388,7 +383,6 @@ GRANT TRIGGER ON db_log.trigger_fe TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_user; -- Additional authorizations for testing
 
@@ -430,7 +424,7 @@ COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instance IS 'Frontend interne Dat
 COMMENT ON COLUMN db_log.fall_fe.fall_studienphase IS 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_station IS 'Station wie vom DIZ Definiert (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_zimmernr IS 'Zimmernummer wie vom DIZ Definiert (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (date)';
+COMMENT ON COLUMN db_log.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (timestamp)';
 COMMENT ON COLUMN db_log.fall_fe.fall_aufn_diag IS 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_gewicht_aktuell IS 'aktuelles Gewicht (Kg) (double precision)';
 COMMENT ON COLUMN db_log.fall_fe.fall_gewicht_aktl_einheit IS 'Einheit des Gewichts (varchar)';
@@ -453,7 +447,7 @@ COMMENT ON COLUMN db_log.fall_fe.fall_leber_insuf_ausmass IS 'aktuelles Ausmaß 
 COMMENT ON COLUMN db_log.fall_fe.fall_schwanger_mo IS 'Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_schwanger_mo_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_status IS 'Status des Falls (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_ent_dat IS 'Entlassdatum (date)';
+COMMENT ON COLUMN db_log.fall_fe.fall_ent_dat IS 'Entlassdatum (timestamp)';
 COMMENT ON COLUMN db_log.fall_fe.fall_complete IS 'Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.fall_fe.last_check_datetime IS 'Time at which data record was last checked';
@@ -470,7 +464,7 @@ COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_femb_3 IS 'descriptive item 
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.fall_fe_id IS 'Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (date)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (timestamp)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_typ IS 'Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_ma_thueberw IS 'Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_mrp_detekt IS 'MRP detektiert? - 1, Ja|0, Nein (varchar)';
@@ -503,7 +497,7 @@ COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_mf_info_txt IS 'des
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_4 IS 'descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_5 IS 'descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_femb_6 IS 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (date)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (timestamp)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber_lbl IS 'descriptive item only for frontend (varchar)';
