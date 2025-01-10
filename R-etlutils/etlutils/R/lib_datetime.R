@@ -108,6 +108,12 @@ convertTimeFormat <- function(dt, columns) {
 #' @return This function modifies the input data table \code{dt} by converting the date format
 #' of the specified columns.
 #'
+#' @examples
+#' library(data.table)
+#' # Single column conversion
+#' dt <- data.table(date = c('2020', '2021-05', '2022/12/25', '2023-07-01'))
+#' convertDateFormat(dt, 'date')
+#'
 #' @export
 convertDateFormat <- function(dt, columns) {
   for (column in columns) {
@@ -140,8 +146,23 @@ convertDateFormat <- function(dt, columns) {
 #' the specified column to date-time objects with the format \code{ymd_hms},
 #' truncating the time to minutes and setting the timezone to "Europe/Berlin".
 #'
+#' The function supports various datetime formats, including:
+#' - ISO 8601 format with \code{T} separating date and time, e.g., \code{"2020-08-14T02:00:00+03:00"}.
+#' - Formats with or without explicit time zones.
+#' - UTC timestamps indicated by a trailing \code{"Z"}, e.g., \code{"2011-09-15T06:31:34Z"}.
+#'
+#' The \code{Z} at the end of a timestamp stands for "Zulu Time", which is equivalent to UTC (Coordinated Universal Time).
+#' It indicates that the timestamp is in UTC and does not require additional time zone conversion.
+#'
 #' @return This function modifies the input data table \code{dt} in place by
 #' fixing the date format in the specified column
+#'
+#' @examples
+#' library(data.table)
+#' # Converting a datetime column
+#' dt <- data.table(id = 1:4, enc_period_end = c("2020-08-14T02:00:00+03:00",
+#' "2021-09-10T12:30:00+02:00", "2022-03-15 18:45:00+02:00", "2011-09-15T06:31:34Z"))
+#' convertDateTimeFormat(dt, columns = c("enc_period_end"))
 #'
 #' @export
 convertDateTimeFormat <- function(dt, columns) {
