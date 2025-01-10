@@ -251,7 +251,7 @@ Clock = setRefClass(
         msg      = message,
         state    = factor('RUNNING', levels = STATE_LEVELS),
         start    = now_,
-        end      = as.POSIXct(NA),
+        end      = as.POSIXctWithTimezone(NA),
         error    = ''
       )
       # add new row to history table

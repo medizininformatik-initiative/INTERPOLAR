@@ -44,11 +44,11 @@ createWardPatientIDPerDateTable <- function(patient_ids_per_ward) {
 #' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
-  start_datetime <- as.POSIXct(Sys.time())
+  start_datetime <- etlutils::as.POSIXctWithTimezone(Sys.time())
   if (exists('DEBUG_ENCOUNTER_DATETIME_START')) {
-    start_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_START)
+    start_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_START)
     if (exists('DEBUG_ENCOUNTER_DATETIME_END') && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
-      end_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_END)
+      end_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_END)
       return(c(start_datetime = start_datetime, end_datetime = end_datetime))
     }
   }
@@ -256,13 +256,13 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     result <- etlutils::dbGetReadOnlyQuery(query, params = params, lock_id = "getLastPatientUpdateDate()[1]")
 
     # Create an empty result vector with NAs for patient IDs not found in the database
-    last_insert_dates <- as.Date(rep(NA, length(patient_ids)))
+    last_insert_dates <- etlutils::as.DateWithTimezone(rep(NA, length(patient_ids)))
 
     # Map the retrieved data to the corresponding patient IDs
     for (i in seq_along(patient_ids)) {
       matching_row <- result[result$pat_id == patient_ids[i], ]
       if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
-        last_insert_dates[i] <- as.Date(as.POSIXct(max(matching_row$last_insert_datetime)))
+        last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
       }
     }
 

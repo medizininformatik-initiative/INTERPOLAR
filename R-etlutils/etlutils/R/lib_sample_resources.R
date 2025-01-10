@@ -829,7 +829,7 @@ mapDatesToPids <- function(pids_with_last_updated) {
   # Use tapply to group by PIDs and get the minimum date for each PID
   pids_with_last_updated <- tapply(pids_with_last_updated, names(pids_with_last_updated), min)
   # Convert back as dates
-  pids_with_last_updated <- as.Date(pids_with_last_updated, origin = "1970-01-01")
+  pids_with_last_updated <- etlutils::as.DateWithTimezone(pids_with_last_updated, origin = "1970-01-01")
   # Replace NA with "1000-01-01" as Date object
   pids_with_last_updated[is.na(pids_with_last_updated)] <- "1000-01-01"
   # Create a list where the unique dates map to patient IDs

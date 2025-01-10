@@ -54,7 +54,7 @@ createFrontendTables <- function() {
       pat_cis_pid = NA_character_,
       pat_name = NA_character_,
       pat_vorname = NA_character_,
-      pat_gebdat = as.POSIXct.Date(NA),
+      pat_gebdat = etlutils::as.DateWithTimezone(NA),
       pat_geschlecht = NA_character_,
       patient_complete = NA_character_
     )
@@ -91,7 +91,7 @@ createFrontendTables <- function() {
       redcap_repeat_instance = character(),
       fall_studienphase = character(),
       fall_station = character(),
-      fall_aufn_dat = as.POSIXct(character()),
+      fall_aufn_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_aufn_diag = character(),
       fall_gewicht_aktuell = numeric(),
       fall_gewicht_aktl_einheit = character(),
@@ -99,7 +99,7 @@ createFrontendTables <- function() {
       fall_groesse_einheit = character(),
       fall_bmi = numeric(),
       fall_status = character(),
-      fall_ent_dat = as.POSIXct(character()),
+      fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_complete = character()
     )
 
@@ -200,8 +200,8 @@ createFrontendTables <- function() {
         # Take the common data (ID, start, end, status) from the first line
         enc_id <- pid_encounters[[i]]$enc_id[1]
         enc_identifier_value <- pid_encounters[[i]]$enc_identifier_value[1]
-        enc_period_start <- pid_encounters[[i]]$enc_period_start[1]
-        enc_period_end <- pid_encounters[[i]]$enc_period_end[1]
+        enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounters[[i]]$enc_period_start[1])
+        enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounters[[i]]$enc_period_end[1])
         enc_status <- pid_encounters[[i]]$enc_status[1]
         data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)

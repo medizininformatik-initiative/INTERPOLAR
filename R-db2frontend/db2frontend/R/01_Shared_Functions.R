@@ -7,6 +7,9 @@
 #' @return A valid REDCap connection object of class `redcapConnection` if the connection
 #'         is successful.
 #'
+#' @details Throws An error if the connection cannot be established, if the API token or URL is
+#'          invalid, or if no valid metadata is retrieved from REDCap.
+#'
 getRedcapConnection <- function() {
   # Connect to REDCap
   frontend_connection <- redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
