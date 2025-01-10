@@ -138,12 +138,18 @@ adjustNames <- function(variables, prefix, valid_names) {
 
     # If a match is found, use the valid name with correct casing
     if (!is.na(match_index)) {
-      name <- valid_names[match_index]
+      return(valid_names[match_index])
     }
-    return(name)
   }
+
   # Apply the helper function to all names
-  names(variables) <- sapply(names(variables), process_name)
+  new_names <- lapply(names(variables), process_name)
+
+  # Filter out NULL names and update variables
+  valid_indices <- !sapply(new_names, is.null)  # Check which names are not NULL
+  variables <- variables[valid_indices]         # Keep only valid variables
+  names(variables) <- unlist(new_names[valid_indices]) # Assign valid names
+
   # Return the modified vector or list
   return(variables)
 }
