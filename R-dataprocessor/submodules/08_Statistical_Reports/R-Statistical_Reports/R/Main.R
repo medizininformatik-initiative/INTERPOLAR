@@ -12,4 +12,7 @@ createStatisticalReport <- function() {
   query <- paste0("SELECT * FROM v_condition\n")
   conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "statistical reports[1]")
   print(conditions)
+  if (!exists("LOCATION_IDENTIFIER")) {
+    stop("LOCATION_IDENTIFIER is not defined. Please define it in the dataprocessor_config.toml")
+  }
 }

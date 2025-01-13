@@ -2,6 +2,10 @@
 # Project Definition for module dataprocessor    #
 ##################################################
 
+# Please specify the identifier for the INTERPOLAR site here (e.g., important
+# for cross-site study performance reports).
+#LOCATION_IDENTIFIER = "Identifier der INTERPOLAR-Einrichtung"
+
 ###
 # VERBOSE LEVELS
 ###
