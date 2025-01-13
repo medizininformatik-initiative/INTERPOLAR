@@ -140,6 +140,7 @@ adjustNames <- function(variables, prefix, valid_names) {
     if (!is.na(match_index)) {
       return(valid_names[match_index])
     }
+    return(NULL)
   }
 
   # Apply the helper function to all names
