@@ -281,6 +281,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Get the date for every PID when the Patient resource was written to the database the last time
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
 
+  etlutils::catList(pids_with_last_updated, "Date for every PID when the Patient resource was written to the database the last time:\n", "\n")
+
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
