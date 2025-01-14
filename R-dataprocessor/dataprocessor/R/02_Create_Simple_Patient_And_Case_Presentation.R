@@ -519,25 +519,25 @@ createFrontendTables <- function() {
 
           if (isFALSE(obs_by_pid)) {
             # Extract the Observations by direct encounter references
-            additional_query_comment <- paste0("        obs_encounter_ref = 'Encounter/", enc_id, "'\n")
-            query <- paste0(query_template, additional_query_comment)
+            additional_query_condition <- paste0("        obs_encounter_ref = 'Encounter/", enc_id, "'\n")
+            query <- paste0(query_template, additional_query_condition)
 
             observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
 
             # If no Observations found with the direct encounter link, so identify potencial
             # Observations by time overlap with the encounter period start and current date
             if (!nrow(observations)) {
-              additional_query_comment <- paste0("        obs_patient_ref = '", pid, "' AND\n",
-                                                 "        obs_effectivedatetime > '", enc_period_start, "'\n")
-              query <- paste0(query_template, additional_query_comment)
+              additional_query_condition <- paste0("        obs_patient_ref = '", pid, "' AND\n",
+                                                   "        obs_effectivedatetime > '", enc_period_start, "'\n")
+              query <- paste0(query_template, additional_query_condition)
 
               observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
             }
 
           } else {
             # Extract Observations by patient ID, but without any references to the encounter
-            additional_query_comment <- paste0("        obs_patient_ref = '", pid, "'\n")
-            query <- paste0(query_template, additional_query_comment)
+            additional_query_condition <- paste0("        obs_patient_ref = '", pid, "'\n")
+            query <- paste0(query_template, additional_query_condition)
 
             observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[3]")
           }
