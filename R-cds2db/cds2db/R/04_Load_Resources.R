@@ -264,11 +264,13 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- etlutils::as.DateWithTimezone(rep(NA, length(patient_ids)))
 
-    # Map the retrieved data to the corresponding patient IDs
-    for (i in seq_along(patient_ids)) {
-      matching_row <- result[result$pat_id == patient_ids[i], ]
-      if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
-        last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+    if (!etlutils::isDefinedAndTrue("DEBUG_IGNORE_LAST_UPDATE_DATE")){
+      # Map the retrieved data to the corresponding patient IDs
+      for (i in seq_along(patient_ids)) {
+        matching_row <- result[result$pat_id == patient_ids[i], ]
+        if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
+          last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+        }
       }
     }
 
