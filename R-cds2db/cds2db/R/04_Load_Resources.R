@@ -264,11 +264,13 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- etlutils::as.DateWithTimezone(rep(NA, length(patient_ids)))
 
-    # Map the retrieved data to the corresponding patient IDs
-    for (i in seq_along(patient_ids)) {
-      matching_row <- result[result$pat_id == patient_ids[i], ]
-      if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
-        last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+    if (!etlutils::isDefinedAndTrue("DEBUG_IGNORE_LAST_UPDATE_DATE")){
+      # Map the retrieved data to the corresponding patient IDs
+      for (i in seq_along(patient_ids)) {
+        matching_row <- result[result$pat_id == patient_ids[i], ]
+        if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
+          last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+        }
       }
     }
 
@@ -280,6 +282,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
 
   # Get the date for every PID when the Patient resource was written to the database the last time
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+
+  etlutils::catList(pids_with_last_updated, "Date for every PID when the Patient resource was written to the database the last time:\n", "\n")
 
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
