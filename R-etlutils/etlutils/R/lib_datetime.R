@@ -1,66 +1,64 @@
-#' Normalize POSIXct Time to UTC
+#' Convert Input to POSIXct with a Specified Timezone
 #'
-#' @param time A POSIXct date-time object.
-#' @return POSIXct date-time object in UTC timezone.
-#' @examples
-#' time1 <- as.POSIXct("2023-03-10 12:00:00", tz = "America/New_York")
-#' normalizeTimeToUTC(time1)
-#' @export
-normalizeTimeToUTC <- function(time) {
-  # Converts the provided POSIXct object to the UTC format
-  normalized_time <- as.POSIXct(format(time, tz = "UTC"), tz = "UTC")
-  return(normalized_time)
-}
-
-#' Normalize Specified Column of Data.Table to UTC
+#' A wrapper around `as.POSIXct` that allows specifying a default or custom timezone and an optional input format.
 #'
-#' This function modifies the specified column in a given data.table by converting
-#' all datetime entries to UTC format. The column is expected to contain POSIXct
-#' datetime objects.
+#' @param x A character vector, numeric vector, or Date object that can be converted to a `POSIXct` object.
+#' @param tz A character string specifying the timezone to set. Defaults to the global variable `global_timezone`.
+#' @param format An optional character string specifying the input format for `x`. Defaults to `NULL`, allowing `as.POSIXct` to infer the format automatically.
+#' @return A `POSIXct` object with the specified timezone applied.
+#' @details
+#' This function simplifies the conversion of various input types to `POSIXct` while allowing for an explicitly defined timezone.
+#' If `format` is provided, it will be used to parse the input; otherwise, the function will attempt to infer the format.
 #'
-#' @param dt A data.table object containing at least one column with POSIXct datetime objects.
-#' @param column The name of the column to be normalized to UTC.
+#' The timezone `tz` defaults to the globally defined variable `global_timezone`, which must be set before calling this function.
 #'
 #' @examples
-#' library(data.table)
-#' dt <- data.table(time = as.POSIXct(c("2023-03-10 12:00:00",
-#'                                      "2023-03-11 15:00:00"), tz = "America/New_York"))
-#' normalizeTableColumnToUTC(dt, "time")
-#' print(dt)
+#' GLOBAL_TIMEZONE <- "Europe/Berlin"
+#' as.POSIXctWithTimezone("1949-12-31 UTC")
+#' as.POSIXct("1949-12-31 CET", tz = "UTC")
 #'
 #' @export
-normalizeTableColumnToUTC <- function(dt, column) {
-  dt[, (column) := as.POSIXct(format(.SD[[..column]], tz = "UTC"), tz = "UTC"), .SDcols = column]
-}
-
-#' Normalize All POSIXct Columns in a Data.Table to UTC
-#'
-#' This function automatically detects all POSIXct columns in a given data.table
-#' and normalizes their time values to the UTC timezone. It modifies the data.table
-#' in place.
-#'
-#' @param dt A data.table object that potentially contains one or more columns
-#'   of POSIXct datetime objects.
-#'
-#' @examples
-#' library(data.table)
-#' dt <- data.table(time1 = as.POSIXct(c("2023-03-10 12:00:00",
-#'                                       "2023-03-11 15:00:00"), tz = "America/New_York"),
-#'                  time2 = as.POSIXct(c("2023-03-10 11:00:00",
-#'                                       "2023-03-11 14:00:00"), tz = "Europe/Berlin"))
-#' normalizeAllPOSIXctToUTC(dt)
-#' print(dt)
-#'
-#' @export
-normalizeAllPOSIXctToUTC <- function(dt) {
-  # Identify all columns of type POSIXct
-  posixct_cols <- sapply(dt, function(x) inherits(x, "POSIXct"))
-
-  # Run through all POSIXct columns and convert them to UTC
-  for (col in names(posixct_cols[posixct_cols])) {
-    dt[, (col) := as.POSIXct(format(.SD[[col]], tz = "UTC"), tz = "UTC"), .SDcols = col]
+as.POSIXctWithTimezone <- function(x, tz = GLOBAL_TIMEZONE, format = NULL) {
+  if (is.null(format)) {
+    as.POSIXct(x, tz = tz)
+  } else {
+    as.POSIXct(x, tz = tz, format = format)
   }
-  # The function modifies the data.table directly, so no return is necessary
+}
+
+#' Convert Input to Date with a Specified Timezone
+#'
+#' A wrapper around `as.Date` that allows specifying a timezone and an optional format for parsing
+#' the input.
+#'
+#' @param x A character vector, numeric vector, or `POSIXt` object that can be converted to a `Date`
+#' object.
+#' @param tz A character string specifying the timezone to set. Defaults to the global variable
+#' `global_timezone`.
+#' @param format An optional character string specifying the input format for `x`. If `NULL`, the
+#' function allows `as.Date` to infer the format automatically. Defaults to `NULL`.
+#' @param origin A character string specifying the origin date for numeric input. Required if `x`
+#' is numeric. Default is `NULL`.
+#'
+#' @return A `Date` object with the specified timezone applied.
+#'
+#' @examples
+#' \dontrun{
+#' GLOBAL_TIMEZONE <- "Europe/Berlin"
+#' as.DateWithTimezone("2025-01-01", origin = "1971-01-01")
+#' as.DateWithTimezone("01/01/2025", format = "%d/%m/%Y")
+#' as.DateWithTimezone(as.POSIXct("2025-01-01 00:00:00", tz = "UTC"))
+#' as.DateWithTimezone(as.POSIXctWithTimezone("2020-08-14 23:00:00+05:00"))
+#' as.DateWithTimezone("1949-12-31 CET")
+#' as.DateWithTimezone("1949-12-31 UTC")
+#' }
+#' @export
+as.DateWithTimezone <- function(x, tz = GLOBAL_TIMEZONE, format = NULL, origin = NULL) {
+  if (is.null(format)) {
+    as.Date(x, tz = tz, origin = origin)
+  } else {
+    as.Date(x, tz = tz, format = format, origin = origin)
+  }
 }
 
 #' Convert Time Format
@@ -80,13 +78,35 @@ normalizeAllPOSIXctToUTC <- function(dt) {
 #' @return This function modifies the input data table \code{dt} by converting the time format
 #' of the specified columns.
 #'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   id = 1:3,
+#'   time_column = c("08:00:00", "15:30:00", "invalid_time")
+#' )
+#' convertTimeFormat(dt, "time_column")
+#' print(dt)
+#'
 #' @export
 convertTimeFormat <- function(dt, columns) {
   for (column in columns) {
-    # Convert string in POSIXct object
-    dt[, (column) := as.POSIXct(.SD[[..column]], format = "%H:%M:%S", tz = "Europe/Berlin"), .SDcols = column]
-    # Set date to '1970-01-01'
-    dt[!is.na(dt[[column]]), (column) := as.POSIXct(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")), tz = "Europe/Berlin")]
+    dt[, (column) := {
+      # Convert each value individually while preserving the hms class
+      result <- sapply(get(column), function(x) {
+        tryCatch(
+          hms::as_hms(x),  # Attempt to convert the value to hms
+          error = function(e) {
+            warning(sprintf("Conversion failed for value '%s': %s", x, e$message))
+            NA  # Assign NA for invalid or unparsable values
+          }
+        )
+      })
+      # Ensure the column retains the hms class
+      data.table::setattr(result, "class", c("hms", "difftime"))
+      # Set the units for the hms object as "secs"
+      data.table::setattr(result, "units", "secs")
+      result
+    }]
   }
 }
 
@@ -109,6 +129,12 @@ convertTimeFormat <- function(dt, columns) {
 #'
 #' @return This function modifies the input data table \code{dt} by converting the date format
 #' of the specified columns.
+#'
+#' @examples
+#' library(data.table)
+#' # Single column conversion
+#' dt <- data.table(date = c('2020', '2021-05', '2022/12/25', '2023-07-01'))
+#' convertDateFormat(dt, 'date')
 #'
 #' @export
 convertDateFormat <- function(dt, columns) {
@@ -142,12 +168,27 @@ convertDateFormat <- function(dt, columns) {
 #' the specified column to date-time objects with the format \code{ymd_hms},
 #' truncating the time to minutes and setting the timezone to "Europe/Berlin".
 #'
+#' The function supports various datetime formats, including:
+#' - ISO 8601 format with \code{T} separating date and time, e.g., \code{"2020-08-14T02:00:00+03:00"}.
+#' - Formats with or without explicit time zones.
+#' - UTC timestamps indicated by a trailing \code{"Z"}, e.g., \code{"2011-09-15T06:31:34Z"}.
+#'
+#' The \code{Z} at the end of a timestamp stands for "Zulu Time", which is equivalent to UTC (Coordinated Universal Time).
+#' It indicates that the timestamp is in UTC and does not require additional time zone conversion.
+#'
 #' @return This function modifies the input data table \code{dt} in place by
 #' fixing the date format in the specified column
+#'
+#' @examples
+#' library(data.table)
+#' # Converting a datetime column
+#' dt <- data.table(id = 1:4, enc_period_end = c("2020-08-14T02:00:00+03:00",
+#' "2021-09-10T12:30:00+02:00", "2022-03-15 18:45:00+02:00", "2011-09-15T06:31:34Z"))
+#' convertDateTimeFormat(dt, columns = c("enc_period_end"))
 #'
 #' @export
 convertDateTimeFormat <- function(dt, columns) {
   for (column in columns) {
-    dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = "Europe/Berlin")]
+    dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = GLOBAL_TIMEZONE)]
   }
 }

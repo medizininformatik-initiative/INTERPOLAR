@@ -7,8 +7,8 @@
 #' @return A valid REDCap connection object of class `redcapConnection` if the connection
 #'         is successful.
 #'
-#' @throws An error if the connection cannot be established, if the API token or URL is invalid,
-#'         or if no valid metadata is retrieved from REDCap.
+#' @details Throws An error if the connection cannot be established, if the API token or URL is
+#'          invalid, or if no valid metadata is retrieved from REDCap.
 #'
 getRedcapConnection <- function() {
   # Connect to REDCap

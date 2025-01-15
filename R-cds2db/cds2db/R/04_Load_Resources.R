@@ -44,11 +44,11 @@ createWardPatientIDPerDateTable <- function(patient_ids_per_ward) {
 #' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
-  start_datetime <- as.POSIXct(Sys.time())
+  start_datetime <- etlutils::as.POSIXctWithTimezone(Sys.time())
   if (exists('DEBUG_ENCOUNTER_DATETIME_START')) {
-    start_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_START)
+    start_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_START)
     if (exists('DEBUG_ENCOUNTER_DATETIME_END') && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
-      end_datetime <- as.POSIXct(DEBUG_ENCOUNTER_DATETIME_END)
+      end_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_END)
       return(c(start_datetime = start_datetime, end_datetime = end_datetime))
     }
   }
@@ -138,12 +138,19 @@ adjustNames <- function(variables, prefix, valid_names) {
 
     # If a match is found, use the valid name with correct casing
     if (!is.na(match_index)) {
-      name <- valid_names[match_index]
+      return(valid_names[match_index])
     }
-    return(name)
+    return(NULL)
   }
+
   # Apply the helper function to all names
-  names(variables) <- sapply(names(variables), process_name)
+  new_names <- lapply(names(variables), process_name)
+
+  # Filter out NULL names and update variables
+  valid_indices <- !sapply(new_names, is.null)  # Check which names are not NULL
+  variables <- variables[valid_indices]         # Keep only valid variables
+  names(variables) <- unlist(new_names[valid_indices]) # Assign valid names
+
   # Return the modified vector or list
   return(variables)
 }
@@ -255,13 +262,15 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     result <- etlutils::dbGetReadOnlyQuery(query, params = params, lock_id = "getLastPatientUpdateDate()[1]")
 
     # Create an empty result vector with NAs for patient IDs not found in the database
-    last_insert_dates <- as.Date(rep(NA, length(patient_ids)))
+    last_insert_dates <- etlutils::as.DateWithTimezone(rep(NA, length(patient_ids)))
 
-    # Map the retrieved data to the corresponding patient IDs
-    for (i in seq_along(patient_ids)) {
-      matching_row <- result[result$pat_id == patient_ids[i], ]
-      if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
-        last_insert_dates[i] <- as.Date(as.POSIXct(max(matching_row$last_insert_datetime)))
+    if (!etlutils::isDefinedAndTrue("DEBUG_IGNORE_LAST_UPDATE_DATE")){
+      # Map the retrieved data to the corresponding patient IDs
+      for (i in seq_along(patient_ids)) {
+        matching_row <- result[result$pat_id == patient_ids[i], ]
+        if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
+          last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+        }
       }
     }
 
@@ -273,6 +282,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
 
   # Get the date for every PID when the Patient resource was written to the database the last time
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+
+  etlutils::catList(pids_with_last_updated, "Date for every PID when the Patient resource was written to the database the last time:\n", "\n")
 
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
@@ -465,23 +476,23 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
       stop("There are no Observations to duplicate ", required_obs_count, " times!")
     }
 
-    #' Extend Observation Table
-    #'
-    #' This function ensures that a given observation table (`table_obs`) has exactly
-    #' `debug_resource_count` rows. If the table has fewer rows, it duplicates the rows
-    #' of the table to meet the required count. If the table has more rows, it truncates
-    #' it to the required size. Duplicated rows will have a modified `obs_id` to ensure
-    #' uniqueness by appending a `_DUP_` suffix with a unique number. Existing rows with
-    #' `_DUP_` in their `obs_id` are preserved and not further modified.
-    #'
-    #' @param table_obs A data.table containing observations with a column named `obs_id`.
-    #'                  The `obs_id` column is used as a unique identifier for each row.
-    #' @param debug_resource_count An integer specifying the required number of rows
-    #'                              in the output table.
-    #' @return A data.table with exactly `debug_resource_count` rows. Rows are either
-    #'         truncated or duplicated to meet the required count, and new rows are
-    #'         assigned unique `obs_id` values.
-    #'
+    # Extend Observation Table
+    #
+    # This function ensures that a given observation table (`table_obs`) has exactly
+    # `debug_resource_count` rows. If the table has fewer rows, it duplicates the rows
+    # of the table to meet the required count. If the table has more rows, it truncates
+    # it to the required size. Duplicated rows will have a modified `obs_id` to ensure
+    # uniqueness by appending a `_DUP_` suffix with a unique number. Existing rows with
+    # `_DUP_` in their `obs_id` are preserved and not further modified.
+    #
+    # @param table_obs A data.table containing observations with a column named `obs_id`.
+    #                  The `obs_id` column is used as a unique identifier for each row.
+    # @param debug_resource_count An integer specifying the required number of rows
+    #                              in the output table.
+    # @return A data.table with exactly `debug_resource_count` rows. Rows are either
+    #         truncated or duplicated to meet the required count, and new rows are
+    #         assigned unique `obs_id` values.
+    #
     extendObservationTable <- function(table_obs, debug_resource_count) {
       # Calculate the number of rows needed
       original_rows <- nrow(table_obs)

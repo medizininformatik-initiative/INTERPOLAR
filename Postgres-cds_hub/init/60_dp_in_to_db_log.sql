@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-01-09 18:57:40
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-13 23:53:58
+-- Create time: 2025-01-09 18:58:46
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -18,7 +18,7 @@
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
--- GRANT_TARGET_USER (3):  db_user
+-- GRANT_TARGET_USER (2):  db_user
 -- COPY_FUNC_SCRIPTNAME:  60_dp_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_fe_dp_in_to_db_log

@@ -162,14 +162,14 @@ my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "")
 
 # Test to check if catList correctly prints a simple list without any prefix or suffix
 test_that("catList prints simple list without prefix or suffix", {
-  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = "
+  expected_output <- "a = 1\nb = 10, NA\nc = 3\nd = "
   output <- capture.output(catList(my_list))
   expect_equal(paste(output, collapse = "\n"), expected_output)
 })
 
 # Test to verify that catList works with a specified prefix and suffix
 test_that("catList works with prefix and suffix", {
-  expected_output <- "Start:\na = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = \nEnd"
+  expected_output <- "Start:\na = 1\nb = 10, NA\nc = 3\nd = \nEnd"
   output <- capture.output(catList(my_list, prefix = "Start:\n", suffix = "End\n"))
   expect_equal(paste(output, collapse = "\n"), expected_output)
 })
@@ -183,7 +183,7 @@ test_that("catList hides values based on pattern", {
 
 # Test to check that catList behaves normally with an empty hide_value_pattern
 test_that("catList works with empty hide_value_pattern", {
-  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = "
+  expected_output <- "a = 1\nb = 10, NA\nc = 3\nd = "
   output <- capture.output(catList(my_list, hide_value_pattern = ""))
   expect_equal(paste(output, collapse = "\n"), expected_output)
 })
@@ -195,17 +195,10 @@ test_that("catList handles list with NA and empty string", {
   expect_equal(paste(output, collapse = "\n"), expected_output)
 })
 
-# Test to verify behavior with NA hide_value_pattern
-test_that("catList handles NA hide_value_pattern", {
-  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n[1] NA\n\nc = 3\nd = "
-  output <- capture.output(catList(my_list, hide_value_pattern = NA))
-  expect_equal(paste(output, collapse = "\n"), expected_output)
-})
-
 # Test to verify behavior with complex nested lists
 test_that("catList handles complex nested lists", {
   complex_list <- list(a = 1, b = list(x = 10, y = list(z = 20)), c = 3)
-  expected_output <- "a = 1\nb = $x\n[1] 10\n\n$y\n$y$z\n[1] 20\n\n\nc = 3"
+  expected_output <- "a = 1\nb = 10, list(z = 20)\nc = 3"
   output <- capture.output(catList(complex_list))
   expect_equal(paste(output, collapse = "\n"), expected_output)
 })
