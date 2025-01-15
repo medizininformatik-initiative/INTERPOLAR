@@ -78,13 +78,35 @@ as.DateWithTimezone <- function(x, tz = GLOBAL_TIMEZONE, format = NULL, origin =
 #' @return This function modifies the input data table \code{dt} by converting the time format
 #' of the specified columns.
 #'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   id = 1:3,
+#'   time_column = c("08:00:00", "15:30:00", "invalid_time")
+#' )
+#' convertTimeFormat(dt, "time_column")
+#' print(dt)
+#'
 #' @export
 convertTimeFormat <- function(dt, columns) {
   for (column in columns) {
-    # Convert string in POSIXct object
-    dt[, (column) := as.POSIXctWithTimezone(.SD[[..column]], format = "%H:%M:%S"), .SDcols = column]
-    # Set date to '1970-01-01'
-    dt[!is.na(dt[[column]]), (column) := as.POSIXctWithTimezone(paste0("1970-01-01 ", format(get(column), "%H:%M:%S")))]
+    dt[, (column) := {
+      # Convert each value individually while preserving the hms class
+      result <- sapply(get(column), function(x) {
+        tryCatch(
+          hms::as_hms(x),  # Attempt to convert the value to hms
+          error = function(e) {
+            warning(sprintf("Conversion failed for value '%s': %s", x, e$message))
+            NA  # Assign NA for invalid or unparsable values
+          }
+        )
+      })
+      # Ensure the column retains the hms class
+      data.table::setattr(result, "class", c("hms", "difftime"))
+      # Set the units for the hms object as "secs"
+      data.table::setattr(result, "units", "secs")
+      result
+    }]
   }
 }
 
