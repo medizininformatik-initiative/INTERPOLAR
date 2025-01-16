@@ -2,6 +2,8 @@
 # Project Definition for module dataprocessor    #
 ##################################################
 
+[global]
+
 ###
 # VERBOSE LEVELS
 ###
@@ -28,6 +30,9 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 MAX_DIR_COUNT = 5
 
+# List of all paths that are to be used as input directories for data
+INPUT_REPO_PATHS = ["./Input-Repo"]
+
 [debug]
 ###################
 # FOR DEBUG ONLY: #
@@ -39,7 +44,7 @@ MAX_DIR_COUNT = 5
 # are loaded from the database.
 #DEBUG_ENCOUNTER_DATETIME = "2020-07-31 21:25:00"
 
-[analyse]
+[frontend]
 
 # In the patient table of the frontend, the patient ID should be displayed, which
 # can be used to search for further information on the patient in other systems.
