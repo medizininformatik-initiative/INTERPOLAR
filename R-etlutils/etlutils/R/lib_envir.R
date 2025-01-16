@@ -131,6 +131,35 @@ initModuleConstants <- function(module_name, path_to_toml, debug_path_to_config_
   return(constants)
 }
 
+#' Initialize Submodule Constants from TOML Files
+#'
+#' This function initializes constants for a submodule by loading one or multiple TOML files.
+#' If `path_to_toml` is a directory, all files ending in `_config.toml` within the directory
+#' are loaded. If `path_to_toml` is a file, only that specific file is loaded.
+#'
+#' @param path_to_toml A string specifying the path to the TOML file or directory.
+#' @param defaults A named vector of default values for variables. Missing variables after loading
+#'        the TOML files are initialized with these values.
+#' @param envir The environment where the constants should be assigned. Default is `.GlobalEnv`.
+#'
+#' @return A named list containing all initialized constants, including those loaded from the TOML files.
+#'
+#' @export
+initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
+  constants <- list()
+  if (file.info(path_to_toml)$isdir) {
+    # If path_to_toml is a directory -> list all files with ending "_config\\.toml"
+    toml_files <- list.files(path_to_toml, pattern = "_config\\.toml$", full.names = TRUE)
+  } else {
+    # If path_to_toml is a file -> read only this file
+    toml_files <- c(path_to_toml)
+  }
+  for (toml_file in toml_files) {
+    constants <- addConstants(toml_file, constants, envir)
+  }
+  return(constants)
+}
+
 #' Get Global Variables by Prefix
 #'
 #' This function retrieves all global variables from the environment that match a given prefix and returns them as either a list or a vector.

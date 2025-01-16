@@ -20,6 +20,11 @@ runSubmodules <- function() {
     # Source all R scripts in the directory
     etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
 
+      # Load all submodule config.toml files
+      submodule_config <- etlutils::initSubmoduleConstants(dir)
+      # log all configuration parameters but hide value with parameter name starts with "FHIR_"
+      etlutils::catList(submodule_config, "Submodule configuration:\n------------------------\n", "\n")
+
       # Source all R scripts in R subdirectory of an package project
       submodule_subdirs <- list.dirs(dir, recursive = FALSE)
       for (subdir in submodule_subdirs) {
