@@ -306,6 +306,24 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       pids_per_ward <- getPIDsPerWard(encounters, filter_patterns)
     })
   }
+
+  etlutils::runLevel3("Validate pids_per_ward", {
+    # Combine all patient IDs from the list into a data table with their corresponding stations
+    pids_per_ward_combinations <- unique(data.table::rbindlist(
+      lapply(names(pids_per_ward), function(ward) {
+        data.table::data.table(patient_id = pids_per_ward[[ward]], ward = ward)
+      }),
+      use.names = TRUE, fill = TRUE
+    ))
+    # Find duplicated pids
+    duplicates_pids_per_ward <- pids_per_ward_combinations[patient_id %in% names(which(table(patient_id) > 1))]
+    # Stop if duplicates pids are found
+    if (nrow(duplicates_pids_per_ward)) {
+      stop("Invalid patient_ids: The following patient_ids are assigned more than in one ward.\n",
+           etlutils::getPrintString(duplicates_pids_per_ward))
+    }
+  })
+
   if (log_result) {
     no_wards <- !length(pids_per_ward)
     all_wards_empty <- all(sapply(pids_per_ward, function(set) length(set) == 0))
