@@ -306,6 +306,32 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       pids_per_ward <- getPIDsPerWard(encounters, filter_patterns)
     })
   }
+
+  #
+  etlutils::runLevel3("Ensure every Encounter/Patient ID is only assigned to one ward", {
+    # Combine all patient IDs from the list into a data table with their corresponding stations
+    pids_per_ward_combinations <- unique(data.table::rbindlist(
+      lapply(names(pids_per_ward), function(ward) {
+        data.table::data.table(patient_id = pids_per_ward[[ward]], ward = ward)
+      }),
+      use.names = TRUE, fill = TRUE
+    ))
+    # Find duplicated pids
+    duplicates_pids_per_ward <- pids_per_ward_combinations[patient_id %in% names(which(table(patient_id) > 1))]
+    # Stop if duplicates pids are found
+    if (nrow(duplicates_pids_per_ward)) {
+      if (read_pids_from_file) {
+        error_message_part <- paste0("Please fix it in the file '", path_to_PID_list_file, "'.\n")
+      } else {
+        error_message_part <- "Please fix the variables 'ENCOUNTER_FILTER_PATTERN' in the toml file.\n"
+      }
+      error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward in file '", path_to_PID_list_file, "'.\n",
+                              error_message_part,
+                              etlutils::getPrintString(duplicates_pids_per_ward))
+      stop(error_message)
+    }
+  })
+
   if (log_result) {
     no_wards <- !length(pids_per_ward)
     all_wards_empty <- all(sapply(pids_per_ward, function(set) length(set) == 0))
