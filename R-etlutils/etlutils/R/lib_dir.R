@@ -225,6 +225,60 @@ readFileAsString <- function(file_path, normalize_newlines = TRUE) {
   return(file_content)
 }
 
+#' Get All Files Matching a Pattern
+#'
+#' This function retrieves all files matching a specified pattern from a flexible set
+#' of inputs, which can be a string (directory or file), a vector, or a list of mixed
+#' directory and file paths. It removes duplicates from the results.
+#'
+#' @param paths A string, vector, or list containing file paths and/or directory paths.
+#' @param pattern A regular expression pattern to filter the files (e.g., "*.xlsx" or "\\.csv$").
+#' @param recursive Logical, indicating whether to search directories recursively. Default is `FALSE`.
+#'
+#' @return A character vector containing all unique file paths that match the pattern.
+#'
+getFilesByPattern <- function(paths, pattern, recursive = FALSE) {
+  # Ensure `paths` is a character vector
+  paths <- unlist(paths)
+
+  # Initialize an empty vector to store matching files
+  matching_files <- c()
+
+  for (path in paths) {
+    if (file.exists(path)) {
+      if (file.info(path)$isdir) {
+        # If it's a directory, list files matching the pattern
+        files <- list.files(path, pattern = pattern, full.names = TRUE, recursive = recursive)
+        matching_files <- c(matching_files, files)
+      } else {
+        # If it's a file, check if it matches the pattern
+        if (grepl(pattern, path)) {
+          matching_files <- c(matching_files, path)
+        }
+      }
+    }
+  }
+
+  # Remove duplicates and return the result
+  return(unique(matching_files))
+}
+
+#' Get Full List of Excel Files
+#'
+#' This function retrieves a full list of `.xlsx` files from a mix of directories and file paths.
+#' It identifies whether each input is a directory or file, and applies a filter to only include
+#' files matching the `.xlsx` extension. Duplicate file paths are removed from the result.
+#'
+#' @param filesOrDirs A character vector or list containing file paths and/or directory paths.
+#' @param recursive Logical, indicating whether to search directories recursively. Default is `FALSE`.
+#'
+#' @return A character vector containing unique file paths to `.xlsx` files.
+#'
+#' @export
+getFullExcelFilesList <- function(filesOrDirs, recursive = FALSE) {
+  getFilesByPattern(filesOrDirs, ".*\\.xlsx$", recursive = recursive)
+}
+
 #' #' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
 #' #'
 #' #' a <- ReadRData('a')
