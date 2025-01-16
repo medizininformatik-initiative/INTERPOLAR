@@ -5,6 +5,6 @@
 # Lade alle anderen Ressourcen (MedicationRequest/Condition) über Encounter-ID herunter (Solange wir die Encounter-Reference haben)
 # MRP Calculation
 # Write MRP in DB-Table
-etlutils::runLevel2("Study 1a Create Simple Patient and Case View", {
+etlutils::runLevel2("Calculate Drug-Disease MRPs", {
   print("TODO Calculate Drug Disease...")
 })
