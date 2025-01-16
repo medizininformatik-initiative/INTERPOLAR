@@ -269,13 +269,13 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
 #'
 #' @export
 readFirstExcelFileAsTableList <- function(path, namePattern) {
-  pattern <- paste0('.*', namePattern, '.*\\.xlsx$')
+  pattern <- paste0(".*", namePattern, ".*\\.xlsx$")
   excelFileNames <- list.files(path)
   excelFileNames <- excelFileNames[grepl(pattern, excelFileNames, perl = TRUE)]
 
   if (length(excelFileNames)) {
     for (i in 1:length(excelFileNames)) {
-      if (!startsWith(excelFileNames[i], '~')) {
+      if (!startsWith(excelFileNames[i], "~")) {
         excelFile <- file.path(path, excelFileNames[i])
         return(readExcelFileAsTableList(excelFile))
       }
