@@ -116,18 +116,58 @@ test_that("convertDateFormat converts date representations correctly", {
 # convertTimeFormat #
 #####################
 
-test_that("convertTimeFormat converts polar time representations to POSIXct", {
-  # Create a test data.table
-  dt <- data.table(time_column = c("12:30:45", "08:15:00", "23:59:59", "13:45:22.123456789", NA, ""))
-  # Call the function
-  suppressMessages(convertTimeFormat(dt, "time_column"))
-  # Check specific time values
-  expect_equal(dt$time_column[1], as.POSIXct("1970-01-01 12:30:45", tz = "Europe/Berlin"))
-  expect_equal(dt$time_column[2], as.POSIXct("1970-01-01 08:15:00", tz = "Europe/Berlin"))
-  expect_equal(dt$time_column[3], as.POSIXct("1970-01-01 23:59:59", tz = "Europe/Berlin"))
-  expect_equal(dt$time_column[4], as.POSIXct("1970-01-01 13:45:22", tz = "Europe/Berlin"))
-  expect_true(is.na(dt$time_column[5]))  # Check NA value
-  expect_true(is.na(dt$time_column[6]))  # Check NA value
+test_that("convertTimeFormat correctly converts valid time strings", {
+  dt <- data.table(
+    id = 1:3,
+    time_column = c("08:00:00", "15:30:00", "12:45:00")
+  )
+  convertTimeFormat(dt, "time_column")
+  # Check that the time_column is now of class "hms"
+  expect_true(inherits(dt$time_column, "hms"))
+  # Check that the values are correctly converted
+  expect_equal(as.character(dt$time_column), c("08:00:00", "15:30:00", "12:45:00"))
+})
+
+test_that("convertTimeFormat handles invalid time strings", {
+  dt <- data.table(
+    id = 1:3,
+    time_column = c("08:00:00", "invalid_time", "15:30:00")
+  )
+  suppressWarnings(convertTimeFormat(dt, "time_column"))
+  # Check that invalid values are converted to NA
+  expect_true(is.na(dt$time_column[2]))
+  # Check that valid values remain unchanged
+  expect_equal(as.character(dt$time_column[c(1, 3)]), c("08:00:00", "15:30:00"))
+})
+
+test_that("convertTimeFormat works with multiple columns", {
+  dt <- data.table(
+    id = 1:3,
+    time_column1 = c("08:00:00", "15:30:00", "12:45:00"),
+    time_column2 = c("20:00:00", "invalid_time", "23:15:00")
+  )
+  suppressWarnings(convertTimeFormat(dt, c("time_column1", "time_column2")))
+  # Check that both columns are of class "hms"
+  expect_true(inherits(dt$time_column1, "hms"))
+  expect_true(inherits(dt$time_column2, "hms"))
+  # Check that valid values are correctly converted
+  expect_equal(as.character(dt$time_column1), c("08:00:00", "15:30:00", "12:45:00"))
+  expect_equal(as.character(dt$time_column2[c(1, 3)]), c("20:00:00", "23:15:00"))
+  # Check that invalid values are NA
+  expect_true(is.na(dt$time_column2[2]))
+})
+
+test_that("convertTimeFormat retains original data table structure", {
+  dt <- data.table(
+    id = 1:3,
+    time_column = c("08:00:00", "15:30:00", "12:45:00"),
+    another_column = c("A", "B", "C")
+  )
+  convertTimeFormat(dt, "time_column")
+  # Check that other columns remain unchanged
+  expect_equal(dt$another_column, c("A", "B", "C"))
+  # Check that the data table structure is preserved
+  expect_equal(names(dt), c("id", "time_column", "another_column"))
 })
 
 #########################
