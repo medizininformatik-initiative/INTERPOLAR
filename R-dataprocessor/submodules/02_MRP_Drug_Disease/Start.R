@@ -6,5 +6,18 @@
 # MRP Calculation
 # Write MRP in DB-Table
 etlutils::runLevel2("Calculate Drug-Disease MRPs", {
-  print("TODO Calculate Drug Disease...")
+
+  # Load Drug-Disease Definition
+  path_to_mrp_tables <- "./Input-Repo"
+  drug_disease_mrp_definition <- etlutils::readFirstExcelFileAsTableList(path_to_mrp_tables, "Drug-Disease")
+
+  drug_disease_mrp_table <- readRDS("./Input-Repo/drug_disease_mrp_table_expanded.RData")
+  if (!exists("drug_disease_mrp_table")) {
+    # Preprocess Drug-Disease table
+    drug_disease_mrp_table <- cleanAndExpandDefinition(drug_disease_mrp_definition$Drug_Disease_Pairs)
+  }
+
+  # Calculate Drug-Disease MRP
+  drug_disease_mrps <- calculateDrugDiseaseMRPs(drug_disease_mrp_table)
+
 })
