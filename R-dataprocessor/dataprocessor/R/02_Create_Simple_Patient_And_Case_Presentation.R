@@ -455,6 +455,11 @@ createFrontendTables <- function() {
 
     encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
 
+    # Create a new table with rows where enc_partof_ref is NOT NA
+    part_of_encounters <- encounters[!is.na(enc_partof_ref)]
+    # Remove those rows from the original table
+    encounters <- encounters[is.na(enc_partof_ref)]
+
     if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")) {
       #TODO AXS prüfen ob dieser Code durch die Funktion convertFilterPatterns aus cds2db ersetzt werden kann
       encounter_filter_patterns <- etlutils::getVarByNameOrDefaultIfMissing("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")
@@ -470,7 +475,15 @@ createFrontendTables <- function() {
         }
         filter_patterns[[paste0("Condition_", length(filter_patterns) + 1)]] <- and_conditions
       }
-      encounters <- etlutils::filterResources(encounters, filter_patterns)
+      encounters_lists <- etlutils::filterResources(encounters, filter_patterns, return_removed = TRUE)
+      # Extract the table with rows that were kept_resources (matched the filter conditions)
+      encounters <- encounters_lists$kept_resources
+      # Extract the table with rows that were removed_resources (did not match the filter conditions)
+      part_of_encounters_filtered <- encounters_lists$removed_resources
+
+      if(nrow(part_of_encounters_filtered)) {
+        part_of_encounters <- unique(rbind(part_of_encounters, part_of_encounters_filtered))
+      }
     }
 
     # load Conditions referenced by Encounters
@@ -486,6 +499,7 @@ createFrontendTables <- function() {
 
       pid <- pids_per_ward$patient_id[pid_index]
       pid_encounters <- encounters[enc_patient_ref == pid]
+      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
