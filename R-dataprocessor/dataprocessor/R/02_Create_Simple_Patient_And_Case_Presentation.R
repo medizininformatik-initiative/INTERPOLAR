@@ -289,13 +289,16 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
 #' @return A single string containing all filtered and combined values, grouped by location labels, separated by semicolons.
 #'
 #' @examples
+#' \dontrun{
 #' # Example data
+#' library(data.table)
 #' pid_part_of_encounters <- data.table(
 #'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd"),
 #'   enc_identifier_value = c("ID_001", "ID_002", "ID_003", "")
 #' )
 #' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
 #' combineEncounterLocations(pid_part_of_encounters, location_labels)
+#' }
 #'
 combineEncounterLocations <- function(data, location_labels) {
   location_codes <- names(location_labels)
@@ -421,6 +424,7 @@ createFrontendTables <- function() {
       fall_station = character(),
       fall_aufn_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_aufn_diag = character(),
+      fall_zimmernr = character(),
       fall_gewicht_aktuell = numeric(),
       fall_gewicht_aktl_einheit = character(),
       fall_groesse = numeric(),
@@ -570,6 +574,15 @@ createFrontendTables <- function() {
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
+
+        # Extract location informations
+        searched_encounter <- paste0("Encounter/", enc_id)
+        filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_partof_ref == searched_encounter]
+        # Define the mapping of location codes to labels
+        location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
+        # Call the function with the filtered_pid_part_of_encounters data and the location_labels
+        combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
+        data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
 
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA, obs_by_pid = FALSE) {
