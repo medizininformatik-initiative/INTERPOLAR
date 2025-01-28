@@ -272,6 +272,59 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
     lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
 }
 
+#' Function to filter rows and combine `enc_identifier_value` for multiple `location_codes`
+#'
+#' This function filters rows from the provided data based on multiple `location_codes`
+#' and combines their corresponding `enc_identifier_value` into a single string.
+#' The function supports configurable labels for each location code.
+#'
+#' @param data A data frame or data table that contains columns `enc_location_physicaltype_code` and `enc_identifier_value`.
+#' @param location_labels A named vector where names correspond to `location_codes` and values are the labels.
+#'
+#' @details This function applies filtering to each `location_code` provided in `location_labels`. It extracts values
+#' from the `enc_identifier_value` column based on the `enc_location_physicaltype_code` column and combines
+#' the non-empty, non-NA values into a single string, separated by commas. Each filtered and combined value is
+#' associated with its corresponding label from `location_labels`.
+#'
+#' @return A single string containing all filtered and combined values, grouped by location labels, separated by semicolons.
+#'
+#' @examples
+#' # Example data
+#' pid_part_of_encounters <- data.table(
+#'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd"),
+#'   enc_identifier_value = c("ID_001", "ID_002", "ID_003", "")
+#' )
+#' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
+#' combineEncounterLocations(pid_part_of_encounters, location_labels)
+#'
+combineEncounterLocations <- function(data, location_labels) {
+  location_codes <- names(location_labels)
+  # Apply the filtering and combining for each location_code and concatenate the results
+  combined_results <- sapply(location_codes, function(location_code) {
+    # Filter rows based on the specified location_code in enc_location_physicaltype_code
+    filtered_values <- data[
+      enc_location_physicaltype_code == location_code,  # Filter condition
+      enc_identifier_value                              # Extract the values from enc_identifier_value
+    ]
+    # Check if there are valid values and filter out NA or empty values
+    valid_values <- filtered_values[!is.na(filtered_values) & filtered_values != ""]
+    # Combine the valid values into a single string, separated by commas
+    combined_values <- paste(valid_values, collapse = ", ")
+    # Get the corresponding label for the location_code from the location_labels mapping
+    location_label <- location_labels[location_code]
+    # If there is a label, return the formatted result with the label and combined values
+    if (!is.null(location_label) && length(valid_values)) {
+      return(paste0(location_label, ": ", combined_values))
+    }
+  })
+
+  # Remove any NULL values if no valid values for a particular location_code
+  combined_results <- combined_results[!sapply(combined_results, is.null)]
+  # Combine all results into a single string, separated by semicolons
+  final_result <- paste(combined_results, collapse = "; ")
+  return(final_result)
+}
+
 #' This function creates frontend tables for displaying patient and encounter information.
 #'
 #' The function retrieves data from the database regarding patient and encounter information
