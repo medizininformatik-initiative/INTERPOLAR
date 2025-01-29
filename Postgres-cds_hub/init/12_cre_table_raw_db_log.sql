@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-12 08:47:47
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-01-13 09:38:21
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-13 10:21:26
+-- Create time: 2025-01-29 18:34:58
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -2715,4 +2715,1670 @@ COMMENT ON COLUMN db_log.pids_per_ward_raw.last_processing_nr IS 'Last processin
 
 -- Output on
 \o
+
+------------------------------------------------------
+-- INDEX for data on Tables in Schema "db_log" --
+------------------------------------------------------
+
+-- Index idx_encounter_raw_data for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_encounter_raw_data
+-- ON db_log.encounter_raw (
+--  --COALESCE(enc_id::text,'#NULL#'),
+    --COALESCE(enc_patient_ref::text,'#NULL#'),
+    --COALESCE(enc_partof_ref::text,'#NULL#'),
+    --COALESCE(enc_identifier_use::text,'#NULL#'),
+    --COALESCE(enc_identifier_type_system::text,'#NULL#'),
+    --COALESCE(enc_identifier_type_version::text,'#NULL#'),
+    --COALESCE(enc_identifier_type_code::text,'#NULL#'),
+    --COALESCE(enc_identifier_type_display::text,'#NULL#'),
+    --COALESCE(enc_identifier_type_text::text,'#NULL#'),
+    --COALESCE(enc_identifier_system::text,'#NULL#'),
+    --COALESCE(enc_identifier_value::text,'#NULL#'),
+    --COALESCE(enc_identifier_start::text,'#NULL#'),
+    --COALESCE(enc_identifier_end::text,'#NULL#'),
+    --COALESCE(enc_status::text,'#NULL#'),
+    --COALESCE(enc_class_system::text,'#NULL#'),
+    --COALESCE(enc_class_version::text,'#NULL#'),
+    --COALESCE(enc_class_code::text,'#NULL#'),
+    --COALESCE(enc_class_display::text,'#NULL#'),
+    --COALESCE(enc_type_system::text,'#NULL#'),
+    --COALESCE(enc_type_version::text,'#NULL#'),
+    --COALESCE(enc_type_code::text,'#NULL#'),
+    --COALESCE(enc_type_display::text,'#NULL#'),
+    --COALESCE(enc_type_text::text,'#NULL#'),
+    --COALESCE(enc_servicetype_system::text,'#NULL#'),
+    --COALESCE(enc_servicetype_version::text,'#NULL#'),
+    --COALESCE(enc_servicetype_code::text,'#NULL#'),
+    --COALESCE(enc_servicetype_display::text,'#NULL#'),
+    --COALESCE(enc_servicetype_text::text,'#NULL#'),
+    --COALESCE(enc_period_start::text,'#NULL#'),
+    --COALESCE(enc_period_end::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_condition_ref::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_use_system::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_use_version::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_use_code::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_use_display::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_use_text::text,'#NULL#'),
+    --COALESCE(enc_diagnosis_rank::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_admitsource_system::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_admitsource_version::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_admitsource_code::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_admitsource_display::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_admitsource_text::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_dischargedisposition_system::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_dischargedisposition_version::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_dischargedisposition_code::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_dischargedisposition_display::text,'#NULL#'),
+    --COALESCE(enc_hospitalization_dischargedisposition_text::text,'#NULL#'),
+    --COALESCE(enc_location_ref::text,'#NULL#'),
+    --COALESCE(enc_location_type::text,'#NULL#'),
+    --COALESCE(enc_location_identifier_use::text,'#NULL#'),
+    --COALESCE(enc_location_identifier_type_system::text,'#NULL#'),
+    --COALESCE(enc_location_identifier_type_version::text,'#NULL#'),
+    --COALESCE(enc_location_identifier_type_code::text,'#NULL#'),
+    --COALESCE(enc_location_identifier_type_display::text,'#NULL#'),
+    --COALESCE(enc_location_identifier_type_text::text,'#NULL#'),
+    --COALESCE(enc_location_display::text,'#NULL#'),
+    --COALESCE(enc_location_status::text,'#NULL#'),
+    --COALESCE(enc_location_physicaltype_system::text,'#NULL#'),
+    --COALESCE(enc_location_physicaltype_version::text,'#NULL#'),
+    --COALESCE(enc_location_physicaltype_code::text,'#NULL#'),
+    --COALESCE(enc_location_physicaltype_display::text,'#NULL#'),
+    --COALESCE(enc_location_physicaltype_text::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_ref::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_type::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_identifier_use::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_identifier_type_system::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_identifier_type_version::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_identifier_type_code::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_identifier_type_display::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_identifier_type_text::text,'#NULL#'),
+    --COALESCE(enc_serviceprovider_display::text,'#NULL#')
+--);
+
+-- Index idx_patient_raw_data for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_patient_raw_data
+-- ON db_log.patient_raw (
+--  --COALESCE(pat_id::text,'#NULL#'),
+    --COALESCE(pat_identifier_use::text,'#NULL#'),
+    --COALESCE(pat_identifier_type_system::text,'#NULL#'),
+    --COALESCE(pat_identifier_type_version::text,'#NULL#'),
+    --COALESCE(pat_identifier_type_code::text,'#NULL#'),
+    --COALESCE(pat_identifier_type_display::text,'#NULL#'),
+    --COALESCE(pat_identifier_type_text::text,'#NULL#'),
+    --COALESCE(pat_identifier_system::text,'#NULL#'),
+    --COALESCE(pat_identifier_value::text,'#NULL#'),
+    --COALESCE(pat_identifier_start::text,'#NULL#'),
+    --COALESCE(pat_identifier_end::text,'#NULL#'),
+    --COALESCE(pat_name_text::text,'#NULL#'),
+    --COALESCE(pat_name_family::text,'#NULL#'),
+    --COALESCE(pat_name_given::text,'#NULL#'),
+    --COALESCE(pat_gender::text,'#NULL#'),
+    --COALESCE(pat_birthdate::text,'#NULL#'),
+    --COALESCE(pat_address_postalcode::text,'#NULL#')
+--);
+
+-- Index idx_condition_raw_data for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_condition_raw_data
+-- ON db_log.condition_raw (
+--  --COALESCE(con_id::text,'#NULL#'),
+    --COALESCE(con_encounter_ref::text,'#NULL#'),
+    --COALESCE(con_patient_ref::text,'#NULL#'),
+    --COALESCE(con_identifier_use::text,'#NULL#'),
+    --COALESCE(con_identifier_type_system::text,'#NULL#'),
+    --COALESCE(con_identifier_type_version::text,'#NULL#'),
+    --COALESCE(con_identifier_type_code::text,'#NULL#'),
+    --COALESCE(con_identifier_type_display::text,'#NULL#'),
+    --COALESCE(con_identifier_type_text::text,'#NULL#'),
+    --COALESCE(con_identifier_system::text,'#NULL#'),
+    --COALESCE(con_identifier_value::text,'#NULL#'),
+    --COALESCE(con_identifier_start::text,'#NULL#'),
+    --COALESCE(con_identifier_end::text,'#NULL#'),
+    --COALESCE(con_clinicalstatus_system::text,'#NULL#'),
+    --COALESCE(con_clinicalstatus_version::text,'#NULL#'),
+    --COALESCE(con_clinicalstatus_code::text,'#NULL#'),
+    --COALESCE(con_clinicalstatus_display::text,'#NULL#'),
+    --COALESCE(con_clinicalstatus_text::text,'#NULL#'),
+    --COALESCE(con_verificationstatus_system::text,'#NULL#'),
+    --COALESCE(con_verificationstatus_version::text,'#NULL#'),
+    --COALESCE(con_verificationstatus_code::text,'#NULL#'),
+    --COALESCE(con_verificationstatus_display::text,'#NULL#'),
+    --COALESCE(con_verificationstatus_text::text,'#NULL#'),
+    --COALESCE(con_category_system::text,'#NULL#'),
+    --COALESCE(con_category_version::text,'#NULL#'),
+    --COALESCE(con_category_code::text,'#NULL#'),
+    --COALESCE(con_category_display::text,'#NULL#'),
+    --COALESCE(con_category_text::text,'#NULL#'),
+    --COALESCE(con_severity_system::text,'#NULL#'),
+    --COALESCE(con_severity_version::text,'#NULL#'),
+    --COALESCE(con_severity_code::text,'#NULL#'),
+    --COALESCE(con_severity_display::text,'#NULL#'),
+    --COALESCE(con_severity_text::text,'#NULL#'),
+    --COALESCE(con_code_system::text,'#NULL#'),
+    --COALESCE(con_code_version::text,'#NULL#'),
+    --COALESCE(con_code_code::text,'#NULL#'),
+    --COALESCE(con_code_display::text,'#NULL#'),
+    --COALESCE(con_code_text::text,'#NULL#'),
+    --COALESCE(con_bodysite_system::text,'#NULL#'),
+    --COALESCE(con_bodysite_version::text,'#NULL#'),
+    --COALESCE(con_bodysite_code::text,'#NULL#'),
+    --COALESCE(con_bodysite_display::text,'#NULL#'),
+    --COALESCE(con_bodysite_text::text,'#NULL#'),
+    --COALESCE(con_onsetperiod_start::text,'#NULL#'),
+    --COALESCE(con_onsetperiod_end::text,'#NULL#'),
+    --COALESCE(con_onsetdatetime::text,'#NULL#'),
+    --COALESCE(con_abatementdatetime::text,'#NULL#'),
+    --COALESCE(con_abatementage_value::text,'#NULL#'),
+    --COALESCE(con_abatementage_comparator::text,'#NULL#'),
+    --COALESCE(con_abatementage_unit::text,'#NULL#'),
+    --COALESCE(con_abatementage_system::text,'#NULL#'),
+    --COALESCE(con_abatementage_code::text,'#NULL#'),
+    --COALESCE(con_abatementperiod_start::text,'#NULL#'),
+    --COALESCE(con_abatementperiod_end::text,'#NULL#'),
+    --COALESCE(con_abatementrange_low_value::text,'#NULL#'),
+    --COALESCE(con_abatementrange_low_unit::text,'#NULL#'),
+    --COALESCE(con_abatementrange_low_system::text,'#NULL#'),
+    --COALESCE(con_abatementrange_low_code::text,'#NULL#'),
+    --COALESCE(con_abatementrange_high_value::text,'#NULL#'),
+    --COALESCE(con_abatementrange_high_unit::text,'#NULL#'),
+    --COALESCE(con_abatementrange_high_system::text,'#NULL#'),
+    --COALESCE(con_abatementrange_high_code::text,'#NULL#'),
+    --COALESCE(con_abatementstring::text,'#NULL#'),
+    --COALESCE(con_recordeddate::text,'#NULL#'),
+    --COALESCE(con_recorder_ref::text,'#NULL#'),
+    --COALESCE(con_recorder_type::text,'#NULL#'),
+    --COALESCE(con_recorder_identifier_use::text,'#NULL#'),
+    --COALESCE(con_recorder_identifier_type_system::text,'#NULL#'),
+    --COALESCE(con_recorder_identifier_type_version::text,'#NULL#'),
+    --COALESCE(con_recorder_identifier_type_code::text,'#NULL#'),
+    --COALESCE(con_recorder_identifier_type_display::text,'#NULL#'),
+    --COALESCE(con_recorder_identifier_type_text::text,'#NULL#'),
+    --COALESCE(con_recorder_display::text,'#NULL#'),
+    --COALESCE(con_asserter_ref::text,'#NULL#'),
+    --COALESCE(con_asserter_type::text,'#NULL#'),
+    --COALESCE(con_asserter_identifier_use::text,'#NULL#'),
+    --COALESCE(con_asserter_identifier_type_system::text,'#NULL#'),
+    --COALESCE(con_asserter_identifier_type_version::text,'#NULL#'),
+    --COALESCE(con_asserter_identifier_type_code::text,'#NULL#'),
+    --COALESCE(con_asserter_identifier_type_display::text,'#NULL#'),
+    --COALESCE(con_asserter_identifier_type_text::text,'#NULL#'),
+    --COALESCE(con_asserter_display::text,'#NULL#'),
+    --COALESCE(con_stage_summary_system::text,'#NULL#'),
+    --COALESCE(con_stage_summary_version::text,'#NULL#'),
+    --COALESCE(con_stage_summary_code::text,'#NULL#'),
+    --COALESCE(con_stage_summary_display::text,'#NULL#'),
+    --COALESCE(con_stage_summary_text::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_ref::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_type::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_identifier_use::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_identifier_type_system::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_identifier_type_version::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_identifier_type_code::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_identifier_type_display::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_identifier_type_text::text,'#NULL#'),
+    --COALESCE(con_stage_assessment_display::text,'#NULL#'),
+    --COALESCE(con_stage_type_system::text,'#NULL#'),
+    --COALESCE(con_stage_type_version::text,'#NULL#'),
+    --COALESCE(con_stage_type_code::text,'#NULL#'),
+    --COALESCE(con_stage_type_display::text,'#NULL#'),
+    --COALESCE(con_stage_type_text::text,'#NULL#'),
+    --COALESCE(con_note_authorstring::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_ref::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_type::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_identifier_use::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(con_note_authorreference_display::text,'#NULL#'),
+    --COALESCE(con_note_time::text,'#NULL#'),
+    --COALESCE(con_note_text::text,'#NULL#')
+--);
+
+-- Index idx_medication_raw_data for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_medication_raw_data
+-- ON db_log.medication_raw (
+--  --COALESCE(med_id::text,'#NULL#'),
+    --COALESCE(med_identifier_use::text,'#NULL#'),
+    --COALESCE(med_identifier_type_system::text,'#NULL#'),
+    --COALESCE(med_identifier_type_version::text,'#NULL#'),
+    --COALESCE(med_identifier_type_code::text,'#NULL#'),
+    --COALESCE(med_identifier_type_display::text,'#NULL#'),
+    --COALESCE(med_identifier_type_text::text,'#NULL#'),
+    --COALESCE(med_identifier_system::text,'#NULL#'),
+    --COALESCE(med_identifier_value::text,'#NULL#'),
+    --COALESCE(med_identifier_start::text,'#NULL#'),
+    --COALESCE(med_identifier_end::text,'#NULL#'),
+    --COALESCE(med_code_system::text,'#NULL#'),
+    --COALESCE(med_code_version::text,'#NULL#'),
+    --COALESCE(med_code_code::text,'#NULL#'),
+    --COALESCE(med_code_display::text,'#NULL#'),
+    --COALESCE(med_code_text::text,'#NULL#'),
+    --COALESCE(med_status::text,'#NULL#'),
+    --COALESCE(med_form_system::text,'#NULL#'),
+    --COALESCE(med_form_version::text,'#NULL#'),
+    --COALESCE(med_form_code::text,'#NULL#'),
+    --COALESCE(med_form_display::text,'#NULL#'),
+    --COALESCE(med_form_text::text,'#NULL#'),
+    --COALESCE(med_amount_numerator_value::text,'#NULL#'),
+    --COALESCE(med_amount_numerator_comparator::text,'#NULL#'),
+    --COALESCE(med_amount_numerator_unit::text,'#NULL#'),
+    --COALESCE(med_amount_numerator_system::text,'#NULL#'),
+    --COALESCE(med_amount_numerator_code::text,'#NULL#'),
+    --COALESCE(med_amount_denominator_value::text,'#NULL#'),
+    --COALESCE(med_amount_denominator_comparator::text,'#NULL#'),
+    --COALESCE(med_amount_denominator_unit::text,'#NULL#'),
+    --COALESCE(med_amount_denominator_system::text,'#NULL#'),
+    --COALESCE(med_amount_denominator_code::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_numerator_value::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_numerator_comparator::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_numerator_unit::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_numerator_system::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_numerator_code::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_denominator_value::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_denominator_comparator::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_denominator_unit::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_denominator_system::text,'#NULL#'),
+    --COALESCE(med_ingredient_strength_denominator_code::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemcodeableconcept_system::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemcodeableconcept_version::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemcodeableconcept_code::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemcodeableconcept_display::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemcodeableconcept_text::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_ref::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_type::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_identifier_use::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(med_ingredient_itemreference_display::text,'#NULL#'),
+    --COALESCE(med_ingredient_isactive::text,'#NULL#')
+--);
+
+-- Index idx_medicationrequest_raw_data for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_data
+-- ON db_log.medicationrequest_raw (
+--  --COALESCE(medreq_id::text,'#NULL#'),
+    --COALESCE(medreq_encounter_ref::text,'#NULL#'),
+    --COALESCE(medreq_patient_ref::text,'#NULL#'),
+    --COALESCE(medreq_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_identifier_system::text,'#NULL#'),
+    --COALESCE(medreq_identifier_value::text,'#NULL#'),
+    --COALESCE(medreq_identifier_start::text,'#NULL#'),
+    --COALESCE(medreq_identifier_end::text,'#NULL#'),
+    --COALESCE(medreq_medicationreference_ref::text,'#NULL#'),
+    --COALESCE(medreq_status::text,'#NULL#'),
+    --COALESCE(medreq_statusreason_system::text,'#NULL#'),
+    --COALESCE(medreq_statusreason_version::text,'#NULL#'),
+    --COALESCE(medreq_statusreason_code::text,'#NULL#'),
+    --COALESCE(medreq_statusreason_display::text,'#NULL#'),
+    --COALESCE(medreq_statusreason_text::text,'#NULL#'),
+    --COALESCE(medreq_intend::text,'#NULL#'),
+    --COALESCE(medreq_category_system::text,'#NULL#'),
+    --COALESCE(medreq_category_version::text,'#NULL#'),
+    --COALESCE(medreq_category_code::text,'#NULL#'),
+    --COALESCE(medreq_category_display::text,'#NULL#'),
+    --COALESCE(medreq_category_text::text,'#NULL#'),
+    --COALESCE(medreq_priority::text,'#NULL#'),
+    --COALESCE(medreq_reportedboolean::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_ref::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_type::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_reportedreference_display::text,'#NULL#'),
+    --COALESCE(medreq_medicationcodeableconcept_system::text,'#NULL#'),
+    --COALESCE(medreq_medicationcodeableconcept_version::text,'#NULL#'),
+    --COALESCE(medreq_medicationcodeableconcept_code::text,'#NULL#'),
+    --COALESCE(medreq_medicationcodeableconcept_display::text,'#NULL#'),
+    --COALESCE(medreq_medicationcodeableconcept_text::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_ref::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_type::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_supportinginformation_display::text,'#NULL#'),
+    --COALESCE(medreq_authoredon::text,'#NULL#'),
+    --COALESCE(medreq_requester_ref::text,'#NULL#'),
+    --COALESCE(medreq_requester_type::text,'#NULL#'),
+    --COALESCE(medreq_requester_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_requester_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_requester_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_requester_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_requester_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_requester_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_requester_display::text,'#NULL#'),
+    --COALESCE(medreq_reasoncode_system::text,'#NULL#'),
+    --COALESCE(medreq_reasoncode_version::text,'#NULL#'),
+    --COALESCE(medreq_reasoncode_code::text,'#NULL#'),
+    --COALESCE(medreq_reasoncode_display::text,'#NULL#'),
+    --COALESCE(medreq_reasoncode_text::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_ref::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_type::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_reasonreference_display::text,'#NULL#'),
+    --COALESCE(medreq_basedon_ref::text,'#NULL#'),
+    --COALESCE(medreq_basedon_type::text,'#NULL#'),
+    --COALESCE(medreq_basedon_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_basedon_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_basedon_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_basedon_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_basedon_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_basedon_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_basedon_display::text,'#NULL#'),
+    --COALESCE(medreq_note_authorstring::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_ref::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_type::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medreq_note_authorreference_display::text,'#NULL#'),
+    --COALESCE(medreq_note_time::text,'#NULL#'),
+    --COALESCE(medreq_note_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_sequence::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_additionalinstruction_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_additionalinstruction_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_additionalinstruction_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_additionalinstruction_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_additionalinstruction_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_patientinstruction::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_event::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsduration_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsduration_comparator::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsduration_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsduration_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsduration_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_low_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_low_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_low_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_low_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_high_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_high_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_high_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsrange_high_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsperiod_start::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_boundsperiod_end::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_count::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_countmax::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_duration::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_durationmax::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_durationunit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_frequency::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_frequencymax::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_period::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_periodmax::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_periodunit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_dayofweek::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_timeofday::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_when::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_repeat_offset::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_code_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_code_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_code_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_code_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_timing_code_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_asneededboolean::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_asneededcodeableconcept_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_asneededcodeableconcept_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_asneededcodeableconcept_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_asneededcodeableconcept_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_asneededcodeableconcept_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_site_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_site_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_site_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_site_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_site_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_route_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_route_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_route_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_route_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_route_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_method_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_method_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_method_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_method_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_method_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_type_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_type_version::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_type_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_type_display::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_type_text::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_low_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_low_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_low_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_low_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_high_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_high_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_high_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_doserange_high_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_dosequantity_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_dosequantity_comparator::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_dosequantity_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_dosequantity_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_dosequantity_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_numerator_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_numerator_comparator::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_numerator_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_numerator_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_numerator_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_denominator_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_denominator_comparator::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_denominator_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_denominator_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_rateratio_denominator_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_low_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_low_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_low_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_low_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_high_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_high_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_high_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_raterange_high_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_ratequantity_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_ratequantity_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_ratequantity_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_doseandrate_ratequantity_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_numerator_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_numerator_comparator::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_numerator_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_numerator_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_numerator_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_denominator_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_denominator_comparator::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_denominator_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_denominator_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperperiod_denominator_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperadministration_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperadministration_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperadministration_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperadministration_code::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperlifetime_value::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperlifetime_unit::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperlifetime_system::text,'#NULL#'),
+    --COALESCE(medreq_doseinstruc_maxdoseperlifetime_code::text,'#NULL#'),
+    --COALESCE(medreq_substitution_reason_system::text,'#NULL#'),
+    --COALESCE(medreq_substitution_reason_version::text,'#NULL#'),
+    --COALESCE(medreq_substitution_reason_code::text,'#NULL#'),
+    --COALESCE(medreq_substitution_reason_display::text,'#NULL#'),
+    --COALESCE(medreq_substitution_reason_text::text,'#NULL#')
+--);
+
+-- Index idx_medicationadministration_raw_data for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_data
+-- ON db_log.medicationadministration_raw (
+--  --COALESCE(medadm_id::text,'#NULL#'),
+    --COALESCE(medadm_encounter_ref::text,'#NULL#'),
+    --COALESCE(medadm_patient_ref::text,'#NULL#'),
+    --COALESCE(medadm_partof_ref::text,'#NULL#'),
+    --COALESCE(medadm_identifier_use::text,'#NULL#'),
+    --COALESCE(medadm_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medadm_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medadm_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medadm_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medadm_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medadm_identifier_system::text,'#NULL#'),
+    --COALESCE(medadm_identifier_value::text,'#NULL#'),
+    --COALESCE(medadm_identifier_start::text,'#NULL#'),
+    --COALESCE(medadm_identifier_end::text,'#NULL#'),
+    --COALESCE(medadm_status::text,'#NULL#'),
+    --COALESCE(medadm_statusreason_system::text,'#NULL#'),
+    --COALESCE(medadm_statusreason_version::text,'#NULL#'),
+    --COALESCE(medadm_statusreason_code::text,'#NULL#'),
+    --COALESCE(medadm_statusreason_display::text,'#NULL#'),
+    --COALESCE(medadm_statusreason_text::text,'#NULL#'),
+    --COALESCE(medadm_category_system::text,'#NULL#'),
+    --COALESCE(medadm_category_version::text,'#NULL#'),
+    --COALESCE(medadm_category_code::text,'#NULL#'),
+    --COALESCE(medadm_category_display::text,'#NULL#'),
+    --COALESCE(medadm_category_text::text,'#NULL#'),
+    --COALESCE(medadm_medicationreference_ref::text,'#NULL#'),
+    --COALESCE(medadm_medicationcodeableconcept_system::text,'#NULL#'),
+    --COALESCE(medadm_medicationcodeableconcept_version::text,'#NULL#'),
+    --COALESCE(medadm_medicationcodeableconcept_code::text,'#NULL#'),
+    --COALESCE(medadm_medicationcodeableconcept_display::text,'#NULL#'),
+    --COALESCE(medadm_medicationcodeableconcept_text::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_ref::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_type::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_identifier_use::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medadm_supportinginformation_display::text,'#NULL#'),
+    --COALESCE(medadm_effectivedatetime::text,'#NULL#'),
+    --COALESCE(medadm_effectiveperiod_start::text,'#NULL#'),
+    --COALESCE(medadm_effectiveperiod_end::text,'#NULL#'),
+    --COALESCE(medadm_performer_function_system::text,'#NULL#'),
+    --COALESCE(medadm_performer_function_version::text,'#NULL#'),
+    --COALESCE(medadm_performer_function_code::text,'#NULL#'),
+    --COALESCE(medadm_performer_function_display::text,'#NULL#'),
+    --COALESCE(medadm_performer_function_text::text,'#NULL#'),
+    --COALESCE(medadm_reasoncode_system::text,'#NULL#'),
+    --COALESCE(medadm_reasoncode_version::text,'#NULL#'),
+    --COALESCE(medadm_reasoncode_code::text,'#NULL#'),
+    --COALESCE(medadm_reasoncode_display::text,'#NULL#'),
+    --COALESCE(medadm_reasoncode_text::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_ref::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_type::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medadm_reasonreference_display::text,'#NULL#'),
+    --COALESCE(medadm_request_ref::text,'#NULL#'),
+    --COALESCE(medadm_note_authorstring::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_ref::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_type::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medadm_note_authorreference_display::text,'#NULL#'),
+    --COALESCE(medadm_note_time::text,'#NULL#'),
+    --COALESCE(medadm_note_text::text,'#NULL#'),
+    --COALESCE(medadm_dosage_text::text,'#NULL#'),
+    --COALESCE(medadm_dosage_site_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_site_version::text,'#NULL#'),
+    --COALESCE(medadm_dosage_site_code::text,'#NULL#'),
+    --COALESCE(medadm_dosage_site_display::text,'#NULL#'),
+    --COALESCE(medadm_dosage_site_text::text,'#NULL#'),
+    --COALESCE(medadm_dosage_route_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_route_version::text,'#NULL#'),
+    --COALESCE(medadm_dosage_route_code::text,'#NULL#'),
+    --COALESCE(medadm_dosage_route_display::text,'#NULL#'),
+    --COALESCE(medadm_dosage_route_text::text,'#NULL#'),
+    --COALESCE(medadm_dosage_method_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_method_version::text,'#NULL#'),
+    --COALESCE(medadm_dosage_method_code::text,'#NULL#'),
+    --COALESCE(medadm_dosage_method_display::text,'#NULL#'),
+    --COALESCE(medadm_dosage_method_text::text,'#NULL#'),
+    --COALESCE(medadm_dosage_dose_value::text,'#NULL#'),
+    --COALESCE(medadm_dosage_dose_unit::text,'#NULL#'),
+    --COALESCE(medadm_dosage_dose_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_dose_code::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_numerator_value::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_numerator_comparator::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_numerator_unit::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_numerator_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_numerator_code::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_denominator_value::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_denominator_comparator::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_denominator_unit::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_denominator_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_rateratio_denominator_code::text,'#NULL#'),
+    --COALESCE(medadm_dosage_ratequantity_value::text,'#NULL#'),
+    --COALESCE(medadm_dosage_ratequantity_unit::text,'#NULL#'),
+    --COALESCE(medadm_dosage_ratequantity_system::text,'#NULL#'),
+    --COALESCE(medadm_dosage_ratequantity_code::text,'#NULL#')
+--);
+
+-- Index idx_medicationstatement_raw_data for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_data
+-- ON db_log.medicationstatement_raw (
+--  --COALESCE(medstat_id::text,'#NULL#'),
+    --COALESCE(medstat_identifier_use::text,'#NULL#'),
+    --COALESCE(medstat_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medstat_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medstat_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medstat_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medstat_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medstat_identifier_system::text,'#NULL#'),
+    --COALESCE(medstat_identifier_value::text,'#NULL#'),
+    --COALESCE(medstat_identifier_start::text,'#NULL#'),
+    --COALESCE(medstat_identifier_end::text,'#NULL#'),
+    --COALESCE(medstat_encounter_ref::text,'#NULL#'),
+    --COALESCE(medstat_patient_ref::text,'#NULL#'),
+    --COALESCE(medstat_partof_ref::text,'#NULL#'),
+    --COALESCE(medstat_basedon_ref::text,'#NULL#'),
+    --COALESCE(medstat_basedon_type::text,'#NULL#'),
+    --COALESCE(medstat_basedon_identifier_use::text,'#NULL#'),
+    --COALESCE(medstat_basedon_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medstat_basedon_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medstat_basedon_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medstat_basedon_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medstat_basedon_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medstat_basedon_display::text,'#NULL#'),
+    --COALESCE(medstat_status::text,'#NULL#'),
+    --COALESCE(medstat_statusreason_system::text,'#NULL#'),
+    --COALESCE(medstat_statusreason_version::text,'#NULL#'),
+    --COALESCE(medstat_statusreason_code::text,'#NULL#'),
+    --COALESCE(medstat_statusreason_display::text,'#NULL#'),
+    --COALESCE(medstat_statusreason_text::text,'#NULL#'),
+    --COALESCE(medstat_category_system::text,'#NULL#'),
+    --COALESCE(medstat_category_version::text,'#NULL#'),
+    --COALESCE(medstat_category_code::text,'#NULL#'),
+    --COALESCE(medstat_category_display::text,'#NULL#'),
+    --COALESCE(medstat_category_text::text,'#NULL#'),
+    --COALESCE(medstat_medicationreference_ref::text,'#NULL#'),
+    --COALESCE(medstat_medicationcodeableconcept_system::text,'#NULL#'),
+    --COALESCE(medstat_medicationcodeableconcept_version::text,'#NULL#'),
+    --COALESCE(medstat_medicationcodeableconcept_code::text,'#NULL#'),
+    --COALESCE(medstat_medicationcodeableconcept_display::text,'#NULL#'),
+    --COALESCE(medstat_medicationcodeableconcept_text::text,'#NULL#'),
+    --COALESCE(medstat_effectivedatetime::text,'#NULL#'),
+    --COALESCE(medstat_effectiveperiod_start::text,'#NULL#'),
+    --COALESCE(medstat_effectiveperiod_end::text,'#NULL#'),
+    --COALESCE(medstat_dateasserted::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_ref::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_type::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_identifier_use::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medstat_informationsource_display::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_ref::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_type::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_identifier_use::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medstat_derivedfrom_display::text,'#NULL#'),
+    --COALESCE(medstat_reasoncode_system::text,'#NULL#'),
+    --COALESCE(medstat_reasoncode_version::text,'#NULL#'),
+    --COALESCE(medstat_reasoncode_code::text,'#NULL#'),
+    --COALESCE(medstat_reasoncode_display::text,'#NULL#'),
+    --COALESCE(medstat_reasoncode_text::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_ref::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_type::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medstat_reasonreference_display::text,'#NULL#'),
+    --COALESCE(medstat_note_authorstring::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_ref::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_type::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_identifier_use::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(medstat_note_authorreference_display::text,'#NULL#'),
+    --COALESCE(medstat_note_time::text,'#NULL#'),
+    --COALESCE(medstat_note_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_sequence::text,'#NULL#'),
+    --COALESCE(medstat_dosage_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_additionalinstruction_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_additionalinstruction_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_additionalinstruction_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_additionalinstruction_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_additionalinstruction_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_patientinstruction::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_event::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsduration_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsduration_comparator::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsduration_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsduration_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsduration_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_low_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_low_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_low_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_low_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_high_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_high_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_high_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsrange_high_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsperiod_start::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_boundsperiod_end::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_count::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_countmax::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_duration::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_durationmax::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_durationunit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_frequency::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_frequencymax::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_period::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_periodmax::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_periodunit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_dayofweek::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_timeofday::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_when::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_repeat_offset::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_code_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_code_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_code_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_code_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_timing_code_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_asneededboolean::text,'#NULL#'),
+    --COALESCE(medstat_dosage_asneededcodeableconcept_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_asneededcodeableconcept_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_asneededcodeableconcept_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_asneededcodeableconcept_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_asneededcodeableconcept_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_site_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_site_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_site_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_site_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_site_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_route_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_route_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_route_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_route_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_route_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_method_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_method_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_method_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_method_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_method_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_type_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_type_version::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_type_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_type_display::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_type_text::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_low_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_low_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_low_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_low_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_high_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_high_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_high_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_doserange_high_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_dosequantity_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_dosequantity_comparator::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_dosequantity_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_dosequantity_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_dosequantity_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_numerator_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_numerator_comparator::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_numerator_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_numerator_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_numerator_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_denominator_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_denominator_comparator::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_denominator_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_denominator_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_rateratio_denominator_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_low_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_low_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_low_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_low_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_high_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_high_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_high_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_raterange_high_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_ratequantity_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_ratequantity_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_ratequantity_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_doseandrate_ratequantity_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_numerator_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_numerator_comparator::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_numerator_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_numerator_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_numerator_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_denominator_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_denominator_comparator::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_denominator_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_denominator_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperperiod_denominator_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperadministration_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperadministration_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperadministration_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperadministration_code::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperlifetime_value::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperlifetime_unit::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperlifetime_system::text,'#NULL#'),
+    --COALESCE(medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
+--);
+
+-- Index idx_observation_raw_data for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_observation_raw_data
+-- ON db_log.observation_raw (
+--  --COALESCE(obs_id::text,'#NULL#'),
+    --COALESCE(obs_encounter_ref::text,'#NULL#'),
+    --COALESCE(obs_patient_ref::text,'#NULL#'),
+    --COALESCE(obs_partof_ref::text,'#NULL#'),
+    --COALESCE(obs_identifier_use::text,'#NULL#'),
+    --COALESCE(obs_identifier_type_system::text,'#NULL#'),
+    --COALESCE(obs_identifier_type_version::text,'#NULL#'),
+    --COALESCE(obs_identifier_type_code::text,'#NULL#'),
+    --COALESCE(obs_identifier_type_display::text,'#NULL#'),
+    --COALESCE(obs_identifier_type_text::text,'#NULL#'),
+    --COALESCE(obs_identifier_system::text,'#NULL#'),
+    --COALESCE(obs_identifier_value::text,'#NULL#'),
+    --COALESCE(obs_identifier_start::text,'#NULL#'),
+    --COALESCE(obs_identifier_end::text,'#NULL#'),
+    --COALESCE(obs_basedon_ref::text,'#NULL#'),
+    --COALESCE(obs_basedon_type::text,'#NULL#'),
+    --COALESCE(obs_basedon_identifier_use::text,'#NULL#'),
+    --COALESCE(obs_basedon_identifier_type_system::text,'#NULL#'),
+    --COALESCE(obs_basedon_identifier_type_version::text,'#NULL#'),
+    --COALESCE(obs_basedon_identifier_type_code::text,'#NULL#'),
+    --COALESCE(obs_basedon_identifier_type_display::text,'#NULL#'),
+    --COALESCE(obs_basedon_identifier_type_text::text,'#NULL#'),
+    --COALESCE(obs_basedon_display::text,'#NULL#'),
+    --COALESCE(obs_status::text,'#NULL#'),
+    --COALESCE(obs_category_system::text,'#NULL#'),
+    --COALESCE(obs_category_version::text,'#NULL#'),
+    --COALESCE(obs_category_code::text,'#NULL#'),
+    --COALESCE(obs_category_display::text,'#NULL#'),
+    --COALESCE(obs_category_text::text,'#NULL#'),
+    --COALESCE(obs_code_system::text,'#NULL#'),
+    --COALESCE(obs_code_version::text,'#NULL#'),
+    --COALESCE(obs_code_code::text,'#NULL#'),
+    --COALESCE(obs_code_display::text,'#NULL#'),
+    --COALESCE(obs_code_text::text,'#NULL#'),
+    --COALESCE(obs_effectivedatetime::text,'#NULL#'),
+    --COALESCE(obs_issued::text,'#NULL#'),
+    --COALESCE(obs_valuerange_low_value::text,'#NULL#'),
+    --COALESCE(obs_valuerange_low_unit::text,'#NULL#'),
+    --COALESCE(obs_valuerange_low_system::text,'#NULL#'),
+    --COALESCE(obs_valuerange_low_code::text,'#NULL#'),
+    --COALESCE(obs_valuerange_high_value::text,'#NULL#'),
+    --COALESCE(obs_valuerange_high_unit::text,'#NULL#'),
+    --COALESCE(obs_valuerange_high_system::text,'#NULL#'),
+    --COALESCE(obs_valuerange_high_code::text,'#NULL#'),
+    --COALESCE(obs_valueratio_numerator_value::text,'#NULL#'),
+    --COALESCE(obs_valueratio_numerator_comparator::text,'#NULL#'),
+    --COALESCE(obs_valueratio_numerator_unit::text,'#NULL#'),
+    --COALESCE(obs_valueratio_numerator_system::text,'#NULL#'),
+    --COALESCE(obs_valueratio_numerator_code::text,'#NULL#'),
+    --COALESCE(obs_valueratio_denominator_value::text,'#NULL#'),
+    --COALESCE(obs_valueratio_denominator_comparator::text,'#NULL#'),
+    --COALESCE(obs_valueratio_denominator_unit::text,'#NULL#'),
+    --COALESCE(obs_valueratio_denominator_system::text,'#NULL#'),
+    --COALESCE(obs_valueratio_denominator_code::text,'#NULL#'),
+    --COALESCE(obs_valuequantity_value::text,'#NULL#'),
+    --COALESCE(obs_valuequantity_comparator::text,'#NULL#'),
+    --COALESCE(obs_valuequantity_unit::text,'#NULL#'),
+    --COALESCE(obs_valuequantity_system::text,'#NULL#'),
+    --COALESCE(obs_valuequantity_code::text,'#NULL#'),
+    --COALESCE(obs_valuecodableconcept_system::text,'#NULL#'),
+    --COALESCE(obs_valuecodableconcept_version::text,'#NULL#'),
+    --COALESCE(obs_valuecodableconcept_code::text,'#NULL#'),
+    --COALESCE(obs_valuecodableconcept_display::text,'#NULL#'),
+    --COALESCE(obs_valuecodableconcept_text::text,'#NULL#'),
+    --COALESCE(obs_dataabsentreason_system::text,'#NULL#'),
+    --COALESCE(obs_dataabsentreason_version::text,'#NULL#'),
+    --COALESCE(obs_dataabsentreason_code::text,'#NULL#'),
+    --COALESCE(obs_dataabsentreason_display::text,'#NULL#'),
+    --COALESCE(obs_dataabsentreason_text::text,'#NULL#'),
+    --COALESCE(obs_note_authorstring::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_ref::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_type::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_identifier_use::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(obs_note_authorreference_display::text,'#NULL#'),
+    --COALESCE(obs_note_time::text,'#NULL#'),
+    --COALESCE(obs_note_text::text,'#NULL#'),
+    --COALESCE(obs_method_system::text,'#NULL#'),
+    --COALESCE(obs_method_version::text,'#NULL#'),
+    --COALESCE(obs_method_code::text,'#NULL#'),
+    --COALESCE(obs_method_display::text,'#NULL#'),
+    --COALESCE(obs_method_text::text,'#NULL#'),
+    --COALESCE(obs_performer_ref::text,'#NULL#'),
+    --COALESCE(obs_performer_type::text,'#NULL#'),
+    --COALESCE(obs_performer_identifier_use::text,'#NULL#'),
+    --COALESCE(obs_performer_identifier_type_system::text,'#NULL#'),
+    --COALESCE(obs_performer_identifier_type_version::text,'#NULL#'),
+    --COALESCE(obs_performer_identifier_type_code::text,'#NULL#'),
+    --COALESCE(obs_performer_identifier_type_display::text,'#NULL#'),
+    --COALESCE(obs_performer_identifier_type_text::text,'#NULL#'),
+    --COALESCE(obs_performer_display::text,'#NULL#'),
+    --COALESCE(obs_referencerange_low_value::text,'#NULL#'),
+    --COALESCE(obs_referencerange_low_unit::text,'#NULL#'),
+    --COALESCE(obs_referencerange_low_system::text,'#NULL#'),
+    --COALESCE(obs_referencerange_low_code::text,'#NULL#'),
+    --COALESCE(obs_referencerange_high_value::text,'#NULL#'),
+    --COALESCE(obs_referencerange_high_unit::text,'#NULL#'),
+    --COALESCE(obs_referencerange_high_system::text,'#NULL#'),
+    --COALESCE(obs_referencerange_high_code::text,'#NULL#'),
+    --COALESCE(obs_referencerange_type_system::text,'#NULL#'),
+    --COALESCE(obs_referencerange_type_version::text,'#NULL#'),
+    --COALESCE(obs_referencerange_type_code::text,'#NULL#'),
+    --COALESCE(obs_referencerange_type_display::text,'#NULL#'),
+    --COALESCE(obs_referencerange_type_text::text,'#NULL#'),
+    --COALESCE(obs_referencerange_appliesto_system::text,'#NULL#'),
+    --COALESCE(obs_referencerange_appliesto_version::text,'#NULL#'),
+    --COALESCE(obs_referencerange_appliesto_code::text,'#NULL#'),
+    --COALESCE(obs_referencerange_appliesto_display::text,'#NULL#'),
+    --COALESCE(obs_referencerange_appliesto_text::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_low_value::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_low_unit::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_low_system::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_low_code::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_high_value::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_high_unit::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_high_system::text,'#NULL#'),
+    --COALESCE(obs_referencerange_age_high_code::text,'#NULL#'),
+    --COALESCE(obs_referencerange_text::text,'#NULL#'),
+    --COALESCE(obs_hasmember_ref::text,'#NULL#'),
+    --COALESCE(obs_hasmember_type::text,'#NULL#'),
+    --COALESCE(obs_hasmember_identifier_use::text,'#NULL#'),
+    --COALESCE(obs_hasmember_identifier_type_system::text,'#NULL#'),
+    --COALESCE(obs_hasmember_identifier_type_version::text,'#NULL#'),
+    --COALESCE(obs_hasmember_identifier_type_code::text,'#NULL#'),
+    --COALESCE(obs_hasmember_identifier_type_display::text,'#NULL#'),
+    --COALESCE(obs_hasmember_identifier_type_text::text,'#NULL#'),
+    --COALESCE(obs_hasmember_display::text,'#NULL#')
+--);
+
+-- Index idx_diagnosticreport_raw_data for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_data
+-- ON db_log.diagnosticreport_raw (
+--  --COALESCE(diagrep_id::text,'#NULL#'),
+    --COALESCE(diagrep_encounter_ref::text,'#NULL#'),
+    --COALESCE(diagrep_patient_ref::text,'#NULL#'),
+    --COALESCE(diagrep_partof_ref::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_use::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_type_system::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_type_version::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_type_code::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_type_display::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_type_text::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_system::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_value::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_start::text,'#NULL#'),
+    --COALESCE(diagrep_identifier_end::text,'#NULL#'),
+    --COALESCE(diagrep_result_ref::text,'#NULL#'),
+    --COALESCE(diagrep_basedon_ref::text,'#NULL#'),
+    --COALESCE(diagrep_status::text,'#NULL#'),
+    --COALESCE(diagrep_category_system::text,'#NULL#'),
+    --COALESCE(diagrep_category_version::text,'#NULL#'),
+    --COALESCE(diagrep_category_code::text,'#NULL#'),
+    --COALESCE(diagrep_category_display::text,'#NULL#'),
+    --COALESCE(diagrep_category_text::text,'#NULL#'),
+    --COALESCE(diagrep_code_system::text,'#NULL#'),
+    --COALESCE(diagrep_code_version::text,'#NULL#'),
+    --COALESCE(diagrep_code_code::text,'#NULL#'),
+    --COALESCE(diagrep_code_display::text,'#NULL#'),
+    --COALESCE(diagrep_code_text::text,'#NULL#'),
+    --COALESCE(diagrep_effectivedatetime::text,'#NULL#'),
+    --COALESCE(diagrep_issued::text,'#NULL#'),
+    --COALESCE(diagrep_performer_ref::text,'#NULL#'),
+    --COALESCE(diagrep_performer_type::text,'#NULL#'),
+    --COALESCE(diagrep_performer_identifier_use::text,'#NULL#'),
+    --COALESCE(diagrep_performer_identifier_type_system::text,'#NULL#'),
+    --COALESCE(diagrep_performer_identifier_type_version::text,'#NULL#'),
+    --COALESCE(diagrep_performer_identifier_type_code::text,'#NULL#'),
+    --COALESCE(diagrep_performer_identifier_type_display::text,'#NULL#'),
+    --COALESCE(diagrep_performer_identifier_type_text::text,'#NULL#'),
+    --COALESCE(diagrep_performer_display::text,'#NULL#'),
+    --COALESCE(diagrep_conclusion::text,'#NULL#'),
+    --COALESCE(diagrep_conclusioncode_system::text,'#NULL#'),
+    --COALESCE(diagrep_conclusioncode_version::text,'#NULL#'),
+    --COALESCE(diagrep_conclusioncode_code::text,'#NULL#'),
+    --COALESCE(diagrep_conclusioncode_display::text,'#NULL#'),
+    --COALESCE(diagrep_conclusioncode_text::text,'#NULL#')
+--);
+
+-- Index idx_servicerequest_raw_data for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_data
+-- ON db_log.servicerequest_raw (
+--  --COALESCE(servreq_id::text,'#NULL#'),
+    --COALESCE(servreq_encounter_ref::text,'#NULL#'),
+    --COALESCE(servreq_patient_ref::text,'#NULL#'),
+    --COALESCE(servreq_identifier_use::text,'#NULL#'),
+    --COALESCE(servreq_identifier_type_system::text,'#NULL#'),
+    --COALESCE(servreq_identifier_type_version::text,'#NULL#'),
+    --COALESCE(servreq_identifier_type_code::text,'#NULL#'),
+    --COALESCE(servreq_identifier_type_display::text,'#NULL#'),
+    --COALESCE(servreq_identifier_type_text::text,'#NULL#'),
+    --COALESCE(servreq_identifier_system::text,'#NULL#'),
+    --COALESCE(servreq_identifier_value::text,'#NULL#'),
+    --COALESCE(servreq_identifier_start::text,'#NULL#'),
+    --COALESCE(servreq_identifier_end::text,'#NULL#'),
+    --COALESCE(servreq_basedon_ref::text,'#NULL#'),
+    --COALESCE(servreq_basedon_type::text,'#NULL#'),
+    --COALESCE(servreq_basedon_identifier_use::text,'#NULL#'),
+    --COALESCE(servreq_basedon_identifier_type_system::text,'#NULL#'),
+    --COALESCE(servreq_basedon_identifier_type_version::text,'#NULL#'),
+    --COALESCE(servreq_basedon_identifier_type_code::text,'#NULL#'),
+    --COALESCE(servreq_basedon_identifier_type_display::text,'#NULL#'),
+    --COALESCE(servreq_basedon_identifier_type_text::text,'#NULL#'),
+    --COALESCE(servreq_basedon_display::text,'#NULL#'),
+    --COALESCE(servreq_status::text,'#NULL#'),
+    --COALESCE(servreq_intent::text,'#NULL#'),
+    --COALESCE(servreq_category_system::text,'#NULL#'),
+    --COALESCE(servreq_category_version::text,'#NULL#'),
+    --COALESCE(servreq_category_code::text,'#NULL#'),
+    --COALESCE(servreq_category_display::text,'#NULL#'),
+    --COALESCE(servreq_category_text::text,'#NULL#'),
+    --COALESCE(servreq_code_system::text,'#NULL#'),
+    --COALESCE(servreq_code_version::text,'#NULL#'),
+    --COALESCE(servreq_code_code::text,'#NULL#'),
+    --COALESCE(servreq_code_display::text,'#NULL#'),
+    --COALESCE(servreq_code_text::text,'#NULL#'),
+    --COALESCE(servreq_authoredon::text,'#NULL#'),
+    --COALESCE(servreq_requester_ref::text,'#NULL#'),
+    --COALESCE(servreq_requester_type::text,'#NULL#'),
+    --COALESCE(servreq_requester_identifier_use::text,'#NULL#'),
+    --COALESCE(servreq_requester_identifier_type_system::text,'#NULL#'),
+    --COALESCE(servreq_requester_identifier_type_version::text,'#NULL#'),
+    --COALESCE(servreq_requester_identifier_type_code::text,'#NULL#'),
+    --COALESCE(servreq_requester_identifier_type_display::text,'#NULL#'),
+    --COALESCE(servreq_requester_identifier_type_text::text,'#NULL#'),
+    --COALESCE(servreq_requester_display::text,'#NULL#'),
+    --COALESCE(servreq_performer_ref::text,'#NULL#'),
+    --COALESCE(servreq_performer_type::text,'#NULL#'),
+    --COALESCE(servreq_performer_identifier_use::text,'#NULL#'),
+    --COALESCE(servreq_performer_identifier_type_system::text,'#NULL#'),
+    --COALESCE(servreq_performer_identifier_type_version::text,'#NULL#'),
+    --COALESCE(servreq_performer_identifier_type_code::text,'#NULL#'),
+    --COALESCE(servreq_performer_identifier_type_display::text,'#NULL#'),
+    --COALESCE(servreq_performer_identifier_type_text::text,'#NULL#'),
+    --COALESCE(servreq_performer_display::text,'#NULL#'),
+    --COALESCE(servreq_locationcode_system::text,'#NULL#'),
+    --COALESCE(servreq_locationcode_version::text,'#NULL#'),
+    --COALESCE(servreq_locationcode_code::text,'#NULL#'),
+    --COALESCE(servreq_locationcode_display::text,'#NULL#'),
+    --COALESCE(servreq_locationcode_text::text,'#NULL#')
+--);
+
+-- Index idx_procedure_raw_data for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_procedure_raw_data
+-- ON db_log.procedure_raw (
+--  --COALESCE(proc_id::text,'#NULL#'),
+    --COALESCE(proc_encounter_ref::text,'#NULL#'),
+    --COALESCE(proc_patient_ref::text,'#NULL#'),
+    --COALESCE(proc_partof_ref::text,'#NULL#'),
+    --COALESCE(proc_identifier_use::text,'#NULL#'),
+    --COALESCE(proc_identifier_type_system::text,'#NULL#'),
+    --COALESCE(proc_identifier_type_version::text,'#NULL#'),
+    --COALESCE(proc_identifier_type_code::text,'#NULL#'),
+    --COALESCE(proc_identifier_type_display::text,'#NULL#'),
+    --COALESCE(proc_identifier_type_text::text,'#NULL#'),
+    --COALESCE(proc_identifier_system::text,'#NULL#'),
+    --COALESCE(proc_identifier_value::text,'#NULL#'),
+    --COALESCE(proc_identifier_start::text,'#NULL#'),
+    --COALESCE(proc_identifier_end::text,'#NULL#'),
+    --COALESCE(proc_basedon_ref::text,'#NULL#'),
+    --COALESCE(proc_basedon_type::text,'#NULL#'),
+    --COALESCE(proc_basedon_identifier_use::text,'#NULL#'),
+    --COALESCE(proc_basedon_identifier_type_system::text,'#NULL#'),
+    --COALESCE(proc_basedon_identifier_type_version::text,'#NULL#'),
+    --COALESCE(proc_basedon_identifier_type_code::text,'#NULL#'),
+    --COALESCE(proc_basedon_identifier_type_display::text,'#NULL#'),
+    --COALESCE(proc_basedon_identifier_type_text::text,'#NULL#'),
+    --COALESCE(proc_basedon_display::text,'#NULL#'),
+    --COALESCE(proc_status::text,'#NULL#'),
+    --COALESCE(proc_statusreason_system::text,'#NULL#'),
+    --COALESCE(proc_statusreason_version::text,'#NULL#'),
+    --COALESCE(proc_statusreason_code::text,'#NULL#'),
+    --COALESCE(proc_statusreason_display::text,'#NULL#'),
+    --COALESCE(proc_statusreason_text::text,'#NULL#'),
+    --COALESCE(proc_category_system::text,'#NULL#'),
+    --COALESCE(proc_category_version::text,'#NULL#'),
+    --COALESCE(proc_category_code::text,'#NULL#'),
+    --COALESCE(proc_category_display::text,'#NULL#'),
+    --COALESCE(proc_category_text::text,'#NULL#'),
+    --COALESCE(proc_code_system::text,'#NULL#'),
+    --COALESCE(proc_code_version::text,'#NULL#'),
+    --COALESCE(proc_code_code::text,'#NULL#'),
+    --COALESCE(proc_code_display::text,'#NULL#'),
+    --COALESCE(proc_code_text::text,'#NULL#'),
+    --COALESCE(proc_performeddatetime::text,'#NULL#'),
+    --COALESCE(proc_performedperiod_start::text,'#NULL#'),
+    --COALESCE(proc_performedperiod_end::text,'#NULL#'),
+    --COALESCE(proc_reasoncode_system::text,'#NULL#'),
+    --COALESCE(proc_reasoncode_version::text,'#NULL#'),
+    --COALESCE(proc_reasoncode_code::text,'#NULL#'),
+    --COALESCE(proc_reasoncode_display::text,'#NULL#'),
+    --COALESCE(proc_reasoncode_text::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_ref::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_type::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_identifier_use::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(proc_reasonreference_display::text,'#NULL#'),
+    --COALESCE(proc_note_authorstring::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_ref::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_type::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_identifier_use::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_identifier_type_system::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_identifier_type_version::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_identifier_type_code::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_identifier_type_display::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_identifier_type_text::text,'#NULL#'),
+    --COALESCE(proc_note_authorreference_display::text,'#NULL#'),
+    --COALESCE(proc_note_time::text,'#NULL#'),
+    --COALESCE(proc_note_text::text,'#NULL#')
+--);
+
+-- Index idx_consent_raw_data for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_consent_raw_data
+-- ON db_log.consent_raw (
+--  --COALESCE(cons_id::text,'#NULL#'),
+    --COALESCE(cons_patient_ref::text,'#NULL#'),
+    --COALESCE(cons_identifier_use::text,'#NULL#'),
+    --COALESCE(cons_identifier_type_system::text,'#NULL#'),
+    --COALESCE(cons_identifier_type_version::text,'#NULL#'),
+    --COALESCE(cons_identifier_type_code::text,'#NULL#'),
+    --COALESCE(cons_identifier_type_display::text,'#NULL#'),
+    --COALESCE(cons_identifier_type_text::text,'#NULL#'),
+    --COALESCE(cons_identifier_system::text,'#NULL#'),
+    --COALESCE(cons_identifier_value::text,'#NULL#'),
+    --COALESCE(cons_identifier_start::text,'#NULL#'),
+    --COALESCE(cons_identifier_end::text,'#NULL#'),
+    --COALESCE(cons_status::text,'#NULL#'),
+    --COALESCE(cons_scope_system::text,'#NULL#'),
+    --COALESCE(cons_scope_version::text,'#NULL#'),
+    --COALESCE(cons_scope_code::text,'#NULL#'),
+    --COALESCE(cons_scope_display::text,'#NULL#'),
+    --COALESCE(cons_scope_text::text,'#NULL#'),
+    --COALESCE(cons_datetime::text,'#NULL#'),
+    --COALESCE(cons_provision_type::text,'#NULL#'),
+    --COALESCE(cons_provision_period_start::text,'#NULL#'),
+    --COALESCE(cons_provision_period_end::text,'#NULL#'),
+    --COALESCE(cons_provision_actor_role_system::text,'#NULL#'),
+    --COALESCE(cons_provision_actor_role_version::text,'#NULL#'),
+    --COALESCE(cons_provision_actor_role_code::text,'#NULL#'),
+    --COALESCE(cons_provision_actor_role_display::text,'#NULL#'),
+    --COALESCE(cons_provision_actor_role_text::text,'#NULL#'),
+    --COALESCE(cons_provision_code_system::text,'#NULL#'),
+    --COALESCE(cons_provision_code_version::text,'#NULL#'),
+    --COALESCE(cons_provision_code_code::text,'#NULL#'),
+    --COALESCE(cons_provision_code_display::text,'#NULL#'),
+    --COALESCE(cons_provision_code_text::text,'#NULL#'),
+    --COALESCE(cons_provision_dataperiod_start::text,'#NULL#'),
+    --COALESCE(cons_provision_dataperiod_end::text,'#NULL#')
+--);
+
+-- Index idx_location_raw_data for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_location_raw_data
+-- ON db_log.location_raw (
+--  --COALESCE(loc_id::text,'#NULL#'),
+    --COALESCE(loc_identifier_use::text,'#NULL#'),
+    --COALESCE(loc_identifier_type_system::text,'#NULL#'),
+    --COALESCE(loc_identifier_type_version::text,'#NULL#'),
+    --COALESCE(loc_identifier_type_code::text,'#NULL#'),
+    --COALESCE(loc_identifier_type_display::text,'#NULL#'),
+    --COALESCE(loc_identifier_type_text::text,'#NULL#'),
+    --COALESCE(loc_identifier_system::text,'#NULL#'),
+    --COALESCE(loc_identifier_value::text,'#NULL#'),
+    --COALESCE(loc_identifier_start::text,'#NULL#'),
+    --COALESCE(loc_identifier_end::text,'#NULL#'),
+    --COALESCE(loc_status::text,'#NULL#'),
+    --COALESCE(loc_name::text,'#NULL#'),
+    --COALESCE(loc_description::text,'#NULL#'),
+    --COALESCE(loc_alias::text,'#NULL#')
+--);
+
+-- Index idx_pids_per_ward_raw_data for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_pids_per_ward_raw_data
+-- ON db_log.pids_per_ward_raw (
+--  --COALESCE(ward_name::text,'#NULL#'),
+    --COALESCE(patient_id::text,'#NULL#')
+--);
+
+
+------------------------------------------------------
+-- INDEX for IDs on Tables in Schema "db_log" --
+------------------------------------------------------
+
+
+-- Index idx_db_log_encounter_raw_input_dt for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_input_dt
+ON db_log.encounter_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_encounter_raw_input_pnr for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_input_pnr
+ON db_log.encounter_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_encounter_raw_last_dt for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_last_dt
+ON db_log.encounter_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_encounter_raw_last_dt for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_last_pnr
+ON db_log.encounter_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_patient_raw_input_dt for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_input_dt
+ON db_log.patient_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_patient_raw_input_pnr for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_input_pnr
+ON db_log.patient_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_patient_raw_last_dt for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_last_dt
+ON db_log.patient_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_patient_raw_last_dt for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_last_pnr
+ON db_log.patient_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_condition_raw_input_dt for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_input_dt
+ON db_log.condition_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_condition_raw_input_pnr for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_input_pnr
+ON db_log.condition_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_condition_raw_last_dt for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_last_dt
+ON db_log.condition_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_condition_raw_last_dt for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_last_pnr
+ON db_log.condition_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_medication_raw_input_dt for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_input_dt
+ON db_log.medication_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medication_raw_input_pnr for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_input_pnr
+ON db_log.medication_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medication_raw_last_dt for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_last_dt
+ON db_log.medication_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medication_raw_last_dt for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_last_pnr
+ON db_log.medication_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_medicationrequest_raw_input_dt for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_input_dt
+ON db_log.medicationrequest_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medicationrequest_raw_input_pnr for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_input_pnr
+ON db_log.medicationrequest_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medicationrequest_raw_last_dt for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_last_dt
+ON db_log.medicationrequest_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medicationrequest_raw_last_dt for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_last_pnr
+ON db_log.medicationrequest_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_medicationadministration_raw_input_dt for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_input_dt
+ON db_log.medicationadministration_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medicationadministration_raw_input_pnr for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_input_pnr
+ON db_log.medicationadministration_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medicationadministration_raw_last_dt for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_last_dt
+ON db_log.medicationadministration_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medicationadministration_raw_last_dt for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_last_pnr
+ON db_log.medicationadministration_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_medicationstatement_raw_input_dt for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_input_dt
+ON db_log.medicationstatement_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medicationstatement_raw_input_pnr for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_input_pnr
+ON db_log.medicationstatement_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medicationstatement_raw_last_dt for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_last_dt
+ON db_log.medicationstatement_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medicationstatement_raw_last_dt for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_last_pnr
+ON db_log.medicationstatement_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_observation_raw_input_dt for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_input_dt
+ON db_log.observation_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_observation_raw_input_pnr for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_input_pnr
+ON db_log.observation_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_observation_raw_last_dt for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_last_dt
+ON db_log.observation_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_observation_raw_last_dt for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_last_pnr
+ON db_log.observation_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_diagnosticreport_raw_input_dt for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_input_dt
+ON db_log.diagnosticreport_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_diagnosticreport_raw_input_pnr for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_input_pnr
+ON db_log.diagnosticreport_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_diagnosticreport_raw_last_dt for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_last_dt
+ON db_log.diagnosticreport_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_diagnosticreport_raw_last_dt for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_last_pnr
+ON db_log.diagnosticreport_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_servicerequest_raw_input_dt for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_input_dt
+ON db_log.servicerequest_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_servicerequest_raw_input_pnr for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_input_pnr
+ON db_log.servicerequest_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_servicerequest_raw_last_dt for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_last_dt
+ON db_log.servicerequest_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_servicerequest_raw_last_dt for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_last_pnr
+ON db_log.servicerequest_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_procedure_raw_input_dt for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_input_dt
+ON db_log.procedure_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_procedure_raw_input_pnr for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_input_pnr
+ON db_log.procedure_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_procedure_raw_last_dt for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_last_dt
+ON db_log.procedure_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_procedure_raw_last_dt for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_last_pnr
+ON db_log.procedure_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_consent_raw_input_dt for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_input_dt
+ON db_log.consent_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_consent_raw_input_pnr for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_input_pnr
+ON db_log.consent_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_consent_raw_last_dt for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_last_dt
+ON db_log.consent_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_consent_raw_last_dt for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_last_pnr
+ON db_log.consent_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_location_raw_input_dt for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_input_dt
+ON db_log.location_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_location_raw_input_pnr for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_input_pnr
+ON db_log.location_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_location_raw_last_dt for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_last_dt
+ON db_log.location_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_location_raw_last_dt for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_last_pnr
+ON db_log.location_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+
+-- Index idx_db_log_pids_per_ward_raw_input_dt for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_input_dt
+ON db_log.pids_per_ward_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_pids_per_ward_raw_input_pnr for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_input_pnr
+ON db_log.pids_per_ward_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_pids_per_ward_raw_last_dt for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_last_dt
+ON db_log.pids_per_ward_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_pids_per_ward_raw_last_dt for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_last_pnr
+ON db_log.pids_per_ward_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
 

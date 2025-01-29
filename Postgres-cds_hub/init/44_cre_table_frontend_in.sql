@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-01-13 09:38:21
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-01-09 17:42:47
+-- Create time: 2025-01-29 18:35:55
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -679,4 +679,470 @@ COMMENT ON COLUMN db2frontend_in.trigger_fe.last_processing_nr IS 'Last processi
 
 -- Output on
 \o
+
+------------------------------------------------------
+-- INDEX for data on Tables in Schema "db2frontend_in" --
+------------------------------------------------------
+
+-- Index idx_patient_fe_data for Table "patient_fe" in schema "db2frontend_in"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_patient_fe_data
+-- ON db2frontend_in.patient_fe (
+--  --COALESCE(record_id::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
+    --COALESCE(pat_header::text,'#NULL#'),
+    --COALESCE(pat_id::text,'#NULL#'),
+    --COALESCE(pat_femb_1::text,'#NULL#'),
+    --COALESCE(pat_cis_pid::text,'#NULL#'),
+    --COALESCE(pat_name::text,'#NULL#'),
+    --COALESCE(pat_vorname::text,'#NULL#'),
+    --COALESCE(pat_gebdat::text,'#NULL#'),
+    --COALESCE(pat_aktuell_alter::text,'#NULL#'),
+    --COALESCE(pat_geschlecht::text,'#NULL#'),
+    --COALESCE(patient_complete::text,'#NULL#')
+--);
+
+-- Index idx_fall_fe_data for Table "fall_fe" in schema "db2frontend_in"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_fall_fe_data
+-- ON db2frontend_in.fall_fe (
+--  --COALESCE(record_id::text,'#NULL#'),
+    --COALESCE(fall_header::text,'#NULL#'),
+    --COALESCE(fall_id::text,'#NULL#'),
+    --COALESCE(fall_pat_id::text,'#NULL#'),
+    --COALESCE(patient_id_fk::text,'#NULL#'),
+    --COALESCE(fall_femb_1::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
+    --COALESCE(fall_studienphase::text,'#NULL#'),
+    --COALESCE(fall_station::text,'#NULL#'),
+    --COALESCE(fall_zimmernr::text,'#NULL#'),
+    --COALESCE(fall_aufn_dat::text,'#NULL#'),
+    --COALESCE(fall_aufn_diag::text,'#NULL#'),
+    --COALESCE(fall_gewicht_aktuell::text,'#NULL#'),
+    --COALESCE(fall_gewicht_aktl_einheit::text,'#NULL#'),
+    --COALESCE(fall_groesse::text,'#NULL#'),
+    --COALESCE(fall_groesse_einheit::text,'#NULL#'),
+    --COALESCE(fall_bmi::text,'#NULL#'),
+    --COALESCE(fall_femb_2::text,'#NULL#'),
+    --COALESCE(fall_femb_3::text,'#NULL#'),
+    --COALESCE(fall_femb_4::text,'#NULL#'),
+    --COALESCE(fall_femb_5::text,'#NULL#'),
+    --COALESCE(fall_femb_6::text,'#NULL#'),
+    --COALESCE(fall_nieren_insuf_chron::text,'#NULL#'),
+    --COALESCE(fall_nieren_insuf_ausmass_lbl::text,'#NULL#'),
+    --COALESCE(fall_nieren_insuf_ausmass::text,'#NULL#'),
+    --COALESCE(fall_nieren_insuf_dialysev_lbl::text,'#NULL#'),
+    --COALESCE(fall_nieren_insuf_dialysev::text,'#NULL#'),
+    --COALESCE(fall_leber_insuf::text,'#NULL#'),
+    --COALESCE(fall_leber_insuf_ausmass_lbl::text,'#NULL#'),
+    --COALESCE(fall_leber_insuf_ausmass::text,'#NULL#'),
+    --COALESCE(fall_schwanger_mo::text,'#NULL#'),
+    --COALESCE(fall_schwanger_mo_lbl::text,'#NULL#'),
+    --COALESCE(fall_status::text,'#NULL#'),
+    --COALESCE(fall_ent_dat::text,'#NULL#'),
+    --COALESCE(fall_complete::text,'#NULL#')
+--);
+
+-- Index idx_medikationsanalyse_fe_data for Table "medikationsanalyse_fe" in schema "db2frontend_in"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_data
+-- ON db2frontend_in.medikationsanalyse_fe (
+--  --COALESCE(record_id::text,'#NULL#'),
+    --COALESCE(meda_header::text,'#NULL#'),
+    --COALESCE(meda_femb_1::text,'#NULL#'),
+    --COALESCE(meda_femb_2::text,'#NULL#'),
+    --COALESCE(meda_femb_3::text,'#NULL#'),
+    --COALESCE(fall_fe_id::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
+    --COALESCE(meda_dat::text,'#NULL#'),
+    --COALESCE(meda_typ::text,'#NULL#'),
+    --COALESCE(meda_ma_thueberw::text,'#NULL#'),
+    --COALESCE(meda_mrp_detekt::text,'#NULL#'),
+    --COALESCE(meda_aufwand_zeit::text,'#NULL#'),
+    --COALESCE(meda_aufwand_zeit_and_lbl::text,'#NULL#'),
+    --COALESCE(meda_aufwand_zeit_and::text,'#NULL#'),
+    --COALESCE(meda_notiz::text,'#NULL#'),
+    --COALESCE(medikationsanalyse_complete::text,'#NULL#')
+--);
+
+-- Index idx_mrpdokumentation_validierung_fe_data for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_data
+-- ON db2frontend_in.mrpdokumentation_validierung_fe (
+--  --COALESCE(record_id::text,'#NULL#'),
+    --COALESCE(meda_fe_id::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
+    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
+    --COALESCE(mrp_header::text,'#NULL#'),
+    --COALESCE(mrp_femb_1::text,'#NULL#'),
+    --COALESCE(mrp_femb_2::text,'#NULL#'),
+    --COALESCE(mrp_femb_3::text,'#NULL#'),
+    --COALESCE(mrp_pi_info::text,'#NULL#'),
+    --COALESCE(mrp_pi_info___1::text,'#NULL#'),
+    --COALESCE(mrp_mf_info::text,'#NULL#'),
+    --COALESCE(mrp_mf_info___1::text,'#NULL#'),
+    --COALESCE(mrp_pi_info_txt::text,'#NULL#'),
+    --COALESCE(mrp_mf_info_txt::text,'#NULL#'),
+    --COALESCE(mrp_femb_4::text,'#NULL#'),
+    --COALESCE(mrp_femb_5::text,'#NULL#'),
+    --COALESCE(mrp_femb_6::text,'#NULL#'),
+    --COALESCE(mrp_entd_dat::text,'#NULL#'),
+    --COALESCE(mrp_kurzbeschr::text,'#NULL#'),
+    --COALESCE(mrp_entd_algorithmisch::text,'#NULL#'),
+    --COALESCE(mrp_hinweisgeber_lbl::text,'#NULL#'),
+    --COALESCE(mrp_hinweisgeber::text,'#NULL#'),
+    --COALESCE(mrp_gewissheit_lbl::text,'#NULL#'),
+    --COALESCE(mrp_gewissheit::text,'#NULL#'),
+    --COALESCE(mrp_femb_22::text,'#NULL#'),
+    --COALESCE(mrp_gewissheit_oth::text,'#NULL#'),
+    --COALESCE(mrp_femb_23::text,'#NULL#'),
+    --COALESCE(mrp_hinweisgeber_oth::text,'#NULL#'),
+    --COALESCE(mrp_gewiss_grund_abl_lbl::text,'#NULL#'),
+    --COALESCE(mrp_gewiss_grund_abl::text,'#NULL#'),
+    --COALESCE(mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#'),
+    --COALESCE(mrp_gewiss_grund_abl_sonst::text,'#NULL#'),
+    --COALESCE(mrp_femb_7::text,'#NULL#'),
+    --COALESCE(mrp_femb_8::text,'#NULL#'),
+    --COALESCE(mrp_femb_9::text,'#NULL#'),
+    --COALESCE(mrp_femb_10::text,'#NULL#'),
+    --COALESCE(mrp_femb_11::text,'#NULL#'),
+    --COALESCE(mrp_femb_12::text,'#NULL#'),
+    --COALESCE(mrp_wirkstoff::text,'#NULL#'),
+    --COALESCE(mrp_atc1_lbl::text,'#NULL#'),
+    --COALESCE(mrp_atc1::text,'#NULL#'),
+    --COALESCE(mrp_atc2_lbl::text,'#NULL#'),
+    --COALESCE(mrp_atc2::text,'#NULL#'),
+    --COALESCE(mrp_atc3_lbl::text,'#NULL#'),
+    --COALESCE(mrp_atc3::text,'#NULL#'),
+    --COALESCE(mrp_atc4_lbl::text,'#NULL#'),
+    --COALESCE(mrp_atc4::text,'#NULL#'),
+    --COALESCE(mrp_atc5_lbl::text,'#NULL#'),
+    --COALESCE(mrp_atc5::text,'#NULL#'),
+    --COALESCE(mrp_femb_13::text,'#NULL#'),
+    --COALESCE(mrp_med_prod::text,'#NULL#'),
+    --COALESCE(mrp_med_prod_sonst_lbl::text,'#NULL#'),
+    --COALESCE(mrp_med_prod_sonst::text,'#NULL#'),
+    --COALESCE(mrp_dokup_fehler::text,'#NULL#'),
+    --COALESCE(mrp_dokup_intervention::text,'#NULL#'),
+    --COALESCE(mrp_femb_14::text,'#NULL#'),
+    --COALESCE(mrp_pigrund::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___1::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___2::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___3::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___4::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___5::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___6::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___7::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___8::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___9::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___10::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___11::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___12::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___13::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___14::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___15::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___16::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___17::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___18::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___19::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___20::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___21::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___22::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___23::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___24::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___25::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___26::text,'#NULL#'),
+    --COALESCE(mrp_pigrund___27::text,'#NULL#'),
+    --COALESCE(mrp_femb_15::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse___1::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse___2::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse___3::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse___4::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse___5::text,'#NULL#'),
+    --COALESCE(mrp_femb_16::text,'#NULL#'),
+    --COALESCE(mrp_femb_17::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse_disease::text,'#NULL#'),
+    --COALESCE(mrp_ip_klasse_labor::text,'#NULL#'),
+    --COALESCE(mrp_femb_18::text,'#NULL#'),
+    --COALESCE(mrp_massn_am::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___1::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___2::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___3::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___4::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___5::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___6::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___7::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___8::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___9::text,'#NULL#'),
+    --COALESCE(mrp_massn_am___10::text,'#NULL#'),
+    --COALESCE(mrp_femb_19::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___1::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___2::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___3::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___4::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___5::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___6::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___7::text,'#NULL#'),
+    --COALESCE(mrp_massn_orga___8::text,'#NULL#'),
+    --COALESCE(mrp_femb_20::text,'#NULL#'),
+    --COALESCE(mrp_notiz::text,'#NULL#'),
+    --COALESCE(mrp_femb_21::text,'#NULL#'),
+    --COALESCE(mrp_dokup_hand_emp_akz::text,'#NULL#'),
+    --COALESCE(mrp_merp::text,'#NULL#'),
+    --COALESCE(mrp_merp_info::text,'#NULL#'),
+    --COALESCE(mrp_merp_info___1::text,'#NULL#'),
+    --COALESCE(mrp_merp_txt::text,'#NULL#'),
+    --COALESCE(mrpdokumentation_validierung_complete::text,'#NULL#')
+--);
+
+-- Index idx_risikofaktor_fe_data for Table "risikofaktor_fe" in schema "db2frontend_in"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_data
+-- ON db2frontend_in.risikofaktor_fe (
+--  --COALESCE(record_id::text,'#NULL#'),
+    --COALESCE(patient_id_fk::text,'#NULL#'),
+    --COALESCE(rskfk_gerhemmer::text,'#NULL#'),
+    --COALESCE(rskfk_tah::text,'#NULL#'),
+    --COALESCE(rskfk_immunsupp::text,'#NULL#'),
+    --COALESCE(rskfk_tumorth::text,'#NULL#'),
+    --COALESCE(rskfk_opiat::text,'#NULL#'),
+    --COALESCE(rskfk_atcn::text,'#NULL#'),
+    --COALESCE(rskfk_ait::text,'#NULL#'),
+    --COALESCE(rskfk_anzam::text,'#NULL#'),
+    --COALESCE(rskfk_priscus::text,'#NULL#'),
+    --COALESCE(rskfk_qtc::text,'#NULL#'),
+    --COALESCE(rskfk_meld::text,'#NULL#'),
+    --COALESCE(rskfk_dialyse::text,'#NULL#'),
+    --COALESCE(rskfk_entern::text,'#NULL#'),
+    --COALESCE(rskfkt_anz_rskamklassen::text,'#NULL#'),
+    --COALESCE(risikofaktor_complete::text,'#NULL#')
+--);
+
+-- Index idx_trigger_fe_data for Table "trigger_fe" in schema "db2frontend_in"
+----------------------------------------------------
+-- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
+-- CREATE INDEX IF NOT EXISTS idx_trigger_fe_data
+-- ON db2frontend_in.trigger_fe (
+--  --COALESCE(patient_id_fk::text,'#NULL#'),
+    --COALESCE(record_id::text,'#NULL#'),
+    --COALESCE(trg_ast::text,'#NULL#'),
+    --COALESCE(trg_alt::text,'#NULL#'),
+    --COALESCE(trg_crp::text,'#NULL#'),
+    --COALESCE(trg_leuk_penie::text,'#NULL#'),
+    --COALESCE(trg_leuk_ose::text,'#NULL#'),
+    --COALESCE(trg_thrmb_penie::text,'#NULL#'),
+    --COALESCE(trg_aptt::text,'#NULL#'),
+    --COALESCE(trg_hyp_haem::text,'#NULL#'),
+    --COALESCE(trg_hypo_glyk::text,'#NULL#'),
+    --COALESCE(trg_hyper_glyk::text,'#NULL#'),
+    --COALESCE(trg_hyper_bilirbnm::text,'#NULL#'),
+    --COALESCE(trg_ck::text,'#NULL#'),
+    --COALESCE(trg_hypo_serablmn::text,'#NULL#'),
+    --COALESCE(trg_hypo_nat::text,'#NULL#'),
+    --COALESCE(trg_hyper_nat::text,'#NULL#'),
+    --COALESCE(trg_hyper_kal::text,'#NULL#'),
+    --COALESCE(trg_hypo_kal::text,'#NULL#'),
+    --COALESCE(trg_inr_ern::text,'#NULL#'),
+    --COALESCE(trg_inr_erh::text,'#NULL#'),
+    --COALESCE(trg_inr_erh_antikoa::text,'#NULL#'),
+    --COALESCE(trg_krea::text,'#NULL#'),
+    --COALESCE(trg_egfr::text,'#NULL#'),
+    --COALESCE(trigger_complete::text,'#NULL#')
+--);
+
+
+------------------------------------------------------
+-- INDEX for IDs on Tables in Schema "db2frontend_in" --
+------------------------------------------------------
+
+  CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db2frontend_in.patient_fe ( patient_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_patient_fe_input_dt for Table "patient_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_input_dt
+ON db2frontend_in.patient_fe (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_patient_fe_input_pnr for Table "patient_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_input_pnr
+ON db2frontend_in.patient_fe (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_patient_fe_last_dt for Table "patient_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_last_dt
+ON db2frontend_in.patient_fe (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_patient_fe_last_dt for Table "patient_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_last_pnr
+ON db2frontend_in.patient_fe (
+   last_processing_nr -- Last processing number of the data record
+);
+
+  CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db2frontend_in.fall_fe ( fall_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_fall_fe_input_dt for Table "fall_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_input_dt
+ON db2frontend_in.fall_fe (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_fall_fe_input_pnr for Table "fall_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_input_pnr
+ON db2frontend_in.fall_fe (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_fall_fe_last_dt for Table "fall_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_last_dt
+ON db2frontend_in.fall_fe (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_fall_fe_last_dt for Table "fall_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_last_pnr
+ON db2frontend_in.fall_fe (
+   last_processing_nr -- Last processing number of the data record
+);
+
+  CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db2frontend_in.medikationsanalyse_fe ( medikationsanalyse_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_input_dt
+ON db2frontend_in.medikationsanalyse_fe (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_medikationsanalyse_fe_input_pnr for Table "medikationsanalyse_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_input_pnr
+ON db2frontend_in.medikationsanalyse_fe (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_last_dt
+ON db2frontend_in.medikationsanalyse_fe (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_last_pnr
+ON db2frontend_in.medikationsanalyse_fe (
+   last_processing_nr -- Last processing number of the data record
+);
+
+  CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db2frontend_in.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_input_dt
+ON db2frontend_in.mrpdokumentation_validierung_fe (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_input_pnr for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_input_pnr
+ON db2frontend_in.mrpdokumentation_validierung_fe (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_last_dt
+ON db2frontend_in.mrpdokumentation_validierung_fe (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_last_pnr
+ON db2frontend_in.mrpdokumentation_validierung_fe (
+   last_processing_nr -- Last processing number of the data record
+);
+
+  CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db2frontend_in.risikofaktor_fe ( risikofaktor_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_input_dt
+ON db2frontend_in.risikofaktor_fe (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_risikofaktor_fe_input_pnr for Table "risikofaktor_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_input_pnr
+ON db2frontend_in.risikofaktor_fe (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_last_dt
+ON db2frontend_in.risikofaktor_fe (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_last_pnr
+ON db2frontend_in.risikofaktor_fe (
+   last_processing_nr -- Last processing number of the data record
+);
+
+  CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db2frontend_in.trigger_fe ( trigger_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_trigger_fe_input_dt for Table "trigger_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_input_dt
+ON db2frontend_in.trigger_fe (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_trigger_fe_input_pnr for Table "trigger_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_input_pnr
+ON db2frontend_in.trigger_fe (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_trigger_fe_last_dt for Table "trigger_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_last_dt
+ON db2frontend_in.trigger_fe (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_trigger_fe_last_dt for Table "trigger_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_last_pnr
+ON db2frontend_in.trigger_fe (
+   last_processing_nr -- Last processing number of the data record
+);
+
 
