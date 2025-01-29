@@ -93,6 +93,7 @@ createFrontendTables <- function() {
       fall_station = character(),
       fall_aufn_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_aufn_diag = character(),
+      fall_zimmernr = character(),
       fall_gewicht_aktuell = numeric(),
       fall_gewicht_aktl_einheit = character(),
       fall_groesse = numeric(),
@@ -110,7 +111,6 @@ createFrontendTables <- function() {
 
     query <- paste0( "SELECT * FROM ", table_name, "\n",
                      "  WHERE enc_patient_ref IN (", query_ids, ")\n",
-                     "    AND enc_partof_ref IS NULL\n",
                      "    AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
                      "    AND enc_period_start <= '", query_datetime, "'"
     )
@@ -127,6 +127,11 @@ createFrontendTables <- function() {
 
     encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
 
+    # Create a new table with rows where enc_partof_ref is NOT NA
+    part_of_encounters <- encounters[!is.na(enc_partof_ref)]
+    # Remove those rows from the original table
+    encounters <- encounters[is.na(enc_partof_ref)]
+
     if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")) {
       #TODO AXS prüfen ob dieser Code durch die Funktion convertFilterPatterns aus cds2db ersetzt werden kann
       encounter_filter_patterns <- etlutils::getVarByNameOrDefaultIfMissing("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")
@@ -142,7 +147,15 @@ createFrontendTables <- function() {
         }
         filter_patterns[[paste0("Condition_", length(filter_patterns) + 1)]] <- and_conditions
       }
-      encounters <- etlutils::filterResources(encounters, filter_patterns)
+      encounters_lists <- etlutils::filterResources(encounters, filter_patterns, return_removed = TRUE)
+      # Extract the table with rows that were kept_resources (matched the filter conditions)
+      encounters <- encounters_lists$kept_resources
+      # Extract the table with rows that were removed_resources (did not match the filter conditions)
+      part_of_encounters_filtered <- encounters_lists$removed_resources
+
+      if(nrow(part_of_encounters_filtered)) {
+        part_of_encounters <- unique(rbind(part_of_encounters, part_of_encounters_filtered))
+      }
     }
 
     # load Conditions referenced by Encounters
@@ -158,6 +171,7 @@ createFrontendTables <- function() {
 
       pid <- pids_per_ward$patient_id[pid_index]
       pid_encounters <- encounters[enc_patient_ref == pid]
+      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
@@ -228,6 +242,15 @@ createFrontendTables <- function() {
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
+
+        # Extract location informations
+        searched_encounter <- paste0("Encounter/", enc_id)
+        filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_partof_ref == searched_encounter]
+        # Define the mapping of location codes to labels
+        location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
+        # Call the function with the filtered_pid_part_of_encounters data and the location_labels
+        combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
+        data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
 
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA, obs_by_pid = FALSE) {

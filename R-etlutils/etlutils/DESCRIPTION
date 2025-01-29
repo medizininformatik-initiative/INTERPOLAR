@@ -21,6 +21,7 @@ Imports:
     data.table,
     DBI,
     fhircrackr,
+    hms,
     httr,
     ICD10gm,
     lubridate,
