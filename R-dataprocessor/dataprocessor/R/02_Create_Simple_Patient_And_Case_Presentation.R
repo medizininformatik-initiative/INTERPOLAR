@@ -442,7 +442,6 @@ createFrontendTables <- function() {
 
     query <- paste0( "SELECT * FROM ", table_name, "\n",
                      "  WHERE enc_patient_ref IN (", query_ids, ")\n",
-                     "    AND enc_partof_ref IS NULL\n",
                      "    AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
                      "    AND enc_period_start <= '", query_datetime, "'"
     )
