@@ -9,7 +9,7 @@ Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_descriptio
 
 ## Bestandteile der CDS tool chain
 
-Hier werden alle verwendeten Bestandteile aufgelistet. Detailliertere Beschreibungen befinden sich im jeweiligen Ordner.
+Hier werden alle verwendeten Bestandteile bzw. CDS-Module aufgelistet. Detailliertere Beschreibungen befinden sich im jeweiligen Ordner. Als Modul wird ein in sich abgeschlossener Softwarebaustein mit zugehöriger funktionalität gesehen. Die Module argieren mittels Schnittstellen miteinander und sind austauschbar.
 
 ### FHIR Server / Endpunkt
 
