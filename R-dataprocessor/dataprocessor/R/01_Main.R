@@ -88,7 +88,10 @@ processData <- function(debug_path_to_config_toml = NA) {
       # (multiple values will be separated by semicolon)
       FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = "",
       FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "",
-      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ""
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "",
+
+      # Default value for LOINC validity days
+      DEFAULT_LOINC_VALIDITY_DAYS = 7
     )
   )
 
