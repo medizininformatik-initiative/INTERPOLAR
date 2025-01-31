@@ -14,15 +14,59 @@
 #'
 createFrontendTables <- function() {
 
-  # This function constructs an error or warning message with optional additional
-  # information such as related tables and database connection details. It can be
-  # used to provide more context when reporting errors or warnings.
-  getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
-    tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
-    db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
-    text <- paste0(text, tables, db_connection)
-    return(text)
+  #' Function to filter rows and combine `enc_identifier_value` for multiple `location_codes`
+  #'
+  #' This function filters rows from the provided data based on multiple `location_codes`
+  #' and combines their corresponding `enc_identifier_value` into a single string.
+  #' The function supports configurable labels for each location code.
+  #'
+  #' @param data A data frame or data table that contains columns `enc_location_physicaltype_code` and `enc_identifier_value`.
+  #' @param location_labels A named vector where names correspond to `location_codes` and values are the labels.
+  #'
+  #' @details This function applies filtering to each `location_code` provided in `location_labels`. It extracts values
+  #' from the `enc_identifier_value` column based on the `enc_location_physicaltype_code` column and combines
+  #' the non-empty, non-NA values into a single string, separated by commas. Each filtered and combined value is
+  #' associated with its corresponding label from `location_labels`.
+  #'
+  #' @return A single string containing all filtered and combined values, grouped by location labels, separated by semicolons.
+  #'
+  #' @examples
+  #' # Example data
+  #' pid_part_of_encounters <- data.table(
+  #'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd"),
+  #'   enc_identifier_value = c("ID_001", "ID_002", "ID_003", "")
+  #' )
+  #' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
+  #' combineEncounterLocations(pid_part_of_encounters, location_labels)
+  #'
+  combineEncounterLocations <- function(data, location_labels) {
+    location_codes <- names(location_labels)
+    # Apply the filtering and combining for each location_code and concatenate the results
+    combined_results <- sapply(location_codes, function(location_code) {
+      # Filter rows based on the specified location_code in enc_location_physicaltype_code
+      filtered_values <- data[
+        enc_location_physicaltype_code == location_code,  # Filter condition
+        enc_identifier_value                              # Extract the values from enc_identifier_value
+      ]
+      # Check if there are valid values and filter out NA or empty values
+      valid_values <- filtered_values[!is.na(filtered_values) & filtered_values != ""]
+      # Combine the valid values into a single string, separated by commas
+      combined_values <- paste(valid_values, collapse = ", ")
+      # Get the corresponding label for the location_code from the location_labels mapping
+      location_label <- location_labels[location_code]
+      # If there is a label, return the formatted result with the label and combined values
+      if (!is.null(location_label) && length(valid_values)) {
+        return(paste0(location_label, ": ", combined_values))
+      }
+    })
+
+    # Remove any NULL values if no valid values for a particular location_code
+    combined_results <- combined_results[!sapply(combined_results, is.null)]
+    # Combine all results into a single string, separated by semicolons
+    final_result <- paste(combined_results, collapse = "; ")
+    return(final_result)
   }
+
 
   # This functions loads the last version of a patient.
   # NOTE: THIS IS ALWAYS THE VERY LAST VERSION. THE current_date IS CURRENTLY IGNORED HERE.
@@ -104,28 +148,11 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
-    # load Encounters for all PIDs
+    # Retrieve query datetime
     query_datetime <- etlutils::getQueryDatetime()
-    query_ids <- etlutils::getQueryList(pids_per_ward$patient_id)
-    table_name <- etlutils::getViewTableName("encounter")
 
-    query <- paste0( "SELECT * FROM ", table_name, "\n",
-                     "  WHERE enc_patient_ref IN (", query_ids, ")\n",
-                     "    AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
-                     "    AND enc_period_start <= '", query_datetime, "'"
-    )
-
-    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
-      enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
-      # create additional condition if there are class codes defined for the accepted encounters
-      if (enc_class_codes != "") {
-        # Additional condition only if enc_class_codes is not empty
-        additional_class_code_condition <- paste0(" AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "')")
-        query <- paste0(query, additional_class_code_condition)
-      }
-    }
-
-    encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
+    # Load encounters by PIDs
+    encounters <- loadEncounters(pids_per_ward, query_datetime, apply_class_filter = TRUE)
 
     # Create a new table with rows where enc_partof_ref is NOT NA
     part_of_encounters <- encounters[!is.na(enc_partof_ref)]
@@ -313,16 +340,9 @@ createFrontendTables <- function() {
     }
     return(enc_frontend_table)
   }
-  pids_per_ward_table_name <- etlutils::getViewTableName("pids_per_ward")
-  pids_per_ward <- etlutils::loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
-  pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
-  if (!nrow(pids_per_ward)) {
-    message <- getErrorOrWarningMessage(
-      text = "WARNING: The pids_per_ward table is empty.\n",
-      tables = "pids_per_ward")
-    stop(message)
-  }
+  # Load all PIDs per ward
+  pids_per_ward <- getPIDs()
 
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
