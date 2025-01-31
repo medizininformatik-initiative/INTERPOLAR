@@ -1,3 +1,83 @@
+#' Validate ATC7 Codes in Multiple Columns
+#'
+#' This function checks whether the values in specified columns of a data table
+#' are valid ATC7 codes and issues warnings for any invalid values.
+#'
+#' @param data A data table containing the columns to validate.
+#' @param columns A character vector specifying the column names to check for ATC7 validity.
+#'
+#' @details The function filters out \code{NA} values and validates each value in the specified
+#' columns using \code{etlutils::isATC7}. If invalid ATC7 codes are found, a warning is issued
+#' for each column.
+#'
+#' @return This function does not return any value. It issues warnings for invalid codes.
+#'
+#' @examples
+#' library(data.table)
+#' drug_disease_mrp_definition <- data.table(
+#'   ATC = c("A01AB07", "INVALID", NA),
+#'   ATC_PROXY = c(NA, "WRONG", "B03AA02")
+#' )
+#' validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
+#'
+#' @export
+validateATC7Codes <- function(data, columns) {
+  for (column in columns) {
+    # Filter out NA values and check for invalid ATC7 codes
+    invalid_codes <- data[[column]][!etlutils::isATC7(data[[column]]) & !is.na(data[[column]])]
+    # Issue a warning if there are invalid codes
+    if (length(invalid_codes) > 0) {
+      warning(sprintf(
+        "The following codes are not valid in column '%s', please check:\n%s",
+        column,
+        paste(invalid_codes, collapse = ", \n")
+      ))
+    }
+  }
+}
+
+#' Validate LOINC Codes in a Column
+#'
+#' This function validates whether all non-NA values in a specified column of a data table
+#' conform to the standard LOINC format.
+#'
+#' @param data A data.table containing the column to validate.
+#' @param column_name The name of the column to check for valid LOINC codes.
+#'
+#' @details A valid LOINC code matches the pattern `^\d{1,5}-\d$`:
+#' - 1 to 5 digits
+#' - Followed by a hyphen (`-`)
+#' - Ending with exactly 1 digit.
+#'
+#' If invalid codes are found, the function will issue a warning with the invalid codes.
+#'
+#' @return The function does not return any value but will issue a warning
+#' if invalid LOINC codes are found in the column.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   LOINC = c("12345-6", "67890-1", "INVALID", NA, "12321", "21312123-1")
+#' )
+#' validateLOINCCodes(dt, "LOINC")
+#' # Warning: The following codes in column 'LOINC' are not valid LOINC codes: INVALID
+#'
+#' @export
+validateLOINCCodes <- function(data, column_name) {
+  # Extract the column values
+  column_values <- data[[column_name]]
+  # Identify invalid codes (ignore NA values)
+  invalid_codes <- column_values[!isLOINC(column_values) & !is.na(column_values)]
+  # If there are invalid codes, issue a warning
+  if (length(invalid_codes) > 0) {
+    warning(sprintf(
+      "The following codes in column '%s' are not valid LOINC codes:\n%s",
+      column_name,
+      paste(invalid_codes, collapse = ", \n")
+    ))
+  }
+}
+
 # List with resource abbreviations
 resource_to_abbreviation <- list(
   condition = "con",
@@ -64,7 +144,7 @@ getForeignIDColumn <- function(resource_name, foreign_resource_name) {
   if (resource_name == foreign_resource_name) {
     getIDColumn(resource_name)
   }
-  foreign_id_column <- paste0(foreign_resource_name, "_id")
+  foreign_id_column <- paste0(foreign_resource_name, "_ref")
   foreign_id_column <- paste0(getResourceAbbreviation(resource_name), "_", foreign_id_column)
   return(pid_column)
 }

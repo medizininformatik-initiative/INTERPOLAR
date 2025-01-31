@@ -75,8 +75,8 @@ processData <- function(debug_path_to_config_toml = NA) {
       # default medication resource should be MedicationRequest and its
       # timestamps
       MEDICATION_REQUEST_RESOURCE = "MedicationRequest",
-      MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id",
-      MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id",
+      MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_ref",
+      MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_ref",
       MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event",
       MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start",
       MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end",
@@ -88,7 +88,10 @@ processData <- function(debug_path_to_config_toml = NA) {
       # (multiple values will be separated by semicolon)
       FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = "",
       FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "",
-      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ""
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "",
+
+      # Default value for LOINC validity days
+      DEFAULT_LOINC_VALIDITY_DAYS = 7
     )
   )
 
@@ -112,6 +115,10 @@ processData <- function(debug_path_to_config_toml = NA) {
     # Reset lock from unfinished previous dataprocessor run
     etlutils::runLevel2("Reset database lock from unfinished previous run", {
       etlutils::dbResetLock()
+    })
+
+    etlutils::runLevel2("Source function script", {
+      source("./R-dataprocessor/dataprocessor/R/00_Functions.R")
     })
 
     etlutils::runLevel2("Run dataprocessor submodules", {
