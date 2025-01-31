@@ -144,7 +144,7 @@ getForeignIDColumn <- function(resource_name, foreign_resource_name) {
   if (resource_name == foreign_resource_name) {
     getIDColumn(resource_name)
   }
-  foreign_id_column <- paste0(foreign_resource_name, "_id")
+  foreign_id_column <- paste0(foreign_resource_name, "_ref")
   foreign_id_column <- paste0(getResourceAbbreviation(resource_name), "_", foreign_id_column)
   return(pid_column)
 }
