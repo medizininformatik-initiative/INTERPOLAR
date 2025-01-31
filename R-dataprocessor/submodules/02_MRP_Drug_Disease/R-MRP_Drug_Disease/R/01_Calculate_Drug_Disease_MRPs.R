@@ -8,7 +8,7 @@
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinition <- function(drug_disease_mrp_definition) {
+cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 
   # Remove table header
   columnnames <- c("MEDICATION_NAME", "ATC_DISPLAY", "ATC")
@@ -90,60 +90,74 @@ cleanAndExpandDefinition <- function(drug_disease_mrp_definition) {
   return(drug_disease_mrp_definition)
 }
 
-#' #' Load the Latest Version of Patients from the Database
-#' #'
-#' #' This function retrieves the latest version of patient records from the database
-#' #' based on patient IDs provided in a table. Note that this always retrieves the
-#' #' very last version, and the \code{current_date} is currently ignored.
-#' #'
-#' #' @param pids_per_ward A data.table containing a column \code{patient_id} with patient IDs.
-#' #'
-#' #' @details
-#' #' - If the same patient appears multiple times in the \code{pids_per_ward} table
-#' #'   (e.g., the same patient assigned to different wards or listed multiple times
-#' #'   on the same ward), the result will also contain these patients multiple times.
-#' #' - This duplication issue should be addressed at the beginning of the process
-#' #'   by the data integration center (DIZ) to ensure no duplicate patients are
-#' #'   present in the input data.
-#' #' - The function uses \code{etlutils::extractIDsFromReferences()} to extract patient IDs
-#' #'   and \code{etlutils::loadResourcesLastStatusByOwnIDFromDB()} to load the last status
-#' #'   of patients from the database.
-#' #'
-#' #' @return A data.table containing the latest version of patient records from the database.
-#' #'
-#' #' @note The \code{current_date} parameter is currently ignored in this implementation.
-#' #'
-#' getPatientsFromDatabase <- function(pids_per_ward) {
-#'   # if there are the same pids multiple in the pids per ward table (same patient on different
-#'   # wards or multiple in the same ward, then the result will contain this patient multiple times
-#'   # too! This error has to be fixed by the DIZ at the beginning of the process (preventing same
-#'   # patient multiple times on the same or different wards)
-#'   pids <- unique(pids_per_ward$patient_id)
-#'   pids <- etlutils::extractIDsFromReferences(pids)
-#'   patients <- etlutils::loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
-#'   return(patients)
-#' }
+#' Calculate Drug-Disease Medication-Related Problems (MRPs)
 #'
-#' calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
-#'   # Load pids_per_ward
-#'   pids_per_ward_table_name <- etlutils::getViewTableName("pids_per_ward")
-#'   pids_per_ward <- etlutils::loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
-#'   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
+#' This function retrieves all necessary patient-related data, including encounters,
+#' medication requests, medications, observations, and conditions, to analyze potential
+#' drug-disease medication-related problems (MRPs).
 #'
-#'   if (!nrow(pids_per_ward)) {
-#'     message <- getErrorOrWarningMessage(
-#'       text = "WARNING: The pids_per_ward table is empty.\n",
-#'       tables = "pids_per_ward")
-#'     stop(message)
-#'   }
+#' @param drug_disease_mrp_definition A data structure (e.g., a list or data.table)
+#'   defining the rules for identifying drug-disease MRPs.
 #'
-#'   # Load the Patient resources from database
-#'   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
-#'   browser()
+#' @return This function return table with all calculated drug-disease MRPs.
 #'
-#'   encounter <- loadResourcesLastStatusByPIDFromDB("Encounter", unique(patients_from_database$pat_id))
-#'
-#' }
+calculateDrugDiseaseMRPs <- function() {
+
+  # Load and expand Drug-Disease Definition
+  drug_disease_mrp_table <- loadMRPTable("Drug-Disease")
+
+  # Load all active PIDs
+  patient_ids <- getPIDs()
+
+  # Retrieve query datetime
+  query_datetime <- etlutils::getQueryDatetime()
+
+  # Load encounters by PIDs
+  encounters <- loadEncounters(patient_ids, query_datetime)
+
+  # Load MedicationRequest resources referenced by Encounters
+  encounter_ids <- paste0("Encounter/", unique(encounters$enc_id))
+  medication_requests <- loadResourcesFromDB(
+    resource_name = MEDICATION_REQUEST_RESOURCE,
+    column_name = MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME,
+    query_ids = encounter_ids
+  )
+
+  # Load Medication resources referenced by MedicationRequest
+  medication_ids <- unique(medication_requests$medstat_medicationreference_ref)
+  medications <- loadResourcesFromDB(
+    resource_name = "Medication",
+    column_name = "med_id",
+    query_ids = medication_ids,
+    remove_ref_type = TRUE
+  )
+
+  # Fill column LOINC_VALIDITY_DAYS and find max value
+  observation_datetime <- calculateObservationDatetime(drug_disease_mrp_table, "LOINC_VALIDITY_DAYS", query_datetime, DEFAULT_LOINC_VALIDITY_DAYS)
+  # Load Observation resources referenced by Patient
+  observations <- loadResourcesFromDB(
+    resource_name = "observation",
+    column_name = "obs_patient_ref",
+    query_ids = patient_ids,
+    additional_query_parameter = paste0("obs_effectivedatetime >= '", observation_datetime, "'\n")
+  )
+
+  # Load Condition resources referenced by Patient
+  conditions <- loadResourcesFromDB(
+    resource_name = "condition",
+    column_name = "con_patient_ref",
+    query_ids = patient_ids
+  )
+
+  # Load Procedures resources referenced by Encounter
+  encounter_ids <- paste0("Encounter/", unique(encounters$enc_id))
+  procedures <- loadResourcesFromDB(
+    resource_name = "procedure",
+    column_name = "proc_encounter_ref",
+    query_ids = encounter_ids
+  )
+
+}
 
 
 #' calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
