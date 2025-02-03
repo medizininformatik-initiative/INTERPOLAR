@@ -249,3 +249,30 @@ loadResourcesFromDB <- function(resource_name, column_name, query_ids, force_rel
 
   return(result)
 }
+
+#' Set the Query Datetime in the Resource Environment
+#'
+#' This function retrieves the current query datetime using `etlutils::getQueryDatetime()`
+#' and stores it in the `.resource_env` environment under the variable `query_datetime`.
+#'
+#' @details
+#' The function ensures that the query datetime is available globally within the
+#' `.resource_env` environment, allowing other functions to access it without
+#' needing to repeatedly fetch it.
+#'
+#' @return This function does not return a value. It assigns `query_datetime` in `.resource_env`.
+#'
+setQueryDatetime <- function() {
+  assign("query_datetime", etlutils::getQueryDatetime(), envir = .resource_env)
+}
+
+#' Retrieve the Query Datetime from the Resource Environment
+#'
+#' This function fetches the stored `query_datetime` value from the `.resource_env`
+#' environment. The datetime must have been previously set using `setQueryDatetime()`.
+#'
+#' @return The stored query datetime.
+#'
+getQueryDatetime <- function() {
+  get("query_datetime", envir = .resource_env)
+}
