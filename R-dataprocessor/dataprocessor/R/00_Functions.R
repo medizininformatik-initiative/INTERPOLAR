@@ -160,6 +160,7 @@ loadEncounters <- function(patient_ids, query_datetime, force_reload = FALSE, ap
   if (!force_reload && exists("encounters", envir = get_resources_env) &&
       exists("encounters_pids", envir = get_resources_env) &&
       identical(get_resources_env$encounters_pids, patient_ids)) {
+      identical(.resource_env$query_datetime, query_datetime)) {
     message("Returning cached encounters.")
     return(get_resources_env$encounters)
   }
