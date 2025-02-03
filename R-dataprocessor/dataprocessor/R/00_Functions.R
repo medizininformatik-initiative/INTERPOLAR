@@ -1,5 +1,5 @@
 # Environment for saving resource data from DB
-get_resources_env <- new.env()
+.resource_env <- new.env()
 
 #' Load and Process an MRP Table
 #'
@@ -116,9 +116,9 @@ getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
 #'
 getPIDs <- function(force_reload = FALSE) {
   # Check if PIDs have already been loaded and force_reload is not TRUE
-  if (!force_reload && exists("pids_per_ward", envir = get_resources_env)) {
+  if (!force_reload && exists("pids_per_ward", envir = .resource_env)) {
     message("Returning cached PIDs.")
-    return(get_resources_env$pids_per_ward)
+    return(.resource_env$pids_per_ward)
   }
   # Load pids_per_ward
   pids_per_ward_table_name <- etlutils::getViewTableName("pids_per_ward")
@@ -133,7 +133,7 @@ getPIDs <- function(force_reload = FALSE) {
   }
   patient_ids <- unique(pids_per_ward$patient_id)
   # Store the loaded data in the environment
-  get_resources_env$pids_per_ward <- patient_ids
+  .resource_env[["pids_per_ward"]] <- patient_ids
   return(patient_ids)
 }
 
@@ -157,12 +157,12 @@ getPIDs <- function(force_reload = FALSE) {
 #' @export
 loadEncounters <- function(patient_ids, query_datetime, force_reload = FALSE, apply_class_filter = FALSE) {
   # Check if encounters exist in the environment and if the patient IDs match
-  if (!force_reload && exists("encounters", envir = get_resources_env) &&
-      exists("encounters_pids", envir = get_resources_env) &&
-      identical(get_resources_env$encounters_pids, patient_ids)) {
+  if (!force_reload && exists("encounters", envir = .resource_env) &&
+      exists("encounters_pids", envir = .resource_env) &&
+      identical(.resource_env$encounters_pids, patient_ids) &&
       identical(.resource_env$query_datetime, query_datetime)) {
     message("Returning cached encounters.")
-    return(get_resources_env$encounters)
+    return(.resource_env$encounters)
   }
 
   # Get formatted patient IDs for SQL query
@@ -192,8 +192,8 @@ loadEncounters <- function(patient_ids, query_datetime, force_reload = FALSE, ap
   encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
 
   # Store the loaded data and patient IDs in the environment
-  get_resources_env$encounters <- encounters
-  get_resources_env$encounters_pids <- patient_ids  # Store patient IDs for comparison
+  .resource_env[["encounters"]] <- encounters
+  .resource_env[["encounters_pids"]] <- patient_ids  # Store patient IDs for comparison
 
   return(encounters)
 }
@@ -225,11 +225,11 @@ loadResourcesFromDB <- function(resource_name, column_name, query_ids, force_rel
   query_ids_key <- paste0(resource_name, "_query_ids")
 
   # Check if the resource is already loaded and query_ids match
-  if (!force_reload && exists(resource_name, envir = get_resources_env) &&
-      exists(query_ids_key, envir = get_resources_env) &&
-      identical(get_resources_env$query_ids_key, query_ids)) {
+  if (!force_reload && exists(resource_name, envir = .resource_env) &&
+      exists(query_ids_key, envir = .resource_env) &&
+      identical(.resource_env$query_ids_key, query_ids)) {
     message("Returning cached ", resource_name, " .")
-    return(get_resources_env$resource_name)
+    return(.resource_env$resource_name)
   }
 
   query_ids_sql <- etlutils::getQueryList(query_ids, remove_ref_type = remove_ref_type)
@@ -245,8 +245,8 @@ loadResourcesFromDB <- function(resource_name, column_name, query_ids, force_rel
   result <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 
   # Store result and corresponding query_ids in the environment
-  assign(resource_name, result, envir = get_resources_env)
-  assign(query_ids_key, query_ids, envir = get_resources_env)  # Store query_ids under specific key
+  assign(resource_name, result, envir = .resource_env)
+  assign(query_ids_key, query_ids, envir = .resource_env)  # Store query_ids under specific key
 
   return(result)
 }
