@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-02-04 23:57:00
+-- Create time: 2025-02-05 00:49:22
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  40_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(redcap_repeat_instrument::TEXT, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
   fall_ent_dat timestamp,   -- Entlassdatum (timestamp)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(fall_header::TEXT, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz 
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
   meda_notiz varchar,   -- Notizfeld (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(meda_header::TEXT, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen 
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_merp_txt varchar,   -- descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(meda_fe_id::TEXT, '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag)
@@ -512,7 +512,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
   rskfkt_anz_rskamklassen varchar,   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(patient_id_fk::TEXT, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
@@ -572,7 +572,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
   trg_egfr varchar,   -- eGFR<30 (varchar)
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(patient_id_fk::TEXT, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet

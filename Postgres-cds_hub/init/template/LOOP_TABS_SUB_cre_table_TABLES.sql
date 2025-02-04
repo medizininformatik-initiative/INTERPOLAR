@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%IF TAGS "\bTYPED\b" "<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table"%>
   <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
              '#'

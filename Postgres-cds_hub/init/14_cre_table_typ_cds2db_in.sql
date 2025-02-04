@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-04 23:56:31
+-- Create time: 2025-02-05 00:48:51
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   enc_serviceprovider_identifier_type_text varchar,   -- serviceProvider/identifier/type/text (varchar)
   enc_serviceprovider_display varchar,   -- serviceProvider/display (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(enc_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(enc_patient_ref::TEXT, '#NULL#') || '|||' || -- hash from: subject/reference
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   pat_birthdate date,   -- birthDate (date)
   pat_address_postalcode varchar,   -- address/postalCode (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(pat_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(pat_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -365,7 +365,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   con_note_time timestamp,   -- note/time (timestamp)
   con_note_text varchar,   -- note/text (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(con_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(con_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -554,7 +554,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   med_ingredient_itemreference_display varchar,   -- ingredient/itemReference/display (varchar)
   med_ingredient_isactive boolean,   -- ingredient/isActive (boolean)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(med_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(med_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -853,7 +853,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medreq_substitution_reason_display varchar,   -- substitution/reason/coding/display (varchar)
   medreq_substitution_reason_text varchar,   -- substitution/reason/text (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(medreq_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(medreq_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -1204,7 +1204,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medadm_dosage_ratequantity_system varchar,   -- dosage/rateQuantity/system (varchar)
   medadm_dosage_ratequantity_code varchar,   -- dosage/rateQuantity/code (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(medadm_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(medadm_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: context/reference
@@ -1542,7 +1542,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medstat_dosage_maxdoseperlifetime_system varchar,   -- dosage/maxDosePerLifetime/system (varchar)
   medstat_dosage_maxdoseperlifetime_code varchar,   -- dosage/maxDosePerLifetime/code (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(medstat_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(medstat_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -1902,7 +1902,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   obs_hasmember_identifier_type_text varchar,   -- hasMember/identifier/type/text (varchar)
   obs_hasmember_display varchar,   -- hasMember/display (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(obs_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(obs_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2096,7 +2096,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagrep_conclusioncode_display varchar,   -- conclusionCode/coding/display (varchar)
   diagrep_conclusioncode_text varchar,   -- conclusionCode/text (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(diagrep_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(diagrep_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2217,7 +2217,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servreq_locationcode_display varchar,   -- locationCode/coding/display (varchar)
   servreq_locationcode_text varchar,   -- locationCode/text (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(servreq_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(servreq_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2362,7 +2362,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   proc_note_time timestamp,   -- note/time (timestamp)
   proc_note_text varchar,   -- note/text (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(proc_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(proc_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2483,7 +2483,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   cons_provision_dataperiod_start timestamp,   -- provision/dataPeriod/start (timestamp)
   cons_provision_dataperiod_end timestamp,   -- provision/dataPeriod/end (timestamp)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(cons_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(cons_patient_ref::TEXT, '#NULL#') || '|||' || -- hash from: patient/reference
@@ -2551,7 +2551,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
   loc_description varchar,   -- description (varchar)
   loc_alias varchar,   -- alias (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(loc_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(loc_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -2587,7 +2587,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
-      md5(
+      db.mutable_md5(
 --         convert_to(
              COALESCE(ward_name::TEXT, '#NULL#') || '|||' || -- hash from: ward_name
              COALESCE(patient_id::TEXT, '#NULL#') || '|||' || -- hash from: patient_id

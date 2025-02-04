@@ -184,7 +184,20 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql; --db.error_log
 
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db_user;
+
+-- mutable md5 hash function
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.mutable_md5(input TEXT) RETURNS TEXT AS $$
+BEGIN
+  RETURN md5(input);
+END;
+$$ LANGUAGE plpgsql VOLATILE;
+
+GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO db_user;
