@@ -1,1 +1,1 @@
-COALESCE(<%COLUMN_NAME%>, '#NULL#') || '|||' || -- hash from: <%COLUMN_DESCRIPTION%>
+COALESCE(<%COLUMN_NAME%>::TEXT, '#NULL#') || '|||' || -- hash from: <%COLUMN_DESCRIPTION%>
