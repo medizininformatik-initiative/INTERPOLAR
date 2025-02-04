@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-01-29 18:35:55
+-- Create time: 2025-02-04 23:39:17
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -51,12 +51,33 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+--         convert_to(
+             COALESCE(record_id, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+             COALESCE(redcap_repeat_instrument, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein
+             COALESCE(redcap_repeat_instance, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein
+             COALESCE(pat_header, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(pat_id, '#NULL#') || '|||' || -- hash from: Patient-identifier FHIR Daten
+             COALESCE(pat_femb_1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Fieldembedding (femb) der Variablen pat_cis_pid, pat_name, pat_vorname, pat_gebdat,pat_geschlecht
+             COALESCE(pat_cis_pid, '#NULL#') || '|||' || -- hash from: Patient Identifier aus dem Krankenhausinformationssystem - so wie es dem Apotheker zur verfügung steht
+             COALESCE(pat_name, '#NULL#') || '|||' || -- hash from: Patientenname
+             COALESCE(pat_vorname, '#NULL#') || '|||' || -- hash from: Patientenvorname
+             COALESCE(pat_gebdat, '#NULL#') || '|||' || -- hash from: Geburtsdatum
+             COALESCE(pat_aktuell_alter, '#NULL#') || '|||' || -- hash from: aktuelles Patientenalter (Jahre)
+             COALESCE(pat_geschlecht, '#NULL#') || '|||' || -- hash from: Geschlecht (wie in FHIR)
+             COALESCE(patient_complete, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete
+             '#'
+--             ,'UTF8' )
+      )
+  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
 -- Table "fall_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
@@ -97,12 +118,56 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat timestamp,   -- Entlassdatum (timestamp)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+--         convert_to(
+             COALESCE(record_id, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+             COALESCE(fall_header, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz 
+             COALESCE(fall_id, '#NULL#') || '|||' || -- hash from: Fall-ID RedCap FHIR Daten
+             COALESCE(fall_pat_id, '#NULL#') || '|||' || -- hash from: Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id)
+             COALESCE(patient_id_fk, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
+             COALESCE(fall_femb_1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit
+             COALESCE(redcap_repeat_instrument, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :   fall
+             COALESCE(redcap_repeat_instance, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n
+             COALESCE(fall_studienphase, '#NULL#') || '|||' || -- hash from: Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) )
+             COALESCE(fall_station, '#NULL#') || '|||' || -- hash from: Station wie vom DIZ Definiert
+             COALESCE(fall_zimmernr, '#NULL#') || '|||' || -- hash from: Zimmernummer wie vom DIZ Definiert
+             COALESCE(fall_aufn_dat, '#NULL#') || '|||' || -- hash from: Aufnahmedatum
+             COALESCE(fall_aufn_diag, '#NULL#') || '|||' || -- hash from: Diagnose(n) bei Aufnahme (wird nur zum lesen sein
+             COALESCE(fall_gewicht_aktuell, '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (Kg)
+             COALESCE(fall_gewicht_aktl_einheit, '#NULL#') || '|||' || -- hash from: Einheit des Gewichts
+             COALESCE(fall_groesse, '#NULL#') || '|||' || -- hash from: Größe (cm)
+             COALESCE(fall_groesse_einheit, '#NULL#') || '|||' || -- hash from: Einheit der Größe
+             COALESCE(fall_bmi, '#NULL#') || '|||' || -- hash from: BMI
+             COALESCE(fall_femb_2, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_nieren_insuf_chron, fall_nieren_insuf_ausmass_lbl, fall_nieren_insuf_ausmass
+             COALESCE(fall_femb_3, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_nieren_insuf_dialysev_lbl, fall_nieren_insuf_dialysev
+             COALESCE(fall_femb_4, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_leber_insuf, fall_leber_insuf_ausmass_lbl, fall_leber_insuf_ausmass
+             COALESCE(fall_femb_5, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_schwanger_mo_lbl, fall_schwanger_mo
+             COALESCE(fall_femb_6, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_status, fall_ent_dat
+             COALESCE(fall_nieren_insuf_chron, '#NULL#') || '|||' || -- hash from: 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz
+             COALESCE(fall_nieren_insuf_ausmass_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(fall_nieren_insuf_ausmass, '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2
+             COALESCE(fall_nieren_insuf_dialysev_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(fall_nieren_insuf_dialysev, '#NULL#') || '|||' || -- hash from: Nierenersatzverfahren - 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren
+             COALESCE(fall_leber_insuf, '#NULL#') || '|||' || -- hash from: Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz
+             COALESCE(fall_leber_insuf_ausmass_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(fall_leber_insuf_ausmass, '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß -1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß 
+             COALESCE(fall_schwanger_mo, '#NULL#') || '|||' || -- hash from: Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9
+             COALESCE(fall_schwanger_mo_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(fall_status, '#NULL#') || '|||' || -- hash from: Status des Falls
+             COALESCE(fall_ent_dat, '#NULL#') || '|||' || -- hash from: Entlassdatum
+             COALESCE(fall_complete, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete
+             '#'
+--             ,'UTF8' )
+      )
+  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
 -- Table "medikationsanalyse_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
@@ -124,12 +189,37 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
   meda_aufwand_zeit_and int,   -- genaue Dauer in Minuten (int)
   meda_notiz varchar,   -- Notizfeld (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+--         convert_to(
+             COALESCE(record_id, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+             COALESCE(meda_header, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen 
+             COALESCE(meda_femb_1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_dat
+             COALESCE(meda_femb_2, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_ma_thueberw
+             COALESCE(meda_femb_3, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz
+             COALESCE(fall_fe_id, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat]
+             COALESCE(redcap_repeat_instrument, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse
+             COALESCE(redcap_repeat_instance, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n
+             COALESCE(meda_dat, '#NULL#') || '|||' || -- hash from: Datum der Medikationsanalyse
+             COALESCE(meda_typ, '#NULL#') || '|||' || -- hash from: Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA 
+             COALESCE(meda_ma_thueberw, '#NULL#') || '|||' || -- hash from: Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein
+             COALESCE(meda_mrp_detekt, '#NULL#') || '|||' || -- hash from: MRP detektiert? - 1, Ja|0, Nein
+             COALESCE(meda_aufwand_zeit, '#NULL#') || '|||' || -- hash from: Zeitaufwand Medikationsanalyse - 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min]
+             COALESCE(meda_aufwand_zeit_and_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(meda_aufwand_zeit_and, '#NULL#') || '|||' || -- hash from: genaue Dauer in Minuten
+             COALESCE(meda_notiz, '#NULL#') || '|||' || -- hash from: Notizfeld
+             COALESCE(medikationsanalyse_complete, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete
+             '#'
+--             ,'UTF8' )
+      )
+  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
 -- Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
@@ -260,12 +350,146 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrp_merp_info___1 varchar,   -- descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+--         convert_to(
+             COALESCE(record_id, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+             COALESCE(meda_fe_id, '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag)
+             COALESCE(redcap_repeat_instrument, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung 
+             COALESCE(redcap_repeat_instance, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n
+             COALESCE(mrp_header, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen 
+             COALESCE(mrp_femb_1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_entd_dat
+             COALESCE(mrp_femb_2, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber
+             COALESCE(mrp_femb_3, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth
+             COALESCE(mrp_pi_info, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_pi_info___1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_mf_info, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_mf_info___1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_pi_info_txt, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_mf_info_txt, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_femb_4, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit
+             COALESCE(mrp_femb_5, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_gewissheit_oth
+             COALESCE(mrp_femb_6, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl
+             COALESCE(mrp_entd_dat, '#NULL#') || '|||' || -- hash from: Datum des MRP
+             COALESCE(mrp_kurzbeschr, '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs
+             COALESCE(mrp_entd_algorithmisch, '#NULL#') || '|||' || -- hash from: MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein
+             COALESCE(mrp_hinweisgeber_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_hinweisgeber, '#NULL#') || '|||' || -- hash from: Hinweisgeber auf das MRP
+             COALESCE(mrp_gewissheit_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_gewissheit, '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt
+             COALESCE(mrp_femb_22, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen
+             COALESCE(mrp_gewissheit_oth, '#NULL#') || '|||' || -- hash from: Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig
+             COALESCE(mrp_femb_23, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_hinweisgeber_oth, '#NULL#') || '|||' || -- hash from: Textfeld, wenn mrp_hinweisgeber = 7 (andere)
+             COALESCE(mrp_gewiss_grund_abl_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_gewiss_grund_abl, '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, Sonstiges
+             COALESCE(mrp_gewiss_grund_abl_sonst_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_gewiss_grund_abl_sonst, '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben
+             COALESCE(mrp_femb_7, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_sonst_lbl, mrp_gewiss_grund_abl_sonst
+             COALESCE(mrp_femb_8, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_wirkstoff
+             COALESCE(mrp_femb_9, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc1_lbl, mrp_atc1
+             COALESCE(mrp_femb_10, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2
+             COALESCE(mrp_femb_11, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3
+             COALESCE(mrp_femb_12, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4
+             COALESCE(mrp_wirkstoff, '#NULL#') || '|||' || -- hash from: Wirkstoff betroffen? - 1, Ja | 0, Nein
+             COALESCE(mrp_atc1_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_atc1, '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name- https://www.bfarm.de/SharedDocs/Downloads/DE/Kodiersysteme/ATC/atc-ddd-amtlich-2024.pdf?__blob=publicationFile
+             COALESCE(mrp_atc2_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_atc2, '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name
+             COALESCE(mrp_atc3_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_atc3, '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name
+             COALESCE(mrp_atc4_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_atc4, '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name
+             COALESCE(mrp_atc5_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_atc5, '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name
+             COALESCE(mrp_femb_13, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_med_prod, '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? - 1, Ja | 0, Nein,
+             COALESCE(mrp_med_prod_sonst_lbl, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_med_prod_sonst, '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat
+             COALESCE(mrp_dokup_fehler, '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung
+             COALESCE(mrp_dokup_intervention, '#NULL#') || '|||' || -- hash from: Intervention / Vorschlag zur Fehlervermeldung
+             COALESCE(mrp_femb_14, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst
+             COALESCE(mrp_pigrund, '#NULL#') || '|||' || -- hash from: PI-Grund
+             COALESCE(mrp_pigrund___1, '#NULL#') || '|||' || -- hash from: 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF)
+             COALESCE(mrp_pigrund___2, '#NULL#') || '|||' || -- hash from: 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF)
+             COALESCE(mrp_pigrund___3, '#NULL#') || '|||' || -- hash from: 3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF)
+             COALESCE(mrp_pigrund___4, '#NULL#') || '|||' || -- hash from: 4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF)
+             COALESCE(mrp_pigrund___5, '#NULL#') || '|||' || -- hash from: 5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF)
+             COALESCE(mrp_pigrund___6, '#NULL#') || '|||' || -- hash from: 6 - AM: Übertragungsfehler (MF)
+             COALESCE(mrp_pigrund___7, '#NULL#') || '|||' || -- hash from: 7 - AM: Substitution aut idem/aut simile (MF)
+             COALESCE(mrp_pigrund___8, '#NULL#') || '|||' || -- hash from: 8 - AM: (Klare) Indikation, aber kein Medikament angeordnet (MF)
+             COALESCE(mrp_pigrund___9, '#NULL#') || '|||' || -- hash from: 9 - AM: Stellfehler (MF)
+             COALESCE(mrp_pigrund___10, '#NULL#') || '|||' || -- hash from: 10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF)
+             COALESCE(mrp_pigrund___11, '#NULL#') || '|||' || -- hash from: 11 - AM: Doppelverordnung (MF)
+             COALESCE(mrp_pigrund___12, '#NULL#') || '|||' || -- hash from: 12 - ANW: Applikation (Dauer) (MF)
+             COALESCE(mrp_pigrund___13, '#NULL#') || '|||' || -- hash from: 13 - ANW: Inkompatibilität oder falsche Zubereitung (MF)
+             COALESCE(mrp_pigrund___14, '#NULL#') || '|||' || -- hash from: 14 - ANW: Applikation (Art) (MF)
+             COALESCE(mrp_pigrund___15, '#NULL#') || '|||' || -- hash from: 15 - ANW: Anfrage zur Administration/Kompatibilität
+             COALESCE(mrp_pigrund___16, '#NULL#') || '|||' || -- hash from: 16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF)
+             COALESCE(mrp_pigrund___17, '#NULL#') || '|||' || -- hash from: 17 - D: (Fehlerhafte) Dosis (MF)
+             COALESCE(mrp_pigrund___18, '#NULL#') || '|||' || -- hash from: 18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF)
+             COALESCE(mrp_pigrund___19, '#NULL#') || '|||' || -- hash from: 19 - D: (Fehlerhaftes) Dosisinterval (MF)
+             COALESCE(mrp_pigrund___20, '#NULL#') || '|||' || -- hash from: 20 - Interaktion (MF)
+             COALESCE(mrp_pigrund___21, '#NULL#') || '|||' || -- hash from: 21 - Kontraindikation (MF)
+             COALESCE(mrp_pigrund___22, '#NULL#') || '|||' || -- hash from: 22 - Nebenwirkungen
+             COALESCE(mrp_pigrund___23, '#NULL#') || '|||' || -- hash from: 23 - S: Beratung/Auswahl eines Arzneistoffs
+             COALESCE(mrp_pigrund___24, '#NULL#') || '|||' || -- hash from: 24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs
+             COALESCE(mrp_pigrund___25, '#NULL#') || '|||' || -- hash from: 25 - S: Beschaffung/Kosten
+             COALESCE(mrp_pigrund___26, '#NULL#') || '|||' || -- hash from: 26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF)
+             COALESCE(mrp_pigrund___27, '#NULL#') || '|||' || -- hash from: 27 - S: Schulung/Beratung eines Patienten
+             COALESCE(mrp_femb_15, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable)
+             COALESCE(mrp_ip_klasse, '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR)
+             COALESCE(mrp_ip_klasse___1, '#NULL#') || '|||' || -- hash from: 1 - Drug - Drug
+             COALESCE(mrp_ip_klasse___2, '#NULL#') || '|||' || -- hash from: 2 - Drug - Drug-Group
+             COALESCE(mrp_ip_klasse___3, '#NULL#') || '|||' || -- hash from: 3 - Drug - Disease
+             COALESCE(mrp_ip_klasse___4, '#NULL#') || '|||' || -- hash from: 4 - Drug - Labor
+             COALESCE(mrp_ip_klasse___5, '#NULL#') || '|||' || -- hash from: 5 - Drug - Age (Priscus 2.0 o. Dosis)
+             COALESCE(mrp_femb_16, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_ip_klasse
+             COALESCE(mrp_femb_17, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_ip_klasse_disease
+             COALESCE(mrp_ip_klasse_disease, '#NULL#') || '|||' || -- hash from: Disease
+             COALESCE(mrp_ip_klasse_labor, '#NULL#') || '|||' || -- hash from: Labor
+             COALESCE(mrp_femb_18, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_ip_klasse_labor
+             COALESCE(mrp_massn_am, '#NULL#') || '|||' || -- hash from: AM: Arzneimitte
+             COALESCE(mrp_massn_am___1, '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben
+             COALESCE(mrp_massn_am___2, '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern
+             COALESCE(mrp_massn_am___3, '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren
+             COALESCE(mrp_massn_am___4, '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen
+             COALESCE(mrp_massn_am___5, '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern
+             COALESCE(mrp_massn_am___6, '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern
+             COALESCE(mrp_massn_am___7, '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung
+             COALESCE(mrp_massn_am___8, '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege
+             COALESCE(mrp_massn_am___9, '#NULL#') || '|||' || -- hash from: 9 - Information an Patient
+             COALESCE(mrp_massn_am___10, '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen
+             COALESCE(mrp_femb_19, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_massn_am
+             COALESCE(mrp_massn_orga, '#NULL#') || '|||' || -- hash from: ORGA: Organisatorisch
+             COALESCE(mrp_massn_orga___1, '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans
+             COALESCE(mrp_massn_orga___2, '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung
+             COALESCE(mrp_massn_orga___3, '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers
+             COALESCE(mrp_massn_orga___4, '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle
+             COALESCE(mrp_massn_orga___5, '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel
+             COALESCE(mrp_massn_orga___6, '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation
+             COALESCE(mrp_massn_orga___7, '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA
+             COALESCE(mrp_massn_orga___8, '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung
+             COALESCE(mrp_femb_20, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_massn_orga
+             COALESCE(mrp_notiz, '#NULL#') || '|||' || -- hash from: Notiz
+             COALESCE(mrp_femb_21, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_notiz
+             COALESCE(mrp_dokup_hand_emp_akz, '#NULL#') || '|||' || -- hash from: Handlungsempfehlung akzeptiert? - 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4 , Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst
+             COALESCE(mrp_merp, '#NULL#') || '|||' || -- hash from: NCC MERP Score - A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I 
+             COALESCE(mrp_merp_info, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend
+             COALESCE(mrp_merp_info___1, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Blendet NCC MERP Index ein/aus
+             COALESCE(mrp_merp_txt, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF
+             COALESCE(mrpdokumentation_validierung_complete, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete
+             '#'
+--             ,'UTF8' )
+      )
+  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
 -- Table "risikofaktor_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
@@ -287,12 +511,37 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
   rskfk_entern varchar,   -- ent. Ern. (varchar)
   rskfkt_anz_rskamklassen varchar,   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+--         convert_to(
+             COALESCE(record_id, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+             COALESCE(patient_id_fk, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
+             COALESCE(rskfk_gerhemmer, '#NULL#') || '|||' || -- hash from: Ger.hemmer
+             COALESCE(rskfk_tah, '#NULL#') || '|||' || -- hash from: TAH
+             COALESCE(rskfk_immunsupp, '#NULL#') || '|||' || -- hash from: Immunsupp.
+             COALESCE(rskfk_tumorth, '#NULL#') || '|||' || -- hash from: Tumorth.
+             COALESCE(rskfk_opiat, '#NULL#') || '|||' || -- hash from: Opiat
+             COALESCE(rskfk_atcn, '#NULL#') || '|||' || -- hash from: ATC N
+             COALESCE(rskfk_ait, '#NULL#') || '|||' || -- hash from: AIT
+             COALESCE(rskfk_anzam, '#NULL#') || '|||' || -- hash from: Anz AM
+             COALESCE(rskfk_priscus, '#NULL#') || '|||' || -- hash from: PRISCUS
+             COALESCE(rskfk_qtc, '#NULL#') || '|||' || -- hash from: QTc
+             COALESCE(rskfk_meld, '#NULL#') || '|||' || -- hash from: MELD
+             COALESCE(rskfk_dialyse, '#NULL#') || '|||' || -- hash from: Dialyse
+             COALESCE(rskfk_entern, '#NULL#') || '|||' || -- hash from: ent. Ern.
+             COALESCE(rskfkt_anz_rskamklassen, '#NULL#') || '|||' || -- hash from: Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0
+             COALESCE(risikofaktor_complete, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status
+             '#'
+--             ,'UTF8' )
+      )
+  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
 -- Table "trigger_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
@@ -322,12 +571,45 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
   trg_krea varchar,   -- Krea↑ (varchar)
   trg_egfr varchar,   -- eGFR<30 (varchar)
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+--         convert_to(
+             COALESCE(patient_id_fk, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
+             COALESCE(record_id, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
+             COALESCE(trg_ast, '#NULL#') || '|||' || -- hash from: AST
+             COALESCE(trg_alt, '#NULL#') || '|||' || -- hash from: ALT↑
+             COALESCE(trg_crp, '#NULL#') || '|||' || -- hash from: CRP↑
+             COALESCE(trg_leuk_penie, '#NULL#') || '|||' || -- hash from: Leuko↓
+             COALESCE(trg_leuk_ose, '#NULL#') || '|||' || -- hash from: Leuko↑
+             COALESCE(trg_thrmb_penie, '#NULL#') || '|||' || -- hash from: Thrombo↓
+             COALESCE(trg_aptt, '#NULL#') || '|||' || -- hash from: aPTT
+             COALESCE(trg_hyp_haem, '#NULL#') || '|||' || -- hash from: Hb↓
+             COALESCE(trg_hypo_glyk, '#NULL#') || '|||' || -- hash from: Glc↓
+             COALESCE(trg_hyper_glyk, '#NULL#') || '|||' || -- hash from: Glc↑
+             COALESCE(trg_hyper_bilirbnm, '#NULL#') || '|||' || -- hash from: Bili↑
+             COALESCE(trg_ck, '#NULL#') || '|||' || -- hash from: CK↑
+             COALESCE(trg_hypo_serablmn, '#NULL#') || '|||' || -- hash from: Alb↓
+             COALESCE(trg_hypo_nat, '#NULL#') || '|||' || -- hash from: Na+↓
+             COALESCE(trg_hyper_nat, '#NULL#') || '|||' || -- hash from: Na+↑
+             COALESCE(trg_hyper_kal, '#NULL#') || '|||' || -- hash from: K+↓
+             COALESCE(trg_hypo_kal, '#NULL#') || '|||' || -- hash from: K+↑
+             COALESCE(trg_inr_ern, '#NULL#') || '|||' || -- hash from: INR Antikoag↓
+             COALESCE(trg_inr_erh, '#NULL#') || '|||' || -- hash from: INR ↑
+             COALESCE(trg_inr_erh_antikoa, '#NULL#') || '|||' || -- hash from: INR Antikoag↑
+             COALESCE(trg_krea, '#NULL#') || '|||' || -- hash from: Krea↑
+             COALESCE(trg_egfr, '#NULL#') || '|||' || -- hash from: eGFR<30
+             COALESCE(trigger_complete, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status
+             '#'
+--             ,'UTF8' )
+      )
+  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
 
 ------------------------------------------------------
 -- SQL Role / Trigger in Schema "db2frontend_in" --
@@ -681,290 +963,10 @@ COMMENT ON COLUMN db2frontend_in.trigger_fe.last_processing_nr IS 'Last processi
 \o
 
 ------------------------------------------------------
--- INDEX for data on Tables in Schema "db2frontend_in" --
-------------------------------------------------------
-
--- Index idx_patient_fe_data for Table "patient_fe" in schema "db2frontend_in"
-----------------------------------------------------
--- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
--- CREATE INDEX IF NOT EXISTS idx_patient_fe_data
--- ON db2frontend_in.patient_fe (
---  --COALESCE(record_id::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
-    --COALESCE(pat_header::text,'#NULL#'),
-    --COALESCE(pat_id::text,'#NULL#'),
-    --COALESCE(pat_femb_1::text,'#NULL#'),
-    --COALESCE(pat_cis_pid::text,'#NULL#'),
-    --COALESCE(pat_name::text,'#NULL#'),
-    --COALESCE(pat_vorname::text,'#NULL#'),
-    --COALESCE(pat_gebdat::text,'#NULL#'),
-    --COALESCE(pat_aktuell_alter::text,'#NULL#'),
-    --COALESCE(pat_geschlecht::text,'#NULL#'),
-    --COALESCE(patient_complete::text,'#NULL#')
---);
-
--- Index idx_fall_fe_data for Table "fall_fe" in schema "db2frontend_in"
-----------------------------------------------------
--- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
--- CREATE INDEX IF NOT EXISTS idx_fall_fe_data
--- ON db2frontend_in.fall_fe (
---  --COALESCE(record_id::text,'#NULL#'),
-    --COALESCE(fall_header::text,'#NULL#'),
-    --COALESCE(fall_id::text,'#NULL#'),
-    --COALESCE(fall_pat_id::text,'#NULL#'),
-    --COALESCE(patient_id_fk::text,'#NULL#'),
-    --COALESCE(fall_femb_1::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
-    --COALESCE(fall_studienphase::text,'#NULL#'),
-    --COALESCE(fall_station::text,'#NULL#'),
-    --COALESCE(fall_zimmernr::text,'#NULL#'),
-    --COALESCE(fall_aufn_dat::text,'#NULL#'),
-    --COALESCE(fall_aufn_diag::text,'#NULL#'),
-    --COALESCE(fall_gewicht_aktuell::text,'#NULL#'),
-    --COALESCE(fall_gewicht_aktl_einheit::text,'#NULL#'),
-    --COALESCE(fall_groesse::text,'#NULL#'),
-    --COALESCE(fall_groesse_einheit::text,'#NULL#'),
-    --COALESCE(fall_bmi::text,'#NULL#'),
-    --COALESCE(fall_femb_2::text,'#NULL#'),
-    --COALESCE(fall_femb_3::text,'#NULL#'),
-    --COALESCE(fall_femb_4::text,'#NULL#'),
-    --COALESCE(fall_femb_5::text,'#NULL#'),
-    --COALESCE(fall_femb_6::text,'#NULL#'),
-    --COALESCE(fall_nieren_insuf_chron::text,'#NULL#'),
-    --COALESCE(fall_nieren_insuf_ausmass_lbl::text,'#NULL#'),
-    --COALESCE(fall_nieren_insuf_ausmass::text,'#NULL#'),
-    --COALESCE(fall_nieren_insuf_dialysev_lbl::text,'#NULL#'),
-    --COALESCE(fall_nieren_insuf_dialysev::text,'#NULL#'),
-    --COALESCE(fall_leber_insuf::text,'#NULL#'),
-    --COALESCE(fall_leber_insuf_ausmass_lbl::text,'#NULL#'),
-    --COALESCE(fall_leber_insuf_ausmass::text,'#NULL#'),
-    --COALESCE(fall_schwanger_mo::text,'#NULL#'),
-    --COALESCE(fall_schwanger_mo_lbl::text,'#NULL#'),
-    --COALESCE(fall_status::text,'#NULL#'),
-    --COALESCE(fall_ent_dat::text,'#NULL#'),
-    --COALESCE(fall_complete::text,'#NULL#')
---);
-
--- Index idx_medikationsanalyse_fe_data for Table "medikationsanalyse_fe" in schema "db2frontend_in"
-----------------------------------------------------
--- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
--- CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_data
--- ON db2frontend_in.medikationsanalyse_fe (
---  --COALESCE(record_id::text,'#NULL#'),
-    --COALESCE(meda_header::text,'#NULL#'),
-    --COALESCE(meda_femb_1::text,'#NULL#'),
-    --COALESCE(meda_femb_2::text,'#NULL#'),
-    --COALESCE(meda_femb_3::text,'#NULL#'),
-    --COALESCE(fall_fe_id::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
-    --COALESCE(meda_dat::text,'#NULL#'),
-    --COALESCE(meda_typ::text,'#NULL#'),
-    --COALESCE(meda_ma_thueberw::text,'#NULL#'),
-    --COALESCE(meda_mrp_detekt::text,'#NULL#'),
-    --COALESCE(meda_aufwand_zeit::text,'#NULL#'),
-    --COALESCE(meda_aufwand_zeit_and_lbl::text,'#NULL#'),
-    --COALESCE(meda_aufwand_zeit_and::text,'#NULL#'),
-    --COALESCE(meda_notiz::text,'#NULL#'),
-    --COALESCE(medikationsanalyse_complete::text,'#NULL#')
---);
-
--- Index idx_mrpdokumentation_validierung_fe_data for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
-----------------------------------------------------
--- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
--- CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_data
--- ON db2frontend_in.mrpdokumentation_validierung_fe (
---  --COALESCE(record_id::text,'#NULL#'),
-    --COALESCE(meda_fe_id::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instrument::text,'#NULL#'),
-    --COALESCE(redcap_repeat_instance::text,'#NULL#'),
-    --COALESCE(mrp_header::text,'#NULL#'),
-    --COALESCE(mrp_femb_1::text,'#NULL#'),
-    --COALESCE(mrp_femb_2::text,'#NULL#'),
-    --COALESCE(mrp_femb_3::text,'#NULL#'),
-    --COALESCE(mrp_pi_info::text,'#NULL#'),
-    --COALESCE(mrp_pi_info___1::text,'#NULL#'),
-    --COALESCE(mrp_mf_info::text,'#NULL#'),
-    --COALESCE(mrp_mf_info___1::text,'#NULL#'),
-    --COALESCE(mrp_pi_info_txt::text,'#NULL#'),
-    --COALESCE(mrp_mf_info_txt::text,'#NULL#'),
-    --COALESCE(mrp_femb_4::text,'#NULL#'),
-    --COALESCE(mrp_femb_5::text,'#NULL#'),
-    --COALESCE(mrp_femb_6::text,'#NULL#'),
-    --COALESCE(mrp_entd_dat::text,'#NULL#'),
-    --COALESCE(mrp_kurzbeschr::text,'#NULL#'),
-    --COALESCE(mrp_entd_algorithmisch::text,'#NULL#'),
-    --COALESCE(mrp_hinweisgeber_lbl::text,'#NULL#'),
-    --COALESCE(mrp_hinweisgeber::text,'#NULL#'),
-    --COALESCE(mrp_gewissheit_lbl::text,'#NULL#'),
-    --COALESCE(mrp_gewissheit::text,'#NULL#'),
-    --COALESCE(mrp_femb_22::text,'#NULL#'),
-    --COALESCE(mrp_gewissheit_oth::text,'#NULL#'),
-    --COALESCE(mrp_femb_23::text,'#NULL#'),
-    --COALESCE(mrp_hinweisgeber_oth::text,'#NULL#'),
-    --COALESCE(mrp_gewiss_grund_abl_lbl::text,'#NULL#'),
-    --COALESCE(mrp_gewiss_grund_abl::text,'#NULL#'),
-    --COALESCE(mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#'),
-    --COALESCE(mrp_gewiss_grund_abl_sonst::text,'#NULL#'),
-    --COALESCE(mrp_femb_7::text,'#NULL#'),
-    --COALESCE(mrp_femb_8::text,'#NULL#'),
-    --COALESCE(mrp_femb_9::text,'#NULL#'),
-    --COALESCE(mrp_femb_10::text,'#NULL#'),
-    --COALESCE(mrp_femb_11::text,'#NULL#'),
-    --COALESCE(mrp_femb_12::text,'#NULL#'),
-    --COALESCE(mrp_wirkstoff::text,'#NULL#'),
-    --COALESCE(mrp_atc1_lbl::text,'#NULL#'),
-    --COALESCE(mrp_atc1::text,'#NULL#'),
-    --COALESCE(mrp_atc2_lbl::text,'#NULL#'),
-    --COALESCE(mrp_atc2::text,'#NULL#'),
-    --COALESCE(mrp_atc3_lbl::text,'#NULL#'),
-    --COALESCE(mrp_atc3::text,'#NULL#'),
-    --COALESCE(mrp_atc4_lbl::text,'#NULL#'),
-    --COALESCE(mrp_atc4::text,'#NULL#'),
-    --COALESCE(mrp_atc5_lbl::text,'#NULL#'),
-    --COALESCE(mrp_atc5::text,'#NULL#'),
-    --COALESCE(mrp_femb_13::text,'#NULL#'),
-    --COALESCE(mrp_med_prod::text,'#NULL#'),
-    --COALESCE(mrp_med_prod_sonst_lbl::text,'#NULL#'),
-    --COALESCE(mrp_med_prod_sonst::text,'#NULL#'),
-    --COALESCE(mrp_dokup_fehler::text,'#NULL#'),
-    --COALESCE(mrp_dokup_intervention::text,'#NULL#'),
-    --COALESCE(mrp_femb_14::text,'#NULL#'),
-    --COALESCE(mrp_pigrund::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___1::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___2::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___3::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___4::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___5::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___6::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___7::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___8::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___9::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___10::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___11::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___12::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___13::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___14::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___15::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___16::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___17::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___18::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___19::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___20::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___21::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___22::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___23::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___24::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___25::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___26::text,'#NULL#'),
-    --COALESCE(mrp_pigrund___27::text,'#NULL#'),
-    --COALESCE(mrp_femb_15::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse___1::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse___2::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse___3::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse___4::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse___5::text,'#NULL#'),
-    --COALESCE(mrp_femb_16::text,'#NULL#'),
-    --COALESCE(mrp_femb_17::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse_disease::text,'#NULL#'),
-    --COALESCE(mrp_ip_klasse_labor::text,'#NULL#'),
-    --COALESCE(mrp_femb_18::text,'#NULL#'),
-    --COALESCE(mrp_massn_am::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___1::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___2::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___3::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___4::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___5::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___6::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___7::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___8::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___9::text,'#NULL#'),
-    --COALESCE(mrp_massn_am___10::text,'#NULL#'),
-    --COALESCE(mrp_femb_19::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___1::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___2::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___3::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___4::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___5::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___6::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___7::text,'#NULL#'),
-    --COALESCE(mrp_massn_orga___8::text,'#NULL#'),
-    --COALESCE(mrp_femb_20::text,'#NULL#'),
-    --COALESCE(mrp_notiz::text,'#NULL#'),
-    --COALESCE(mrp_femb_21::text,'#NULL#'),
-    --COALESCE(mrp_dokup_hand_emp_akz::text,'#NULL#'),
-    --COALESCE(mrp_merp::text,'#NULL#'),
-    --COALESCE(mrp_merp_info::text,'#NULL#'),
-    --COALESCE(mrp_merp_info___1::text,'#NULL#'),
-    --COALESCE(mrp_merp_txt::text,'#NULL#'),
-    --COALESCE(mrpdokumentation_validierung_complete::text,'#NULL#')
---);
-
--- Index idx_risikofaktor_fe_data for Table "risikofaktor_fe" in schema "db2frontend_in"
-----------------------------------------------------
--- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
--- CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_data
--- ON db2frontend_in.risikofaktor_fe (
---  --COALESCE(record_id::text,'#NULL#'),
-    --COALESCE(patient_id_fk::text,'#NULL#'),
-    --COALESCE(rskfk_gerhemmer::text,'#NULL#'),
-    --COALESCE(rskfk_tah::text,'#NULL#'),
-    --COALESCE(rskfk_immunsupp::text,'#NULL#'),
-    --COALESCE(rskfk_tumorth::text,'#NULL#'),
-    --COALESCE(rskfk_opiat::text,'#NULL#'),
-    --COALESCE(rskfk_atcn::text,'#NULL#'),
-    --COALESCE(rskfk_ait::text,'#NULL#'),
-    --COALESCE(rskfk_anzam::text,'#NULL#'),
-    --COALESCE(rskfk_priscus::text,'#NULL#'),
-    --COALESCE(rskfk_qtc::text,'#NULL#'),
-    --COALESCE(rskfk_meld::text,'#NULL#'),
-    --COALESCE(rskfk_dialyse::text,'#NULL#'),
-    --COALESCE(rskfk_entern::text,'#NULL#'),
-    --COALESCE(rskfkt_anz_rskamklassen::text,'#NULL#'),
-    --COALESCE(risikofaktor_complete::text,'#NULL#')
---);
-
--- Index idx_trigger_fe_data for Table "trigger_fe" in schema "db2frontend_in"
-----------------------------------------------------
--- Funktioniert nicht - weil nicht mehr als 32 Spalten Möglich
--- CREATE INDEX IF NOT EXISTS idx_trigger_fe_data
--- ON db2frontend_in.trigger_fe (
---  --COALESCE(patient_id_fk::text,'#NULL#'),
-    --COALESCE(record_id::text,'#NULL#'),
-    --COALESCE(trg_ast::text,'#NULL#'),
-    --COALESCE(trg_alt::text,'#NULL#'),
-    --COALESCE(trg_crp::text,'#NULL#'),
-    --COALESCE(trg_leuk_penie::text,'#NULL#'),
-    --COALESCE(trg_leuk_ose::text,'#NULL#'),
-    --COALESCE(trg_thrmb_penie::text,'#NULL#'),
-    --COALESCE(trg_aptt::text,'#NULL#'),
-    --COALESCE(trg_hyp_haem::text,'#NULL#'),
-    --COALESCE(trg_hypo_glyk::text,'#NULL#'),
-    --COALESCE(trg_hyper_glyk::text,'#NULL#'),
-    --COALESCE(trg_hyper_bilirbnm::text,'#NULL#'),
-    --COALESCE(trg_ck::text,'#NULL#'),
-    --COALESCE(trg_hypo_serablmn::text,'#NULL#'),
-    --COALESCE(trg_hypo_nat::text,'#NULL#'),
-    --COALESCE(trg_hyper_nat::text,'#NULL#'),
-    --COALESCE(trg_hyper_kal::text,'#NULL#'),
-    --COALESCE(trg_hypo_kal::text,'#NULL#'),
-    --COALESCE(trg_inr_ern::text,'#NULL#'),
-    --COALESCE(trg_inr_erh::text,'#NULL#'),
-    --COALESCE(trg_inr_erh_antikoa::text,'#NULL#'),
-    --COALESCE(trg_krea::text,'#NULL#'),
-    --COALESCE(trg_egfr::text,'#NULL#'),
-    --COALESCE(trigger_complete::text,'#NULL#')
---);
-
-
-------------------------------------------------------
 -- INDEX for IDs on Tables in Schema "db2frontend_in" --
 ------------------------------------------------------
 
+------------------------- Index for db2frontend_in - patient_fe ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db2frontend_in.patient_fe ( patient_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_patient_fe_input_dt for Table "patient_fe" in schema "db2frontend_in"
@@ -995,6 +997,14 @@ ON db2frontend_in.patient_fe (
    last_processing_nr -- Last processing number of the data record
 );
 
+-- Index idx_db2frontend_in_patient_fe_hash for Table "patient_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_hash
+ON db2frontend_in.patient_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db2frontend_in - fall_fe ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db2frontend_in.fall_fe ( fall_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_fall_fe_input_dt for Table "fall_fe" in schema "db2frontend_in"
@@ -1025,6 +1035,14 @@ ON db2frontend_in.fall_fe (
    last_processing_nr -- Last processing number of the data record
 );
 
+-- Index idx_db2frontend_in_fall_fe_hash for Table "fall_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_hash
+ON db2frontend_in.fall_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db2frontend_in - medikationsanalyse_fe ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db2frontend_in.medikationsanalyse_fe ( medikationsanalyse_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
@@ -1055,6 +1073,14 @@ ON db2frontend_in.medikationsanalyse_fe (
    last_processing_nr -- Last processing number of the data record
 );
 
+-- Index idx_db2frontend_in_medikationsanalyse_fe_hash for Table "medikationsanalyse_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_hash
+ON db2frontend_in.medikationsanalyse_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db2frontend_in - mrpdokumentation_validierung_fe ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db2frontend_in.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
@@ -1085,6 +1111,14 @@ ON db2frontend_in.mrpdokumentation_validierung_fe (
    last_processing_nr -- Last processing number of the data record
 );
 
+-- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_hash for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_hash
+ON db2frontend_in.mrpdokumentation_validierung_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db2frontend_in - risikofaktor_fe ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db2frontend_in.risikofaktor_fe ( risikofaktor_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
@@ -1115,6 +1149,14 @@ ON db2frontend_in.risikofaktor_fe (
    last_processing_nr -- Last processing number of the data record
 );
 
+-- Index idx_db2frontend_in_risikofaktor_fe_hash for Table "risikofaktor_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_hash
+ON db2frontend_in.risikofaktor_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db2frontend_in - trigger_fe ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db2frontend_in.trigger_fe ( trigger_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_trigger_fe_input_dt for Table "trigger_fe" in schema "db2frontend_in"
@@ -1143,6 +1185,13 @@ ON db2frontend_in.trigger_fe (
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_last_pnr
 ON db2frontend_in.trigger_fe (
    last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db2frontend_in_trigger_fe_hash for Table "trigger_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_hash
+ON db2frontend_in.trigger_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
 

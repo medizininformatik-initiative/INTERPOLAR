@@ -1,3 +1,4 @@
+------------------------- Index for <%OWNER_SCHEMA%> - <%TABLE_NAME%> ---------------------------------
   <%IF TAGS "\bINT_ID\b" "CREATE INDEX IF NOT EXISTS idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> ( <%TABLE_NAME%>_id); -- Primary key of the entity - already filled in this schema - History via timestamp"%>
   <%IF TAGS "\bTYPED\b" "CREATE INDEX IF NOT EXISTS idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> ( <%TABLE_NAME%>_raw_id); -- Primary key of the corresponding raw table"%>
 
@@ -27,5 +28,12 @@ ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
 CREATE INDEX IF NOT EXISTS idx_<%OWNER_SCHEMA%>_<%TABLE_NAME%>_last_pnr
 ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
    last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_<%OWNER_SCHEMA%>_<%TABLE_NAME%>_hash for Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_<%OWNER_SCHEMA%>_<%TABLE_NAME%>_hash
+ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
