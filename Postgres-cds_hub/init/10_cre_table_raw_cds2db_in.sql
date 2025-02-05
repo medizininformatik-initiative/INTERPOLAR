@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-05 00:48:24
+-- Create time: 2025-02-05 01:33:05
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -107,8 +107,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_serviceprovider_identifier_type_display VARCHAR,   -- serviceProvider/identifier/type/coding/display (VARCHAR)
   enc_serviceprovider_identifier_type_text VARCHAR,   -- serviceProvider/identifier/type/text (VARCHAR)
   enc_serviceprovider_display VARCHAR,   -- serviceProvider/display (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(enc_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(enc_patient_ref::TEXT, '#NULL#') || '|||' || -- hash from: subject/reference
@@ -183,8 +183,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
              COALESCE(enc_serviceprovider_display::TEXT, '#NULL#') || '|||' || -- hash from: serviceProvider/display
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -213,8 +214,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   pat_gender VARCHAR,   -- gender (VARCHAR)
   pat_birthdate VARCHAR,   -- birthDate (VARCHAR)
   pat_address_postalcode VARCHAR,   -- address/postalCode (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(pat_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(pat_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -235,8 +236,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
              COALESCE(pat_address_postalcode::TEXT, '#NULL#') || '|||' || -- hash from: address/postalCode
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -361,8 +363,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   con_note_time VARCHAR,   -- note/time (VARCHAR)
   con_note_text VARCHAR,   -- note/text (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(con_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(con_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -479,8 +481,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
              COALESCE(con_note_text::TEXT, '#NULL#') || '|||' || -- hash from: note/text
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -549,8 +552,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   med_ingredient_itemreference_identifier_type_text VARCHAR,   -- ingredient/itemReference/identifier/type/text (VARCHAR)
   med_ingredient_itemreference_display VARCHAR,   -- ingredient/itemReference/display (VARCHAR)
   med_ingredient_isactive VARCHAR,   -- ingredient/isActive (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(med_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(med_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -611,8 +614,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
              COALESCE(med_ingredient_isactive::TEXT, '#NULL#') || '|||' || -- hash from: ingredient/isActive
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -847,8 +851,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_substitution_reason_code VARCHAR,   -- substitution/reason/coding/code (VARCHAR)
   medreq_substitution_reason_display VARCHAR,   -- substitution/reason/coding/display (VARCHAR)
   medreq_substitution_reason_text VARCHAR,   -- substitution/reason/text (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(medreq_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(medreq_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -1075,8 +1079,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(medreq_substitution_reason_text::TEXT, '#NULL#') || '|||' || -- hash from: substitution/reason/text
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -1197,8 +1202,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_dosage_ratequantity_unit VARCHAR,   -- dosage/rateQuantity/unit (VARCHAR)
   medadm_dosage_ratequantity_system VARCHAR,   -- dosage/rateQuantity/system (VARCHAR)
   medadm_dosage_ratequantity_code VARCHAR,   -- dosage/rateQuantity/code (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(medadm_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(medadm_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: context/reference
@@ -1311,8 +1316,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
              COALESCE(medadm_dosage_ratequantity_code::TEXT, '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/code
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -1534,8 +1540,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_dosage_maxdoseperlifetime_unit VARCHAR,   -- dosage/maxDosePerLifetime/unit (VARCHAR)
   medstat_dosage_maxdoseperlifetime_system VARCHAR,   -- dosage/maxDosePerLifetime/system (VARCHAR)
   medstat_dosage_maxdoseperlifetime_code VARCHAR,   -- dosage/maxDosePerLifetime/code (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(medstat_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(medstat_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -1749,8 +1755,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
              COALESCE(medstat_dosage_maxdoseperlifetime_code::TEXT, '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/code
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -1893,8 +1900,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_hasmember_identifier_type_display VARCHAR,   -- hasMember/identifier/type/coding/display (VARCHAR)
   obs_hasmember_identifier_type_text VARCHAR,   -- hasMember/identifier/type/text (VARCHAR)
   obs_hasmember_display VARCHAR,   -- hasMember/display (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(obs_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(obs_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2029,8 +2036,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
              COALESCE(obs_hasmember_display::TEXT, '#NULL#') || '|||' || -- hash from: hasMember/display
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2086,8 +2094,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_conclusioncode_code VARCHAR,   -- conclusionCode/coding/code (VARCHAR)
   diagrep_conclusioncode_display VARCHAR,   -- conclusionCode/coding/display (VARCHAR)
   diagrep_conclusioncode_text VARCHAR,   -- conclusionCode/text (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(diagrep_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(diagrep_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2135,8 +2143,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
              COALESCE(diagrep_conclusioncode_text::TEXT, '#NULL#') || '|||' || -- hash from: conclusionCode/text
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2206,8 +2215,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_locationcode_code VARCHAR,   -- locationCode/coding/code (VARCHAR)
   servreq_locationcode_display VARCHAR,   -- locationCode/coding/display (VARCHAR)
   servreq_locationcode_text VARCHAR,   -- locationCode/text (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(servreq_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(servreq_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2269,8 +2278,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
              COALESCE(servreq_locationcode_text::TEXT, '#NULL#') || '|||' || -- hash from: locationCode/text
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2350,8 +2360,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   proc_note_time VARCHAR,   -- note/time (VARCHAR)
   proc_note_text VARCHAR,   -- note/text (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(proc_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(proc_encounter_ref::TEXT, '#NULL#') || '|||' || -- hash from: encounter/reference
@@ -2423,8 +2433,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
              COALESCE(proc_note_text::TEXT, '#NULL#') || '|||' || -- hash from: note/text
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2470,8 +2481,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   cons_provision_code_text VARCHAR,   -- provision/code/text (VARCHAR)
   cons_provision_dataperiod_start VARCHAR,   -- provision/dataPeriod/start (VARCHAR)
   cons_provision_dataperiod_end VARCHAR,   -- provision/dataPeriod/end (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(cons_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(cons_patient_ref::TEXT, '#NULL#') || '|||' || -- hash from: patient/reference
@@ -2509,8 +2520,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
              COALESCE(cons_provision_dataperiod_end::TEXT, '#NULL#') || '|||' || -- hash from: provision/dataPeriod/end
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2537,8 +2549,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
   loc_name VARCHAR,   -- name (VARCHAR)
   loc_description VARCHAR,   -- description (VARCHAR)
   loc_alias VARCHAR,   -- alias (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(loc_id::TEXT, '#NULL#') || '|||' || -- hash from: id
              COALESCE(loc_identifier_use::TEXT, '#NULL#') || '|||' || -- hash from: identifier/use
@@ -2557,8 +2569,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
              COALESCE(loc_alias::TEXT, '#NULL#') || '|||' || -- hash from: alias
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2572,15 +2585,16 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   ward_name VARCHAR,   -- ward_name (VARCHAR)
   patient_id VARCHAR,   -- patient_id (VARCHAR)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(ward_name::TEXT, '#NULL#') || '|||' || -- hash from: ward_name
              COALESCE(patient_id::TEXT, '#NULL#') || '|||' || -- hash from: patient_id
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record

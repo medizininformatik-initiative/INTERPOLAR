@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-05 00:49:30
+-- Create time: 2025-02-05 01:34:12
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (wie in FHIR) (varchar)
   patient_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(redcap_repeat_instrument::TEXT, '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein
@@ -67,8 +67,9 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
              COALESCE(patient_complete::TEXT, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -116,8 +117,8 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat timestamp,   -- Entlassdatum (timestamp)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(fall_header::TEXT, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz 
@@ -157,8 +158,9 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
              COALESCE(fall_complete::TEXT, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -187,8 +189,8 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   meda_aufwand_zeit_and int,   -- genaue Dauer in Minuten (int)
   meda_notiz varchar,   -- Notizfeld (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(meda_header::TEXT, '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen 
@@ -209,8 +211,9 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
              COALESCE(medikationsanalyse_complete::TEXT, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -348,8 +351,8 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_merp_info___1 varchar,   -- descriptive item only for frontend - Blendet NCC MERP Index ein/aus (varchar)
   mrp_merp_txt varchar,   -- descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(meda_fe_id::TEXT, '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag)
@@ -479,8 +482,9 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(mrpdokumentation_validierung_complete::TEXT, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -509,8 +513,8 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   rskfk_entern varchar,   -- ent. Ern. (varchar)
   rskfkt_anz_rskamklassen varchar,   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (varchar)
   risikofaktor_complete varchar,   -- Frontend Complete-Status (varchar)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
              COALESCE(patient_id_fk::TEXT, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
@@ -531,8 +535,9 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
              COALESCE(risikofaktor_complete::TEXT, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -569,8 +574,8 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
   trg_krea varchar,   -- Krea↑ (varchar)
   trg_egfr varchar,   -- eGFR<30 (varchar)
   trigger_complete varchar,   -- Frontend Complete-Status (varchar)
-  hash_index_col TEXT GENERATED ALWAYS AS (
-      db.mutable_md5(
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+--      db.mutable_md5(
 --         convert_to(
              COALESCE(patient_id_fk::TEXT, '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id)
              COALESCE(record_id::TEXT, '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet
@@ -599,8 +604,9 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
              COALESCE(trigger_complete::TEXT, '#NULL#') || '|||' || -- hash from: Frontend Complete-Status
              '#'
 --             ,'UTF8' )
-      )
-  ) STORED, 							-- Column for automatic hash value for comparing FHIR data
+--      )
+  ) STORED, 							-- Column collection data for index automatic 
+  hash_index_col TEXT DEFAULT 'ToDo automatisches füllen',      -- Column for hash value for comparing FHIR data
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
