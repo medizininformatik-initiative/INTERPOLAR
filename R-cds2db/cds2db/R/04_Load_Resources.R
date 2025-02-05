@@ -139,12 +139,19 @@ adjustNames <- function(variables, prefix, valid_names) {
 
     # If a match is found, use the valid name with correct casing
     if (!is.na(match_index)) {
-      name <- valid_names[match_index]
+      return(valid_names[match_index])
     }
-    return(name)
+    return(NULL)
   }
+
   # Apply the helper function to all names
-  names(variables) <- sapply(names(variables), process_name)
+  new_names <- lapply(names(variables), process_name)
+
+  # Filter out NULL names and update variables
+  valid_indices <- !sapply(new_names, is.null)  # Check which names are not NULL
+  variables <- variables[valid_indices]         # Keep only valid variables
+  names(variables) <- unlist(new_names[valid_indices]) # Assign valid names
+
   # Return the modified vector or list
   return(variables)
 }
@@ -258,11 +265,13 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- etlutils::as.DateWithTimezone(rep(NA, length(patient_ids)))
 
-    # Map the retrieved data to the corresponding patient IDs
-    for (i in seq_along(patient_ids)) {
-      matching_row <- result[result$pat_id == patient_ids[i], ]
-      if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
-        last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+    if (!etlutils::isDefinedAndTrue("DEBUG_IGNORE_LAST_UPDATE_DATE")){
+      # Map the retrieved data to the corresponding patient IDs
+      for (i in seq_along(patient_ids)) {
+        matching_row <- result[result$pat_id == patient_ids[i], ]
+        if (nrow(matching_row)) { # Keep NA for IDs without a last_updated date and not -Inf
+          last_insert_dates[i] <- etlutils::as.DateWithTimezone(max(matching_row$last_insert_datetime))
+        }
       }
     }
 
@@ -274,6 +283,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
 
   # Get the date for every PID when the Patient resource was written to the database the last time
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+
+  etlutils::catList(pids_with_last_updated, "Date for every PID when the Patient resource was written to the database the last time:\n", "\n")
 
   # Load all data of relevant patients from FHIR server
   resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)

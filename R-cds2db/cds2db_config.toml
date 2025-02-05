@@ -119,12 +119,14 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 
 # Use this defintion to set the filters to identify all Encounters of the relevant wards. This is
 # only necessary if the relevant Patient IDs should be derived from this Encounters and are not
-# provided in any other way.
+# provided in any other way (e.g PATH_TO_PID_LIST_FILE).
 # Every entry defines a single condition. An Encounter will be accepted, if at least one condition is
 # fulfilled (OR connected). A condition defines which expressions of the Encounter should have which
 # value. The values can be defined as grep patterns. Multilpe subconditions can be connected by '+'
 # (logcal AND). All Patterns are Case INSENSITIVE!
 # A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
+# If 2 or more patterns overlap, then the same Encounter will be assigned to multiple wards. This
+# is not allowed and will lead to an error.
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
   "location.location.reference = 'Location/location_id_1'",
@@ -184,7 +186,6 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # parameter DEBUG_ADD_FHIR_SEARCH_GENERAL. Several parameters can be customised by linking the FHIR
 # search parameters with an '&'. If the parameter is set to an empty string "", then the resource is
 # not downloaded.
-# search parameters with an '&'.
 #
 # ATTENTION: Which specific FHIR search requests result from the following DEBUG_ADD_FHIR_SEARCH
 # ---------- parameters depends on the FHIR server and can only be predicted to a limited extent!
@@ -206,6 +207,10 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #DEBUG_ADD_FHIR_SEARCH_PATIENT = ""
 #DEBUG_ADD_FHIR_SEARCH_PROCEDURE = ""
 #DEBUG_ADD_FHIR_SEARCH_SERVICEREQUEST = ""
+
+# Set this parameter to "true" if last_update_date should be ignored. In this case all data will be downloaded
+# from FHIR-server without checking last implemented data in database.
+#DEBUG_IGNORE_LAST_UPDATE_DATE = true
 
 [retrieve.debug.filtering.after_download]
 

@@ -216,6 +216,13 @@ convertVerboseNumbers <- function(n) {
 #' @return This function modifies the input data table \code{dt} in place by
 #' fixing the integer format in the specified columns
 #'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   id = c("AAA", "2", "3", "4"))
+#' convertIntegerFormat(dt, "id")
+#' print(dt)
+#'
 #' @export
 convertIntegerFormat <- function(dt, columns) {
   for (column in columns) {
@@ -237,6 +244,13 @@ convertIntegerFormat <- function(dt, columns) {
 #' @return This function modifies the input data table \code{dt} in place by
 #' fixing the decimal format in the specified columns
 #'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   value = c("AAA", "20.7", "30.1", "40.0"))
+#' convertIntegerFormat(dt, "value")
+#' print(dt)
+#'
 #' @export
 convertDecimalFormat <- function(dt, columns) {
   for (column in columns) {
@@ -257,6 +271,13 @@ convertDecimalFormat <- function(dt, columns) {
 #'
 #' @return This function modifies the input data table \code{dt} in place by
 #' fixing the boolean format in the specified columns
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(
+#'   status = c("0", "1", "FALSE", "TRUE"))
+#' convertIntegerFormat(dt, "status")
+#' print(dt)
 #'
 #' @export
 convertBooleanFormat <- function(dt, columns) {
