@@ -189,7 +189,7 @@ GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,V
 GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db_user;
 
--- mutable md5 hash function
+-- immutable md5 hash function
 ----------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.mutable_md5(input TEXT)
 RETURNS TEXT
@@ -198,9 +198,136 @@ AS $$
 BEGIN
   RETURN md5(input);
 END;
-$$ LANGUAGE plpgsql VOLATILE;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db2dataprocessor_user;
 GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db_user;
+
+-- Funktionen zur einheitlichen Darstellung als String
+-- 1. immutable overloaded function for TEXT / VARCHAR / CHAR
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TEXT)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db_user;
+
+-- 2. immutable overloaded function for SMALLINT / INTEGER / BIGINT
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BIGINT)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db_user;
+
+-- 3. immutable overloaded function for REAL / FLOAT4 / DOUBLE PRECISION
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data DOUBLE PRECISION)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db_user;
+
+-- 4. immutable overloaded function for NUMERIC / DECIMAL
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data NUMERIC)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT to_char(input_data, 'FM999999999999990.999999');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db_user;
+
+-- 5. immutable overloaded function for DATE / TIMESTAMP - !!! NOT TIMESTAMPTZ !!!
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TIMESTAMP)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT to_char(input_data, 'YYYY-MM-DD HH24:MI:SS.US');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db_user;
+
+-- 6. immutable overloaded function for TIME - !!! NOT TIMETZ !!!
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TIME)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT to_char(input_data, 'HH24:MI:SS.US');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db_user;
+
+-- 7. immutable overloaded function for BOOLEAN (TRUE, FALSE, NULL)
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BOOLEAN)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT CASE WHEN input_data THEN 'true' WHEN NOT input_data THEN 'false' ELSE 'null' END;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db_user;
+
+-- 8. immutable overloaded function for BYTEA (Binärdaten)
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BYTEA)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT encode(input_data, 'hex');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db_user;
+
+-- 9. immutable overloaded function for UUID (Universally Unique Identifier)
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data UUID)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data::TEXT;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO db_user;
