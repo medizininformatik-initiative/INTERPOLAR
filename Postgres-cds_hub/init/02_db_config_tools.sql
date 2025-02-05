@@ -191,13 +191,16 @@ GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,V
 
 -- mutable md5 hash function
 ----------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION db.mutable_md5(input TEXT) RETURNS TEXT AS $$
+CREATE OR REPLACE FUNCTION db.mutable_md5(input TEXT)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
 BEGIN
   RETURN md5(input);
 END;
 $$ LANGUAGE plpgsql VOLATILE;
 
-GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.error_log(TEXT) TO db_user;
+GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db_user;
