@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-04 16:58:23
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-02-05 13:18:10
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-13 23:53:45
+-- Create time: 2025-02-05 16:12:57
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -4364,11 +4364,11 @@ BEGIN
                               COALESCE(target_record.obs_valuequantity_unit::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_unit::text,'#NULL#') AND
                               COALESCE(target_record.obs_valuequantity_system::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_system::text,'#NULL#') AND
                               COALESCE(target_record.obs_valuequantity_code::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_system::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_version::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_code::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_display::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_text::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_text::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_system::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_system::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_version::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_version::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_code::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_code::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_display::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_display::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_text::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_text::text,'#NULL#') AND
                               COALESCE(target_record.obs_dataabsentreason_system::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_system::text,'#NULL#') AND
                               COALESCE(target_record.obs_dataabsentreason_version::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_version::text,'#NULL#') AND
                               COALESCE(target_record.obs_dataabsentreason_code::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_code::text,'#NULL#') AND
@@ -4504,11 +4504,11 @@ BEGIN
                                 obs_valuequantity_unit,
                                 obs_valuequantity_system,
                                 obs_valuequantity_code,
-                                obs_valuecodableconcept_system,
-                                obs_valuecodableconcept_version,
-                                obs_valuecodableconcept_code,
-                                obs_valuecodableconcept_display,
-                                obs_valuecodableconcept_text,
+                                obs_valuecodeableconcept_system,
+                                obs_valuecodeableconcept_version,
+                                obs_valuecodeableconcept_code,
+                                obs_valuecodeableconcept_display,
+                                obs_valuecodeableconcept_text,
                                 obs_dataabsentreason_system,
                                 obs_dataabsentreason_version,
                                 obs_dataabsentreason_code,
@@ -4643,11 +4643,11 @@ BEGIN
                                 current_record.obs_valuequantity_unit,
                                 current_record.obs_valuequantity_system,
                                 current_record.obs_valuequantity_code,
-                                current_record.obs_valuecodableconcept_system,
-                                current_record.obs_valuecodableconcept_version,
-                                current_record.obs_valuecodableconcept_code,
-                                current_record.obs_valuecodableconcept_display,
-                                current_record.obs_valuecodableconcept_text,
+                                current_record.obs_valuecodeableconcept_system,
+                                current_record.obs_valuecodeableconcept_version,
+                                current_record.obs_valuecodeableconcept_code,
+                                current_record.obs_valuecodeableconcept_display,
+                                current_record.obs_valuecodeableconcept_text,
                                 current_record.obs_dataabsentreason_system,
                                 current_record.obs_dataabsentreason_version,
                                 current_record.obs_dataabsentreason_code,
@@ -4790,11 +4790,11 @@ BEGIN
                               COALESCE(target_record.obs_valuequantity_unit::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_unit::text,'#NULL#') AND
                               COALESCE(target_record.obs_valuequantity_system::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_system::text,'#NULL#') AND
                               COALESCE(target_record.obs_valuequantity_code::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_system::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_version::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_code::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_display::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodableconcept_text::text,'#NULL#') = COALESCE(current_record.obs_valuecodableconcept_text::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_system::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_system::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_version::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_version::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_code::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_code::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_display::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_display::text,'#NULL#') AND
+                              COALESCE(target_record.obs_valuecodeableconcept_text::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_text::text,'#NULL#') AND
                               COALESCE(target_record.obs_dataabsentreason_system::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_system::text,'#NULL#') AND
                               COALESCE(target_record.obs_dataabsentreason_version::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_version::text,'#NULL#') AND
                               COALESCE(target_record.obs_dataabsentreason_code::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_code::text,'#NULL#') AND

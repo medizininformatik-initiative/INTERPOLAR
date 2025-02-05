@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-12 08:47:47
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-02-05 13:18:10
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2024-12-13 10:21:35
+-- Create time: 2025-02-05 16:12:54
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -975,11 +975,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   obs_valuequantity_unit varchar,   -- valueQuantity/unit (varchar)
   obs_valuequantity_system varchar,   -- valueQuantity/system (varchar)
   obs_valuequantity_code varchar,   -- valueQuantity/code (varchar)
-  obs_valuecodableconcept_system varchar,   -- valueCodableConcept/coding/system (varchar)
-  obs_valuecodableconcept_version varchar,   -- valueCodableConcept/coding/version (varchar)
-  obs_valuecodableconcept_code varchar,   -- valueCodableConcept/coding/code (varchar)
-  obs_valuecodableconcept_display varchar,   -- valueCodableConcept/coding/display (varchar)
-  obs_valuecodableconcept_text varchar,   -- valueCodableConcept/text (varchar)
+  obs_valuecodeableconcept_system varchar,   -- valueCodeableConcept/coding/system (varchar)
+  obs_valuecodeableconcept_version varchar,   -- valueCodeableConcept/coding/version (varchar)
+  obs_valuecodeableconcept_code varchar,   -- valueCodeableConcept/coding/code (varchar)
+  obs_valuecodeableconcept_display varchar,   -- valueCodeableConcept/coding/display (varchar)
+  obs_valuecodeableconcept_text varchar,   -- valueCodeableConcept/text (varchar)
   obs_dataabsentreason_system varchar,   -- dataAbsentReason/coding/system (varchar)
   obs_dataabsentreason_version varchar,   -- dataAbsentReason/coding/version (varchar)
   obs_dataabsentreason_code varchar,   -- dataAbsentReason/coding/code (varchar)
@@ -2409,11 +2409,11 @@ COMMENT ON COLUMN db_log.observation.obs_valuequantity_comparator IS 'valueQuant
 COMMENT ON COLUMN db_log.observation.obs_valuequantity_unit IS 'valueQuantity/unit (varchar)';
 COMMENT ON COLUMN db_log.observation.obs_valuequantity_system IS 'valueQuantity/system (varchar)';
 COMMENT ON COLUMN db_log.observation.obs_valuequantity_code IS 'valueQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodableconcept_system IS 'valueCodableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodableconcept_version IS 'valueCodableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodableconcept_code IS 'valueCodableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodableconcept_display IS 'valueCodableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodableconcept_text IS 'valueCodableConcept/text (varchar)';
+COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_system IS 'valueCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_version IS 'valueCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_code IS 'valueCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_display IS 'valueCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_text IS 'valueCodeableConcept/text (varchar)';
 COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_system IS 'dataAbsentReason/coding/system (varchar)';
 COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_version IS 'dataAbsentReason/coding/version (varchar)';
 COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_code IS 'dataAbsentReason/coding/code (varchar)';

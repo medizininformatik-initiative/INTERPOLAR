@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-12 08:47:47
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-02-05 13:18:10
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2024-12-13 10:21:23
+-- Create time: 2025-02-05 16:12:42
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -965,11 +965,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_valuequantity_unit VARCHAR,   -- valueQuantity/unit (VARCHAR)
   obs_valuequantity_system VARCHAR,   -- valueQuantity/system (VARCHAR)
   obs_valuequantity_code VARCHAR,   -- valueQuantity/code (VARCHAR)
-  obs_valuecodableconcept_system VARCHAR,   -- valueCodableConcept/coding/system (VARCHAR)
-  obs_valuecodableconcept_version VARCHAR,   -- valueCodableConcept/coding/version (VARCHAR)
-  obs_valuecodableconcept_code VARCHAR,   -- valueCodableConcept/coding/code (VARCHAR)
-  obs_valuecodableconcept_display VARCHAR,   -- valueCodableConcept/coding/display (VARCHAR)
-  obs_valuecodableconcept_text VARCHAR,   -- valueCodableConcept/text (VARCHAR)
+  obs_valuecodeableconcept_system VARCHAR,   -- valueCodeableConcept/coding/system (VARCHAR)
+  obs_valuecodeableconcept_version VARCHAR,   -- valueCodeableConcept/coding/version (VARCHAR)
+  obs_valuecodeableconcept_code VARCHAR,   -- valueCodeableConcept/coding/code (VARCHAR)
+  obs_valuecodeableconcept_display VARCHAR,   -- valueCodeableConcept/coding/display (VARCHAR)
+  obs_valuecodeableconcept_text VARCHAR,   -- valueCodeableConcept/text (VARCHAR)
   obs_dataabsentreason_system VARCHAR,   -- dataAbsentReason/coding/system (VARCHAR)
   obs_dataabsentreason_version VARCHAR,   -- dataAbsentReason/coding/version (VARCHAR)
   obs_dataabsentreason_code VARCHAR,   -- dataAbsentReason/coding/code (VARCHAR)
@@ -2371,11 +2371,11 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_comparator IS 'val
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_unit IS 'valueQuantity/unit (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_system IS 'valueQuantity/system (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_code IS 'valueQuantity/code (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_system IS 'valueCodableConcept/coding/system (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_version IS 'valueCodableConcept/coding/version (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_code IS 'valueCodableConcept/coding/code (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_display IS 'valueCodableConcept/coding/display (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_text IS 'valueCodableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_system IS 'valueCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_version IS 'valueCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_code IS 'valueCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_display IS 'valueCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_text IS 'valueCodeableConcept/text (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_dataabsentreason_system IS 'dataAbsentReason/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_dataabsentreason_version IS 'dataAbsentReason/coding/version (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_dataabsentreason_code IS 'dataAbsentReason/coding/code (varchar)';
