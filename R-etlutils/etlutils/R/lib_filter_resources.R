@@ -5,6 +5,12 @@
 #' @param resources A data.table representing the resources table to be filtered.
 #' @param filter_patterns A list of filter conditions. Each condition is a character string containing multiple
 #' subconditions separated by '+'.
+#' @param return_removed A logical value. If `TRUE`, the function returns a list with two elements:
+#'   \itemize{
+#'     \item \code{kept}: The rows that satisfy the filter conditions.
+#'     \item \code{removed}: The rows that do not satisfy the filter conditions.
+#'   }
+#'   If `FALSE` (default), the function returns only the filtered rows (kept).
 #'
 #' @return A filtered data.table based on the given filter patterns.
 #'
@@ -16,7 +22,7 @@
 #'
 #' @export
 #'
-filterResources <- function(resources, filter_patterns) {
+filterResources <- function(resources, filter_patterns, return_removed = FALSE) {
 
   # nothing todo
   if (!length(filter_patterns)) {
@@ -55,10 +61,29 @@ filterResources <- function(resources, filter_patterns) {
       resources[i, Filter_Column_Keep := resources[i, Filter_Column_Keep] || fulfills_condition(resources[i], condition)]
     }
   }
+#
+#   resources[, Filter_Column_Keep_Subcondition := NULL]
+#   filtered_resources <- resources[Filter_Column_Keep == TRUE]
+#   filtered_resources[, Filter_Column_Keep := NULL]
+#   resources[, Filter_Column_Keep := NULL]
+#   return(filtered_resources)
 
-  resources[, Filter_Column_Keep_Subcondition := NULL]
-  filtered_resources <- resources[Filter_Column_Keep == TRUE]
-  filtered_resources[, Filter_Column_Keep := NULL]
+  # Split into kept and removed rows
+  kept_resources <- resources[Filter_Column_Keep == TRUE]
+  removed_resources <- resources[Filter_Column_Keep == FALSE]
+
+  # Clean up temporary columns
   resources[, Filter_Column_Keep := NULL]
-  return(filtered_resources)
+  resources[, Filter_Column_Keep_Subcondition := NULL]
+
+  # Decide return type based on return_removed
+  if (return_removed) {
+    return(list(
+      kept_resources = kept_resources,
+      removed_resources = removed_resources
+    ))
+  } else {
+    return(kept_resources)
+  }
+
 }
