@@ -119,35 +119,52 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
   return(pids_per_ward)
 }
 
-#' Get unique patient IDs per ward based on filter patterns.
+#' Extract Patient IDs (PIDs) and Encounter IDs per Ward
 #'
-#' This function takes a list of encounters and a corresponding list of filter patterns for each ward.
-#' It filters the encounters for each ward based on the provided filter patterns and extracts unique
-#' patient IDs ('subject/reference'). The result is a list where each element corresponds to a ward,
-#' and the values are unique patient IDs for that ward.
+#' This function filters encounter data based on ward-specific patterns and extracts
+#' a data.table containing unique PIDs and corresponding encounter IDs for each ward.
 #'
-#' @param encounters A list of encounter to filter.
-#' @param all_wards_filter_patterns A list of filter patterns, where each element corresponds to a ward.
+#' @param encounters A data.frame or data.table containing encounter data.
+#' @param all_wards_filter_patterns A named list of filtering patterns for different wards.
+#' @return A named list where each element is a data.table with `pid` and `encounter_id` for a specific ward.
+#' @export
 #'
-#' @return A list where each element corresponds to a ward, and the values are unique patient IDs for that ward.
-#'   The list is structured such that each outer list represents a ward, and the inner lists contain
-#'   unique patient IDs for that ward.
-#'
+#' @import data.table
+#' @importFrom etlutils filterResources
 getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
+
   pids_per_ward <- list()
+
   for (i in seq_along(all_wards_filter_patterns)) {
     ward_filter_patterns <- all_wards_filter_patterns[[i]]
+
+    # Filter encounters based on ward-specific patterns
     ward_encounters <- etlutils::filterResources(encounters, ward_filter_patterns)
-    writeRData(ward_encounters, "pid_source_encounter_filtered")
-    pids_per_ward[[i]] <- unique(sort(ward_encounters$'subject/reference')) # PID is always in 'subject/reference'
-    names(pids_per_ward)[i] <- names(all_wards_filter_patterns)[i]
+
+    # Save filtered encounters
+    writeRData(ward_encounters, paste0("pid_source_encounter_filtered_", i))
+
+    # Create a data.table with PID and Encounter ID
+    dt <- data.table(
+      pid = ward_encounters$`subject/reference`,
+      encounter_id = ward_encounters$id
+    )
+
+    # Remove duplicates and sort by PID
+    dt <- unique(dt[order(pid)])
+
+    # Assign the ward name as the list key
+    ward_name <- names(all_wards_filter_patterns)[i]
+    pids_per_ward[[ward_name]] <- dt
   }
 
-  if (exists("DEBUG_FILTER_PIDS_PATTERN")) {
+  # If DEBUG_FILTER_PIDS_PATTERN exists, filter PIDs based on the pattern
+  if (exists("DEBUG_FILTER_PIDS_PATTERN", envir = .GlobalEnv)) {
     for (ward in names(pids_per_ward)) {
-      pids_per_ward[[ward]] <- pids_per_ward[[ward]][grepl(DEBUG_FILTER_PIDS_PATTERN, pids_per_ward[[ward]])]
+      pids_per_ward[[ward]] <- pids_per_ward[[ward]][grepl(DEBUG_FILTER_PIDS_PATTERN, pid)]
     }
   }
+
   return(pids_per_ward)
 }
 
@@ -307,17 +324,22 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
     })
   }
 
-  #
   etlutils::runLevel3("Ensure every Encounter/Patient ID is only assigned to one ward", {
     # Combine all patient IDs from the list into a data table with their corresponding stations
     pids_per_ward_combinations <- unique(data.table::rbindlist(
       lapply(names(pids_per_ward), function(ward) {
-        data.table::data.table(patient_id = pids_per_ward[[ward]], ward = ward)
+        data.table::data.table(
+          patient_id = pids_per_ward[[ward]]$pid,
+          encounter_id = pids_per_ward[[ward]]$encounter_id,
+          ward = ward)
       }),
       use.names = TRUE, fill = TRUE
     ))
-    # Find duplicated pids
-    duplicates_pids_per_ward <- pids_per_ward_combinations[patient_id %in% names(which(table(patient_id) > 1))]
+
+    # Find patient IDs that appear in multiple different wards
+    multi_ward_patients <- unique(pids_per_ward_combinations[, .(patient_id, ward)])[, .N, by = patient_id][N > 1, patient_id]
+    # Keep only rows where patient_id appears in multiple different wards
+    duplicates_pids_per_ward <- pids_per_ward_combinations[patient_id %in% multi_ward_patients]
     # Stop if duplicates pids are found
     if (nrow(duplicates_pids_per_ward)) {
       if (read_pids_from_file) {

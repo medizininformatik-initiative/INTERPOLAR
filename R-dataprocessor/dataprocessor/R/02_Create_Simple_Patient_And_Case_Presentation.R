@@ -498,9 +498,12 @@ createFrontendTables <- function() {
 
     conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
 
-    for (pid_index in seq_len(nrow(pids_per_ward))) {
+    # Create a new data.table with only pid and ward_name, ensuring unique rows
+    unique_pid_ward <- unique(pids_per_ward[, .(patient_id, ward_name)])
 
-      pid <- pids_per_ward$patient_id[pid_index]
+    for (pid_index in seq_len(nrow(unique_pid_ward))) {
+
+      pid <- unique_pid_ward$patient_id[pid_index]
       pid_encounters <- encounters[enc_patient_ref == pid]
       pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid]
 
@@ -562,8 +565,8 @@ createFrontendTables <- function() {
         fall_complete <- ifelse(fall_complete, "Complete", NA)
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
-        # Extract ward name from pids_per_ward table
-        data.table::set(enc_frontend_table, target_index, "fall_station", pids_per_ward$ward_name[pid_index])
+        # Extract ward name from unique_pid_ward table
+        data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
 
         # Extract the admission diagnosis
         admission_diagnoses <- pid_encounters[[i]][enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
