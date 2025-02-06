@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-05 13:18:10
+-- Rights definition file last update : 2025-01-15 10:46:31
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-05 16:12:49
+-- Create time: 2025-02-06 11:51:50
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -6494,7 +6494,8 @@ BEGIN
                         SELECT count(1) INTO data_count
                         FROM db_log.pids_per_ward_raw target_record
                         WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
+                              COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#') AND
+                              COALESCE(target_record.encounter_id::text,'#NULL#') = COALESCE(current_record.encounter_id::text,'#NULL#')
                         ;
         
                         err_section:='pids_per_ward_raw-15';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
@@ -6505,6 +6506,7 @@ BEGIN
                                 pids_per_ward_raw_id,
                                 ward_name,
                                 patient_id,
+                                encounter_id,
                                 input_datetime,
                                 last_check_datetime,
                                 input_processing_nr,
@@ -6514,6 +6516,7 @@ BEGIN
                                 current_record.pids_per_ward_raw_id,
                                 current_record.ward_name,
                                 current_record.patient_id,
+                                current_record.encounter_id,
                                 current_record.input_datetime,
                                 last_pro_datetime,
                                 last_pro_nr,
@@ -6531,7 +6534,8 @@ BEGIN
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
                             WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#')
+                              COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#') AND
+                              COALESCE(target_record.encounter_id::text,'#NULL#') = COALESCE(current_record.encounter_id::text,'#NULL#')
                             ;
         
                             -- Delete updatet datasets

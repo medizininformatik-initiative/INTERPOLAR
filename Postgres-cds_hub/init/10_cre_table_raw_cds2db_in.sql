@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-05 13:18:10
+-- Rights definition file last update : 2025-01-15 10:46:31
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-05 16:12:42
+-- Create time: 2025-02-06 11:51:32
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1318,6 +1318,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   ward_name VARCHAR,   -- ward_name (VARCHAR)
   patient_id VARCHAR,   -- patient_id (VARCHAR)
+  encounter_id VARCHAR,   -- encounter_id (VARCHAR)
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2706,6 +2707,7 @@ COMMENT ON COLUMN cds2db_in.location_raw.last_processing_nr IS 'Last processing 
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.pids_per_ward_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.ward_name IS 'ward_name (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.patient_id IS 'patient_id (varchar)';
+COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.encounter_id IS 'encounter_id (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.current_dataset_status IS 'Processing status of the data record';

@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-05 13:18:10
+-- Rights definition file last update : 2025-01-15 10:46:31
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-05 16:12:50
+-- Create time: 2025-02-06 11:51:54
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1332,6 +1332,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   ward_name varchar,   -- ward_name (varchar)
   patient_id varchar,   -- patient_id (varchar)
+  encounter_id varchar,   -- encounter_id (varchar)
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -2734,6 +2735,7 @@ COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_id IS 'Primary key of th
 COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.ward_name IS 'ward_name (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.patient_id IS 'patient_id (varchar)';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.encounter_id IS 'encounter_id (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
