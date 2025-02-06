@@ -576,7 +576,12 @@ createFrontendTables <- function() {
 
         # Extract location informations
         searched_encounter <- paste0("Encounter/", enc_id)
-        filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_partof_ref == searched_encounter]
+        if (exists("MISSING_PART_OF_REFERENCE")) {
+          filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_identifier_value == enc_identifier_value]
+        } else {
+          filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_partof_ref == searched_encounter]
+        }
+
         # Define the mapping of location codes to labels
         location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
         # Call the function with the filtered_pid_part_of_encounters data and the location_labels
