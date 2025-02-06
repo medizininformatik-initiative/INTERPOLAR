@@ -294,7 +294,7 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
 #' library(data.table)
 #' pid_part_of_encounters <- data.table(
 #'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd"),
-#'   enc_identifier_value = c("ID_001", "ID_002", "ID_003", "")
+#'   enc_location_display = c("ID_001", "ID_002", "ID_003", "")
 #' )
 #' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
 #' combineEncounterLocations(pid_part_of_encounters, location_labels)
@@ -307,7 +307,7 @@ combineEncounterLocations <- function(data, location_labels) {
     # Filter rows based on the specified location_code in enc_location_physicaltype_code
     filtered_values <- data[
       enc_location_physicaltype_code == location_code,  # Filter condition
-      enc_identifier_value                              # Extract the values from enc_identifier_value
+      enc_location_display                              # Extract the values from enc_identifier_value
     ]
     # Check if there are valid values and filter out NA or empty values
     valid_values <- filtered_values[!is.na(filtered_values) & filtered_values != ""]
