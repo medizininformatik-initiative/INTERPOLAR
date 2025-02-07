@@ -27,12 +27,21 @@
 #' }
 #'
 createWardPatientIDPerDateTable <- function(patient_ids_per_ward) {
-  ward_names <- names(patient_ids_per_ward)
-  patient_ids <- unlist(patient_ids_per_ward)
-  ward_patient_id_per_date <- data.table::data.table(
-    ward_name = rep(ward_names, lengths(patient_ids_per_ward)),
-    patient_id = patient_ids
+  # Combine all ward tables into one data.table
+  ward_patient_id_per_date <- data.table::rbindlist(
+    lapply(names(patient_ids_per_ward), function(ward) {
+      dt <- patient_ids_per_ward[[ward]]
+      if (nrow(dt) > 0) {
+        dt[, ward_name := ward]  # Add ward column
+        data.table::setnames(dt, c("pid", "encounter_id"), c("patient_id", "encounter_id"))  # Rename columns
+        return(dt)
+      } else {
+        return(NULL)  # Skip empty tables
+      }
+    }),
+    use.names = TRUE, fill = TRUE
   )
+
   return(ward_patient_id_per_date)
 }
 
@@ -224,7 +233,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   }
 
   # Unify and unique all patient IDs
-  patient_ids_fhir <- unique(unlist(patient_ids_per_ward))
+  patient_ids_fhir <- unique(unlist(data.table::rbindlist(patient_ids_per_ward, use.names = TRUE, fill = TRUE)[, .(pid)]))
   patient_ids <- unique(c(patient_ids_fhir, patient_ids_db))
 
   # This parameter should only be changed via DEBUG variables to set additional test filters for
