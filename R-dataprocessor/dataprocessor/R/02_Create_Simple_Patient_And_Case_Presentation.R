@@ -293,8 +293,8 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
 #' # Example data
 #' library(data.table)
 #' pid_part_of_encounters <- data.table(
-#'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd"),
-#'   enc_identifier_value = c("ID_001", "ID_002", "ID_003", "")
+#'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd", "bd"),
+#'   enc_location_display = c("ID_001", "ID_002", "ID_003", "ID_004", "ID_004")
 #' )
 #' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
 #' combineEncounterLocations(pid_part_of_encounters, location_labels)
@@ -307,20 +307,21 @@ combineEncounterLocations <- function(data, location_labels) {
     # Filter rows based on the specified location_code in enc_location_physicaltype_code
     filtered_values <- data[
       enc_location_physicaltype_code == location_code,  # Filter condition
-      enc_identifier_value                              # Extract the values from enc_identifier_value
+      enc_location_display                              # Extract the values from enc_identifier_value
     ]
     # Check if there are valid values and filter out NA or empty values
     valid_values <- filtered_values[!is.na(filtered_values) & filtered_values != ""]
-    # Combine the valid values into a single string, separated by commas
-    combined_values <- paste(valid_values, collapse = ", ")
+    # Remove duplicated values
+    unique_values <- unique(valid_values)
+    # Combine die einzigartigen Werte in eine Zeichenkette
+    combined_values <- paste(unique_values, collapse = ", ")
     # Get the corresponding label for the location_code from the location_labels mapping
     location_label <- location_labels[location_code]
     # If there is a label, return the formatted result with the label and combined values
-    if (!is.null(location_label) && length(valid_values)) {
+    if (!is.null(location_label) && length(unique_values)) {
       return(paste0(location_label, ": ", combined_values))
     }
   })
-
   # Remove any NULL values if no valid values for a particular location_code
   combined_results <- combined_results[!sapply(combined_results, is.null)]
   # Combine all results into a single string, separated by semicolons
@@ -498,9 +499,12 @@ createFrontendTables <- function() {
 
     conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
 
-    for (pid_index in seq_len(nrow(pids_per_ward))) {
+    # Create a new data.table with only pid and ward_name, ensuring unique rows
+    unique_pid_ward <- unique(pids_per_ward[, .(patient_id, ward_name)])
 
-      pid <- pids_per_ward$patient_id[pid_index]
+    for (pid_index in seq_len(nrow(unique_pid_ward))) {
+
+      pid <- unique_pid_ward$patient_id[pid_index]
       pid_encounters <- encounters[enc_patient_ref == pid]
       pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid]
 
@@ -562,8 +566,8 @@ createFrontendTables <- function() {
         fall_complete <- ifelse(fall_complete, "Complete", NA)
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
-        # Extract ward name from pids_per_ward table
-        data.table::set(enc_frontend_table, target_index, "fall_station", pids_per_ward$ward_name[pid_index])
+        # Extract ward name from unique_pid_ward table
+        data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
 
         # Extract the admission diagnosis
         admission_diagnoses <- pid_encounters[[i]][enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
@@ -575,8 +579,13 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
 
         # Extract location informations
-        searched_encounter <- paste0("Encounter/", enc_id)
-        filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_partof_ref == searched_encounter]
+        if (exists("MISSING_PART_OF_REFERENCE")) {
+          filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_identifier_value == enc_identifier_value]
+        } else {
+          searched_encounter <- paste0("Encounter/", enc_id)
+          filtered_pid_part_of_encounters <- pid_part_of_encounters[grepl(searched_encounter, enc_partof_ref)]
+        }
+
         # Define the mapping of location codes to labels
         location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
         # Call the function with the filtered_pid_part_of_encounters data and the location_labels

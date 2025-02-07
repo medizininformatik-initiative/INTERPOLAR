@@ -91,6 +91,10 @@ FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 #               "enc_type_system = 'http://fhir.de/CodeSystem/Kontaktebene'"
 #               ]
 
+# If there are no partof references for encounter, then the relationship between
+# “Versorgungsstellenkontakt” and “Fachabteilungskontakt” must be found via the encounter identifier.
+#MISSING_PART_OF_REFERENCE = true
+
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
