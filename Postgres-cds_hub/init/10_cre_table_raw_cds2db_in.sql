@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2024-12-12 08:47:47
--- Rights definition file size        : 15179 Byte
+-- Rights definition file last update : 2025-01-15 10:46:31
+-- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2024-12-13 10:21:23
+-- Create time: 2025-02-06 19:15:13
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -37,8 +37,9 @@
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   enc_id VARCHAR,   -- id (VARCHAR)
-  enc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  enc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  enc_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  enc_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  enc_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   enc_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   enc_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   enc_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -49,6 +50,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   enc_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   enc_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  enc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  enc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   enc_status VARCHAR,   -- status (VARCHAR)
   enc_class_system VARCHAR,   -- class/system (VARCHAR)
   enc_class_version VARCHAR,   -- class/version (VARCHAR)
@@ -118,6 +121,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   patient_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pat_id VARCHAR,   -- id (VARCHAR)
+  pat_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  pat_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  pat_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   pat_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   pat_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   pat_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -145,8 +151,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   con_id VARCHAR,   -- id (VARCHAR)
-  con_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  con_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  con_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  con_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  con_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   con_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   con_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   con_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -157,6 +164,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   con_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   con_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  con_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  con_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
   con_clinicalstatus_system VARCHAR,   -- clinicalStatus/coding/system (VARCHAR)
   con_clinicalstatus_version VARCHAR,   -- clinicalStatus/coding/version (VARCHAR)
   con_clinicalstatus_code VARCHAR,   -- clinicalStatus/coding/code (VARCHAR)
@@ -268,6 +277,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   medication_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   med_id VARCHAR,   -- id (VARCHAR)
+  med_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  med_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  med_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   med_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   med_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   med_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -335,8 +347,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medreq_id VARCHAR,   -- id (VARCHAR)
-  medreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  medreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  medreq_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  medreq_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  medreq_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   medreq_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   medreq_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   medreq_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -347,6 +360,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   medreq_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   medreq_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  medreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  medreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
   medreq_medicationreference_ref VARCHAR,   -- medicationReference/reference (VARCHAR)
   medreq_status VARCHAR,   -- status (VARCHAR)
   medreq_statusreason_system VARCHAR,   -- statusReason/coding/system (VARCHAR)
@@ -568,9 +583,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medadm_id VARCHAR,   -- id (VARCHAR)
-  medadm_encounter_ref VARCHAR,   -- context/reference (VARCHAR)
-  medadm_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  medadm_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  medadm_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  medadm_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  medadm_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   medadm_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   medadm_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   medadm_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -581,6 +596,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   medadm_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   medadm_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  medadm_encounter_ref VARCHAR,   -- context/reference (VARCHAR)
+  medadm_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  medadm_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   medadm_status VARCHAR,   -- status (VARCHAR)
   medadm_statusreason_system VARCHAR,   -- statusReason/coding/system (VARCHAR)
   medadm_statusreason_version VARCHAR,   -- statusReason/coding/version (VARCHAR)
@@ -687,6 +705,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medicationstatement_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medstat_id VARCHAR,   -- id (VARCHAR)
+  medstat_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  medstat_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  medstat_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   medstat_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   medstat_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   medstat_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -907,9 +928,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   obs_id VARCHAR,   -- id (VARCHAR)
-  obs_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  obs_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  obs_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  obs_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  obs_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  obs_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   obs_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   obs_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   obs_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -920,6 +941,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   obs_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   obs_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  obs_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  obs_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  obs_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   obs_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   obs_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
   obs_basedon_identifier_use VARCHAR,   -- basedOn/identifier/use (VARCHAR)
@@ -965,11 +989,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_valuequantity_unit VARCHAR,   -- valueQuantity/unit (VARCHAR)
   obs_valuequantity_system VARCHAR,   -- valueQuantity/system (VARCHAR)
   obs_valuequantity_code VARCHAR,   -- valueQuantity/code (VARCHAR)
-  obs_valuecodableconcept_system VARCHAR,   -- valueCodableConcept/coding/system (VARCHAR)
-  obs_valuecodableconcept_version VARCHAR,   -- valueCodableConcept/coding/version (VARCHAR)
-  obs_valuecodableconcept_code VARCHAR,   -- valueCodableConcept/coding/code (VARCHAR)
-  obs_valuecodableconcept_display VARCHAR,   -- valueCodableConcept/coding/display (VARCHAR)
-  obs_valuecodableconcept_text VARCHAR,   -- valueCodableConcept/text (VARCHAR)
+  obs_valuecodeableconcept_system VARCHAR,   -- valueCodeableConcept/coding/system (VARCHAR)
+  obs_valuecodeableconcept_version VARCHAR,   -- valueCodeableConcept/coding/version (VARCHAR)
+  obs_valuecodeableconcept_code VARCHAR,   -- valueCodeableConcept/coding/code (VARCHAR)
+  obs_valuecodeableconcept_display VARCHAR,   -- valueCodeableConcept/coding/display (VARCHAR)
+  obs_valuecodeableconcept_text VARCHAR,   -- valueCodeableConcept/text (VARCHAR)
   obs_dataabsentreason_system VARCHAR,   -- dataAbsentReason/coding/system (VARCHAR)
   obs_dataabsentreason_version VARCHAR,   -- dataAbsentReason/coding/version (VARCHAR)
   obs_dataabsentreason_code VARCHAR,   -- dataAbsentReason/coding/code (VARCHAR)
@@ -1048,9 +1072,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagrep_id VARCHAR,   -- id (VARCHAR)
-  diagrep_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  diagrep_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  diagrep_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  diagrep_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  diagrep_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  diagrep_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   diagrep_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   diagrep_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   diagrep_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -1061,6 +1085,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   diagrep_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   diagrep_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  diagrep_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  diagrep_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  diagrep_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   diagrep_result_ref VARCHAR,   -- result/reference (VARCHAR)
   diagrep_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   diagrep_status VARCHAR,   -- status (VARCHAR)
@@ -1102,8 +1129,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servreq_id VARCHAR,   -- id (VARCHAR)
-  servreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  servreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  servreq_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  servreq_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  servreq_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   servreq_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   servreq_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   servreq_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -1114,6 +1142,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   servreq_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   servreq_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  servreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  servreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
   servreq_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   servreq_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
   servreq_basedon_identifier_use VARCHAR,   -- basedOn/identifier/use (VARCHAR)
@@ -1170,9 +1200,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   proc_id VARCHAR,   -- id (VARCHAR)
-  proc_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  proc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  proc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  proc_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  proc_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  proc_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   proc_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   proc_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   proc_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -1183,6 +1213,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   proc_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   proc_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  proc_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  proc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  proc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   proc_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   proc_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
   proc_basedon_identifier_use VARCHAR,   -- basedOn/identifier/use (VARCHAR)
@@ -1248,7 +1281,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   cons_id VARCHAR,   -- id (VARCHAR)
-  cons_patient_ref VARCHAR,   -- patient/reference (VARCHAR)
+  cons_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  cons_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  cons_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   cons_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   cons_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   cons_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -1259,6 +1294,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   cons_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   cons_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   cons_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  cons_patient_ref VARCHAR,   -- patient/reference (VARCHAR)
   cons_status VARCHAR,   -- status (VARCHAR)
   cons_scope_system VARCHAR,   -- scope/coding/system (VARCHAR)
   cons_scope_version VARCHAR,   -- scope/coding/version (VARCHAR)
@@ -1292,6 +1328,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
 CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
   location_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   loc_id VARCHAR,   -- id (VARCHAR)
+  loc_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  loc_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  loc_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   loc_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   loc_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   loc_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -1318,6 +1357,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   ward_name VARCHAR,   -- ward_name (VARCHAR)
   patient_id VARCHAR,   -- patient_id (VARCHAR)
+  encounter_id VARCHAR,   -- encounter_id (VARCHAR)
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
@@ -1464,8 +1504,9 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward_raw TO db_
 
 COMMENT ON COLUMN cds2db_in.encounter_raw.encounter_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.encounter_raw.enc_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.encounter_raw.enc_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -1476,6 +1517,8 @@ COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_system IS 'identifier/s
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_class_system IS 'class/system (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_class_version IS 'class/version (varchar)';
@@ -1542,6 +1585,9 @@ COMMENT ON COLUMN cds2db_in.encounter_raw.last_processing_nr IS 'Last processing
 
 COMMENT ON COLUMN cds2db_in.patient_raw.patient_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -1566,8 +1612,9 @@ COMMENT ON COLUMN cds2db_in.patient_raw.last_processing_nr IS 'Last processing n
 
 COMMENT ON COLUMN cds2db_in.condition_raw.condition_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.condition_raw.con_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.condition_raw.con_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -1578,6 +1625,8 @@ COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_system IS 'identifier/s
 COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_clinicalstatus_system IS 'clinicalStatus/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_clinicalstatus_version IS 'clinicalStatus/coding/version (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_clinicalstatus_code IS 'clinicalStatus/coding/code (varchar)';
@@ -1686,6 +1735,9 @@ COMMENT ON COLUMN cds2db_in.condition_raw.last_processing_nr IS 'Last processing
 
 COMMENT ON COLUMN cds2db_in.medication_raw.medication_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.medication_raw.med_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medication_raw.med_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.medication_raw.med_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -1750,8 +1802,9 @@ COMMENT ON COLUMN cds2db_in.medication_raw.last_processing_nr IS 'Last processin
 
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medicationrequest_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -1762,6 +1815,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_system IS 'i
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_medicationreference_ref IS 'medicationReference/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_statusreason_system IS 'statusReason/coding/system (varchar)';
@@ -1980,9 +2035,9 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.last_processing_nr IS 'Last pr
 
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medicationadministration_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_encounter_ref IS 'context/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -1993,6 +2048,9 @@ COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_syste
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_encounter_ref IS 'context/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_statusreason_system IS 'statusReason/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_statusreason_version IS 'statusReason/coding/version (varchar)';
@@ -2096,6 +2154,9 @@ COMMENT ON COLUMN cds2db_in.medicationadministration_raw.last_processing_nr IS '
 
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medicationstatement_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2313,9 +2374,9 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.last_processing_nr IS 'Last 
 
 COMMENT ON COLUMN cds2db_in.observation_raw.observation_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2326,6 +2387,9 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_system IS 'identifier
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_type IS 'basedOn/type (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
@@ -2371,11 +2435,11 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_comparator IS 'val
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_unit IS 'valueQuantity/unit (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_system IS 'valueQuantity/system (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuequantity_code IS 'valueQuantity/code (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_system IS 'valueCodableConcept/coding/system (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_version IS 'valueCodableConcept/coding/version (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_code IS 'valueCodableConcept/coding/code (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_display IS 'valueCodableConcept/coding/display (varchar)';
-COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodableconcept_text IS 'valueCodableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_system IS 'valueCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_version IS 'valueCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_code IS 'valueCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_display IS 'valueCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_valuecodeableconcept_text IS 'valueCodeableConcept/text (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_dataabsentreason_system IS 'dataAbsentReason/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_dataabsentreason_version IS 'dataAbsentReason/coding/version (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_dataabsentreason_code IS 'dataAbsentReason/coding/code (varchar)';
@@ -2451,9 +2515,9 @@ COMMENT ON COLUMN cds2db_in.observation_raw.last_processing_nr IS 'Last processi
 
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagnosticreport_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2464,6 +2528,9 @@ COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_system IS 'i
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_result_ref IS 'result/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_status IS 'status (varchar)';
@@ -2502,8 +2569,9 @@ COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.last_processing_nr IS 'Last pro
 
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servicerequest_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2514,6 +2582,8 @@ COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_system IS 'ide
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_type IS 'basedOn/type (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
@@ -2567,9 +2637,9 @@ COMMENT ON COLUMN cds2db_in.servicerequest_raw.last_processing_nr IS 'Last proce
 
 COMMENT ON COLUMN cds2db_in.procedure_raw.procedure_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.procedure_raw.proc_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.procedure_raw.proc_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.procedure_raw.proc_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2580,6 +2650,9 @@ COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_system IS 'identifier/
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_type IS 'basedOn/type (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
@@ -2642,7 +2715,9 @@ COMMENT ON COLUMN cds2db_in.procedure_raw.last_processing_nr IS 'Last processing
 
 COMMENT ON COLUMN cds2db_in.consent_raw.consent_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.consent_raw.cons_patient_ref IS 'patient/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.consent_raw.cons_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.consent_raw.cons_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.consent_raw.cons_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2653,6 +2728,7 @@ COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_system IS 'identifier/sy
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.consent_raw.cons_patient_ref IS 'patient/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_scope_system IS 'scope/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_scope_version IS 'scope/coding/version (varchar)';
@@ -2683,6 +2759,9 @@ COMMENT ON COLUMN cds2db_in.consent_raw.last_processing_nr IS 'Last processing n
 
 COMMENT ON COLUMN cds2db_in.location_raw.location_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -2706,6 +2785,7 @@ COMMENT ON COLUMN cds2db_in.location_raw.last_processing_nr IS 'Last processing 
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.pids_per_ward_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.ward_name IS 'ward_name (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.patient_id IS 'patient_id (varchar)';
+COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.encounter_id IS 'encounter_id (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.current_dataset_status IS 'Processing status of the data record';
