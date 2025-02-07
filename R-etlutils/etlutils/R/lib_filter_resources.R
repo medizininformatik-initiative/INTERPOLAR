@@ -20,6 +20,46 @@
 #' However, within each individual condition (subconditions separated by '+'), an AND operation is applied,
 #' requiring all subconditions to be met for the condition to be satisfied.
 #'
+#' @examples
+#' library(data.table)
+#'
+#' # Create example resources table
+#' resources <- data.table(
+#'   id = 1:5,
+#'   type = c("A", "B", "A", "C", "B"),
+#'   serviceType = c("0100", "0200", "0500", "0100", "0500"),
+#'   class = c("station", "IMP", "inpatient", "ACUTE", "NONAC")
+#' )
+#'
+#' # Example 1: Filter resources where type = "A"
+#' filter_patterns <- list(
+#'   list(type = "A")
+#' )
+#' filtered_resources <- filterResources(resources, filter_patterns)
+#' print(filtered_resources)
+#'
+#' # Example 2: Filter where serviceType is "0100" or "0500"
+#' filter_patterns <- list(
+#'   list(serviceType = "0100|0500")
+#' )
+#' filtered_resources <- filterResources(resources, filter_patterns)
+#' print(filtered_resources)
+#'
+#' # Example 3: Filter where type = "B" AND serviceType = "0500"
+#' filter_patterns <- list(
+#'   list(type = "B", serviceType = "0500")
+#' )
+#' filtered_resources <- filterResources(resources, filter_patterns)
+#' print(filtered_resources)
+#'
+#' # Example 4: Return removed rows as well
+#' filter_patterns <- list(
+#'   list(type = "A")
+#' )
+#' result <- filterResources(resources, filter_patterns, return_removed = TRUE)
+#' print(result$kept_resources)    # Rows that match the filter
+#' print(result$removed_resources) # Rows that do not match
+#'
 #' @export
 #'
 filterResources <- function(resources, filter_patterns, return_removed = FALSE) {
@@ -61,20 +101,14 @@ filterResources <- function(resources, filter_patterns, return_removed = FALSE) 
       resources[i, Filter_Column_Keep := resources[i, Filter_Column_Keep] || fulfills_condition(resources[i], condition)]
     }
   }
-#
-#   resources[, Filter_Column_Keep_Subcondition := NULL]
-#   filtered_resources <- resources[Filter_Column_Keep == TRUE]
-#   filtered_resources[, Filter_Column_Keep := NULL]
-#   resources[, Filter_Column_Keep := NULL]
-#   return(filtered_resources)
 
   # Split into kept and removed rows
   kept_resources <- resources[Filter_Column_Keep == TRUE]
   removed_resources <- resources[Filter_Column_Keep == FALSE]
 
   # Clean up temporary columns
-  resources[, Filter_Column_Keep := NULL]
-  resources[, Filter_Column_Keep_Subcondition := NULL]
+  kept_resources[, c("Filter_Column_Keep", "Filter_Column_Keep_Subcondition") := NULL]
+  removed_resources[, c("Filter_Column_Keep", "Filter_Column_Keep_Subcondition") := NULL]
 
   # Decide return type based on return_removed
   if (return_removed) {
@@ -85,5 +119,4 @@ filterResources <- function(resources, filter_patterns, return_removed = FALSE) 
   } else {
     return(kept_resources)
   }
-
 }
