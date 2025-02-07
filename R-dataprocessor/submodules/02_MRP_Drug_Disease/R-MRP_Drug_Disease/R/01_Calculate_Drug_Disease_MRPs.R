@@ -109,8 +109,9 @@ calculateDrugDiseaseMRPs <- function() {
   # Load all active PIDs
   patient_ids <- getPIDs()
 
-  # Retrieve query datetime
-  query_datetime <- etlutils::getQueryDatetime()
+  # Save and retrieve query datetime
+  setQueryDatetime()
+  query_datetime <- getQueryDatetime()
 
   # Load encounters by PIDs
   encounters <- loadEncounters(patient_ids, query_datetime)
