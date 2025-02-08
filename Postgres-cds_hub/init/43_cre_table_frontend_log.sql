@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-08 12:23:44
+-- Create time: 2025-02-08 15:40:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
              COALESCE(db.to_char_immutable(patient_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (patient_complete)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
              COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (redcap_repeat_instrument)
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
              COALESCE(db.to_char_immutable(fall_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (fall_complete)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
              COALESCE(db.to_char_immutable(fall_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (fall_header)
@@ -258,7 +258,7 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
              COALESCE(db.to_char_immutable(medikationsanalyse_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (medikationsanalyse_complete)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
              COALESCE(db.to_char_immutable(meda_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (meda_header)
@@ -546,7 +546,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrpdokumentation_validierung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (mrpdokumentation_validierung_complete)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
              COALESCE(db.to_char_immutable(meda_fe_id), '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (meda_fe_id)
@@ -725,7 +725,7 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
              COALESCE(db.to_char_immutable(risikofaktor_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status (risikofaktor_complete)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
              COALESCE(db.to_char_immutable(patient_id_fk), '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (patient_id_fk)
@@ -811,7 +811,7 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
              COALESCE(db.to_char_immutable(trigger_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status (trigger_complete)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(patient_id_fk), '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (patient_id_fk)
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
