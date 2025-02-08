@@ -130,7 +130,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   for (expand_table in expansion_tables) {
     for (col_name in colnames(table)) {
       if (!(col_name %in% colnames(expand_table))) {
-        expand_table[, (col_name) := NA]
+        expand_table[, (col_name) := NA_character_]
       }
     }
     data.table::setcolorder(expand_table, names(table))
@@ -182,7 +182,10 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       # Only for References: If the REFERENCE_TYPES column is filled for a Reference
       # which should be expanded -> write the REFERENCE_TYPES column value also to
       # the first column of the expanded reference
-      new_table[row, REFERENCE_TYPES := table[row][["REFERENCE_TYPES"]]]
+      new_table[row, REFERENCE_TYPES := table[row, REFERENCE_TYPES]]
+      # same for the RESOURCE, RESOURCE_PREFIX
+      new_table[row, RESOURCE := table[row, RESOURCE]]
+      new_table[row, RESOURCE_PREFIX := table[row, RESOURCE_PREFIX]]
 
       for (expanded_row_index in 1:nrow(expansion_table)) {
         replaced_row_index <- as.integer(row + expanded_row_index - 1)

@@ -185,7 +185,7 @@ getIndices <- function(filter_string, delimiter = ",", range_delimiter = "-") {
 #' the `hide_value_pattern`, it will display "<Not empty list>" for lists or "<Not empty string>"
 #' for non-empty strings.
 #'
-#' @param list A named list or a list of lists to be printed.
+#' @param input_list A named list or a list of lists to be printed.
 #' @param prefix A string to print before the list output (optional, default is an empty string).
 #' @param suffix A string to print after the list output (optional, default is an empty string).
 #' @param hide_value_pattern A regular expression pattern to hide the values of specific list
@@ -201,32 +201,55 @@ getIndices <- function(filter_string, delimiter = ",", range_delimiter = "-") {
 #' catList(my_list, hide_value_pattern = "e|b")
 #'
 #' @export
-catList <- function(list, prefix = "", suffix = "", hide_value_pattern = "") {
+catList <- function(input_list, prefix = "", suffix = "", hide_value_pattern = "") {
+  # Print the prefix
   cat(prefix)
-  if (is.na(hide_value_pattern)) hide_value_pattern <- ""
-  for (name in names(list)) {
-    value <- list[[name]]
-    # Only apply hide_value_pattern logic if it's non-empty
+
+  # Initialize an empty list to store combined values for each date
+  combined_list <- list()
+
+  # Iterate over the input list to combine values by date
+  for (i in seq_along(input_list)) {
+    # Get the current name (date) and value (list of items)
+    name <- names(input_list)[i]
+    value <- input_list[[i]]
+
+    # Check if the name matches the hide_value_pattern
+    hide_value <- grepl(hide_value_pattern, name, perl = TRUE)
+
+    # Process the value based on the pattern and its content
     if (hide_value_pattern != "") {
-      hide_value <- grepl(hide_value_pattern, name, perl = TRUE)
       if (is.list(value)) {
-        # If it's a list, check the elements for the hide_value_pattern
+        # If value is a list, check if it matches the hide_value_pattern
         if (hide_value) {
           value <- "<Not empty list>"
         } else {
-          value <- getPrintString(value)
+          value <- getPrintString(value) # Assuming `getPrintString` is defined
         }
-      } else if (hide_value && nchar(value)) {
-        # If it's not a list, check if the value matches the hide_value_pattern
+      } else if (hide_value && !is.null(value) && !is.na(value) && nchar(as.character(value)) > 0) {
+        # Handle non-empty, non-list values
         value <- paste("<Not empty", typeof(value), "value>")
       }
-    } else {
-      # If no pattern is provided, just print the value normally
-      if (is.list(value)) {
-        value <- getPrintString(value)
-      }
     }
+
+    # Combine values for the same name (dates)
+    if (is.null(combined_list[[name]])) {
+      combined_list[[name]] <- value
+    } else {
+      combined_list[[name]] <- c(combined_list[[name]], value)
+    }
+  }
+
+  # Now we process combined values (for dates)
+  for (name in names(combined_list)) {
+    # If multiple values exist, paste them together
+    value <- combined_list[[name]]
+    value <- paste(value, collapse = ", ")
+
+    # Print the combined output
     cat(paste0(name, " = ", value, "\n"))
   }
+
+  # Print the suffix
   cat(suffix)
 }

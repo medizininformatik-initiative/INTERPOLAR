@@ -9,7 +9,7 @@ Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_descriptio
 
 ## Bestandteile der CDS tool chain
 
-Hier werden alle verwendeten Bestandteile aufgelistet. Detailliertere Beschreibungen befinden sich im jeweiligen Ordner.
+Hier werden alle verwendeten Bestandteile bzw. CDS-Module aufgelistet. Detaillierte Beschreibungen sind in den jeweiligen Ordnern zu finden. Ein Modul ist eine eigenständige Softwarekomponente mit klar definierten Funktionalitäten. Die Module kommunizieren über Schnittstellen miteinander und sind austauschbar.
 
 ### FHIR Server / Endpunkt
 
@@ -109,3 +109,5 @@ Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abst
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
 - Haben Sie einen Fehler gefunden, legen Sie bitte ein Ticket ([Issues->New issue](https://github.com/medizininformatik-initiative/INTERPOLAR/issues/new/choose)) an.
+- Haben Sie Vorschläge zur Verbesserung oder Fragen, erstellen Sie bitte einen Beitrag unter [Discussions](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions).
+- Hinweise zum Umgang mit Fehlern und Änderungswünschen sind in [diesem Beitrag](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/574) zusammengefasst.
