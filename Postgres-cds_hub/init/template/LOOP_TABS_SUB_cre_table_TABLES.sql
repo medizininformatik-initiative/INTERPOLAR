@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
              <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
              '#'

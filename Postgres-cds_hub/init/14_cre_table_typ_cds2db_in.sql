@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-08 15:18:53
+-- Create time: 2025-02-08 15:34:45
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
              COALESCE(db.to_char_immutable(enc_serviceprovider_display), '#NULL#') || '|||' || -- hash from: serviceProvider/display (enc_serviceprovider_display)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: id (enc_id)
              COALESCE(db.to_char_immutable(enc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (enc_meta_versionid)
@@ -322,7 +322,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
              COALESCE(db.to_char_immutable(pat_address_postalcode), '#NULL#') || '|||' || -- hash from: address/postalCode (pat_address_postalcode)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(pat_id), '#NULL#') || '|||' || -- hash from: id (pat_id)
              COALESCE(db.to_char_immutable(pat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (pat_meta_versionid)
@@ -594,7 +594,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
              COALESCE(db.to_char_immutable(con_note_text), '#NULL#') || '|||' || -- hash from: note/text (con_note_text)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(con_id), '#NULL#') || '|||' || -- hash from: id (con_id)
              COALESCE(db.to_char_immutable(con_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (con_meta_versionid)
@@ -850,7 +850,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
              COALESCE(db.to_char_immutable(med_ingredient_isactive), '#NULL#') || '|||' || -- hash from: ingredient/isActive (med_ingredient_isactive)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(med_id), '#NULL#') || '|||' || -- hash from: id (med_id)
              COALESCE(db.to_char_immutable(med_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (med_meta_versionid)
@@ -1382,7 +1382,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
              COALESCE(db.to_char_immutable(medreq_substitution_reason_text), '#NULL#') || '|||' || -- hash from: substitution/reason/text (medreq_substitution_reason_text)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(medreq_id), '#NULL#') || '|||' || -- hash from: id (medreq_id)
              COALESCE(db.to_char_immutable(medreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medreq_meta_versionid)
@@ -1852,7 +1852,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
              COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/code (medadm_dosage_ratequantity_code)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(medadm_id), '#NULL#') || '|||' || -- hash from: id (medadm_id)
              COALESCE(db.to_char_immutable(medadm_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medadm_meta_versionid)
@@ -2410,7 +2410,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
              COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/code (medstat_dosage_maxdoseperlifetime_code)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(medstat_id), '#NULL#') || '|||' || -- hash from: id (medstat_id)
              COALESCE(db.to_char_immutable(medstat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medstat_meta_versionid)
@@ -2911,7 +2911,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
              COALESCE(db.to_char_immutable(obs_hasmember_display), '#NULL#') || '|||' || -- hash from: hasMember/display (obs_hasmember_display)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(obs_id), '#NULL#') || '|||' || -- hash from: id (obs_id)
              COALESCE(db.to_char_immutable(obs_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (obs_meta_versionid)
@@ -3159,7 +3159,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
              COALESCE(db.to_char_immutable(diagrep_conclusioncode_text), '#NULL#') || '|||' || -- hash from: conclusionCode/text (diagrep_conclusioncode_text)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(diagrep_id), '#NULL#') || '|||' || -- hash from: id (diagrep_id)
              COALESCE(db.to_char_immutable(diagrep_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (diagrep_meta_versionid)
@@ -3348,7 +3348,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
              COALESCE(db.to_char_immutable(servreq_locationcode_text), '#NULL#') || '|||' || -- hash from: locationCode/text (servreq_locationcode_text)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(servreq_id), '#NULL#') || '|||' || -- hash from: id (servreq_id)
              COALESCE(db.to_char_immutable(servreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (servreq_meta_versionid)
@@ -3571,7 +3571,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
              COALESCE(db.to_char_immutable(proc_note_text), '#NULL#') || '|||' || -- hash from: note/text (proc_note_text)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(proc_id), '#NULL#') || '|||' || -- hash from: id (proc_id)
              COALESCE(db.to_char_immutable(proc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (proc_meta_versionid)
@@ -3736,7 +3736,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
              COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/end (cons_provision_dataperiod_end)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(cons_id), '#NULL#') || '|||' || -- hash from: id (cons_id)
              COALESCE(db.to_char_immutable(cons_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (cons_meta_versionid)
@@ -3829,7 +3829,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
              COALESCE(db.to_char_immutable(loc_alias), '#NULL#') || '|||' || -- hash from: alias (loc_alias)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(loc_id), '#NULL#') || '|||' || -- hash from: id (loc_id)
              COALESCE(db.to_char_immutable(loc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (loc_meta_versionid)
@@ -3873,7 +3873,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
              COALESCE(db.to_char_immutable(encounter_id), '#NULL#') || '|||' || -- hash from: encounter_id (encounter_id)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
-  hash_index_col TEXT TEXT GENERATED ALWAYS AS (
+  hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: ward_name (ward_name)
              COALESCE(db.to_char_immutable(patient_id), '#NULL#') || '|||' || -- hash from: patient_id (patient_id)
