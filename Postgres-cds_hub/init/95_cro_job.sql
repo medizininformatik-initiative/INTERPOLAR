@@ -149,6 +149,9 @@ BEGIN
         If num<5 then num:=5; END IF; -- Wenn kleiner als 10 sec - Mindestwartedauer um chance für externe INTervention zu geben
         If num>45 then num:=40; END IF; -- Wenn größer als JobINTerval - kleiner setzen um wieder in Takt zu kommen
 
+        err_section:='cron_job_data_transfer-53';    err_schema:='system';    err_table:='Aufraeumen';
+	VACUUM ANALYZE;
+
         err_section:='cron_job_data_transfer-54';    err_schema:='db_config';    err_table:='db_process_control';
 
         -- Semaphore setzen das ReadyToConnect (Pause) gemacht werden kann weil alle Verarbeitungsschritte abgearbeitet sind
@@ -193,7 +196,7 @@ BEGIN
     err_section:='cron_job_data_transfer-80';    err_schema:='/';    err_table:='/';
 EXCEPTION
     WHEN OTHERS THEN
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
     SELECT db.error_log(
         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -276,7 +279,7 @@ BEGIN
     
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
-                    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+                    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
                     SELECT db.error_log(
                         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -307,7 +310,7 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
     SELECT db.error_log(
         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -398,7 +401,7 @@ BEGIN
     
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
-                    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+                    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
                     SELECT db.error_log(
                         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -429,7 +432,7 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
     SELECT db.error_log(
         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -469,7 +472,7 @@ BEGIN
     RETURN status; -- get_lock_module successfully
 EXCEPTION
     WHEN OTHERS THEN
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
     SELECT db.error_log(
         err_schema => CAST('db_config' AS VARCHAR),                   -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -520,7 +523,7 @@ BEGIN
     END IF;
 
     err_section:='db.data_transfer_reset_lock-07';    err_schema:='db_log';    err_table:='data_import_hist';
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist;
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist;
     
     err_section:='db.data_transfer_reset_lock-10';    err_schema:='db';    err_table:='error_log';
     SELECT db.error_log(
@@ -561,7 +564,7 @@ BEGIN
     
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
-                    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+                    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
                     SELECT db.error_log(
                         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -592,7 +595,7 @@ BEGIN
     RETURN FALSE;
 EXCEPTION
     WHEN OTHERS THEN
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
     SELECT db.error_log(
         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -643,7 +646,7 @@ BEGIN
     RETURN status;
 EXCEPTION
     WHEN OTHERS THEN
-    SELECT MAX(last_processing_nr) INTO num FROM db_log.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
 
     SELECT db.error_log(
         err_schema => CAST('db_config' AS VARCHAR),                   -- err_schema (varchar) Schema, in dem der Fehler auftrat

@@ -1,5 +1,5 @@
 -- Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%IF TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int, -- Primary key of the entity - already filled in this schema - History via timestamp"%>
   <%IF NOT TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity"%>
@@ -21,4 +21,7 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_threshold = 25000);
 
