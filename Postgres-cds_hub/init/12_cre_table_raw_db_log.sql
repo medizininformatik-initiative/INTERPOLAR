@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-08 12:22:50
+-- Create time: 2025-02-08 15:18:39
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -37,8 +37,9 @@
 CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   enc_id VARCHAR,   -- id (VARCHAR)
-  enc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  enc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  enc_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  enc_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  enc_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   enc_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   enc_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   enc_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -49,6 +50,8 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   enc_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   enc_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   enc_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  enc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  enc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   enc_status VARCHAR,   -- status (VARCHAR)
   enc_class_system VARCHAR,   -- class/system (VARCHAR)
   enc_class_version VARCHAR,   -- class/version (VARCHAR)
@@ -109,8 +112,9 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   enc_serviceprovider_display VARCHAR,   -- serviceProvider/display (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: id (enc_id)
-             COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
-             COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
+             COALESCE(db.to_char_immutable(enc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (enc_meta_versionid)
+             COALESCE(db.to_char_immutable(enc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (enc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(enc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (enc_meta_profile)
              COALESCE(db.to_char_immutable(enc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (enc_identifier_use)
              COALESCE(db.to_char_immutable(enc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (enc_identifier_type_system)
              COALESCE(db.to_char_immutable(enc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (enc_identifier_type_version)
@@ -121,6 +125,8 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
              COALESCE(db.to_char_immutable(enc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (enc_identifier_value)
              COALESCE(db.to_char_immutable(enc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (enc_identifier_start)
              COALESCE(db.to_char_immutable(enc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (enc_identifier_end)
+             COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
+             COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
              COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
              COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
              COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
@@ -184,8 +190,9 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: id (enc_id)
-             COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
-             COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
+             COALESCE(db.to_char_immutable(enc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (enc_meta_versionid)
+             COALESCE(db.to_char_immutable(enc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (enc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(enc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (enc_meta_profile)
              COALESCE(db.to_char_immutable(enc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (enc_identifier_use)
              COALESCE(db.to_char_immutable(enc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (enc_identifier_type_system)
              COALESCE(db.to_char_immutable(enc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (enc_identifier_type_version)
@@ -196,6 +203,8 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
              COALESCE(db.to_char_immutable(enc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (enc_identifier_value)
              COALESCE(db.to_char_immutable(enc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (enc_identifier_start)
              COALESCE(db.to_char_immutable(enc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (enc_identifier_end)
+             COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
+             COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
              COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
              COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
              COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
@@ -269,6 +278,9 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
 CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   patient_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pat_id VARCHAR,   -- id (VARCHAR)
+  pat_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  pat_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  pat_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   pat_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   pat_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   pat_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -287,6 +299,9 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   pat_address_postalcode VARCHAR,   -- address/postalCode (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(pat_id), '#NULL#') || '|||' || -- hash from: id (pat_id)
+             COALESCE(db.to_char_immutable(pat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (pat_meta_versionid)
+             COALESCE(db.to_char_immutable(pat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (pat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(pat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (pat_meta_profile)
              COALESCE(db.to_char_immutable(pat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (pat_identifier_use)
              COALESCE(db.to_char_immutable(pat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (pat_identifier_type_system)
              COALESCE(db.to_char_immutable(pat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (pat_identifier_type_version)
@@ -308,6 +323,9 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(pat_id), '#NULL#') || '|||' || -- hash from: id (pat_id)
+             COALESCE(db.to_char_immutable(pat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (pat_meta_versionid)
+             COALESCE(db.to_char_immutable(pat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (pat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(pat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (pat_meta_profile)
              COALESCE(db.to_char_immutable(pat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (pat_identifier_use)
              COALESCE(db.to_char_immutable(pat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (pat_identifier_type_system)
              COALESCE(db.to_char_immutable(pat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (pat_identifier_type_version)
@@ -339,8 +357,9 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
 CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   con_id VARCHAR,   -- id (VARCHAR)
-  con_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  con_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  con_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  con_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  con_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   con_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   con_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   con_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -351,6 +370,8 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   con_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   con_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   con_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  con_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  con_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
   con_clinicalstatus_system VARCHAR,   -- clinicalStatus/coding/system (VARCHAR)
   con_clinicalstatus_version VARCHAR,   -- clinicalStatus/coding/version (VARCHAR)
   con_clinicalstatus_code VARCHAR,   -- clinicalStatus/coding/code (VARCHAR)
@@ -453,8 +474,9 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   con_note_text VARCHAR,   -- note/text (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(con_id), '#NULL#') || '|||' || -- hash from: id (con_id)
-             COALESCE(db.to_char_immutable(con_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (con_encounter_ref)
-             COALESCE(db.to_char_immutable(con_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (con_patient_ref)
+             COALESCE(db.to_char_immutable(con_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (con_meta_versionid)
+             COALESCE(db.to_char_immutable(con_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (con_meta_lastupdated)
+             COALESCE(db.to_char_immutable(con_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (con_meta_profile)
              COALESCE(db.to_char_immutable(con_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (con_identifier_use)
              COALESCE(db.to_char_immutable(con_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (con_identifier_type_system)
              COALESCE(db.to_char_immutable(con_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (con_identifier_type_version)
@@ -465,6 +487,8 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
              COALESCE(db.to_char_immutable(con_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (con_identifier_value)
              COALESCE(db.to_char_immutable(con_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (con_identifier_start)
              COALESCE(db.to_char_immutable(con_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (con_identifier_end)
+             COALESCE(db.to_char_immutable(con_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (con_encounter_ref)
+             COALESCE(db.to_char_immutable(con_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (con_patient_ref)
              COALESCE(db.to_char_immutable(con_clinicalstatus_system), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/system (con_clinicalstatus_system)
              COALESCE(db.to_char_immutable(con_clinicalstatus_version), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/version (con_clinicalstatus_version)
              COALESCE(db.to_char_immutable(con_clinicalstatus_code), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/code (con_clinicalstatus_code)
@@ -570,8 +594,9 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(con_id), '#NULL#') || '|||' || -- hash from: id (con_id)
-             COALESCE(db.to_char_immutable(con_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (con_encounter_ref)
-             COALESCE(db.to_char_immutable(con_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (con_patient_ref)
+             COALESCE(db.to_char_immutable(con_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (con_meta_versionid)
+             COALESCE(db.to_char_immutable(con_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (con_meta_lastupdated)
+             COALESCE(db.to_char_immutable(con_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (con_meta_profile)
              COALESCE(db.to_char_immutable(con_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (con_identifier_use)
              COALESCE(db.to_char_immutable(con_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (con_identifier_type_system)
              COALESCE(db.to_char_immutable(con_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (con_identifier_type_version)
@@ -582,6 +607,8 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
              COALESCE(db.to_char_immutable(con_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (con_identifier_value)
              COALESCE(db.to_char_immutable(con_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (con_identifier_start)
              COALESCE(db.to_char_immutable(con_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (con_identifier_end)
+             COALESCE(db.to_char_immutable(con_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (con_encounter_ref)
+             COALESCE(db.to_char_immutable(con_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (con_patient_ref)
              COALESCE(db.to_char_immutable(con_clinicalstatus_system), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/system (con_clinicalstatus_system)
              COALESCE(db.to_char_immutable(con_clinicalstatus_version), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/version (con_clinicalstatus_version)
              COALESCE(db.to_char_immutable(con_clinicalstatus_code), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/code (con_clinicalstatus_code)
@@ -697,6 +724,9 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
 CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   medication_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   med_id VARCHAR,   -- id (VARCHAR)
+  med_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  med_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  med_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   med_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   med_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   med_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -755,6 +785,9 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   med_ingredient_isactive VARCHAR,   -- ingredient/isActive (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(med_id), '#NULL#') || '|||' || -- hash from: id (med_id)
+             COALESCE(db.to_char_immutable(med_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (med_meta_versionid)
+             COALESCE(db.to_char_immutable(med_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (med_meta_lastupdated)
+             COALESCE(db.to_char_immutable(med_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (med_meta_profile)
              COALESCE(db.to_char_immutable(med_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (med_identifier_use)
              COALESCE(db.to_char_immutable(med_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (med_identifier_type_system)
              COALESCE(db.to_char_immutable(med_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (med_identifier_type_version)
@@ -816,6 +849,9 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(med_id), '#NULL#') || '|||' || -- hash from: id (med_id)
+             COALESCE(db.to_char_immutable(med_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (med_meta_versionid)
+             COALESCE(db.to_char_immutable(med_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (med_meta_lastupdated)
+             COALESCE(db.to_char_immutable(med_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (med_meta_profile)
              COALESCE(db.to_char_immutable(med_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (med_identifier_use)
              COALESCE(db.to_char_immutable(med_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (med_identifier_type_system)
              COALESCE(db.to_char_immutable(med_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (med_identifier_type_version)
@@ -887,8 +923,9 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medreq_id VARCHAR,   -- id (VARCHAR)
-  medreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  medreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  medreq_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  medreq_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  medreq_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   medreq_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   medreq_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   medreq_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -899,6 +936,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medreq_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   medreq_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   medreq_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  medreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  medreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
   medreq_medicationreference_ref VARCHAR,   -- medicationReference/reference (VARCHAR)
   medreq_status VARCHAR,   -- status (VARCHAR)
   medreq_statusreason_system VARCHAR,   -- statusReason/coding/system (VARCHAR)
@@ -1111,8 +1150,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medreq_substitution_reason_text VARCHAR,   -- substitution/reason/text (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(medreq_id), '#NULL#') || '|||' || -- hash from: id (medreq_id)
-             COALESCE(db.to_char_immutable(medreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (medreq_encounter_ref)
-             COALESCE(db.to_char_immutable(medreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medreq_patient_ref)
+             COALESCE(db.to_char_immutable(medreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medreq_meta_versionid)
+             COALESCE(db.to_char_immutable(medreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medreq_meta_profile)
              COALESCE(db.to_char_immutable(medreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medreq_identifier_use)
              COALESCE(db.to_char_immutable(medreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medreq_identifier_type_system)
              COALESCE(db.to_char_immutable(medreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medreq_identifier_type_version)
@@ -1123,6 +1163,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medreq_identifier_value)
              COALESCE(db.to_char_immutable(medreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medreq_identifier_start)
              COALESCE(db.to_char_immutable(medreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medreq_identifier_end)
+             COALESCE(db.to_char_immutable(medreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (medreq_encounter_ref)
+             COALESCE(db.to_char_immutable(medreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medreq_patient_ref)
              COALESCE(db.to_char_immutable(medreq_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medreq_medicationreference_ref)
              COALESCE(db.to_char_immutable(medreq_status), '#NULL#') || '|||' || -- hash from: status (medreq_status)
              COALESCE(db.to_char_immutable(medreq_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medreq_statusreason_system)
@@ -1338,8 +1380,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(medreq_id), '#NULL#') || '|||' || -- hash from: id (medreq_id)
-             COALESCE(db.to_char_immutable(medreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (medreq_encounter_ref)
-             COALESCE(db.to_char_immutable(medreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medreq_patient_ref)
+             COALESCE(db.to_char_immutable(medreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medreq_meta_versionid)
+             COALESCE(db.to_char_immutable(medreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medreq_meta_profile)
              COALESCE(db.to_char_immutable(medreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medreq_identifier_use)
              COALESCE(db.to_char_immutable(medreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medreq_identifier_type_system)
              COALESCE(db.to_char_immutable(medreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medreq_identifier_type_version)
@@ -1350,6 +1393,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medreq_identifier_value)
              COALESCE(db.to_char_immutable(medreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medreq_identifier_start)
              COALESCE(db.to_char_immutable(medreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medreq_identifier_end)
+             COALESCE(db.to_char_immutable(medreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (medreq_encounter_ref)
+             COALESCE(db.to_char_immutable(medreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medreq_patient_ref)
              COALESCE(db.to_char_immutable(medreq_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medreq_medicationreference_ref)
              COALESCE(db.to_char_immutable(medreq_status), '#NULL#') || '|||' || -- hash from: status (medreq_status)
              COALESCE(db.to_char_immutable(medreq_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medreq_statusreason_system)
@@ -1575,9 +1620,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medadm_id VARCHAR,   -- id (VARCHAR)
-  medadm_encounter_ref VARCHAR,   -- context/reference (VARCHAR)
-  medadm_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  medadm_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  medadm_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  medadm_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  medadm_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   medadm_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   medadm_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   medadm_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -1588,6 +1633,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medadm_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   medadm_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   medadm_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  medadm_encounter_ref VARCHAR,   -- context/reference (VARCHAR)
+  medadm_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  medadm_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   medadm_status VARCHAR,   -- status (VARCHAR)
   medadm_statusreason_system VARCHAR,   -- statusReason/coding/system (VARCHAR)
   medadm_statusreason_version VARCHAR,   -- statusReason/coding/version (VARCHAR)
@@ -1685,9 +1733,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medadm_dosage_ratequantity_code VARCHAR,   -- dosage/rateQuantity/code (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(medadm_id), '#NULL#') || '|||' || -- hash from: id (medadm_id)
-             COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
-             COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
-             COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
+             COALESCE(db.to_char_immutable(medadm_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medadm_meta_versionid)
+             COALESCE(db.to_char_immutable(medadm_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medadm_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medadm_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medadm_meta_profile)
              COALESCE(db.to_char_immutable(medadm_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medadm_identifier_use)
              COALESCE(db.to_char_immutable(medadm_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medadm_identifier_type_system)
              COALESCE(db.to_char_immutable(medadm_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medadm_identifier_type_version)
@@ -1698,6 +1746,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
              COALESCE(db.to_char_immutable(medadm_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medadm_identifier_value)
              COALESCE(db.to_char_immutable(medadm_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medadm_identifier_start)
              COALESCE(db.to_char_immutable(medadm_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medadm_identifier_end)
+             COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
+             COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
+             COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
              COALESCE(db.to_char_immutable(medadm_status), '#NULL#') || '|||' || -- hash from: status (medadm_status)
              COALESCE(db.to_char_immutable(medadm_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medadm_statusreason_system)
              COALESCE(db.to_char_immutable(medadm_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medadm_statusreason_version)
@@ -1798,9 +1849,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(medadm_id), '#NULL#') || '|||' || -- hash from: id (medadm_id)
-             COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
-             COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
-             COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
+             COALESCE(db.to_char_immutable(medadm_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medadm_meta_versionid)
+             COALESCE(db.to_char_immutable(medadm_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medadm_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medadm_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medadm_meta_profile)
              COALESCE(db.to_char_immutable(medadm_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medadm_identifier_use)
              COALESCE(db.to_char_immutable(medadm_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medadm_identifier_type_system)
              COALESCE(db.to_char_immutable(medadm_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medadm_identifier_type_version)
@@ -1811,6 +1862,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
              COALESCE(db.to_char_immutable(medadm_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medadm_identifier_value)
              COALESCE(db.to_char_immutable(medadm_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medadm_identifier_start)
              COALESCE(db.to_char_immutable(medadm_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medadm_identifier_end)
+             COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
+             COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
+             COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
              COALESCE(db.to_char_immutable(medadm_status), '#NULL#') || '|||' || -- hash from: status (medadm_status)
              COALESCE(db.to_char_immutable(medadm_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medadm_statusreason_system)
              COALESCE(db.to_char_immutable(medadm_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medadm_statusreason_version)
@@ -1921,6 +1975,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   medicationstatement_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medstat_id VARCHAR,   -- id (VARCHAR)
+  medstat_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  medstat_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  medstat_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   medstat_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   medstat_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   medstat_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -2132,6 +2189,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   medstat_dosage_maxdoseperlifetime_code VARCHAR,   -- dosage/maxDosePerLifetime/code (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(medstat_id), '#NULL#') || '|||' || -- hash from: id (medstat_id)
+             COALESCE(db.to_char_immutable(medstat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medstat_meta_versionid)
+             COALESCE(db.to_char_immutable(medstat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medstat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medstat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medstat_meta_profile)
              COALESCE(db.to_char_immutable(medstat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medstat_identifier_use)
              COALESCE(db.to_char_immutable(medstat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medstat_identifier_type_system)
              COALESCE(db.to_char_immutable(medstat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medstat_identifier_type_version)
@@ -2346,6 +2406,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(medstat_id), '#NULL#') || '|||' || -- hash from: id (medstat_id)
+             COALESCE(db.to_char_immutable(medstat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medstat_meta_versionid)
+             COALESCE(db.to_char_immutable(medstat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medstat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medstat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medstat_meta_profile)
              COALESCE(db.to_char_immutable(medstat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medstat_identifier_use)
              COALESCE(db.to_char_immutable(medstat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medstat_identifier_type_system)
              COALESCE(db.to_char_immutable(medstat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medstat_identifier_type_version)
@@ -2570,9 +2633,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
 CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   obs_id VARCHAR,   -- id (VARCHAR)
-  obs_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  obs_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  obs_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  obs_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  obs_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  obs_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   obs_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   obs_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   obs_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -2583,6 +2646,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   obs_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   obs_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   obs_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  obs_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  obs_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  obs_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   obs_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   obs_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
   obs_basedon_identifier_use VARCHAR,   -- basedOn/identifier/use (VARCHAR)
@@ -2628,11 +2694,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   obs_valuequantity_unit VARCHAR,   -- valueQuantity/unit (VARCHAR)
   obs_valuequantity_system VARCHAR,   -- valueQuantity/system (VARCHAR)
   obs_valuequantity_code VARCHAR,   -- valueQuantity/code (VARCHAR)
-  obs_valuecodableconcept_system VARCHAR,   -- valueCodableConcept/coding/system (VARCHAR)
-  obs_valuecodableconcept_version VARCHAR,   -- valueCodableConcept/coding/version (VARCHAR)
-  obs_valuecodableconcept_code VARCHAR,   -- valueCodableConcept/coding/code (VARCHAR)
-  obs_valuecodableconcept_display VARCHAR,   -- valueCodableConcept/coding/display (VARCHAR)
-  obs_valuecodableconcept_text VARCHAR,   -- valueCodableConcept/text (VARCHAR)
+  obs_valuecodeableconcept_system VARCHAR,   -- valueCodeableConcept/coding/system (VARCHAR)
+  obs_valuecodeableconcept_version VARCHAR,   -- valueCodeableConcept/coding/version (VARCHAR)
+  obs_valuecodeableconcept_code VARCHAR,   -- valueCodeableConcept/coding/code (VARCHAR)
+  obs_valuecodeableconcept_display VARCHAR,   -- valueCodeableConcept/coding/display (VARCHAR)
+  obs_valuecodeableconcept_text VARCHAR,   -- valueCodeableConcept/text (VARCHAR)
   obs_dataabsentreason_system VARCHAR,   -- dataAbsentReason/coding/system (VARCHAR)
   obs_dataabsentreason_version VARCHAR,   -- dataAbsentReason/coding/version (VARCHAR)
   obs_dataabsentreason_code VARCHAR,   -- dataAbsentReason/coding/code (VARCHAR)
@@ -2702,9 +2768,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   obs_hasmember_display VARCHAR,   -- hasMember/display (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(obs_id), '#NULL#') || '|||' || -- hash from: id (obs_id)
-             COALESCE(db.to_char_immutable(obs_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (obs_encounter_ref)
-             COALESCE(db.to_char_immutable(obs_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (obs_patient_ref)
-             COALESCE(db.to_char_immutable(obs_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (obs_partof_ref)
+             COALESCE(db.to_char_immutable(obs_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (obs_meta_versionid)
+             COALESCE(db.to_char_immutable(obs_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (obs_meta_lastupdated)
+             COALESCE(db.to_char_immutable(obs_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (obs_meta_profile)
              COALESCE(db.to_char_immutable(obs_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (obs_identifier_use)
              COALESCE(db.to_char_immutable(obs_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (obs_identifier_type_system)
              COALESCE(db.to_char_immutable(obs_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (obs_identifier_type_version)
@@ -2715,6 +2781,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
              COALESCE(db.to_char_immutable(obs_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (obs_identifier_value)
              COALESCE(db.to_char_immutable(obs_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (obs_identifier_start)
              COALESCE(db.to_char_immutable(obs_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (obs_identifier_end)
+             COALESCE(db.to_char_immutable(obs_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (obs_encounter_ref)
+             COALESCE(db.to_char_immutable(obs_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (obs_patient_ref)
+             COALESCE(db.to_char_immutable(obs_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (obs_partof_ref)
              COALESCE(db.to_char_immutable(obs_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (obs_basedon_ref)
              COALESCE(db.to_char_immutable(obs_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (obs_basedon_type)
              COALESCE(db.to_char_immutable(obs_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (obs_basedon_identifier_use)
@@ -2760,11 +2829,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
              COALESCE(db.to_char_immutable(obs_valuequantity_unit), '#NULL#') || '|||' || -- hash from: valueQuantity/unit (obs_valuequantity_unit)
              COALESCE(db.to_char_immutable(obs_valuequantity_system), '#NULL#') || '|||' || -- hash from: valueQuantity/system (obs_valuequantity_system)
              COALESCE(db.to_char_immutable(obs_valuequantity_code), '#NULL#') || '|||' || -- hash from: valueQuantity/code (obs_valuequantity_code)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_system), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/system (obs_valuecodableconcept_system)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_version), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/version (obs_valuecodableconcept_version)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_code), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/code (obs_valuecodableconcept_code)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_display), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/display (obs_valuecodableconcept_display)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_text), '#NULL#') || '|||' || -- hash from: valueCodableConcept/text (obs_valuecodableconcept_text)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_system), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/system (obs_valuecodeableconcept_system)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_version), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/version (obs_valuecodeableconcept_version)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_code), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/code (obs_valuecodeableconcept_code)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_display), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/display (obs_valuecodeableconcept_display)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_text), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/text (obs_valuecodeableconcept_text)
              COALESCE(db.to_char_immutable(obs_dataabsentreason_system), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/system (obs_dataabsentreason_system)
              COALESCE(db.to_char_immutable(obs_dataabsentreason_version), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/version (obs_dataabsentreason_version)
              COALESCE(db.to_char_immutable(obs_dataabsentreason_code), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/code (obs_dataabsentreason_code)
@@ -2837,9 +2906,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(obs_id), '#NULL#') || '|||' || -- hash from: id (obs_id)
-             COALESCE(db.to_char_immutable(obs_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (obs_encounter_ref)
-             COALESCE(db.to_char_immutable(obs_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (obs_patient_ref)
-             COALESCE(db.to_char_immutable(obs_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (obs_partof_ref)
+             COALESCE(db.to_char_immutable(obs_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (obs_meta_versionid)
+             COALESCE(db.to_char_immutable(obs_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (obs_meta_lastupdated)
+             COALESCE(db.to_char_immutable(obs_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (obs_meta_profile)
              COALESCE(db.to_char_immutable(obs_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (obs_identifier_use)
              COALESCE(db.to_char_immutable(obs_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (obs_identifier_type_system)
              COALESCE(db.to_char_immutable(obs_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (obs_identifier_type_version)
@@ -2850,6 +2919,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
              COALESCE(db.to_char_immutable(obs_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (obs_identifier_value)
              COALESCE(db.to_char_immutable(obs_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (obs_identifier_start)
              COALESCE(db.to_char_immutable(obs_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (obs_identifier_end)
+             COALESCE(db.to_char_immutable(obs_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (obs_encounter_ref)
+             COALESCE(db.to_char_immutable(obs_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (obs_patient_ref)
+             COALESCE(db.to_char_immutable(obs_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (obs_partof_ref)
              COALESCE(db.to_char_immutable(obs_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (obs_basedon_ref)
              COALESCE(db.to_char_immutable(obs_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (obs_basedon_type)
              COALESCE(db.to_char_immutable(obs_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (obs_basedon_identifier_use)
@@ -2895,11 +2967,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
              COALESCE(db.to_char_immutable(obs_valuequantity_unit), '#NULL#') || '|||' || -- hash from: valueQuantity/unit (obs_valuequantity_unit)
              COALESCE(db.to_char_immutable(obs_valuequantity_system), '#NULL#') || '|||' || -- hash from: valueQuantity/system (obs_valuequantity_system)
              COALESCE(db.to_char_immutable(obs_valuequantity_code), '#NULL#') || '|||' || -- hash from: valueQuantity/code (obs_valuequantity_code)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_system), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/system (obs_valuecodableconcept_system)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_version), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/version (obs_valuecodableconcept_version)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_code), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/code (obs_valuecodableconcept_code)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_display), '#NULL#') || '|||' || -- hash from: valueCodableConcept/coding/display (obs_valuecodableconcept_display)
-             COALESCE(db.to_char_immutable(obs_valuecodableconcept_text), '#NULL#') || '|||' || -- hash from: valueCodableConcept/text (obs_valuecodableconcept_text)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_system), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/system (obs_valuecodeableconcept_system)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_version), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/version (obs_valuecodeableconcept_version)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_code), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/code (obs_valuecodeableconcept_code)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_display), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/display (obs_valuecodeableconcept_display)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_text), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/text (obs_valuecodeableconcept_text)
              COALESCE(db.to_char_immutable(obs_dataabsentreason_system), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/system (obs_dataabsentreason_system)
              COALESCE(db.to_char_immutable(obs_dataabsentreason_version), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/version (obs_dataabsentreason_version)
              COALESCE(db.to_char_immutable(obs_dataabsentreason_code), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/code (obs_dataabsentreason_code)
@@ -2982,9 +3054,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagrep_id VARCHAR,   -- id (VARCHAR)
-  diagrep_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  diagrep_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  diagrep_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  diagrep_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  diagrep_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  diagrep_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   diagrep_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   diagrep_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   diagrep_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -2995,6 +3067,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagrep_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   diagrep_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   diagrep_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  diagrep_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  diagrep_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  diagrep_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   diagrep_result_ref VARCHAR,   -- result/reference (VARCHAR)
   diagrep_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   diagrep_status VARCHAR,   -- status (VARCHAR)
@@ -3027,9 +3102,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagrep_conclusioncode_text VARCHAR,   -- conclusionCode/text (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(diagrep_id), '#NULL#') || '|||' || -- hash from: id (diagrep_id)
-             COALESCE(db.to_char_immutable(diagrep_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (diagrep_encounter_ref)
-             COALESCE(db.to_char_immutable(diagrep_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (diagrep_patient_ref)
-             COALESCE(db.to_char_immutable(diagrep_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (diagrep_partof_ref)
+             COALESCE(db.to_char_immutable(diagrep_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (diagrep_meta_versionid)
+             COALESCE(db.to_char_immutable(diagrep_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (diagrep_meta_lastupdated)
+             COALESCE(db.to_char_immutable(diagrep_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (diagrep_meta_profile)
              COALESCE(db.to_char_immutable(diagrep_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (diagrep_identifier_use)
              COALESCE(db.to_char_immutable(diagrep_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (diagrep_identifier_type_system)
              COALESCE(db.to_char_immutable(diagrep_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (diagrep_identifier_type_version)
@@ -3040,6 +3115,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
              COALESCE(db.to_char_immutable(diagrep_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (diagrep_identifier_value)
              COALESCE(db.to_char_immutable(diagrep_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (diagrep_identifier_start)
              COALESCE(db.to_char_immutable(diagrep_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (diagrep_identifier_end)
+             COALESCE(db.to_char_immutable(diagrep_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (diagrep_encounter_ref)
+             COALESCE(db.to_char_immutable(diagrep_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (diagrep_patient_ref)
+             COALESCE(db.to_char_immutable(diagrep_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (diagrep_partof_ref)
              COALESCE(db.to_char_immutable(diagrep_result_ref), '#NULL#') || '|||' || -- hash from: result/reference (diagrep_result_ref)
              COALESCE(db.to_char_immutable(diagrep_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (diagrep_basedon_ref)
              COALESCE(db.to_char_immutable(diagrep_status), '#NULL#') || '|||' || -- hash from: status (diagrep_status)
@@ -3075,9 +3153,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(diagrep_id), '#NULL#') || '|||' || -- hash from: id (diagrep_id)
-             COALESCE(db.to_char_immutable(diagrep_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (diagrep_encounter_ref)
-             COALESCE(db.to_char_immutable(diagrep_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (diagrep_patient_ref)
-             COALESCE(db.to_char_immutable(diagrep_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (diagrep_partof_ref)
+             COALESCE(db.to_char_immutable(diagrep_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (diagrep_meta_versionid)
+             COALESCE(db.to_char_immutable(diagrep_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (diagrep_meta_lastupdated)
+             COALESCE(db.to_char_immutable(diagrep_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (diagrep_meta_profile)
              COALESCE(db.to_char_immutable(diagrep_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (diagrep_identifier_use)
              COALESCE(db.to_char_immutable(diagrep_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (diagrep_identifier_type_system)
              COALESCE(db.to_char_immutable(diagrep_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (diagrep_identifier_type_version)
@@ -3088,6 +3166,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
              COALESCE(db.to_char_immutable(diagrep_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (diagrep_identifier_value)
              COALESCE(db.to_char_immutable(diagrep_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (diagrep_identifier_start)
              COALESCE(db.to_char_immutable(diagrep_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (diagrep_identifier_end)
+             COALESCE(db.to_char_immutable(diagrep_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (diagrep_encounter_ref)
+             COALESCE(db.to_char_immutable(diagrep_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (diagrep_patient_ref)
+             COALESCE(db.to_char_immutable(diagrep_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (diagrep_partof_ref)
              COALESCE(db.to_char_immutable(diagrep_result_ref), '#NULL#') || '|||' || -- hash from: result/reference (diagrep_result_ref)
              COALESCE(db.to_char_immutable(diagrep_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (diagrep_basedon_ref)
              COALESCE(db.to_char_immutable(diagrep_status), '#NULL#') || '|||' || -- hash from: status (diagrep_status)
@@ -3133,8 +3214,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
 CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servreq_id VARCHAR,   -- id (VARCHAR)
-  servreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  servreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  servreq_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  servreq_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  servreq_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   servreq_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   servreq_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   servreq_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -3145,6 +3227,8 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servreq_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   servreq_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   servreq_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  servreq_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  servreq_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
   servreq_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   servreq_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
   servreq_basedon_identifier_use VARCHAR,   -- basedOn/identifier/use (VARCHAR)
@@ -3192,8 +3276,9 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servreq_locationcode_text VARCHAR,   -- locationCode/text (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(servreq_id), '#NULL#') || '|||' || -- hash from: id (servreq_id)
-             COALESCE(db.to_char_immutable(servreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (servreq_encounter_ref)
-             COALESCE(db.to_char_immutable(servreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (servreq_patient_ref)
+             COALESCE(db.to_char_immutable(servreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (servreq_meta_versionid)
+             COALESCE(db.to_char_immutable(servreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (servreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(servreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (servreq_meta_profile)
              COALESCE(db.to_char_immutable(servreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (servreq_identifier_use)
              COALESCE(db.to_char_immutable(servreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (servreq_identifier_type_system)
              COALESCE(db.to_char_immutable(servreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (servreq_identifier_type_version)
@@ -3204,6 +3289,8 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
              COALESCE(db.to_char_immutable(servreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (servreq_identifier_value)
              COALESCE(db.to_char_immutable(servreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (servreq_identifier_start)
              COALESCE(db.to_char_immutable(servreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (servreq_identifier_end)
+             COALESCE(db.to_char_immutable(servreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (servreq_encounter_ref)
+             COALESCE(db.to_char_immutable(servreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (servreq_patient_ref)
              COALESCE(db.to_char_immutable(servreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (servreq_basedon_ref)
              COALESCE(db.to_char_immutable(servreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (servreq_basedon_type)
              COALESCE(db.to_char_immutable(servreq_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (servreq_basedon_identifier_use)
@@ -3254,8 +3341,9 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(servreq_id), '#NULL#') || '|||' || -- hash from: id (servreq_id)
-             COALESCE(db.to_char_immutable(servreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (servreq_encounter_ref)
-             COALESCE(db.to_char_immutable(servreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (servreq_patient_ref)
+             COALESCE(db.to_char_immutable(servreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (servreq_meta_versionid)
+             COALESCE(db.to_char_immutable(servreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (servreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(servreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (servreq_meta_profile)
              COALESCE(db.to_char_immutable(servreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (servreq_identifier_use)
              COALESCE(db.to_char_immutable(servreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (servreq_identifier_type_system)
              COALESCE(db.to_char_immutable(servreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (servreq_identifier_type_version)
@@ -3266,6 +3354,8 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
              COALESCE(db.to_char_immutable(servreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (servreq_identifier_value)
              COALESCE(db.to_char_immutable(servreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (servreq_identifier_start)
              COALESCE(db.to_char_immutable(servreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (servreq_identifier_end)
+             COALESCE(db.to_char_immutable(servreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (servreq_encounter_ref)
+             COALESCE(db.to_char_immutable(servreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (servreq_patient_ref)
              COALESCE(db.to_char_immutable(servreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (servreq_basedon_ref)
              COALESCE(db.to_char_immutable(servreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (servreq_basedon_type)
              COALESCE(db.to_char_immutable(servreq_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (servreq_basedon_identifier_use)
@@ -3326,9 +3416,9 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
 CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   proc_id VARCHAR,   -- id (VARCHAR)
-  proc_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
-  proc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
-  proc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
+  proc_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  proc_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  proc_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   proc_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   proc_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   proc_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -3339,6 +3429,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   proc_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   proc_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   proc_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  proc_encounter_ref VARCHAR,   -- encounter/reference (VARCHAR)
+  proc_patient_ref VARCHAR,   -- subject/reference (VARCHAR)
+  proc_partof_ref VARCHAR,   -- partOf/reference (VARCHAR)
   proc_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   proc_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
   proc_basedon_identifier_use VARCHAR,   -- basedOn/identifier/use (VARCHAR)
@@ -3395,9 +3488,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   proc_note_text VARCHAR,   -- note/text (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(proc_id), '#NULL#') || '|||' || -- hash from: id (proc_id)
-             COALESCE(db.to_char_immutable(proc_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (proc_encounter_ref)
-             COALESCE(db.to_char_immutable(proc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (proc_patient_ref)
-             COALESCE(db.to_char_immutable(proc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (proc_partof_ref)
+             COALESCE(db.to_char_immutable(proc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (proc_meta_versionid)
+             COALESCE(db.to_char_immutable(proc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (proc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(proc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (proc_meta_profile)
              COALESCE(db.to_char_immutable(proc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (proc_identifier_use)
              COALESCE(db.to_char_immutable(proc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (proc_identifier_type_system)
              COALESCE(db.to_char_immutable(proc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (proc_identifier_type_version)
@@ -3408,6 +3501,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
              COALESCE(db.to_char_immutable(proc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (proc_identifier_value)
              COALESCE(db.to_char_immutable(proc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (proc_identifier_start)
              COALESCE(db.to_char_immutable(proc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (proc_identifier_end)
+             COALESCE(db.to_char_immutable(proc_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (proc_encounter_ref)
+             COALESCE(db.to_char_immutable(proc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (proc_patient_ref)
+             COALESCE(db.to_char_immutable(proc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (proc_partof_ref)
              COALESCE(db.to_char_immutable(proc_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (proc_basedon_ref)
              COALESCE(db.to_char_immutable(proc_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (proc_basedon_type)
              COALESCE(db.to_char_immutable(proc_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (proc_basedon_identifier_use)
@@ -3467,9 +3563,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(proc_id), '#NULL#') || '|||' || -- hash from: id (proc_id)
-             COALESCE(db.to_char_immutable(proc_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (proc_encounter_ref)
-             COALESCE(db.to_char_immutable(proc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (proc_patient_ref)
-             COALESCE(db.to_char_immutable(proc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (proc_partof_ref)
+             COALESCE(db.to_char_immutable(proc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (proc_meta_versionid)
+             COALESCE(db.to_char_immutable(proc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (proc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(proc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (proc_meta_profile)
              COALESCE(db.to_char_immutable(proc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (proc_identifier_use)
              COALESCE(db.to_char_immutable(proc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (proc_identifier_type_system)
              COALESCE(db.to_char_immutable(proc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (proc_identifier_type_version)
@@ -3480,6 +3576,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
              COALESCE(db.to_char_immutable(proc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (proc_identifier_value)
              COALESCE(db.to_char_immutable(proc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (proc_identifier_start)
              COALESCE(db.to_char_immutable(proc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (proc_identifier_end)
+             COALESCE(db.to_char_immutable(proc_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (proc_encounter_ref)
+             COALESCE(db.to_char_immutable(proc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (proc_patient_ref)
+             COALESCE(db.to_char_immutable(proc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (proc_partof_ref)
              COALESCE(db.to_char_immutable(proc_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (proc_basedon_ref)
              COALESCE(db.to_char_immutable(proc_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (proc_basedon_type)
              COALESCE(db.to_char_immutable(proc_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (proc_basedon_identifier_use)
@@ -3549,7 +3648,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
 CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   cons_id VARCHAR,   -- id (VARCHAR)
-  cons_patient_ref VARCHAR,   -- patient/reference (VARCHAR)
+  cons_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  cons_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  cons_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   cons_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   cons_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   cons_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -3560,6 +3661,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   cons_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   cons_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   cons_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  cons_patient_ref VARCHAR,   -- patient/reference (VARCHAR)
   cons_status VARCHAR,   -- status (VARCHAR)
   cons_scope_system VARCHAR,   -- scope/coding/system (VARCHAR)
   cons_scope_version VARCHAR,   -- scope/coding/version (VARCHAR)
@@ -3584,7 +3686,9 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   cons_provision_dataperiod_end VARCHAR,   -- provision/dataPeriod/end (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(cons_id), '#NULL#') || '|||' || -- hash from: id (cons_id)
-             COALESCE(db.to_char_immutable(cons_patient_ref), '#NULL#') || '|||' || -- hash from: patient/reference (cons_patient_ref)
+             COALESCE(db.to_char_immutable(cons_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (cons_meta_versionid)
+             COALESCE(db.to_char_immutable(cons_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (cons_meta_lastupdated)
+             COALESCE(db.to_char_immutable(cons_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (cons_meta_profile)
              COALESCE(db.to_char_immutable(cons_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (cons_identifier_use)
              COALESCE(db.to_char_immutable(cons_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (cons_identifier_type_system)
              COALESCE(db.to_char_immutable(cons_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (cons_identifier_type_version)
@@ -3595,6 +3699,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
              COALESCE(db.to_char_immutable(cons_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (cons_identifier_value)
              COALESCE(db.to_char_immutable(cons_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (cons_identifier_start)
              COALESCE(db.to_char_immutable(cons_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (cons_identifier_end)
+             COALESCE(db.to_char_immutable(cons_patient_ref), '#NULL#') || '|||' || -- hash from: patient/reference (cons_patient_ref)
              COALESCE(db.to_char_immutable(cons_status), '#NULL#') || '|||' || -- hash from: status (cons_status)
              COALESCE(db.to_char_immutable(cons_scope_system), '#NULL#') || '|||' || -- hash from: scope/coding/system (cons_scope_system)
              COALESCE(db.to_char_immutable(cons_scope_version), '#NULL#') || '|||' || -- hash from: scope/coding/version (cons_scope_version)
@@ -3622,7 +3727,9 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(cons_id), '#NULL#') || '|||' || -- hash from: id (cons_id)
-             COALESCE(db.to_char_immutable(cons_patient_ref), '#NULL#') || '|||' || -- hash from: patient/reference (cons_patient_ref)
+             COALESCE(db.to_char_immutable(cons_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (cons_meta_versionid)
+             COALESCE(db.to_char_immutable(cons_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (cons_meta_lastupdated)
+             COALESCE(db.to_char_immutable(cons_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (cons_meta_profile)
              COALESCE(db.to_char_immutable(cons_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (cons_identifier_use)
              COALESCE(db.to_char_immutable(cons_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (cons_identifier_type_system)
              COALESCE(db.to_char_immutable(cons_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (cons_identifier_type_version)
@@ -3633,6 +3740,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
              COALESCE(db.to_char_immutable(cons_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (cons_identifier_value)
              COALESCE(db.to_char_immutable(cons_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (cons_identifier_start)
              COALESCE(db.to_char_immutable(cons_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (cons_identifier_end)
+             COALESCE(db.to_char_immutable(cons_patient_ref), '#NULL#') || '|||' || -- hash from: patient/reference (cons_patient_ref)
              COALESCE(db.to_char_immutable(cons_status), '#NULL#') || '|||' || -- hash from: status (cons_status)
              COALESCE(db.to_char_immutable(cons_scope_system), '#NULL#') || '|||' || -- hash from: scope/coding/system (cons_scope_system)
              COALESCE(db.to_char_immutable(cons_scope_version), '#NULL#') || '|||' || -- hash from: scope/coding/version (cons_scope_version)
@@ -3670,6 +3778,9 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
 CREATE TABLE IF NOT EXISTS db_log.location_raw (
   location_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   loc_id VARCHAR,   -- id (VARCHAR)
+  loc_meta_versionid VARCHAR,   -- meta/versionId (VARCHAR)
+  loc_meta_lastupdated VARCHAR,   -- meta/lastUpdated (VARCHAR)
+  loc_meta_profile VARCHAR,   -- meta/profile (VARCHAR)
   loc_identifier_use VARCHAR,   -- identifier/use (VARCHAR)
   loc_identifier_type_system VARCHAR,   -- identifier/type/coding/system (VARCHAR)
   loc_identifier_type_version VARCHAR,   -- identifier/type/coding/version (VARCHAR)
@@ -3686,6 +3797,9 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
   loc_alias VARCHAR,   -- alias (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(loc_id), '#NULL#') || '|||' || -- hash from: id (loc_id)
+             COALESCE(db.to_char_immutable(loc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (loc_meta_versionid)
+             COALESCE(db.to_char_immutable(loc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (loc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(loc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (loc_meta_profile)
              COALESCE(db.to_char_immutable(loc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (loc_identifier_use)
              COALESCE(db.to_char_immutable(loc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (loc_identifier_type_system)
              COALESCE(db.to_char_immutable(loc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (loc_identifier_type_version)
@@ -3705,6 +3819,9 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(loc_id), '#NULL#') || '|||' || -- hash from: id (loc_id)
+             COALESCE(db.to_char_immutable(loc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (loc_meta_versionid)
+             COALESCE(db.to_char_immutable(loc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (loc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(loc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (loc_meta_profile)
              COALESCE(db.to_char_immutable(loc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (loc_identifier_use)
              COALESCE(db.to_char_immutable(loc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (loc_identifier_type_system)
              COALESCE(db.to_char_immutable(loc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (loc_identifier_type_version)
@@ -3735,15 +3852,18 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   ward_name VARCHAR,   -- ward_name (VARCHAR)
   patient_id VARCHAR,   -- patient_id (VARCHAR)
+  encounter_id VARCHAR,   -- encounter_id (VARCHAR)
   hash_txt_col TEXT GENERATED ALWAYS AS (
              COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: ward_name (ward_name)
              COALESCE(db.to_char_immutable(patient_id), '#NULL#') || '|||' || -- hash from: patient_id (patient_id)
+             COALESCE(db.to_char_immutable(encounter_id), '#NULL#') || '|||' || -- hash from: encounter_id (encounter_id)
              '#'
   ) STORED, 							-- Column collection data for index to read and kollion handling 
   hash_index_col TEXT TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: ward_name (ward_name)
              COALESCE(db.to_char_immutable(patient_id), '#NULL#') || '|||' || -- hash from: patient_id (patient_id)
+             COALESCE(db.to_char_immutable(encounter_id), '#NULL#') || '|||' || -- hash from: encounter_id (encounter_id)
              '#'
       )
   ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -3894,8 +4014,9 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward_raw TO db_use
 
 COMMENT ON COLUMN db_log.encounter_raw.encounter_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.encounter_raw.enc_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.encounter_raw.enc_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -3906,6 +4027,8 @@ COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_system IS 'identifier/syst
 COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.encounter_raw.enc_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_status IS 'status (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_class_system IS 'class/system (varchar)';
 COMMENT ON COLUMN db_log.encounter_raw.enc_class_version IS 'class/version (varchar)';
@@ -3972,6 +4095,9 @@ COMMENT ON COLUMN db_log.encounter_raw.last_processing_nr IS 'Last processing nu
 
 COMMENT ON COLUMN db_log.patient_raw.patient_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.patient_raw.pat_id IS 'id (varchar)';
+COMMENT ON COLUMN db_log.patient_raw.pat_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.patient_raw.pat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.patient_raw.pat_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.patient_raw.pat_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.patient_raw.pat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.patient_raw.pat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -3996,8 +4122,9 @@ COMMENT ON COLUMN db_log.patient_raw.last_processing_nr IS 'Last processing numb
 
 COMMENT ON COLUMN db_log.condition_raw.condition_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.condition_raw.con_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.condition_raw.con_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.condition_raw.con_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.condition_raw.con_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.condition_raw.con_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.condition_raw.con_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4008,6 +4135,8 @@ COMMENT ON COLUMN db_log.condition_raw.con_identifier_system IS 'identifier/syst
 COMMENT ON COLUMN db_log.condition_raw.con_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.condition_raw.con_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN db_log.condition_raw.con_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_clinicalstatus_system IS 'clinicalStatus/coding/system (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_clinicalstatus_version IS 'clinicalStatus/coding/version (varchar)';
 COMMENT ON COLUMN db_log.condition_raw.con_clinicalstatus_code IS 'clinicalStatus/coding/code (varchar)';
@@ -4116,6 +4245,9 @@ COMMENT ON COLUMN db_log.condition_raw.last_processing_nr IS 'Last processing nu
 
 COMMENT ON COLUMN db_log.medication_raw.medication_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medication_raw.med_id IS 'id (varchar)';
+COMMENT ON COLUMN db_log.medication_raw.med_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.medication_raw.med_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.medication_raw.med_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.medication_raw.med_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.medication_raw.med_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.medication_raw.med_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4180,8 +4312,9 @@ COMMENT ON COLUMN db_log.medication_raw.last_processing_nr IS 'Last processing n
 
 COMMENT ON COLUMN db_log.medicationrequest_raw.medicationrequest_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4192,6 +4325,8 @@ COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_system IS 'iden
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_medicationreference_ref IS 'medicationReference/reference (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_status IS 'status (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_statusreason_system IS 'statusReason/coding/system (varchar)';
@@ -4410,9 +4545,9 @@ COMMENT ON COLUMN db_log.medicationrequest_raw.last_processing_nr IS 'Last proce
 
 COMMENT ON COLUMN db_log.medicationadministration_raw.medicationadministration_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_encounter_ref IS 'context/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4423,6 +4558,9 @@ COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_system I
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_encounter_ref IS 'context/reference (varchar)';
+COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_status IS 'status (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_statusreason_system IS 'statusReason/coding/system (varchar)';
 COMMENT ON COLUMN db_log.medicationadministration_raw.medadm_statusreason_version IS 'statusReason/coding/version (varchar)';
@@ -4526,6 +4664,9 @@ COMMENT ON COLUMN db_log.medicationadministration_raw.last_processing_nr IS 'Las
 
 COMMENT ON COLUMN db_log.medicationstatement_raw.medicationstatement_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_id IS 'id (varchar)';
+COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.medicationstatement_raw.medstat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4743,9 +4884,9 @@ COMMENT ON COLUMN db_log.medicationstatement_raw.last_processing_nr IS 'Last pro
 
 COMMENT ON COLUMN db_log.observation_raw.observation_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.observation_raw.obs_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4756,6 +4897,9 @@ COMMENT ON COLUMN db_log.observation_raw.obs_identifier_system IS 'identifier/sy
 COMMENT ON COLUMN db_log.observation_raw.obs_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_basedon_type IS 'basedOn/type (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
@@ -4801,11 +4945,11 @@ COMMENT ON COLUMN db_log.observation_raw.obs_valuequantity_comparator IS 'valueQ
 COMMENT ON COLUMN db_log.observation_raw.obs_valuequantity_unit IS 'valueQuantity/unit (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_valuequantity_system IS 'valueQuantity/system (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_valuequantity_code IS 'valueQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_valuecodableconcept_system IS 'valueCodableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_valuecodableconcept_version IS 'valueCodableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_valuecodableconcept_code IS 'valueCodableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_valuecodableconcept_display IS 'valueCodableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation_raw.obs_valuecodableconcept_text IS 'valueCodableConcept/text (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_valuecodeableconcept_system IS 'valueCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_valuecodeableconcept_version IS 'valueCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_valuecodeableconcept_code IS 'valueCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_valuecodeableconcept_display IS 'valueCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN db_log.observation_raw.obs_valuecodeableconcept_text IS 'valueCodeableConcept/text (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_dataabsentreason_system IS 'dataAbsentReason/coding/system (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_dataabsentreason_version IS 'dataAbsentReason/coding/version (varchar)';
 COMMENT ON COLUMN db_log.observation_raw.obs_dataabsentreason_code IS 'dataAbsentReason/coding/code (varchar)';
@@ -4881,9 +5025,9 @@ COMMENT ON COLUMN db_log.observation_raw.last_processing_nr IS 'Last processing 
 
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagnosticreport_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4894,6 +5038,9 @@ COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_system IS 'iden
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_result_ref IS 'result/reference (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN db_log.diagnosticreport_raw.diagrep_status IS 'status (varchar)';
@@ -4932,8 +5079,9 @@ COMMENT ON COLUMN db_log.diagnosticreport_raw.last_processing_nr IS 'Last proces
 
 COMMENT ON COLUMN db_log.servicerequest_raw.servicerequest_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.servicerequest_raw.servreq_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.servicerequest_raw.servreq_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.servicerequest_raw.servreq_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.servicerequest_raw.servreq_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.servicerequest_raw.servreq_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -4944,6 +5092,8 @@ COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_system IS 'identi
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.servicerequest_raw.servreq_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN db_log.servicerequest_raw.servreq_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_basedon_type IS 'basedOn/type (varchar)';
 COMMENT ON COLUMN db_log.servicerequest_raw.servreq_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
@@ -4997,9 +5147,9 @@ COMMENT ON COLUMN db_log.servicerequest_raw.last_processing_nr IS 'Last processi
 
 COMMENT ON COLUMN db_log.procedure_raw.procedure_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.procedure_raw.proc_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.procedure_raw.proc_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure_raw.proc_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure_raw.proc_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN db_log.procedure_raw.proc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.procedure_raw.proc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.procedure_raw.proc_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -5010,6 +5160,9 @@ COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_system IS 'identifier/sys
 COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.procedure_raw.proc_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN db_log.procedure_raw.proc_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN db_log.procedure_raw.proc_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_basedon_type IS 'basedOn/type (varchar)';
 COMMENT ON COLUMN db_log.procedure_raw.proc_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
@@ -5072,7 +5225,9 @@ COMMENT ON COLUMN db_log.procedure_raw.last_processing_nr IS 'Last processing nu
 
 COMMENT ON COLUMN db_log.consent_raw.consent_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.consent_raw.cons_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.consent_raw.cons_patient_ref IS 'patient/reference (varchar)';
+COMMENT ON COLUMN db_log.consent_raw.cons_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.consent_raw.cons_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.consent_raw.cons_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -5083,6 +5238,7 @@ COMMENT ON COLUMN db_log.consent_raw.cons_identifier_system IS 'identifier/syste
 COMMENT ON COLUMN db_log.consent_raw.cons_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN db_log.consent_raw.cons_patient_ref IS 'patient/reference (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_status IS 'status (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_scope_system IS 'scope/coding/system (varchar)';
 COMMENT ON COLUMN db_log.consent_raw.cons_scope_version IS 'scope/coding/version (varchar)';
@@ -5113,6 +5269,9 @@ COMMENT ON COLUMN db_log.consent_raw.last_processing_nr IS 'Last processing numb
 
 COMMENT ON COLUMN db_log.location_raw.location_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.location_raw.loc_id IS 'id (varchar)';
+COMMENT ON COLUMN db_log.location_raw.loc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN db_log.location_raw.loc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
+COMMENT ON COLUMN db_log.location_raw.loc_meta_profile IS 'meta/profile (varchar)';
 COMMENT ON COLUMN db_log.location_raw.loc_identifier_use IS 'identifier/use (varchar)';
 COMMENT ON COLUMN db_log.location_raw.loc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
 COMMENT ON COLUMN db_log.location_raw.loc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
@@ -5136,6 +5295,7 @@ COMMENT ON COLUMN db_log.location_raw.last_processing_nr IS 'Last processing num
 COMMENT ON COLUMN db_log.pids_per_ward_raw.pids_per_ward_raw_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.pids_per_ward_raw.ward_name IS 'ward_name (varchar)';
 COMMENT ON COLUMN db_log.pids_per_ward_raw.patient_id IS 'patient_id (varchar)';
+COMMENT ON COLUMN db_log.pids_per_ward_raw.encounter_id IS 'encounter_id (varchar)';
 COMMENT ON COLUMN db_log.pids_per_ward_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.pids_per_ward_raw.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN db_log.pids_per_ward_raw.current_dataset_status IS 'Processing status of the data record';
