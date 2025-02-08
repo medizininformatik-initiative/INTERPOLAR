@@ -29,7 +29,7 @@
                         err_section:='<%TABLE_NAME%>-10';    err_schema:='<%OWNER_SCHEMA%>';    err_table:='<%TABLE_NAME%>';
                         SELECT count(1) INTO data_count
                         FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record
-                        WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='<%TABLE_NAME%>-15';    err_schema:='<%OWNER_SCHEMA%>';    err_table:='<%TABLE_NAME%>';
@@ -65,7 +65,7 @@
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_COMPARE%>
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -80,7 +80,7 @@
                             , current_dataset_status = 'ERROR func: <%COPY_FUNC_NAME%>'
                             , last_processing_nr = last_pro_nr
                             WHERE <%TABLE_NAME%>_id = current_record.<%TABLE_NAME%>_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat

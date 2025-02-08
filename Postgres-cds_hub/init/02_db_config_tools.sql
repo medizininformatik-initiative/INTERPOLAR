@@ -189,21 +189,7 @@ GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,V
 GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db_user;
 
--- immutable md5 hash function
 ----------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION db.mutable_md5(input TEXT)
-RETURNS TEXT
-SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN md5(input);
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
-GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.mutable_md5(TEXT) TO db_user;
 
 -- Funktionen zur einheitlichen Darstellung als String
 -- 1. immutable overloaded function for TEXT / VARCHAR / CHAR
