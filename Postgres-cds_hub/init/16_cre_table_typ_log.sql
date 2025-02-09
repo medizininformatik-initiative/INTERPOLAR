@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-08 15:34:56
+-- Create time: 2025-02-09 00:35:14
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -35,7 +35,7 @@
 -----------------------------------------------------
 
 -- Table "encounter" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter (
   encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -276,8 +276,11 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.encounter SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "patient" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient (
   patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -356,8 +359,11 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.patient SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.patient SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "condition" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition (
   condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -724,8 +730,11 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.condition SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.condition SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medication" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication (
   medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -924,8 +933,11 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.medication SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medication SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationrequest" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -1622,8 +1634,11 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationadministration" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -1978,8 +1993,11 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationstatement" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -2637,8 +2655,11 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "observation" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation (
   observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3059,8 +3080,11 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.observation SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.observation SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "diagnosticreport" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3220,8 +3244,11 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "servicerequest" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3423,8 +3450,11 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "procedure" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure (
   procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3656,8 +3686,11 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.procedure SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "consent" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent (
   consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3787,8 +3820,11 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.consent SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.consent SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "location" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location (
   location_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3861,8 +3897,11 @@ CREATE TABLE IF NOT EXISTS db_log.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE db_log.location SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.location SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "pids_per_ward" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
   pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3889,6 +3928,9 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------

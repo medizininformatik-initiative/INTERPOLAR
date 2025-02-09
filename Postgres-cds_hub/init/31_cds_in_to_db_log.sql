@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-08 15:19:19
+-- Create time: 2025-02-09 00:35:27
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -47,7 +47,7 @@ DECLARE
     data_count_pro_upd INT:=0; -- Counting updatet records in this run how are still there
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
-    data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
+    data_count_last_status_max INT:=5000; -- Max number of data records since the status was last set (parameter)
     last_pro_nr INT; -- Last processing number
     temp VARCHAR; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
@@ -378,9 +378,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='encounter-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT encounter_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'encounter' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.encounter d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -394,13 +394,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'encounter', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'encounter', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'encounter', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -556,9 +556,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='patient-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT patient_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'patient' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.patient d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -572,13 +572,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'patient', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'patient', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -926,9 +926,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='condition-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT condition_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'condition' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.condition d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -942,13 +942,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'condition', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'condition', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'condition', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1184,9 +1184,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medication-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medication_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medication' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medication d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1200,13 +1200,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medication', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medication', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medication', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1774,9 +1774,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationrequest-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medicationrequest_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationrequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1790,13 +1790,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationrequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationrequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationrequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -2136,9 +2136,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationadministration-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medicationadministration_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationadministration' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -2152,13 +2152,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationadministration', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationadministration', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationadministration', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -2700,9 +2700,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationstatement-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medicationstatement_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationstatement' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -2716,13 +2716,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationstatement', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationstatement', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationstatement', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -3106,9 +3106,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='observation-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT observation_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'observation' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.observation d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -3122,13 +3122,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'observation', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'observation', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'observation', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -3338,9 +3338,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='diagnosticreport-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT diagnosticreport_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'diagnosticreport' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -3354,13 +3354,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'diagnosticreport', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'diagnosticreport', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'diagnosticreport', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -3598,9 +3598,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='servicerequest-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT servicerequest_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'servicerequest' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.servicerequest d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -3614,13 +3614,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'servicerequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'servicerequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'servicerequest', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -3878,9 +3878,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='procedure-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT procedure_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'procedure' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.procedure d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -3894,13 +3894,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'procedure', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'procedure', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'procedure', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -4090,9 +4090,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='consent-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT consent_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'consent' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.consent d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -4106,13 +4106,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'consent', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'consent', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'consent', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -4264,9 +4264,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='location-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT location_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'location' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.location d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -4280,13 +4280,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'location', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'location', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'location', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -4408,9 +4408,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='pids_per_ward-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT pids_per_ward_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'pids_per_ward' AS table_name, last_pro_datetime, current_dataset_status, 'copy_type_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -4424,13 +4424,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'pids_per_ward', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'pids_per_ward', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'pids_per_ward', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -4449,15 +4449,15 @@ BEGIN
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
     
         err_section:='BOTTON-05';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_all', 'db_log', 'copy_type_cds_in_to_db_log', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
 
         err_section:='BOTTON-10';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_type_cds_in_to_db_log', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     
         err_section:='BOTTON-15';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_upd', 'db_log', 'copy_type_cds_in_to_db_log', last_pro_datetime, 'copy_type_cds_in_to_db_log', data_count_pro_upd, tmp_sec, 'Count all updatetd Datasetzs '||temp);
 
         -- Cleer current executed function and total number of records

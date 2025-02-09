@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-08 15:34:45
+-- Create time: 2025-02-09 00:35:00
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -33,7 +33,7 @@
 -----------------------------------------------------
 
 -- Table "encounter" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -274,8 +274,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "patient" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -354,8 +357,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "condition" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -722,8 +728,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medication" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -922,8 +931,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationrequest" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -1620,8 +1632,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationadministration" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -1976,8 +1991,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationstatement" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -2635,8 +2653,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "observation" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3057,8 +3078,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "diagnosticreport" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3218,8 +3242,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "servicerequest" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3421,8 +3448,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "procedure" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3654,8 +3684,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "consent" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3785,8 +3818,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "location" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
   location_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3859,8 +3895,11 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
+ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "pids_per_ward" in schema "cds2db_in"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
@@ -3887,6 +3926,9 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------

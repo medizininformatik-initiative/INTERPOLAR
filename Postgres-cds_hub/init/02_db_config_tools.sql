@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS db_config.db_parameter (
   last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
 );
 
+-- Index idx_db_config_db_parameter_name for Table "db_parameter" in schema "db_config"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_config_db_parameter_name
+ON db_config.db_parameter (   parameter_name );
+
 GRANT INSERT ON db_config.db_parameter TO db_user;
 GRANT SELECT ON db_config.db_parameter TO db_user;
 GRANT UPDATE ON db_config.db_parameter TO db_user;
@@ -39,6 +44,11 @@ CREATE TABLE IF NOT EXISTS db_config.db_process_control (
   last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
 );
 
+-- Index idx_db_config_db_db_process_control_name for Table "db_process_control" in schema "db_config"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_config_db_db_process_control_name
+ON db_config.db_process_control (   pc_name );
+
 GRANT INSERT ON db_config.db_process_control TO db_user;
 GRANT SELECT ON db_config.db_process_control TO db_user;
 GRANT UPDATE ON db_config.db_process_control TO db_user;
@@ -48,8 +58,8 @@ GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
 GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
-        INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-        VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
+INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
 -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
 INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
 VALUES ('timepoint_1_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function started) Format: YYYY-MM-DD HH24:MI:SS.US');
@@ -67,9 +77,9 @@ INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
 VALUES ('currently_processed_number_of_data_records_in_the_function','','currently processed number of data records in the function (db.data_transfer_status)');
 
 
--- Table "data_import_hist" in schema "db_log"
+-- Table "data_import_hist" in schema "db"
 ----------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
+CREATE TABLE IF NOT EXISTS db.data_import_hist (
   id SERIAL,
   table_primary_key INT, -- Primary key in the documentet table
   last_processing_nr INT, -- Last processing number of the data in the table
@@ -84,16 +94,41 @@ CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
   import_hist_cre_at TIMESTAMP DEFAULT current_timestamp -- Timestamp the HistRec wars create
 );
 
+-- Index idx_db_data_import_hist_last_processing_nr for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_last_processing_nr
+ON db.data_import_hist (   last_processing_nr );
+
+-- Index idx_db_data_import_hist_schema_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_schema_name
+ON db.data_import_hist (   schema_name );
+
+-- Index idx_db_data_import_hist_table_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_table_name
+ON db.data_import_hist (   table_name );
+
+-- Index idx_db_data_import_hist_function_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_function_name
+ON db.data_import_hist (   function_name );
+
+-- Index idx_db_data_import_hist_variable_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_variable_name
+ON db.data_import_hist (   variable_name );
+
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db_log TO cds2db_user;
 GRANT USAGE ON SCHEMA db_log TO db2frontend_user;
 
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_log_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO cds2db_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2dataprocessor_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2frontend_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db_log_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO cds2db_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db2dataprocessor_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db2frontend_user;
 
 -- View "data_count_report" in "db_config"
 ----------------------------------------------------
@@ -110,11 +145,11 @@ FROM
     ELSE 'NichtDefinierteFunktion'
 END dataflow
 , sum(dataset_count) dataset_count_all_ds, round(sum(copy_time_in_sec)) copy_time_in_sec
-, round(sum(dataset_count)/sum(copy_time_in_sec)) all_ds_per_sec FROM db_log.data_import_hist a
+, round(sum(dataset_count)/sum(copy_time_in_sec)) all_ds_per_sec FROM db.data_import_hist a
 where variable_name='data_count_pro_all' group by function_name, to_char(import_hist_cre_at,'YYYY-MM-DD')
 ) a
 left join (SELECT to_char(import_hist_cre_at,'YYYY-MM-DD') day_sum, function_name, sum(dataset_count) dataset_count_new_ds, round(sum(copy_time_in_sec)) copy_time_in_sec
-, round(sum(dataset_count)/sum(copy_time_in_sec)) new_ds_per_sec FROM db_log.data_import_hist a
+, round(sum(dataset_count)/sum(copy_time_in_sec)) new_ds_per_sec FROM db.data_import_hist a
 where variable_name='data_count_pro_new' group by function_name, to_char(import_hist_cre_at,'YYYY-MM-DD')
 ) b on (a.day_sum=b.day_sum AND a.function_name=b.function_name)
 ORDER BY day_sum DESC, function_name
