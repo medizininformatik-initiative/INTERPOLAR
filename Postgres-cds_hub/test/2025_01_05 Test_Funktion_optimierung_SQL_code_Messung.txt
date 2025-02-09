@@ -90,10 +90,10 @@ BEGIN
     SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
 
     err_section:='optimize_sql_code_test-10';    err_schema:='/';    err_table:='vor FOR Round';
-    FOR round IN 1..250 LOOP -- Ziel 250
+    FOR round IN 1..400 LOOP -- Ziel 250
         err_section:='optimize_sql_code_test-11';    err_schema:='/';    err_table:='round:'||round;
     -- Einfügen der Anzahl der Datensätze mit 1x; 2x; 3x; 4x; 5x; 10x; 15x;
-        IF round IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 18, 20, 25, 30, 35, 40, 50, 60, 70, 90, 100, 130, 160, 200, 250) THEN
+        IF round IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 18, 20, 25, 30, 35, 40, 50, 60, 70, 90, 100, 130, 160, 200, 250, 300, 350, 400) THEN
             err_section:='optimize_sql_code_test-12';    err_schema:='/';    err_table:='round:'||round;
 --            COMMIT;
             ------------------------------------------
