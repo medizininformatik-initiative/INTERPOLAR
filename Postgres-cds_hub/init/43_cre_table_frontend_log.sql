@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-09 00:35:40
+-- Create time: 2025-02-11 22:23:16
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -90,8 +90,8 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
-ALTER TABLE db_log.patient_fe SET (autovacuum_vacuum_scale_factor = 0.01);
-ALTER TABLE db_log.patient_fe SET (autovacuum_vacuum_threshold = 25000);
+-- ALTER TABLE db_log.patient_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.patient_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "fall_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -220,8 +220,8 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
-ALTER TABLE db_log.fall_fe SET (autovacuum_vacuum_scale_factor = 0.01);
-ALTER TABLE db_log.fall_fe SET (autovacuum_vacuum_threshold = 25000);
+-- ALTER TABLE db_log.fall_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.fall_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medikationsanalyse_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -293,8 +293,8 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
-ALTER TABLE db_log.medikationsanalyse_fe SET (autovacuum_vacuum_scale_factor = 0.01);
-ALTER TABLE db_log.medikationsanalyse_fe SET (autovacuum_vacuum_threshold = 25000);
+-- ALTER TABLE db_log.medikationsanalyse_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.medikationsanalyse_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -693,8 +693,8 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
-ALTER TABLE db_log.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_scale_factor = 0.01);
-ALTER TABLE db_log.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_threshold = 25000);
+-- ALTER TABLE db_log.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "risikofaktor_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -766,8 +766,8 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
-ALTER TABLE db_log.risikofaktor_fe SET (autovacuum_vacuum_scale_factor = 0.01);
-ALTER TABLE db_log.risikofaktor_fe SET (autovacuum_vacuum_threshold = 25000);
+-- ALTER TABLE db_log.risikofaktor_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.risikofaktor_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "trigger_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -863,8 +863,8 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
-ALTER TABLE db_log.trigger_fe SET (autovacuum_vacuum_scale_factor = 0.01);
-ALTER TABLE db_log.trigger_fe SET (autovacuum_vacuum_threshold = 25000);
+-- ALTER TABLE db_log.trigger_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.trigger_fe SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------
