@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-09 00:35:31
+-- Create time: 2025-02-11 22:23:03
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -1439,7 +1439,5 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
--- Move to copy function - SELECT cron.schedule('*/1 * * * *', 'SELECT db.take_over_last_check_date();');
 -----------------------------
 
