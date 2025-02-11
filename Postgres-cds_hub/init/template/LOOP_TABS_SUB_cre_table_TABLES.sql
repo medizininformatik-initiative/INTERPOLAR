@@ -22,6 +22,6 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_threshold = 25000);
 

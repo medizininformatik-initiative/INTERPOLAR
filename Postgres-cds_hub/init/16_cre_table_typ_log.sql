@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-11 22:22:46
+-- Create time: 2025-02-09 00:35:14
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -276,8 +276,8 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.encounter SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.encounter SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "patient" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -359,8 +359,8 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.patient SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.patient SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.patient SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.patient SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "condition" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -730,8 +730,8 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.condition SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.condition SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.condition SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.condition SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medication" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -933,8 +933,8 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.medication SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medication SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.medication SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medication SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationrequest" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -1634,8 +1634,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationadministration" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -1993,8 +1993,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationstatement" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -2655,8 +2655,8 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "observation" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3080,8 +3080,8 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.observation SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.observation SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.observation SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.observation SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "diagnosticreport" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3244,8 +3244,8 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "servicerequest" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3450,8 +3450,8 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "procedure" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3686,8 +3686,8 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.procedure SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.procedure SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "consent" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3820,8 +3820,8 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.consent SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.consent SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.consent SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.consent SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "location" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3897,8 +3897,8 @@ CREATE TABLE IF NOT EXISTS db_log.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.location SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.location SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.location SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.location SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "pids_per_ward" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -3929,8 +3929,8 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------

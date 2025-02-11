@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-11 22:22:34
+-- Create time: 2025-02-09 00:35:00
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -274,8 +274,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "patient" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -357,8 +357,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "condition" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -728,8 +728,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medication" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -931,8 +931,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationrequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -1632,8 +1632,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationadministration" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -1991,8 +1991,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationstatement" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -2653,8 +2653,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "observation" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3078,8 +3078,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "diagnosticreport" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3242,8 +3242,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "servicerequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3448,8 +3448,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "procedure" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3684,8 +3684,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "consent" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3818,8 +3818,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "location" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3895,8 +3895,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "pids_per_ward" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -3927,8 +3927,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------

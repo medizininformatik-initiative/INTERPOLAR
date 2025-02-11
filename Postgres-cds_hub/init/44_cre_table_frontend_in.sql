@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-02-11 22:23:08
+-- Create time: 2025-02-09 00:35:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.patient_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.patient_fe SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db2frontend_in.patient_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db2frontend_in.patient_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "fall_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -222,8 +222,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.fall_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.fall_fe SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db2frontend_in.fall_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db2frontend_in.fall_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medikationsanalyse_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -295,8 +295,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.medikationsanalyse_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.medikationsanalyse_fe SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db2frontend_in.medikationsanalyse_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db2frontend_in.medikationsanalyse_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -695,8 +695,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "risikofaktor_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -768,8 +768,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.risikofaktor_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.risikofaktor_fe SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db2frontend_in.risikofaktor_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db2frontend_in.risikofaktor_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "trigger_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -865,8 +865,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.trigger_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.trigger_fe SET (autovacuum_vacuum_threshold = 25000);
+ALTER TABLE db2frontend_in.trigger_fe SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE db2frontend_in.trigger_fe SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------
