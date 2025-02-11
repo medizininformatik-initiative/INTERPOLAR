@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-11 22:22:04
+-- Create time: 2025-02-11 22:33:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2025-02-11 22:23:20
+-- Create time: 2025-02-11 22:34:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  52_cre_view_fe_out.sql
 -- TEMPLATE:  template_cre_view3.sql
