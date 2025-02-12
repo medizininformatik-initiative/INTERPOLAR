@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-12 20:33:21
+-- Create time: 2025-02-12 23:18:01
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -34,7 +34,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
     current_record record;
-    new_last_pro_nr INT; -- New processing number for these sync
+    new_last_pro_nr INT:=0; -- New processing number for these sync
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
     max_last_pro_nr INT; -- Last processing number over all entities
     max_ent_pro_nr INT;  -- Max processing number from a entiti
@@ -68,13 +68,11 @@ BEGIN
     WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
     ) ) AS t(res TEXT) INTO erg;
 
+    err_section:='HEAD-05';    err_schema:='db_log';    err_table:='data_import_hist';
+
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''erg:'||erg||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
-
-    -- Last import Nr in raw-data
-    err_section:='HEAD-05';    err_schema:='db_log';    err_table:='data_import_hist';
---    SELECT MAX(last_processing_nr) INTO last_raw_pro_nr FROM db.data_import_hist WHERE table_name like '%_raw' AND schema_name='db_log';
 
     -- Counting datasets
     err_section:='HEAD-10';    err_schema:='db_log';    err_table:='- all_entitys -';
@@ -82,154 +80,230 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''vor max_lpn'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-    WITH max_last_processing AS (
-        SELECT
-            (SELECT MAX(last_processing_nr) FROM db_log.encounter) AS max_encounter,
-(SELECT MAX(last_processing_nr) FROM db_log.patient) AS max_patient,
-(SELECT MAX(last_processing_nr) FROM db_log.condition) AS max_condition,
-(SELECT MAX(last_processing_nr) FROM db_log.medication) AS max_medication,
-(SELECT MAX(last_processing_nr) FROM db_log.medicationrequest) AS max_medicationrequest,
-(SELECT MAX(last_processing_nr) FROM db_log.medicationadministration) AS max_medicationadministration,
-(SELECT MAX(last_processing_nr) FROM db_log.medicationstatement) AS max_medicationstatement,
-(SELECT MAX(last_processing_nr) FROM db_log.observation) AS max_observation,
-(SELECT MAX(last_processing_nr) FROM db_log.diagnosticreport) AS max_diagnosticreport,
-(SELECT MAX(last_processing_nr) FROM db_log.servicerequest) AS max_servicerequest,
-(SELECT MAX(last_processing_nr) FROM db_log.procedure) AS max_procedure,
-(SELECT MAX(last_processing_nr) FROM db_log.consent) AS max_consent,
-(SELECT MAX(last_processing_nr) FROM db_log.location) AS max_location,
-(SELECT MAX(last_processing_nr) FROM db_log.pids_per_ward) AS max_pids_per_ward,
-            (SELECT 0) AS lastzeile
-    )
-    SELECT SUM(anz), MAX(lpn) INTO data_count_pro_all, max_last_pro_nr -- Anzahl der geänderten Datensätze und lpn ueber alles
-    FROM ( SELECT 0::INT AS anz, 0 AS lpn
-        UNION SELECT COUNT(1) AS anz, MAX(max_encounter) AS lpn
-    FROM db_log.encounter_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
-            (SELECT encounter_raw_id FROM db_log.encounter, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_encounter
-            )
-         )
-    AND last_processing_nr!=(SELECT max_encounter FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_patient) AS lpn
-    FROM db_log.patient_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
-            (SELECT patient_raw_id FROM db_log.patient, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_patient
-            )
-         )
-    AND last_processing_nr!=(SELECT max_patient FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_condition) AS lpn
-    FROM db_log.condition_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
-            (SELECT condition_raw_id FROM db_log.condition, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_condition
-            )
-         )
-    AND last_processing_nr!=(SELECT max_condition FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_medication) AS lpn
-    FROM db_log.medication_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
-            (SELECT medication_raw_id FROM db_log.medication, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_medication
-            )
-         )
-    AND last_processing_nr!=(SELECT max_medication FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_medicationrequest) AS lpn
-    FROM db_log.medicationrequest_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
-            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_medicationrequest
-            )
-         )
-    AND last_processing_nr!=(SELECT max_medicationrequest FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_medicationadministration) AS lpn
-    FROM db_log.medicationadministration_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
-            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_medicationadministration
-            )
-         )
-    AND last_processing_nr!=(SELECT max_medicationadministration FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_medicationstatement) AS lpn
-    FROM db_log.medicationstatement_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
-            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_medicationstatement
-            )
-         )
-    AND last_processing_nr!=(SELECT max_medicationstatement FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_observation) AS lpn
-    FROM db_log.observation_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
-            (SELECT observation_raw_id FROM db_log.observation, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_observation
-            )
-         )
-    AND last_processing_nr!=(SELECT max_observation FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_diagnosticreport) AS lpn
-    FROM db_log.diagnosticreport_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
-            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_diagnosticreport
-            )
-         )
-    AND last_processing_nr!=(SELECT max_diagnosticreport FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_servicerequest) AS lpn
-    FROM db_log.servicerequest_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
-            (SELECT servicerequest_raw_id FROM db_log.servicerequest, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_servicerequest
-            )
-         )
-    AND last_processing_nr!=(SELECT max_servicerequest FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_procedure) AS lpn
-    FROM db_log.procedure_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
-            (SELECT procedure_raw_id FROM db_log.procedure, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_procedure
-            )
-         )
-    AND last_processing_nr!=(SELECT max_procedure FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_consent) AS lpn
-    FROM db_log.consent_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
-            (SELECT consent_raw_id FROM db_log.consent, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_consent
-            )
-         )
-    AND last_processing_nr!=(SELECT max_consent FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_location) AS lpn
-    FROM db_log.location_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
-            (SELECT location_raw_id FROM db_log.location, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_location
-            )
-         )
-    AND last_processing_nr!=(SELECT max_location FROM max_last_processing)
-    UNION SELECT COUNT(1) AS anz, MAX(max_pids_per_ward) AS lpn
-    FROM db_log.pids_per_ward_raw, max_last_processing
-    WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
-            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward, max_last_processing
-             WHERE last_processing_nr=max_last_processing.max_pids_per_ward
-            )
-         )
-    AND last_processing_nr!=(SELECT max_pids_per_ward FROM max_last_processing)
+    ---- Start check db_log.encounter ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.encounter;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
 
-    );
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.encounter_raw er
+        JOIN db_log.encounter e ON er.encounter_raw_id = e.encounter_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.encounter ----
+
+    ---- Start check db_log.patient ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.patient;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.patient_raw er
+        JOIN db_log.patient e ON er.patient_raw_id = e.patient_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.patient ----
+
+    ---- Start check db_log.condition ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.condition;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.condition_raw er
+        JOIN db_log.condition e ON er.condition_raw_id = e.condition_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.condition ----
+
+    ---- Start check db_log.medication ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.medication;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.medication_raw er
+        JOIN db_log.medication e ON er.medication_raw_id = e.medication_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.medication ----
+
+    ---- Start check db_log.medicationrequest ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.medicationrequest;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.medicationrequest_raw er
+        JOIN db_log.medicationrequest e ON er.medicationrequest_raw_id = e.medicationrequest_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.medicationrequest ----
+
+    ---- Start check db_log.medicationadministration ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.medicationadministration;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.medicationadministration_raw er
+        JOIN db_log.medicationadministration e ON er.medicationadministration_raw_id = e.medicationadministration_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.medicationadministration ----
+
+    ---- Start check db_log.medicationstatement ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.medicationstatement;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.medicationstatement_raw er
+        JOIN db_log.medicationstatement e ON er.medicationstatement_raw_id = e.medicationstatement_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.medicationstatement ----
+
+    ---- Start check db_log.observation ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.observation;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.observation_raw er
+        JOIN db_log.observation e ON er.observation_raw_id = e.observation_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.observation ----
+
+    ---- Start check db_log.diagnosticreport ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.diagnosticreport;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.diagnosticreport_raw er
+        JOIN db_log.diagnosticreport e ON er.diagnosticreport_raw_id = e.diagnosticreport_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.diagnosticreport ----
+
+    ---- Start check db_log.servicerequest ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.servicerequest;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.servicerequest_raw er
+        JOIN db_log.servicerequest e ON er.servicerequest_raw_id = e.servicerequest_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.servicerequest ----
+
+    ---- Start check db_log.procedure ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.procedure;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.procedure_raw er
+        JOIN db_log.procedure e ON er.procedure_raw_id = e.procedure_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.procedure ----
+
+    ---- Start check db_log.consent ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.consent;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.consent_raw er
+        JOIN db_log.consent e ON er.consent_raw_id = e.consent_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.consent ----
+
+    ---- Start check db_log.location ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.location;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.location_raw er
+        JOIN db_log.location e ON er.location_raw_id = e.location_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.location ----
+
+    ---- Start check db_log.pids_per_ward ----
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM db_log.pids_per_ward;
+    IF max_ent_pro_nr>max_last_pro_nr AND max_ent_pro_nr IS NOT NULL THEN max_last_pro_nr:=max_ent_pro_nr; END IF;
+
+    IF data_count_pro_all=0 AND max_ent_pro_nr IS NOT NULL THEN
+        SELECT COUNT(*) INTO data_count_pro_all
+        FROM db_log.pids_per_ward_raw er
+        JOIN db_log.pids_per_ward e ON er.pids_per_ward_raw_id = e.pids_per_ward_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr;
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+    END IF;
+    ---- End check db_log.pids_per_ward ----
+
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
@@ -281,15 +355,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT encounter_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.encounter_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.encounter_raw WHERE encounter_raw_id IN 
-            (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.encounter_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.encounter_raw er
+        JOIN db_log.encounter e ON er.encounter_raw_id = e.encounter_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.encounter_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.encounter_raw er
+        JOIN db_log.encounter e ON er.encounter_raw_id = e.encounter_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -368,15 +444,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT patient_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.patient_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.patient_raw WHERE patient_raw_id IN 
-            (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.patient_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.patient_raw er
+        JOIN db_log.patient e ON er.patient_raw_id = e.patient_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.patient_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.patient_raw er
+        JOIN db_log.patient e ON er.patient_raw_id = e.patient_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -455,15 +533,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT condition_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.condition_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.condition_raw WHERE condition_raw_id IN 
-            (SELECT condition_raw_id FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.condition_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.condition_raw er
+        JOIN db_log.condition e ON er.condition_raw_id = e.condition_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.condition_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.condition_raw er
+        JOIN db_log.condition e ON er.condition_raw_id = e.condition_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -542,15 +622,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT medication_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.medication_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medication_raw WHERE medication_raw_id IN 
-            (SELECT medication_raw_id FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.medication_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medication_raw er
+        JOIN db_log.medication e ON er.medication_raw_id = e.medication_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.medication_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medication_raw er
+        JOIN db_log.medication e ON er.medication_raw_id = e.medication_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -629,15 +711,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT medicationrequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.medicationrequest_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medicationrequest_raw WHERE medicationrequest_raw_id IN 
-            (SELECT medicationrequest_raw_id FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.medicationrequest_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medicationrequest_raw er
+        JOIN db_log.medicationrequest e ON er.medicationrequest_raw_id = e.medicationrequest_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.medicationrequest_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medicationrequest_raw er
+        JOIN db_log.medicationrequest e ON er.medicationrequest_raw_id = e.medicationrequest_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -716,15 +800,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT medicationadministration_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.medicationadministration_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medicationadministration_raw WHERE medicationadministration_raw_id IN 
-            (SELECT medicationadministration_raw_id FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.medicationadministration_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medicationadministration_raw er
+        JOIN db_log.medicationadministration e ON er.medicationadministration_raw_id = e.medicationadministration_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.medicationadministration_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medicationadministration_raw er
+        JOIN db_log.medicationadministration e ON er.medicationadministration_raw_id = e.medicationadministration_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -803,15 +889,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT medicationstatement_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.medicationstatement_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.medicationstatement_raw WHERE medicationstatement_raw_id IN 
-            (SELECT medicationstatement_raw_id FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.medicationstatement_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medicationstatement_raw er
+        JOIN db_log.medicationstatement e ON er.medicationstatement_raw_id = e.medicationstatement_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.medicationstatement_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.medicationstatement_raw er
+        JOIN db_log.medicationstatement e ON er.medicationstatement_raw_id = e.medicationstatement_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -890,15 +978,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT observation_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.observation_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.observation_raw WHERE observation_raw_id IN 
-            (SELECT observation_raw_id FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.observation_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.observation_raw er
+        JOIN db_log.observation e ON er.observation_raw_id = e.observation_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.observation_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.observation_raw er
+        JOIN db_log.observation e ON er.observation_raw_id = e.observation_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -977,15 +1067,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT diagnosticreport_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.diagnosticreport_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.diagnosticreport_raw WHERE diagnosticreport_raw_id IN 
-            (SELECT diagnosticreport_raw_id FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.diagnosticreport_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.diagnosticreport_raw er
+        JOIN db_log.diagnosticreport e ON er.diagnosticreport_raw_id = e.diagnosticreport_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.diagnosticreport_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.diagnosticreport_raw er
+        JOIN db_log.diagnosticreport e ON er.diagnosticreport_raw_id = e.diagnosticreport_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -1064,15 +1156,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT servicerequest_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.servicerequest_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.servicerequest_raw WHERE servicerequest_raw_id IN 
-            (SELECT servicerequest_raw_id FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.servicerequest_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.servicerequest_raw er
+        JOIN db_log.servicerequest e ON er.servicerequest_raw_id = e.servicerequest_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.servicerequest_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.servicerequest_raw er
+        JOIN db_log.servicerequest e ON er.servicerequest_raw_id = e.servicerequest_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -1151,15 +1245,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT procedure_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.procedure_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.procedure_raw WHERE procedure_raw_id IN 
-            (SELECT procedure_raw_id FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.procedure_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.procedure_raw er
+        JOIN db_log.procedure e ON er.procedure_raw_id = e.procedure_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.procedure_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.procedure_raw er
+        JOIN db_log.procedure e ON er.procedure_raw_id = e.procedure_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -1238,15 +1334,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT consent_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.consent_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.consent_raw WHERE consent_raw_id IN 
-            (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.consent_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.consent_raw er
+        JOIN db_log.consent e ON er.consent_raw_id = e.consent_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.consent_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.consent_raw er
+        JOIN db_log.consent e ON er.consent_raw_id = e.consent_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -1325,15 +1423,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT location_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.location_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.location_raw WHERE location_raw_id IN 
-            (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.location_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.location_raw er
+        JOIN db_log.location e ON er.location_raw_id = e.location_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.location_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.location_raw er
+        JOIN db_log.location e ON er.location_raw_id = e.location_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -1412,15 +1512,17 @@ BEGIN
 
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT pids_per_ward_raw_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM db_log.pids_per_ward_raw WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM db_log.pids_per_ward_raw WHERE pids_per_ward_raw_id IN 
-            (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr
-            )
-         )
-    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.pids_per_ward_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.pids_per_ward_raw er
+        JOIN db_log.pids_per_ward e ON er.pids_per_ward_raw_id = e.pids_per_ward_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.pids_per_ward_raw_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM db_log.pids_per_ward_raw er
+        JOIN db_log.pids_per_ward e ON er.pids_per_ward_raw_id = e.pids_per_ward_raw_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
