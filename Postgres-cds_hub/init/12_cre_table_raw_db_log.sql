@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-11 22:33:36
+-- Create time: 2025-02-12 23:07:14
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -5358,28 +5358,28 @@ COMMENT ON COLUMN db_log.pids_per_ward_raw.last_processing_nr IS 'Last processin
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_input_dt
 ON db_log.encounter_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_encounter_raw_input_pnr for Table "encounter_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_input_pnr
 ON db_log.encounter_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_encounter_raw_last_dt for Table "encounter_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_last_dt
 ON db_log.encounter_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_encounter_raw_last_dt for Table "encounter_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_last_pnr
 ON db_log.encounter_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_encounter_raw_hash for Table "encounter_raw" in schema "db_log"
@@ -5395,28 +5395,28 @@ ON db_log.encounter_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_input_dt
 ON db_log.patient_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_patient_raw_input_pnr for Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_input_pnr
 ON db_log.patient_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_patient_raw_last_dt for Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_last_dt
 ON db_log.patient_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_patient_raw_last_dt for Table "patient_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_last_pnr
 ON db_log.patient_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_patient_raw_hash for Table "patient_raw" in schema "db_log"
@@ -5432,28 +5432,28 @@ ON db_log.patient_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_input_dt
 ON db_log.condition_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_condition_raw_input_pnr for Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_input_pnr
 ON db_log.condition_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_condition_raw_last_dt for Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_last_dt
 ON db_log.condition_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_condition_raw_last_dt for Table "condition_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_last_pnr
 ON db_log.condition_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_condition_raw_hash for Table "condition_raw" in schema "db_log"
@@ -5469,28 +5469,28 @@ ON db_log.condition_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_input_dt
 ON db_log.medication_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_medication_raw_input_pnr for Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_input_pnr
 ON db_log.medication_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_medication_raw_last_dt for Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_last_dt
 ON db_log.medication_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_medication_raw_last_dt for Table "medication_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_last_pnr
 ON db_log.medication_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_medication_raw_hash for Table "medication_raw" in schema "db_log"
@@ -5506,28 +5506,28 @@ ON db_log.medication_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_input_dt
 ON db_log.medicationrequest_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_medicationrequest_raw_input_pnr for Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_input_pnr
 ON db_log.medicationrequest_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_medicationrequest_raw_last_dt for Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_last_dt
 ON db_log.medicationrequest_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_medicationrequest_raw_last_dt for Table "medicationrequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_last_pnr
 ON db_log.medicationrequest_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_medicationrequest_raw_hash for Table "medicationrequest_raw" in schema "db_log"
@@ -5543,28 +5543,28 @@ ON db_log.medicationrequest_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_input_dt
 ON db_log.medicationadministration_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_medicationadministration_raw_input_pnr for Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_input_pnr
 ON db_log.medicationadministration_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_medicationadministration_raw_last_dt for Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_last_dt
 ON db_log.medicationadministration_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_medicationadministration_raw_last_dt for Table "medicationadministration_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_last_pnr
 ON db_log.medicationadministration_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_medicationadministration_raw_hash for Table "medicationadministration_raw" in schema "db_log"
@@ -5580,28 +5580,28 @@ ON db_log.medicationadministration_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_input_dt
 ON db_log.medicationstatement_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_medicationstatement_raw_input_pnr for Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_input_pnr
 ON db_log.medicationstatement_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_medicationstatement_raw_last_dt for Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_last_dt
 ON db_log.medicationstatement_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_medicationstatement_raw_last_dt for Table "medicationstatement_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_last_pnr
 ON db_log.medicationstatement_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_medicationstatement_raw_hash for Table "medicationstatement_raw" in schema "db_log"
@@ -5617,28 +5617,28 @@ ON db_log.medicationstatement_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_input_dt
 ON db_log.observation_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_observation_raw_input_pnr for Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_input_pnr
 ON db_log.observation_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_observation_raw_last_dt for Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_last_dt
 ON db_log.observation_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_observation_raw_last_dt for Table "observation_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_last_pnr
 ON db_log.observation_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_observation_raw_hash for Table "observation_raw" in schema "db_log"
@@ -5654,28 +5654,28 @@ ON db_log.observation_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_input_dt
 ON db_log.diagnosticreport_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_diagnosticreport_raw_input_pnr for Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_input_pnr
 ON db_log.diagnosticreport_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_diagnosticreport_raw_last_dt for Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_last_dt
 ON db_log.diagnosticreport_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_diagnosticreport_raw_last_dt for Table "diagnosticreport_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_last_pnr
 ON db_log.diagnosticreport_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_diagnosticreport_raw_hash for Table "diagnosticreport_raw" in schema "db_log"
@@ -5691,28 +5691,28 @@ ON db_log.diagnosticreport_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_input_dt
 ON db_log.servicerequest_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_servicerequest_raw_input_pnr for Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_input_pnr
 ON db_log.servicerequest_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_servicerequest_raw_last_dt for Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_last_dt
 ON db_log.servicerequest_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_servicerequest_raw_last_dt for Table "servicerequest_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_last_pnr
 ON db_log.servicerequest_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_servicerequest_raw_hash for Table "servicerequest_raw" in schema "db_log"
@@ -5728,28 +5728,28 @@ ON db_log.servicerequest_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_input_dt
 ON db_log.procedure_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_procedure_raw_input_pnr for Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_input_pnr
 ON db_log.procedure_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_procedure_raw_last_dt for Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_last_dt
 ON db_log.procedure_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_procedure_raw_last_dt for Table "procedure_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_last_pnr
 ON db_log.procedure_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_procedure_raw_hash for Table "procedure_raw" in schema "db_log"
@@ -5765,28 +5765,28 @@ ON db_log.procedure_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_input_dt
 ON db_log.consent_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_consent_raw_input_pnr for Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_input_pnr
 ON db_log.consent_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_consent_raw_last_dt for Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_last_dt
 ON db_log.consent_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_consent_raw_last_dt for Table "consent_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_last_pnr
 ON db_log.consent_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_consent_raw_hash for Table "consent_raw" in schema "db_log"
@@ -5802,28 +5802,28 @@ ON db_log.consent_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_input_dt
 ON db_log.location_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_location_raw_input_pnr for Table "location_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_input_pnr
 ON db_log.location_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_location_raw_last_dt for Table "location_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_last_dt
 ON db_log.location_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_location_raw_last_dt for Table "location_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_last_pnr
 ON db_log.location_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_location_raw_hash for Table "location_raw" in schema "db_log"
@@ -5839,28 +5839,28 @@ ON db_log.location_raw (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_input_dt
 ON db_log.pids_per_ward_raw (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_pids_per_ward_raw_input_pnr for Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_input_pnr
 ON db_log.pids_per_ward_raw (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_pids_per_ward_raw_last_dt for Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_last_dt
 ON db_log.pids_per_ward_raw (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_pids_per_ward_raw_last_dt for Table "pids_per_ward_raw" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_last_pnr
 ON db_log.pids_per_ward_raw (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_pids_per_ward_raw_hash for Table "pids_per_ward_raw" in schema "db_log"

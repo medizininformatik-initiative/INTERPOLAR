@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-11 22:34:28
+-- Create time: 2025-02-12 23:08:09
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1217,34 +1217,34 @@ COMMENT ON COLUMN db_log.trigger_fe.last_processing_nr IS 'Last processing numbe
 ------------------------------------------------------
 
 ------------------------- Index for db_log - patient_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db_log.patient_fe ( patient_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db_log.patient_fe ( patient_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db_log_patient_fe_input_dt for Table "patient_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_input_dt
 ON db_log.patient_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_patient_fe_input_pnr for Table "patient_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_input_pnr
 ON db_log.patient_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_patient_fe_last_dt for Table "patient_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_last_dt
 ON db_log.patient_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_patient_fe_last_dt for Table "patient_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_last_pnr
 ON db_log.patient_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_patient_fe_hash for Table "patient_fe" in schema "db_log"
@@ -1255,34 +1255,34 @@ ON db_log.patient_fe (
 );
 
 ------------------------- Index for db_log - fall_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db_log.fall_fe ( fall_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db_log.fall_fe ( fall_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db_log_fall_fe_input_dt for Table "fall_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_input_dt
 ON db_log.fall_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_fall_fe_input_pnr for Table "fall_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_input_pnr
 ON db_log.fall_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_fall_fe_last_dt for Table "fall_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_last_dt
 ON db_log.fall_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_fall_fe_last_dt for Table "fall_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_last_pnr
 ON db_log.fall_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_fall_fe_hash for Table "fall_fe" in schema "db_log"
@@ -1293,34 +1293,34 @@ ON db_log.fall_fe (
 );
 
 ------------------------- Index for db_log - medikationsanalyse_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe ( medikationsanalyse_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe ( medikationsanalyse_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db_log_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_input_dt
 ON db_log.medikationsanalyse_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_medikationsanalyse_fe_input_pnr for Table "medikationsanalyse_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_input_pnr
 ON db_log.medikationsanalyse_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_last_dt
 ON db_log.medikationsanalyse_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_last_pnr
 ON db_log.medikationsanalyse_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_medikationsanalyse_fe_hash for Table "medikationsanalyse_fe" in schema "db_log"
@@ -1331,34 +1331,34 @@ ON db_log.medikationsanalyse_fe (
 );
 
 ------------------------- Index for db_log - mrpdokumentation_validierung_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db_log_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_input_dt
 ON db_log.mrpdokumentation_validierung_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_mrpdokumentation_validierung_fe_input_pnr for Table "mrpdokumentation_validierung_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_input_pnr
 ON db_log.mrpdokumentation_validierung_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_last_dt
 ON db_log.mrpdokumentation_validierung_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_last_pnr
 ON db_log.mrpdokumentation_validierung_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_mrpdokumentation_validierung_fe_hash for Table "mrpdokumentation_validierung_fe" in schema "db_log"
@@ -1369,34 +1369,34 @@ ON db_log.mrpdokumentation_validierung_fe (
 );
 
 ------------------------- Index for db_log - risikofaktor_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db_log.risikofaktor_fe ( risikofaktor_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db_log.risikofaktor_fe ( risikofaktor_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db_log_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_input_dt
 ON db_log.risikofaktor_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_risikofaktor_fe_input_pnr for Table "risikofaktor_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_input_pnr
 ON db_log.risikofaktor_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_last_dt
 ON db_log.risikofaktor_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_last_pnr
 ON db_log.risikofaktor_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_risikofaktor_fe_hash for Table "risikofaktor_fe" in schema "db_log"
@@ -1407,34 +1407,34 @@ ON db_log.risikofaktor_fe (
 );
 
 ------------------------- Index for db_log - trigger_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db_log.trigger_fe ( trigger_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db_log.trigger_fe ( trigger_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db_log_trigger_fe_input_dt for Table "trigger_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_input_dt
 ON db_log.trigger_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db_log_trigger_fe_input_pnr for Table "trigger_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_input_pnr
 ON db_log.trigger_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db_log_trigger_fe_last_dt for Table "trigger_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_last_dt
 ON db_log.trigger_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db_log_trigger_fe_last_dt for Table "trigger_fe" in schema "db_log"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_last_pnr
 ON db_log.trigger_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db_log_trigger_fe_hash for Table "trigger_fe" in schema "db_log"

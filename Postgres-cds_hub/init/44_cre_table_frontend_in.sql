@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-02-11 22:34:25
+-- Create time: 2025-02-12 23:08:06
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1225,34 +1225,34 @@ COMMENT ON COLUMN db2frontend_in.trigger_fe.last_processing_nr IS 'Last processi
 ------------------------------------------------------
 
 ------------------------- Index for db2frontend_in - patient_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db2frontend_in.patient_fe ( patient_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db2frontend_in.patient_fe ( patient_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_patient_fe_input_dt for Table "patient_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_input_dt
 ON db2frontend_in.patient_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db2frontend_in_patient_fe_input_pnr for Table "patient_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_input_pnr
 ON db2frontend_in.patient_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db2frontend_in_patient_fe_last_dt for Table "patient_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_last_dt
 ON db2frontend_in.patient_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db2frontend_in_patient_fe_last_dt for Table "patient_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_patient_fe_last_pnr
 ON db2frontend_in.patient_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db2frontend_in_patient_fe_hash for Table "patient_fe" in schema "db2frontend_in"
@@ -1263,34 +1263,34 @@ ON db2frontend_in.patient_fe (
 );
 
 ------------------------- Index for db2frontend_in - fall_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db2frontend_in.fall_fe ( fall_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db2frontend_in.fall_fe ( fall_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_fall_fe_input_dt for Table "fall_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_input_dt
 ON db2frontend_in.fall_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db2frontend_in_fall_fe_input_pnr for Table "fall_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_input_pnr
 ON db2frontend_in.fall_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db2frontend_in_fall_fe_last_dt for Table "fall_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_last_dt
 ON db2frontend_in.fall_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db2frontend_in_fall_fe_last_dt for Table "fall_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_fall_fe_last_pnr
 ON db2frontend_in.fall_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db2frontend_in_fall_fe_hash for Table "fall_fe" in schema "db2frontend_in"
@@ -1301,34 +1301,34 @@ ON db2frontend_in.fall_fe (
 );
 
 ------------------------- Index for db2frontend_in - medikationsanalyse_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db2frontend_in.medikationsanalyse_fe ( medikationsanalyse_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db2frontend_in.medikationsanalyse_fe ( medikationsanalyse_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_input_dt
 ON db2frontend_in.medikationsanalyse_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db2frontend_in_medikationsanalyse_fe_input_pnr for Table "medikationsanalyse_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_input_pnr
 ON db2frontend_in.medikationsanalyse_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db2frontend_in_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_last_dt
 ON db2frontend_in.medikationsanalyse_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db2frontend_in_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_medikationsanalyse_fe_last_pnr
 ON db2frontend_in.medikationsanalyse_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db2frontend_in_medikationsanalyse_fe_hash for Table "medikationsanalyse_fe" in schema "db2frontend_in"
@@ -1339,34 +1339,34 @@ ON db2frontend_in.medikationsanalyse_fe (
 );
 
 ------------------------- Index for db2frontend_in - mrpdokumentation_validierung_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db2frontend_in.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db2frontend_in.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_input_dt
 ON db2frontend_in.mrpdokumentation_validierung_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_input_pnr for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_input_pnr
 ON db2frontend_in.mrpdokumentation_validierung_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_last_dt
 ON db2frontend_in.mrpdokumentation_validierung_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_last_pnr
 ON db2frontend_in.mrpdokumentation_validierung_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db2frontend_in_mrpdokumentation_validierung_fe_hash for Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
@@ -1377,34 +1377,34 @@ ON db2frontend_in.mrpdokumentation_validierung_fe (
 );
 
 ------------------------- Index for db2frontend_in - risikofaktor_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db2frontend_in.risikofaktor_fe ( risikofaktor_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db2frontend_in.risikofaktor_fe ( risikofaktor_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_input_dt
 ON db2frontend_in.risikofaktor_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db2frontend_in_risikofaktor_fe_input_pnr for Table "risikofaktor_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_input_pnr
 ON db2frontend_in.risikofaktor_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db2frontend_in_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_last_dt
 ON db2frontend_in.risikofaktor_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db2frontend_in_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_risikofaktor_fe_last_pnr
 ON db2frontend_in.risikofaktor_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db2frontend_in_risikofaktor_fe_hash for Table "risikofaktor_fe" in schema "db2frontend_in"
@@ -1415,34 +1415,34 @@ ON db2frontend_in.risikofaktor_fe (
 );
 
 ------------------------- Index for db2frontend_in - trigger_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db2frontend_in.trigger_fe ( trigger_fe_id); -- Primary key of the entity - already filled in this schema - History via timestamp
+  CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db2frontend_in.trigger_fe ( trigger_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
 
 -- Index idx_db2frontend_in_trigger_fe_input_dt for Table "trigger_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_input_dt
 ON db2frontend_in.trigger_fe (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_db2frontend_in_trigger_fe_input_pnr for Table "trigger_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_input_pnr
 ON db2frontend_in.trigger_fe (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_db2frontend_in_trigger_fe_last_dt for Table "trigger_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_last_dt
 ON db2frontend_in.trigger_fe (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_db2frontend_in_trigger_fe_last_dt for Table "trigger_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_trigger_fe_last_pnr
 ON db2frontend_in.trigger_fe (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_db2frontend_in_trigger_fe_hash for Table "trigger_fe" in schema "db2frontend_in"
