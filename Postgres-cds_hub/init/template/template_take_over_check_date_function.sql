@@ -5,7 +5,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
     current_record record;
-    new_last_pro_nr INT; -- New processing number for these sync
+    new_last_pro_nr INT:=0; -- New processing number for these sync
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
     max_last_pro_nr INT; -- Last processing number over all entities
     max_ent_pro_nr INT;  -- Max processing number from a entiti
@@ -39,13 +39,11 @@ BEGIN
     WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
     ) ) AS t(res TEXT) INTO erg;
 
+    err_section:='HEAD-05';    err_schema:='db_log';    err_table:='data_import_hist';
+
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''erg:'||erg||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
-
-    -- Last import Nr in raw-data
-    err_section:='HEAD-05';    err_schema:='db_log';    err_table:='data_import_hist';
---    SELECT MAX(last_processing_nr) INTO last_raw_pro_nr FROM db.data_import_hist WHERE table_name like '%_raw' AND schema_name='db_log';
 
     -- Counting datasets
     err_section:='HEAD-10';    err_schema:='db_log';    err_table:='- all_entitys -';
@@ -53,16 +51,7 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''vor max_lpn'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-    WITH max_last_processing AS (
-        SELECT
-            <%LOOP_TABS_SUB_take_over_check_date_function4%>
-            (SELECT 0) AS lastzeile
-    )
-    SELECT SUM(anz), MAX(lpn) INTO data_count_pro_all, max_last_pro_nr -- Anzahl der geänderten Datensätze und lpn ueber alles
-    FROM ( SELECT 0::INT AS anz, 0 AS lpn
-    <%LOOP_TABS_SUB_take_over_check_date_function3%>
-
-    );
+<%LOOP_TABS_SUB_take_over_check_date_function4%>
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
