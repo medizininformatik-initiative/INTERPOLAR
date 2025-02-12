@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-11 22:33:47
+-- Create time: 2025-02-12 20:32:42
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -45,7 +45,7 @@ DECLARE
     data_count_pro_upd INT:=0; -- Counting updatet records in this run how are still there
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
-    data_count_last_status_max INT:=5000; -- Max number of data records since the status was last set (parameter)
+    data_count_last_status_max INT:=10000; -- Max number of data records since the status was last set (parameter)
     last_pro_nr INT; -- Last processing number
     temp VARCHAR; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
