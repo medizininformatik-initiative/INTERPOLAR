@@ -147,7 +147,7 @@ isDebugTestError <- function(err = NA) {
   if (all(is.na(err))) {
     err <- getErrorMessage()
   }
-  grepl("DEBUG_TEST_", err)
+  grepl("DEBUG_ENCOUNTER_REQUEST_TEST", err)
 }
 
 #' Check for Debug Test Error
