@@ -5,15 +5,21 @@
     err_section:='<%TABLE_NAME_2%>-01';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
     data_count_update:=0;
 
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>;
+
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', '' vor Loop max_ent_pro_nr:'||max_ent_pro_nr||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
     SELECT <%TABLE_NAME%>_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
     FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE last_processing_nr IN
         (SELECT last_processing_nr FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE <%TABLE_NAME%>_id IN 
-            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
+            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=max_ent_pro_nr
             )
          )
-    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>) -- if not yet compared and brought to the same level
+    AND (last_processing_nr!=max_ent_pro_nr -- if not yet compared and brought to the same level
 	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
         )
     )
@@ -62,6 +68,10 @@
                 data_count_last_status_set:=0;
             END IF;
     END LOOP;
+
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', '' nach Loop max_ent_pro_nr:'||max_ent_pro_nr||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
         INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
