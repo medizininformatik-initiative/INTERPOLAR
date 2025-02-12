@@ -150,7 +150,7 @@ BEGIN
         If num>45 then num:=40; END IF; -- Wenn größer als JobINTerval - kleiner setzen um wieder in Takt zu kommen
 
         err_section:='cron_job_data_transfer-53';    err_schema:='system';    err_table:='Aufraeumen';
-	VACUUM ANALYZE;
+--	VACUUM ANALYZE;
 
         err_section:='cron_job_data_transfer-54';    err_schema:='db_config';    err_table:='db_process_control';
 
