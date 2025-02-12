@@ -15,5 +15,4 @@ Config/testthat/edition: 3
 Imports: 
     data.table,
     methods,
-    etlutils,
-    rlang
+    etlutils
