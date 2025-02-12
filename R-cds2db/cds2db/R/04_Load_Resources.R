@@ -117,7 +117,7 @@ getActiveEncounterPIDsFromDB <- function() {
   # Run the SQL query and return patient IDs
   patient_ids_active <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getActiveEncounterPIDsFromDB()")
 
-  return(patient_ids_active$enc_patient_id)
+  return(patient_ids_active$enc_patient_ref)
 }
 
 #' Adjusts the names of a vector or list by removing a specified prefix and matching them
