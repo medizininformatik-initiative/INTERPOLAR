@@ -134,7 +134,7 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
   last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
   table_name <- getViewTableName(resource_name)
-  id_column <- getIDColumn(resource_name)
+  id_column <- etlutils::getIDColumn(resource_name)
   query <-paste0(
     "SELECT * FROM ", table_name, " a\n",
     " WHERE last_processing_nr = ", last_processing_nr,
@@ -158,7 +158,7 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
 #' @return A character string representing the filter statement for the SQL query.
 #'
 getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
-  resource_id_column <- getIDColumn(resource_name)
+  resource_id_column <- etlutils::getIDColumn(resource_name)
   if (filter_column == resource_id_column) {
     # remove resource name and the slash if the IDs are references and not pure IDs
     filter_column_values <- gsub(paste0("^", resource_name, "/"), "", filter_column_values)
@@ -215,7 +215,7 @@ loadResourcesLastStatusFromDB <- function(resource_name) {
 #' @return A data frame containing the last status of load resources.
 #'
 loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids) {
-  id_column <- getIDColumn(resource_name)
+  id_column <- etlutils::getIDColumn(resource_name)
   loadResourcesFromDB(
     resource_name = resource_name,
     filter_column = id_column,
@@ -238,7 +238,7 @@ loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids) {
   if (tolower(resource_name) %in% "patient") {
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, pids))
   }
-  pid_column <- getPIDColumn(resource_name)
+  pid_column <- etlutils::getPIDColumn(resource_name)
   loadResourcesFromDB(
     resource_name = resource_name,
     filter_column = pid_column,
@@ -264,7 +264,7 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
   if (tolower(resource_name) %in% "encounter") {
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, enc_ids))
   }
-  enc_id_column <- getPIDColumn(resource_name)
+  enc_id_column <- etlutils::getEncIDColumn(resource_name)
   loadResourcesFromDB(
     resource_name = resource_name,
     filter_column = enc_id_column,
@@ -742,87 +742,4 @@ createFrontendTables <- function() {
     lock_id = "createFrontendTables()",
     stop_if_table_not_empty = TRUE)
 
-}
-
-# List with resource abbreviations
-resource_to_abbreviation <- list(
-  condition = "con",
-  consent = "cons",
-  diagnosticreport = "diagrep",
-  encounter = "enc",
-  location = "loc",
-  medication = "med",
-  medicationadministration = "medadm",
-  medicationrequest = "medreq",
-  medicationstatement = "medstat",
-  observation = "obs",
-  patient = "pat",
-  procedure = "proc",
-  servicerequest = "servreq"
-)
-
-#' Get Abbreviation for Resource Name
-#'
-#' This function retrieves the abbreviation for a given resource name.
-#'
-#' @param resource_name A character string representing the resource name.
-#'
-#' @return A character string containing the abbreviation for the specified resource name.
-#'
-getResourceAbbreviation <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  resource_to_abbreviation[[resource_name]]
-}
-
-#' Get PID Column for Resource
-#'
-#' This function retrieves the name of the PID column for a given resource.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the PID column for the specified resource.
-#'
-getPIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  if (resource_name == "patient") {
-    pid_column <- "id"
-  } else {
-    pid_column <- "patient_id"
-  }
-  pid_column <- paste0(getResourceAbbreviation(resource_name), "_", pid_column)
-  return(pid_column)
-}
-
-#' Get ID Column for Resource
-#'
-#' This function retrieves the name of the ID column for a given resource.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the ID column for the specified resource.
-#'
-getIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  id_column <- paste0(getResourceAbbreviation(resource_name), "_id")
-  return(id_column)
-}
-
-#' Get Encounter ID/Reference Column for Resource
-#'
-#' This function retrieves the name of the column with the reference to Encounters for a given
-#' resource type.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the name of the Encounter ID column for the specified resource.
-#'
-getEncIDColumn <- function(resource_name) {
-  resource_name <- tolower(resource_name)
-  if (resource_name == "encounter") {
-    enc_id_column <- "id"
-  } else {
-    enc_id_column <- "encounter_id"
-  }
-  enc_id_column <- paste0(getResourceAbbreviation(resource_name), "_", enc_id_column)
-  return(enc_id_column)
 }
