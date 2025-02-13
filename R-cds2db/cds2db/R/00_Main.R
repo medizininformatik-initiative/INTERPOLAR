@@ -127,20 +127,10 @@ retrieve <- function(debug_path_to_config_toml = NA) {
     })
   }))
 
-  if (etlutils::isErrorOccured()) {
-    if (etlutils::isDebugTestError()) {
-      finish_message <- "\nModule 'cds2db' Debug Test Message:\n"
-    } else {
-      finish_message <- "\nModule 'cds2db' finished with ERRORS (see details above).\n"
-    }
-    # Remove the irrelevant part from the error message, that the error occurs in our checkError()
-    # function. This message part is the beginning of the error message and ends with a " : \n  ".
-    error_message <- sub("^[^:]*: \n  ", "", etlutils::getErrorMessage())
-    finish_message <- paste0(finish_message, error_message)
-  } else if (all_wards_empty || all_empty_fhir || all_empty_raw) {
-    finish_message <- "Module 'cds2db' finished with no errors but the result was empty (see warnings above).\n"
-  } else {
-    finish_message <- "Module 'cds2db' finished with no errors.\n"
+  # Generate finish message
+  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
+  if (etlutils::isErrorOccured() && (exists("all_wards_empty") || exists("all_empty_fhir") || exists("all_empty_raw"))) {
+    finish_message <- paste0("\nModule '", PROJECT_NAME,"' finished with no errors but the result was empty (see warnings above).\n")
   }
 
   # Add warning if any DEBUG_ variables are active

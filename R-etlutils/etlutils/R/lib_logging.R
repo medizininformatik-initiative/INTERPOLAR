@@ -647,3 +647,38 @@ appendDebugWarning <- function(finish_message) {
 
   return(finish_message)
 }
+
+#' Generate a Finish Message for a Module
+#'
+#' This function generates a finish message for a given module based on the error state.
+#' If an error has occurred, it extracts the relevant error message and appends it to the finish message.
+#' If no error has occurred, it returns a success message.
+#'
+#' @param PROJECT_NAME A character string specifying the name of the module.
+#'
+#' @return A character string containing the generated finish message.
+#'
+#' @examples
+#' PROJECT_NAME <- "cds2db"
+#' finish_message <- generateFinishMessage(PROJECT_NAME)
+#' cat(finish_message)
+#'
+#' @export
+generateFinishMessage <- function(PROJECT_NAME) {
+  if (etlutils::isErrorOccured()) {
+    if (etlutils::isDebugTestError()) {
+      finish_message <- paste0("\nModule '", PROJECT_NAME, "' Debug Test Message:\n")
+    } else {
+      finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with ERRORS (see details above).\n")
+    }
+
+    # Remove irrelevant part from the error message
+    error_message <- sub("^[^:]*: \n  ", "", etlutils::getErrorMessage())
+    finish_message <- paste0(finish_message, error_message)
+
+  } else {
+    finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with no errors.\n")
+  }
+
+  return(finish_message)
+}
