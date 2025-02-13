@@ -108,8 +108,13 @@ retrieve <- function() {
 
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
-  if (etlutils::isErrorOccured() && (exists("all_wards_empty") || exists("all_empty_fhir") || exists("all_empty_raw"))) {
-    finish_message <- paste0("\nModule '", PROJECT_NAME,"' finished with no errors but the result was empty (see warnings above).\n")
+  if (!etlutils::isErrorOccured() &&
+      (etlutils::isDefinedAndTrue("all_wards_empty") ||
+       etlutils::isDefinedAndTrue("all_empty_fhir") ||
+       etlutils::isDefinedAndTrue("all_empty_raw"))) {
+    finish_message <- paste0(
+      "\nModule '", PROJECT_NAME, "' finished with no errors but the result was empty (see warnings above).\n"
+    )
   }
 
   # Add warning if any DEBUG_ variables are active
