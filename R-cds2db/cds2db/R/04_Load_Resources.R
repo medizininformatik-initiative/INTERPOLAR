@@ -78,16 +78,22 @@ getQueryDatetime <- function() {
 
 #' Get active encounter patient IDs from the database
 #'
-#' This function retrieves patient IDs from encounters that are considered active.
-#' An encounter is considered active if it has no recorded end date (\code{enc_period_end IS NULL}).
+#' This function retrieves patient IDs from encounters that are active based on
+#' the current query date. An encounter is considered active if its start date
+#' is less than or equal to the current date and either has no end date or its
+#' end date is greater than the current date.
 #'
-#' The function constructs and executes a SQL query to fetch patient IDs from encounters
-#' that are still ongoing. Unlike the previous implementation, the function no longer
-#' considers the current date or any query datetime.
+#' The function retrieves the current datetime using \code{getQueryDatetime()}
+#' and then constructs and executes a SQL query to fetch the active patient IDs
+#' from the database.
 #'
 #' @return A vector of patient IDs with active encounters.
 #'
 getActiveEncounterPIDsFromDB <- function() {
+  # Get current or debug datetime
+  query_datetime <- getQueryDatetime()
+  datetime <- query_datetime[["start_datetime"]]
+
   # Create the SQL-Query
   query <- paste0(
     "WITH latest_encounter AS (\n",
@@ -104,7 +110,9 @@ getActiveEncounterPIDsFromDB <- function() {
     ")\n",
     "SELECT DISTINCT enc_patient_ref\n",
     "FROM latest_encounter\n",
-    "WHERE row_num = 1 AND enc_period_end IS NULL\n"
+    "WHERE row_num = 1\n",
+    "  AND enc_period_start <= '", datetime, "'\n",
+    "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
   )
 
   # Run the SQL query and return patient IDs
