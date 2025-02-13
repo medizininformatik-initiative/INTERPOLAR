@@ -621,3 +621,29 @@ printAllTables <- function(table, table_name = NA) {
     printTableSummary(table, table_name)
   }
 }
+
+#' Append a Warning if DEBUG_ Variables are Active
+#'
+#' This function checks for global variables starting with "DEBUG_" and appends
+#' a warning message to the given `finish_message` if any are found.
+#'
+#' @param finish_message A character string representing the current finish message.
+#' @return A modified finish message including a warning if DEBUG_ variables are active.
+#'
+#' @export
+appendDebugWarning <- function(finish_message) {
+  # Check if any DEBUG_ variables exist
+  debug_variables <- getGlobalVariablesByPrefix("DEBUG_", astype = "vector")
+
+  # If there are active DEBUG variables, append a warning message
+  if (length(debug_variables) > 0) {
+    debug_variable_string <- paste(names(debug_variables), collapse = ", ")
+    finish_message <- paste0(
+      finish_message,
+      "\nAdditional Warning: The following DEBUG parameters are activated: ", debug_variable_string,
+      "\nThese parameters are only accepted for test cases!"
+    )
+  }
+
+  return(finish_message)
+}

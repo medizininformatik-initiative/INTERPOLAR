@@ -143,6 +143,9 @@ retrieve <- function(debug_path_to_config_toml = NA) {
     finish_message <- "Module 'cds2db' finished with no errors.\n"
   }
 
+  # Add warning if any DEBUG_ variables are active
+  finish_message <- etlutils::appendDebugWarning(finish_message)
+
   etlutils::finalize(finish_message)
 
 }
