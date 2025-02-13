@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS db_config.db_parameter (
   last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
 );
 
+-- Index idx_db_config_db_parameter_name for Table "db_parameter" in schema "db_config"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_config_db_parameter_name
+ON db_config.db_parameter (   parameter_name );
+
 GRANT INSERT ON db_config.db_parameter TO db_user;
 GRANT SELECT ON db_config.db_parameter TO db_user;
 GRANT UPDATE ON db_config.db_parameter TO db_user;
@@ -39,6 +44,11 @@ CREATE TABLE IF NOT EXISTS db_config.db_process_control (
   last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
 );
 
+-- Index idx_db_config_db_db_process_control_name for Table "db_process_control" in schema "db_config"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_config_db_db_process_control_name
+ON db_config.db_process_control (   pc_name );
+
 GRANT INSERT ON db_config.db_process_control TO db_user;
 GRANT SELECT ON db_config.db_process_control TO db_user;
 GRANT UPDATE ON db_config.db_process_control TO db_user;
@@ -48,8 +58,8 @@ GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
 GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
-        INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-        VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
+INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
 -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
 INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
 VALUES ('timepoint_1_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function started) Format: YYYY-MM-DD HH24:MI:SS.US');
@@ -67,9 +77,9 @@ INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
 VALUES ('currently_processed_number_of_data_records_in_the_function','','currently processed number of data records in the function (db.data_transfer_status)');
 
 
--- Table "data_import_hist" in schema "db_log"
+-- Table "data_import_hist" in schema "db"
 ----------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
+CREATE TABLE IF NOT EXISTS db.data_import_hist (
   id SERIAL,
   table_primary_key INT, -- Primary key in the documentet table
   last_processing_nr INT, -- Last processing number of the data in the table
@@ -84,16 +94,41 @@ CREATE TABLE IF NOT EXISTS db_log.data_import_hist (
   import_hist_cre_at TIMESTAMP DEFAULT current_timestamp -- Timestamp the HistRec wars create
 );
 
+-- Index idx_db_data_import_hist_last_processing_nr for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_last_processing_nr
+ON db.data_import_hist (   last_processing_nr );
+
+-- Index idx_db_data_import_hist_schema_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_schema_name
+ON db.data_import_hist (   schema_name );
+
+-- Index idx_db_data_import_hist_table_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_table_name
+ON db.data_import_hist (   table_name );
+
+-- Index idx_db_data_import_hist_function_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_function_name
+ON db.data_import_hist (   function_name );
+
+-- Index idx_db_data_import_hist_variable_name for Table "data_import_hist" in schema "db"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_variable_name
+ON db.data_import_hist (   variable_name );
+
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db_log TO cds2db_user;
 GRANT USAGE ON SCHEMA db_log TO db2frontend_user;
 
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_log_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO cds2db_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2dataprocessor_user;
-GRANT INSERT, SELECT ON TABLE db_log.data_import_hist TO db2frontend_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db_log_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO cds2db_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db2dataprocessor_user;
+GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db2frontend_user;
 
 -- View "data_count_report" in "db_config"
 ----------------------------------------------------
@@ -110,11 +145,11 @@ FROM
     ELSE 'NichtDefinierteFunktion'
 END dataflow
 , sum(dataset_count) dataset_count_all_ds, round(sum(copy_time_in_sec)) copy_time_in_sec
-, round(sum(dataset_count)/sum(copy_time_in_sec)) all_ds_per_sec FROM db_log.data_import_hist a
+, round(sum(dataset_count)/sum(copy_time_in_sec)) all_ds_per_sec FROM db.data_import_hist a
 where variable_name='data_count_pro_all' group by function_name, to_char(import_hist_cre_at,'YYYY-MM-DD')
 ) a
 left join (SELECT to_char(import_hist_cre_at,'YYYY-MM-DD') day_sum, function_name, sum(dataset_count) dataset_count_new_ds, round(sum(copy_time_in_sec)) copy_time_in_sec
-, round(sum(dataset_count)/sum(copy_time_in_sec)) new_ds_per_sec FROM db_log.data_import_hist a
+, round(sum(dataset_count)/sum(copy_time_in_sec)) new_ds_per_sec FROM db.data_import_hist a
 where variable_name='data_count_pro_new' group by function_name, to_char(import_hist_cre_at,'YYYY-MM-DD')
 ) b on (a.day_sum=b.day_sum AND a.function_name=b.function_name)
 ORDER BY day_sum DESC, function_name
@@ -184,7 +219,136 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql; --db.error_log
 
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.error_log(varchar,varchar,varchar,varchar,varchar,varchar,int) TO db_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db_user;
+
+----------------------------------------------------------------------
+
+-- Funktionen zur einheitlichen Darstellung als String
+-- 1. immutable overloaded function for TEXT / VARCHAR / CHAR
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TEXT)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db_user;
+
+-- 2. immutable overloaded function for SMALLINT / INTEGER / BIGINT
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BIGINT)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db_user;
+
+-- 3. immutable overloaded function for REAL / FLOAT4 / DOUBLE PRECISION
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data DOUBLE PRECISION)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db_user;
+
+-- 4. immutable overloaded function for NUMERIC / DECIMAL
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data NUMERIC)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT to_char(input_data, 'FM999999999999990.999999');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db_user;
+
+-- 5. immutable overloaded function for DATE / TIMESTAMP - !!! NOT TIMESTAMPTZ !!!
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TIMESTAMP)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT to_char(input_data, 'YYYY-MM-DD HH24:MI:SS.US');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db_user;
+
+-- 6. immutable overloaded function for TIME - !!! NOT TIMETZ !!!
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TIME)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT to_char(input_data, 'HH24:MI:SS.US');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db_user;
+
+-- 7. immutable overloaded function for BOOLEAN (TRUE, FALSE, NULL)
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BOOLEAN)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT CASE WHEN input_data THEN 'true' WHEN NOT input_data THEN 'false' ELSE 'null' END;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db_user;
+
+-- 8. immutable overloaded function for BYTEA (Binärdaten)
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BYTEA)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT encode(input_data, 'hex');
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db_user;
+
+-- 9. immutable overloaded function for UUID (Universally Unique Identifier)
+----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data UUID)
+RETURNS TEXT
+SECURITY DEFINER
+AS $$
+  SELECT input_data::TEXT;
+$$ LANGUAGE SQL IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO cds2db_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO db2dataprocessor_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO db2frontend_user;
+GRANT EXECUTE ON FUNCTION db.to_char_immutable(UUID) TO db_user;

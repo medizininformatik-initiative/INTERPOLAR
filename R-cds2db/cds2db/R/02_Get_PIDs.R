@@ -126,11 +126,9 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 #'
 #' @param encounters A data.frame or data.table containing encounter data.
 #' @param all_wards_filter_patterns A named list of filtering patterns for different wards.
-#' @return A named list where each element is a data.table with `pid` and `encounter_id` for a specific ward.
-#' @export
 #'
-#' @import data.table
-#' @importFrom etlutils filterResources
+#' @return A named list where each element is a data.table with `pid` and `encounter_id` for a specific ward.
+#'
 getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 
   pids_per_ward <- list()
@@ -142,7 +140,7 @@ getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
     ward_encounters <- etlutils::filterResources(encounters, ward_filter_patterns)
 
     # Save filtered encounters
-    writeRData(ward_encounters, paste0("pid_source_encounter_filtered_", i))
+    etlutils::writeRData(ward_encounters, paste0("pid_source_encounter_filtered_", i))
 
     # Create a data.table with PID and Encounter ID
     dt <- data.table(
@@ -258,7 +256,7 @@ getEncounters <- function(table_description, current_datetime) {
       )
 
       # stop the execution and print the current result of FHIR search request (DEBUG)
-      checkDebugTestError("DEBUG_ENCOUNTER_REQUEST_TEST", request_encounter)
+      etlutils::checkDebugTestError("DEBUG_ENCOUNTER_REQUEST_TEST", request_encounter)
 
       table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
                                                            table_description = table_description,

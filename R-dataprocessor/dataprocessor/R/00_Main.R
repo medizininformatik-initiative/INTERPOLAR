@@ -3,10 +3,8 @@
 #' Starts the retrieval for this project. This is the main start function start the Data Processor
 #' job
 #'
-#' @param debug_path_to_config_toml Debug parameter for loading an optional debug config.toml file
-#'
 #' @export
-processData <- function(debug_path_to_config_toml = NA) {
+processData <- function() {
   ###
   # Read the module configuration toml file.
   ###

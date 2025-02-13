@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-01-09 18:57:40
+-- Rights definition file last update : 2025-01-13 09:38:21
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-01-09 18:58:46
+-- Create time: 2025-02-11 22:34:30
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -45,7 +45,7 @@ DECLARE
     data_count_pro_upd INT:=0; -- Counting updatet records in this run how are still there
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
-    data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
+    data_count_last_status_max INT:=5000; -- Max number of data records since the status was last set (parameter)
     last_pro_nr INT; -- Last processing number
     temp VARCHAR; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
@@ -143,19 +143,7 @@ BEGIN
                         err_section:='patient_fe-10';    err_schema:='db_log';    err_table:='patient_fe';
                         SELECT count(1) INTO data_count
                         FROM db_log.patient_fe target_record
-                        WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
-                              COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
-                              COALESCE(target_record.pat_femb_1::text,'#NULL#') = COALESCE(current_record.pat_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
-                              COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
-                              COALESCE(target_record.pat_gebdat::text,'#NULL#') = COALESCE(current_record.pat_gebdat::text,'#NULL#') AND
-                              COALESCE(target_record.pat_aktuell_alter::text,'#NULL#') = COALESCE(current_record.pat_aktuell_alter::text,'#NULL#') AND
-                              COALESCE(target_record.pat_geschlecht::text,'#NULL#') = COALESCE(current_record.pat_geschlecht::text,'#NULL#') AND
-                              COALESCE(target_record.patient_complete::text,'#NULL#') = COALESCE(current_record.patient_complete::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='patient_fe-15';    err_schema:='db_log';    err_table:='patient_fe';
@@ -213,19 +201,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.pat_header::text,'#NULL#') = COALESCE(current_record.pat_header::text,'#NULL#') AND
-                              COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
-                              COALESCE(target_record.pat_femb_1::text,'#NULL#') = COALESCE(current_record.pat_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.pat_cis_pid::text,'#NULL#') = COALESCE(current_record.pat_cis_pid::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name::text,'#NULL#') = COALESCE(current_record.pat_name::text,'#NULL#') AND
-                              COALESCE(target_record.pat_vorname::text,'#NULL#') = COALESCE(current_record.pat_vorname::text,'#NULL#') AND
-                              COALESCE(target_record.pat_gebdat::text,'#NULL#') = COALESCE(current_record.pat_gebdat::text,'#NULL#') AND
-                              COALESCE(target_record.pat_aktuell_alter::text,'#NULL#') = COALESCE(current_record.pat_aktuell_alter::text,'#NULL#') AND
-                              COALESCE(target_record.pat_geschlecht::text,'#NULL#') = COALESCE(current_record.pat_geschlecht::text,'#NULL#') AND
-                              COALESCE(target_record.patient_complete::text,'#NULL#') = COALESCE(current_record.patient_complete::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -240,7 +216,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE patient_fe_id = current_record.patient_fe_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -268,9 +244,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='patient_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT patient_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'patient_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.patient_fe d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -284,13 +260,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -329,42 +305,7 @@ BEGIN
                         err_section:='fall_fe-10';    err_schema:='db_log';    err_table:='fall_fe';
                         SELECT count(1) INTO data_count
                         FROM db_log.fall_fe target_record
-                        WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.fall_header::text,'#NULL#') = COALESCE(current_record.fall_header::text,'#NULL#') AND
-                              COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
-                              COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_1::text,'#NULL#') = COALESCE(current_record.fall_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
-                              COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                              COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
-                              COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
-                              COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
-                              COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
-                              COALESCE(target_record.fall_gewicht_aktl_einheit::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktl_einheit::text,'#NULL#') AND
-                              COALESCE(target_record.fall_groesse::text,'#NULL#') = COALESCE(current_record.fall_groesse::text,'#NULL#') AND
-                              COALESCE(target_record.fall_groesse_einheit::text,'#NULL#') = COALESCE(current_record.fall_groesse_einheit::text,'#NULL#') AND
-                              COALESCE(target_record.fall_bmi::text,'#NULL#') = COALESCE(current_record.fall_bmi::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_2::text,'#NULL#') = COALESCE(current_record.fall_femb_2::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_3::text,'#NULL#') = COALESCE(current_record.fall_femb_3::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_4::text,'#NULL#') = COALESCE(current_record.fall_femb_4::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_5::text,'#NULL#') = COALESCE(current_record.fall_femb_5::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_6::text,'#NULL#') = COALESCE(current_record.fall_femb_6::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_chron::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_chron::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_dialysev::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev::text,'#NULL#') AND
-                              COALESCE(target_record.fall_leber_insuf::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf::text,'#NULL#') AND
-                              COALESCE(target_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
-                              COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
-                              COALESCE(target_record.fall_schwanger_mo_lbl::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
-                              COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
-                              COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='fall_fe-15';    err_schema:='db_log';    err_table:='fall_fe';
@@ -468,42 +409,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.fall_header::text,'#NULL#') = COALESCE(current_record.fall_header::text,'#NULL#') AND
-                              COALESCE(target_record.fall_id::text,'#NULL#') = COALESCE(current_record.fall_id::text,'#NULL#') AND
-                              COALESCE(target_record.fall_pat_id::text,'#NULL#') = COALESCE(current_record.fall_pat_id::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_1::text,'#NULL#') = COALESCE(current_record.fall_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.fall_studienphase::text,'#NULL#') = COALESCE(current_record.fall_studienphase::text,'#NULL#') AND
-                              COALESCE(target_record.fall_station::text,'#NULL#') = COALESCE(current_record.fall_station::text,'#NULL#') AND
-                              COALESCE(target_record.fall_zimmernr::text,'#NULL#') = COALESCE(current_record.fall_zimmernr::text,'#NULL#') AND
-                              COALESCE(target_record.fall_aufn_dat::text,'#NULL#') = COALESCE(current_record.fall_aufn_dat::text,'#NULL#') AND
-                              COALESCE(target_record.fall_aufn_diag::text,'#NULL#') = COALESCE(current_record.fall_aufn_diag::text,'#NULL#') AND
-                              COALESCE(target_record.fall_gewicht_aktuell::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktuell::text,'#NULL#') AND
-                              COALESCE(target_record.fall_gewicht_aktl_einheit::text,'#NULL#') = COALESCE(current_record.fall_gewicht_aktl_einheit::text,'#NULL#') AND
-                              COALESCE(target_record.fall_groesse::text,'#NULL#') = COALESCE(current_record.fall_groesse::text,'#NULL#') AND
-                              COALESCE(target_record.fall_groesse_einheit::text,'#NULL#') = COALESCE(current_record.fall_groesse_einheit::text,'#NULL#') AND
-                              COALESCE(target_record.fall_bmi::text,'#NULL#') = COALESCE(current_record.fall_bmi::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_2::text,'#NULL#') = COALESCE(current_record.fall_femb_2::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_3::text,'#NULL#') = COALESCE(current_record.fall_femb_3::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_4::text,'#NULL#') = COALESCE(current_record.fall_femb_4::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_5::text,'#NULL#') = COALESCE(current_record.fall_femb_5::text,'#NULL#') AND
-                              COALESCE(target_record.fall_femb_6::text,'#NULL#') = COALESCE(current_record.fall_femb_6::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_chron::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_chron::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_ausmass::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_nieren_insuf_dialysev::text,'#NULL#') = COALESCE(current_record.fall_nieren_insuf_dialysev::text,'#NULL#') AND
-                              COALESCE(target_record.fall_leber_insuf::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf::text,'#NULL#') AND
-                              COALESCE(target_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_leber_insuf_ausmass::text,'#NULL#') = COALESCE(current_record.fall_leber_insuf_ausmass::text,'#NULL#') AND
-                              COALESCE(target_record.fall_schwanger_mo::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo::text,'#NULL#') AND
-                              COALESCE(target_record.fall_schwanger_mo_lbl::text,'#NULL#') = COALESCE(current_record.fall_schwanger_mo_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.fall_status::text,'#NULL#') = COALESCE(current_record.fall_status::text,'#NULL#') AND
-                              COALESCE(target_record.fall_ent_dat::text,'#NULL#') = COALESCE(current_record.fall_ent_dat::text,'#NULL#') AND
-                              COALESCE(target_record.fall_complete::text,'#NULL#') = COALESCE(current_record.fall_complete::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -518,7 +424,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE fall_fe_id = current_record.fall_fe_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -546,9 +452,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='fall_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT fall_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'fall_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.fall_fe d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -562,13 +468,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'fall_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -607,23 +513,7 @@ BEGIN
                         err_section:='medikationsanalyse_fe-10';    err_schema:='db_log';    err_table:='medikationsanalyse_fe';
                         SELECT count(1) INTO data_count
                         FROM db_log.medikationsanalyse_fe target_record
-                        WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.meda_header::text,'#NULL#') = COALESCE(current_record.meda_header::text,'#NULL#') AND
-                              COALESCE(target_record.meda_femb_1::text,'#NULL#') = COALESCE(current_record.meda_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.meda_femb_2::text,'#NULL#') = COALESCE(current_record.meda_femb_2::text,'#NULL#') AND
-                              COALESCE(target_record.meda_femb_3::text,'#NULL#') = COALESCE(current_record.meda_femb_3::text,'#NULL#') AND
-                              COALESCE(target_record.fall_fe_id::text,'#NULL#') = COALESCE(current_record.fall_fe_id::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
-                              COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
-                              COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
-                              COALESCE(target_record.meda_mrp_detekt::text,'#NULL#') = COALESCE(current_record.meda_mrp_detekt::text,'#NULL#') AND
-                              COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
-                              COALESCE(target_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.meda_aufwand_zeit_and::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and::text,'#NULL#') AND
-                              COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
-                              COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='medikationsanalyse_fe-15';    err_schema:='db_log';    err_table:='medikationsanalyse_fe';
@@ -689,23 +579,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.meda_header::text,'#NULL#') = COALESCE(current_record.meda_header::text,'#NULL#') AND
-                              COALESCE(target_record.meda_femb_1::text,'#NULL#') = COALESCE(current_record.meda_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.meda_femb_2::text,'#NULL#') = COALESCE(current_record.meda_femb_2::text,'#NULL#') AND
-                              COALESCE(target_record.meda_femb_3::text,'#NULL#') = COALESCE(current_record.meda_femb_3::text,'#NULL#') AND
-                              COALESCE(target_record.fall_fe_id::text,'#NULL#') = COALESCE(current_record.fall_fe_id::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.meda_dat::text,'#NULL#') = COALESCE(current_record.meda_dat::text,'#NULL#') AND
-                              COALESCE(target_record.meda_typ::text,'#NULL#') = COALESCE(current_record.meda_typ::text,'#NULL#') AND
-                              COALESCE(target_record.meda_ma_thueberw::text,'#NULL#') = COALESCE(current_record.meda_ma_thueberw::text,'#NULL#') AND
-                              COALESCE(target_record.meda_mrp_detekt::text,'#NULL#') = COALESCE(current_record.meda_mrp_detekt::text,'#NULL#') AND
-                              COALESCE(target_record.meda_aufwand_zeit::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit::text,'#NULL#') AND
-                              COALESCE(target_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.meda_aufwand_zeit_and::text,'#NULL#') = COALESCE(current_record.meda_aufwand_zeit_and::text,'#NULL#') AND
-                              COALESCE(target_record.meda_notiz::text,'#NULL#') = COALESCE(current_record.meda_notiz::text,'#NULL#') AND
-                              COALESCE(target_record.medikationsanalyse_complete::text,'#NULL#') = COALESCE(current_record.medikationsanalyse_complete::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -720,7 +594,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medikationsanalyse_fe_id = current_record.medikationsanalyse_fe_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -748,9 +622,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medikationsanalyse_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medikationsanalyse_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medikationsanalyse_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.medikationsanalyse_fe d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -764,13 +638,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medikationsanalyse_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -809,132 +683,7 @@ BEGIN
                         err_section:='mrpdokumentation_validierung_fe-10';    err_schema:='db_log';    err_table:='mrpdokumentation_validierung_fe';
                         SELECT count(1) INTO data_count
                         FROM db_log.mrpdokumentation_validierung_fe target_record
-                        WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.meda_fe_id::text,'#NULL#') = COALESCE(current_record.meda_fe_id::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_header::text,'#NULL#') = COALESCE(current_record.mrp_header::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_1::text,'#NULL#') = COALESCE(current_record.mrp_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_2::text,'#NULL#') = COALESCE(current_record.mrp_femb_2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_3::text,'#NULL#') = COALESCE(current_record.mrp_femb_3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pi_info::text,'#NULL#') = COALESCE(current_record.mrp_pi_info::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pi_info___1::text,'#NULL#') = COALESCE(current_record.mrp_pi_info___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_mf_info::text,'#NULL#') = COALESCE(current_record.mrp_mf_info::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_mf_info___1::text,'#NULL#') = COALESCE(current_record.mrp_mf_info___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pi_info_txt::text,'#NULL#') = COALESCE(current_record.mrp_pi_info_txt::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_mf_info_txt::text,'#NULL#') = COALESCE(current_record.mrp_mf_info_txt::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_4::text,'#NULL#') = COALESCE(current_record.mrp_femb_4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_5::text,'#NULL#') = COALESCE(current_record.mrp_femb_5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_6::text,'#NULL#') = COALESCE(current_record.mrp_femb_6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_entd_dat::text,'#NULL#') = COALESCE(current_record.mrp_entd_dat::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_kurzbeschr::text,'#NULL#') = COALESCE(current_record.mrp_kurzbeschr::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_entd_algorithmisch::text,'#NULL#') = COALESCE(current_record.mrp_entd_algorithmisch::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_hinweisgeber_lbl::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_hinweisgeber::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewissheit_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewissheit::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewissheit_oth::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_oth::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_23::text,'#NULL#') = COALESCE(current_record.mrp_femb_23::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_hinweisgeber_oth::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber_oth::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl_sonst::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_sonst::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_7::text,'#NULL#') = COALESCE(current_record.mrp_femb_7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_8::text,'#NULL#') = COALESCE(current_record.mrp_femb_8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_9::text,'#NULL#') = COALESCE(current_record.mrp_femb_9::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_10::text,'#NULL#') = COALESCE(current_record.mrp_femb_10::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_11::text,'#NULL#') = COALESCE(current_record.mrp_femb_11::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_12::text,'#NULL#') = COALESCE(current_record.mrp_femb_12::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_wirkstoff::text,'#NULL#') = COALESCE(current_record.mrp_wirkstoff::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc1_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc1_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc1::text,'#NULL#') = COALESCE(current_record.mrp_atc1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc2_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc2_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc2::text,'#NULL#') = COALESCE(current_record.mrp_atc2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc3_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc3_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc3::text,'#NULL#') = COALESCE(current_record.mrp_atc3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc4_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc4_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc4::text,'#NULL#') = COALESCE(current_record.mrp_atc4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc5_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc5_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc5::text,'#NULL#') = COALESCE(current_record.mrp_atc5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_13::text,'#NULL#') = COALESCE(current_record.mrp_femb_13::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_med_prod::text,'#NULL#') = COALESCE(current_record.mrp_med_prod::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_med_prod_sonst_lbl::text,'#NULL#') = COALESCE(current_record.mrp_med_prod_sonst_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_med_prod_sonst::text,'#NULL#') = COALESCE(current_record.mrp_med_prod_sonst::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_dokup_fehler::text,'#NULL#') = COALESCE(current_record.mrp_dokup_fehler::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_dokup_intervention::text,'#NULL#') = COALESCE(current_record.mrp_dokup_intervention::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_14::text,'#NULL#') = COALESCE(current_record.mrp_femb_14::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund::text,'#NULL#') = COALESCE(current_record.mrp_pigrund::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___1::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___2::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___3::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___4::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___5::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___6::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___7::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___8::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___9::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___9::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___10::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___10::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___11::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___11::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___12::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___12::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___13::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___13::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___14::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___14::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___15::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___15::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___16::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___16::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___17::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___17::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___18::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___18::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___19::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___19::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___20::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___20::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___21::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___21::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___22::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___22::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___23::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___23::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___24::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___24::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___25::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___25::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___26::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___26::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___27::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___27::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_15::text,'#NULL#') = COALESCE(current_record.mrp_femb_15::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___1::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___2::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___3::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___4::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___5::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_16::text,'#NULL#') = COALESCE(current_record.mrp_femb_16::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_17::text,'#NULL#') = COALESCE(current_record.mrp_femb_17::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse_disease::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_disease::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse_labor::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_labor::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_18::text,'#NULL#') = COALESCE(current_record.mrp_femb_18::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am::text,'#NULL#') = COALESCE(current_record.mrp_massn_am::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___9::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___9::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___10::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___10::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_19::text,'#NULL#') = COALESCE(current_record.mrp_femb_19::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_20::text,'#NULL#') = COALESCE(current_record.mrp_femb_20::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_notiz::text,'#NULL#') = COALESCE(current_record.mrp_notiz::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_21::text,'#NULL#') = COALESCE(current_record.mrp_femb_21::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_dokup_hand_emp_akz::text,'#NULL#') = COALESCE(current_record.mrp_dokup_hand_emp_akz::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp::text,'#NULL#') = COALESCE(current_record.mrp_merp::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
-                              COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='mrpdokumentation_validierung_fe-15';    err_schema:='db_log';    err_table:='mrpdokumentation_validierung_fe';
@@ -1218,132 +967,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.meda_fe_id::text,'#NULL#') = COALESCE(current_record.meda_fe_id::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instrument::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instrument::text,'#NULL#') AND
-                              COALESCE(target_record.redcap_repeat_instance::text,'#NULL#') = COALESCE(current_record.redcap_repeat_instance::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_header::text,'#NULL#') = COALESCE(current_record.mrp_header::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_1::text,'#NULL#') = COALESCE(current_record.mrp_femb_1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_2::text,'#NULL#') = COALESCE(current_record.mrp_femb_2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_3::text,'#NULL#') = COALESCE(current_record.mrp_femb_3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pi_info::text,'#NULL#') = COALESCE(current_record.mrp_pi_info::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pi_info___1::text,'#NULL#') = COALESCE(current_record.mrp_pi_info___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_mf_info::text,'#NULL#') = COALESCE(current_record.mrp_mf_info::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_mf_info___1::text,'#NULL#') = COALESCE(current_record.mrp_mf_info___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pi_info_txt::text,'#NULL#') = COALESCE(current_record.mrp_pi_info_txt::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_mf_info_txt::text,'#NULL#') = COALESCE(current_record.mrp_mf_info_txt::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_4::text,'#NULL#') = COALESCE(current_record.mrp_femb_4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_5::text,'#NULL#') = COALESCE(current_record.mrp_femb_5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_6::text,'#NULL#') = COALESCE(current_record.mrp_femb_6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_entd_dat::text,'#NULL#') = COALESCE(current_record.mrp_entd_dat::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_kurzbeschr::text,'#NULL#') = COALESCE(current_record.mrp_kurzbeschr::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_entd_algorithmisch::text,'#NULL#') = COALESCE(current_record.mrp_entd_algorithmisch::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_hinweisgeber_lbl::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_hinweisgeber::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewissheit_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewissheit::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_22::text,'#NULL#') = COALESCE(current_record.mrp_femb_22::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewissheit_oth::text,'#NULL#') = COALESCE(current_record.mrp_gewissheit_oth::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_23::text,'#NULL#') = COALESCE(current_record.mrp_femb_23::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_hinweisgeber_oth::text,'#NULL#') = COALESCE(current_record.mrp_hinweisgeber_oth::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_sonst_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_gewiss_grund_abl_sonst::text,'#NULL#') = COALESCE(current_record.mrp_gewiss_grund_abl_sonst::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_7::text,'#NULL#') = COALESCE(current_record.mrp_femb_7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_8::text,'#NULL#') = COALESCE(current_record.mrp_femb_8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_9::text,'#NULL#') = COALESCE(current_record.mrp_femb_9::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_10::text,'#NULL#') = COALESCE(current_record.mrp_femb_10::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_11::text,'#NULL#') = COALESCE(current_record.mrp_femb_11::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_12::text,'#NULL#') = COALESCE(current_record.mrp_femb_12::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_wirkstoff::text,'#NULL#') = COALESCE(current_record.mrp_wirkstoff::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc1_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc1_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc1::text,'#NULL#') = COALESCE(current_record.mrp_atc1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc2_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc2_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc2::text,'#NULL#') = COALESCE(current_record.mrp_atc2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc3_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc3_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc3::text,'#NULL#') = COALESCE(current_record.mrp_atc3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc4_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc4_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc4::text,'#NULL#') = COALESCE(current_record.mrp_atc4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc5_lbl::text,'#NULL#') = COALESCE(current_record.mrp_atc5_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_atc5::text,'#NULL#') = COALESCE(current_record.mrp_atc5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_13::text,'#NULL#') = COALESCE(current_record.mrp_femb_13::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_med_prod::text,'#NULL#') = COALESCE(current_record.mrp_med_prod::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_med_prod_sonst_lbl::text,'#NULL#') = COALESCE(current_record.mrp_med_prod_sonst_lbl::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_med_prod_sonst::text,'#NULL#') = COALESCE(current_record.mrp_med_prod_sonst::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_dokup_fehler::text,'#NULL#') = COALESCE(current_record.mrp_dokup_fehler::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_dokup_intervention::text,'#NULL#') = COALESCE(current_record.mrp_dokup_intervention::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_14::text,'#NULL#') = COALESCE(current_record.mrp_femb_14::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund::text,'#NULL#') = COALESCE(current_record.mrp_pigrund::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___1::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___2::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___3::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___4::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___5::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___6::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___7::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___8::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___9::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___9::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___10::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___10::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___11::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___11::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___12::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___12::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___13::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___13::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___14::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___14::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___15::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___15::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___16::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___16::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___17::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___17::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___18::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___18::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___19::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___19::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___20::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___20::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___21::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___21::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___22::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___22::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___23::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___23::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___24::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___24::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___25::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___25::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___26::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___26::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_pigrund___27::text,'#NULL#') = COALESCE(current_record.mrp_pigrund___27::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_15::text,'#NULL#') = COALESCE(current_record.mrp_femb_15::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___1::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___2::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___3::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___4::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse___5::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_16::text,'#NULL#') = COALESCE(current_record.mrp_femb_16::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_17::text,'#NULL#') = COALESCE(current_record.mrp_femb_17::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse_disease::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_disease::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_ip_klasse_labor::text,'#NULL#') = COALESCE(current_record.mrp_ip_klasse_labor::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_18::text,'#NULL#') = COALESCE(current_record.mrp_femb_18::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am::text,'#NULL#') = COALESCE(current_record.mrp_massn_am::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___9::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___9::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_am___10::text,'#NULL#') = COALESCE(current_record.mrp_massn_am___10::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_19::text,'#NULL#') = COALESCE(current_record.mrp_femb_19::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___1::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___2::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___2::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___3::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___3::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___4::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___4::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___5::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___5::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___6::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___6::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___7::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___7::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_massn_orga___8::text,'#NULL#') = COALESCE(current_record.mrp_massn_orga___8::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_20::text,'#NULL#') = COALESCE(current_record.mrp_femb_20::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_notiz::text,'#NULL#') = COALESCE(current_record.mrp_notiz::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_femb_21::text,'#NULL#') = COALESCE(current_record.mrp_femb_21::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_dokup_hand_emp_akz::text,'#NULL#') = COALESCE(current_record.mrp_dokup_hand_emp_akz::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp::text,'#NULL#') = COALESCE(current_record.mrp_merp::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp_info::text,'#NULL#') = COALESCE(current_record.mrp_merp_info::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp_info___1::text,'#NULL#') = COALESCE(current_record.mrp_merp_info___1::text,'#NULL#') AND
-                              COALESCE(target_record.mrp_merp_txt::text,'#NULL#') = COALESCE(current_record.mrp_merp_txt::text,'#NULL#') AND
-                              COALESCE(target_record.mrpdokumentation_validierung_complete::text,'#NULL#') = COALESCE(current_record.mrpdokumentation_validierung_complete::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -1358,7 +982,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -1386,9 +1010,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='mrpdokumentation_validierung_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT mrpdokumentation_validierung_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'mrpdokumentation_validierung_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.mrpdokumentation_validierung_fe d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1402,13 +1026,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'mrpdokumentation_validierung_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1447,23 +1071,7 @@ BEGIN
                         err_section:='risikofaktor_fe-10';    err_schema:='db_log';    err_table:='risikofaktor_fe';
                         SELECT count(1) INTO data_count
                         FROM db_log.risikofaktor_fe target_record
-                        WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_gerhemmer::text,'#NULL#') = COALESCE(current_record.rskfk_gerhemmer::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_tah::text,'#NULL#') = COALESCE(current_record.rskfk_tah::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_immunsupp::text,'#NULL#') = COALESCE(current_record.rskfk_immunsupp::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_tumorth::text,'#NULL#') = COALESCE(current_record.rskfk_tumorth::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_opiat::text,'#NULL#') = COALESCE(current_record.rskfk_opiat::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_atcn::text,'#NULL#') = COALESCE(current_record.rskfk_atcn::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_ait::text,'#NULL#') = COALESCE(current_record.rskfk_ait::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_anzam::text,'#NULL#') = COALESCE(current_record.rskfk_anzam::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_priscus::text,'#NULL#') = COALESCE(current_record.rskfk_priscus::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_qtc::text,'#NULL#') = COALESCE(current_record.rskfk_qtc::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_meld::text,'#NULL#') = COALESCE(current_record.rskfk_meld::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_dialyse::text,'#NULL#') = COALESCE(current_record.rskfk_dialyse::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_entern::text,'#NULL#') = COALESCE(current_record.rskfk_entern::text,'#NULL#') AND
-                              COALESCE(target_record.rskfkt_anz_rskamklassen::text,'#NULL#') = COALESCE(current_record.rskfkt_anz_rskamklassen::text,'#NULL#') AND
-                              COALESCE(target_record.risikofaktor_complete::text,'#NULL#') = COALESCE(current_record.risikofaktor_complete::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='risikofaktor_fe-15';    err_schema:='db_log';    err_table:='risikofaktor_fe';
@@ -1529,23 +1137,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_gerhemmer::text,'#NULL#') = COALESCE(current_record.rskfk_gerhemmer::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_tah::text,'#NULL#') = COALESCE(current_record.rskfk_tah::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_immunsupp::text,'#NULL#') = COALESCE(current_record.rskfk_immunsupp::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_tumorth::text,'#NULL#') = COALESCE(current_record.rskfk_tumorth::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_opiat::text,'#NULL#') = COALESCE(current_record.rskfk_opiat::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_atcn::text,'#NULL#') = COALESCE(current_record.rskfk_atcn::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_ait::text,'#NULL#') = COALESCE(current_record.rskfk_ait::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_anzam::text,'#NULL#') = COALESCE(current_record.rskfk_anzam::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_priscus::text,'#NULL#') = COALESCE(current_record.rskfk_priscus::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_qtc::text,'#NULL#') = COALESCE(current_record.rskfk_qtc::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_meld::text,'#NULL#') = COALESCE(current_record.rskfk_meld::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_dialyse::text,'#NULL#') = COALESCE(current_record.rskfk_dialyse::text,'#NULL#') AND
-                              COALESCE(target_record.rskfk_entern::text,'#NULL#') = COALESCE(current_record.rskfk_entern::text,'#NULL#') AND
-                              COALESCE(target_record.rskfkt_anz_rskamklassen::text,'#NULL#') = COALESCE(current_record.rskfkt_anz_rskamklassen::text,'#NULL#') AND
-                              COALESCE(target_record.risikofaktor_complete::text,'#NULL#') = COALESCE(current_record.risikofaktor_complete::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -1560,7 +1152,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE risikofaktor_fe_id = current_record.risikofaktor_fe_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -1588,9 +1180,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='risikofaktor_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT risikofaktor_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'risikofaktor_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.risikofaktor_fe d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1604,13 +1196,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'risikofaktor_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1649,31 +1241,7 @@ BEGIN
                         err_section:='trigger_fe-10';    err_schema:='db_log';    err_table:='trigger_fe';
                         SELECT count(1) INTO data_count
                         FROM db_log.trigger_fe target_record
-                        WHERE COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                              COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.trg_ast::text,'#NULL#') = COALESCE(current_record.trg_ast::text,'#NULL#') AND
-                              COALESCE(target_record.trg_alt::text,'#NULL#') = COALESCE(current_record.trg_alt::text,'#NULL#') AND
-                              COALESCE(target_record.trg_crp::text,'#NULL#') = COALESCE(current_record.trg_crp::text,'#NULL#') AND
-                              COALESCE(target_record.trg_leuk_penie::text,'#NULL#') = COALESCE(current_record.trg_leuk_penie::text,'#NULL#') AND
-                              COALESCE(target_record.trg_leuk_ose::text,'#NULL#') = COALESCE(current_record.trg_leuk_ose::text,'#NULL#') AND
-                              COALESCE(target_record.trg_thrmb_penie::text,'#NULL#') = COALESCE(current_record.trg_thrmb_penie::text,'#NULL#') AND
-                              COALESCE(target_record.trg_aptt::text,'#NULL#') = COALESCE(current_record.trg_aptt::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyp_haem::text,'#NULL#') = COALESCE(current_record.trg_hyp_haem::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_glyk::text,'#NULL#') = COALESCE(current_record.trg_hypo_glyk::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_glyk::text,'#NULL#') = COALESCE(current_record.trg_hyper_glyk::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_bilirbnm::text,'#NULL#') = COALESCE(current_record.trg_hyper_bilirbnm::text,'#NULL#') AND
-                              COALESCE(target_record.trg_ck::text,'#NULL#') = COALESCE(current_record.trg_ck::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_serablmn::text,'#NULL#') = COALESCE(current_record.trg_hypo_serablmn::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_nat::text,'#NULL#') = COALESCE(current_record.trg_hypo_nat::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_nat::text,'#NULL#') = COALESCE(current_record.trg_hyper_nat::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_kal::text,'#NULL#') = COALESCE(current_record.trg_hyper_kal::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_kal::text,'#NULL#') = COALESCE(current_record.trg_hypo_kal::text,'#NULL#') AND
-                              COALESCE(target_record.trg_inr_ern::text,'#NULL#') = COALESCE(current_record.trg_inr_ern::text,'#NULL#') AND
-                              COALESCE(target_record.trg_inr_erh::text,'#NULL#') = COALESCE(current_record.trg_inr_erh::text,'#NULL#') AND
-                              COALESCE(target_record.trg_inr_erh_antikoa::text,'#NULL#') = COALESCE(current_record.trg_inr_erh_antikoa::text,'#NULL#') AND
-                              COALESCE(target_record.trg_krea::text,'#NULL#') = COALESCE(current_record.trg_krea::text,'#NULL#') AND
-                              COALESCE(target_record.trg_egfr::text,'#NULL#') = COALESCE(current_record.trg_egfr::text,'#NULL#') AND
-                              COALESCE(target_record.trigger_complete::text,'#NULL#') = COALESCE(current_record.trigger_complete::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='trigger_fe-15';    err_schema:='db_log';    err_table:='trigger_fe';
@@ -1755,31 +1323,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.patient_id_fk::text,'#NULL#') = COALESCE(current_record.patient_id_fk::text,'#NULL#') AND
-                              COALESCE(target_record.record_id::text,'#NULL#') = COALESCE(current_record.record_id::text,'#NULL#') AND
-                              COALESCE(target_record.trg_ast::text,'#NULL#') = COALESCE(current_record.trg_ast::text,'#NULL#') AND
-                              COALESCE(target_record.trg_alt::text,'#NULL#') = COALESCE(current_record.trg_alt::text,'#NULL#') AND
-                              COALESCE(target_record.trg_crp::text,'#NULL#') = COALESCE(current_record.trg_crp::text,'#NULL#') AND
-                              COALESCE(target_record.trg_leuk_penie::text,'#NULL#') = COALESCE(current_record.trg_leuk_penie::text,'#NULL#') AND
-                              COALESCE(target_record.trg_leuk_ose::text,'#NULL#') = COALESCE(current_record.trg_leuk_ose::text,'#NULL#') AND
-                              COALESCE(target_record.trg_thrmb_penie::text,'#NULL#') = COALESCE(current_record.trg_thrmb_penie::text,'#NULL#') AND
-                              COALESCE(target_record.trg_aptt::text,'#NULL#') = COALESCE(current_record.trg_aptt::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyp_haem::text,'#NULL#') = COALESCE(current_record.trg_hyp_haem::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_glyk::text,'#NULL#') = COALESCE(current_record.trg_hypo_glyk::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_glyk::text,'#NULL#') = COALESCE(current_record.trg_hyper_glyk::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_bilirbnm::text,'#NULL#') = COALESCE(current_record.trg_hyper_bilirbnm::text,'#NULL#') AND
-                              COALESCE(target_record.trg_ck::text,'#NULL#') = COALESCE(current_record.trg_ck::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_serablmn::text,'#NULL#') = COALESCE(current_record.trg_hypo_serablmn::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_nat::text,'#NULL#') = COALESCE(current_record.trg_hypo_nat::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_nat::text,'#NULL#') = COALESCE(current_record.trg_hyper_nat::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hyper_kal::text,'#NULL#') = COALESCE(current_record.trg_hyper_kal::text,'#NULL#') AND
-                              COALESCE(target_record.trg_hypo_kal::text,'#NULL#') = COALESCE(current_record.trg_hypo_kal::text,'#NULL#') AND
-                              COALESCE(target_record.trg_inr_ern::text,'#NULL#') = COALESCE(current_record.trg_inr_ern::text,'#NULL#') AND
-                              COALESCE(target_record.trg_inr_erh::text,'#NULL#') = COALESCE(current_record.trg_inr_erh::text,'#NULL#') AND
-                              COALESCE(target_record.trg_inr_erh_antikoa::text,'#NULL#') = COALESCE(current_record.trg_inr_erh_antikoa::text,'#NULL#') AND
-                              COALESCE(target_record.trg_krea::text,'#NULL#') = COALESCE(current_record.trg_krea::text,'#NULL#') AND
-                              COALESCE(target_record.trg_egfr::text,'#NULL#') = COALESCE(current_record.trg_egfr::text,'#NULL#') AND
-                              COALESCE(target_record.trigger_complete::text,'#NULL#') = COALESCE(current_record.trigger_complete::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -1794,7 +1338,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_fe_dp_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE trigger_fe_id = current_record.trigger_fe_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -1822,9 +1366,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='trigger_fe-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT trigger_fe_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'trigger_fe' AS table_name, last_pro_datetime, current_dataset_status, 'copy_fe_dp_in_to_db_log' AS function_name FROM db_log.trigger_fe d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1838,13 +1382,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'trigger_fe', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1863,15 +1407,15 @@ BEGIN
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
     
         err_section:='BOTTON-05';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_all', 'db_log', 'copy_fe_dp_in_to_db_log', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
 
         err_section:='BOTTON-10';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_fe_dp_in_to_db_log', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     
         err_section:='BOTTON-15';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_upd', 'db_log', 'copy_fe_dp_in_to_db_log', last_pro_datetime, 'copy_fe_dp_in_to_db_log', data_count_pro_upd, tmp_sec, 'Count all updatetd Datasetzs '||temp);
 
         -- Cleer current executed function and total number of records
@@ -1914,6 +1458,5 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
--- old start CopyJob CDS in 2 DB_log - SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_fe_dp_in_to_db_log();');
 -----------------------------
 

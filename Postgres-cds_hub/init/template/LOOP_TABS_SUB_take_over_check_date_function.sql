@@ -64,13 +64,13 @@
     END LOOP;
 
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
-        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, '<%TABLE_NAME%>' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
-        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
+        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist);
     
-        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT <%TABLE_NAME_2%>_id AS table_primary_key, last_processing_nr, '<%SCHEMA_2%>' AS schema_name, '<%TABLE_NAME_2%>' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>
-        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
+        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist);
     END IF;
     -- END <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>
     -----------------------------------------------------------------------------------------------------------------------

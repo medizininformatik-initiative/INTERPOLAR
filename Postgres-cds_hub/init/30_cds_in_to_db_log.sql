@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-01-15 10:46:31
+-- Rights definition file last update : 2025-01-13 09:38:21
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-06 19:15:31
+-- Create time: 2025-02-11 22:33:47
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -45,7 +45,7 @@ DECLARE
     data_count_pro_upd INT:=0; -- Counting updatet records in this run how are still there
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
-    data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
+    data_count_last_status_max INT:=5000; -- Max number of data records since the status was last set (parameter)
     last_pro_nr INT; -- Last processing number
     temp VARCHAR; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
@@ -151,80 +151,7 @@ BEGIN
                         err_section:='encounter_raw-10';    err_schema:='db_log';    err_table:='encounter_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.encounter_raw target_record
-                        WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
-                              COALESCE(target_record.enc_meta_versionid::text,'#NULL#') = COALESCE(current_record.enc_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.enc_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.enc_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.enc_meta_profile::text,'#NULL#') = COALESCE(current_record.enc_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_code::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_display::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_system::text,'#NULL#') = COALESCE(current_record.enc_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_value::text,'#NULL#') = COALESCE(current_record.enc_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_start::text,'#NULL#') = COALESCE(current_record.enc_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_end::text,'#NULL#') = COALESCE(current_record.enc_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.enc_patient_ref::text,'#NULL#') = COALESCE(current_record.enc_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_partof_ref::text,'#NULL#') = COALESCE(current_record.enc_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_status::text,'#NULL#') = COALESCE(current_record.enc_status::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_system::text,'#NULL#') = COALESCE(current_record.enc_class_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_version::text,'#NULL#') = COALESCE(current_record.enc_class_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_code::text,'#NULL#') = COALESCE(current_record.enc_class_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_display::text,'#NULL#') = COALESCE(current_record.enc_class_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_system::text,'#NULL#') = COALESCE(current_record.enc_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_version::text,'#NULL#') = COALESCE(current_record.enc_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_code::text,'#NULL#') = COALESCE(current_record.enc_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_display::text,'#NULL#') = COALESCE(current_record.enc_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_text::text,'#NULL#') = COALESCE(current_record.enc_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_system::text,'#NULL#') = COALESCE(current_record.enc_servicetype_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_version::text,'#NULL#') = COALESCE(current_record.enc_servicetype_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_code::text,'#NULL#') = COALESCE(current_record.enc_servicetype_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_display::text,'#NULL#') = COALESCE(current_record.enc_servicetype_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_text::text,'#NULL#') = COALESCE(current_record.enc_servicetype_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_period_start::text,'#NULL#') = COALESCE(current_record.enc_period_start::text,'#NULL#') AND
-                              COALESCE(target_record.enc_period_end::text,'#NULL#') = COALESCE(current_record.enc_period_end::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_condition_ref::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_condition_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_system::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_version::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_code::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_display::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_text::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_rank::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_rank::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_system::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_version::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_code::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_display::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_text::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_system::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_version::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_ref::text,'#NULL#') = COALESCE(current_record.enc_location_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_type::text,'#NULL#') = COALESCE(current_record.enc_location_type::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_code::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_display::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_display::text,'#NULL#') = COALESCE(current_record.enc_location_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_status::text,'#NULL#') = COALESCE(current_record.enc_location_status::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_system::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_version::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_code::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_display::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_text::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_ref::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_type::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_type::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_code::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_display::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='encounter_raw-15';    err_schema:='db_log';    err_table:='encounter_raw';
@@ -404,80 +331,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.enc_id::text,'#NULL#') = COALESCE(current_record.enc_id::text,'#NULL#') AND
-                              COALESCE(target_record.enc_meta_versionid::text,'#NULL#') = COALESCE(current_record.enc_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.enc_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.enc_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.enc_meta_profile::text,'#NULL#') = COALESCE(current_record.enc_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_code::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_display::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_system::text,'#NULL#') = COALESCE(current_record.enc_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_value::text,'#NULL#') = COALESCE(current_record.enc_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_start::text,'#NULL#') = COALESCE(current_record.enc_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.enc_identifier_end::text,'#NULL#') = COALESCE(current_record.enc_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.enc_patient_ref::text,'#NULL#') = COALESCE(current_record.enc_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_partof_ref::text,'#NULL#') = COALESCE(current_record.enc_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_status::text,'#NULL#') = COALESCE(current_record.enc_status::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_system::text,'#NULL#') = COALESCE(current_record.enc_class_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_version::text,'#NULL#') = COALESCE(current_record.enc_class_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_code::text,'#NULL#') = COALESCE(current_record.enc_class_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_class_display::text,'#NULL#') = COALESCE(current_record.enc_class_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_system::text,'#NULL#') = COALESCE(current_record.enc_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_version::text,'#NULL#') = COALESCE(current_record.enc_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_code::text,'#NULL#') = COALESCE(current_record.enc_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_display::text,'#NULL#') = COALESCE(current_record.enc_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_type_text::text,'#NULL#') = COALESCE(current_record.enc_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_system::text,'#NULL#') = COALESCE(current_record.enc_servicetype_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_version::text,'#NULL#') = COALESCE(current_record.enc_servicetype_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_code::text,'#NULL#') = COALESCE(current_record.enc_servicetype_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_display::text,'#NULL#') = COALESCE(current_record.enc_servicetype_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_servicetype_text::text,'#NULL#') = COALESCE(current_record.enc_servicetype_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_period_start::text,'#NULL#') = COALESCE(current_record.enc_period_start::text,'#NULL#') AND
-                              COALESCE(target_record.enc_period_end::text,'#NULL#') = COALESCE(current_record.enc_period_end::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_condition_ref::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_condition_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_system::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_version::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_code::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_display::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_use_text::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_use_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_diagnosis_rank::text,'#NULL#') = COALESCE(current_record.enc_diagnosis_rank::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_system::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_version::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_code::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_display::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_admitsource_text::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_admitsource_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_system::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_version::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') = COALESCE(current_record.enc_hospitalization_dischargedisposition_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_ref::text,'#NULL#') = COALESCE(current_record.enc_location_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_type::text,'#NULL#') = COALESCE(current_record.enc_location_type::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_code::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_display::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_location_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_display::text,'#NULL#') = COALESCE(current_record.enc_location_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_status::text,'#NULL#') = COALESCE(current_record.enc_location_status::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_system::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_version::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_code::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_display::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_location_physicaltype_text::text,'#NULL#') = COALESCE(current_record.enc_location_physicaltype_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_ref::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_ref::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_type::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_type::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_use::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_version::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_code::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.enc_serviceprovider_display::text,'#NULL#') = COALESCE(current_record.enc_serviceprovider_display::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -492,7 +346,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE encounter_raw_id = current_record.encounter_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -520,9 +374,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='encounter_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT encounter_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'encounter_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.encounter_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -536,13 +390,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'encounter_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'encounter_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'encounter_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -581,26 +435,7 @@ BEGIN
                         err_section:='patient_raw-10';    err_schema:='db_log';    err_table:='patient_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.patient_raw target_record
-                        WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
-                              COALESCE(target_record.pat_meta_versionid::text,'#NULL#') = COALESCE(current_record.pat_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.pat_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.pat_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.pat_meta_profile::text,'#NULL#') = COALESCE(current_record.pat_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_use::text,'#NULL#') = COALESCE(current_record.pat_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_system::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_version::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_code::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_display::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_text::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_system::text,'#NULL#') = COALESCE(current_record.pat_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_value::text,'#NULL#') = COALESCE(current_record.pat_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_start::text,'#NULL#') = COALESCE(current_record.pat_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_end::text,'#NULL#') = COALESCE(current_record.pat_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name_text::text,'#NULL#') = COALESCE(current_record.pat_name_text::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name_family::text,'#NULL#') = COALESCE(current_record.pat_name_family::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name_given::text,'#NULL#') = COALESCE(current_record.pat_name_given::text,'#NULL#') AND
-                              COALESCE(target_record.pat_gender::text,'#NULL#') = COALESCE(current_record.pat_gender::text,'#NULL#') AND
-                              COALESCE(target_record.pat_birthdate::text,'#NULL#') = COALESCE(current_record.pat_birthdate::text,'#NULL#') AND
-                              COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='patient_raw-15';    err_schema:='db_log';    err_table:='patient_raw';
@@ -672,26 +507,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.pat_id::text,'#NULL#') = COALESCE(current_record.pat_id::text,'#NULL#') AND
-                              COALESCE(target_record.pat_meta_versionid::text,'#NULL#') = COALESCE(current_record.pat_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.pat_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.pat_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.pat_meta_profile::text,'#NULL#') = COALESCE(current_record.pat_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_use::text,'#NULL#') = COALESCE(current_record.pat_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_system::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_version::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_code::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_display::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_type_text::text,'#NULL#') = COALESCE(current_record.pat_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_system::text,'#NULL#') = COALESCE(current_record.pat_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_value::text,'#NULL#') = COALESCE(current_record.pat_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_start::text,'#NULL#') = COALESCE(current_record.pat_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.pat_identifier_end::text,'#NULL#') = COALESCE(current_record.pat_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name_text::text,'#NULL#') = COALESCE(current_record.pat_name_text::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name_family::text,'#NULL#') = COALESCE(current_record.pat_name_family::text,'#NULL#') AND
-                              COALESCE(target_record.pat_name_given::text,'#NULL#') = COALESCE(current_record.pat_name_given::text,'#NULL#') AND
-                              COALESCE(target_record.pat_gender::text,'#NULL#') = COALESCE(current_record.pat_gender::text,'#NULL#') AND
-                              COALESCE(target_record.pat_birthdate::text,'#NULL#') = COALESCE(current_record.pat_birthdate::text,'#NULL#') AND
-                              COALESCE(target_record.pat_address_postalcode::text,'#NULL#') = COALESCE(current_record.pat_address_postalcode::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -706,7 +522,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE patient_raw_id = current_record.patient_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -734,9 +550,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='patient_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT patient_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'patient_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.patient_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -750,13 +566,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'patient_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'patient_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -795,122 +611,7 @@ BEGIN
                         err_section:='condition_raw-10';    err_schema:='db_log';    err_table:='condition_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.condition_raw target_record
-                        WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
-                              COALESCE(target_record.con_meta_versionid::text,'#NULL#') = COALESCE(current_record.con_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.con_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.con_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.con_meta_profile::text,'#NULL#') = COALESCE(current_record.con_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_use::text,'#NULL#') = COALESCE(current_record.con_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_system::text,'#NULL#') = COALESCE(current_record.con_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_value::text,'#NULL#') = COALESCE(current_record.con_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_start::text,'#NULL#') = COALESCE(current_record.con_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_end::text,'#NULL#') = COALESCE(current_record.con_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.con_encounter_ref::text,'#NULL#') = COALESCE(current_record.con_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_patient_ref::text,'#NULL#') = COALESCE(current_record.con_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_system::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_version::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_code::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_display::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_text::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_system::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_version::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_code::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_display::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_text::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_system::text,'#NULL#') = COALESCE(current_record.con_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_version::text,'#NULL#') = COALESCE(current_record.con_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_code::text,'#NULL#') = COALESCE(current_record.con_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_display::text,'#NULL#') = COALESCE(current_record.con_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_text::text,'#NULL#') = COALESCE(current_record.con_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_system::text,'#NULL#') = COALESCE(current_record.con_severity_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_version::text,'#NULL#') = COALESCE(current_record.con_severity_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_code::text,'#NULL#') = COALESCE(current_record.con_severity_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_display::text,'#NULL#') = COALESCE(current_record.con_severity_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_text::text,'#NULL#') = COALESCE(current_record.con_severity_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_system::text,'#NULL#') = COALESCE(current_record.con_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_version::text,'#NULL#') = COALESCE(current_record.con_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_code::text,'#NULL#') = COALESCE(current_record.con_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_display::text,'#NULL#') = COALESCE(current_record.con_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_text::text,'#NULL#') = COALESCE(current_record.con_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_system::text,'#NULL#') = COALESCE(current_record.con_bodysite_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_version::text,'#NULL#') = COALESCE(current_record.con_bodysite_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_code::text,'#NULL#') = COALESCE(current_record.con_bodysite_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_display::text,'#NULL#') = COALESCE(current_record.con_bodysite_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_text::text,'#NULL#') = COALESCE(current_record.con_bodysite_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_onsetperiod_start::text,'#NULL#') = COALESCE(current_record.con_onsetperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.con_onsetperiod_end::text,'#NULL#') = COALESCE(current_record.con_onsetperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.con_onsetdatetime::text,'#NULL#') = COALESCE(current_record.con_onsetdatetime::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementdatetime::text,'#NULL#') = COALESCE(current_record.con_abatementdatetime::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_value::text,'#NULL#') = COALESCE(current_record.con_abatementage_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_comparator::text,'#NULL#') = COALESCE(current_record.con_abatementage_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_unit::text,'#NULL#') = COALESCE(current_record.con_abatementage_unit::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_system::text,'#NULL#') = COALESCE(current_record.con_abatementage_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_code::text,'#NULL#') = COALESCE(current_record.con_abatementage_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementperiod_start::text,'#NULL#') = COALESCE(current_record.con_abatementperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementperiod_end::text,'#NULL#') = COALESCE(current_record.con_abatementperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_value::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_unit::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_system::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_code::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_value::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_unit::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_system::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_code::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementstring::text,'#NULL#') = COALESCE(current_record.con_abatementstring::text,'#NULL#') AND
-                              COALESCE(target_record.con_recordeddate::text,'#NULL#') = COALESCE(current_record.con_recordeddate::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_ref::text,'#NULL#') = COALESCE(current_record.con_recorder_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_type::text,'#NULL#') = COALESCE(current_record.con_recorder_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_use::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_display::text,'#NULL#') = COALESCE(current_record.con_recorder_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_ref::text,'#NULL#') = COALESCE(current_record.con_asserter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_type::text,'#NULL#') = COALESCE(current_record.con_asserter_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_use::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_display::text,'#NULL#') = COALESCE(current_record.con_asserter_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_system::text,'#NULL#') = COALESCE(current_record.con_stage_summary_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_version::text,'#NULL#') = COALESCE(current_record.con_stage_summary_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_code::text,'#NULL#') = COALESCE(current_record.con_stage_summary_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_display::text,'#NULL#') = COALESCE(current_record.con_stage_summary_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_text::text,'#NULL#') = COALESCE(current_record.con_stage_summary_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_ref::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_type::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_use::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_display::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_system::text,'#NULL#') = COALESCE(current_record.con_stage_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_version::text,'#NULL#') = COALESCE(current_record.con_stage_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_code::text,'#NULL#') = COALESCE(current_record.con_stage_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_display::text,'#NULL#') = COALESCE(current_record.con_stage_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_text::text,'#NULL#') = COALESCE(current_record.con_stage_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorstring::text,'#NULL#') = COALESCE(current_record.con_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_time::text,'#NULL#') = COALESCE(current_record.con_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_text::text,'#NULL#') = COALESCE(current_record.con_note_text::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='condition_raw-15';    err_schema:='db_log';    err_table:='condition_raw';
@@ -1174,122 +875,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.con_id::text,'#NULL#') = COALESCE(current_record.con_id::text,'#NULL#') AND
-                              COALESCE(target_record.con_meta_versionid::text,'#NULL#') = COALESCE(current_record.con_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.con_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.con_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.con_meta_profile::text,'#NULL#') = COALESCE(current_record.con_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_use::text,'#NULL#') = COALESCE(current_record.con_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_system::text,'#NULL#') = COALESCE(current_record.con_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_value::text,'#NULL#') = COALESCE(current_record.con_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_start::text,'#NULL#') = COALESCE(current_record.con_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.con_identifier_end::text,'#NULL#') = COALESCE(current_record.con_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.con_encounter_ref::text,'#NULL#') = COALESCE(current_record.con_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_patient_ref::text,'#NULL#') = COALESCE(current_record.con_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_system::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_version::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_code::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_display::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_clinicalstatus_text::text,'#NULL#') = COALESCE(current_record.con_clinicalstatus_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_system::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_version::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_code::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_display::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_verificationstatus_text::text,'#NULL#') = COALESCE(current_record.con_verificationstatus_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_system::text,'#NULL#') = COALESCE(current_record.con_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_version::text,'#NULL#') = COALESCE(current_record.con_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_code::text,'#NULL#') = COALESCE(current_record.con_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_display::text,'#NULL#') = COALESCE(current_record.con_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_category_text::text,'#NULL#') = COALESCE(current_record.con_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_system::text,'#NULL#') = COALESCE(current_record.con_severity_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_version::text,'#NULL#') = COALESCE(current_record.con_severity_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_code::text,'#NULL#') = COALESCE(current_record.con_severity_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_display::text,'#NULL#') = COALESCE(current_record.con_severity_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_severity_text::text,'#NULL#') = COALESCE(current_record.con_severity_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_system::text,'#NULL#') = COALESCE(current_record.con_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_version::text,'#NULL#') = COALESCE(current_record.con_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_code::text,'#NULL#') = COALESCE(current_record.con_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_display::text,'#NULL#') = COALESCE(current_record.con_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_code_text::text,'#NULL#') = COALESCE(current_record.con_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_system::text,'#NULL#') = COALESCE(current_record.con_bodysite_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_version::text,'#NULL#') = COALESCE(current_record.con_bodysite_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_code::text,'#NULL#') = COALESCE(current_record.con_bodysite_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_display::text,'#NULL#') = COALESCE(current_record.con_bodysite_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_bodysite_text::text,'#NULL#') = COALESCE(current_record.con_bodysite_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_onsetperiod_start::text,'#NULL#') = COALESCE(current_record.con_onsetperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.con_onsetperiod_end::text,'#NULL#') = COALESCE(current_record.con_onsetperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.con_onsetdatetime::text,'#NULL#') = COALESCE(current_record.con_onsetdatetime::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementdatetime::text,'#NULL#') = COALESCE(current_record.con_abatementdatetime::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_value::text,'#NULL#') = COALESCE(current_record.con_abatementage_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_comparator::text,'#NULL#') = COALESCE(current_record.con_abatementage_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_unit::text,'#NULL#') = COALESCE(current_record.con_abatementage_unit::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_system::text,'#NULL#') = COALESCE(current_record.con_abatementage_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementage_code::text,'#NULL#') = COALESCE(current_record.con_abatementage_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementperiod_start::text,'#NULL#') = COALESCE(current_record.con_abatementperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementperiod_end::text,'#NULL#') = COALESCE(current_record.con_abatementperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_value::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_unit::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_system::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_low_code::text,'#NULL#') = COALESCE(current_record.con_abatementrange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_value::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_unit::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_system::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementrange_high_code::text,'#NULL#') = COALESCE(current_record.con_abatementrange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_abatementstring::text,'#NULL#') = COALESCE(current_record.con_abatementstring::text,'#NULL#') AND
-                              COALESCE(target_record.con_recordeddate::text,'#NULL#') = COALESCE(current_record.con_recordeddate::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_ref::text,'#NULL#') = COALESCE(current_record.con_recorder_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_type::text,'#NULL#') = COALESCE(current_record.con_recorder_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_use::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_recorder_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_recorder_display::text,'#NULL#') = COALESCE(current_record.con_recorder_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_ref::text,'#NULL#') = COALESCE(current_record.con_asserter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_type::text,'#NULL#') = COALESCE(current_record.con_asserter_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_use::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_asserter_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_asserter_display::text,'#NULL#') = COALESCE(current_record.con_asserter_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_system::text,'#NULL#') = COALESCE(current_record.con_stage_summary_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_version::text,'#NULL#') = COALESCE(current_record.con_stage_summary_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_code::text,'#NULL#') = COALESCE(current_record.con_stage_summary_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_display::text,'#NULL#') = COALESCE(current_record.con_stage_summary_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_summary_text::text,'#NULL#') = COALESCE(current_record.con_stage_summary_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_ref::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_type::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_use::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_assessment_display::text,'#NULL#') = COALESCE(current_record.con_stage_assessment_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_system::text,'#NULL#') = COALESCE(current_record.con_stage_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_version::text,'#NULL#') = COALESCE(current_record.con_stage_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_code::text,'#NULL#') = COALESCE(current_record.con_stage_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_display::text,'#NULL#') = COALESCE(current_record.con_stage_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_stage_type_text::text,'#NULL#') = COALESCE(current_record.con_stage_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorstring::text,'#NULL#') = COALESCE(current_record.con_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.con_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_time::text,'#NULL#') = COALESCE(current_record.con_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.con_note_text::text,'#NULL#') = COALESCE(current_record.con_note_text::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -1304,7 +890,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE condition_raw_id = current_record.condition_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -1332,9 +918,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='condition_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT condition_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'condition_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.condition_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1348,13 +934,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'condition_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'condition_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'condition_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1393,66 +979,7 @@ BEGIN
                         err_section:='medication_raw-10';    err_schema:='db_log';    err_table:='medication_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medication_raw target_record
-                        WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
-                              COALESCE(target_record.med_meta_versionid::text,'#NULL#') = COALESCE(current_record.med_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.med_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.med_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.med_meta_profile::text,'#NULL#') = COALESCE(current_record.med_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_use::text,'#NULL#') = COALESCE(current_record.med_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_version::text,'#NULL#') = COALESCE(current_record.med_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_code::text,'#NULL#') = COALESCE(current_record.med_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_display::text,'#NULL#') = COALESCE(current_record.med_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_text::text,'#NULL#') = COALESCE(current_record.med_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_system::text,'#NULL#') = COALESCE(current_record.med_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_value::text,'#NULL#') = COALESCE(current_record.med_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_start::text,'#NULL#') = COALESCE(current_record.med_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_end::text,'#NULL#') = COALESCE(current_record.med_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_system::text,'#NULL#') = COALESCE(current_record.med_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_version::text,'#NULL#') = COALESCE(current_record.med_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_code::text,'#NULL#') = COALESCE(current_record.med_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_display::text,'#NULL#') = COALESCE(current_record.med_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_text::text,'#NULL#') = COALESCE(current_record.med_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_status::text,'#NULL#') = COALESCE(current_record.med_status::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_system::text,'#NULL#') = COALESCE(current_record.med_form_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_version::text,'#NULL#') = COALESCE(current_record.med_form_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_code::text,'#NULL#') = COALESCE(current_record.med_form_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_display::text,'#NULL#') = COALESCE(current_record.med_form_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_text::text,'#NULL#') = COALESCE(current_record.med_form_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_value::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_comparator::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_unit::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_system::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_code::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_value::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_comparator::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_unit::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_system::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_code::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_value::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_comparator::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_unit::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_value::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_comparator::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_unit::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_ref::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_type::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_isactive::text,'#NULL#') = COALESCE(current_record.med_ingredient_isactive::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='medication_raw-15';    err_schema:='db_log';    err_table:='medication_raw';
@@ -1604,66 +1131,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.med_id::text,'#NULL#') = COALESCE(current_record.med_id::text,'#NULL#') AND
-                              COALESCE(target_record.med_meta_versionid::text,'#NULL#') = COALESCE(current_record.med_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.med_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.med_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.med_meta_profile::text,'#NULL#') = COALESCE(current_record.med_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_use::text,'#NULL#') = COALESCE(current_record.med_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_version::text,'#NULL#') = COALESCE(current_record.med_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_code::text,'#NULL#') = COALESCE(current_record.med_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_display::text,'#NULL#') = COALESCE(current_record.med_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_type_text::text,'#NULL#') = COALESCE(current_record.med_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_system::text,'#NULL#') = COALESCE(current_record.med_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_value::text,'#NULL#') = COALESCE(current_record.med_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_start::text,'#NULL#') = COALESCE(current_record.med_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.med_identifier_end::text,'#NULL#') = COALESCE(current_record.med_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_system::text,'#NULL#') = COALESCE(current_record.med_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_version::text,'#NULL#') = COALESCE(current_record.med_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_code::text,'#NULL#') = COALESCE(current_record.med_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_display::text,'#NULL#') = COALESCE(current_record.med_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_code_text::text,'#NULL#') = COALESCE(current_record.med_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_status::text,'#NULL#') = COALESCE(current_record.med_status::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_system::text,'#NULL#') = COALESCE(current_record.med_form_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_version::text,'#NULL#') = COALESCE(current_record.med_form_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_code::text,'#NULL#') = COALESCE(current_record.med_form_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_display::text,'#NULL#') = COALESCE(current_record.med_form_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_form_text::text,'#NULL#') = COALESCE(current_record.med_form_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_value::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_comparator::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_unit::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_system::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_numerator_code::text,'#NULL#') = COALESCE(current_record.med_amount_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_value::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_comparator::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_unit::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_system::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_amount_denominator_code::text,'#NULL#') = COALESCE(current_record.med_amount_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_value::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_comparator::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_unit::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_numerator_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_value::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_comparator::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_unit::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_strength_denominator_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_strength_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_ref::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_type::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_itemreference_display::text,'#NULL#') = COALESCE(current_record.med_ingredient_itemreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.med_ingredient_isactive::text,'#NULL#') = COALESCE(current_record.med_ingredient_isactive::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -1678,7 +1146,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medication_raw_id = current_record.medication_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -1706,9 +1174,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medication_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medication_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medication_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medication_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -1722,13 +1190,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medication_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medication_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medication_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -1767,232 +1235,7 @@ BEGIN
                         err_section:='medicationrequest_raw-10';    err_schema:='db_log';    err_table:='medicationrequest_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medicationrequest_raw target_record
-                        WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_meta_versionid::text,'#NULL#') = COALESCE(current_record.medreq_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.medreq_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_meta_profile::text,'#NULL#') = COALESCE(current_record.medreq_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_system::text,'#NULL#') = COALESCE(current_record.medreq_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_value::text,'#NULL#') = COALESCE(current_record.medreq_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_start::text,'#NULL#') = COALESCE(current_record.medreq_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_end::text,'#NULL#') = COALESCE(current_record.medreq_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.medreq_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_patient_ref::text,'#NULL#') = COALESCE(current_record.medreq_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_medicationreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_status::text,'#NULL#') = COALESCE(current_record.medreq_status::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_system::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_version::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_code::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_display::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_text::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_intend::text,'#NULL#') = COALESCE(current_record.medreq_intend::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_system::text,'#NULL#') = COALESCE(current_record.medreq_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_version::text,'#NULL#') = COALESCE(current_record.medreq_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_code::text,'#NULL#') = COALESCE(current_record.medreq_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_display::text,'#NULL#') = COALESCE(current_record.medreq_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_text::text,'#NULL#') = COALESCE(current_record.medreq_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_priority::text,'#NULL#') = COALESCE(current_record.medreq_priority::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedboolean::text,'#NULL#') = COALESCE(current_record.medreq_reportedboolean::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_display::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_display::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_authoredon::text,'#NULL#') = COALESCE(current_record.medreq_authoredon::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_ref::text,'#NULL#') = COALESCE(current_record.medreq_requester_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_type::text,'#NULL#') = COALESCE(current_record.medreq_requester_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_display::text,'#NULL#') = COALESCE(current_record.medreq_requester_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_system::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_version::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.medreq_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_type::text,'#NULL#') = COALESCE(current_record.medreq_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_display::text,'#NULL#') = COALESCE(current_record.medreq_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorstring::text,'#NULL#') = COALESCE(current_record.medreq_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_time::text,'#NULL#') = COALESCE(current_record.medreq_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_text::text,'#NULL#') = COALESCE(current_record.medreq_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_sequence::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_sequence::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_patientinstruction::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_patientinstruction::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_event::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_event::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsperiod_start::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsperiod_end::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_count::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_count::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_countmax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_countmax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_duration::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_duration::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_durationmax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_durationmax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_durationunit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_durationunit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_frequency::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_frequency::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_frequencymax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_frequencymax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_period::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_period::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_periodmax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_periodmax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_periodunit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_periodunit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_dayofweek::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_dayofweek::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_timeofday::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_timeofday::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_when::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_when::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_offset::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_offset::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededboolean::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededboolean::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_system::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_version::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_code::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_display::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_text::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_text::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='medicationrequest_raw-15';    err_schema:='db_log';    err_table:='medicationrequest_raw';
@@ -2476,232 +1719,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.medreq_id::text,'#NULL#') = COALESCE(current_record.medreq_id::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_meta_versionid::text,'#NULL#') = COALESCE(current_record.medreq_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.medreq_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_meta_profile::text,'#NULL#') = COALESCE(current_record.medreq_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_system::text,'#NULL#') = COALESCE(current_record.medreq_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_value::text,'#NULL#') = COALESCE(current_record.medreq_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_start::text,'#NULL#') = COALESCE(current_record.medreq_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_identifier_end::text,'#NULL#') = COALESCE(current_record.medreq_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.medreq_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_patient_ref::text,'#NULL#') = COALESCE(current_record.medreq_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_medicationreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_status::text,'#NULL#') = COALESCE(current_record.medreq_status::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_system::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_version::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_code::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_display::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_statusreason_text::text,'#NULL#') = COALESCE(current_record.medreq_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_intend::text,'#NULL#') = COALESCE(current_record.medreq_intend::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_system::text,'#NULL#') = COALESCE(current_record.medreq_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_version::text,'#NULL#') = COALESCE(current_record.medreq_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_code::text,'#NULL#') = COALESCE(current_record.medreq_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_display::text,'#NULL#') = COALESCE(current_record.medreq_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_category_text::text,'#NULL#') = COALESCE(current_record.medreq_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_priority::text,'#NULL#') = COALESCE(current_record.medreq_priority::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedboolean::text,'#NULL#') = COALESCE(current_record.medreq_reportedboolean::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reportedreference_display::text,'#NULL#') = COALESCE(current_record.medreq_reportedreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medreq_medicationcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_supportinginformation_display::text,'#NULL#') = COALESCE(current_record.medreq_supportinginformation_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_authoredon::text,'#NULL#') = COALESCE(current_record.medreq_authoredon::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_ref::text,'#NULL#') = COALESCE(current_record.medreq_requester_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_type::text,'#NULL#') = COALESCE(current_record.medreq_requester_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_requester_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_requester_display::text,'#NULL#') = COALESCE(current_record.medreq_requester_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_system::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_version::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medreq_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medreq_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.medreq_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_type::text,'#NULL#') = COALESCE(current_record.medreq_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_basedon_display::text,'#NULL#') = COALESCE(current_record.medreq_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorstring::text,'#NULL#') = COALESCE(current_record.medreq_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.medreq_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_time::text,'#NULL#') = COALESCE(current_record.medreq_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_note_text::text,'#NULL#') = COALESCE(current_record.medreq_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_sequence::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_sequence::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_additionalinstruction_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_additionalinstruction_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_patientinstruction::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_patientinstruction::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_event::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_event::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsduration_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsduration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_low_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsrange_high_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsrange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsperiod_start::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_boundsperiod_end::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_boundsperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_count::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_count::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_countmax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_countmax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_duration::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_duration::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_durationmax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_durationmax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_durationunit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_durationunit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_frequency::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_frequency::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_frequencymax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_frequencymax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_period::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_period::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_periodmax::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_periodmax::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_periodunit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_periodunit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_dayofweek::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_dayofweek::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_timeofday::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_timeofday::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_when::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_when::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_repeat_offset::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_repeat_offset::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_timing_code_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_timing_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededboolean::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededboolean::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_asneededcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_asneededcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_site_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_site_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_route_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_route_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_method_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_version::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_display::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_type_text::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_low_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_doserange_high_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_doserange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_dosequantity_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_dosequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_numerator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_rateratio_denominator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_rateratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_low_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_raterange_high_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_raterange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_doseandrate_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_doseandrate_ratequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_numerator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperperiod_denominator_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperperiod_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperadministration_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperadministration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_value::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_value::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_unit::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_doseinstruc_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medreq_doseinstruc_maxdoseperlifetime_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_system::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_version::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_code::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_display::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medreq_substitution_reason_text::text,'#NULL#') = COALESCE(current_record.medreq_substitution_reason_text::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -2716,7 +1734,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -2744,9 +1762,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationrequest_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medicationrequest_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationrequest_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationrequest_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -2760,13 +1778,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationrequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationrequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationrequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -2805,118 +1823,7 @@ BEGIN
                         err_section:='medicationadministration_raw-10';    err_schema:='db_log';    err_table:='medicationadministration_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medicationadministration_raw target_record
-                        WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_meta_versionid::text,'#NULL#') = COALESCE(current_record.medadm_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.medadm_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_meta_profile::text,'#NULL#') = COALESCE(current_record.medadm_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_system::text,'#NULL#') = COALESCE(current_record.medadm_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_value::text,'#NULL#') = COALESCE(current_record.medadm_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_start::text,'#NULL#') = COALESCE(current_record.medadm_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_end::text,'#NULL#') = COALESCE(current_record.medadm_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_encounter_ref::text,'#NULL#') = COALESCE(current_record.medadm_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_patient_ref::text,'#NULL#') = COALESCE(current_record.medadm_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_partof_ref::text,'#NULL#') = COALESCE(current_record.medadm_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_status::text,'#NULL#') = COALESCE(current_record.medadm_status::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_system::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_version::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_code::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_display::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_text::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_system::text,'#NULL#') = COALESCE(current_record.medadm_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_version::text,'#NULL#') = COALESCE(current_record.medadm_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_code::text,'#NULL#') = COALESCE(current_record.medadm_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_display::text,'#NULL#') = COALESCE(current_record.medadm_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_text::text,'#NULL#') = COALESCE(current_record.medadm_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_medicationreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_type::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_display::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_effectivedatetime::text,'#NULL#') = COALESCE(current_record.medadm_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_effectiveperiod_start::text,'#NULL#') = COALESCE(current_record.medadm_effectiveperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_effectiveperiod_end::text,'#NULL#') = COALESCE(current_record.medadm_effectiveperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_system::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_version::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_code::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_display::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_text::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_system::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_version::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_request_ref::text,'#NULL#') = COALESCE(current_record.medadm_request_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorstring::text,'#NULL#') = COALESCE(current_record.medadm_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_time::text,'#NULL#') = COALESCE(current_record.medadm_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_text::text,'#NULL#') = COALESCE(current_record.medadm_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_version::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_display::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_version::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_display::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_version::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_display::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_code::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='medicationadministration_raw-15';    err_schema:='db_log';    err_table:='medicationadministration_raw';
@@ -3172,118 +2079,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.medadm_id::text,'#NULL#') = COALESCE(current_record.medadm_id::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_meta_versionid::text,'#NULL#') = COALESCE(current_record.medadm_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.medadm_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_meta_profile::text,'#NULL#') = COALESCE(current_record.medadm_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_system::text,'#NULL#') = COALESCE(current_record.medadm_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_value::text,'#NULL#') = COALESCE(current_record.medadm_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_start::text,'#NULL#') = COALESCE(current_record.medadm_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_identifier_end::text,'#NULL#') = COALESCE(current_record.medadm_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_encounter_ref::text,'#NULL#') = COALESCE(current_record.medadm_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_patient_ref::text,'#NULL#') = COALESCE(current_record.medadm_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_partof_ref::text,'#NULL#') = COALESCE(current_record.medadm_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_status::text,'#NULL#') = COALESCE(current_record.medadm_status::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_system::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_version::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_code::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_display::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_statusreason_text::text,'#NULL#') = COALESCE(current_record.medadm_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_system::text,'#NULL#') = COALESCE(current_record.medadm_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_version::text,'#NULL#') = COALESCE(current_record.medadm_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_code::text,'#NULL#') = COALESCE(current_record.medadm_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_display::text,'#NULL#') = COALESCE(current_record.medadm_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_category_text::text,'#NULL#') = COALESCE(current_record.medadm_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_medicationreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medadm_medicationcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_ref::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_type::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_type::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_supportinginformation_display::text,'#NULL#') = COALESCE(current_record.medadm_supportinginformation_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_effectivedatetime::text,'#NULL#') = COALESCE(current_record.medadm_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_effectiveperiod_start::text,'#NULL#') = COALESCE(current_record.medadm_effectiveperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_effectiveperiod_end::text,'#NULL#') = COALESCE(current_record.medadm_effectiveperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_system::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_version::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_code::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_display::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_performer_function_text::text,'#NULL#') = COALESCE(current_record.medadm_performer_function_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_system::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_version::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medadm_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medadm_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_request_ref::text,'#NULL#') = COALESCE(current_record.medadm_request_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorstring::text,'#NULL#') = COALESCE(current_record.medadm_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.medadm_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_time::text,'#NULL#') = COALESCE(current_record.medadm_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_note_text::text,'#NULL#') = COALESCE(current_record.medadm_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_version::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_display::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_site_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_site_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_version::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_display::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_route_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_route_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_version::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_display::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_method_text::text,'#NULL#') = COALESCE(current_record.medadm_dosage_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_dose_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_dose_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_numerator_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_rateratio_denominator_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_rateratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_value::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_unit::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medadm_dosage_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medadm_dosage_ratequantity_code::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -3298,7 +2094,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -3326,9 +2122,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationadministration_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medicationadministration_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationadministration_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationadministration_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -3342,13 +2138,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationadministration_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationadministration_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationadministration_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -3387,219 +2183,7 @@ BEGIN
                         err_section:='medicationstatement_raw-10';    err_schema:='db_log';    err_table:='medicationstatement_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medicationstatement_raw target_record
-                        WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_meta_versionid::text,'#NULL#') = COALESCE(current_record.medstat_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.medstat_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_meta_profile::text,'#NULL#') = COALESCE(current_record.medstat_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_system::text,'#NULL#') = COALESCE(current_record.medstat_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_value::text,'#NULL#') = COALESCE(current_record.medstat_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_start::text,'#NULL#') = COALESCE(current_record.medstat_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_end::text,'#NULL#') = COALESCE(current_record.medstat_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_encounter_ref::text,'#NULL#') = COALESCE(current_record.medstat_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_patient_ref::text,'#NULL#') = COALESCE(current_record.medstat_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_partof_ref::text,'#NULL#') = COALESCE(current_record.medstat_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_ref::text,'#NULL#') = COALESCE(current_record.medstat_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_type::text,'#NULL#') = COALESCE(current_record.medstat_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_display::text,'#NULL#') = COALESCE(current_record.medstat_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_status::text,'#NULL#') = COALESCE(current_record.medstat_status::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_system::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_version::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_code::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_display::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_text::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_system::text,'#NULL#') = COALESCE(current_record.medstat_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_version::text,'#NULL#') = COALESCE(current_record.medstat_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_code::text,'#NULL#') = COALESCE(current_record.medstat_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_display::text,'#NULL#') = COALESCE(current_record.medstat_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_text::text,'#NULL#') = COALESCE(current_record.medstat_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_medicationreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_effectivedatetime::text,'#NULL#') = COALESCE(current_record.medstat_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_effectiveperiod_start::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_effectiveperiod_end::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dateasserted::text,'#NULL#') = COALESCE(current_record.medstat_dateasserted::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_ref::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_type::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_ref::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_type::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_display::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_system::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_version::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorstring::text,'#NULL#') = COALESCE(current_record.medstat_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_time::text,'#NULL#') = COALESCE(current_record.medstat_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_text::text,'#NULL#') = COALESCE(current_record.medstat_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_sequence::text,'#NULL#') = COALESCE(current_record.medstat_dosage_sequence::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_patientinstruction::text,'#NULL#') = COALESCE(current_record.medstat_dosage_patientinstruction::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_event::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_event::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsperiod_start::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsperiod_end::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_count::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_count::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_countmax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_countmax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_duration::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_duration::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_durationmax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_durationmax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_durationunit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_durationunit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_frequency::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_frequency::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_frequencymax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_frequencymax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_period::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_period::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_periodmax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_periodmax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_periodunit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_periodunit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_dayofweek::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_dayofweek::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_timeofday::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_timeofday::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_when::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_when::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_offset::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_offset::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededboolean::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededboolean::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='medicationstatement_raw-15';    err_schema:='db_log';    err_table:='medicationstatement_raw';
@@ -4057,219 +2641,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.medstat_id::text,'#NULL#') = COALESCE(current_record.medstat_id::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_meta_versionid::text,'#NULL#') = COALESCE(current_record.medstat_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.medstat_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_meta_profile::text,'#NULL#') = COALESCE(current_record.medstat_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_system::text,'#NULL#') = COALESCE(current_record.medstat_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_value::text,'#NULL#') = COALESCE(current_record.medstat_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_start::text,'#NULL#') = COALESCE(current_record.medstat_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_identifier_end::text,'#NULL#') = COALESCE(current_record.medstat_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_encounter_ref::text,'#NULL#') = COALESCE(current_record.medstat_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_patient_ref::text,'#NULL#') = COALESCE(current_record.medstat_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_partof_ref::text,'#NULL#') = COALESCE(current_record.medstat_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_ref::text,'#NULL#') = COALESCE(current_record.medstat_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_type::text,'#NULL#') = COALESCE(current_record.medstat_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_basedon_display::text,'#NULL#') = COALESCE(current_record.medstat_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_status::text,'#NULL#') = COALESCE(current_record.medstat_status::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_system::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_version::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_code::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_display::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_statusreason_text::text,'#NULL#') = COALESCE(current_record.medstat_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_system::text,'#NULL#') = COALESCE(current_record.medstat_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_version::text,'#NULL#') = COALESCE(current_record.medstat_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_code::text,'#NULL#') = COALESCE(current_record.medstat_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_display::text,'#NULL#') = COALESCE(current_record.medstat_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_category_text::text,'#NULL#') = COALESCE(current_record.medstat_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_medicationreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_medicationcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medstat_medicationcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_effectivedatetime::text,'#NULL#') = COALESCE(current_record.medstat_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_effectiveperiod_start::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_effectiveperiod_end::text,'#NULL#') = COALESCE(current_record.medstat_effectiveperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dateasserted::text,'#NULL#') = COALESCE(current_record.medstat_dateasserted::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_ref::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_type::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_informationsource_display::text,'#NULL#') = COALESCE(current_record.medstat_informationsource_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_ref::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_type::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_derivedfrom_display::text,'#NULL#') = COALESCE(current_record.medstat_derivedfrom_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_system::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_version::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_code::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_display::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasoncode_text::text,'#NULL#') = COALESCE(current_record.medstat_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_type::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_reasonreference_display::text,'#NULL#') = COALESCE(current_record.medstat_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorstring::text,'#NULL#') = COALESCE(current_record.medstat_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.medstat_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_time::text,'#NULL#') = COALESCE(current_record.medstat_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_note_text::text,'#NULL#') = COALESCE(current_record.medstat_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_sequence::text,'#NULL#') = COALESCE(current_record.medstat_dosage_sequence::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_additionalinstruction_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_additionalinstruction_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_patientinstruction::text,'#NULL#') = COALESCE(current_record.medstat_dosage_patientinstruction::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_event::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_event::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsduration_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsduration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_low_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsrange_high_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsrange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsperiod_start::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_boundsperiod_end::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_boundsperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_count::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_count::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_countmax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_countmax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_duration::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_duration::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_durationmax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_durationmax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_durationunit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_durationunit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_frequency::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_frequency::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_frequencymax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_frequencymax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_period::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_period::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_periodmax::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_periodmax::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_periodunit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_periodunit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_dayofweek::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_dayofweek::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_timeofday::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_timeofday::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_when::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_when::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_repeat_offset::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_repeat_offset::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_timing_code_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_timing_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededboolean::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededboolean::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_asneededcodeableconcept_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_asneededcodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_site_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_site_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_route_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_route_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_method_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_version::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_display::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_type_text::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_low_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_doserange_high_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_doserange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_dosequantity_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_dosequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_numerator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_rateratio_denominator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_rateratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_low_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_raterange_high_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_raterange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_doseandrate_ratequantity_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_doseandrate_ratequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_numerator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_comparator::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperperiod_denominator_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperperiod_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperadministration_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperadministration_code::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_value::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_value::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_unit::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_unit::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_system::text,'#NULL#') AND
-                              COALESCE(target_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#') = COALESCE(current_record.medstat_dosage_maxdoseperlifetime_code::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -4284,7 +2656,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -4312,9 +2684,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationstatement_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT medicationstatement_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'medicationstatement_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.medicationstatement_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -4328,13 +2700,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationstatement_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationstatement_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationstatement_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -4373,140 +2745,7 @@ BEGIN
                         err_section:='observation_raw-10';    err_schema:='db_log';    err_table:='observation_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.observation_raw target_record
-                        WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
-                              COALESCE(target_record.obs_meta_versionid::text,'#NULL#') = COALESCE(current_record.obs_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.obs_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.obs_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.obs_meta_profile::text,'#NULL#') = COALESCE(current_record.obs_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_system::text,'#NULL#') = COALESCE(current_record.obs_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_value::text,'#NULL#') = COALESCE(current_record.obs_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_start::text,'#NULL#') = COALESCE(current_record.obs_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_end::text,'#NULL#') = COALESCE(current_record.obs_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.obs_encounter_ref::text,'#NULL#') = COALESCE(current_record.obs_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_patient_ref::text,'#NULL#') = COALESCE(current_record.obs_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_partof_ref::text,'#NULL#') = COALESCE(current_record.obs_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_ref::text,'#NULL#') = COALESCE(current_record.obs_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_type::text,'#NULL#') = COALESCE(current_record.obs_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_display::text,'#NULL#') = COALESCE(current_record.obs_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_status::text,'#NULL#') = COALESCE(current_record.obs_status::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_system::text,'#NULL#') = COALESCE(current_record.obs_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_version::text,'#NULL#') = COALESCE(current_record.obs_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_code::text,'#NULL#') = COALESCE(current_record.obs_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_display::text,'#NULL#') = COALESCE(current_record.obs_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_text::text,'#NULL#') = COALESCE(current_record.obs_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_system::text,'#NULL#') = COALESCE(current_record.obs_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_version::text,'#NULL#') = COALESCE(current_record.obs_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_code::text,'#NULL#') = COALESCE(current_record.obs_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_display::text,'#NULL#') = COALESCE(current_record.obs_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_text::text,'#NULL#') = COALESCE(current_record.obs_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_effectivedatetime::text,'#NULL#') = COALESCE(current_record.obs_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.obs_issued::text,'#NULL#') = COALESCE(current_record.obs_issued::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_value::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_unit::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_system::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_code::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_value::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_unit::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_system::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_code::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_value::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_system::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_code::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_value::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_system::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_code::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_value::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_comparator::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_unit::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_system::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_code::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_system::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_version::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_code::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_display::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_text::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_system::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_version::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_code::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_display::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_text::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorstring::text,'#NULL#') = COALESCE(current_record.obs_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_time::text,'#NULL#') = COALESCE(current_record.obs_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_text::text,'#NULL#') = COALESCE(current_record.obs_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_system::text,'#NULL#') = COALESCE(current_record.obs_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_version::text,'#NULL#') = COALESCE(current_record.obs_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_code::text,'#NULL#') = COALESCE(current_record.obs_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_display::text,'#NULL#') = COALESCE(current_record.obs_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_text::text,'#NULL#') = COALESCE(current_record.obs_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_ref::text,'#NULL#') = COALESCE(current_record.obs_performer_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_type::text,'#NULL#') = COALESCE(current_record.obs_performer_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_display::text,'#NULL#') = COALESCE(current_record.obs_performer_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_version::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_display::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_version::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_display::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_ref::text,'#NULL#') = COALESCE(current_record.obs_hasmember_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_type::text,'#NULL#') = COALESCE(current_record.obs_hasmember_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_display::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='observation_raw-15';    err_schema:='db_log';    err_table:='observation_raw';
@@ -4806,140 +3045,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.obs_id::text,'#NULL#') = COALESCE(current_record.obs_id::text,'#NULL#') AND
-                              COALESCE(target_record.obs_meta_versionid::text,'#NULL#') = COALESCE(current_record.obs_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.obs_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.obs_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.obs_meta_profile::text,'#NULL#') = COALESCE(current_record.obs_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_system::text,'#NULL#') = COALESCE(current_record.obs_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_value::text,'#NULL#') = COALESCE(current_record.obs_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_start::text,'#NULL#') = COALESCE(current_record.obs_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.obs_identifier_end::text,'#NULL#') = COALESCE(current_record.obs_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.obs_encounter_ref::text,'#NULL#') = COALESCE(current_record.obs_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_patient_ref::text,'#NULL#') = COALESCE(current_record.obs_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_partof_ref::text,'#NULL#') = COALESCE(current_record.obs_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_ref::text,'#NULL#') = COALESCE(current_record.obs_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_type::text,'#NULL#') = COALESCE(current_record.obs_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_basedon_display::text,'#NULL#') = COALESCE(current_record.obs_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_status::text,'#NULL#') = COALESCE(current_record.obs_status::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_system::text,'#NULL#') = COALESCE(current_record.obs_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_version::text,'#NULL#') = COALESCE(current_record.obs_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_code::text,'#NULL#') = COALESCE(current_record.obs_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_display::text,'#NULL#') = COALESCE(current_record.obs_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_category_text::text,'#NULL#') = COALESCE(current_record.obs_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_system::text,'#NULL#') = COALESCE(current_record.obs_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_version::text,'#NULL#') = COALESCE(current_record.obs_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_code::text,'#NULL#') = COALESCE(current_record.obs_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_display::text,'#NULL#') = COALESCE(current_record.obs_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_code_text::text,'#NULL#') = COALESCE(current_record.obs_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_effectivedatetime::text,'#NULL#') = COALESCE(current_record.obs_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.obs_issued::text,'#NULL#') = COALESCE(current_record.obs_issued::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_value::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_unit::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_system::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_low_code::text,'#NULL#') = COALESCE(current_record.obs_valuerange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_value::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_unit::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_system::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuerange_high_code::text,'#NULL#') = COALESCE(current_record.obs_valuerange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_value::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_comparator::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_unit::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_system::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_numerator_code::text,'#NULL#') = COALESCE(current_record.obs_valueratio_numerator_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_value::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_comparator::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_unit::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_system::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valueratio_denominator_code::text,'#NULL#') = COALESCE(current_record.obs_valueratio_denominator_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_value::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_comparator::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_comparator::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_unit::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_system::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuequantity_code::text,'#NULL#') = COALESCE(current_record.obs_valuequantity_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_system::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_version::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_code::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_display::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_valuecodeableconcept_text::text,'#NULL#') = COALESCE(current_record.obs_valuecodeableconcept_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_system::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_version::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_code::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_display::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_dataabsentreason_text::text,'#NULL#') = COALESCE(current_record.obs_dataabsentreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorstring::text,'#NULL#') = COALESCE(current_record.obs_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.obs_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_time::text,'#NULL#') = COALESCE(current_record.obs_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.obs_note_text::text,'#NULL#') = COALESCE(current_record.obs_note_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_system::text,'#NULL#') = COALESCE(current_record.obs_method_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_version::text,'#NULL#') = COALESCE(current_record.obs_method_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_code::text,'#NULL#') = COALESCE(current_record.obs_method_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_display::text,'#NULL#') = COALESCE(current_record.obs_method_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_method_text::text,'#NULL#') = COALESCE(current_record.obs_method_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_ref::text,'#NULL#') = COALESCE(current_record.obs_performer_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_type::text,'#NULL#') = COALESCE(current_record.obs_performer_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_performer_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_performer_display::text,'#NULL#') = COALESCE(current_record.obs_performer_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_low_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_high_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_version::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_display::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_type_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_version::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_display::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_appliesto_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_appliesto_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_low_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_low_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_value::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_value::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_unit::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_unit::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_system::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_age_high_code::text,'#NULL#') = COALESCE(current_record.obs_referencerange_age_high_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_referencerange_text::text,'#NULL#') = COALESCE(current_record.obs_referencerange_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_ref::text,'#NULL#') = COALESCE(current_record.obs_hasmember_ref::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_type::text,'#NULL#') = COALESCE(current_record.obs_hasmember_type::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_use::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_system::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_version::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_code::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_identifier_type_text::text,'#NULL#') = COALESCE(current_record.obs_hasmember_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.obs_hasmember_display::text,'#NULL#') = COALESCE(current_record.obs_hasmember_display::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -4954,7 +3060,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE observation_raw_id = current_record.observation_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -4982,9 +3088,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='observation_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT observation_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'observation_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.observation_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -4998,13 +3104,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'observation_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'observation_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'observation_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -5043,53 +3149,7 @@ BEGIN
                         err_section:='diagnosticreport_raw-10';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.diagnosticreport_raw target_record
-                        WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_meta_versionid::text,'#NULL#') = COALESCE(current_record.diagrep_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.diagrep_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_meta_profile::text,'#NULL#') = COALESCE(current_record.diagrep_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_version::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_code::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_display::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_text::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_system::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_value::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_start::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_end::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_encounter_ref::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_patient_ref::text,'#NULL#') = COALESCE(current_record.diagrep_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_partof_ref::text,'#NULL#') = COALESCE(current_record.diagrep_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_result_ref::text,'#NULL#') = COALESCE(current_record.diagrep_result_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_basedon_ref::text,'#NULL#') = COALESCE(current_record.diagrep_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_status::text,'#NULL#') = COALESCE(current_record.diagrep_status::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_system::text,'#NULL#') = COALESCE(current_record.diagrep_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_version::text,'#NULL#') = COALESCE(current_record.diagrep_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_code::text,'#NULL#') = COALESCE(current_record.diagrep_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_display::text,'#NULL#') = COALESCE(current_record.diagrep_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_text::text,'#NULL#') = COALESCE(current_record.diagrep_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_system::text,'#NULL#') = COALESCE(current_record.diagrep_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_version::text,'#NULL#') = COALESCE(current_record.diagrep_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_code::text,'#NULL#') = COALESCE(current_record.diagrep_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_display::text,'#NULL#') = COALESCE(current_record.diagrep_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_text::text,'#NULL#') = COALESCE(current_record.diagrep_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_effectivedatetime::text,'#NULL#') = COALESCE(current_record.diagrep_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_issued::text,'#NULL#') = COALESCE(current_record.diagrep_issued::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_ref::text,'#NULL#') = COALESCE(current_record.diagrep_performer_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_type::text,'#NULL#') = COALESCE(current_record.diagrep_performer_type::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_version::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_code::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_display::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_text::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_display::text,'#NULL#') = COALESCE(current_record.diagrep_performer_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusion::text,'#NULL#') = COALESCE(current_record.diagrep_conclusion::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_system::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_version::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_code::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_display::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_text::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_text::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='diagnosticreport_raw-15';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
@@ -5215,53 +3275,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.diagrep_id::text,'#NULL#') = COALESCE(current_record.diagrep_id::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_meta_versionid::text,'#NULL#') = COALESCE(current_record.diagrep_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.diagrep_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_meta_profile::text,'#NULL#') = COALESCE(current_record.diagrep_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_version::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_code::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_display::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_type_text::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_system::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_value::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_start::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_identifier_end::text,'#NULL#') = COALESCE(current_record.diagrep_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_encounter_ref::text,'#NULL#') = COALESCE(current_record.diagrep_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_patient_ref::text,'#NULL#') = COALESCE(current_record.diagrep_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_partof_ref::text,'#NULL#') = COALESCE(current_record.diagrep_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_result_ref::text,'#NULL#') = COALESCE(current_record.diagrep_result_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_basedon_ref::text,'#NULL#') = COALESCE(current_record.diagrep_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_status::text,'#NULL#') = COALESCE(current_record.diagrep_status::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_system::text,'#NULL#') = COALESCE(current_record.diagrep_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_version::text,'#NULL#') = COALESCE(current_record.diagrep_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_code::text,'#NULL#') = COALESCE(current_record.diagrep_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_display::text,'#NULL#') = COALESCE(current_record.diagrep_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_category_text::text,'#NULL#') = COALESCE(current_record.diagrep_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_system::text,'#NULL#') = COALESCE(current_record.diagrep_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_version::text,'#NULL#') = COALESCE(current_record.diagrep_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_code::text,'#NULL#') = COALESCE(current_record.diagrep_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_display::text,'#NULL#') = COALESCE(current_record.diagrep_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_code_text::text,'#NULL#') = COALESCE(current_record.diagrep_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_effectivedatetime::text,'#NULL#') = COALESCE(current_record.diagrep_effectivedatetime::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_issued::text,'#NULL#') = COALESCE(current_record.diagrep_issued::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_ref::text,'#NULL#') = COALESCE(current_record.diagrep_performer_ref::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_type::text,'#NULL#') = COALESCE(current_record.diagrep_performer_type::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_version::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_code::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_display::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_identifier_type_text::text,'#NULL#') = COALESCE(current_record.diagrep_performer_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_performer_display::text,'#NULL#') = COALESCE(current_record.diagrep_performer_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusion::text,'#NULL#') = COALESCE(current_record.diagrep_conclusion::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_system::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_version::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_code::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_display::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.diagrep_conclusioncode_text::text,'#NULL#') = COALESCE(current_record.diagrep_conclusioncode_text::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -5276,7 +3290,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -5304,9 +3318,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='diagnosticreport_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT diagnosticreport_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'diagnosticreport_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.diagnosticreport_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -5320,13 +3334,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'diagnosticreport_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'diagnosticreport_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'diagnosticreport_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -5365,67 +3379,7 @@ BEGIN
                         err_section:='servicerequest_raw-10';    err_schema:='db_log';    err_table:='servicerequest_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.servicerequest_raw target_record
-                        WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_meta_versionid::text,'#NULL#') = COALESCE(current_record.servreq_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.servreq_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_meta_profile::text,'#NULL#') = COALESCE(current_record.servreq_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_system::text,'#NULL#') = COALESCE(current_record.servreq_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_value::text,'#NULL#') = COALESCE(current_record.servreq_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_start::text,'#NULL#') = COALESCE(current_record.servreq_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_end::text,'#NULL#') = COALESCE(current_record.servreq_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.servreq_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_patient_ref::text,'#NULL#') = COALESCE(current_record.servreq_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.servreq_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_type::text,'#NULL#') = COALESCE(current_record.servreq_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_display::text,'#NULL#') = COALESCE(current_record.servreq_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_status::text,'#NULL#') = COALESCE(current_record.servreq_status::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_intent::text,'#NULL#') = COALESCE(current_record.servreq_intent::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_system::text,'#NULL#') = COALESCE(current_record.servreq_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_version::text,'#NULL#') = COALESCE(current_record.servreq_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_code::text,'#NULL#') = COALESCE(current_record.servreq_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_display::text,'#NULL#') = COALESCE(current_record.servreq_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_text::text,'#NULL#') = COALESCE(current_record.servreq_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_system::text,'#NULL#') = COALESCE(current_record.servreq_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_version::text,'#NULL#') = COALESCE(current_record.servreq_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_code::text,'#NULL#') = COALESCE(current_record.servreq_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_display::text,'#NULL#') = COALESCE(current_record.servreq_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_text::text,'#NULL#') = COALESCE(current_record.servreq_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_authoredon::text,'#NULL#') = COALESCE(current_record.servreq_authoredon::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_ref::text,'#NULL#') = COALESCE(current_record.servreq_requester_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_type::text,'#NULL#') = COALESCE(current_record.servreq_requester_type::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_ref::text,'#NULL#') = COALESCE(current_record.servreq_performer_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_type::text,'#NULL#') = COALESCE(current_record.servreq_performer_type::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_display::text,'#NULL#') = COALESCE(current_record.servreq_performer_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_system::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_version::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_code::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_display::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_text::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_text::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='servicerequest_raw-15';    err_schema:='db_log';    err_table:='servicerequest_raw';
@@ -5579,67 +3533,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.servreq_id::text,'#NULL#') = COALESCE(current_record.servreq_id::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_meta_versionid::text,'#NULL#') = COALESCE(current_record.servreq_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.servreq_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_meta_profile::text,'#NULL#') = COALESCE(current_record.servreq_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_system::text,'#NULL#') = COALESCE(current_record.servreq_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_value::text,'#NULL#') = COALESCE(current_record.servreq_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_start::text,'#NULL#') = COALESCE(current_record.servreq_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_identifier_end::text,'#NULL#') = COALESCE(current_record.servreq_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_encounter_ref::text,'#NULL#') = COALESCE(current_record.servreq_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_patient_ref::text,'#NULL#') = COALESCE(current_record.servreq_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_ref::text,'#NULL#') = COALESCE(current_record.servreq_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_type::text,'#NULL#') = COALESCE(current_record.servreq_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_basedon_display::text,'#NULL#') = COALESCE(current_record.servreq_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_status::text,'#NULL#') = COALESCE(current_record.servreq_status::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_intent::text,'#NULL#') = COALESCE(current_record.servreq_intent::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_system::text,'#NULL#') = COALESCE(current_record.servreq_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_version::text,'#NULL#') = COALESCE(current_record.servreq_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_code::text,'#NULL#') = COALESCE(current_record.servreq_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_display::text,'#NULL#') = COALESCE(current_record.servreq_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_category_text::text,'#NULL#') = COALESCE(current_record.servreq_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_system::text,'#NULL#') = COALESCE(current_record.servreq_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_version::text,'#NULL#') = COALESCE(current_record.servreq_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_code::text,'#NULL#') = COALESCE(current_record.servreq_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_display::text,'#NULL#') = COALESCE(current_record.servreq_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_code_text::text,'#NULL#') = COALESCE(current_record.servreq_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_authoredon::text,'#NULL#') = COALESCE(current_record.servreq_authoredon::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_ref::text,'#NULL#') = COALESCE(current_record.servreq_requester_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_type::text,'#NULL#') = COALESCE(current_record.servreq_requester_type::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_requester_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_requester_display::text,'#NULL#') = COALESCE(current_record.servreq_requester_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_ref::text,'#NULL#') = COALESCE(current_record.servreq_performer_ref::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_type::text,'#NULL#') = COALESCE(current_record.servreq_performer_type::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_use::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_system::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_version::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_code::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_display::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_identifier_type_text::text,'#NULL#') = COALESCE(current_record.servreq_performer_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_performer_display::text,'#NULL#') = COALESCE(current_record.servreq_performer_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_system::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_system::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_version::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_version::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_code::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_code::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_display::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_display::text,'#NULL#') AND
-                              COALESCE(target_record.servreq_locationcode_text::text,'#NULL#') = COALESCE(current_record.servreq_locationcode_text::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -5654,7 +3548,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -5682,9 +3576,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='servicerequest_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT servicerequest_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'servicerequest_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.servicerequest_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -5698,13 +3592,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'servicerequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'servicerequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'servicerequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -5743,77 +3637,7 @@ BEGIN
                         err_section:='procedure_raw-10';    err_schema:='db_log';    err_table:='procedure_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.procedure_raw target_record
-                        WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
-                              COALESCE(target_record.proc_meta_versionid::text,'#NULL#') = COALESCE(current_record.proc_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.proc_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.proc_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.proc_meta_profile::text,'#NULL#') = COALESCE(current_record.proc_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_system::text,'#NULL#') = COALESCE(current_record.proc_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_value::text,'#NULL#') = COALESCE(current_record.proc_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_start::text,'#NULL#') = COALESCE(current_record.proc_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_end::text,'#NULL#') = COALESCE(current_record.proc_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.proc_encounter_ref::text,'#NULL#') = COALESCE(current_record.proc_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_patient_ref::text,'#NULL#') = COALESCE(current_record.proc_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_partof_ref::text,'#NULL#') = COALESCE(current_record.proc_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_ref::text,'#NULL#') = COALESCE(current_record.proc_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_type::text,'#NULL#') = COALESCE(current_record.proc_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_display::text,'#NULL#') = COALESCE(current_record.proc_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_status::text,'#NULL#') = COALESCE(current_record.proc_status::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_system::text,'#NULL#') = COALESCE(current_record.proc_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_version::text,'#NULL#') = COALESCE(current_record.proc_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_code::text,'#NULL#') = COALESCE(current_record.proc_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_display::text,'#NULL#') = COALESCE(current_record.proc_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_text::text,'#NULL#') = COALESCE(current_record.proc_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_system::text,'#NULL#') = COALESCE(current_record.proc_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_version::text,'#NULL#') = COALESCE(current_record.proc_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_code::text,'#NULL#') = COALESCE(current_record.proc_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_display::text,'#NULL#') = COALESCE(current_record.proc_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_text::text,'#NULL#') = COALESCE(current_record.proc_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_system::text,'#NULL#') = COALESCE(current_record.proc_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_version::text,'#NULL#') = COALESCE(current_record.proc_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_code::text,'#NULL#') = COALESCE(current_record.proc_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_display::text,'#NULL#') = COALESCE(current_record.proc_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_text::text,'#NULL#') = COALESCE(current_record.proc_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_performeddatetime::text,'#NULL#') = COALESCE(current_record.proc_performeddatetime::text,'#NULL#') AND
-                              COALESCE(target_record.proc_performedperiod_start::text,'#NULL#') = COALESCE(current_record.proc_performedperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.proc_performedperiod_end::text,'#NULL#') = COALESCE(current_record.proc_performedperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_system::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_version::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_code::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_display::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_text::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_type::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_display::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorstring::text,'#NULL#') = COALESCE(current_record.proc_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_time::text,'#NULL#') = COALESCE(current_record.proc_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_text::text,'#NULL#') = COALESCE(current_record.proc_note_text::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='procedure_raw-15';    err_schema:='db_log';    err_table:='procedure_raw';
@@ -5987,77 +3811,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.proc_id::text,'#NULL#') = COALESCE(current_record.proc_id::text,'#NULL#') AND
-                              COALESCE(target_record.proc_meta_versionid::text,'#NULL#') = COALESCE(current_record.proc_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.proc_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.proc_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.proc_meta_profile::text,'#NULL#') = COALESCE(current_record.proc_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_system::text,'#NULL#') = COALESCE(current_record.proc_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_value::text,'#NULL#') = COALESCE(current_record.proc_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_start::text,'#NULL#') = COALESCE(current_record.proc_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.proc_identifier_end::text,'#NULL#') = COALESCE(current_record.proc_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.proc_encounter_ref::text,'#NULL#') = COALESCE(current_record.proc_encounter_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_patient_ref::text,'#NULL#') = COALESCE(current_record.proc_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_partof_ref::text,'#NULL#') = COALESCE(current_record.proc_partof_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_ref::text,'#NULL#') = COALESCE(current_record.proc_basedon_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_type::text,'#NULL#') = COALESCE(current_record.proc_basedon_type::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_basedon_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_basedon_display::text,'#NULL#') = COALESCE(current_record.proc_basedon_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_status::text,'#NULL#') = COALESCE(current_record.proc_status::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_system::text,'#NULL#') = COALESCE(current_record.proc_statusreason_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_version::text,'#NULL#') = COALESCE(current_record.proc_statusreason_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_code::text,'#NULL#') = COALESCE(current_record.proc_statusreason_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_display::text,'#NULL#') = COALESCE(current_record.proc_statusreason_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_statusreason_text::text,'#NULL#') = COALESCE(current_record.proc_statusreason_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_system::text,'#NULL#') = COALESCE(current_record.proc_category_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_version::text,'#NULL#') = COALESCE(current_record.proc_category_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_code::text,'#NULL#') = COALESCE(current_record.proc_category_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_display::text,'#NULL#') = COALESCE(current_record.proc_category_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_category_text::text,'#NULL#') = COALESCE(current_record.proc_category_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_system::text,'#NULL#') = COALESCE(current_record.proc_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_version::text,'#NULL#') = COALESCE(current_record.proc_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_code::text,'#NULL#') = COALESCE(current_record.proc_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_display::text,'#NULL#') = COALESCE(current_record.proc_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_code_text::text,'#NULL#') = COALESCE(current_record.proc_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_performeddatetime::text,'#NULL#') = COALESCE(current_record.proc_performeddatetime::text,'#NULL#') AND
-                              COALESCE(target_record.proc_performedperiod_start::text,'#NULL#') = COALESCE(current_record.proc_performedperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.proc_performedperiod_end::text,'#NULL#') = COALESCE(current_record.proc_performedperiod_end::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_system::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_version::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_code::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_display::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasoncode_text::text,'#NULL#') = COALESCE(current_record.proc_reasoncode_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_ref::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_type::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_reasonreference_display::text,'#NULL#') = COALESCE(current_record.proc_reasonreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorstring::text,'#NULL#') = COALESCE(current_record.proc_note_authorstring::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_ref::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_ref::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_type::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_type::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_use::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_version::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_code::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_display::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_identifier_type_text::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_authorreference_display::text,'#NULL#') = COALESCE(current_record.proc_note_authorreference_display::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_time::text,'#NULL#') = COALESCE(current_record.proc_note_time::text,'#NULL#') AND
-                              COALESCE(target_record.proc_note_text::text,'#NULL#') = COALESCE(current_record.proc_note_text::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -6072,7 +3826,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE procedure_raw_id = current_record.procedure_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -6100,9 +3854,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='procedure_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT procedure_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'procedure_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.procedure_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -6116,13 +3870,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'procedure_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'procedure_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'procedure_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -6161,43 +3915,7 @@ BEGIN
                         err_section:='consent_raw-10';    err_schema:='db_log';    err_table:='consent_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.consent_raw target_record
-                        WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
-                              COALESCE(target_record.cons_meta_versionid::text,'#NULL#') = COALESCE(current_record.cons_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.cons_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.cons_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.cons_meta_profile::text,'#NULL#') = COALESCE(current_record.cons_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_use::text,'#NULL#') = COALESCE(current_record.cons_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_system::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_version::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_code::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_display::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_text::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_system::text,'#NULL#') = COALESCE(current_record.cons_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_value::text,'#NULL#') = COALESCE(current_record.cons_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_start::text,'#NULL#') = COALESCE(current_record.cons_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_end::text,'#NULL#') = COALESCE(current_record.cons_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.cons_patient_ref::text,'#NULL#') = COALESCE(current_record.cons_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.cons_status::text,'#NULL#') = COALESCE(current_record.cons_status::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_system::text,'#NULL#') = COALESCE(current_record.cons_scope_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_version::text,'#NULL#') = COALESCE(current_record.cons_scope_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_code::text,'#NULL#') = COALESCE(current_record.cons_scope_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_display::text,'#NULL#') = COALESCE(current_record.cons_scope_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_text::text,'#NULL#') = COALESCE(current_record.cons_scope_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_datetime::text,'#NULL#') = COALESCE(current_record.cons_datetime::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_type::text,'#NULL#') = COALESCE(current_record.cons_provision_type::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_period_start::text,'#NULL#') = COALESCE(current_record.cons_provision_period_start::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_period_end::text,'#NULL#') = COALESCE(current_record.cons_provision_period_end::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_system::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_version::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_code::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_display::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_text::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_system::text,'#NULL#') = COALESCE(current_record.cons_provision_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_version::text,'#NULL#') = COALESCE(current_record.cons_provision_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_code::text,'#NULL#') = COALESCE(current_record.cons_provision_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_display::text,'#NULL#') = COALESCE(current_record.cons_provision_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_text::text,'#NULL#') = COALESCE(current_record.cons_provision_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_dataperiod_start::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_dataperiod_end::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_end::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='consent_raw-15';    err_schema:='db_log';    err_table:='consent_raw';
@@ -6303,43 +4021,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.cons_id::text,'#NULL#') = COALESCE(current_record.cons_id::text,'#NULL#') AND
-                              COALESCE(target_record.cons_meta_versionid::text,'#NULL#') = COALESCE(current_record.cons_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.cons_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.cons_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.cons_meta_profile::text,'#NULL#') = COALESCE(current_record.cons_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_use::text,'#NULL#') = COALESCE(current_record.cons_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_system::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_version::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_code::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_display::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_type_text::text,'#NULL#') = COALESCE(current_record.cons_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_system::text,'#NULL#') = COALESCE(current_record.cons_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_value::text,'#NULL#') = COALESCE(current_record.cons_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_start::text,'#NULL#') = COALESCE(current_record.cons_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.cons_identifier_end::text,'#NULL#') = COALESCE(current_record.cons_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.cons_patient_ref::text,'#NULL#') = COALESCE(current_record.cons_patient_ref::text,'#NULL#') AND
-                              COALESCE(target_record.cons_status::text,'#NULL#') = COALESCE(current_record.cons_status::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_system::text,'#NULL#') = COALESCE(current_record.cons_scope_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_version::text,'#NULL#') = COALESCE(current_record.cons_scope_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_code::text,'#NULL#') = COALESCE(current_record.cons_scope_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_display::text,'#NULL#') = COALESCE(current_record.cons_scope_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_scope_text::text,'#NULL#') = COALESCE(current_record.cons_scope_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_datetime::text,'#NULL#') = COALESCE(current_record.cons_datetime::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_type::text,'#NULL#') = COALESCE(current_record.cons_provision_type::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_period_start::text,'#NULL#') = COALESCE(current_record.cons_provision_period_start::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_period_end::text,'#NULL#') = COALESCE(current_record.cons_provision_period_end::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_system::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_version::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_code::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_display::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_actor_role_text::text,'#NULL#') = COALESCE(current_record.cons_provision_actor_role_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_system::text,'#NULL#') = COALESCE(current_record.cons_provision_code_system::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_version::text,'#NULL#') = COALESCE(current_record.cons_provision_code_version::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_code::text,'#NULL#') = COALESCE(current_record.cons_provision_code_code::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_display::text,'#NULL#') = COALESCE(current_record.cons_provision_code_display::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_code_text::text,'#NULL#') = COALESCE(current_record.cons_provision_code_text::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_dataperiod_start::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_start::text,'#NULL#') AND
-                              COALESCE(target_record.cons_provision_dataperiod_end::text,'#NULL#') = COALESCE(current_record.cons_provision_dataperiod_end::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -6354,7 +4036,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE consent_raw_id = current_record.consent_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -6382,9 +4064,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='consent_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT consent_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'consent_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.consent_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -6398,13 +4080,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'consent_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'consent_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'consent_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -6443,24 +4125,7 @@ BEGIN
                         err_section:='location_raw-10';    err_schema:='db_log';    err_table:='location_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.location_raw target_record
-                        WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
-                              COALESCE(target_record.loc_meta_versionid::text,'#NULL#') = COALESCE(current_record.loc_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.loc_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.loc_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.loc_meta_profile::text,'#NULL#') = COALESCE(current_record.loc_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_use::text,'#NULL#') = COALESCE(current_record.loc_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_code::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_display::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_text::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_system::text,'#NULL#') = COALESCE(current_record.loc_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_value::text,'#NULL#') = COALESCE(current_record.loc_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_start::text,'#NULL#') = COALESCE(current_record.loc_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_end::text,'#NULL#') = COALESCE(current_record.loc_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.loc_status::text,'#NULL#') = COALESCE(current_record.loc_status::text,'#NULL#') AND
-                              COALESCE(target_record.loc_name::text,'#NULL#') = COALESCE(current_record.loc_name::text,'#NULL#') AND
-                              COALESCE(target_record.loc_description::text,'#NULL#') = COALESCE(current_record.loc_description::text,'#NULL#') AND
-                              COALESCE(target_record.loc_alias::text,'#NULL#') = COALESCE(current_record.loc_alias::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='location_raw-15';    err_schema:='db_log';    err_table:='location_raw';
@@ -6528,24 +4193,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.loc_id::text,'#NULL#') = COALESCE(current_record.loc_id::text,'#NULL#') AND
-                              COALESCE(target_record.loc_meta_versionid::text,'#NULL#') = COALESCE(current_record.loc_meta_versionid::text,'#NULL#') AND
-                              COALESCE(target_record.loc_meta_lastupdated::text,'#NULL#') = COALESCE(current_record.loc_meta_lastupdated::text,'#NULL#') AND
-                              COALESCE(target_record.loc_meta_profile::text,'#NULL#') = COALESCE(current_record.loc_meta_profile::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_use::text,'#NULL#') = COALESCE(current_record.loc_identifier_use::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_system::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_system::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_version::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_version::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_code::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_code::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_display::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_display::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_type_text::text,'#NULL#') = COALESCE(current_record.loc_identifier_type_text::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_system::text,'#NULL#') = COALESCE(current_record.loc_identifier_system::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_value::text,'#NULL#') = COALESCE(current_record.loc_identifier_value::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_start::text,'#NULL#') = COALESCE(current_record.loc_identifier_start::text,'#NULL#') AND
-                              COALESCE(target_record.loc_identifier_end::text,'#NULL#') = COALESCE(current_record.loc_identifier_end::text,'#NULL#') AND
-                              COALESCE(target_record.loc_status::text,'#NULL#') = COALESCE(current_record.loc_status::text,'#NULL#') AND
-                              COALESCE(target_record.loc_name::text,'#NULL#') = COALESCE(current_record.loc_name::text,'#NULL#') AND
-                              COALESCE(target_record.loc_description::text,'#NULL#') = COALESCE(current_record.loc_description::text,'#NULL#') AND
-                              COALESCE(target_record.loc_alias::text,'#NULL#') = COALESCE(current_record.loc_alias::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -6560,7 +4208,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE location_raw_id = current_record.location_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -6588,9 +4236,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='location_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT location_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'location_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.location_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -6604,13 +4252,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'location_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'location_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'location_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -6649,9 +4297,7 @@ BEGIN
                         err_section:='pids_per_ward_raw-10';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.pids_per_ward_raw target_record
-                        WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#') AND
-                              COALESCE(target_record.encounter_id::text,'#NULL#') = COALESCE(current_record.encounter_id::text,'#NULL#')
+                        WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
         
                         err_section:='pids_per_ward_raw-15';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
@@ -6689,9 +4335,7 @@ BEGIN
                             SET last_check_datetime = last_pro_datetime
                             , current_dataset_status = 'Last Time the same Dataset : '||CURRENT_TIMESTAMP
                             , last_processing_nr = last_pro_nr
-                            WHERE COALESCE(target_record.ward_name::text,'#NULL#') = COALESCE(current_record.ward_name::text,'#NULL#') AND
-                              COALESCE(target_record.patient_id::text,'#NULL#') = COALESCE(current_record.patient_id::text,'#NULL#') AND
-                              COALESCE(target_record.encounter_id::text,'#NULL#') = COALESCE(current_record.encounter_id::text,'#NULL#')
+                            WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
         
                             -- Delete updatet datasets
@@ -6706,7 +4350,7 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
-        
+      
         
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
@@ -6734,9 +4378,9 @@ BEGIN
         
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='pids_per_ward_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
-                INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+                INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
                 ( SELECT pids_per_ward_raw_id AS table_primary_key, last_processing_nr,'data_import_hist_every_dataset' as variable_name , 'db_log' AS schema_name, 'pids_per_ward_raw' AS table_name, last_pro_datetime, current_dataset_status, 'copy_raw_cds_in_to_db_log' AS function_name FROM db_log.pids_per_ward_raw d WHERE d.last_processing_nr=last_pro_nr
-                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
+                EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
     
@@ -6750,13 +4394,13 @@ BEGIN
             
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'pids_per_ward_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'pids_per_ward_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
         
-            INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+            INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'pids_per_ward_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
     
@@ -6775,15 +4419,15 @@ BEGIN
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
     
         err_section:='BOTTON-05';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_all', 'db_log', 'copy_raw_cds_in_to_db_log', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
 
         err_section:='BOTTON-10';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_raw_cds_in_to_db_log', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     
         err_section:='BOTTON-15';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_upd', 'db_log', 'copy_raw_cds_in_to_db_log', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_pro_upd, tmp_sec, 'Count all updatetd Datasetzs '||temp);
 
         -- Cleer current executed function and total number of records
@@ -6826,6 +4470,5 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
--- old start CopyJob CDS in 2 DB_log - SELECT cron.schedule('*/1 * * * *', 'SELECT db.copy_raw_cds_in_to_db_log();');
 -----------------------------
 

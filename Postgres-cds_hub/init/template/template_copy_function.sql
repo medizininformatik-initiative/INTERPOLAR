@@ -15,7 +15,7 @@ DECLARE
     data_count_pro_upd INT:=0; -- Counting updatet records in this run how are still there
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
-    data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
+    data_count_last_status_max INT:=5000; -- Max number of data records since the status was last set (parameter)
     last_pro_nr INT; -- Last processing number
     temp VARCHAR; -- Temporary variable for interim results
     last_pro_datetime timestamp not null DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
@@ -89,15 +89,15 @@ BEGIN
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
     
         err_section:='BOTTON-05';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_all', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
 
         err_section:='BOTTON-10';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
     
         err_section:='BOTTON-15';  err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_upd', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', data_count_pro_upd, tmp_sec, 'Count all updatetd Datasetzs '||temp);
 
         -- Cleer current executed function and total number of records
@@ -140,5 +140,4 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
--- old start CopyJob CDS in 2 DB_log - SELECT cron.schedule('*/1 * * * *', 'SELECT db.<%COPY_FUNC_NAME%>();');
 -----------------------------

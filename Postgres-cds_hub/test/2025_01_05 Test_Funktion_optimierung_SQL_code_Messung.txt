@@ -1,0 +1,273 @@
+-- Testskript um Daten zu schreiben un derren Transferzeit innerhalb der DB zu messen - verschiedene Konstellationen simulierbar - Ergebniss wird in eine Zwischentabelle geschrieben
+CREATE OR REPLACE FUNCTION db.optimize_sql_code_test(
+  step INT DEFAULT 100
+, msg VARCHAR DEFAULT 'keine Angabe'
+, loeschen VARCHAR DEFAULT 'nein' -- Datenbank vor Durchgang leeren - "ja" - am Anfang löschen - "nein" - nie löschen additiv - "alles" - bei jedem zwischenschritt auch löschen
+, ins_only_new VARCHAR DEFAULT 'nein' -- "ja" jeder durchgang neue - "nein" teils schon vorhanden - "voll" - alle schon vorhanden sollen nur Neue Datensätze eingefügt oder bereits bestehende
+)
+RETURNS VOID
+SECURITY DEFINER
+AS $$
+DECLARE
+    temp VARCHAR;
+    erg TEXT;
+    status VARCHAR;
+    round INT;
+    num2 INT;
+    maxloop INT :=100;
+    err_section VARCHAR;
+    err_schema VARCHAR;
+    err_table VARCHAR;
+    err_pid VARCHAR;
+    set_sem_erg BOOLEAN;
+    vorhanden_raw INT;
+    vorhanden_typ INT;
+
+BEGIN
+    maxloop:=(10*step); -- Notaus an Datensazanzahl anpassen
+    err_section:='optimize_sql_code_test-0';    err_schema:='/';    err_table:='pg_sleep';
+    SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory 
+
+    err_section:='optimize_sql_code_test-1';    err_schema:='/';    err_table:='anhalten';
+    -- Abarbeitung anhalten
+    SELECT db.data_transfer_stop('Modul','Funktion') INTO status; -- Lock -> True
+
+    err_section:='optimize_sql_code_test-5';    err_schema:='/';    err_table:='loeschen:'||loeschen;
+    IF loeschen='ja' or loeschen='alles' THEN
+        SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+        err_section:='optimize_sql_code_test-6';    err_schema:='/';    err_table:='loeschen:'||loeschen;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM db.data_import_hist' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM db_config.db_error_log' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM cds2db_in.patient_raw' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM db_log.patient_raw' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM cds2db_in.patient' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM db_log.patient' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory
+    END IF;
+
+    IF ins_only_new='voll' THEN
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM cds2db_in.patient_raw' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM db_log.patient_raw' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM cds2db_in.patient' ) ) AS t(res TEXT) INTO erg;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM db_log.patient' ) ) AS t(res TEXT) INTO erg;
+
+        -- Einfügen der raw Daten - als Subproc
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'INSERT INTO db_log.patient_raw (pat_id,pat_name_text) (select ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(250*step)||' ) AS rn) b)'
+        ) ) AS t(res TEXT) INTO erg;
+
+        -- Einfügen der raw Daten - als Subproc
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'INSERT INTO db_log.patient (patient_raw_id,pat_id,pat_name_text) (select rn, ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(250*step)||' ) AS rn) b)'
+        ) ) AS t(res TEXT) INTO erg;
+        
+        PERFORM pg_sleep(2); -- 2 Sekunden warten
+
+        SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory
+    END IF;
+
+    SELECT db.data_transfer_start('Modul','Funktion') INTO status; -- Unlock -> True
+    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+
+    err_section:='optimize_sql_code_test-10';    err_schema:='/';    err_table:='vor FOR Round';
+    FOR round IN 1..400 LOOP -- Ziel 250
+        err_section:='optimize_sql_code_test-11';    err_schema:='/';    err_table:='round:'||round;
+    -- Einfügen der Anzahl der Datensätze mit 1x; 2x; 3x; 4x; 5x; 10x; 15x;
+        IF round IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 18, 20, 25, 30, 35, 40, 50, 60, 70, 90, 100, 130,
+        160, 200, 250, 300, 350, 400) THEN
+            err_section:='optimize_sql_code_test-12';    err_schema:='/';    err_table:='round:'||round;
+--            COMMIT;
+            ------------------------------------------
+            num2:=maxloop;
+            LOOP -- Verarbeitung anhalten
+                -- Funktion aufrufen und Ergebnis in status speichern
+                err_section:='optimize_sql_code_test-15';    err_schema:='/';    err_table:='round:'||round;
+                SELECT db.data_transfer_status() INTO status;
+                
+                -- Überprüfen, ob der Status 'Ready' ist
+                IF status like 'ReadyToConnect%' THEN
+                    SELECT db.data_transfer_stop('Modul','Funktion_raw_'||round) INTO status; -- Lock -> True
+                    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+                    status:='';
+                    EXIT;
+                END IF;
+                
+                num2:=num2-1;
+                IF num2<2 THEN maxloop:=1; EXIT; END IF;
+                
+                PERFORM pg_sleep(2); -- 2 Sekunden warten
+            END LOOP;
+            -------------------------------------------
+
+            err_section:='optimize_sql_code_test-17';    err_schema:='/';    err_table:='round:'||round;
+
+            -- Einfügen der raw Daten - als Subproc
+            SELECT res FROM public.pg_background_result(public.pg_background_launch(
+            'INSERT INTO cds2db_in.patient_raw (pat_id,pat_name_text) (select ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(round*step)||' ) AS rn) b)'
+            ) ) AS t(res TEXT) INTO erg;
+
+            err_section:='optimize_sql_code_test-19';    err_schema:='/';    err_table:='round:'||round;
+
+            SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+
+            SELECT count(1) INTO vorhanden_raw FROM db_log.patient_raw;
+            SELECT count(1) INTO vorhanden_typ FROM db_log.patient;
+
+            -- Verarbeitung starten
+            SELECT db.data_transfer_start('Modul','Funktion_raw_'||round) into status; -- Unlock -> True
+    
+            PERFORM pg_sleep(2);
+
+            num2:=maxloop;
+            LOOP -- Verarbeitung anhalten wenn einmal durchgelaufen und wieder ready
+                -- Funktion aufrufen und Ergebnis in status speichern
+                err_section:='optimize_sql_code_test-25';    err_schema:='/';    err_table:='round:'||round;
+                SELECT db.data_transfer_status() INTO status;
+                
+                -- Überprüfen, ob der Status 'Ready' ist
+                IF status like 'ReadyToConnect%' THEN
+                    SELECT db.data_transfer_stop('Modul','Funktion_typed_'||round) INTO status; -- Lock -> True
+                    SELECT pg_sleep(5) INTO temp; -- Time to inelize dynamic shared memory 
+                    status:='';
+                    EXIT;
+                END IF;
+                
+                num2:=num2-1;
+                IF num2<2 THEN maxloop:=1; EXIT; END IF;
+
+                PERFORM pg_sleep(2); -- 2 Sekunden warten
+            END LOOP;
+
+            err_section:='optimize_sql_code_test-30';    err_schema:='/';    err_table:='round:'||round;
+
+            -- Einfügen der typiesierten Daten - als Subproc
+            SELECT res FROM public.pg_background_result(public.pg_background_launch(
+            'insert into cds2db_in.patient (patient_raw_id,pat_id,pat_name_text) (select patient_raw_id,pat_id,pat_name_text from cds2db_out.v_patient_raw_diff)'
+            ) ) AS t(res TEXT) INTO erg;
+            
+            PERFORM pg_sleep(2); -- 2 Sekunden warten
+          
+            err_section:='optimize_sql_code_test-35';    err_schema:='/';    err_table:='round:'||round;
+
+            SELECT db.data_transfer_start('Modul','Funktion_typed_'||round) into status; -- Unlock -> True
+
+            PERFORM pg_sleep(2); -- 2 Sekunden warten
+
+            ------------------------------------------
+            num2:=maxloop;
+            LOOP -- Verarbeitung anhalten
+                -- Funktion aufrufen und Ergebnis in status speichern
+                err_section:='optimize_sql_code_test-40';    err_schema:='/';    err_table:='round:'||round;
+
+                SELECT db.data_transfer_status() INTO status;
+                
+                -- Überprüfen, ob der Status 'Ready' ist
+                IF status like 'ReadyToConnect%' THEN
+                    SELECT db.data_transfer_stop('Modul','Funktion_doku_'||round) INTO status; -- Lock -> True
+                    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+                    status:='';
+                    EXIT;
+                END IF;
+                
+                num2:=num2-1;
+                IF num2<2 THEN maxloop:=1; EXIT; END IF;
+                
+                PERFORM pg_sleep(2); -- 2 Sekunden warten
+            END LOOP;
+            -------------------------------------------
+
+            err_section:='optimize_sql_code_test-45';    err_schema:='/';    err_table:='round:'||round;
+
+            SELECT res FROM public.pg_background_result(public.pg_background_launch(
+            'insert into db_config.dev_sql_measurement (
+            cre_datetime, msg, raw_ds_all, raw_ds_target, raw_copy_t, raw_copy_with_oh, raw_ds_new, raw_ds_upd, typ_ds_all, typ_ds_target, typ_copy_t, typ_copy_with_oh, typ_ds_new, typ_ds_upd, takeover_t)
+            (
+            select last_check_datetime, '''||msg||' - round:'||round||''', dataset_count raw_ds_all
+            , '||vorhanden_raw||' AS raw_ds_target
+            , copy_time_in_sec raw_copy_t
+            , (select copy_time_in_sec from db.data_import_hist where table_name=''copy_raw_cds_in_to_db_log'' and variable_name=''data_count_pro_all'') raw_copy_with_oh
+            , (select dataset_count from db.data_import_hist where table_name=''patient_raw'' and variable_name=''data_count_new'') raw_ds_new
+            , (select dataset_count from db.data_import_hist where table_name=''patient_raw'' and variable_name=''data_count_update'') raw_ds_upd
+            , (select dataset_count from db.data_import_hist where table_name=''patient'' and variable_name=''data_count_all'') typ_ds_all
+            , '||vorhanden_typ||' AS typ_ds_target
+            , (select copy_time_in_sec from db.data_import_hist where table_name=''patient'' and variable_name=''data_count_all'') typ_copy_t
+            , (select copy_time_in_sec from db.data_import_hist where table_name=''copy_type_cds_in_to_db_log'' and variable_name=''data_count_pro_all'') typ_copy_with_oh
+            , (select dataset_count from db.data_import_hist where table_name=''patient'' and variable_name=''data_count_new'') typ_ds_new
+            , (select dataset_count from db.data_import_hist where table_name=''patient'' and variable_name=''data_count_update'') typ_ds_upd
+            , (select sum(copy_time_in_sec) from db.data_import_hist where table_name=''take_over_last_check_date'' and variable_name=''data_count_pro_all'') takeover_t
+            from db.data_import_hist where table_name=''patient_raw'' and variable_name=''data_count_all''
+            )'
+            ) ) AS t(res TEXT) INTO erg;
+            
+            
+            IF loeschen='alles' THEN
+                SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+                err_section:='optimize_sql_code_test-50';    err_schema:='/';    err_table:='loeschen:'||loeschen;
+                
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'DELETE FROM cds2db_in.patient_raw' ) ) AS t(res TEXT) INTO erg;
+        
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'DELETE FROM db_log.patient_raw' ) ) AS t(res TEXT) INTO erg;
+        
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'DELETE FROM cds2db_in.patient' ) ) AS t(res TEXT) INTO erg;
+        
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'DELETE FROM db_log.patient' ) ) AS t(res TEXT) INTO erg;
+        
+                SELECT pg_sleep(5) INTO temp; -- Time to inelize dynamic shared memory
+            END IF;
+            
+            SELECT res FROM public.pg_background_result(public.pg_background_launch(
+            'update db.data_import_hist set table_name=''old_''||table_name where table_name not like ''old_%'' or table_name=''take_over_last_check_date''' ) ) AS t(res TEXT) INTO erg;
+
+            err_section:='optimize_sql_code_test-60';    err_schema:='/';    err_table:='round:'||round;
+
+            SELECT db.data_transfer_start('Modul','Funktion_doku_'||round) into status; -- Unlock -> True
+            SELECT pg_sleep(5) INTO temp; -- Time to inelize dynamic shared memory
+        END IF; -- in bestimmten Runden
+        err_section:='optimize_sql_code_test-65';    err_schema:='/';    err_table:='round:'||round;
+    END LOOP;  -- Runden durchgehen
+
+    err_section:='optimize_sql_code_test-70';    err_schema:='/';    err_table:='round:'||round;
+
+    SELECT db.data_transfer_start('Modul','Funktion')  INTO status; -- Unlock -> True
+    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+
+    err_section:='optimize_sql_code_test-80';    err_schema:='/';    err_table:='/';
+EXCEPTION
+    WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num2 FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.optimize_sql_code_test()' AS VARCHAR), -- err_objekt (VARCHAR) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS VARCHAR),                    -- err_user (VARCHAR) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS VARCHAR),     -- err_msg (VARCHAR) Fehlernachricht
+        err_line => CAST(err_section AS VARCHAR),                     -- err_line (VARCHAR) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' ||err_table||' lastErg:'||erg AS VARCHAR), -- err_variables (VARCHAR) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(num2 AS INT)                          -- last_processing_nr (INT) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
+END;
+$$ LANGUAGE plpgsql; 

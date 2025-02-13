@@ -90,7 +90,6 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #'
 #' @param module_name A string specifying the name of the module being initialized.
 #' @param path_to_toml A string specifying the path to the primary configuration TOML file.
-#' @param debug_path_to_config_toml An optional string specifying the path to a debug TOML file.
 #' @param defaults A named vector of default values for variables. Missing variables after loading
 #'        the TOML file are initialized with these values.
 #' @param envir The environment where variables should be assigned. Default is `.GlobalEnv`.
@@ -99,8 +98,7 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #'         and merged constants from the database configuration, if provided.
 #'
 #' @export
-initModuleConstants <- function(module_name, path_to_toml, debug_path_to_config_toml = NA,
-                                defaults = c(), envir = .GlobalEnv) {
+initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir = .GlobalEnv) {
 
   # Set the project name in the specified environment
   assign("PROJECT_NAME", module_name, envir = envir)
@@ -108,9 +106,9 @@ initModuleConstants <- function(module_name, path_to_toml, debug_path_to_config_
   # Initialize constants from the main TOML file
   constants <- initConstants(path_to_toml, defaults, envir)
 
-  # Optionally load debug constants if provided
-  if (!isSimpleNA(debug_path_to_config_toml)) {
-    constants <- addConstants(debug_path_to_config_toml, constants, envir)
+  # Optionally load and add debug constants if provided
+  if (exists("DEBUG_PATH_TO_CONFIG_TOML") && nchar(DEBUG_PATH_TO_CONFIG_TOML)) {
+    constants <- addConstants(DEBUG_PATH_TO_CONFIG_TOML, constants, envir)
   }
 
   # Initialize the project timestamp if not already set

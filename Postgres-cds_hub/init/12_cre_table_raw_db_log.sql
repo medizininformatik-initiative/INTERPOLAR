@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-01-15 10:46:31
+-- Rights definition file last update : 2025-01-13 09:38:21
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-06 19:15:22
+-- Create time: 2025-02-11 22:33:36
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -33,7 +33,7 @@
 -----------------------------------------------------
 
 -- Table "encounter_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   enc_id VARCHAR,   -- id (VARCHAR)
@@ -110,14 +110,174 @@ CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
   enc_serviceprovider_identifier_type_display VARCHAR,   -- serviceProvider/identifier/type/coding/display (VARCHAR)
   enc_serviceprovider_identifier_type_text VARCHAR,   -- serviceProvider/identifier/type/text (VARCHAR)
   enc_serviceprovider_display VARCHAR,   -- serviceProvider/display (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: id (enc_id)
+             COALESCE(db.to_char_immutable(enc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (enc_meta_versionid)
+             COALESCE(db.to_char_immutable(enc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (enc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(enc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (enc_meta_profile)
+             COALESCE(db.to_char_immutable(enc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (enc_identifier_use)
+             COALESCE(db.to_char_immutable(enc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (enc_identifier_type_system)
+             COALESCE(db.to_char_immutable(enc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (enc_identifier_type_version)
+             COALESCE(db.to_char_immutable(enc_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (enc_identifier_type_code)
+             COALESCE(db.to_char_immutable(enc_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (enc_identifier_type_display)
+             COALESCE(db.to_char_immutable(enc_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (enc_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (enc_identifier_system)
+             COALESCE(db.to_char_immutable(enc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (enc_identifier_value)
+             COALESCE(db.to_char_immutable(enc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (enc_identifier_start)
+             COALESCE(db.to_char_immutable(enc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (enc_identifier_end)
+             COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
+             COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
+             COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
+             COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
+             COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
+             COALESCE(db.to_char_immutable(enc_class_code), '#NULL#') || '|||' || -- hash from: class/code (enc_class_code)
+             COALESCE(db.to_char_immutable(enc_class_display), '#NULL#') || '|||' || -- hash from: class/display (enc_class_display)
+             COALESCE(db.to_char_immutable(enc_type_system), '#NULL#') || '|||' || -- hash from: type/coding/system (enc_type_system)
+             COALESCE(db.to_char_immutable(enc_type_version), '#NULL#') || '|||' || -- hash from: type/coding/version (enc_type_version)
+             COALESCE(db.to_char_immutable(enc_type_code), '#NULL#') || '|||' || -- hash from: type/coding/code (enc_type_code)
+             COALESCE(db.to_char_immutable(enc_type_display), '#NULL#') || '|||' || -- hash from: type/coding/display (enc_type_display)
+             COALESCE(db.to_char_immutable(enc_type_text), '#NULL#') || '|||' || -- hash from: type/text (enc_type_text)
+             COALESCE(db.to_char_immutable(enc_servicetype_system), '#NULL#') || '|||' || -- hash from: serviceType/coding/system (enc_servicetype_system)
+             COALESCE(db.to_char_immutable(enc_servicetype_version), '#NULL#') || '|||' || -- hash from: serviceType/coding/version (enc_servicetype_version)
+             COALESCE(db.to_char_immutable(enc_servicetype_code), '#NULL#') || '|||' || -- hash from: serviceType/coding/code (enc_servicetype_code)
+             COALESCE(db.to_char_immutable(enc_servicetype_display), '#NULL#') || '|||' || -- hash from: serviceType/coding/display (enc_servicetype_display)
+             COALESCE(db.to_char_immutable(enc_servicetype_text), '#NULL#') || '|||' || -- hash from: serviceType/text (enc_servicetype_text)
+             COALESCE(db.to_char_immutable(enc_period_start), '#NULL#') || '|||' || -- hash from: period/start (enc_period_start)
+             COALESCE(db.to_char_immutable(enc_period_end), '#NULL#') || '|||' || -- hash from: period/end (enc_period_end)
+             COALESCE(db.to_char_immutable(enc_diagnosis_condition_ref), '#NULL#') || '|||' || -- hash from: diagnosis/condition/reference (enc_diagnosis_condition_ref)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_system), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/system (enc_diagnosis_use_system)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_version), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/version (enc_diagnosis_use_version)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_code), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/code (enc_diagnosis_use_code)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_display), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/display (enc_diagnosis_use_display)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_text), '#NULL#') || '|||' || -- hash from: diagnosis/use/text (enc_diagnosis_use_text)
+             COALESCE(db.to_char_immutable(enc_diagnosis_rank), '#NULL#') || '|||' || -- hash from: diagnosis/rank (enc_diagnosis_rank)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_system), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/system (enc_hospitalization_admitsource_system)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_version), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/version (enc_hospitalization_admitsource_version)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_code), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/code (enc_hospitalization_admitsource_code)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_display), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/display (enc_hospitalization_admitsource_display)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_text), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/text (enc_hospitalization_admitsource_text)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_system), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/system (enc_hospitalization_dischargedisposition_system)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_version), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/version (enc_hospitalization_dischargedisposition_version)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_code), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/code (enc_hospitalization_dischargedisposition_code)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_display), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/display (enc_hospitalization_dischargedisposition_display)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_text), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/text (enc_hospitalization_dischargedisposition_text)
+             COALESCE(db.to_char_immutable(enc_location_ref), '#NULL#') || '|||' || -- hash from: location/location/reference (enc_location_ref)
+             COALESCE(db.to_char_immutable(enc_location_type), '#NULL#') || '|||' || -- hash from: location/location/type (enc_location_type)
+             COALESCE(db.to_char_immutable(enc_location_identifier_use), '#NULL#') || '|||' || -- hash from: location/location/identifier/use (enc_location_identifier_use)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_system), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/system (enc_location_identifier_type_system)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_version), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/version (enc_location_identifier_type_version)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_code), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/code (enc_location_identifier_type_code)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_display), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/display (enc_location_identifier_type_display)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_text), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/text (enc_location_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_location_display), '#NULL#') || '|||' || -- hash from: location/location/display (enc_location_display)
+             COALESCE(db.to_char_immutable(enc_location_status), '#NULL#') || '|||' || -- hash from: location/status (enc_location_status)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_system), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/system (enc_location_physicaltype_system)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_version), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/version (enc_location_physicaltype_version)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_code), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/code (enc_location_physicaltype_code)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_display), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/display (enc_location_physicaltype_display)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_text), '#NULL#') || '|||' || -- hash from: location/physicalType/text (enc_location_physicaltype_text)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_ref), '#NULL#') || '|||' || -- hash from: serviceProvider/reference (enc_serviceprovider_ref)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_type), '#NULL#') || '|||' || -- hash from: serviceProvider/type (enc_serviceprovider_type)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_use), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/use (enc_serviceprovider_identifier_use)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_system), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/system (enc_serviceprovider_identifier_type_system)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_version), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/version (enc_serviceprovider_identifier_type_version)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_code), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/code (enc_serviceprovider_identifier_type_code)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_display), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/display (enc_serviceprovider_identifier_type_display)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_text), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/text (enc_serviceprovider_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_display), '#NULL#') || '|||' || -- hash from: serviceProvider/display (enc_serviceprovider_display)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: id (enc_id)
+             COALESCE(db.to_char_immutable(enc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (enc_meta_versionid)
+             COALESCE(db.to_char_immutable(enc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (enc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(enc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (enc_meta_profile)
+             COALESCE(db.to_char_immutable(enc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (enc_identifier_use)
+             COALESCE(db.to_char_immutable(enc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (enc_identifier_type_system)
+             COALESCE(db.to_char_immutable(enc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (enc_identifier_type_version)
+             COALESCE(db.to_char_immutable(enc_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (enc_identifier_type_code)
+             COALESCE(db.to_char_immutable(enc_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (enc_identifier_type_display)
+             COALESCE(db.to_char_immutable(enc_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (enc_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (enc_identifier_system)
+             COALESCE(db.to_char_immutable(enc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (enc_identifier_value)
+             COALESCE(db.to_char_immutable(enc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (enc_identifier_start)
+             COALESCE(db.to_char_immutable(enc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (enc_identifier_end)
+             COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
+             COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
+             COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
+             COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
+             COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
+             COALESCE(db.to_char_immutable(enc_class_code), '#NULL#') || '|||' || -- hash from: class/code (enc_class_code)
+             COALESCE(db.to_char_immutable(enc_class_display), '#NULL#') || '|||' || -- hash from: class/display (enc_class_display)
+             COALESCE(db.to_char_immutable(enc_type_system), '#NULL#') || '|||' || -- hash from: type/coding/system (enc_type_system)
+             COALESCE(db.to_char_immutable(enc_type_version), '#NULL#') || '|||' || -- hash from: type/coding/version (enc_type_version)
+             COALESCE(db.to_char_immutable(enc_type_code), '#NULL#') || '|||' || -- hash from: type/coding/code (enc_type_code)
+             COALESCE(db.to_char_immutable(enc_type_display), '#NULL#') || '|||' || -- hash from: type/coding/display (enc_type_display)
+             COALESCE(db.to_char_immutable(enc_type_text), '#NULL#') || '|||' || -- hash from: type/text (enc_type_text)
+             COALESCE(db.to_char_immutable(enc_servicetype_system), '#NULL#') || '|||' || -- hash from: serviceType/coding/system (enc_servicetype_system)
+             COALESCE(db.to_char_immutable(enc_servicetype_version), '#NULL#') || '|||' || -- hash from: serviceType/coding/version (enc_servicetype_version)
+             COALESCE(db.to_char_immutable(enc_servicetype_code), '#NULL#') || '|||' || -- hash from: serviceType/coding/code (enc_servicetype_code)
+             COALESCE(db.to_char_immutable(enc_servicetype_display), '#NULL#') || '|||' || -- hash from: serviceType/coding/display (enc_servicetype_display)
+             COALESCE(db.to_char_immutable(enc_servicetype_text), '#NULL#') || '|||' || -- hash from: serviceType/text (enc_servicetype_text)
+             COALESCE(db.to_char_immutable(enc_period_start), '#NULL#') || '|||' || -- hash from: period/start (enc_period_start)
+             COALESCE(db.to_char_immutable(enc_period_end), '#NULL#') || '|||' || -- hash from: period/end (enc_period_end)
+             COALESCE(db.to_char_immutable(enc_diagnosis_condition_ref), '#NULL#') || '|||' || -- hash from: diagnosis/condition/reference (enc_diagnosis_condition_ref)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_system), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/system (enc_diagnosis_use_system)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_version), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/version (enc_diagnosis_use_version)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_code), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/code (enc_diagnosis_use_code)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_display), '#NULL#') || '|||' || -- hash from: diagnosis/use/coding/display (enc_diagnosis_use_display)
+             COALESCE(db.to_char_immutable(enc_diagnosis_use_text), '#NULL#') || '|||' || -- hash from: diagnosis/use/text (enc_diagnosis_use_text)
+             COALESCE(db.to_char_immutable(enc_diagnosis_rank), '#NULL#') || '|||' || -- hash from: diagnosis/rank (enc_diagnosis_rank)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_system), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/system (enc_hospitalization_admitsource_system)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_version), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/version (enc_hospitalization_admitsource_version)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_code), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/code (enc_hospitalization_admitsource_code)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_display), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/coding/display (enc_hospitalization_admitsource_display)
+             COALESCE(db.to_char_immutable(enc_hospitalization_admitsource_text), '#NULL#') || '|||' || -- hash from: hospitalization/admitSource/text (enc_hospitalization_admitsource_text)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_system), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/system (enc_hospitalization_dischargedisposition_system)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_version), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/version (enc_hospitalization_dischargedisposition_version)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_code), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/code (enc_hospitalization_dischargedisposition_code)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_display), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/coding/display (enc_hospitalization_dischargedisposition_display)
+             COALESCE(db.to_char_immutable(enc_hospitalization_dischargedisposition_text), '#NULL#') || '|||' || -- hash from: hospitalization/dischargeDisposition/text (enc_hospitalization_dischargedisposition_text)
+             COALESCE(db.to_char_immutable(enc_location_ref), '#NULL#') || '|||' || -- hash from: location/location/reference (enc_location_ref)
+             COALESCE(db.to_char_immutable(enc_location_type), '#NULL#') || '|||' || -- hash from: location/location/type (enc_location_type)
+             COALESCE(db.to_char_immutable(enc_location_identifier_use), '#NULL#') || '|||' || -- hash from: location/location/identifier/use (enc_location_identifier_use)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_system), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/system (enc_location_identifier_type_system)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_version), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/version (enc_location_identifier_type_version)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_code), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/code (enc_location_identifier_type_code)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_display), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/display (enc_location_identifier_type_display)
+             COALESCE(db.to_char_immutable(enc_location_identifier_type_text), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/text (enc_location_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_location_display), '#NULL#') || '|||' || -- hash from: location/location/display (enc_location_display)
+             COALESCE(db.to_char_immutable(enc_location_status), '#NULL#') || '|||' || -- hash from: location/status (enc_location_status)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_system), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/system (enc_location_physicaltype_system)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_version), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/version (enc_location_physicaltype_version)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_code), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/code (enc_location_physicaltype_code)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_display), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/display (enc_location_physicaltype_display)
+             COALESCE(db.to_char_immutable(enc_location_physicaltype_text), '#NULL#') || '|||' || -- hash from: location/physicalType/text (enc_location_physicaltype_text)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_ref), '#NULL#') || '|||' || -- hash from: serviceProvider/reference (enc_serviceprovider_ref)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_type), '#NULL#') || '|||' || -- hash from: serviceProvider/type (enc_serviceprovider_type)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_use), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/use (enc_serviceprovider_identifier_use)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_system), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/system (enc_serviceprovider_identifier_type_system)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_version), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/version (enc_serviceprovider_identifier_type_version)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_code), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/code (enc_serviceprovider_identifier_type_code)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_display), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/display (enc_serviceprovider_identifier_type_display)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_text), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/text (enc_serviceprovider_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_display), '#NULL#') || '|||' || -- hash from: serviceProvider/display (enc_serviceprovider_display)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.encounter_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.encounter_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "patient_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   patient_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pat_id VARCHAR,   -- id (VARCHAR)
@@ -140,14 +300,66 @@ CREATE TABLE IF NOT EXISTS db_log.patient_raw (
   pat_gender VARCHAR,   -- gender (VARCHAR)
   pat_birthdate VARCHAR,   -- birthDate (VARCHAR)
   pat_address_postalcode VARCHAR,   -- address/postalCode (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(pat_id), '#NULL#') || '|||' || -- hash from: id (pat_id)
+             COALESCE(db.to_char_immutable(pat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (pat_meta_versionid)
+             COALESCE(db.to_char_immutable(pat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (pat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(pat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (pat_meta_profile)
+             COALESCE(db.to_char_immutable(pat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (pat_identifier_use)
+             COALESCE(db.to_char_immutable(pat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (pat_identifier_type_system)
+             COALESCE(db.to_char_immutable(pat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (pat_identifier_type_version)
+             COALESCE(db.to_char_immutable(pat_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (pat_identifier_type_code)
+             COALESCE(db.to_char_immutable(pat_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (pat_identifier_type_display)
+             COALESCE(db.to_char_immutable(pat_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (pat_identifier_type_text)
+             COALESCE(db.to_char_immutable(pat_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (pat_identifier_system)
+             COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
+             COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
+             COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
+             COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
+             COALESCE(db.to_char_immutable(pat_name_family), '#NULL#') || '|||' || -- hash from: name/family (pat_name_family)
+             COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
+             COALESCE(db.to_char_immutable(pat_gender), '#NULL#') || '|||' || -- hash from: gender (pat_gender)
+             COALESCE(db.to_char_immutable(pat_birthdate), '#NULL#') || '|||' || -- hash from: birthDate (pat_birthdate)
+             COALESCE(db.to_char_immutable(pat_address_postalcode), '#NULL#') || '|||' || -- hash from: address/postalCode (pat_address_postalcode)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(pat_id), '#NULL#') || '|||' || -- hash from: id (pat_id)
+             COALESCE(db.to_char_immutable(pat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (pat_meta_versionid)
+             COALESCE(db.to_char_immutable(pat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (pat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(pat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (pat_meta_profile)
+             COALESCE(db.to_char_immutable(pat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (pat_identifier_use)
+             COALESCE(db.to_char_immutable(pat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (pat_identifier_type_system)
+             COALESCE(db.to_char_immutable(pat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (pat_identifier_type_version)
+             COALESCE(db.to_char_immutable(pat_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (pat_identifier_type_code)
+             COALESCE(db.to_char_immutable(pat_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (pat_identifier_type_display)
+             COALESCE(db.to_char_immutable(pat_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (pat_identifier_type_text)
+             COALESCE(db.to_char_immutable(pat_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (pat_identifier_system)
+             COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
+             COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
+             COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
+             COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
+             COALESCE(db.to_char_immutable(pat_name_family), '#NULL#') || '|||' || -- hash from: name/family (pat_name_family)
+             COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
+             COALESCE(db.to_char_immutable(pat_gender), '#NULL#') || '|||' || -- hash from: gender (pat_gender)
+             COALESCE(db.to_char_immutable(pat_birthdate), '#NULL#') || '|||' || -- hash from: birthDate (pat_birthdate)
+             COALESCE(db.to_char_immutable(pat_address_postalcode), '#NULL#') || '|||' || -- hash from: address/postalCode (pat_address_postalcode)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.patient_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.patient_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "condition_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   con_id VARCHAR,   -- id (VARCHAR)
@@ -266,14 +478,258 @@ CREATE TABLE IF NOT EXISTS db_log.condition_raw (
   con_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   con_note_time VARCHAR,   -- note/time (VARCHAR)
   con_note_text VARCHAR,   -- note/text (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(con_id), '#NULL#') || '|||' || -- hash from: id (con_id)
+             COALESCE(db.to_char_immutable(con_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (con_meta_versionid)
+             COALESCE(db.to_char_immutable(con_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (con_meta_lastupdated)
+             COALESCE(db.to_char_immutable(con_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (con_meta_profile)
+             COALESCE(db.to_char_immutable(con_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (con_identifier_use)
+             COALESCE(db.to_char_immutable(con_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (con_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (con_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (con_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (con_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (con_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (con_identifier_system)
+             COALESCE(db.to_char_immutable(con_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (con_identifier_value)
+             COALESCE(db.to_char_immutable(con_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (con_identifier_start)
+             COALESCE(db.to_char_immutable(con_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (con_identifier_end)
+             COALESCE(db.to_char_immutable(con_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (con_encounter_ref)
+             COALESCE(db.to_char_immutable(con_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (con_patient_ref)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_system), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/system (con_clinicalstatus_system)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_version), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/version (con_clinicalstatus_version)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_code), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/code (con_clinicalstatus_code)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_display), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/display (con_clinicalstatus_display)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_text), '#NULL#') || '|||' || -- hash from: clinicalStatus/text (con_clinicalstatus_text)
+             COALESCE(db.to_char_immutable(con_verificationstatus_system), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/system (con_verificationstatus_system)
+             COALESCE(db.to_char_immutable(con_verificationstatus_version), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/version (con_verificationstatus_version)
+             COALESCE(db.to_char_immutable(con_verificationstatus_code), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/code (con_verificationstatus_code)
+             COALESCE(db.to_char_immutable(con_verificationstatus_display), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/display (con_verificationstatus_display)
+             COALESCE(db.to_char_immutable(con_verificationstatus_text), '#NULL#') || '|||' || -- hash from: verificationStatus/text (con_verificationstatus_text)
+             COALESCE(db.to_char_immutable(con_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (con_category_system)
+             COALESCE(db.to_char_immutable(con_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (con_category_version)
+             COALESCE(db.to_char_immutable(con_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (con_category_code)
+             COALESCE(db.to_char_immutable(con_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (con_category_display)
+             COALESCE(db.to_char_immutable(con_category_text), '#NULL#') || '|||' || -- hash from: category/text (con_category_text)
+             COALESCE(db.to_char_immutable(con_severity_system), '#NULL#') || '|||' || -- hash from: severity/coding/system (con_severity_system)
+             COALESCE(db.to_char_immutable(con_severity_version), '#NULL#') || '|||' || -- hash from: severity/coding/version (con_severity_version)
+             COALESCE(db.to_char_immutable(con_severity_code), '#NULL#') || '|||' || -- hash from: severity/coding/code (con_severity_code)
+             COALESCE(db.to_char_immutable(con_severity_display), '#NULL#') || '|||' || -- hash from: severity/coding/display (con_severity_display)
+             COALESCE(db.to_char_immutable(con_severity_text), '#NULL#') || '|||' || -- hash from: severity/text (con_severity_text)
+             COALESCE(db.to_char_immutable(con_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (con_code_system)
+             COALESCE(db.to_char_immutable(con_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (con_code_version)
+             COALESCE(db.to_char_immutable(con_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (con_code_code)
+             COALESCE(db.to_char_immutable(con_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (con_code_display)
+             COALESCE(db.to_char_immutable(con_code_text), '#NULL#') || '|||' || -- hash from: code/text (con_code_text)
+             COALESCE(db.to_char_immutable(con_bodysite_system), '#NULL#') || '|||' || -- hash from: bodySite/coding/system (con_bodysite_system)
+             COALESCE(db.to_char_immutable(con_bodysite_version), '#NULL#') || '|||' || -- hash from: bodySite/coding/version (con_bodysite_version)
+             COALESCE(db.to_char_immutable(con_bodysite_code), '#NULL#') || '|||' || -- hash from: bodySite/coding/code (con_bodysite_code)
+             COALESCE(db.to_char_immutable(con_bodysite_display), '#NULL#') || '|||' || -- hash from: bodySite/coding/display (con_bodysite_display)
+             COALESCE(db.to_char_immutable(con_bodysite_text), '#NULL#') || '|||' || -- hash from: bodySite/text (con_bodysite_text)
+             COALESCE(db.to_char_immutable(con_onsetperiod_start), '#NULL#') || '|||' || -- hash from: onsetPeriod/start (con_onsetperiod_start)
+             COALESCE(db.to_char_immutable(con_onsetperiod_end), '#NULL#') || '|||' || -- hash from: onsetPeriod/end (con_onsetperiod_end)
+             COALESCE(db.to_char_immutable(con_onsetdatetime), '#NULL#') || '|||' || -- hash from: onsetDateTime (con_onsetdatetime)
+             COALESCE(db.to_char_immutable(con_abatementdatetime), '#NULL#') || '|||' || -- hash from: abatementDateTime (con_abatementdatetime)
+             COALESCE(db.to_char_immutable(con_abatementage_value), '#NULL#') || '|||' || -- hash from: abatementAge/value (con_abatementage_value)
+             COALESCE(db.to_char_immutable(con_abatementage_comparator), '#NULL#') || '|||' || -- hash from: abatementAge/comparator (con_abatementage_comparator)
+             COALESCE(db.to_char_immutable(con_abatementage_unit), '#NULL#') || '|||' || -- hash from: abatementAge/unit (con_abatementage_unit)
+             COALESCE(db.to_char_immutable(con_abatementage_system), '#NULL#') || '|||' || -- hash from: abatementAge/system (con_abatementage_system)
+             COALESCE(db.to_char_immutable(con_abatementage_code), '#NULL#') || '|||' || -- hash from: abatementAge/code (con_abatementage_code)
+             COALESCE(db.to_char_immutable(con_abatementperiod_start), '#NULL#') || '|||' || -- hash from: abatementPeriod/start (con_abatementperiod_start)
+             COALESCE(db.to_char_immutable(con_abatementperiod_end), '#NULL#') || '|||' || -- hash from: abatementPeriod/end (con_abatementperiod_end)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_value), '#NULL#') || '|||' || -- hash from: abatementRange/low/value (con_abatementrange_low_value)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_unit), '#NULL#') || '|||' || -- hash from: abatementRange/low/unit (con_abatementrange_low_unit)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_system), '#NULL#') || '|||' || -- hash from: abatementRange/low/system (con_abatementrange_low_system)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_code), '#NULL#') || '|||' || -- hash from: abatementRange/low/code (con_abatementrange_low_code)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_value), '#NULL#') || '|||' || -- hash from: abatementRange/high/value (con_abatementrange_high_value)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_unit), '#NULL#') || '|||' || -- hash from: abatementRange/high/unit (con_abatementrange_high_unit)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_system), '#NULL#') || '|||' || -- hash from: abatementRange/high/system (con_abatementrange_high_system)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_code), '#NULL#') || '|||' || -- hash from: abatementRange/high/code (con_abatementrange_high_code)
+             COALESCE(db.to_char_immutable(con_abatementstring), '#NULL#') || '|||' || -- hash from: abatementString (con_abatementstring)
+             COALESCE(db.to_char_immutable(con_recordeddate), '#NULL#') || '|||' || -- hash from: recordedDate (con_recordeddate)
+             COALESCE(db.to_char_immutable(con_recorder_ref), '#NULL#') || '|||' || -- hash from: recorder/reference (con_recorder_ref)
+             COALESCE(db.to_char_immutable(con_recorder_type), '#NULL#') || '|||' || -- hash from: recorder/type (con_recorder_type)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_use), '#NULL#') || '|||' || -- hash from: recorder/identifier/use (con_recorder_identifier_use)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_system), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/system (con_recorder_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_version), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/version (con_recorder_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_code), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/code (con_recorder_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_display), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/display (con_recorder_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_text), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/text (con_recorder_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_recorder_display), '#NULL#') || '|||' || -- hash from: recorder/display (con_recorder_display)
+             COALESCE(db.to_char_immutable(con_asserter_ref), '#NULL#') || '|||' || -- hash from: asserter/reference (con_asserter_ref)
+             COALESCE(db.to_char_immutable(con_asserter_type), '#NULL#') || '|||' || -- hash from: asserter/type (con_asserter_type)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_use), '#NULL#') || '|||' || -- hash from: asserter/identifier/use (con_asserter_identifier_use)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_system), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/system (con_asserter_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_version), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/version (con_asserter_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_code), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/code (con_asserter_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_display), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/display (con_asserter_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_text), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/text (con_asserter_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_asserter_display), '#NULL#') || '|||' || -- hash from: asserter/display (con_asserter_display)
+             COALESCE(db.to_char_immutable(con_stage_summary_system), '#NULL#') || '|||' || -- hash from: stage/summary/coding/system (con_stage_summary_system)
+             COALESCE(db.to_char_immutable(con_stage_summary_version), '#NULL#') || '|||' || -- hash from: stage/summary/coding/version (con_stage_summary_version)
+             COALESCE(db.to_char_immutable(con_stage_summary_code), '#NULL#') || '|||' || -- hash from: stage/summary/coding/code (con_stage_summary_code)
+             COALESCE(db.to_char_immutable(con_stage_summary_display), '#NULL#') || '|||' || -- hash from: stage/summary/coding/display (con_stage_summary_display)
+             COALESCE(db.to_char_immutable(con_stage_summary_text), '#NULL#') || '|||' || -- hash from: stage/summary/text (con_stage_summary_text)
+             COALESCE(db.to_char_immutable(con_stage_assessment_ref), '#NULL#') || '|||' || -- hash from: stage/assessment/reference (con_stage_assessment_ref)
+             COALESCE(db.to_char_immutable(con_stage_assessment_type), '#NULL#') || '|||' || -- hash from: stage/assessment/type (con_stage_assessment_type)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_use), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/use (con_stage_assessment_identifier_use)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_system), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/system (con_stage_assessment_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_version), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/version (con_stage_assessment_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_code), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/code (con_stage_assessment_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_display), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/display (con_stage_assessment_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_text), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/text (con_stage_assessment_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_stage_assessment_display), '#NULL#') || '|||' || -- hash from: stage/assessment/display (con_stage_assessment_display)
+             COALESCE(db.to_char_immutable(con_stage_type_system), '#NULL#') || '|||' || -- hash from: stage/type/coding/system (con_stage_type_system)
+             COALESCE(db.to_char_immutable(con_stage_type_version), '#NULL#') || '|||' || -- hash from: stage/type/coding/version (con_stage_type_version)
+             COALESCE(db.to_char_immutable(con_stage_type_code), '#NULL#') || '|||' || -- hash from: stage/type/coding/code (con_stage_type_code)
+             COALESCE(db.to_char_immutable(con_stage_type_display), '#NULL#') || '|||' || -- hash from: stage/type/coding/display (con_stage_type_display)
+             COALESCE(db.to_char_immutable(con_stage_type_text), '#NULL#') || '|||' || -- hash from: stage/type/text (con_stage_type_text)
+             COALESCE(db.to_char_immutable(con_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (con_note_authorstring)
+             COALESCE(db.to_char_immutable(con_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (con_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(con_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (con_note_authorreference_type)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (con_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (con_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (con_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (con_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (con_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (con_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (con_note_authorreference_display)
+             COALESCE(db.to_char_immutable(con_note_time), '#NULL#') || '|||' || -- hash from: note/time (con_note_time)
+             COALESCE(db.to_char_immutable(con_note_text), '#NULL#') || '|||' || -- hash from: note/text (con_note_text)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(con_id), '#NULL#') || '|||' || -- hash from: id (con_id)
+             COALESCE(db.to_char_immutable(con_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (con_meta_versionid)
+             COALESCE(db.to_char_immutable(con_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (con_meta_lastupdated)
+             COALESCE(db.to_char_immutable(con_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (con_meta_profile)
+             COALESCE(db.to_char_immutable(con_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (con_identifier_use)
+             COALESCE(db.to_char_immutable(con_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (con_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (con_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (con_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (con_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (con_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (con_identifier_system)
+             COALESCE(db.to_char_immutable(con_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (con_identifier_value)
+             COALESCE(db.to_char_immutable(con_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (con_identifier_start)
+             COALESCE(db.to_char_immutable(con_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (con_identifier_end)
+             COALESCE(db.to_char_immutable(con_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (con_encounter_ref)
+             COALESCE(db.to_char_immutable(con_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (con_patient_ref)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_system), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/system (con_clinicalstatus_system)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_version), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/version (con_clinicalstatus_version)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_code), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/code (con_clinicalstatus_code)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_display), '#NULL#') || '|||' || -- hash from: clinicalStatus/coding/display (con_clinicalstatus_display)
+             COALESCE(db.to_char_immutable(con_clinicalstatus_text), '#NULL#') || '|||' || -- hash from: clinicalStatus/text (con_clinicalstatus_text)
+             COALESCE(db.to_char_immutable(con_verificationstatus_system), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/system (con_verificationstatus_system)
+             COALESCE(db.to_char_immutable(con_verificationstatus_version), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/version (con_verificationstatus_version)
+             COALESCE(db.to_char_immutable(con_verificationstatus_code), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/code (con_verificationstatus_code)
+             COALESCE(db.to_char_immutable(con_verificationstatus_display), '#NULL#') || '|||' || -- hash from: verificationStatus/coding/display (con_verificationstatus_display)
+             COALESCE(db.to_char_immutable(con_verificationstatus_text), '#NULL#') || '|||' || -- hash from: verificationStatus/text (con_verificationstatus_text)
+             COALESCE(db.to_char_immutable(con_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (con_category_system)
+             COALESCE(db.to_char_immutable(con_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (con_category_version)
+             COALESCE(db.to_char_immutable(con_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (con_category_code)
+             COALESCE(db.to_char_immutable(con_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (con_category_display)
+             COALESCE(db.to_char_immutable(con_category_text), '#NULL#') || '|||' || -- hash from: category/text (con_category_text)
+             COALESCE(db.to_char_immutable(con_severity_system), '#NULL#') || '|||' || -- hash from: severity/coding/system (con_severity_system)
+             COALESCE(db.to_char_immutable(con_severity_version), '#NULL#') || '|||' || -- hash from: severity/coding/version (con_severity_version)
+             COALESCE(db.to_char_immutable(con_severity_code), '#NULL#') || '|||' || -- hash from: severity/coding/code (con_severity_code)
+             COALESCE(db.to_char_immutable(con_severity_display), '#NULL#') || '|||' || -- hash from: severity/coding/display (con_severity_display)
+             COALESCE(db.to_char_immutable(con_severity_text), '#NULL#') || '|||' || -- hash from: severity/text (con_severity_text)
+             COALESCE(db.to_char_immutable(con_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (con_code_system)
+             COALESCE(db.to_char_immutable(con_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (con_code_version)
+             COALESCE(db.to_char_immutable(con_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (con_code_code)
+             COALESCE(db.to_char_immutable(con_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (con_code_display)
+             COALESCE(db.to_char_immutable(con_code_text), '#NULL#') || '|||' || -- hash from: code/text (con_code_text)
+             COALESCE(db.to_char_immutable(con_bodysite_system), '#NULL#') || '|||' || -- hash from: bodySite/coding/system (con_bodysite_system)
+             COALESCE(db.to_char_immutable(con_bodysite_version), '#NULL#') || '|||' || -- hash from: bodySite/coding/version (con_bodysite_version)
+             COALESCE(db.to_char_immutable(con_bodysite_code), '#NULL#') || '|||' || -- hash from: bodySite/coding/code (con_bodysite_code)
+             COALESCE(db.to_char_immutable(con_bodysite_display), '#NULL#') || '|||' || -- hash from: bodySite/coding/display (con_bodysite_display)
+             COALESCE(db.to_char_immutable(con_bodysite_text), '#NULL#') || '|||' || -- hash from: bodySite/text (con_bodysite_text)
+             COALESCE(db.to_char_immutable(con_onsetperiod_start), '#NULL#') || '|||' || -- hash from: onsetPeriod/start (con_onsetperiod_start)
+             COALESCE(db.to_char_immutable(con_onsetperiod_end), '#NULL#') || '|||' || -- hash from: onsetPeriod/end (con_onsetperiod_end)
+             COALESCE(db.to_char_immutable(con_onsetdatetime), '#NULL#') || '|||' || -- hash from: onsetDateTime (con_onsetdatetime)
+             COALESCE(db.to_char_immutable(con_abatementdatetime), '#NULL#') || '|||' || -- hash from: abatementDateTime (con_abatementdatetime)
+             COALESCE(db.to_char_immutable(con_abatementage_value), '#NULL#') || '|||' || -- hash from: abatementAge/value (con_abatementage_value)
+             COALESCE(db.to_char_immutable(con_abatementage_comparator), '#NULL#') || '|||' || -- hash from: abatementAge/comparator (con_abatementage_comparator)
+             COALESCE(db.to_char_immutable(con_abatementage_unit), '#NULL#') || '|||' || -- hash from: abatementAge/unit (con_abatementage_unit)
+             COALESCE(db.to_char_immutable(con_abatementage_system), '#NULL#') || '|||' || -- hash from: abatementAge/system (con_abatementage_system)
+             COALESCE(db.to_char_immutable(con_abatementage_code), '#NULL#') || '|||' || -- hash from: abatementAge/code (con_abatementage_code)
+             COALESCE(db.to_char_immutable(con_abatementperiod_start), '#NULL#') || '|||' || -- hash from: abatementPeriod/start (con_abatementperiod_start)
+             COALESCE(db.to_char_immutable(con_abatementperiod_end), '#NULL#') || '|||' || -- hash from: abatementPeriod/end (con_abatementperiod_end)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_value), '#NULL#') || '|||' || -- hash from: abatementRange/low/value (con_abatementrange_low_value)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_unit), '#NULL#') || '|||' || -- hash from: abatementRange/low/unit (con_abatementrange_low_unit)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_system), '#NULL#') || '|||' || -- hash from: abatementRange/low/system (con_abatementrange_low_system)
+             COALESCE(db.to_char_immutable(con_abatementrange_low_code), '#NULL#') || '|||' || -- hash from: abatementRange/low/code (con_abatementrange_low_code)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_value), '#NULL#') || '|||' || -- hash from: abatementRange/high/value (con_abatementrange_high_value)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_unit), '#NULL#') || '|||' || -- hash from: abatementRange/high/unit (con_abatementrange_high_unit)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_system), '#NULL#') || '|||' || -- hash from: abatementRange/high/system (con_abatementrange_high_system)
+             COALESCE(db.to_char_immutable(con_abatementrange_high_code), '#NULL#') || '|||' || -- hash from: abatementRange/high/code (con_abatementrange_high_code)
+             COALESCE(db.to_char_immutable(con_abatementstring), '#NULL#') || '|||' || -- hash from: abatementString (con_abatementstring)
+             COALESCE(db.to_char_immutable(con_recordeddate), '#NULL#') || '|||' || -- hash from: recordedDate (con_recordeddate)
+             COALESCE(db.to_char_immutable(con_recorder_ref), '#NULL#') || '|||' || -- hash from: recorder/reference (con_recorder_ref)
+             COALESCE(db.to_char_immutable(con_recorder_type), '#NULL#') || '|||' || -- hash from: recorder/type (con_recorder_type)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_use), '#NULL#') || '|||' || -- hash from: recorder/identifier/use (con_recorder_identifier_use)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_system), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/system (con_recorder_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_version), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/version (con_recorder_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_code), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/code (con_recorder_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_display), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/display (con_recorder_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_type_text), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/text (con_recorder_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_recorder_display), '#NULL#') || '|||' || -- hash from: recorder/display (con_recorder_display)
+             COALESCE(db.to_char_immutable(con_asserter_ref), '#NULL#') || '|||' || -- hash from: asserter/reference (con_asserter_ref)
+             COALESCE(db.to_char_immutable(con_asserter_type), '#NULL#') || '|||' || -- hash from: asserter/type (con_asserter_type)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_use), '#NULL#') || '|||' || -- hash from: asserter/identifier/use (con_asserter_identifier_use)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_system), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/system (con_asserter_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_version), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/version (con_asserter_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_code), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/code (con_asserter_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_display), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/display (con_asserter_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_type_text), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/text (con_asserter_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_asserter_display), '#NULL#') || '|||' || -- hash from: asserter/display (con_asserter_display)
+             COALESCE(db.to_char_immutable(con_stage_summary_system), '#NULL#') || '|||' || -- hash from: stage/summary/coding/system (con_stage_summary_system)
+             COALESCE(db.to_char_immutable(con_stage_summary_version), '#NULL#') || '|||' || -- hash from: stage/summary/coding/version (con_stage_summary_version)
+             COALESCE(db.to_char_immutable(con_stage_summary_code), '#NULL#') || '|||' || -- hash from: stage/summary/coding/code (con_stage_summary_code)
+             COALESCE(db.to_char_immutable(con_stage_summary_display), '#NULL#') || '|||' || -- hash from: stage/summary/coding/display (con_stage_summary_display)
+             COALESCE(db.to_char_immutable(con_stage_summary_text), '#NULL#') || '|||' || -- hash from: stage/summary/text (con_stage_summary_text)
+             COALESCE(db.to_char_immutable(con_stage_assessment_ref), '#NULL#') || '|||' || -- hash from: stage/assessment/reference (con_stage_assessment_ref)
+             COALESCE(db.to_char_immutable(con_stage_assessment_type), '#NULL#') || '|||' || -- hash from: stage/assessment/type (con_stage_assessment_type)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_use), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/use (con_stage_assessment_identifier_use)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_system), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/system (con_stage_assessment_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_version), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/version (con_stage_assessment_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_code), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/code (con_stage_assessment_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_display), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/display (con_stage_assessment_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_text), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/text (con_stage_assessment_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_stage_assessment_display), '#NULL#') || '|||' || -- hash from: stage/assessment/display (con_stage_assessment_display)
+             COALESCE(db.to_char_immutable(con_stage_type_system), '#NULL#') || '|||' || -- hash from: stage/type/coding/system (con_stage_type_system)
+             COALESCE(db.to_char_immutable(con_stage_type_version), '#NULL#') || '|||' || -- hash from: stage/type/coding/version (con_stage_type_version)
+             COALESCE(db.to_char_immutable(con_stage_type_code), '#NULL#') || '|||' || -- hash from: stage/type/coding/code (con_stage_type_code)
+             COALESCE(db.to_char_immutable(con_stage_type_display), '#NULL#') || '|||' || -- hash from: stage/type/coding/display (con_stage_type_display)
+             COALESCE(db.to_char_immutable(con_stage_type_text), '#NULL#') || '|||' || -- hash from: stage/type/text (con_stage_type_text)
+             COALESCE(db.to_char_immutable(con_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (con_note_authorstring)
+             COALESCE(db.to_char_immutable(con_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (con_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(con_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (con_note_authorreference_type)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (con_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (con_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (con_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (con_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (con_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (con_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (con_note_authorreference_display)
+             COALESCE(db.to_char_immutable(con_note_time), '#NULL#') || '|||' || -- hash from: note/time (con_note_time)
+             COALESCE(db.to_char_immutable(con_note_text), '#NULL#') || '|||' || -- hash from: note/text (con_note_text)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.condition_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.condition_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medication_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   medication_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   med_id VARCHAR,   -- id (VARCHAR)
@@ -336,14 +792,146 @@ CREATE TABLE IF NOT EXISTS db_log.medication_raw (
   med_ingredient_itemreference_identifier_type_text VARCHAR,   -- ingredient/itemReference/identifier/type/text (VARCHAR)
   med_ingredient_itemreference_display VARCHAR,   -- ingredient/itemReference/display (VARCHAR)
   med_ingredient_isactive VARCHAR,   -- ingredient/isActive (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(med_id), '#NULL#') || '|||' || -- hash from: id (med_id)
+             COALESCE(db.to_char_immutable(med_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (med_meta_versionid)
+             COALESCE(db.to_char_immutable(med_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (med_meta_lastupdated)
+             COALESCE(db.to_char_immutable(med_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (med_meta_profile)
+             COALESCE(db.to_char_immutable(med_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (med_identifier_use)
+             COALESCE(db.to_char_immutable(med_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (med_identifier_type_system)
+             COALESCE(db.to_char_immutable(med_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (med_identifier_type_version)
+             COALESCE(db.to_char_immutable(med_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (med_identifier_type_code)
+             COALESCE(db.to_char_immutable(med_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (med_identifier_type_display)
+             COALESCE(db.to_char_immutable(med_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (med_identifier_type_text)
+             COALESCE(db.to_char_immutable(med_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (med_identifier_system)
+             COALESCE(db.to_char_immutable(med_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (med_identifier_value)
+             COALESCE(db.to_char_immutable(med_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (med_identifier_start)
+             COALESCE(db.to_char_immutable(med_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (med_identifier_end)
+             COALESCE(db.to_char_immutable(med_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (med_code_system)
+             COALESCE(db.to_char_immutable(med_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (med_code_version)
+             COALESCE(db.to_char_immutable(med_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (med_code_code)
+             COALESCE(db.to_char_immutable(med_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (med_code_display)
+             COALESCE(db.to_char_immutable(med_code_text), '#NULL#') || '|||' || -- hash from: code/text (med_code_text)
+             COALESCE(db.to_char_immutable(med_status), '#NULL#') || '|||' || -- hash from: status (med_status)
+             COALESCE(db.to_char_immutable(med_form_system), '#NULL#') || '|||' || -- hash from: form/coding/system (med_form_system)
+             COALESCE(db.to_char_immutable(med_form_version), '#NULL#') || '|||' || -- hash from: form/coding/version (med_form_version)
+             COALESCE(db.to_char_immutable(med_form_code), '#NULL#') || '|||' || -- hash from: form/coding/code (med_form_code)
+             COALESCE(db.to_char_immutable(med_form_display), '#NULL#') || '|||' || -- hash from: form/coding/display (med_form_display)
+             COALESCE(db.to_char_immutable(med_form_text), '#NULL#') || '|||' || -- hash from: form/text (med_form_text)
+             COALESCE(db.to_char_immutable(med_amount_numerator_value), '#NULL#') || '|||' || -- hash from: amount/numerator/value (med_amount_numerator_value)
+             COALESCE(db.to_char_immutable(med_amount_numerator_comparator), '#NULL#') || '|||' || -- hash from: amount/numerator/comparator (med_amount_numerator_comparator)
+             COALESCE(db.to_char_immutable(med_amount_numerator_unit), '#NULL#') || '|||' || -- hash from: amount/numerator/unit (med_amount_numerator_unit)
+             COALESCE(db.to_char_immutable(med_amount_numerator_system), '#NULL#') || '|||' || -- hash from: amount/numerator/system (med_amount_numerator_system)
+             COALESCE(db.to_char_immutable(med_amount_numerator_code), '#NULL#') || '|||' || -- hash from: amount/numerator/code (med_amount_numerator_code)
+             COALESCE(db.to_char_immutable(med_amount_denominator_value), '#NULL#') || '|||' || -- hash from: amount/denominator/value (med_amount_denominator_value)
+             COALESCE(db.to_char_immutable(med_amount_denominator_comparator), '#NULL#') || '|||' || -- hash from: amount/denominator/comparator (med_amount_denominator_comparator)
+             COALESCE(db.to_char_immutable(med_amount_denominator_unit), '#NULL#') || '|||' || -- hash from: amount/denominator/unit (med_amount_denominator_unit)
+             COALESCE(db.to_char_immutable(med_amount_denominator_system), '#NULL#') || '|||' || -- hash from: amount/denominator/system (med_amount_denominator_system)
+             COALESCE(db.to_char_immutable(med_amount_denominator_code), '#NULL#') || '|||' || -- hash from: amount/denominator/code (med_amount_denominator_code)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_value), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/value (med_ingredient_strength_numerator_value)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_comparator), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/comparator (med_ingredient_strength_numerator_comparator)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_unit), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/unit (med_ingredient_strength_numerator_unit)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_system), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/system (med_ingredient_strength_numerator_system)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_code), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/code (med_ingredient_strength_numerator_code)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_value), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/value (med_ingredient_strength_denominator_value)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_comparator), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/comparator (med_ingredient_strength_denominator_comparator)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_unit), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/unit (med_ingredient_strength_denominator_unit)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_system), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/system (med_ingredient_strength_denominator_system)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_code), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/code (med_ingredient_strength_denominator_code)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_system), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/system (med_ingredient_itemcodeableconcept_system)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_version), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/version (med_ingredient_itemcodeableconcept_version)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_code), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/code (med_ingredient_itemcodeableconcept_code)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_display), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/display (med_ingredient_itemcodeableconcept_display)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_text), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/text (med_ingredient_itemcodeableconcept_text)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_ref), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/reference (med_ingredient_itemreference_ref)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_type), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/type (med_ingredient_itemreference_type)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_use), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/use (med_ingredient_itemreference_identifier_use)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/system (med_ingredient_itemreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/version (med_ingredient_itemreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/code (med_ingredient_itemreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/display (med_ingredient_itemreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/text (med_ingredient_itemreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_display), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/display (med_ingredient_itemreference_display)
+             COALESCE(db.to_char_immutable(med_ingredient_isactive), '#NULL#') || '|||' || -- hash from: ingredient/isActive (med_ingredient_isactive)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(med_id), '#NULL#') || '|||' || -- hash from: id (med_id)
+             COALESCE(db.to_char_immutable(med_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (med_meta_versionid)
+             COALESCE(db.to_char_immutable(med_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (med_meta_lastupdated)
+             COALESCE(db.to_char_immutable(med_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (med_meta_profile)
+             COALESCE(db.to_char_immutable(med_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (med_identifier_use)
+             COALESCE(db.to_char_immutable(med_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (med_identifier_type_system)
+             COALESCE(db.to_char_immutable(med_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (med_identifier_type_version)
+             COALESCE(db.to_char_immutable(med_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (med_identifier_type_code)
+             COALESCE(db.to_char_immutable(med_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (med_identifier_type_display)
+             COALESCE(db.to_char_immutable(med_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (med_identifier_type_text)
+             COALESCE(db.to_char_immutable(med_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (med_identifier_system)
+             COALESCE(db.to_char_immutable(med_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (med_identifier_value)
+             COALESCE(db.to_char_immutable(med_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (med_identifier_start)
+             COALESCE(db.to_char_immutable(med_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (med_identifier_end)
+             COALESCE(db.to_char_immutable(med_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (med_code_system)
+             COALESCE(db.to_char_immutable(med_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (med_code_version)
+             COALESCE(db.to_char_immutable(med_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (med_code_code)
+             COALESCE(db.to_char_immutable(med_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (med_code_display)
+             COALESCE(db.to_char_immutable(med_code_text), '#NULL#') || '|||' || -- hash from: code/text (med_code_text)
+             COALESCE(db.to_char_immutable(med_status), '#NULL#') || '|||' || -- hash from: status (med_status)
+             COALESCE(db.to_char_immutable(med_form_system), '#NULL#') || '|||' || -- hash from: form/coding/system (med_form_system)
+             COALESCE(db.to_char_immutable(med_form_version), '#NULL#') || '|||' || -- hash from: form/coding/version (med_form_version)
+             COALESCE(db.to_char_immutable(med_form_code), '#NULL#') || '|||' || -- hash from: form/coding/code (med_form_code)
+             COALESCE(db.to_char_immutable(med_form_display), '#NULL#') || '|||' || -- hash from: form/coding/display (med_form_display)
+             COALESCE(db.to_char_immutable(med_form_text), '#NULL#') || '|||' || -- hash from: form/text (med_form_text)
+             COALESCE(db.to_char_immutable(med_amount_numerator_value), '#NULL#') || '|||' || -- hash from: amount/numerator/value (med_amount_numerator_value)
+             COALESCE(db.to_char_immutable(med_amount_numerator_comparator), '#NULL#') || '|||' || -- hash from: amount/numerator/comparator (med_amount_numerator_comparator)
+             COALESCE(db.to_char_immutable(med_amount_numerator_unit), '#NULL#') || '|||' || -- hash from: amount/numerator/unit (med_amount_numerator_unit)
+             COALESCE(db.to_char_immutable(med_amount_numerator_system), '#NULL#') || '|||' || -- hash from: amount/numerator/system (med_amount_numerator_system)
+             COALESCE(db.to_char_immutable(med_amount_numerator_code), '#NULL#') || '|||' || -- hash from: amount/numerator/code (med_amount_numerator_code)
+             COALESCE(db.to_char_immutable(med_amount_denominator_value), '#NULL#') || '|||' || -- hash from: amount/denominator/value (med_amount_denominator_value)
+             COALESCE(db.to_char_immutable(med_amount_denominator_comparator), '#NULL#') || '|||' || -- hash from: amount/denominator/comparator (med_amount_denominator_comparator)
+             COALESCE(db.to_char_immutable(med_amount_denominator_unit), '#NULL#') || '|||' || -- hash from: amount/denominator/unit (med_amount_denominator_unit)
+             COALESCE(db.to_char_immutable(med_amount_denominator_system), '#NULL#') || '|||' || -- hash from: amount/denominator/system (med_amount_denominator_system)
+             COALESCE(db.to_char_immutable(med_amount_denominator_code), '#NULL#') || '|||' || -- hash from: amount/denominator/code (med_amount_denominator_code)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_value), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/value (med_ingredient_strength_numerator_value)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_comparator), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/comparator (med_ingredient_strength_numerator_comparator)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_unit), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/unit (med_ingredient_strength_numerator_unit)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_system), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/system (med_ingredient_strength_numerator_system)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_numerator_code), '#NULL#') || '|||' || -- hash from: ingredient/strength/numerator/code (med_ingredient_strength_numerator_code)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_value), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/value (med_ingredient_strength_denominator_value)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_comparator), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/comparator (med_ingredient_strength_denominator_comparator)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_unit), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/unit (med_ingredient_strength_denominator_unit)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_system), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/system (med_ingredient_strength_denominator_system)
+             COALESCE(db.to_char_immutable(med_ingredient_strength_denominator_code), '#NULL#') || '|||' || -- hash from: ingredient/strength/denominator/code (med_ingredient_strength_denominator_code)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_system), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/system (med_ingredient_itemcodeableconcept_system)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_version), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/version (med_ingredient_itemcodeableconcept_version)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_code), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/code (med_ingredient_itemcodeableconcept_code)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_display), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/coding/display (med_ingredient_itemcodeableconcept_display)
+             COALESCE(db.to_char_immutable(med_ingredient_itemcodeableconcept_text), '#NULL#') || '|||' || -- hash from: ingredient/itemCodeableConcept/text (med_ingredient_itemcodeableconcept_text)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_ref), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/reference (med_ingredient_itemreference_ref)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_type), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/type (med_ingredient_itemreference_type)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_use), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/use (med_ingredient_itemreference_identifier_use)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/system (med_ingredient_itemreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/version (med_ingredient_itemreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/code (med_ingredient_itemreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/display (med_ingredient_itemreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/text (med_ingredient_itemreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_display), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/display (med_ingredient_itemreference_display)
+             COALESCE(db.to_char_immutable(med_ingredient_isactive), '#NULL#') || '|||' || -- hash from: ingredient/isActive (med_ingredient_isactive)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.medication_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.medication_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationrequest_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medreq_id VARCHAR,   -- id (VARCHAR)
@@ -572,14 +1160,478 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medreq_substitution_reason_code VARCHAR,   -- substitution/reason/coding/code (VARCHAR)
   medreq_substitution_reason_display VARCHAR,   -- substitution/reason/coding/display (VARCHAR)
   medreq_substitution_reason_text VARCHAR,   -- substitution/reason/text (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(medreq_id), '#NULL#') || '|||' || -- hash from: id (medreq_id)
+             COALESCE(db.to_char_immutable(medreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medreq_meta_versionid)
+             COALESCE(db.to_char_immutable(medreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medreq_meta_profile)
+             COALESCE(db.to_char_immutable(medreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medreq_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medreq_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medreq_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (medreq_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (medreq_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (medreq_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (medreq_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medreq_identifier_value)
+             COALESCE(db.to_char_immutable(medreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medreq_identifier_start)
+             COALESCE(db.to_char_immutable(medreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medreq_identifier_end)
+             COALESCE(db.to_char_immutable(medreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (medreq_encounter_ref)
+             COALESCE(db.to_char_immutable(medreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medreq_patient_ref)
+             COALESCE(db.to_char_immutable(medreq_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medreq_medicationreference_ref)
+             COALESCE(db.to_char_immutable(medreq_status), '#NULL#') || '|||' || -- hash from: status (medreq_status)
+             COALESCE(db.to_char_immutable(medreq_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medreq_statusreason_system)
+             COALESCE(db.to_char_immutable(medreq_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medreq_statusreason_version)
+             COALESCE(db.to_char_immutable(medreq_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (medreq_statusreason_code)
+             COALESCE(db.to_char_immutable(medreq_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medreq_statusreason_display)
+             COALESCE(db.to_char_immutable(medreq_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medreq_statusreason_text)
+             COALESCE(db.to_char_immutable(medreq_intend), '#NULL#') || '|||' || -- hash from: intend (medreq_intend)
+             COALESCE(db.to_char_immutable(medreq_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medreq_category_system)
+             COALESCE(db.to_char_immutable(medreq_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medreq_category_version)
+             COALESCE(db.to_char_immutable(medreq_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medreq_category_code)
+             COALESCE(db.to_char_immutable(medreq_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (medreq_category_display)
+             COALESCE(db.to_char_immutable(medreq_category_text), '#NULL#') || '|||' || -- hash from: category/text (medreq_category_text)
+             COALESCE(db.to_char_immutable(medreq_priority), '#NULL#') || '|||' || -- hash from: priority (medreq_priority)
+             COALESCE(db.to_char_immutable(medreq_reportedboolean), '#NULL#') || '|||' || -- hash from: reportedBoolean (medreq_reportedboolean)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_ref), '#NULL#') || '|||' || -- hash from: reportedReference/reference (medreq_reportedreference_ref)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_type), '#NULL#') || '|||' || -- hash from: reportedReference/type (medreq_reportedreference_type)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_use), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/use (medreq_reportedreference_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/system (medreq_reportedreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/version (medreq_reportedreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/code (medreq_reportedreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/display (medreq_reportedreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/text (medreq_reportedreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_display), '#NULL#') || '|||' || -- hash from: reportedReference/display (medreq_reportedreference_display)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medreq_medicationcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medreq_medicationcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_code), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/code (medreq_medicationcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_display), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/display (medreq_medicationcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_text), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/text (medreq_medicationcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_ref), '#NULL#') || '|||' || -- hash from: supportingInformation/reference (medreq_supportinginformation_ref)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_type), '#NULL#') || '|||' || -- hash from: supportingInformation/type (medreq_supportinginformation_type)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_use), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/use (medreq_supportinginformation_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_system), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/system (medreq_supportinginformation_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_version), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/version (medreq_supportinginformation_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_code), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/code (medreq_supportinginformation_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_display), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/display (medreq_supportinginformation_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_text), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/text (medreq_supportinginformation_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_display), '#NULL#') || '|||' || -- hash from: supportingInformation/display (medreq_supportinginformation_display)
+             COALESCE(db.to_char_immutable(medreq_authoredon), '#NULL#') || '|||' || -- hash from: authoredOn (medreq_authoredon)
+             COALESCE(db.to_char_immutable(medreq_requester_ref), '#NULL#') || '|||' || -- hash from: requester/reference (medreq_requester_ref)
+             COALESCE(db.to_char_immutable(medreq_requester_type), '#NULL#') || '|||' || -- hash from: requester/type (medreq_requester_type)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_use), '#NULL#') || '|||' || -- hash from: requester/identifier/use (medreq_requester_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_system), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/system (medreq_requester_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_version), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/version (medreq_requester_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_code), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/code (medreq_requester_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_display), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/display (medreq_requester_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_text), '#NULL#') || '|||' || -- hash from: requester/identifier/type/text (medreq_requester_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_requester_display), '#NULL#') || '|||' || -- hash from: requester/display (medreq_requester_display)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medreq_reasoncode_system)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medreq_reasoncode_version)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (medreq_reasoncode_code)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (medreq_reasoncode_display)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (medreq_reasoncode_text)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (medreq_reasonreference_ref)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (medreq_reasonreference_type)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (medreq_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (medreq_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (medreq_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medreq_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medreq_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medreq_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medreq_reasonreference_display)
+             COALESCE(db.to_char_immutable(medreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medreq_basedon_ref)
+             COALESCE(db.to_char_immutable(medreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (medreq_basedon_type)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (medreq_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (medreq_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (medreq_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (medreq_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (medreq_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (medreq_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (medreq_basedon_display)
+             COALESCE(db.to_char_immutable(medreq_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medreq_note_authorstring)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medreq_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (medreq_note_authorreference_type)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (medreq_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (medreq_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (medreq_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medreq_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medreq_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medreq_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medreq_note_authorreference_display)
+             COALESCE(db.to_char_immutable(medreq_note_time), '#NULL#') || '|||' || -- hash from: note/time (medreq_note_time)
+             COALESCE(db.to_char_immutable(medreq_note_text), '#NULL#') || '|||' || -- hash from: note/text (medreq_note_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_sequence), '#NULL#') || '|||' || -- hash from: dosageInstruction/sequence (medreq_doseinstruc_sequence)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/text (medreq_doseinstruc_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/system (medreq_doseinstruc_additionalinstruction_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/version (medreq_doseinstruc_additionalinstruction_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/code (medreq_doseinstruc_additionalinstruction_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/display (medreq_doseinstruc_additionalinstruction_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/text (medreq_doseinstruc_additionalinstruction_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_patientinstruction), '#NULL#') || '|||' || -- hash from: dosageInstruction/patientInstruction (medreq_doseinstruc_patientinstruction)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_event), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/event (medreq_doseinstruc_timing_event)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/value (medreq_doseinstruc_timing_repeat_boundsduration_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/comparator (medreq_doseinstruc_timing_repeat_boundsduration_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/unit (medreq_doseinstruc_timing_repeat_boundsduration_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/system (medreq_doseinstruc_timing_repeat_boundsduration_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/code (medreq_doseinstruc_timing_repeat_boundsduration_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/value (medreq_doseinstruc_timing_repeat_boundsrange_low_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/unit (medreq_doseinstruc_timing_repeat_boundsrange_low_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/system (medreq_doseinstruc_timing_repeat_boundsrange_low_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/code (medreq_doseinstruc_timing_repeat_boundsrange_low_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/value (medreq_doseinstruc_timing_repeat_boundsrange_high_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/unit (medreq_doseinstruc_timing_repeat_boundsrange_high_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/system (medreq_doseinstruc_timing_repeat_boundsrange_high_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/code (medreq_doseinstruc_timing_repeat_boundsrange_high_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsperiod_start), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsPeriod/start (medreq_doseinstruc_timing_repeat_boundsperiod_start)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsperiod_end), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsPeriod/end (medreq_doseinstruc_timing_repeat_boundsperiod_end)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_count), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/count (medreq_doseinstruc_timing_repeat_count)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_countmax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/countMax (medreq_doseinstruc_timing_repeat_countmax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_duration), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/duration (medreq_doseinstruc_timing_repeat_duration)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_durationmax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/durationMax (medreq_doseinstruc_timing_repeat_durationmax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_durationunit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/durationUnit (medreq_doseinstruc_timing_repeat_durationunit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_frequency), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/frequency (medreq_doseinstruc_timing_repeat_frequency)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_frequencymax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/frequencyMax (medreq_doseinstruc_timing_repeat_frequencymax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_period), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/period (medreq_doseinstruc_timing_repeat_period)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_periodmax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/periodMax (medreq_doseinstruc_timing_repeat_periodmax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_periodunit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/periodUnit (medreq_doseinstruc_timing_repeat_periodunit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_dayofweek), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/dayOfWeek (medreq_doseinstruc_timing_repeat_dayofweek)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_timeofday), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/timeOfDay (medreq_doseinstruc_timing_repeat_timeofday)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_when), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/when (medreq_doseinstruc_timing_repeat_when)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_offset), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/offset (medreq_doseinstruc_timing_repeat_offset)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/system (medreq_doseinstruc_timing_code_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/version (medreq_doseinstruc_timing_code_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/code (medreq_doseinstruc_timing_code_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/display (medreq_doseinstruc_timing_code_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/text (medreq_doseinstruc_timing_code_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededboolean), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededBoolean (medreq_doseinstruc_asneededboolean)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/system (medreq_doseinstruc_asneededcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/version (medreq_doseinstruc_asneededcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/code (medreq_doseinstruc_asneededcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/display (medreq_doseinstruc_asneededcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/text (medreq_doseinstruc_asneededcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/system (medreq_doseinstruc_site_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/version (medreq_doseinstruc_site_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/code (medreq_doseinstruc_site_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/display (medreq_doseinstruc_site_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/text (medreq_doseinstruc_site_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/system (medreq_doseinstruc_route_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/version (medreq_doseinstruc_route_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/code (medreq_doseinstruc_route_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/display (medreq_doseinstruc_route_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/text (medreq_doseinstruc_route_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/system (medreq_doseinstruc_method_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/version (medreq_doseinstruc_method_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/code (medreq_doseinstruc_method_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/display (medreq_doseinstruc_method_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/text (medreq_doseinstruc_method_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/system (medreq_doseinstruc_doseandrate_type_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/version (medreq_doseinstruc_doseandrate_type_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/code (medreq_doseinstruc_doseandrate_type_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/display (medreq_doseinstruc_doseandrate_type_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/text (medreq_doseinstruc_doseandrate_type_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/value (medreq_doseinstruc_doseandrate_doserange_low_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/unit (medreq_doseinstruc_doseandrate_doserange_low_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/system (medreq_doseinstruc_doseandrate_doserange_low_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/code (medreq_doseinstruc_doseandrate_doserange_low_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/value (medreq_doseinstruc_doseandrate_doserange_high_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/unit (medreq_doseinstruc_doseandrate_doserange_high_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/system (medreq_doseinstruc_doseandrate_doserange_high_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/code (medreq_doseinstruc_doseandrate_doserange_high_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/value (medreq_doseinstruc_doseandrate_dosequantity_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/comparator (medreq_doseinstruc_doseandrate_dosequantity_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/unit (medreq_doseinstruc_doseandrate_dosequantity_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/system (medreq_doseinstruc_doseandrate_dosequantity_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/code (medreq_doseinstruc_doseandrate_dosequantity_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/value (medreq_doseinstruc_doseandrate_rateratio_numerator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/comparator (medreq_doseinstruc_doseandrate_rateratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/unit (medreq_doseinstruc_doseandrate_rateratio_numerator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/system (medreq_doseinstruc_doseandrate_rateratio_numerator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/code (medreq_doseinstruc_doseandrate_rateratio_numerator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/value (medreq_doseinstruc_doseandrate_rateratio_denominator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/comparator (medreq_doseinstruc_doseandrate_rateratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/unit (medreq_doseinstruc_doseandrate_rateratio_denominator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/system (medreq_doseinstruc_doseandrate_rateratio_denominator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/code (medreq_doseinstruc_doseandrate_rateratio_denominator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/value (medreq_doseinstruc_doseandrate_raterange_low_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/unit (medreq_doseinstruc_doseandrate_raterange_low_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/system (medreq_doseinstruc_doseandrate_raterange_low_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/code (medreq_doseinstruc_doseandrate_raterange_low_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/value (medreq_doseinstruc_doseandrate_raterange_high_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/unit (medreq_doseinstruc_doseandrate_raterange_high_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/system (medreq_doseinstruc_doseandrate_raterange_high_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/code (medreq_doseinstruc_doseandrate_raterange_high_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/value (medreq_doseinstruc_doseandrate_ratequantity_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/unit (medreq_doseinstruc_doseandrate_ratequantity_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/system (medreq_doseinstruc_doseandrate_ratequantity_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/code (medreq_doseinstruc_doseandrate_ratequantity_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/value (medreq_doseinstruc_maxdoseperperiod_numerator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/comparator (medreq_doseinstruc_maxdoseperperiod_numerator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/unit (medreq_doseinstruc_maxdoseperperiod_numerator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/system (medreq_doseinstruc_maxdoseperperiod_numerator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/code (medreq_doseinstruc_maxdoseperperiod_numerator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/value (medreq_doseinstruc_maxdoseperperiod_denominator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/comparator (medreq_doseinstruc_maxdoseperperiod_denominator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/unit (medreq_doseinstruc_maxdoseperperiod_denominator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/system (medreq_doseinstruc_maxdoseperperiod_denominator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/code (medreq_doseinstruc_maxdoseperperiod_denominator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/value (medreq_doseinstruc_maxdoseperadministration_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/unit (medreq_doseinstruc_maxdoseperadministration_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/system (medreq_doseinstruc_maxdoseperadministration_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/code (medreq_doseinstruc_maxdoseperadministration_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/value (medreq_doseinstruc_maxdoseperlifetime_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/unit (medreq_doseinstruc_maxdoseperlifetime_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/system (medreq_doseinstruc_maxdoseperlifetime_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/code (medreq_doseinstruc_maxdoseperlifetime_code)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_system), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/system (medreq_substitution_reason_system)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_version), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/version (medreq_substitution_reason_version)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_code), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/code (medreq_substitution_reason_code)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_display), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/display (medreq_substitution_reason_display)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_text), '#NULL#') || '|||' || -- hash from: substitution/reason/text (medreq_substitution_reason_text)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(medreq_id), '#NULL#') || '|||' || -- hash from: id (medreq_id)
+             COALESCE(db.to_char_immutable(medreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medreq_meta_versionid)
+             COALESCE(db.to_char_immutable(medreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medreq_meta_profile)
+             COALESCE(db.to_char_immutable(medreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medreq_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medreq_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medreq_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (medreq_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (medreq_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (medreq_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (medreq_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medreq_identifier_value)
+             COALESCE(db.to_char_immutable(medreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medreq_identifier_start)
+             COALESCE(db.to_char_immutable(medreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medreq_identifier_end)
+             COALESCE(db.to_char_immutable(medreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (medreq_encounter_ref)
+             COALESCE(db.to_char_immutable(medreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medreq_patient_ref)
+             COALESCE(db.to_char_immutable(medreq_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medreq_medicationreference_ref)
+             COALESCE(db.to_char_immutable(medreq_status), '#NULL#') || '|||' || -- hash from: status (medreq_status)
+             COALESCE(db.to_char_immutable(medreq_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medreq_statusreason_system)
+             COALESCE(db.to_char_immutable(medreq_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medreq_statusreason_version)
+             COALESCE(db.to_char_immutable(medreq_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (medreq_statusreason_code)
+             COALESCE(db.to_char_immutable(medreq_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medreq_statusreason_display)
+             COALESCE(db.to_char_immutable(medreq_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medreq_statusreason_text)
+             COALESCE(db.to_char_immutable(medreq_intend), '#NULL#') || '|||' || -- hash from: intend (medreq_intend)
+             COALESCE(db.to_char_immutable(medreq_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medreq_category_system)
+             COALESCE(db.to_char_immutable(medreq_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medreq_category_version)
+             COALESCE(db.to_char_immutable(medreq_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medreq_category_code)
+             COALESCE(db.to_char_immutable(medreq_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (medreq_category_display)
+             COALESCE(db.to_char_immutable(medreq_category_text), '#NULL#') || '|||' || -- hash from: category/text (medreq_category_text)
+             COALESCE(db.to_char_immutable(medreq_priority), '#NULL#') || '|||' || -- hash from: priority (medreq_priority)
+             COALESCE(db.to_char_immutable(medreq_reportedboolean), '#NULL#') || '|||' || -- hash from: reportedBoolean (medreq_reportedboolean)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_ref), '#NULL#') || '|||' || -- hash from: reportedReference/reference (medreq_reportedreference_ref)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_type), '#NULL#') || '|||' || -- hash from: reportedReference/type (medreq_reportedreference_type)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_use), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/use (medreq_reportedreference_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/system (medreq_reportedreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/version (medreq_reportedreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/code (medreq_reportedreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/display (medreq_reportedreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/text (medreq_reportedreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_display), '#NULL#') || '|||' || -- hash from: reportedReference/display (medreq_reportedreference_display)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medreq_medicationcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medreq_medicationcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_code), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/code (medreq_medicationcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_display), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/display (medreq_medicationcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_text), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/text (medreq_medicationcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_ref), '#NULL#') || '|||' || -- hash from: supportingInformation/reference (medreq_supportinginformation_ref)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_type), '#NULL#') || '|||' || -- hash from: supportingInformation/type (medreq_supportinginformation_type)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_use), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/use (medreq_supportinginformation_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_system), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/system (medreq_supportinginformation_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_version), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/version (medreq_supportinginformation_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_code), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/code (medreq_supportinginformation_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_display), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/display (medreq_supportinginformation_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_text), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/text (medreq_supportinginformation_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_display), '#NULL#') || '|||' || -- hash from: supportingInformation/display (medreq_supportinginformation_display)
+             COALESCE(db.to_char_immutable(medreq_authoredon), '#NULL#') || '|||' || -- hash from: authoredOn (medreq_authoredon)
+             COALESCE(db.to_char_immutable(medreq_requester_ref), '#NULL#') || '|||' || -- hash from: requester/reference (medreq_requester_ref)
+             COALESCE(db.to_char_immutable(medreq_requester_type), '#NULL#') || '|||' || -- hash from: requester/type (medreq_requester_type)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_use), '#NULL#') || '|||' || -- hash from: requester/identifier/use (medreq_requester_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_system), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/system (medreq_requester_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_version), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/version (medreq_requester_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_code), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/code (medreq_requester_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_display), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/display (medreq_requester_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_type_text), '#NULL#') || '|||' || -- hash from: requester/identifier/type/text (medreq_requester_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_requester_display), '#NULL#') || '|||' || -- hash from: requester/display (medreq_requester_display)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medreq_reasoncode_system)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medreq_reasoncode_version)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (medreq_reasoncode_code)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (medreq_reasoncode_display)
+             COALESCE(db.to_char_immutable(medreq_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (medreq_reasoncode_text)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (medreq_reasonreference_ref)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (medreq_reasonreference_type)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (medreq_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (medreq_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (medreq_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medreq_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medreq_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medreq_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medreq_reasonreference_display)
+             COALESCE(db.to_char_immutable(medreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medreq_basedon_ref)
+             COALESCE(db.to_char_immutable(medreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (medreq_basedon_type)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (medreq_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (medreq_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (medreq_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (medreq_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (medreq_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (medreq_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (medreq_basedon_display)
+             COALESCE(db.to_char_immutable(medreq_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medreq_note_authorstring)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medreq_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (medreq_note_authorreference_type)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (medreq_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (medreq_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (medreq_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medreq_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medreq_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medreq_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medreq_note_authorreference_display)
+             COALESCE(db.to_char_immutable(medreq_note_time), '#NULL#') || '|||' || -- hash from: note/time (medreq_note_time)
+             COALESCE(db.to_char_immutable(medreq_note_text), '#NULL#') || '|||' || -- hash from: note/text (medreq_note_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_sequence), '#NULL#') || '|||' || -- hash from: dosageInstruction/sequence (medreq_doseinstruc_sequence)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/text (medreq_doseinstruc_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/system (medreq_doseinstruc_additionalinstruction_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/version (medreq_doseinstruc_additionalinstruction_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/code (medreq_doseinstruc_additionalinstruction_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/coding/display (medreq_doseinstruc_additionalinstruction_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_additionalinstruction_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/additionalInstruction/text (medreq_doseinstruc_additionalinstruction_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_patientinstruction), '#NULL#') || '|||' || -- hash from: dosageInstruction/patientInstruction (medreq_doseinstruc_patientinstruction)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_event), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/event (medreq_doseinstruc_timing_event)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/value (medreq_doseinstruc_timing_repeat_boundsduration_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/comparator (medreq_doseinstruc_timing_repeat_boundsduration_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/unit (medreq_doseinstruc_timing_repeat_boundsduration_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/system (medreq_doseinstruc_timing_repeat_boundsduration_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsduration_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsDuration/code (medreq_doseinstruc_timing_repeat_boundsduration_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/value (medreq_doseinstruc_timing_repeat_boundsrange_low_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/unit (medreq_doseinstruc_timing_repeat_boundsrange_low_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/system (medreq_doseinstruc_timing_repeat_boundsrange_low_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_low_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/low/code (medreq_doseinstruc_timing_repeat_boundsrange_low_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/value (medreq_doseinstruc_timing_repeat_boundsrange_high_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/unit (medreq_doseinstruc_timing_repeat_boundsrange_high_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/system (medreq_doseinstruc_timing_repeat_boundsrange_high_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsrange_high_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsRange/high/code (medreq_doseinstruc_timing_repeat_boundsrange_high_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsperiod_start), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsPeriod/start (medreq_doseinstruc_timing_repeat_boundsperiod_start)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_boundsperiod_end), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/boundsPeriod/end (medreq_doseinstruc_timing_repeat_boundsperiod_end)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_count), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/count (medreq_doseinstruc_timing_repeat_count)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_countmax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/countMax (medreq_doseinstruc_timing_repeat_countmax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_duration), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/duration (medreq_doseinstruc_timing_repeat_duration)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_durationmax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/durationMax (medreq_doseinstruc_timing_repeat_durationmax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_durationunit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/durationUnit (medreq_doseinstruc_timing_repeat_durationunit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_frequency), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/frequency (medreq_doseinstruc_timing_repeat_frequency)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_frequencymax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/frequencyMax (medreq_doseinstruc_timing_repeat_frequencymax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_period), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/period (medreq_doseinstruc_timing_repeat_period)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_periodmax), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/periodMax (medreq_doseinstruc_timing_repeat_periodmax)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_periodunit), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/periodUnit (medreq_doseinstruc_timing_repeat_periodunit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_dayofweek), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/dayOfWeek (medreq_doseinstruc_timing_repeat_dayofweek)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_timeofday), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/timeOfDay (medreq_doseinstruc_timing_repeat_timeofday)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_when), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/when (medreq_doseinstruc_timing_repeat_when)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_repeat_offset), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/repeat/offset (medreq_doseinstruc_timing_repeat_offset)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/system (medreq_doseinstruc_timing_code_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/version (medreq_doseinstruc_timing_code_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/code (medreq_doseinstruc_timing_code_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/coding/display (medreq_doseinstruc_timing_code_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_timing_code_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/timing/code/text (medreq_doseinstruc_timing_code_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededboolean), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededBoolean (medreq_doseinstruc_asneededboolean)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/system (medreq_doseinstruc_asneededcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/version (medreq_doseinstruc_asneededcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/code (medreq_doseinstruc_asneededcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/coding/display (medreq_doseinstruc_asneededcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_asneededcodeableconcept_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/asNeededCodeableConcept/text (medreq_doseinstruc_asneededcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/system (medreq_doseinstruc_site_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/version (medreq_doseinstruc_site_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/code (medreq_doseinstruc_site_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/coding/display (medreq_doseinstruc_site_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_site_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/site/text (medreq_doseinstruc_site_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/system (medreq_doseinstruc_route_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/version (medreq_doseinstruc_route_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/code (medreq_doseinstruc_route_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/coding/display (medreq_doseinstruc_route_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_route_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/route/text (medreq_doseinstruc_route_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/system (medreq_doseinstruc_method_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/version (medreq_doseinstruc_method_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/code (medreq_doseinstruc_method_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/coding/display (medreq_doseinstruc_method_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_method_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/method/text (medreq_doseinstruc_method_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/system (medreq_doseinstruc_doseandrate_type_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_version), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/version (medreq_doseinstruc_doseandrate_type_version)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/code (medreq_doseinstruc_doseandrate_type_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_display), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/coding/display (medreq_doseinstruc_doseandrate_type_display)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_type_text), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/type/text (medreq_doseinstruc_doseandrate_type_text)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/value (medreq_doseinstruc_doseandrate_doserange_low_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/unit (medreq_doseinstruc_doseandrate_doserange_low_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/system (medreq_doseinstruc_doseandrate_doserange_low_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_low_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/low/code (medreq_doseinstruc_doseandrate_doserange_low_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/value (medreq_doseinstruc_doseandrate_doserange_high_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/unit (medreq_doseinstruc_doseandrate_doserange_high_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/system (medreq_doseinstruc_doseandrate_doserange_high_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_doserange_high_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseRange/high/code (medreq_doseinstruc_doseandrate_doserange_high_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/value (medreq_doseinstruc_doseandrate_dosequantity_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/comparator (medreq_doseinstruc_doseandrate_dosequantity_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/unit (medreq_doseinstruc_doseandrate_dosequantity_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/system (medreq_doseinstruc_doseandrate_dosequantity_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_dosequantity_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/doseQuantity/code (medreq_doseinstruc_doseandrate_dosequantity_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/value (medreq_doseinstruc_doseandrate_rateratio_numerator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/comparator (medreq_doseinstruc_doseandrate_rateratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/unit (medreq_doseinstruc_doseandrate_rateratio_numerator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/system (medreq_doseinstruc_doseandrate_rateratio_numerator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_numerator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/numerator/code (medreq_doseinstruc_doseandrate_rateratio_numerator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/value (medreq_doseinstruc_doseandrate_rateratio_denominator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/comparator (medreq_doseinstruc_doseandrate_rateratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/unit (medreq_doseinstruc_doseandrate_rateratio_denominator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/system (medreq_doseinstruc_doseandrate_rateratio_denominator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_rateratio_denominator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRatio/denominator/code (medreq_doseinstruc_doseandrate_rateratio_denominator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/value (medreq_doseinstruc_doseandrate_raterange_low_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/unit (medreq_doseinstruc_doseandrate_raterange_low_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/system (medreq_doseinstruc_doseandrate_raterange_low_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_low_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/low/code (medreq_doseinstruc_doseandrate_raterange_low_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/value (medreq_doseinstruc_doseandrate_raterange_high_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/unit (medreq_doseinstruc_doseandrate_raterange_high_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/system (medreq_doseinstruc_doseandrate_raterange_high_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_raterange_high_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateRange/high/code (medreq_doseinstruc_doseandrate_raterange_high_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/value (medreq_doseinstruc_doseandrate_ratequantity_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/unit (medreq_doseinstruc_doseandrate_ratequantity_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/system (medreq_doseinstruc_doseandrate_ratequantity_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_doseandrate_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/doseAndRate/rateQuantity/code (medreq_doseinstruc_doseandrate_ratequantity_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/value (medreq_doseinstruc_maxdoseperperiod_numerator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/comparator (medreq_doseinstruc_maxdoseperperiod_numerator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/unit (medreq_doseinstruc_maxdoseperperiod_numerator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/system (medreq_doseinstruc_maxdoseperperiod_numerator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_numerator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/numerator/code (medreq_doseinstruc_maxdoseperperiod_numerator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/value (medreq_doseinstruc_maxdoseperperiod_denominator_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/comparator (medreq_doseinstruc_maxdoseperperiod_denominator_comparator)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/unit (medreq_doseinstruc_maxdoseperperiod_denominator_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/system (medreq_doseinstruc_maxdoseperperiod_denominator_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperperiod_denominator_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerPeriod/denominator/code (medreq_doseinstruc_maxdoseperperiod_denominator_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/value (medreq_doseinstruc_maxdoseperadministration_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/unit (medreq_doseinstruc_maxdoseperadministration_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/system (medreq_doseinstruc_maxdoseperadministration_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperadministration_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerAdministration/code (medreq_doseinstruc_maxdoseperadministration_code)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_value), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/value (medreq_doseinstruc_maxdoseperlifetime_value)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_unit), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/unit (medreq_doseinstruc_maxdoseperlifetime_unit)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_system), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/system (medreq_doseinstruc_maxdoseperlifetime_system)
+             COALESCE(db.to_char_immutable(medreq_doseinstruc_maxdoseperlifetime_code), '#NULL#') || '|||' || -- hash from: dosageInstruction/maxDosePerLifetime/code (medreq_doseinstruc_maxdoseperlifetime_code)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_system), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/system (medreq_substitution_reason_system)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_version), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/version (medreq_substitution_reason_version)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_code), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/code (medreq_substitution_reason_code)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_display), '#NULL#') || '|||' || -- hash from: substitution/reason/coding/display (medreq_substitution_reason_display)
+             COALESCE(db.to_char_immutable(medreq_substitution_reason_text), '#NULL#') || '|||' || -- hash from: substitution/reason/text (medreq_substitution_reason_text)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.medicationrequest_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.medicationrequest_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationadministration_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medadm_id VARCHAR,   -- id (VARCHAR)
@@ -694,14 +1746,250 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
   medadm_dosage_ratequantity_unit VARCHAR,   -- dosage/rateQuantity/unit (VARCHAR)
   medadm_dosage_ratequantity_system VARCHAR,   -- dosage/rateQuantity/system (VARCHAR)
   medadm_dosage_ratequantity_code VARCHAR,   -- dosage/rateQuantity/code (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(medadm_id), '#NULL#') || '|||' || -- hash from: id (medadm_id)
+             COALESCE(db.to_char_immutable(medadm_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medadm_meta_versionid)
+             COALESCE(db.to_char_immutable(medadm_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medadm_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medadm_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medadm_meta_profile)
+             COALESCE(db.to_char_immutable(medadm_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medadm_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medadm_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medadm_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (medadm_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (medadm_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (medadm_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (medadm_identifier_system)
+             COALESCE(db.to_char_immutable(medadm_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medadm_identifier_value)
+             COALESCE(db.to_char_immutable(medadm_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medadm_identifier_start)
+             COALESCE(db.to_char_immutable(medadm_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medadm_identifier_end)
+             COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
+             COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
+             COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
+             COALESCE(db.to_char_immutable(medadm_status), '#NULL#') || '|||' || -- hash from: status (medadm_status)
+             COALESCE(db.to_char_immutable(medadm_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medadm_statusreason_system)
+             COALESCE(db.to_char_immutable(medadm_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medadm_statusreason_version)
+             COALESCE(db.to_char_immutable(medadm_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (medadm_statusreason_code)
+             COALESCE(db.to_char_immutable(medadm_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medadm_statusreason_display)
+             COALESCE(db.to_char_immutable(medadm_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medadm_statusreason_text)
+             COALESCE(db.to_char_immutable(medadm_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medadm_category_system)
+             COALESCE(db.to_char_immutable(medadm_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medadm_category_version)
+             COALESCE(db.to_char_immutable(medadm_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medadm_category_code)
+             COALESCE(db.to_char_immutable(medadm_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (medadm_category_display)
+             COALESCE(db.to_char_immutable(medadm_category_text), '#NULL#') || '|||' || -- hash from: category/text (medadm_category_text)
+             COALESCE(db.to_char_immutable(medadm_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medadm_medicationreference_ref)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medadm_medicationcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medadm_medicationcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_code), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/code (medadm_medicationcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_display), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/display (medadm_medicationcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_text), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/text (medadm_medicationcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_ref), '#NULL#') || '|||' || -- hash from: supportingInformation/reference (medadm_supportinginformation_ref)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_type), '#NULL#') || '|||' || -- hash from: supportingInformation/type (medadm_supportinginformation_type)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_use), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/use (medadm_supportinginformation_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_system), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/system (medadm_supportinginformation_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_version), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/version (medadm_supportinginformation_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_code), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/code (medadm_supportinginformation_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_display), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/display (medadm_supportinginformation_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_text), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/text (medadm_supportinginformation_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_display), '#NULL#') || '|||' || -- hash from: supportingInformation/display (medadm_supportinginformation_display)
+             COALESCE(db.to_char_immutable(medadm_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (medadm_effectivedatetime)
+             COALESCE(db.to_char_immutable(medadm_effectiveperiod_start), '#NULL#') || '|||' || -- hash from: effectivePeriod/start (medadm_effectiveperiod_start)
+             COALESCE(db.to_char_immutable(medadm_effectiveperiod_end), '#NULL#') || '|||' || -- hash from: effectivePeriod/end (medadm_effectiveperiod_end)
+             COALESCE(db.to_char_immutable(medadm_performer_function_system), '#NULL#') || '|||' || -- hash from: performer/function/coding/system (medadm_performer_function_system)
+             COALESCE(db.to_char_immutable(medadm_performer_function_version), '#NULL#') || '|||' || -- hash from: performer/function/coding/version (medadm_performer_function_version)
+             COALESCE(db.to_char_immutable(medadm_performer_function_code), '#NULL#') || '|||' || -- hash from: performer/function/coding/code (medadm_performer_function_code)
+             COALESCE(db.to_char_immutable(medadm_performer_function_display), '#NULL#') || '|||' || -- hash from: performer/function/coding/display (medadm_performer_function_display)
+             COALESCE(db.to_char_immutable(medadm_performer_function_text), '#NULL#') || '|||' || -- hash from: performer/function/text (medadm_performer_function_text)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medadm_reasoncode_system)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medadm_reasoncode_version)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (medadm_reasoncode_code)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (medadm_reasoncode_display)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (medadm_reasoncode_text)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (medadm_reasonreference_ref)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (medadm_reasonreference_type)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (medadm_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (medadm_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (medadm_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medadm_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medadm_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medadm_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medadm_reasonreference_display)
+             COALESCE(db.to_char_immutable(medadm_request_ref), '#NULL#') || '|||' || -- hash from: request/reference (medadm_request_ref)
+             COALESCE(db.to_char_immutable(medadm_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medadm_note_authorstring)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medadm_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (medadm_note_authorreference_type)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (medadm_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (medadm_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (medadm_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medadm_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medadm_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medadm_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medadm_note_authorreference_display)
+             COALESCE(db.to_char_immutable(medadm_note_time), '#NULL#') || '|||' || -- hash from: note/time (medadm_note_time)
+             COALESCE(db.to_char_immutable(medadm_note_text), '#NULL#') || '|||' || -- hash from: note/text (medadm_note_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_text), '#NULL#') || '|||' || -- hash from: dosage/text (medadm_dosage_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_system), '#NULL#') || '|||' || -- hash from: dosage/site/coding/system (medadm_dosage_site_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_version), '#NULL#') || '|||' || -- hash from: dosage/site/coding/version (medadm_dosage_site_version)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_code), '#NULL#') || '|||' || -- hash from: dosage/site/coding/code (medadm_dosage_site_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_display), '#NULL#') || '|||' || -- hash from: dosage/site/coding/display (medadm_dosage_site_display)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_text), '#NULL#') || '|||' || -- hash from: dosage/site/text (medadm_dosage_site_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_system), '#NULL#') || '|||' || -- hash from: dosage/route/coding/system (medadm_dosage_route_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_version), '#NULL#') || '|||' || -- hash from: dosage/route/coding/version (medadm_dosage_route_version)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_code), '#NULL#') || '|||' || -- hash from: dosage/route/coding/code (medadm_dosage_route_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_display), '#NULL#') || '|||' || -- hash from: dosage/route/coding/display (medadm_dosage_route_display)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_text), '#NULL#') || '|||' || -- hash from: dosage/route/text (medadm_dosage_route_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_system), '#NULL#') || '|||' || -- hash from: dosage/method/coding/system (medadm_dosage_method_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_version), '#NULL#') || '|||' || -- hash from: dosage/method/coding/version (medadm_dosage_method_version)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_code), '#NULL#') || '|||' || -- hash from: dosage/method/coding/code (medadm_dosage_method_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_display), '#NULL#') || '|||' || -- hash from: dosage/method/coding/display (medadm_dosage_method_display)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_text), '#NULL#') || '|||' || -- hash from: dosage/method/text (medadm_dosage_method_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_value), '#NULL#') || '|||' || -- hash from: dosage/dose/value (medadm_dosage_dose_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_unit), '#NULL#') || '|||' || -- hash from: dosage/dose/unit (medadm_dosage_dose_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_system), '#NULL#') || '|||' || -- hash from: dosage/dose/system (medadm_dosage_dose_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_code), '#NULL#') || '|||' || -- hash from: dosage/dose/code (medadm_dosage_dose_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_value), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/value (medadm_dosage_rateratio_numerator_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/comparator (medadm_dosage_rateratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_unit), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/unit (medadm_dosage_rateratio_numerator_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_system), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/system (medadm_dosage_rateratio_numerator_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_code), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/code (medadm_dosage_rateratio_numerator_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_value), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/value (medadm_dosage_rateratio_denominator_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/comparator (medadm_dosage_rateratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_unit), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/unit (medadm_dosage_rateratio_denominator_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_system), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/system (medadm_dosage_rateratio_denominator_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_code), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/code (medadm_dosage_rateratio_denominator_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_value), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/value (medadm_dosage_ratequantity_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_unit), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/unit (medadm_dosage_ratequantity_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_system), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/system (medadm_dosage_ratequantity_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/code (medadm_dosage_ratequantity_code)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(medadm_id), '#NULL#') || '|||' || -- hash from: id (medadm_id)
+             COALESCE(db.to_char_immutable(medadm_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medadm_meta_versionid)
+             COALESCE(db.to_char_immutable(medadm_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medadm_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medadm_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medadm_meta_profile)
+             COALESCE(db.to_char_immutable(medadm_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medadm_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medadm_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medadm_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (medadm_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (medadm_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (medadm_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (medadm_identifier_system)
+             COALESCE(db.to_char_immutable(medadm_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medadm_identifier_value)
+             COALESCE(db.to_char_immutable(medadm_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medadm_identifier_start)
+             COALESCE(db.to_char_immutable(medadm_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medadm_identifier_end)
+             COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
+             COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
+             COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
+             COALESCE(db.to_char_immutable(medadm_status), '#NULL#') || '|||' || -- hash from: status (medadm_status)
+             COALESCE(db.to_char_immutable(medadm_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medadm_statusreason_system)
+             COALESCE(db.to_char_immutable(medadm_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medadm_statusreason_version)
+             COALESCE(db.to_char_immutable(medadm_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (medadm_statusreason_code)
+             COALESCE(db.to_char_immutable(medadm_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medadm_statusreason_display)
+             COALESCE(db.to_char_immutable(medadm_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medadm_statusreason_text)
+             COALESCE(db.to_char_immutable(medadm_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medadm_category_system)
+             COALESCE(db.to_char_immutable(medadm_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medadm_category_version)
+             COALESCE(db.to_char_immutable(medadm_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medadm_category_code)
+             COALESCE(db.to_char_immutable(medadm_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (medadm_category_display)
+             COALESCE(db.to_char_immutable(medadm_category_text), '#NULL#') || '|||' || -- hash from: category/text (medadm_category_text)
+             COALESCE(db.to_char_immutable(medadm_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medadm_medicationreference_ref)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medadm_medicationcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medadm_medicationcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_code), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/code (medadm_medicationcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_display), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/display (medadm_medicationcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medadm_medicationcodeableconcept_text), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/text (medadm_medicationcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_ref), '#NULL#') || '|||' || -- hash from: supportingInformation/reference (medadm_supportinginformation_ref)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_type), '#NULL#') || '|||' || -- hash from: supportingInformation/type (medadm_supportinginformation_type)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_use), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/use (medadm_supportinginformation_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_system), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/system (medadm_supportinginformation_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_version), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/version (medadm_supportinginformation_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_code), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/code (medadm_supportinginformation_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_display), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/display (medadm_supportinginformation_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_text), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/text (medadm_supportinginformation_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_display), '#NULL#') || '|||' || -- hash from: supportingInformation/display (medadm_supportinginformation_display)
+             COALESCE(db.to_char_immutable(medadm_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (medadm_effectivedatetime)
+             COALESCE(db.to_char_immutable(medadm_effectiveperiod_start), '#NULL#') || '|||' || -- hash from: effectivePeriod/start (medadm_effectiveperiod_start)
+             COALESCE(db.to_char_immutable(medadm_effectiveperiod_end), '#NULL#') || '|||' || -- hash from: effectivePeriod/end (medadm_effectiveperiod_end)
+             COALESCE(db.to_char_immutable(medadm_performer_function_system), '#NULL#') || '|||' || -- hash from: performer/function/coding/system (medadm_performer_function_system)
+             COALESCE(db.to_char_immutable(medadm_performer_function_version), '#NULL#') || '|||' || -- hash from: performer/function/coding/version (medadm_performer_function_version)
+             COALESCE(db.to_char_immutable(medadm_performer_function_code), '#NULL#') || '|||' || -- hash from: performer/function/coding/code (medadm_performer_function_code)
+             COALESCE(db.to_char_immutable(medadm_performer_function_display), '#NULL#') || '|||' || -- hash from: performer/function/coding/display (medadm_performer_function_display)
+             COALESCE(db.to_char_immutable(medadm_performer_function_text), '#NULL#') || '|||' || -- hash from: performer/function/text (medadm_performer_function_text)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medadm_reasoncode_system)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medadm_reasoncode_version)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (medadm_reasoncode_code)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (medadm_reasoncode_display)
+             COALESCE(db.to_char_immutable(medadm_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (medadm_reasoncode_text)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (medadm_reasonreference_ref)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (medadm_reasonreference_type)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (medadm_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (medadm_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (medadm_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medadm_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medadm_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medadm_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medadm_reasonreference_display)
+             COALESCE(db.to_char_immutable(medadm_request_ref), '#NULL#') || '|||' || -- hash from: request/reference (medadm_request_ref)
+             COALESCE(db.to_char_immutable(medadm_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medadm_note_authorstring)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medadm_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (medadm_note_authorreference_type)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (medadm_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (medadm_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (medadm_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medadm_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medadm_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medadm_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medadm_note_authorreference_display)
+             COALESCE(db.to_char_immutable(medadm_note_time), '#NULL#') || '|||' || -- hash from: note/time (medadm_note_time)
+             COALESCE(db.to_char_immutable(medadm_note_text), '#NULL#') || '|||' || -- hash from: note/text (medadm_note_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_text), '#NULL#') || '|||' || -- hash from: dosage/text (medadm_dosage_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_system), '#NULL#') || '|||' || -- hash from: dosage/site/coding/system (medadm_dosage_site_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_version), '#NULL#') || '|||' || -- hash from: dosage/site/coding/version (medadm_dosage_site_version)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_code), '#NULL#') || '|||' || -- hash from: dosage/site/coding/code (medadm_dosage_site_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_display), '#NULL#') || '|||' || -- hash from: dosage/site/coding/display (medadm_dosage_site_display)
+             COALESCE(db.to_char_immutable(medadm_dosage_site_text), '#NULL#') || '|||' || -- hash from: dosage/site/text (medadm_dosage_site_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_system), '#NULL#') || '|||' || -- hash from: dosage/route/coding/system (medadm_dosage_route_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_version), '#NULL#') || '|||' || -- hash from: dosage/route/coding/version (medadm_dosage_route_version)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_code), '#NULL#') || '|||' || -- hash from: dosage/route/coding/code (medadm_dosage_route_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_display), '#NULL#') || '|||' || -- hash from: dosage/route/coding/display (medadm_dosage_route_display)
+             COALESCE(db.to_char_immutable(medadm_dosage_route_text), '#NULL#') || '|||' || -- hash from: dosage/route/text (medadm_dosage_route_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_system), '#NULL#') || '|||' || -- hash from: dosage/method/coding/system (medadm_dosage_method_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_version), '#NULL#') || '|||' || -- hash from: dosage/method/coding/version (medadm_dosage_method_version)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_code), '#NULL#') || '|||' || -- hash from: dosage/method/coding/code (medadm_dosage_method_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_display), '#NULL#') || '|||' || -- hash from: dosage/method/coding/display (medadm_dosage_method_display)
+             COALESCE(db.to_char_immutable(medadm_dosage_method_text), '#NULL#') || '|||' || -- hash from: dosage/method/text (medadm_dosage_method_text)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_value), '#NULL#') || '|||' || -- hash from: dosage/dose/value (medadm_dosage_dose_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_unit), '#NULL#') || '|||' || -- hash from: dosage/dose/unit (medadm_dosage_dose_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_system), '#NULL#') || '|||' || -- hash from: dosage/dose/system (medadm_dosage_dose_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_dose_code), '#NULL#') || '|||' || -- hash from: dosage/dose/code (medadm_dosage_dose_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_value), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/value (medadm_dosage_rateratio_numerator_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/comparator (medadm_dosage_rateratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_unit), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/unit (medadm_dosage_rateratio_numerator_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_system), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/system (medadm_dosage_rateratio_numerator_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_numerator_code), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/numerator/code (medadm_dosage_rateratio_numerator_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_value), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/value (medadm_dosage_rateratio_denominator_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/comparator (medadm_dosage_rateratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_unit), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/unit (medadm_dosage_rateratio_denominator_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_system), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/system (medadm_dosage_rateratio_denominator_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_rateratio_denominator_code), '#NULL#') || '|||' || -- hash from: dosage/rateRatio/denominator/code (medadm_dosage_rateratio_denominator_code)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_value), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/value (medadm_dosage_ratequantity_value)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_unit), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/unit (medadm_dosage_ratequantity_unit)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_system), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/system (medadm_dosage_ratequantity_system)
+             COALESCE(db.to_char_immutable(medadm_dosage_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosage/rateQuantity/code (medadm_dosage_ratequantity_code)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.medicationadministration_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.medicationadministration_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "medicationstatement_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   medicationstatement_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medstat_id VARCHAR,   -- id (VARCHAR)
@@ -917,14 +2205,452 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
   medstat_dosage_maxdoseperlifetime_unit VARCHAR,   -- dosage/maxDosePerLifetime/unit (VARCHAR)
   medstat_dosage_maxdoseperlifetime_system VARCHAR,   -- dosage/maxDosePerLifetime/system (VARCHAR)
   medstat_dosage_maxdoseperlifetime_code VARCHAR,   -- dosage/maxDosePerLifetime/code (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(medstat_id), '#NULL#') || '|||' || -- hash from: id (medstat_id)
+             COALESCE(db.to_char_immutable(medstat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medstat_meta_versionid)
+             COALESCE(db.to_char_immutable(medstat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medstat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medstat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medstat_meta_profile)
+             COALESCE(db.to_char_immutable(medstat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medstat_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medstat_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medstat_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (medstat_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (medstat_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (medstat_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (medstat_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medstat_identifier_value)
+             COALESCE(db.to_char_immutable(medstat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medstat_identifier_start)
+             COALESCE(db.to_char_immutable(medstat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medstat_identifier_end)
+             COALESCE(db.to_char_immutable(medstat_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medstat_encounter_ref)
+             COALESCE(db.to_char_immutable(medstat_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medstat_patient_ref)
+             COALESCE(db.to_char_immutable(medstat_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medstat_partof_ref)
+             COALESCE(db.to_char_immutable(medstat_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medstat_basedon_ref)
+             COALESCE(db.to_char_immutable(medstat_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (medstat_basedon_type)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (medstat_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (medstat_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (medstat_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (medstat_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (medstat_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (medstat_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (medstat_basedon_display)
+             COALESCE(db.to_char_immutable(medstat_status), '#NULL#') || '|||' || -- hash from: status (medstat_status)
+             COALESCE(db.to_char_immutable(medstat_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medstat_statusreason_system)
+             COALESCE(db.to_char_immutable(medstat_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medstat_statusreason_version)
+             COALESCE(db.to_char_immutable(medstat_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (medstat_statusreason_code)
+             COALESCE(db.to_char_immutable(medstat_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medstat_statusreason_display)
+             COALESCE(db.to_char_immutable(medstat_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medstat_statusreason_text)
+             COALESCE(db.to_char_immutable(medstat_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medstat_category_system)
+             COALESCE(db.to_char_immutable(medstat_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medstat_category_version)
+             COALESCE(db.to_char_immutable(medstat_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medstat_category_code)
+             COALESCE(db.to_char_immutable(medstat_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (medstat_category_display)
+             COALESCE(db.to_char_immutable(medstat_category_text), '#NULL#') || '|||' || -- hash from: category/text (medstat_category_text)
+             COALESCE(db.to_char_immutable(medstat_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medstat_medicationreference_ref)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medstat_medicationcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medstat_medicationcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_code), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/code (medstat_medicationcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_display), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/display (medstat_medicationcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_text), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/text (medstat_medicationcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medstat_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (medstat_effectivedatetime)
+             COALESCE(db.to_char_immutable(medstat_effectiveperiod_start), '#NULL#') || '|||' || -- hash from: effectivePeriod/start (medstat_effectiveperiod_start)
+             COALESCE(db.to_char_immutable(medstat_effectiveperiod_end), '#NULL#') || '|||' || -- hash from: effectivePeriod/end (medstat_effectiveperiod_end)
+             COALESCE(db.to_char_immutable(medstat_dateasserted), '#NULL#') || '|||' || -- hash from: dateAsserted (medstat_dateasserted)
+             COALESCE(db.to_char_immutable(medstat_informationsource_ref), '#NULL#') || '|||' || -- hash from: informationSource/reference (medstat_informationsource_ref)
+             COALESCE(db.to_char_immutable(medstat_informationsource_type), '#NULL#') || '|||' || -- hash from: informationSource/type (medstat_informationsource_type)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_use), '#NULL#') || '|||' || -- hash from: informationSource/identifier/use (medstat_informationsource_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_system), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/system (medstat_informationsource_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_version), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/version (medstat_informationsource_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_code), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/code (medstat_informationsource_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_display), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/display (medstat_informationsource_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_text), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/text (medstat_informationsource_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_informationsource_display), '#NULL#') || '|||' || -- hash from: informationSource/display (medstat_informationsource_display)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_ref), '#NULL#') || '|||' || -- hash from: derivedFrom/reference (medstat_derivedfrom_ref)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_type), '#NULL#') || '|||' || -- hash from: derivedFrom/type (medstat_derivedfrom_type)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_use), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/use (medstat_derivedfrom_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_system), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/system (medstat_derivedfrom_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_version), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/version (medstat_derivedfrom_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_code), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/code (medstat_derivedfrom_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_display), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/display (medstat_derivedfrom_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_text), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/text (medstat_derivedfrom_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_display), '#NULL#') || '|||' || -- hash from: derivedFrom/display (medstat_derivedfrom_display)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medstat_reasoncode_system)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medstat_reasoncode_version)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (medstat_reasoncode_code)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (medstat_reasoncode_display)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (medstat_reasoncode_text)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (medstat_reasonreference_ref)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (medstat_reasonreference_type)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (medstat_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (medstat_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (medstat_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medstat_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medstat_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medstat_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medstat_reasonreference_display)
+             COALESCE(db.to_char_immutable(medstat_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medstat_note_authorstring)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medstat_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (medstat_note_authorreference_type)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (medstat_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (medstat_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (medstat_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medstat_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medstat_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medstat_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medstat_note_authorreference_display)
+             COALESCE(db.to_char_immutable(medstat_note_time), '#NULL#') || '|||' || -- hash from: note/time (medstat_note_time)
+             COALESCE(db.to_char_immutable(medstat_note_text), '#NULL#') || '|||' || -- hash from: note/text (medstat_note_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_sequence), '#NULL#') || '|||' || -- hash from: dosage/sequence (medstat_dosage_sequence)
+             COALESCE(db.to_char_immutable(medstat_dosage_text), '#NULL#') || '|||' || -- hash from: dosage/text (medstat_dosage_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_system), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/system (medstat_dosage_additionalinstruction_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_version), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/version (medstat_dosage_additionalinstruction_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_code), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/code (medstat_dosage_additionalinstruction_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_display), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/display (medstat_dosage_additionalinstruction_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_text), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/text (medstat_dosage_additionalinstruction_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_patientinstruction), '#NULL#') || '|||' || -- hash from: dosage/patientInstruction (medstat_dosage_patientinstruction)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_event), '#NULL#') || '|||' || -- hash from: dosage/timing/event (medstat_dosage_timing_event)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_value), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/value (medstat_dosage_timing_repeat_boundsduration_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_comparator), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/comparator (medstat_dosage_timing_repeat_boundsduration_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_unit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/unit (medstat_dosage_timing_repeat_boundsduration_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_system), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/system (medstat_dosage_timing_repeat_boundsduration_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_code), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/code (medstat_dosage_timing_repeat_boundsduration_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_value), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/value (medstat_dosage_timing_repeat_boundsrange_low_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_unit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/unit (medstat_dosage_timing_repeat_boundsrange_low_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_system), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/system (medstat_dosage_timing_repeat_boundsrange_low_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_code), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/code (medstat_dosage_timing_repeat_boundsrange_low_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_value), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/value (medstat_dosage_timing_repeat_boundsrange_high_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_unit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/unit (medstat_dosage_timing_repeat_boundsrange_high_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_system), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/system (medstat_dosage_timing_repeat_boundsrange_high_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_code), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/code (medstat_dosage_timing_repeat_boundsrange_high_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsperiod_start), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsPeriod/start (medstat_dosage_timing_repeat_boundsperiod_start)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsperiod_end), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsPeriod/end (medstat_dosage_timing_repeat_boundsperiod_end)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_count), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/count (medstat_dosage_timing_repeat_count)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_countmax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/countMax (medstat_dosage_timing_repeat_countmax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_duration), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/duration (medstat_dosage_timing_repeat_duration)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_durationmax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/durationMax (medstat_dosage_timing_repeat_durationmax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_durationunit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/durationUnit (medstat_dosage_timing_repeat_durationunit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_frequency), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/frequency (medstat_dosage_timing_repeat_frequency)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_frequencymax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/frequencyMax (medstat_dosage_timing_repeat_frequencymax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_period), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/period (medstat_dosage_timing_repeat_period)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_periodmax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/periodMax (medstat_dosage_timing_repeat_periodmax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_periodunit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/periodUnit (medstat_dosage_timing_repeat_periodunit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_dayofweek), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/dayOfWeek (medstat_dosage_timing_repeat_dayofweek)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_timeofday), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/timeOfDay (medstat_dosage_timing_repeat_timeofday)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_when), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/when (medstat_dosage_timing_repeat_when)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_offset), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/offset (medstat_dosage_timing_repeat_offset)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_system), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/system (medstat_dosage_timing_code_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_version), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/version (medstat_dosage_timing_code_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_code), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/code (medstat_dosage_timing_code_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_display), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/display (medstat_dosage_timing_code_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_text), '#NULL#') || '|||' || -- hash from: dosage/timing/code/text (medstat_dosage_timing_code_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededboolean), '#NULL#') || '|||' || -- hash from: dosage/asNeededBoolean (medstat_dosage_asneededboolean)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_system), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/system (medstat_dosage_asneededcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_version), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/version (medstat_dosage_asneededcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_code), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/code (medstat_dosage_asneededcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_display), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/display (medstat_dosage_asneededcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_text), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/text (medstat_dosage_asneededcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_system), '#NULL#') || '|||' || -- hash from: dosage/site/coding/system (medstat_dosage_site_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_version), '#NULL#') || '|||' || -- hash from: dosage/site/coding/version (medstat_dosage_site_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_code), '#NULL#') || '|||' || -- hash from: dosage/site/coding/code (medstat_dosage_site_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_display), '#NULL#') || '|||' || -- hash from: dosage/site/coding/display (medstat_dosage_site_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_text), '#NULL#') || '|||' || -- hash from: dosage/site/text (medstat_dosage_site_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_system), '#NULL#') || '|||' || -- hash from: dosage/route/coding/system (medstat_dosage_route_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_version), '#NULL#') || '|||' || -- hash from: dosage/route/coding/version (medstat_dosage_route_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_code), '#NULL#') || '|||' || -- hash from: dosage/route/coding/code (medstat_dosage_route_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_display), '#NULL#') || '|||' || -- hash from: dosage/route/coding/display (medstat_dosage_route_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_text), '#NULL#') || '|||' || -- hash from: dosage/route/text (medstat_dosage_route_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_system), '#NULL#') || '|||' || -- hash from: dosage/method/coding/system (medstat_dosage_method_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_version), '#NULL#') || '|||' || -- hash from: dosage/method/coding/version (medstat_dosage_method_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_code), '#NULL#') || '|||' || -- hash from: dosage/method/coding/code (medstat_dosage_method_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_display), '#NULL#') || '|||' || -- hash from: dosage/method/coding/display (medstat_dosage_method_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_text), '#NULL#') || '|||' || -- hash from: dosage/method/text (medstat_dosage_method_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/system (medstat_dosage_doseandrate_type_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_version), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/version (medstat_dosage_doseandrate_type_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/code (medstat_dosage_doseandrate_type_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_display), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/display (medstat_dosage_doseandrate_type_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_text), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/text (medstat_dosage_doseandrate_type_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/value (medstat_dosage_doseandrate_doserange_low_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/unit (medstat_dosage_doseandrate_doserange_low_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/system (medstat_dosage_doseandrate_doserange_low_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/code (medstat_dosage_doseandrate_doserange_low_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/value (medstat_dosage_doseandrate_doserange_high_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/unit (medstat_dosage_doseandrate_doserange_high_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/system (medstat_dosage_doseandrate_doserange_high_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/code (medstat_dosage_doseandrate_doserange_high_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/value (medstat_dosage_doseandrate_dosequantity_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_comparator), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/comparator (medstat_dosage_doseandrate_dosequantity_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/unit (medstat_dosage_doseandrate_dosequantity_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/system (medstat_dosage_doseandrate_dosequantity_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/code (medstat_dosage_doseandrate_dosequantity_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/value (medstat_dosage_doseandrate_rateratio_numerator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/comparator (medstat_dosage_doseandrate_rateratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/unit (medstat_dosage_doseandrate_rateratio_numerator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/system (medstat_dosage_doseandrate_rateratio_numerator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/code (medstat_dosage_doseandrate_rateratio_numerator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/value (medstat_dosage_doseandrate_rateratio_denominator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/comparator (medstat_dosage_doseandrate_rateratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/unit (medstat_dosage_doseandrate_rateratio_denominator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/system (medstat_dosage_doseandrate_rateratio_denominator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/code (medstat_dosage_doseandrate_rateratio_denominator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/value (medstat_dosage_doseandrate_raterange_low_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/unit (medstat_dosage_doseandrate_raterange_low_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/system (medstat_dosage_doseandrate_raterange_low_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/code (medstat_dosage_doseandrate_raterange_low_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/value (medstat_dosage_doseandrate_raterange_high_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/unit (medstat_dosage_doseandrate_raterange_high_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/system (medstat_dosage_doseandrate_raterange_high_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/code (medstat_dosage_doseandrate_raterange_high_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/value (medstat_dosage_doseandrate_ratequantity_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/unit (medstat_dosage_doseandrate_ratequantity_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/system (medstat_dosage_doseandrate_ratequantity_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/code (medstat_dosage_doseandrate_ratequantity_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/value (medstat_dosage_maxdoseperperiod_numerator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/comparator (medstat_dosage_maxdoseperperiod_numerator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/unit (medstat_dosage_maxdoseperperiod_numerator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/system (medstat_dosage_maxdoseperperiod_numerator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/code (medstat_dosage_maxdoseperperiod_numerator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/value (medstat_dosage_maxdoseperperiod_denominator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/comparator (medstat_dosage_maxdoseperperiod_denominator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/unit (medstat_dosage_maxdoseperperiod_denominator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/system (medstat_dosage_maxdoseperperiod_denominator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/code (medstat_dosage_maxdoseperperiod_denominator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/value (medstat_dosage_maxdoseperadministration_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/unit (medstat_dosage_maxdoseperadministration_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/system (medstat_dosage_maxdoseperadministration_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/code (medstat_dosage_maxdoseperadministration_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/value (medstat_dosage_maxdoseperlifetime_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/unit (medstat_dosage_maxdoseperlifetime_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/system (medstat_dosage_maxdoseperlifetime_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/code (medstat_dosage_maxdoseperlifetime_code)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(medstat_id), '#NULL#') || '|||' || -- hash from: id (medstat_id)
+             COALESCE(db.to_char_immutable(medstat_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (medstat_meta_versionid)
+             COALESCE(db.to_char_immutable(medstat_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (medstat_meta_lastupdated)
+             COALESCE(db.to_char_immutable(medstat_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (medstat_meta_profile)
+             COALESCE(db.to_char_immutable(medstat_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (medstat_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (medstat_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (medstat_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (medstat_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (medstat_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (medstat_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (medstat_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (medstat_identifier_value)
+             COALESCE(db.to_char_immutable(medstat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medstat_identifier_start)
+             COALESCE(db.to_char_immutable(medstat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medstat_identifier_end)
+             COALESCE(db.to_char_immutable(medstat_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medstat_encounter_ref)
+             COALESCE(db.to_char_immutable(medstat_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medstat_patient_ref)
+             COALESCE(db.to_char_immutable(medstat_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medstat_partof_ref)
+             COALESCE(db.to_char_immutable(medstat_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medstat_basedon_ref)
+             COALESCE(db.to_char_immutable(medstat_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (medstat_basedon_type)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (medstat_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (medstat_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (medstat_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (medstat_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (medstat_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (medstat_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (medstat_basedon_display)
+             COALESCE(db.to_char_immutable(medstat_status), '#NULL#') || '|||' || -- hash from: status (medstat_status)
+             COALESCE(db.to_char_immutable(medstat_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medstat_statusreason_system)
+             COALESCE(db.to_char_immutable(medstat_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (medstat_statusreason_version)
+             COALESCE(db.to_char_immutable(medstat_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (medstat_statusreason_code)
+             COALESCE(db.to_char_immutable(medstat_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medstat_statusreason_display)
+             COALESCE(db.to_char_immutable(medstat_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medstat_statusreason_text)
+             COALESCE(db.to_char_immutable(medstat_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medstat_category_system)
+             COALESCE(db.to_char_immutable(medstat_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medstat_category_version)
+             COALESCE(db.to_char_immutable(medstat_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medstat_category_code)
+             COALESCE(db.to_char_immutable(medstat_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (medstat_category_display)
+             COALESCE(db.to_char_immutable(medstat_category_text), '#NULL#') || '|||' || -- hash from: category/text (medstat_category_text)
+             COALESCE(db.to_char_immutable(medstat_medicationreference_ref), '#NULL#') || '|||' || -- hash from: medicationReference/reference (medstat_medicationreference_ref)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medstat_medicationcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medstat_medicationcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_code), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/code (medstat_medicationcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_display), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/display (medstat_medicationcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medstat_medicationcodeableconcept_text), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/text (medstat_medicationcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medstat_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (medstat_effectivedatetime)
+             COALESCE(db.to_char_immutable(medstat_effectiveperiod_start), '#NULL#') || '|||' || -- hash from: effectivePeriod/start (medstat_effectiveperiod_start)
+             COALESCE(db.to_char_immutable(medstat_effectiveperiod_end), '#NULL#') || '|||' || -- hash from: effectivePeriod/end (medstat_effectiveperiod_end)
+             COALESCE(db.to_char_immutable(medstat_dateasserted), '#NULL#') || '|||' || -- hash from: dateAsserted (medstat_dateasserted)
+             COALESCE(db.to_char_immutable(medstat_informationsource_ref), '#NULL#') || '|||' || -- hash from: informationSource/reference (medstat_informationsource_ref)
+             COALESCE(db.to_char_immutable(medstat_informationsource_type), '#NULL#') || '|||' || -- hash from: informationSource/type (medstat_informationsource_type)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_use), '#NULL#') || '|||' || -- hash from: informationSource/identifier/use (medstat_informationsource_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_system), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/system (medstat_informationsource_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_version), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/version (medstat_informationsource_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_code), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/code (medstat_informationsource_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_display), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/display (medstat_informationsource_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_text), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/text (medstat_informationsource_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_informationsource_display), '#NULL#') || '|||' || -- hash from: informationSource/display (medstat_informationsource_display)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_ref), '#NULL#') || '|||' || -- hash from: derivedFrom/reference (medstat_derivedfrom_ref)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_type), '#NULL#') || '|||' || -- hash from: derivedFrom/type (medstat_derivedfrom_type)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_use), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/use (medstat_derivedfrom_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_system), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/system (medstat_derivedfrom_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_version), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/version (medstat_derivedfrom_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_code), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/code (medstat_derivedfrom_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_display), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/display (medstat_derivedfrom_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_text), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/text (medstat_derivedfrom_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_display), '#NULL#') || '|||' || -- hash from: derivedFrom/display (medstat_derivedfrom_display)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medstat_reasoncode_system)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medstat_reasoncode_version)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (medstat_reasoncode_code)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (medstat_reasoncode_display)
+             COALESCE(db.to_char_immutable(medstat_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (medstat_reasoncode_text)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (medstat_reasonreference_ref)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (medstat_reasonreference_type)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (medstat_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (medstat_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (medstat_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medstat_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medstat_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medstat_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medstat_reasonreference_display)
+             COALESCE(db.to_char_immutable(medstat_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medstat_note_authorstring)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medstat_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (medstat_note_authorreference_type)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (medstat_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (medstat_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (medstat_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medstat_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medstat_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medstat_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medstat_note_authorreference_display)
+             COALESCE(db.to_char_immutable(medstat_note_time), '#NULL#') || '|||' || -- hash from: note/time (medstat_note_time)
+             COALESCE(db.to_char_immutable(medstat_note_text), '#NULL#') || '|||' || -- hash from: note/text (medstat_note_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_sequence), '#NULL#') || '|||' || -- hash from: dosage/sequence (medstat_dosage_sequence)
+             COALESCE(db.to_char_immutable(medstat_dosage_text), '#NULL#') || '|||' || -- hash from: dosage/text (medstat_dosage_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_system), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/system (medstat_dosage_additionalinstruction_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_version), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/version (medstat_dosage_additionalinstruction_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_code), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/code (medstat_dosage_additionalinstruction_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_display), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/coding/display (medstat_dosage_additionalinstruction_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_additionalinstruction_text), '#NULL#') || '|||' || -- hash from: dosage/additionalInstruction/text (medstat_dosage_additionalinstruction_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_patientinstruction), '#NULL#') || '|||' || -- hash from: dosage/patientInstruction (medstat_dosage_patientinstruction)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_event), '#NULL#') || '|||' || -- hash from: dosage/timing/event (medstat_dosage_timing_event)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_value), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/value (medstat_dosage_timing_repeat_boundsduration_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_comparator), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/comparator (medstat_dosage_timing_repeat_boundsduration_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_unit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/unit (medstat_dosage_timing_repeat_boundsduration_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_system), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/system (medstat_dosage_timing_repeat_boundsduration_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsduration_code), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsDuration/code (medstat_dosage_timing_repeat_boundsduration_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_value), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/value (medstat_dosage_timing_repeat_boundsrange_low_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_unit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/unit (medstat_dosage_timing_repeat_boundsrange_low_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_system), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/system (medstat_dosage_timing_repeat_boundsrange_low_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_low_code), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/low/code (medstat_dosage_timing_repeat_boundsrange_low_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_value), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/value (medstat_dosage_timing_repeat_boundsrange_high_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_unit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/unit (medstat_dosage_timing_repeat_boundsrange_high_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_system), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/system (medstat_dosage_timing_repeat_boundsrange_high_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsrange_high_code), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsRange/high/code (medstat_dosage_timing_repeat_boundsrange_high_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsperiod_start), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsPeriod/start (medstat_dosage_timing_repeat_boundsperiod_start)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_boundsperiod_end), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/boundsPeriod/end (medstat_dosage_timing_repeat_boundsperiod_end)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_count), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/count (medstat_dosage_timing_repeat_count)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_countmax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/countMax (medstat_dosage_timing_repeat_countmax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_duration), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/duration (medstat_dosage_timing_repeat_duration)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_durationmax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/durationMax (medstat_dosage_timing_repeat_durationmax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_durationunit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/durationUnit (medstat_dosage_timing_repeat_durationunit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_frequency), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/frequency (medstat_dosage_timing_repeat_frequency)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_frequencymax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/frequencyMax (medstat_dosage_timing_repeat_frequencymax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_period), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/period (medstat_dosage_timing_repeat_period)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_periodmax), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/periodMax (medstat_dosage_timing_repeat_periodmax)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_periodunit), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/periodUnit (medstat_dosage_timing_repeat_periodunit)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_dayofweek), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/dayOfWeek (medstat_dosage_timing_repeat_dayofweek)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_timeofday), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/timeOfDay (medstat_dosage_timing_repeat_timeofday)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_when), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/when (medstat_dosage_timing_repeat_when)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_repeat_offset), '#NULL#') || '|||' || -- hash from: dosage/timing/repeat/offset (medstat_dosage_timing_repeat_offset)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_system), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/system (medstat_dosage_timing_code_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_version), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/version (medstat_dosage_timing_code_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_code), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/code (medstat_dosage_timing_code_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_display), '#NULL#') || '|||' || -- hash from: dosage/timing/code/coding/display (medstat_dosage_timing_code_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_timing_code_text), '#NULL#') || '|||' || -- hash from: dosage/timing/code/text (medstat_dosage_timing_code_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededboolean), '#NULL#') || '|||' || -- hash from: dosage/asNeededBoolean (medstat_dosage_asneededboolean)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_system), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/system (medstat_dosage_asneededcodeableconcept_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_version), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/version (medstat_dosage_asneededcodeableconcept_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_code), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/code (medstat_dosage_asneededcodeableconcept_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_display), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/coding/display (medstat_dosage_asneededcodeableconcept_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_asneededcodeableconcept_text), '#NULL#') || '|||' || -- hash from: dosage/asNeededCodeableConcept/text (medstat_dosage_asneededcodeableconcept_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_system), '#NULL#') || '|||' || -- hash from: dosage/site/coding/system (medstat_dosage_site_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_version), '#NULL#') || '|||' || -- hash from: dosage/site/coding/version (medstat_dosage_site_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_code), '#NULL#') || '|||' || -- hash from: dosage/site/coding/code (medstat_dosage_site_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_display), '#NULL#') || '|||' || -- hash from: dosage/site/coding/display (medstat_dosage_site_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_site_text), '#NULL#') || '|||' || -- hash from: dosage/site/text (medstat_dosage_site_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_system), '#NULL#') || '|||' || -- hash from: dosage/route/coding/system (medstat_dosage_route_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_version), '#NULL#') || '|||' || -- hash from: dosage/route/coding/version (medstat_dosage_route_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_code), '#NULL#') || '|||' || -- hash from: dosage/route/coding/code (medstat_dosage_route_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_display), '#NULL#') || '|||' || -- hash from: dosage/route/coding/display (medstat_dosage_route_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_route_text), '#NULL#') || '|||' || -- hash from: dosage/route/text (medstat_dosage_route_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_system), '#NULL#') || '|||' || -- hash from: dosage/method/coding/system (medstat_dosage_method_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_version), '#NULL#') || '|||' || -- hash from: dosage/method/coding/version (medstat_dosage_method_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_code), '#NULL#') || '|||' || -- hash from: dosage/method/coding/code (medstat_dosage_method_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_display), '#NULL#') || '|||' || -- hash from: dosage/method/coding/display (medstat_dosage_method_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_method_text), '#NULL#') || '|||' || -- hash from: dosage/method/text (medstat_dosage_method_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/system (medstat_dosage_doseandrate_type_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_version), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/version (medstat_dosage_doseandrate_type_version)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/code (medstat_dosage_doseandrate_type_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_display), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/coding/display (medstat_dosage_doseandrate_type_display)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_type_text), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/type/text (medstat_dosage_doseandrate_type_text)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/value (medstat_dosage_doseandrate_doserange_low_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/unit (medstat_dosage_doseandrate_doserange_low_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/system (medstat_dosage_doseandrate_doserange_low_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_low_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/low/code (medstat_dosage_doseandrate_doserange_low_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/value (medstat_dosage_doseandrate_doserange_high_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/unit (medstat_dosage_doseandrate_doserange_high_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/system (medstat_dosage_doseandrate_doserange_high_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_doserange_high_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseRange/high/code (medstat_dosage_doseandrate_doserange_high_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/value (medstat_dosage_doseandrate_dosequantity_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_comparator), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/comparator (medstat_dosage_doseandrate_dosequantity_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/unit (medstat_dosage_doseandrate_dosequantity_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/system (medstat_dosage_doseandrate_dosequantity_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_dosequantity_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/doseQuantity/code (medstat_dosage_doseandrate_dosequantity_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/value (medstat_dosage_doseandrate_rateratio_numerator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/comparator (medstat_dosage_doseandrate_rateratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/unit (medstat_dosage_doseandrate_rateratio_numerator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/system (medstat_dosage_doseandrate_rateratio_numerator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_numerator_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/numerator/code (medstat_dosage_doseandrate_rateratio_numerator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/value (medstat_dosage_doseandrate_rateratio_denominator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/comparator (medstat_dosage_doseandrate_rateratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/unit (medstat_dosage_doseandrate_rateratio_denominator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/system (medstat_dosage_doseandrate_rateratio_denominator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_rateratio_denominator_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRatio/denominator/code (medstat_dosage_doseandrate_rateratio_denominator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/value (medstat_dosage_doseandrate_raterange_low_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/unit (medstat_dosage_doseandrate_raterange_low_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/system (medstat_dosage_doseandrate_raterange_low_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_low_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/low/code (medstat_dosage_doseandrate_raterange_low_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/value (medstat_dosage_doseandrate_raterange_high_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/unit (medstat_dosage_doseandrate_raterange_high_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/system (medstat_dosage_doseandrate_raterange_high_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_raterange_high_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateRange/high/code (medstat_dosage_doseandrate_raterange_high_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_value), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/value (medstat_dosage_doseandrate_ratequantity_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_unit), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/unit (medstat_dosage_doseandrate_ratequantity_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_system), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/system (medstat_dosage_doseandrate_ratequantity_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_doseandrate_ratequantity_code), '#NULL#') || '|||' || -- hash from: dosage/doseAndRate/rateQuantity/code (medstat_dosage_doseandrate_ratequantity_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/value (medstat_dosage_maxdoseperperiod_numerator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_comparator), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/comparator (medstat_dosage_maxdoseperperiod_numerator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/unit (medstat_dosage_maxdoseperperiod_numerator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/system (medstat_dosage_maxdoseperperiod_numerator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_numerator_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/numerator/code (medstat_dosage_maxdoseperperiod_numerator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/value (medstat_dosage_maxdoseperperiod_denominator_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_comparator), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/comparator (medstat_dosage_maxdoseperperiod_denominator_comparator)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/unit (medstat_dosage_maxdoseperperiod_denominator_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/system (medstat_dosage_maxdoseperperiod_denominator_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperperiod_denominator_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerPeriod/denominator/code (medstat_dosage_maxdoseperperiod_denominator_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/value (medstat_dosage_maxdoseperadministration_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/unit (medstat_dosage_maxdoseperadministration_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/system (medstat_dosage_maxdoseperadministration_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperadministration_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerAdministration/code (medstat_dosage_maxdoseperadministration_code)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_value), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/value (medstat_dosage_maxdoseperlifetime_value)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_unit), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/unit (medstat_dosage_maxdoseperlifetime_unit)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_system), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/system (medstat_dosage_maxdoseperlifetime_system)
+             COALESCE(db.to_char_immutable(medstat_dosage_maxdoseperlifetime_code), '#NULL#') || '|||' || -- hash from: dosage/maxDosePerLifetime/code (medstat_dosage_maxdoseperlifetime_code)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.medicationstatement_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.medicationstatement_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "observation_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   obs_id VARCHAR,   -- id (VARCHAR)
@@ -1061,14 +2787,294 @@ CREATE TABLE IF NOT EXISTS db_log.observation_raw (
   obs_hasmember_identifier_type_display VARCHAR,   -- hasMember/identifier/type/coding/display (VARCHAR)
   obs_hasmember_identifier_type_text VARCHAR,   -- hasMember/identifier/type/text (VARCHAR)
   obs_hasmember_display VARCHAR,   -- hasMember/display (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(obs_id), '#NULL#') || '|||' || -- hash from: id (obs_id)
+             COALESCE(db.to_char_immutable(obs_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (obs_meta_versionid)
+             COALESCE(db.to_char_immutable(obs_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (obs_meta_lastupdated)
+             COALESCE(db.to_char_immutable(obs_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (obs_meta_profile)
+             COALESCE(db.to_char_immutable(obs_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (obs_identifier_use)
+             COALESCE(db.to_char_immutable(obs_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (obs_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (obs_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (obs_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (obs_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (obs_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (obs_identifier_system)
+             COALESCE(db.to_char_immutable(obs_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (obs_identifier_value)
+             COALESCE(db.to_char_immutable(obs_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (obs_identifier_start)
+             COALESCE(db.to_char_immutable(obs_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (obs_identifier_end)
+             COALESCE(db.to_char_immutable(obs_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (obs_encounter_ref)
+             COALESCE(db.to_char_immutable(obs_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (obs_patient_ref)
+             COALESCE(db.to_char_immutable(obs_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (obs_partof_ref)
+             COALESCE(db.to_char_immutable(obs_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (obs_basedon_ref)
+             COALESCE(db.to_char_immutable(obs_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (obs_basedon_type)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (obs_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (obs_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (obs_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (obs_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (obs_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (obs_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (obs_basedon_display)
+             COALESCE(db.to_char_immutable(obs_status), '#NULL#') || '|||' || -- hash from: status (obs_status)
+             COALESCE(db.to_char_immutable(obs_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (obs_category_system)
+             COALESCE(db.to_char_immutable(obs_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (obs_category_version)
+             COALESCE(db.to_char_immutable(obs_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (obs_category_code)
+             COALESCE(db.to_char_immutable(obs_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (obs_category_display)
+             COALESCE(db.to_char_immutable(obs_category_text), '#NULL#') || '|||' || -- hash from: category/text (obs_category_text)
+             COALESCE(db.to_char_immutable(obs_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (obs_code_system)
+             COALESCE(db.to_char_immutable(obs_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (obs_code_version)
+             COALESCE(db.to_char_immutable(obs_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (obs_code_code)
+             COALESCE(db.to_char_immutable(obs_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (obs_code_display)
+             COALESCE(db.to_char_immutable(obs_code_text), '#NULL#') || '|||' || -- hash from: code/text (obs_code_text)
+             COALESCE(db.to_char_immutable(obs_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (obs_effectivedatetime)
+             COALESCE(db.to_char_immutable(obs_issued), '#NULL#') || '|||' || -- hash from: issued (obs_issued)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_value), '#NULL#') || '|||' || -- hash from: valueRange/low/value (obs_valuerange_low_value)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_unit), '#NULL#') || '|||' || -- hash from: valueRange/low/unit (obs_valuerange_low_unit)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_system), '#NULL#') || '|||' || -- hash from: valueRange/low/system (obs_valuerange_low_system)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_code), '#NULL#') || '|||' || -- hash from: valueRange/low/code (obs_valuerange_low_code)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_value), '#NULL#') || '|||' || -- hash from: valueRange/high/value (obs_valuerange_high_value)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_unit), '#NULL#') || '|||' || -- hash from: valueRange/high/unit (obs_valuerange_high_unit)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_system), '#NULL#') || '|||' || -- hash from: valueRange/high/system (obs_valuerange_high_system)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_code), '#NULL#') || '|||' || -- hash from: valueRange/high/code (obs_valuerange_high_code)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_value), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/value (obs_valueratio_numerator_value)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/comparator (obs_valueratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_unit), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/unit (obs_valueratio_numerator_unit)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_system), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/system (obs_valueratio_numerator_system)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_code), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/code (obs_valueratio_numerator_code)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_value), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/value (obs_valueratio_denominator_value)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/comparator (obs_valueratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_unit), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/unit (obs_valueratio_denominator_unit)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_system), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/system (obs_valueratio_denominator_system)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_code), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/code (obs_valueratio_denominator_code)
+             COALESCE(db.to_char_immutable(obs_valuequantity_value), '#NULL#') || '|||' || -- hash from: valueQuantity/value (obs_valuequantity_value)
+             COALESCE(db.to_char_immutable(obs_valuequantity_comparator), '#NULL#') || '|||' || -- hash from: valueQuantity/comparator (obs_valuequantity_comparator)
+             COALESCE(db.to_char_immutable(obs_valuequantity_unit), '#NULL#') || '|||' || -- hash from: valueQuantity/unit (obs_valuequantity_unit)
+             COALESCE(db.to_char_immutable(obs_valuequantity_system), '#NULL#') || '|||' || -- hash from: valueQuantity/system (obs_valuequantity_system)
+             COALESCE(db.to_char_immutable(obs_valuequantity_code), '#NULL#') || '|||' || -- hash from: valueQuantity/code (obs_valuequantity_code)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_system), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/system (obs_valuecodeableconcept_system)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_version), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/version (obs_valuecodeableconcept_version)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_code), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/code (obs_valuecodeableconcept_code)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_display), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/display (obs_valuecodeableconcept_display)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_text), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/text (obs_valuecodeableconcept_text)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_system), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/system (obs_dataabsentreason_system)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_version), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/version (obs_dataabsentreason_version)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_code), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/code (obs_dataabsentreason_code)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_display), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/display (obs_dataabsentreason_display)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_text), '#NULL#') || '|||' || -- hash from: dataAbsentReason/text (obs_dataabsentreason_text)
+             COALESCE(db.to_char_immutable(obs_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (obs_note_authorstring)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (obs_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (obs_note_authorreference_type)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (obs_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (obs_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (obs_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (obs_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (obs_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (obs_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (obs_note_authorreference_display)
+             COALESCE(db.to_char_immutable(obs_note_time), '#NULL#') || '|||' || -- hash from: note/time (obs_note_time)
+             COALESCE(db.to_char_immutable(obs_note_text), '#NULL#') || '|||' || -- hash from: note/text (obs_note_text)
+             COALESCE(db.to_char_immutable(obs_method_system), '#NULL#') || '|||' || -- hash from: method/coding/system (obs_method_system)
+             COALESCE(db.to_char_immutable(obs_method_version), '#NULL#') || '|||' || -- hash from: method/coding/version (obs_method_version)
+             COALESCE(db.to_char_immutable(obs_method_code), '#NULL#') || '|||' || -- hash from: method/coding/code (obs_method_code)
+             COALESCE(db.to_char_immutable(obs_method_display), '#NULL#') || '|||' || -- hash from: method/coding/display (obs_method_display)
+             COALESCE(db.to_char_immutable(obs_method_text), '#NULL#') || '|||' || -- hash from: method/text (obs_method_text)
+             COALESCE(db.to_char_immutable(obs_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (obs_performer_ref)
+             COALESCE(db.to_char_immutable(obs_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (obs_performer_type)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_use), '#NULL#') || '|||' || -- hash from: performer/identifier/use (obs_performer_identifier_use)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_system), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/system (obs_performer_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_version), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/version (obs_performer_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (obs_performer_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (obs_performer_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (obs_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (obs_performer_display)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_value), '#NULL#') || '|||' || -- hash from: referenceRange/low/value (obs_referencerange_low_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_unit), '#NULL#') || '|||' || -- hash from: referenceRange/low/unit (obs_referencerange_low_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_system), '#NULL#') || '|||' || -- hash from: referenceRange/low/system (obs_referencerange_low_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_code), '#NULL#') || '|||' || -- hash from: referenceRange/low/code (obs_referencerange_low_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_value), '#NULL#') || '|||' || -- hash from: referenceRange/high/value (obs_referencerange_high_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_unit), '#NULL#') || '|||' || -- hash from: referenceRange/high/unit (obs_referencerange_high_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_system), '#NULL#') || '|||' || -- hash from: referenceRange/high/system (obs_referencerange_high_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_code), '#NULL#') || '|||' || -- hash from: referenceRange/high/code (obs_referencerange_high_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_system), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/system (obs_referencerange_type_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_version), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/version (obs_referencerange_type_version)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_code), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/code (obs_referencerange_type_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_display), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/display (obs_referencerange_type_display)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_text), '#NULL#') || '|||' || -- hash from: referenceRange/type/text (obs_referencerange_type_text)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_system), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/system (obs_referencerange_appliesto_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_version), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/version (obs_referencerange_appliesto_version)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_code), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/code (obs_referencerange_appliesto_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_display), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/display (obs_referencerange_appliesto_display)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_text), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/text (obs_referencerange_appliesto_text)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_value), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/value (obs_referencerange_age_low_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_unit), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/unit (obs_referencerange_age_low_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_system), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/system (obs_referencerange_age_low_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_code), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/code (obs_referencerange_age_low_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_value), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/value (obs_referencerange_age_high_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_unit), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/unit (obs_referencerange_age_high_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_system), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/system (obs_referencerange_age_high_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_code), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/code (obs_referencerange_age_high_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_text), '#NULL#') || '|||' || -- hash from: referenceRange/text (obs_referencerange_text)
+             COALESCE(db.to_char_immutable(obs_hasmember_ref), '#NULL#') || '|||' || -- hash from: hasMember/reference (obs_hasmember_ref)
+             COALESCE(db.to_char_immutable(obs_hasmember_type), '#NULL#') || '|||' || -- hash from: hasMember/type (obs_hasmember_type)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_use), '#NULL#') || '|||' || -- hash from: hasMember/identifier/use (obs_hasmember_identifier_use)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_system), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/system (obs_hasmember_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_version), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/version (obs_hasmember_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_code), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/code (obs_hasmember_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_display), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/display (obs_hasmember_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_text), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/text (obs_hasmember_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_hasmember_display), '#NULL#') || '|||' || -- hash from: hasMember/display (obs_hasmember_display)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(obs_id), '#NULL#') || '|||' || -- hash from: id (obs_id)
+             COALESCE(db.to_char_immutable(obs_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (obs_meta_versionid)
+             COALESCE(db.to_char_immutable(obs_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (obs_meta_lastupdated)
+             COALESCE(db.to_char_immutable(obs_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (obs_meta_profile)
+             COALESCE(db.to_char_immutable(obs_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (obs_identifier_use)
+             COALESCE(db.to_char_immutable(obs_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (obs_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (obs_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (obs_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (obs_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (obs_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (obs_identifier_system)
+             COALESCE(db.to_char_immutable(obs_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (obs_identifier_value)
+             COALESCE(db.to_char_immutable(obs_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (obs_identifier_start)
+             COALESCE(db.to_char_immutable(obs_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (obs_identifier_end)
+             COALESCE(db.to_char_immutable(obs_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (obs_encounter_ref)
+             COALESCE(db.to_char_immutable(obs_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (obs_patient_ref)
+             COALESCE(db.to_char_immutable(obs_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (obs_partof_ref)
+             COALESCE(db.to_char_immutable(obs_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (obs_basedon_ref)
+             COALESCE(db.to_char_immutable(obs_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (obs_basedon_type)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (obs_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (obs_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (obs_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (obs_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (obs_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (obs_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (obs_basedon_display)
+             COALESCE(db.to_char_immutable(obs_status), '#NULL#') || '|||' || -- hash from: status (obs_status)
+             COALESCE(db.to_char_immutable(obs_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (obs_category_system)
+             COALESCE(db.to_char_immutable(obs_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (obs_category_version)
+             COALESCE(db.to_char_immutable(obs_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (obs_category_code)
+             COALESCE(db.to_char_immutable(obs_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (obs_category_display)
+             COALESCE(db.to_char_immutable(obs_category_text), '#NULL#') || '|||' || -- hash from: category/text (obs_category_text)
+             COALESCE(db.to_char_immutable(obs_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (obs_code_system)
+             COALESCE(db.to_char_immutable(obs_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (obs_code_version)
+             COALESCE(db.to_char_immutable(obs_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (obs_code_code)
+             COALESCE(db.to_char_immutable(obs_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (obs_code_display)
+             COALESCE(db.to_char_immutable(obs_code_text), '#NULL#') || '|||' || -- hash from: code/text (obs_code_text)
+             COALESCE(db.to_char_immutable(obs_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (obs_effectivedatetime)
+             COALESCE(db.to_char_immutable(obs_issued), '#NULL#') || '|||' || -- hash from: issued (obs_issued)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_value), '#NULL#') || '|||' || -- hash from: valueRange/low/value (obs_valuerange_low_value)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_unit), '#NULL#') || '|||' || -- hash from: valueRange/low/unit (obs_valuerange_low_unit)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_system), '#NULL#') || '|||' || -- hash from: valueRange/low/system (obs_valuerange_low_system)
+             COALESCE(db.to_char_immutable(obs_valuerange_low_code), '#NULL#') || '|||' || -- hash from: valueRange/low/code (obs_valuerange_low_code)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_value), '#NULL#') || '|||' || -- hash from: valueRange/high/value (obs_valuerange_high_value)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_unit), '#NULL#') || '|||' || -- hash from: valueRange/high/unit (obs_valuerange_high_unit)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_system), '#NULL#') || '|||' || -- hash from: valueRange/high/system (obs_valuerange_high_system)
+             COALESCE(db.to_char_immutable(obs_valuerange_high_code), '#NULL#') || '|||' || -- hash from: valueRange/high/code (obs_valuerange_high_code)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_value), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/value (obs_valueratio_numerator_value)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_comparator), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/comparator (obs_valueratio_numerator_comparator)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_unit), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/unit (obs_valueratio_numerator_unit)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_system), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/system (obs_valueratio_numerator_system)
+             COALESCE(db.to_char_immutable(obs_valueratio_numerator_code), '#NULL#') || '|||' || -- hash from: valueRatio/numerator/code (obs_valueratio_numerator_code)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_value), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/value (obs_valueratio_denominator_value)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_comparator), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/comparator (obs_valueratio_denominator_comparator)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_unit), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/unit (obs_valueratio_denominator_unit)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_system), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/system (obs_valueratio_denominator_system)
+             COALESCE(db.to_char_immutable(obs_valueratio_denominator_code), '#NULL#') || '|||' || -- hash from: valueRatio/denominator/code (obs_valueratio_denominator_code)
+             COALESCE(db.to_char_immutable(obs_valuequantity_value), '#NULL#') || '|||' || -- hash from: valueQuantity/value (obs_valuequantity_value)
+             COALESCE(db.to_char_immutable(obs_valuequantity_comparator), '#NULL#') || '|||' || -- hash from: valueQuantity/comparator (obs_valuequantity_comparator)
+             COALESCE(db.to_char_immutable(obs_valuequantity_unit), '#NULL#') || '|||' || -- hash from: valueQuantity/unit (obs_valuequantity_unit)
+             COALESCE(db.to_char_immutable(obs_valuequantity_system), '#NULL#') || '|||' || -- hash from: valueQuantity/system (obs_valuequantity_system)
+             COALESCE(db.to_char_immutable(obs_valuequantity_code), '#NULL#') || '|||' || -- hash from: valueQuantity/code (obs_valuequantity_code)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_system), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/system (obs_valuecodeableconcept_system)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_version), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/version (obs_valuecodeableconcept_version)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_code), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/code (obs_valuecodeableconcept_code)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_display), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/coding/display (obs_valuecodeableconcept_display)
+             COALESCE(db.to_char_immutable(obs_valuecodeableconcept_text), '#NULL#') || '|||' || -- hash from: valueCodeableConcept/text (obs_valuecodeableconcept_text)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_system), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/system (obs_dataabsentreason_system)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_version), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/version (obs_dataabsentreason_version)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_code), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/code (obs_dataabsentreason_code)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_display), '#NULL#') || '|||' || -- hash from: dataAbsentReason/coding/display (obs_dataabsentreason_display)
+             COALESCE(db.to_char_immutable(obs_dataabsentreason_text), '#NULL#') || '|||' || -- hash from: dataAbsentReason/text (obs_dataabsentreason_text)
+             COALESCE(db.to_char_immutable(obs_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (obs_note_authorstring)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (obs_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (obs_note_authorreference_type)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (obs_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (obs_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (obs_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (obs_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (obs_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (obs_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (obs_note_authorreference_display)
+             COALESCE(db.to_char_immutable(obs_note_time), '#NULL#') || '|||' || -- hash from: note/time (obs_note_time)
+             COALESCE(db.to_char_immutable(obs_note_text), '#NULL#') || '|||' || -- hash from: note/text (obs_note_text)
+             COALESCE(db.to_char_immutable(obs_method_system), '#NULL#') || '|||' || -- hash from: method/coding/system (obs_method_system)
+             COALESCE(db.to_char_immutable(obs_method_version), '#NULL#') || '|||' || -- hash from: method/coding/version (obs_method_version)
+             COALESCE(db.to_char_immutable(obs_method_code), '#NULL#') || '|||' || -- hash from: method/coding/code (obs_method_code)
+             COALESCE(db.to_char_immutable(obs_method_display), '#NULL#') || '|||' || -- hash from: method/coding/display (obs_method_display)
+             COALESCE(db.to_char_immutable(obs_method_text), '#NULL#') || '|||' || -- hash from: method/text (obs_method_text)
+             COALESCE(db.to_char_immutable(obs_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (obs_performer_ref)
+             COALESCE(db.to_char_immutable(obs_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (obs_performer_type)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_use), '#NULL#') || '|||' || -- hash from: performer/identifier/use (obs_performer_identifier_use)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_system), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/system (obs_performer_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_version), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/version (obs_performer_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (obs_performer_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (obs_performer_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (obs_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (obs_performer_display)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_value), '#NULL#') || '|||' || -- hash from: referenceRange/low/value (obs_referencerange_low_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_unit), '#NULL#') || '|||' || -- hash from: referenceRange/low/unit (obs_referencerange_low_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_system), '#NULL#') || '|||' || -- hash from: referenceRange/low/system (obs_referencerange_low_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_low_code), '#NULL#') || '|||' || -- hash from: referenceRange/low/code (obs_referencerange_low_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_value), '#NULL#') || '|||' || -- hash from: referenceRange/high/value (obs_referencerange_high_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_unit), '#NULL#') || '|||' || -- hash from: referenceRange/high/unit (obs_referencerange_high_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_system), '#NULL#') || '|||' || -- hash from: referenceRange/high/system (obs_referencerange_high_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_high_code), '#NULL#') || '|||' || -- hash from: referenceRange/high/code (obs_referencerange_high_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_system), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/system (obs_referencerange_type_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_version), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/version (obs_referencerange_type_version)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_code), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/code (obs_referencerange_type_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_display), '#NULL#') || '|||' || -- hash from: referenceRange/type/coding/display (obs_referencerange_type_display)
+             COALESCE(db.to_char_immutable(obs_referencerange_type_text), '#NULL#') || '|||' || -- hash from: referenceRange/type/text (obs_referencerange_type_text)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_system), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/system (obs_referencerange_appliesto_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_version), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/version (obs_referencerange_appliesto_version)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_code), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/code (obs_referencerange_appliesto_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_display), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/coding/display (obs_referencerange_appliesto_display)
+             COALESCE(db.to_char_immutable(obs_referencerange_appliesto_text), '#NULL#') || '|||' || -- hash from: referenceRange/appliesTo/text (obs_referencerange_appliesto_text)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_value), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/value (obs_referencerange_age_low_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_unit), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/unit (obs_referencerange_age_low_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_system), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/system (obs_referencerange_age_low_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_low_code), '#NULL#') || '|||' || -- hash from: referenceRange/age/low/code (obs_referencerange_age_low_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_value), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/value (obs_referencerange_age_high_value)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_unit), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/unit (obs_referencerange_age_high_unit)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_system), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/system (obs_referencerange_age_high_system)
+             COALESCE(db.to_char_immutable(obs_referencerange_age_high_code), '#NULL#') || '|||' || -- hash from: referenceRange/age/high/code (obs_referencerange_age_high_code)
+             COALESCE(db.to_char_immutable(obs_referencerange_text), '#NULL#') || '|||' || -- hash from: referenceRange/text (obs_referencerange_text)
+             COALESCE(db.to_char_immutable(obs_hasmember_ref), '#NULL#') || '|||' || -- hash from: hasMember/reference (obs_hasmember_ref)
+             COALESCE(db.to_char_immutable(obs_hasmember_type), '#NULL#') || '|||' || -- hash from: hasMember/type (obs_hasmember_type)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_use), '#NULL#') || '|||' || -- hash from: hasMember/identifier/use (obs_hasmember_identifier_use)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_system), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/system (obs_hasmember_identifier_type_system)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_version), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/version (obs_hasmember_identifier_type_version)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_code), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/code (obs_hasmember_identifier_type_code)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_display), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/display (obs_hasmember_identifier_type_display)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_text), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/text (obs_hasmember_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_hasmember_display), '#NULL#') || '|||' || -- hash from: hasMember/display (obs_hasmember_display)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.observation_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.observation_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "diagnosticreport_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagrep_id VARCHAR,   -- id (VARCHAR)
@@ -1118,14 +3124,120 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
   diagrep_conclusioncode_code VARCHAR,   -- conclusionCode/coding/code (VARCHAR)
   diagrep_conclusioncode_display VARCHAR,   -- conclusionCode/coding/display (VARCHAR)
   diagrep_conclusioncode_text VARCHAR,   -- conclusionCode/text (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(diagrep_id), '#NULL#') || '|||' || -- hash from: id (diagrep_id)
+             COALESCE(db.to_char_immutable(diagrep_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (diagrep_meta_versionid)
+             COALESCE(db.to_char_immutable(diagrep_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (diagrep_meta_lastupdated)
+             COALESCE(db.to_char_immutable(diagrep_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (diagrep_meta_profile)
+             COALESCE(db.to_char_immutable(diagrep_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (diagrep_identifier_use)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (diagrep_identifier_type_system)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (diagrep_identifier_type_version)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (diagrep_identifier_type_code)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (diagrep_identifier_type_display)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (diagrep_identifier_type_text)
+             COALESCE(db.to_char_immutable(diagrep_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (diagrep_identifier_system)
+             COALESCE(db.to_char_immutable(diagrep_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (diagrep_identifier_value)
+             COALESCE(db.to_char_immutable(diagrep_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (diagrep_identifier_start)
+             COALESCE(db.to_char_immutable(diagrep_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (diagrep_identifier_end)
+             COALESCE(db.to_char_immutable(diagrep_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (diagrep_encounter_ref)
+             COALESCE(db.to_char_immutable(diagrep_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (diagrep_patient_ref)
+             COALESCE(db.to_char_immutable(diagrep_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (diagrep_partof_ref)
+             COALESCE(db.to_char_immutable(diagrep_result_ref), '#NULL#') || '|||' || -- hash from: result/reference (diagrep_result_ref)
+             COALESCE(db.to_char_immutable(diagrep_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (diagrep_basedon_ref)
+             COALESCE(db.to_char_immutable(diagrep_status), '#NULL#') || '|||' || -- hash from: status (diagrep_status)
+             COALESCE(db.to_char_immutable(diagrep_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (diagrep_category_system)
+             COALESCE(db.to_char_immutable(diagrep_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (diagrep_category_version)
+             COALESCE(db.to_char_immutable(diagrep_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (diagrep_category_code)
+             COALESCE(db.to_char_immutable(diagrep_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (diagrep_category_display)
+             COALESCE(db.to_char_immutable(diagrep_category_text), '#NULL#') || '|||' || -- hash from: category/text (diagrep_category_text)
+             COALESCE(db.to_char_immutable(diagrep_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (diagrep_code_system)
+             COALESCE(db.to_char_immutable(diagrep_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (diagrep_code_version)
+             COALESCE(db.to_char_immutable(diagrep_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (diagrep_code_code)
+             COALESCE(db.to_char_immutable(diagrep_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (diagrep_code_display)
+             COALESCE(db.to_char_immutable(diagrep_code_text), '#NULL#') || '|||' || -- hash from: code/text (diagrep_code_text)
+             COALESCE(db.to_char_immutable(diagrep_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (diagrep_effectivedatetime)
+             COALESCE(db.to_char_immutable(diagrep_issued), '#NULL#') || '|||' || -- hash from: issued (diagrep_issued)
+             COALESCE(db.to_char_immutable(diagrep_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (diagrep_performer_ref)
+             COALESCE(db.to_char_immutable(diagrep_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (diagrep_performer_type)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_use), '#NULL#') || '|||' || -- hash from: performer/identifier/use (diagrep_performer_identifier_use)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_system), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/system (diagrep_performer_identifier_type_system)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_version), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/version (diagrep_performer_identifier_type_version)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (diagrep_performer_identifier_type_code)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (diagrep_performer_identifier_type_display)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (diagrep_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(diagrep_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (diagrep_performer_display)
+             COALESCE(db.to_char_immutable(diagrep_conclusion), '#NULL#') || '|||' || -- hash from: conclusion (diagrep_conclusion)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_system), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/system (diagrep_conclusioncode_system)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_version), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/version (diagrep_conclusioncode_version)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_code), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/code (diagrep_conclusioncode_code)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_display), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/display (diagrep_conclusioncode_display)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_text), '#NULL#') || '|||' || -- hash from: conclusionCode/text (diagrep_conclusioncode_text)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(diagrep_id), '#NULL#') || '|||' || -- hash from: id (diagrep_id)
+             COALESCE(db.to_char_immutable(diagrep_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (diagrep_meta_versionid)
+             COALESCE(db.to_char_immutable(diagrep_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (diagrep_meta_lastupdated)
+             COALESCE(db.to_char_immutable(diagrep_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (diagrep_meta_profile)
+             COALESCE(db.to_char_immutable(diagrep_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (diagrep_identifier_use)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (diagrep_identifier_type_system)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (diagrep_identifier_type_version)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (diagrep_identifier_type_code)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (diagrep_identifier_type_display)
+             COALESCE(db.to_char_immutable(diagrep_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (diagrep_identifier_type_text)
+             COALESCE(db.to_char_immutable(diagrep_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (diagrep_identifier_system)
+             COALESCE(db.to_char_immutable(diagrep_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (diagrep_identifier_value)
+             COALESCE(db.to_char_immutable(diagrep_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (diagrep_identifier_start)
+             COALESCE(db.to_char_immutable(diagrep_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (diagrep_identifier_end)
+             COALESCE(db.to_char_immutable(diagrep_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (diagrep_encounter_ref)
+             COALESCE(db.to_char_immutable(diagrep_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (diagrep_patient_ref)
+             COALESCE(db.to_char_immutable(diagrep_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (diagrep_partof_ref)
+             COALESCE(db.to_char_immutable(diagrep_result_ref), '#NULL#') || '|||' || -- hash from: result/reference (diagrep_result_ref)
+             COALESCE(db.to_char_immutable(diagrep_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (diagrep_basedon_ref)
+             COALESCE(db.to_char_immutable(diagrep_status), '#NULL#') || '|||' || -- hash from: status (diagrep_status)
+             COALESCE(db.to_char_immutable(diagrep_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (diagrep_category_system)
+             COALESCE(db.to_char_immutable(diagrep_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (diagrep_category_version)
+             COALESCE(db.to_char_immutable(diagrep_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (diagrep_category_code)
+             COALESCE(db.to_char_immutable(diagrep_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (diagrep_category_display)
+             COALESCE(db.to_char_immutable(diagrep_category_text), '#NULL#') || '|||' || -- hash from: category/text (diagrep_category_text)
+             COALESCE(db.to_char_immutable(diagrep_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (diagrep_code_system)
+             COALESCE(db.to_char_immutable(diagrep_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (diagrep_code_version)
+             COALESCE(db.to_char_immutable(diagrep_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (diagrep_code_code)
+             COALESCE(db.to_char_immutable(diagrep_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (diagrep_code_display)
+             COALESCE(db.to_char_immutable(diagrep_code_text), '#NULL#') || '|||' || -- hash from: code/text (diagrep_code_text)
+             COALESCE(db.to_char_immutable(diagrep_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (diagrep_effectivedatetime)
+             COALESCE(db.to_char_immutable(diagrep_issued), '#NULL#') || '|||' || -- hash from: issued (diagrep_issued)
+             COALESCE(db.to_char_immutable(diagrep_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (diagrep_performer_ref)
+             COALESCE(db.to_char_immutable(diagrep_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (diagrep_performer_type)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_use), '#NULL#') || '|||' || -- hash from: performer/identifier/use (diagrep_performer_identifier_use)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_system), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/system (diagrep_performer_identifier_type_system)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_version), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/version (diagrep_performer_identifier_type_version)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (diagrep_performer_identifier_type_code)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (diagrep_performer_identifier_type_display)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (diagrep_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(diagrep_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (diagrep_performer_display)
+             COALESCE(db.to_char_immutable(diagrep_conclusion), '#NULL#') || '|||' || -- hash from: conclusion (diagrep_conclusion)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_system), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/system (diagrep_conclusioncode_system)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_version), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/version (diagrep_conclusioncode_version)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_code), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/code (diagrep_conclusioncode_code)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_display), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/display (diagrep_conclusioncode_display)
+             COALESCE(db.to_char_immutable(diagrep_conclusioncode_text), '#NULL#') || '|||' || -- hash from: conclusionCode/text (diagrep_conclusioncode_text)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.diagnosticreport_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.diagnosticreport_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "servicerequest_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servreq_id VARCHAR,   -- id (VARCHAR)
@@ -1189,14 +3301,148 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
   servreq_locationcode_code VARCHAR,   -- locationCode/coding/code (VARCHAR)
   servreq_locationcode_display VARCHAR,   -- locationCode/coding/display (VARCHAR)
   servreq_locationcode_text VARCHAR,   -- locationCode/text (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(servreq_id), '#NULL#') || '|||' || -- hash from: id (servreq_id)
+             COALESCE(db.to_char_immutable(servreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (servreq_meta_versionid)
+             COALESCE(db.to_char_immutable(servreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (servreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(servreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (servreq_meta_profile)
+             COALESCE(db.to_char_immutable(servreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (servreq_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (servreq_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (servreq_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (servreq_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (servreq_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (servreq_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (servreq_identifier_system)
+             COALESCE(db.to_char_immutable(servreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (servreq_identifier_value)
+             COALESCE(db.to_char_immutable(servreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (servreq_identifier_start)
+             COALESCE(db.to_char_immutable(servreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (servreq_identifier_end)
+             COALESCE(db.to_char_immutable(servreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (servreq_encounter_ref)
+             COALESCE(db.to_char_immutable(servreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (servreq_patient_ref)
+             COALESCE(db.to_char_immutable(servreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (servreq_basedon_ref)
+             COALESCE(db.to_char_immutable(servreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (servreq_basedon_type)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (servreq_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (servreq_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (servreq_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (servreq_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (servreq_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (servreq_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (servreq_basedon_display)
+             COALESCE(db.to_char_immutable(servreq_status), '#NULL#') || '|||' || -- hash from: status (servreq_status)
+             COALESCE(db.to_char_immutable(servreq_intent), '#NULL#') || '|||' || -- hash from: intent (servreq_intent)
+             COALESCE(db.to_char_immutable(servreq_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (servreq_category_system)
+             COALESCE(db.to_char_immutable(servreq_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (servreq_category_version)
+             COALESCE(db.to_char_immutable(servreq_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (servreq_category_code)
+             COALESCE(db.to_char_immutable(servreq_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (servreq_category_display)
+             COALESCE(db.to_char_immutable(servreq_category_text), '#NULL#') || '|||' || -- hash from: category/text (servreq_category_text)
+             COALESCE(db.to_char_immutable(servreq_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (servreq_code_system)
+             COALESCE(db.to_char_immutable(servreq_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (servreq_code_version)
+             COALESCE(db.to_char_immutable(servreq_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (servreq_code_code)
+             COALESCE(db.to_char_immutable(servreq_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (servreq_code_display)
+             COALESCE(db.to_char_immutable(servreq_code_text), '#NULL#') || '|||' || -- hash from: code/text (servreq_code_text)
+             COALESCE(db.to_char_immutable(servreq_authoredon), '#NULL#') || '|||' || -- hash from: authoredOn (servreq_authoredon)
+             COALESCE(db.to_char_immutable(servreq_requester_ref), '#NULL#') || '|||' || -- hash from: requester/reference (servreq_requester_ref)
+             COALESCE(db.to_char_immutable(servreq_requester_type), '#NULL#') || '|||' || -- hash from: requester/type (servreq_requester_type)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_use), '#NULL#') || '|||' || -- hash from: requester/identifier/use (servreq_requester_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_system), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/system (servreq_requester_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_version), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/version (servreq_requester_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_code), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/code (servreq_requester_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_display), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/display (servreq_requester_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_text), '#NULL#') || '|||' || -- hash from: requester/identifier/type/text (servreq_requester_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_requester_display), '#NULL#') || '|||' || -- hash from: requester/display (servreq_requester_display)
+             COALESCE(db.to_char_immutable(servreq_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (servreq_performer_ref)
+             COALESCE(db.to_char_immutable(servreq_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (servreq_performer_type)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_use), '#NULL#') || '|||' || -- hash from: performer/identifier/use (servreq_performer_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_system), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/system (servreq_performer_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_version), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/version (servreq_performer_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (servreq_performer_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (servreq_performer_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (servreq_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (servreq_performer_display)
+             COALESCE(db.to_char_immutable(servreq_locationcode_system), '#NULL#') || '|||' || -- hash from: locationCode/coding/system (servreq_locationcode_system)
+             COALESCE(db.to_char_immutable(servreq_locationcode_version), '#NULL#') || '|||' || -- hash from: locationCode/coding/version (servreq_locationcode_version)
+             COALESCE(db.to_char_immutable(servreq_locationcode_code), '#NULL#') || '|||' || -- hash from: locationCode/coding/code (servreq_locationcode_code)
+             COALESCE(db.to_char_immutable(servreq_locationcode_display), '#NULL#') || '|||' || -- hash from: locationCode/coding/display (servreq_locationcode_display)
+             COALESCE(db.to_char_immutable(servreq_locationcode_text), '#NULL#') || '|||' || -- hash from: locationCode/text (servreq_locationcode_text)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(servreq_id), '#NULL#') || '|||' || -- hash from: id (servreq_id)
+             COALESCE(db.to_char_immutable(servreq_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (servreq_meta_versionid)
+             COALESCE(db.to_char_immutable(servreq_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (servreq_meta_lastupdated)
+             COALESCE(db.to_char_immutable(servreq_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (servreq_meta_profile)
+             COALESCE(db.to_char_immutable(servreq_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (servreq_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (servreq_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (servreq_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (servreq_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (servreq_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (servreq_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (servreq_identifier_system)
+             COALESCE(db.to_char_immutable(servreq_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (servreq_identifier_value)
+             COALESCE(db.to_char_immutable(servreq_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (servreq_identifier_start)
+             COALESCE(db.to_char_immutable(servreq_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (servreq_identifier_end)
+             COALESCE(db.to_char_immutable(servreq_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (servreq_encounter_ref)
+             COALESCE(db.to_char_immutable(servreq_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (servreq_patient_ref)
+             COALESCE(db.to_char_immutable(servreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (servreq_basedon_ref)
+             COALESCE(db.to_char_immutable(servreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (servreq_basedon_type)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (servreq_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (servreq_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (servreq_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (servreq_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (servreq_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (servreq_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (servreq_basedon_display)
+             COALESCE(db.to_char_immutable(servreq_status), '#NULL#') || '|||' || -- hash from: status (servreq_status)
+             COALESCE(db.to_char_immutable(servreq_intent), '#NULL#') || '|||' || -- hash from: intent (servreq_intent)
+             COALESCE(db.to_char_immutable(servreq_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (servreq_category_system)
+             COALESCE(db.to_char_immutable(servreq_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (servreq_category_version)
+             COALESCE(db.to_char_immutable(servreq_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (servreq_category_code)
+             COALESCE(db.to_char_immutable(servreq_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (servreq_category_display)
+             COALESCE(db.to_char_immutable(servreq_category_text), '#NULL#') || '|||' || -- hash from: category/text (servreq_category_text)
+             COALESCE(db.to_char_immutable(servreq_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (servreq_code_system)
+             COALESCE(db.to_char_immutable(servreq_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (servreq_code_version)
+             COALESCE(db.to_char_immutable(servreq_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (servreq_code_code)
+             COALESCE(db.to_char_immutable(servreq_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (servreq_code_display)
+             COALESCE(db.to_char_immutable(servreq_code_text), '#NULL#') || '|||' || -- hash from: code/text (servreq_code_text)
+             COALESCE(db.to_char_immutable(servreq_authoredon), '#NULL#') || '|||' || -- hash from: authoredOn (servreq_authoredon)
+             COALESCE(db.to_char_immutable(servreq_requester_ref), '#NULL#') || '|||' || -- hash from: requester/reference (servreq_requester_ref)
+             COALESCE(db.to_char_immutable(servreq_requester_type), '#NULL#') || '|||' || -- hash from: requester/type (servreq_requester_type)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_use), '#NULL#') || '|||' || -- hash from: requester/identifier/use (servreq_requester_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_system), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/system (servreq_requester_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_version), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/version (servreq_requester_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_code), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/code (servreq_requester_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_display), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/display (servreq_requester_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_type_text), '#NULL#') || '|||' || -- hash from: requester/identifier/type/text (servreq_requester_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_requester_display), '#NULL#') || '|||' || -- hash from: requester/display (servreq_requester_display)
+             COALESCE(db.to_char_immutable(servreq_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (servreq_performer_ref)
+             COALESCE(db.to_char_immutable(servreq_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (servreq_performer_type)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_use), '#NULL#') || '|||' || -- hash from: performer/identifier/use (servreq_performer_identifier_use)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_system), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/system (servreq_performer_identifier_type_system)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_version), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/version (servreq_performer_identifier_type_version)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (servreq_performer_identifier_type_code)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (servreq_performer_identifier_type_display)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (servreq_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (servreq_performer_display)
+             COALESCE(db.to_char_immutable(servreq_locationcode_system), '#NULL#') || '|||' || -- hash from: locationCode/coding/system (servreq_locationcode_system)
+             COALESCE(db.to_char_immutable(servreq_locationcode_version), '#NULL#') || '|||' || -- hash from: locationCode/coding/version (servreq_locationcode_version)
+             COALESCE(db.to_char_immutable(servreq_locationcode_code), '#NULL#') || '|||' || -- hash from: locationCode/coding/code (servreq_locationcode_code)
+             COALESCE(db.to_char_immutable(servreq_locationcode_display), '#NULL#') || '|||' || -- hash from: locationCode/coding/display (servreq_locationcode_display)
+             COALESCE(db.to_char_immutable(servreq_locationcode_text), '#NULL#') || '|||' || -- hash from: locationCode/text (servreq_locationcode_text)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.servicerequest_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.servicerequest_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "procedure_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   proc_id VARCHAR,   -- id (VARCHAR)
@@ -1270,14 +3516,168 @@ CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
   proc_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   proc_note_time VARCHAR,   -- note/time (VARCHAR)
   proc_note_text VARCHAR,   -- note/text (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(proc_id), '#NULL#') || '|||' || -- hash from: id (proc_id)
+             COALESCE(db.to_char_immutable(proc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (proc_meta_versionid)
+             COALESCE(db.to_char_immutable(proc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (proc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(proc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (proc_meta_profile)
+             COALESCE(db.to_char_immutable(proc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (proc_identifier_use)
+             COALESCE(db.to_char_immutable(proc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (proc_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (proc_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (proc_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (proc_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (proc_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (proc_identifier_system)
+             COALESCE(db.to_char_immutable(proc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (proc_identifier_value)
+             COALESCE(db.to_char_immutable(proc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (proc_identifier_start)
+             COALESCE(db.to_char_immutable(proc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (proc_identifier_end)
+             COALESCE(db.to_char_immutable(proc_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (proc_encounter_ref)
+             COALESCE(db.to_char_immutable(proc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (proc_patient_ref)
+             COALESCE(db.to_char_immutable(proc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (proc_partof_ref)
+             COALESCE(db.to_char_immutable(proc_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (proc_basedon_ref)
+             COALESCE(db.to_char_immutable(proc_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (proc_basedon_type)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (proc_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (proc_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (proc_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (proc_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (proc_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (proc_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (proc_basedon_display)
+             COALESCE(db.to_char_immutable(proc_status), '#NULL#') || '|||' || -- hash from: status (proc_status)
+             COALESCE(db.to_char_immutable(proc_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (proc_statusreason_system)
+             COALESCE(db.to_char_immutable(proc_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (proc_statusreason_version)
+             COALESCE(db.to_char_immutable(proc_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (proc_statusreason_code)
+             COALESCE(db.to_char_immutable(proc_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (proc_statusreason_display)
+             COALESCE(db.to_char_immutable(proc_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (proc_statusreason_text)
+             COALESCE(db.to_char_immutable(proc_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (proc_category_system)
+             COALESCE(db.to_char_immutable(proc_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (proc_category_version)
+             COALESCE(db.to_char_immutable(proc_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (proc_category_code)
+             COALESCE(db.to_char_immutable(proc_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (proc_category_display)
+             COALESCE(db.to_char_immutable(proc_category_text), '#NULL#') || '|||' || -- hash from: category/text (proc_category_text)
+             COALESCE(db.to_char_immutable(proc_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (proc_code_system)
+             COALESCE(db.to_char_immutable(proc_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (proc_code_version)
+             COALESCE(db.to_char_immutable(proc_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (proc_code_code)
+             COALESCE(db.to_char_immutable(proc_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (proc_code_display)
+             COALESCE(db.to_char_immutable(proc_code_text), '#NULL#') || '|||' || -- hash from: code/text (proc_code_text)
+             COALESCE(db.to_char_immutable(proc_performeddatetime), '#NULL#') || '|||' || -- hash from: performedDateTime (proc_performeddatetime)
+             COALESCE(db.to_char_immutable(proc_performedperiod_start), '#NULL#') || '|||' || -- hash from: performedPeriod/start (proc_performedperiod_start)
+             COALESCE(db.to_char_immutable(proc_performedperiod_end), '#NULL#') || '|||' || -- hash from: performedPeriod/end (proc_performedperiod_end)
+             COALESCE(db.to_char_immutable(proc_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (proc_reasoncode_system)
+             COALESCE(db.to_char_immutable(proc_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (proc_reasoncode_version)
+             COALESCE(db.to_char_immutable(proc_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (proc_reasoncode_code)
+             COALESCE(db.to_char_immutable(proc_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (proc_reasoncode_display)
+             COALESCE(db.to_char_immutable(proc_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (proc_reasoncode_text)
+             COALESCE(db.to_char_immutable(proc_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (proc_reasonreference_ref)
+             COALESCE(db.to_char_immutable(proc_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (proc_reasonreference_type)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (proc_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (proc_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (proc_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (proc_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (proc_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (proc_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (proc_reasonreference_display)
+             COALESCE(db.to_char_immutable(proc_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (proc_note_authorstring)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (proc_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (proc_note_authorreference_type)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (proc_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (proc_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (proc_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (proc_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (proc_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (proc_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (proc_note_authorreference_display)
+             COALESCE(db.to_char_immutable(proc_note_time), '#NULL#') || '|||' || -- hash from: note/time (proc_note_time)
+             COALESCE(db.to_char_immutable(proc_note_text), '#NULL#') || '|||' || -- hash from: note/text (proc_note_text)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(proc_id), '#NULL#') || '|||' || -- hash from: id (proc_id)
+             COALESCE(db.to_char_immutable(proc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (proc_meta_versionid)
+             COALESCE(db.to_char_immutable(proc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (proc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(proc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (proc_meta_profile)
+             COALESCE(db.to_char_immutable(proc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (proc_identifier_use)
+             COALESCE(db.to_char_immutable(proc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (proc_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (proc_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (proc_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (proc_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (proc_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (proc_identifier_system)
+             COALESCE(db.to_char_immutable(proc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (proc_identifier_value)
+             COALESCE(db.to_char_immutable(proc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (proc_identifier_start)
+             COALESCE(db.to_char_immutable(proc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (proc_identifier_end)
+             COALESCE(db.to_char_immutable(proc_encounter_ref), '#NULL#') || '|||' || -- hash from: encounter/reference (proc_encounter_ref)
+             COALESCE(db.to_char_immutable(proc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (proc_patient_ref)
+             COALESCE(db.to_char_immutable(proc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (proc_partof_ref)
+             COALESCE(db.to_char_immutable(proc_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (proc_basedon_ref)
+             COALESCE(db.to_char_immutable(proc_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (proc_basedon_type)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_use), '#NULL#') || '|||' || -- hash from: basedOn/identifier/use (proc_basedon_identifier_use)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/system (proc_basedon_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_version), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/version (proc_basedon_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (proc_basedon_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (proc_basedon_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (proc_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (proc_basedon_display)
+             COALESCE(db.to_char_immutable(proc_status), '#NULL#') || '|||' || -- hash from: status (proc_status)
+             COALESCE(db.to_char_immutable(proc_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (proc_statusreason_system)
+             COALESCE(db.to_char_immutable(proc_statusreason_version), '#NULL#') || '|||' || -- hash from: statusReason/coding/version (proc_statusreason_version)
+             COALESCE(db.to_char_immutable(proc_statusreason_code), '#NULL#') || '|||' || -- hash from: statusReason/coding/code (proc_statusreason_code)
+             COALESCE(db.to_char_immutable(proc_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (proc_statusreason_display)
+             COALESCE(db.to_char_immutable(proc_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (proc_statusreason_text)
+             COALESCE(db.to_char_immutable(proc_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (proc_category_system)
+             COALESCE(db.to_char_immutable(proc_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (proc_category_version)
+             COALESCE(db.to_char_immutable(proc_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (proc_category_code)
+             COALESCE(db.to_char_immutable(proc_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (proc_category_display)
+             COALESCE(db.to_char_immutable(proc_category_text), '#NULL#') || '|||' || -- hash from: category/text (proc_category_text)
+             COALESCE(db.to_char_immutable(proc_code_system), '#NULL#') || '|||' || -- hash from: code/coding/system (proc_code_system)
+             COALESCE(db.to_char_immutable(proc_code_version), '#NULL#') || '|||' || -- hash from: code/coding/version (proc_code_version)
+             COALESCE(db.to_char_immutable(proc_code_code), '#NULL#') || '|||' || -- hash from: code/coding/code (proc_code_code)
+             COALESCE(db.to_char_immutable(proc_code_display), '#NULL#') || '|||' || -- hash from: code/coding/display (proc_code_display)
+             COALESCE(db.to_char_immutable(proc_code_text), '#NULL#') || '|||' || -- hash from: code/text (proc_code_text)
+             COALESCE(db.to_char_immutable(proc_performeddatetime), '#NULL#') || '|||' || -- hash from: performedDateTime (proc_performeddatetime)
+             COALESCE(db.to_char_immutable(proc_performedperiod_start), '#NULL#') || '|||' || -- hash from: performedPeriod/start (proc_performedperiod_start)
+             COALESCE(db.to_char_immutable(proc_performedperiod_end), '#NULL#') || '|||' || -- hash from: performedPeriod/end (proc_performedperiod_end)
+             COALESCE(db.to_char_immutable(proc_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (proc_reasoncode_system)
+             COALESCE(db.to_char_immutable(proc_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (proc_reasoncode_version)
+             COALESCE(db.to_char_immutable(proc_reasoncode_code), '#NULL#') || '|||' || -- hash from: reasonCode/coding/code (proc_reasoncode_code)
+             COALESCE(db.to_char_immutable(proc_reasoncode_display), '#NULL#') || '|||' || -- hash from: reasonCode/coding/display (proc_reasoncode_display)
+             COALESCE(db.to_char_immutable(proc_reasoncode_text), '#NULL#') || '|||' || -- hash from: reasonCode/text (proc_reasoncode_text)
+             COALESCE(db.to_char_immutable(proc_reasonreference_ref), '#NULL#') || '|||' || -- hash from: reasonReference/reference (proc_reasonreference_ref)
+             COALESCE(db.to_char_immutable(proc_reasonreference_type), '#NULL#') || '|||' || -- hash from: reasonReference/type (proc_reasonreference_type)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_use), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/use (proc_reasonreference_identifier_use)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/system (proc_reasonreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/version (proc_reasonreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (proc_reasonreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (proc_reasonreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (proc_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (proc_reasonreference_display)
+             COALESCE(db.to_char_immutable(proc_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (proc_note_authorstring)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (proc_note_authorreference_ref)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_type), '#NULL#') || '|||' || -- hash from: note/authorReference/type (proc_note_authorreference_type)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_use), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/use (proc_note_authorreference_identifier_use)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/system (proc_note_authorreference_identifier_type_system)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_version), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/version (proc_note_authorreference_identifier_type_version)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (proc_note_authorreference_identifier_type_code)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (proc_note_authorreference_identifier_type_display)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (proc_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (proc_note_authorreference_display)
+             COALESCE(db.to_char_immutable(proc_note_time), '#NULL#') || '|||' || -- hash from: note/time (proc_note_time)
+             COALESCE(db.to_char_immutable(proc_note_text), '#NULL#') || '|||' || -- hash from: note/text (proc_note_text)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.procedure_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.procedure_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "consent_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   cons_id VARCHAR,   -- id (VARCHAR)
@@ -1317,14 +3717,100 @@ CREATE TABLE IF NOT EXISTS db_log.consent_raw (
   cons_provision_code_text VARCHAR,   -- provision/code/text (VARCHAR)
   cons_provision_dataperiod_start VARCHAR,   -- provision/dataPeriod/start (VARCHAR)
   cons_provision_dataperiod_end VARCHAR,   -- provision/dataPeriod/end (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(cons_id), '#NULL#') || '|||' || -- hash from: id (cons_id)
+             COALESCE(db.to_char_immutable(cons_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (cons_meta_versionid)
+             COALESCE(db.to_char_immutable(cons_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (cons_meta_lastupdated)
+             COALESCE(db.to_char_immutable(cons_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (cons_meta_profile)
+             COALESCE(db.to_char_immutable(cons_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (cons_identifier_use)
+             COALESCE(db.to_char_immutable(cons_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (cons_identifier_type_system)
+             COALESCE(db.to_char_immutable(cons_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (cons_identifier_type_version)
+             COALESCE(db.to_char_immutable(cons_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (cons_identifier_type_code)
+             COALESCE(db.to_char_immutable(cons_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (cons_identifier_type_display)
+             COALESCE(db.to_char_immutable(cons_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (cons_identifier_type_text)
+             COALESCE(db.to_char_immutable(cons_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (cons_identifier_system)
+             COALESCE(db.to_char_immutable(cons_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (cons_identifier_value)
+             COALESCE(db.to_char_immutable(cons_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (cons_identifier_start)
+             COALESCE(db.to_char_immutable(cons_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (cons_identifier_end)
+             COALESCE(db.to_char_immutable(cons_patient_ref), '#NULL#') || '|||' || -- hash from: patient/reference (cons_patient_ref)
+             COALESCE(db.to_char_immutable(cons_status), '#NULL#') || '|||' || -- hash from: status (cons_status)
+             COALESCE(db.to_char_immutable(cons_scope_system), '#NULL#') || '|||' || -- hash from: scope/coding/system (cons_scope_system)
+             COALESCE(db.to_char_immutable(cons_scope_version), '#NULL#') || '|||' || -- hash from: scope/coding/version (cons_scope_version)
+             COALESCE(db.to_char_immutable(cons_scope_code), '#NULL#') || '|||' || -- hash from: scope/coding/code (cons_scope_code)
+             COALESCE(db.to_char_immutable(cons_scope_display), '#NULL#') || '|||' || -- hash from: scope/coding/display (cons_scope_display)
+             COALESCE(db.to_char_immutable(cons_scope_text), '#NULL#') || '|||' || -- hash from: scope/text (cons_scope_text)
+             COALESCE(db.to_char_immutable(cons_datetime), '#NULL#') || '|||' || -- hash from: dateTime (cons_datetime)
+             COALESCE(db.to_char_immutable(cons_provision_type), '#NULL#') || '|||' || -- hash from: provision/type (cons_provision_type)
+             COALESCE(db.to_char_immutable(cons_provision_period_start), '#NULL#') || '|||' || -- hash from: provision/period/start (cons_provision_period_start)
+             COALESCE(db.to_char_immutable(cons_provision_period_end), '#NULL#') || '|||' || -- hash from: provision/period/end (cons_provision_period_end)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_system), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/system (cons_provision_actor_role_system)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_version), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/version (cons_provision_actor_role_version)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_code), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/code (cons_provision_actor_role_code)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_display), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/display (cons_provision_actor_role_display)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_text), '#NULL#') || '|||' || -- hash from: provision/actor/role/text (cons_provision_actor_role_text)
+             COALESCE(db.to_char_immutable(cons_provision_code_system), '#NULL#') || '|||' || -- hash from: provision/code/coding/system (cons_provision_code_system)
+             COALESCE(db.to_char_immutable(cons_provision_code_version), '#NULL#') || '|||' || -- hash from: provision/code/coding/version (cons_provision_code_version)
+             COALESCE(db.to_char_immutable(cons_provision_code_code), '#NULL#') || '|||' || -- hash from: provision/code/coding/code (cons_provision_code_code)
+             COALESCE(db.to_char_immutable(cons_provision_code_display), '#NULL#') || '|||' || -- hash from: provision/code/coding/display (cons_provision_code_display)
+             COALESCE(db.to_char_immutable(cons_provision_code_text), '#NULL#') || '|||' || -- hash from: provision/code/text (cons_provision_code_text)
+             COALESCE(db.to_char_immutable(cons_provision_dataperiod_start), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/start (cons_provision_dataperiod_start)
+             COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/end (cons_provision_dataperiod_end)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(cons_id), '#NULL#') || '|||' || -- hash from: id (cons_id)
+             COALESCE(db.to_char_immutable(cons_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (cons_meta_versionid)
+             COALESCE(db.to_char_immutable(cons_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (cons_meta_lastupdated)
+             COALESCE(db.to_char_immutable(cons_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (cons_meta_profile)
+             COALESCE(db.to_char_immutable(cons_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (cons_identifier_use)
+             COALESCE(db.to_char_immutable(cons_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (cons_identifier_type_system)
+             COALESCE(db.to_char_immutable(cons_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (cons_identifier_type_version)
+             COALESCE(db.to_char_immutable(cons_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (cons_identifier_type_code)
+             COALESCE(db.to_char_immutable(cons_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (cons_identifier_type_display)
+             COALESCE(db.to_char_immutable(cons_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (cons_identifier_type_text)
+             COALESCE(db.to_char_immutable(cons_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (cons_identifier_system)
+             COALESCE(db.to_char_immutable(cons_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (cons_identifier_value)
+             COALESCE(db.to_char_immutable(cons_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (cons_identifier_start)
+             COALESCE(db.to_char_immutable(cons_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (cons_identifier_end)
+             COALESCE(db.to_char_immutable(cons_patient_ref), '#NULL#') || '|||' || -- hash from: patient/reference (cons_patient_ref)
+             COALESCE(db.to_char_immutable(cons_status), '#NULL#') || '|||' || -- hash from: status (cons_status)
+             COALESCE(db.to_char_immutable(cons_scope_system), '#NULL#') || '|||' || -- hash from: scope/coding/system (cons_scope_system)
+             COALESCE(db.to_char_immutable(cons_scope_version), '#NULL#') || '|||' || -- hash from: scope/coding/version (cons_scope_version)
+             COALESCE(db.to_char_immutable(cons_scope_code), '#NULL#') || '|||' || -- hash from: scope/coding/code (cons_scope_code)
+             COALESCE(db.to_char_immutable(cons_scope_display), '#NULL#') || '|||' || -- hash from: scope/coding/display (cons_scope_display)
+             COALESCE(db.to_char_immutable(cons_scope_text), '#NULL#') || '|||' || -- hash from: scope/text (cons_scope_text)
+             COALESCE(db.to_char_immutable(cons_datetime), '#NULL#') || '|||' || -- hash from: dateTime (cons_datetime)
+             COALESCE(db.to_char_immutable(cons_provision_type), '#NULL#') || '|||' || -- hash from: provision/type (cons_provision_type)
+             COALESCE(db.to_char_immutable(cons_provision_period_start), '#NULL#') || '|||' || -- hash from: provision/period/start (cons_provision_period_start)
+             COALESCE(db.to_char_immutable(cons_provision_period_end), '#NULL#') || '|||' || -- hash from: provision/period/end (cons_provision_period_end)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_system), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/system (cons_provision_actor_role_system)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_version), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/version (cons_provision_actor_role_version)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_code), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/code (cons_provision_actor_role_code)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_display), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/display (cons_provision_actor_role_display)
+             COALESCE(db.to_char_immutable(cons_provision_actor_role_text), '#NULL#') || '|||' || -- hash from: provision/actor/role/text (cons_provision_actor_role_text)
+             COALESCE(db.to_char_immutable(cons_provision_code_system), '#NULL#') || '|||' || -- hash from: provision/code/coding/system (cons_provision_code_system)
+             COALESCE(db.to_char_immutable(cons_provision_code_version), '#NULL#') || '|||' || -- hash from: provision/code/coding/version (cons_provision_code_version)
+             COALESCE(db.to_char_immutable(cons_provision_code_code), '#NULL#') || '|||' || -- hash from: provision/code/coding/code (cons_provision_code_code)
+             COALESCE(db.to_char_immutable(cons_provision_code_display), '#NULL#') || '|||' || -- hash from: provision/code/coding/display (cons_provision_code_display)
+             COALESCE(db.to_char_immutable(cons_provision_code_text), '#NULL#') || '|||' || -- hash from: provision/code/text (cons_provision_code_text)
+             COALESCE(db.to_char_immutable(cons_provision_dataperiod_start), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/start (cons_provision_dataperiod_start)
+             COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/end (cons_provision_dataperiod_end)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.consent_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.consent_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "location_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location_raw (
   location_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   loc_id VARCHAR,   -- id (VARCHAR)
@@ -1345,25 +3831,91 @@ CREATE TABLE IF NOT EXISTS db_log.location_raw (
   loc_name VARCHAR,   -- name (VARCHAR)
   loc_description VARCHAR,   -- description (VARCHAR)
   loc_alias VARCHAR,   -- alias (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(loc_id), '#NULL#') || '|||' || -- hash from: id (loc_id)
+             COALESCE(db.to_char_immutable(loc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (loc_meta_versionid)
+             COALESCE(db.to_char_immutable(loc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (loc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(loc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (loc_meta_profile)
+             COALESCE(db.to_char_immutable(loc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (loc_identifier_use)
+             COALESCE(db.to_char_immutable(loc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (loc_identifier_type_system)
+             COALESCE(db.to_char_immutable(loc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (loc_identifier_type_version)
+             COALESCE(db.to_char_immutable(loc_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (loc_identifier_type_code)
+             COALESCE(db.to_char_immutable(loc_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (loc_identifier_type_display)
+             COALESCE(db.to_char_immutable(loc_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (loc_identifier_type_text)
+             COALESCE(db.to_char_immutable(loc_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (loc_identifier_system)
+             COALESCE(db.to_char_immutable(loc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (loc_identifier_value)
+             COALESCE(db.to_char_immutable(loc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (loc_identifier_start)
+             COALESCE(db.to_char_immutable(loc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (loc_identifier_end)
+             COALESCE(db.to_char_immutable(loc_status), '#NULL#') || '|||' || -- hash from: status (loc_status)
+             COALESCE(db.to_char_immutable(loc_name), '#NULL#') || '|||' || -- hash from: name (loc_name)
+             COALESCE(db.to_char_immutable(loc_description), '#NULL#') || '|||' || -- hash from: description (loc_description)
+             COALESCE(db.to_char_immutable(loc_alias), '#NULL#') || '|||' || -- hash from: alias (loc_alias)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(loc_id), '#NULL#') || '|||' || -- hash from: id (loc_id)
+             COALESCE(db.to_char_immutable(loc_meta_versionid), '#NULL#') || '|||' || -- hash from: meta/versionId (loc_meta_versionid)
+             COALESCE(db.to_char_immutable(loc_meta_lastupdated), '#NULL#') || '|||' || -- hash from: meta/lastUpdated (loc_meta_lastupdated)
+             COALESCE(db.to_char_immutable(loc_meta_profile), '#NULL#') || '|||' || -- hash from: meta/profile (loc_meta_profile)
+             COALESCE(db.to_char_immutable(loc_identifier_use), '#NULL#') || '|||' || -- hash from: identifier/use (loc_identifier_use)
+             COALESCE(db.to_char_immutable(loc_identifier_type_system), '#NULL#') || '|||' || -- hash from: identifier/type/coding/system (loc_identifier_type_system)
+             COALESCE(db.to_char_immutable(loc_identifier_type_version), '#NULL#') || '|||' || -- hash from: identifier/type/coding/version (loc_identifier_type_version)
+             COALESCE(db.to_char_immutable(loc_identifier_type_code), '#NULL#') || '|||' || -- hash from: identifier/type/coding/code (loc_identifier_type_code)
+             COALESCE(db.to_char_immutable(loc_identifier_type_display), '#NULL#') || '|||' || -- hash from: identifier/type/coding/display (loc_identifier_type_display)
+             COALESCE(db.to_char_immutable(loc_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (loc_identifier_type_text)
+             COALESCE(db.to_char_immutable(loc_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (loc_identifier_system)
+             COALESCE(db.to_char_immutable(loc_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (loc_identifier_value)
+             COALESCE(db.to_char_immutable(loc_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (loc_identifier_start)
+             COALESCE(db.to_char_immutable(loc_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (loc_identifier_end)
+             COALESCE(db.to_char_immutable(loc_status), '#NULL#') || '|||' || -- hash from: status (loc_status)
+             COALESCE(db.to_char_immutable(loc_name), '#NULL#') || '|||' || -- hash from: name (loc_name)
+             COALESCE(db.to_char_immutable(loc_description), '#NULL#') || '|||' || -- hash from: description (loc_description)
+             COALESCE(db.to_char_immutable(loc_alias), '#NULL#') || '|||' || -- hash from: alias (loc_alias)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.location_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.location_raw SET (autovacuum_vacuum_threshold = 25000);
+
 -- Table "pids_per_ward_raw" in schema "db_log"
-----------------------------------------------------
+-------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   ward_name VARCHAR,   -- ward_name (VARCHAR)
   patient_id VARCHAR,   -- patient_id (VARCHAR)
   encounter_id VARCHAR,   -- encounter_id (VARCHAR)
+  hash_txt_col TEXT GENERATED ALWAYS AS (
+             COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: ward_name (ward_name)
+             COALESCE(db.to_char_immutable(patient_id), '#NULL#') || '|||' || -- hash from: patient_id (patient_id)
+             COALESCE(db.to_char_immutable(encounter_id), '#NULL#') || '|||' || -- hash from: encounter_id (encounter_id)
+             '#'
+  ) STORED, 							-- Column collection data for index to read and kollion handling 
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: ward_name (ward_name)
+             COALESCE(db.to_char_immutable(patient_id), '#NULL#') || '|||' || -- hash from: patient_id (patient_id)
+             COALESCE(db.to_char_immutable(encounter_id), '#NULL#') || '|||' || -- hash from: encounter_id (encounter_id)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
   last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
   current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
+
+-- ALTER TABLE db_log.pids_per_ward_raw SET (autovacuum_vacuum_scale_factor = 0.01);
+-- ALTER TABLE db_log.pids_per_ward_raw SET (autovacuum_vacuum_threshold = 25000);
+
 
 ------------------------------------------------------
 -- SQL Role / Trigger in Schema "db_log" --
@@ -2795,4 +5347,527 @@ COMMENT ON COLUMN db_log.pids_per_ward_raw.last_processing_nr IS 'Last processin
 
 -- Output on
 \o
+
+------------------------------------------------------
+-- INDEX for IDs on Tables in Schema "db_log" --
+------------------------------------------------------
+
+------------------------- Index for db_log - encounter_raw ---------------------------------
+
+-- Index idx_db_log_encounter_raw_input_dt for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_input_dt
+ON db_log.encounter_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_encounter_raw_input_pnr for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_input_pnr
+ON db_log.encounter_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_encounter_raw_last_dt for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_last_dt
+ON db_log.encounter_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_encounter_raw_last_dt for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_last_pnr
+ON db_log.encounter_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_encounter_raw_hash for Table "encounter_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_encounter_raw_hash
+ON db_log.encounter_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - patient_raw ---------------------------------
+
+-- Index idx_db_log_patient_raw_input_dt for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_input_dt
+ON db_log.patient_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_patient_raw_input_pnr for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_input_pnr
+ON db_log.patient_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_patient_raw_last_dt for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_last_dt
+ON db_log.patient_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_patient_raw_last_dt for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_last_pnr
+ON db_log.patient_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_patient_raw_hash for Table "patient_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_patient_raw_hash
+ON db_log.patient_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - condition_raw ---------------------------------
+
+-- Index idx_db_log_condition_raw_input_dt for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_input_dt
+ON db_log.condition_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_condition_raw_input_pnr for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_input_pnr
+ON db_log.condition_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_condition_raw_last_dt for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_last_dt
+ON db_log.condition_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_condition_raw_last_dt for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_last_pnr
+ON db_log.condition_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_condition_raw_hash for Table "condition_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_condition_raw_hash
+ON db_log.condition_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - medication_raw ---------------------------------
+
+-- Index idx_db_log_medication_raw_input_dt for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_input_dt
+ON db_log.medication_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medication_raw_input_pnr for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_input_pnr
+ON db_log.medication_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medication_raw_last_dt for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_last_dt
+ON db_log.medication_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medication_raw_last_dt for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_last_pnr
+ON db_log.medication_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_medication_raw_hash for Table "medication_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medication_raw_hash
+ON db_log.medication_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - medicationrequest_raw ---------------------------------
+
+-- Index idx_db_log_medicationrequest_raw_input_dt for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_input_dt
+ON db_log.medicationrequest_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medicationrequest_raw_input_pnr for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_input_pnr
+ON db_log.medicationrequest_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medicationrequest_raw_last_dt for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_last_dt
+ON db_log.medicationrequest_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medicationrequest_raw_last_dt for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_last_pnr
+ON db_log.medicationrequest_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_medicationrequest_raw_hash for Table "medicationrequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_raw_hash
+ON db_log.medicationrequest_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - medicationadministration_raw ---------------------------------
+
+-- Index idx_db_log_medicationadministration_raw_input_dt for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_input_dt
+ON db_log.medicationadministration_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medicationadministration_raw_input_pnr for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_input_pnr
+ON db_log.medicationadministration_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medicationadministration_raw_last_dt for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_last_dt
+ON db_log.medicationadministration_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medicationadministration_raw_last_dt for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_last_pnr
+ON db_log.medicationadministration_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_medicationadministration_raw_hash for Table "medicationadministration_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_raw_hash
+ON db_log.medicationadministration_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - medicationstatement_raw ---------------------------------
+
+-- Index idx_db_log_medicationstatement_raw_input_dt for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_input_dt
+ON db_log.medicationstatement_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_medicationstatement_raw_input_pnr for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_input_pnr
+ON db_log.medicationstatement_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_medicationstatement_raw_last_dt for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_last_dt
+ON db_log.medicationstatement_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_medicationstatement_raw_last_dt for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_last_pnr
+ON db_log.medicationstatement_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_medicationstatement_raw_hash for Table "medicationstatement_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_raw_hash
+ON db_log.medicationstatement_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - observation_raw ---------------------------------
+
+-- Index idx_db_log_observation_raw_input_dt for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_input_dt
+ON db_log.observation_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_observation_raw_input_pnr for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_input_pnr
+ON db_log.observation_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_observation_raw_last_dt for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_last_dt
+ON db_log.observation_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_observation_raw_last_dt for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_last_pnr
+ON db_log.observation_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_observation_raw_hash for Table "observation_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_observation_raw_hash
+ON db_log.observation_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - diagnosticreport_raw ---------------------------------
+
+-- Index idx_db_log_diagnosticreport_raw_input_dt for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_input_dt
+ON db_log.diagnosticreport_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_diagnosticreport_raw_input_pnr for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_input_pnr
+ON db_log.diagnosticreport_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_diagnosticreport_raw_last_dt for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_last_dt
+ON db_log.diagnosticreport_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_diagnosticreport_raw_last_dt for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_last_pnr
+ON db_log.diagnosticreport_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_diagnosticreport_raw_hash for Table "diagnosticreport_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_raw_hash
+ON db_log.diagnosticreport_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - servicerequest_raw ---------------------------------
+
+-- Index idx_db_log_servicerequest_raw_input_dt for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_input_dt
+ON db_log.servicerequest_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_servicerequest_raw_input_pnr for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_input_pnr
+ON db_log.servicerequest_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_servicerequest_raw_last_dt for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_last_dt
+ON db_log.servicerequest_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_servicerequest_raw_last_dt for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_last_pnr
+ON db_log.servicerequest_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_servicerequest_raw_hash for Table "servicerequest_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_raw_hash
+ON db_log.servicerequest_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - procedure_raw ---------------------------------
+
+-- Index idx_db_log_procedure_raw_input_dt for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_input_dt
+ON db_log.procedure_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_procedure_raw_input_pnr for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_input_pnr
+ON db_log.procedure_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_procedure_raw_last_dt for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_last_dt
+ON db_log.procedure_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_procedure_raw_last_dt for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_last_pnr
+ON db_log.procedure_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_procedure_raw_hash for Table "procedure_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_procedure_raw_hash
+ON db_log.procedure_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - consent_raw ---------------------------------
+
+-- Index idx_db_log_consent_raw_input_dt for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_input_dt
+ON db_log.consent_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_consent_raw_input_pnr for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_input_pnr
+ON db_log.consent_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_consent_raw_last_dt for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_last_dt
+ON db_log.consent_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_consent_raw_last_dt for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_last_pnr
+ON db_log.consent_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_consent_raw_hash for Table "consent_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_consent_raw_hash
+ON db_log.consent_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - location_raw ---------------------------------
+
+-- Index idx_db_log_location_raw_input_dt for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_input_dt
+ON db_log.location_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_location_raw_input_pnr for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_input_pnr
+ON db_log.location_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_location_raw_last_dt for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_last_dt
+ON db_log.location_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_location_raw_last_dt for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_last_pnr
+ON db_log.location_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_location_raw_hash for Table "location_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_location_raw_hash
+ON db_log.location_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db_log - pids_per_ward_raw ---------------------------------
+
+-- Index idx_db_log_pids_per_ward_raw_input_dt for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_input_dt
+ON db_log.pids_per_ward_raw (
+   input_datetime -- Time at which the data record is inserted
+);
+
+-- Index idx_db_log_pids_per_ward_raw_input_pnr for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_input_pnr
+ON db_log.pids_per_ward_raw (
+   input_processing_nr -- (First) Processing number of the data record
+);
+
+-- Index idx_db_log_pids_per_ward_raw_last_dt for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_last_dt
+ON db_log.pids_per_ward_raw (
+   last_check_datetime -- Time at which data record was last checked
+);
+
+-- Index idx_db_log_pids_per_ward_raw_last_dt for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_last_pnr
+ON db_log.pids_per_ward_raw (
+   last_processing_nr -- Last processing number of the data record
+);
+
+-- Index idx_db_log_pids_per_ward_raw_hash for Table "pids_per_ward_raw" in schema "db_log"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_raw_hash
+ON db_log.pids_per_ward_raw (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
 

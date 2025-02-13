@@ -40,7 +40,7 @@ BEGIN
 
     -- Last import Nr in raw-data
     err_section:='HEAD-05';    err_schema:='db_log';    err_table:='data_import_hist';
-    SELECT MAX(last_processing_nr) INTO last_raw_pro_nr FROM db_log.data_import_hist WHERE table_name like '%_raw' AND schema_name='db_log';
+    SELECT MAX(last_processing_nr) INTO last_raw_pro_nr FROM db.data_import_hist WHERE table_name like '%_raw' AND schema_name='db_log';
 
     -- Counting datasets
     err_section:='HEAD-10';    err_schema:='db_log';    err_table:='- all_entitys -';
@@ -97,7 +97,7 @@ BEGIN
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
     
         err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
-        INSERT INTO db_log.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
+        INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( new_last_pro_nr,'data_count_pro_all', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
 
         -- Cleer current executed function and total number of records
@@ -139,6 +139,4 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
--- CopyJob CDS in 2 DB_log
--- Move to copy function - SELECT cron.schedule('*/1 * * * *', 'SELECT db.<%COPY_FUNC_NAME%>();');
 -----------------------------
