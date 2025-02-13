@@ -1,3 +1,43 @@
+#' Initialize and Start a Module
+#'
+#' This function initializes the module by setting up necessary constants,
+#' creating required directories, starting a process clock, and logging configuration details.
+#' It ensures that the module environment is properly configured before execution.
+#'
+#' @param module_name A character string specifying the name of the module.
+#' @param path_to_toml (Optional) A character string specifying the path to the TOML configuration file. Default is `NA`.
+#' @param debug_path_to_config_toml (Optional) A character string specifying the path to a debug-specific TOML configuration file. Default is `NA`.
+#' @param hide_value_pattern (Optional) A character string pattern used to hide certain values in the logged configuration output. Default is `NA`.
+#'
+#' @details
+#' - Initializes module-specific constants using `etlutils::initModuleConstants()`.
+#' - Creates necessary directories using `etlutils::createDIRS()`.
+#' - Initializes a global process clock using `etlutils::createClock()`.
+#' - Starts logging all console outputs using `etlutils::startLogging()`.
+#' - Logs all configuration parameters while optionally hiding values that match `hide_value_pattern`.
+#'
+#' @return This function does not return a value. It performs setup operations as a side effect.
+#'
+#'
+#' @export
+startModule <- function(module_name, path_to_toml = NA, debug_path_to_config_toml = NA, hide_value_pattern = NA) {
+  # Init module constants
+  config <- etlutils::initModuleConstants(
+    module_name = module_name,
+    path_to_toml = path_to_toml,
+    debug_path_to_config_toml = debug_path_to_config_toml
+  )
+
+  # Create necessary directories
+  etlutils::createDIRS(module_name)
+  # Create globally used process clock
+  etlutils::createClock()
+  # Start logging console outputs
+  etlutils::startLogging(module_name)
+  # Log all configuration parameters, optionally hiding values based on the pattern
+  etlutils::catList(config, prefix = "Configuration:\n--------------\n", suffix = "\n", hide_value_pattern)
+}
+
 #' #' Store Finish Data in a Log File
 #' #'
 #' #' This function records log messages, error messages, and error status

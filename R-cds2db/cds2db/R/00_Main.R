@@ -6,30 +6,10 @@
 #'
 #' @export
 retrieve <- function(debug_path_to_config_toml = NA) {
+  # Initialize and start module
+  etlutils::startModule("cds2db", path_to_toml = "./R-cds2db/cds2db_config.toml", debug_path_to_config_toml,
+              hide_value_pattern = "^FHIR_(?!SEARCH_).+")
 
-  ###
-  # Init module constants
-  ###
-  config <- etlutils::initModuleConstants(
-    module_name = "cds2db",
-    path_to_toml = "./R-cds2db/cds2db_config.toml",
-    debug_path_to_config_toml = debug_path_to_config_toml
-  )
-
-  etlutils::createDIRS(PROJECT_NAME)
-
-  ###
-  # Create globally used process_clock
-  ###
-  etlutils::createClock()
-
-  ###
-  # log all console outputs and save them at the end
-  ###
-  etlutils::startLogging(PROJECT_NAME)
-
-  # log all configuration parameters but hide value with parameter name starts with "FHIR_"
-  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_(?!SEARCH_).+")
 
   try(etlutils::runLevel1("Run Retrieve", {
 
