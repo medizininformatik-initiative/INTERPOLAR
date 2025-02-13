@@ -288,16 +288,38 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   etlutils::catList(pids_with_last_updated, "Date for every PID when the Patient resource was written to the database the last time:\n", "\n")
 
   # Load all data of relevant patients from FHIR server
-  resource_tables <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
+  resource_tables_fhir <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
   # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
   table_names <- paste0(names(table_descriptions), "_raw_last")
   # Read the tables from the database using the generated table names
-  db_resource_tables <- etlutils::dbReadTables(table_names, lock_id = "getLastPatientUpdateDate()[2]")
-  # Remove the "_raw_last" suffix from the table names in `db_resource_tables`
-  names(db_resource_tables) <- gsub("_raw_last$", "", names(db_resource_tables))
-  # Merge the tables from the original list (`table_names`) and the database tables (`db_resource_tables`) into a single list
-  full_tables <- mergeTablesUnion(resource_tables, db_resource_tables)
+  resource_tables_db <- etlutils::dbReadTables(table_names, lock_id = "getLastPatientUpdateDate()[2]")
+  # Remove the "_raw_last" suffix from the table names in `resource_tables_db`
+  names(resource_tables_db) <- gsub("_raw_last$", "", names(resource_tables_db))
+
+  # remove all "old" data loaded from DB which has an update from the FHIR server
+  for (table_name in names(resource_tables_fhir)) {
+
+    fhir_data <- resource_tables_fhir[[table_name]]
+    db_data <- resource_tables_db[[table_name]]
+
+    id_column <- etlutils::getIDColumn(table_name)
+    common_columns <- intersect(names(db_data), names(fhir_data))  # Ensure only existing columns are used
+
+    # Remove columns that do not exist in the FHIR table (modifies db_data in-place)
+    setcolorder(db_data, common_columns)
+    db_data <- db_data[, ..common_columns]  # This step still creates a copy, but it's necessary
+
+    # Remove rows where the ID exists in the FHIR table
+    ids_to_remove <- fhir_data[[id_column]]
+    db_data <- db_data[!(get(id_column) %in% ids_to_remove)]  # This step creates a copy
+
+    # Save the modified table back to the list
+    resource_tables_db[[table_name]] <- db_data
+  }
+
+  # Merge the tables from the original list (`table_names`) and the database tables (`resource_tables_db`) into a single list
+  full_tables <- etlutils::mergeTablesUnion(resource_tables_fhir, resource_tables_db)
 
   # Loop through each table name in the `full_tables` list
   for (full_table_name in names(full_tables)) {
