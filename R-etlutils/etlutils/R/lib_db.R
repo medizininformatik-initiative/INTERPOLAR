@@ -560,6 +560,14 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
 
 }
 
+dbGetReadOnlyColumns <- function(table_name) {
+  # TODO: Dieser Holzhammer muss ersetzt werden durch eine DB-Abfrage, die für jede Tabelle die Spalten liefert, die einen Fehler generieren, wenn man versucht sie in die Datenbank zu schreiben.
+  # Wenn man sich die Tabelle aber vorher mit select * geholt hat, dann sind diese Spalten mit dabei.
+  # Das hier soll in der Version 0.3.0 nochmal überarbeitet/durchdacht werden!
+  # Am besten wäre es, wenn die Views bei einem select * diese Spalten gar nicht erst mit ausliefern!
+  return(c("hash_index_col", "hash_txt_col"))
+}
+
 #' Insert Rows into a PostgreSQL Table
 #'
 #' This function inserts rows from a `data.table` or `data.frame` into a
@@ -584,6 +592,10 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
 dbAddContent <- function(table_name, table, lock_id = NULL) {
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
+
+  # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
+  table[, (dbGetReadOnlyColumns(table_name)) := NULL]
+
   # Measure start time
   time0 <- Sys.time()
   # Get row count for reporting
