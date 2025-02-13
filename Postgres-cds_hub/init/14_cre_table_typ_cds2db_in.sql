@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15240 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-11 22:33:51
+-- Create time: 2025-02-12 23:07:33
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -5381,34 +5381,34 @@ COMMENT ON COLUMN cds2db_in.pids_per_ward.last_processing_nr IS 'Last processing
 ------------------------------------------------------
 
 ------------------------- Index for cds2db_in - encounter ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_encounter_raw_id ON cds2db_in.encounter ( encounter_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_encounter_raw_id ON cds2db_in.encounter ( encounter_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_encounter_input_dt for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_input_dt
 ON cds2db_in.encounter (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_encounter_input_pnr for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_input_pnr
 ON cds2db_in.encounter (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_encounter_last_dt for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_last_dt
 ON cds2db_in.encounter (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_encounter_last_dt for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_last_pnr
 ON cds2db_in.encounter (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_encounter_hash for Table "encounter" in schema "cds2db_in"
@@ -5419,34 +5419,34 @@ ON cds2db_in.encounter (
 );
 
 ------------------------- Index for cds2db_in - patient ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_patient_raw_id ON cds2db_in.patient ( patient_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_patient_raw_id ON cds2db_in.patient ( patient_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_patient_input_dt for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_input_dt
 ON cds2db_in.patient (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_patient_input_pnr for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_input_pnr
 ON cds2db_in.patient (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_patient_last_dt for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_last_dt
 ON cds2db_in.patient (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_patient_last_dt for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_last_pnr
 ON cds2db_in.patient (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_patient_hash for Table "patient" in schema "cds2db_in"
@@ -5457,34 +5457,34 @@ ON cds2db_in.patient (
 );
 
 ------------------------- Index for cds2db_in - condition ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_condition_raw_id ON cds2db_in.condition ( condition_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_condition_raw_id ON cds2db_in.condition ( condition_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_condition_input_dt for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_input_dt
 ON cds2db_in.condition (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_condition_input_pnr for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_input_pnr
 ON cds2db_in.condition (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_condition_last_dt for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_last_dt
 ON cds2db_in.condition (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_condition_last_dt for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_last_pnr
 ON cds2db_in.condition (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_condition_hash for Table "condition" in schema "cds2db_in"
@@ -5495,34 +5495,34 @@ ON cds2db_in.condition (
 );
 
 ------------------------- Index for cds2db_in - medication ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medication_raw_id ON cds2db_in.medication ( medication_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_medication_raw_id ON cds2db_in.medication ( medication_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_medication_input_dt for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_input_dt
 ON cds2db_in.medication (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_medication_input_pnr for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_input_pnr
 ON cds2db_in.medication (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_medication_last_dt for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_last_dt
 ON cds2db_in.medication (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_medication_last_dt for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_last_pnr
 ON cds2db_in.medication (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_medication_hash for Table "medication" in schema "cds2db_in"
@@ -5533,34 +5533,34 @@ ON cds2db_in.medication (
 );
 
 ------------------------- Index for cds2db_in - medicationrequest ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_id ON cds2db_in.medicationrequest ( medicationrequest_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_id ON cds2db_in.medicationrequest ( medicationrequest_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_medicationrequest_input_dt for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_input_dt
 ON cds2db_in.medicationrequest (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_medicationrequest_input_pnr for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_input_pnr
 ON cds2db_in.medicationrequest (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_medicationrequest_last_dt for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_last_dt
 ON cds2db_in.medicationrequest (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_medicationrequest_last_dt for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_last_pnr
 ON cds2db_in.medicationrequest (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_medicationrequest_hash for Table "medicationrequest" in schema "cds2db_in"
@@ -5571,34 +5571,34 @@ ON cds2db_in.medicationrequest (
 );
 
 ------------------------- Index for cds2db_in - medicationadministration ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_id ON cds2db_in.medicationadministration ( medicationadministration_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_id ON cds2db_in.medicationadministration ( medicationadministration_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_medicationadministration_input_dt for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_input_dt
 ON cds2db_in.medicationadministration (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_medicationadministration_input_pnr for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_input_pnr
 ON cds2db_in.medicationadministration (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_medicationadministration_last_dt for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_last_dt
 ON cds2db_in.medicationadministration (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_medicationadministration_last_dt for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_last_pnr
 ON cds2db_in.medicationadministration (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_medicationadministration_hash for Table "medicationadministration" in schema "cds2db_in"
@@ -5609,34 +5609,34 @@ ON cds2db_in.medicationadministration (
 );
 
 ------------------------- Index for cds2db_in - medicationstatement ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_id ON cds2db_in.medicationstatement ( medicationstatement_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_id ON cds2db_in.medicationstatement ( medicationstatement_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_medicationstatement_input_dt for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_input_dt
 ON cds2db_in.medicationstatement (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_medicationstatement_input_pnr for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_input_pnr
 ON cds2db_in.medicationstatement (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_medicationstatement_last_dt for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_last_dt
 ON cds2db_in.medicationstatement (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_medicationstatement_last_dt for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_last_pnr
 ON cds2db_in.medicationstatement (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_medicationstatement_hash for Table "medicationstatement" in schema "cds2db_in"
@@ -5647,34 +5647,34 @@ ON cds2db_in.medicationstatement (
 );
 
 ------------------------- Index for cds2db_in - observation ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_observation_raw_id ON cds2db_in.observation ( observation_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_observation_raw_id ON cds2db_in.observation ( observation_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_observation_input_dt for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_input_dt
 ON cds2db_in.observation (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_observation_input_pnr for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_input_pnr
 ON cds2db_in.observation (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_observation_last_dt for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_last_dt
 ON cds2db_in.observation (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_observation_last_dt for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_last_pnr
 ON cds2db_in.observation (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_observation_hash for Table "observation" in schema "cds2db_in"
@@ -5685,34 +5685,34 @@ ON cds2db_in.observation (
 );
 
 ------------------------- Index for cds2db_in - diagnosticreport ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport ( diagnosticreport_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport ( diagnosticreport_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_diagnosticreport_input_dt for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_input_dt
 ON cds2db_in.diagnosticreport (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_diagnosticreport_input_pnr for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_input_pnr
 ON cds2db_in.diagnosticreport (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_diagnosticreport_last_dt for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_last_dt
 ON cds2db_in.diagnosticreport (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_diagnosticreport_last_dt for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_last_pnr
 ON cds2db_in.diagnosticreport (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_diagnosticreport_hash for Table "diagnosticreport" in schema "cds2db_in"
@@ -5723,34 +5723,34 @@ ON cds2db_in.diagnosticreport (
 );
 
 ------------------------- Index for cds2db_in - servicerequest ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_id ON cds2db_in.servicerequest ( servicerequest_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_id ON cds2db_in.servicerequest ( servicerequest_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_servicerequest_input_dt for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_input_dt
 ON cds2db_in.servicerequest (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_servicerequest_input_pnr for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_input_pnr
 ON cds2db_in.servicerequest (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_servicerequest_last_dt for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_last_dt
 ON cds2db_in.servicerequest (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_servicerequest_last_dt for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_last_pnr
 ON cds2db_in.servicerequest (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_servicerequest_hash for Table "servicerequest" in schema "cds2db_in"
@@ -5761,34 +5761,34 @@ ON cds2db_in.servicerequest (
 );
 
 ------------------------- Index for cds2db_in - procedure ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_procedure_raw_id ON cds2db_in.procedure ( procedure_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_procedure_raw_id ON cds2db_in.procedure ( procedure_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_procedure_input_dt for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_input_dt
 ON cds2db_in.procedure (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_procedure_input_pnr for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_input_pnr
 ON cds2db_in.procedure (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_procedure_last_dt for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_last_dt
 ON cds2db_in.procedure (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_procedure_last_dt for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_last_pnr
 ON cds2db_in.procedure (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_procedure_hash for Table "procedure" in schema "cds2db_in"
@@ -5799,34 +5799,34 @@ ON cds2db_in.procedure (
 );
 
 ------------------------- Index for cds2db_in - consent ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_consent_raw_id ON cds2db_in.consent ( consent_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_consent_raw_id ON cds2db_in.consent ( consent_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_consent_input_dt for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_input_dt
 ON cds2db_in.consent (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_consent_input_pnr for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_input_pnr
 ON cds2db_in.consent (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_consent_last_dt for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_last_dt
 ON cds2db_in.consent (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_consent_last_dt for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_last_pnr
 ON cds2db_in.consent (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_consent_hash for Table "consent" in schema "cds2db_in"
@@ -5837,34 +5837,34 @@ ON cds2db_in.consent (
 );
 
 ------------------------- Index for cds2db_in - location ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_location_raw_id ON cds2db_in.location ( location_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_location_raw_id ON cds2db_in.location ( location_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_location_input_dt for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_input_dt
 ON cds2db_in.location (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_location_input_pnr for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_input_pnr
 ON cds2db_in.location (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_location_last_dt for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_last_dt
 ON cds2db_in.location (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_location_last_dt for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_last_pnr
 ON cds2db_in.location (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_location_hash for Table "location" in schema "cds2db_in"
@@ -5875,34 +5875,34 @@ ON cds2db_in.location (
 );
 
 ------------------------- Index for cds2db_in - pids_per_ward ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward ( pids_per_ward_raw_id); -- Primary key of the corresponding raw table
+  CREATE INDEX IF NOT EXISTS idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward ( pids_per_ward_raw_id DESC); -- Primary key of the corresponding raw table
 
 -- Index idx_cds2db_in_pids_per_ward_input_dt for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_input_dt
 ON cds2db_in.pids_per_ward (
-   input_datetime -- Time at which the data record is inserted
+   input_datetime DESC -- Time at which the data record is inserted
 );
 
 -- Index idx_cds2db_in_pids_per_ward_input_pnr for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_input_pnr
 ON cds2db_in.pids_per_ward (
-   input_processing_nr -- (First) Processing number of the data record
+   input_processing_nr DESC -- (First) Processing number of the data record
 );
 
 -- Index idx_cds2db_in_pids_per_ward_last_dt for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_last_dt
 ON cds2db_in.pids_per_ward (
-   last_check_datetime -- Time at which data record was last checked
+   last_check_datetime DESC -- Time at which data record was last checked
 );
 
 -- Index idx_cds2db_in_pids_per_ward_last_dt for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_last_pnr
 ON cds2db_in.pids_per_ward (
-   last_processing_nr -- Last processing number of the data record
+   last_processing_nr DESC -- Last processing number of the data record
 );
 
 -- Index idx_cds2db_in_pids_per_ward_hash for Table "pids_per_ward" in schema "cds2db_in"

@@ -23,6 +23,10 @@ DECLARE
     vorhanden_raw INT;
     vorhanden_typ INT;
 
+-- SELECT db.optimize_sql_code_test( 500,'A- in leere DB','alles','nein');
+-- SELECT db.optimize_sql_code_test( 500,'B- teilweise neue Pat in stehende DB','ja','nein');
+-- SELECT db.optimize_sql_code_test( 500,'C- alle neuen Pat schon vorhanden-update ','nein','voll');
+
 BEGIN
     maxloop:=(10*step); -- Notaus an Datensazanzahl anpassen
     err_section:='optimize_sql_code_test-0';    err_schema:='/';    err_table:='pg_sleep';
@@ -73,12 +77,12 @@ BEGIN
 
         -- Einfügen der raw Daten - als Subproc
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'INSERT INTO db_log.patient_raw (pat_id,pat_name_text) (select ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(250*step)||' ) AS rn) b)'
+        'INSERT INTO db_log.patient_raw (pat_id,pat_name_text) (select ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(1000*step)||' ) AS rn) b)'
         ) ) AS t(res TEXT) INTO erg;
 
         -- Einfügen der raw Daten - als Subproc
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'INSERT INTO db_log.patient (patient_raw_id,pat_id,pat_name_text) (select rn, ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(250*step)||' ) AS rn) b)'
+        'INSERT INTO db_log.patient (patient_raw_id,pat_id,pat_name_text) (select rn, ''Pat_''||rn||case when ('''||ins_only_new||'''=''ja'') then ''_''||to_char(now(),''MISSSSS'') end AS pat, ''Pat_''||rn AS pat_name from (SELECT generate_series(1, '||(1000*step)||' ) AS rn) b)'
         ) ) AS t(res TEXT) INTO erg;
         
         PERFORM pg_sleep(2); -- 2 Sekunden warten
@@ -90,13 +94,13 @@ BEGIN
     SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
 
     err_section:='optimize_sql_code_test-10';    err_schema:='/';    err_table:='vor FOR Round';
-    FOR round IN 1..400 LOOP -- Ziel 250
+    FOR round IN 1..1000 LOOP -- Ziel 250
         err_section:='optimize_sql_code_test-11';    err_schema:='/';    err_table:='round:'||round;
     -- Einfügen der Anzahl der Datensätze mit 1x; 2x; 3x; 4x; 5x; 10x; 15x;
-        IF round IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 18, 20, 25, 30, 35, 40, 50, 60, 70, 90, 100, 130,
-        160, 200, 250, 300, 350, 400) THEN
+        IF round IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 18, 20, 25, 30, 35, 40, 50, 60, 70, 90, 100, 130, 160, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000
+       
+        ) THEN
             err_section:='optimize_sql_code_test-12';    err_schema:='/';    err_table:='round:'||round;
---            COMMIT;
             ------------------------------------------
             num2:=maxloop;
             LOOP -- Verarbeitung anhalten

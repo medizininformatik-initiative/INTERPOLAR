@@ -1,8 +1,12 @@
 -- ###################### PARAMETER ############################
 -- >>>> WICHTIG Standort / Zeitabhängig <<<<
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-values ('release_version','2.7','GitHup release version');
+values ('release_version','2.9','GitHup release version');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='release_version';
+
+insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+values ('release_version_date','2025-02-14','GitHup release version');
+--update db_config.db_parameter set parameter_value='YYYY-MM-DD' where parameter_name='release_version_date';
 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
 values ('project_participants','IMISE Leipzig','project participants to distinguish between different instances');
