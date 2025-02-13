@@ -2,18 +2,15 @@
 #' Starts the retrieval for this project. This is the main start function start the ETL job
 #' from FHIR to Database
 #'
-#' @param debug_path_to_config_toml Debug parameter for loading an optional debug config.toml file
-#'
 #' @export
-retrieve <- function(debug_path_to_config_toml = NA) {
+retrieve <- function() {
 
   ###
   # Init module constants
   ###
   config <- etlutils::initModuleConstants(
     module_name = "cds2db",
-    path_to_toml = "./R-cds2db/cds2db_config.toml",
-    debug_path_to_config_toml = debug_path_to_config_toml
+    path_to_toml = "./R-cds2db/cds2db_config.toml"
   )
 
   etlutils::createDIRS(PROJECT_NAME)
