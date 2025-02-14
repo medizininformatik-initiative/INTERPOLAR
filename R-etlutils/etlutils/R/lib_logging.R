@@ -147,7 +147,7 @@ isDebugTestError <- function(err = NA) {
   if (all(is.na(err))) {
     err <- getErrorMessage()
   }
-  grepl("DEBUG_TEST_", err)
+  grepl("DEBUG_ENCOUNTER_REQUEST_TEST", err)
 }
 
 #' Check for Debug Test Error
@@ -620,4 +620,65 @@ printAllTables <- function(table, table_name = NA) {
     }
     printTableSummary(table, table_name)
   }
+}
+
+#' Append a Warning if DEBUG_ Variables are Active
+#'
+#' This function checks for global variables starting with "DEBUG_" and appends
+#' a warning message to the given `finish_message` if any are found.
+#'
+#' @param finish_message A character string representing the current finish message.
+#' @return A modified finish message including a warning if DEBUG_ variables are active.
+#'
+#' @export
+appendDebugWarning <- function(finish_message) {
+  # Check if any DEBUG_ variables exist
+  debug_variables <- getGlobalVariablesByPrefix("DEBUG_", astype = "vector")
+
+  # If there are active DEBUG variables, append a warning message
+  if (length(debug_variables) > 0) {
+    debug_variable_string <- paste(names(debug_variables), collapse = ", ")
+    finish_message <- paste0(
+      finish_message,
+      "\nAdditional Warning: The following DEBUG parameters are activated: ", debug_variable_string,
+      "\nThese parameters are only accepted for test cases!\n"
+    )
+  }
+
+  return(finish_message)
+}
+
+#' Generate a Finish Message for a Module
+#'
+#' This function generates a finish message for a given module based on the error state.
+#' If an error has occurred, it extracts the relevant error message and appends it to the finish message.
+#' If no error has occurred, it returns a success message.
+#'
+#' @param PROJECT_NAME A character string specifying the name of the module.
+#'
+#' @return A character string containing the generated finish message.
+#'
+#' @examples
+#' PROJECT_NAME <- "cds2db"
+#' finish_message <- generateFinishMessage(PROJECT_NAME)
+#' cat(finish_message)
+#'
+#' @export
+generateFinishMessage <- function(PROJECT_NAME) {
+  if (etlutils::isErrorOccured()) {
+    if (etlutils::isDebugTestError()) {
+      finish_message <- paste0("\nModule '", PROJECT_NAME, "' Debug Test Message:\n")
+    } else {
+      finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with ERRORS (see details above).\n")
+    }
+
+    # Remove irrelevant part from the error message
+    error_message <- sub("^[^:]*: \n  ", "", etlutils::getErrorMessage())
+    finish_message <- paste0(finish_message, error_message)
+
+  } else {
+    finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with no errors.\n")
+  }
+
+  return(finish_message)
 }
