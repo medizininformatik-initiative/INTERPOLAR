@@ -1,18 +1,69 @@
-#' Generate a Statistical Report
+#' Create Statistical Report
 #'
-#' This function generates a statistical report by querying a database view
-#' (`v_condition`) and fetching the results. The query is executed with a
-#' read-only lock to ensure data consistency.
+#' This function generates a statistical report by fetching and processing patient, encounter,
+#' and ward data. It includes steps for merging the data, calculating the age of patients,
+#' defining the FAS1 dataset, and verifying that the data meets specific criteria. The report
+#' focuses on encounters and patients that meet certain conditions such as the presence of a ward,
+#' patient age, and encounter type. The report also allows for customization of the start and end
+#' date for the reporting period.
 #'
-#' @return This function does not return a value explicitly. It prints the
-#'         fetched data from the database query (`v_condition`) to the console.
+#' @param REPORT_PERIOD_START A character string specifying the start date of the report period.
+#' @param REPORT_PERIOD_END A character string specifying the end date of the report period.
 #'
+#' @return A statistical report that includes the patient table, encounter table,
+#'   merged table, and FAS1 dataset.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Checks if `LOCATION_IDENTIFIER` is defined. If not, the function stops with an error message.
+#' 2. Fetches patient data from the database using `get_patient_data()`.
+#' 3. Fetches encounter data from the database using `get_encounter_data()`.
+#' 4. Fetches data related to patients per ward using `get_pids_per_ward_data()`.
+#' 5. Merges the patient, encounter, and ward data using `merge_pat_enc_ward()` and calculates patient age
+#'    using `calculate_age()`.
+#' 6. Defines the FAS1 dataset by filtering and processing the merged data using `define_FAS1()`,
+#'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
+#' 7. Prints the resulting datasets (`complete_table` and `FAS1`) for verification.
+#' 8. Prints the reporting period and the number of cases in the FAS1 dataset.
+#'
+#' @seealso [get_patient_data()], [get_encounter_data()], [get_pids_per_ward_data()],
+#'   [merge_pat_enc_ward()], [calculate_age()], [define_FAS1()]
 #' @export
-createStatisticalReport <- function() {
-  query <- paste0("SELECT * FROM v_condition\n")
-  conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "statistical reports[1]")
-  print(conditions)
+createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
+                                    REPORT_PERIOD_END = "2020-05-08") {
+
+  # TODO: include the start and end date in an interactive way ----------
+
+  # Check if LOCATION_IDENTIFIER is defined (needed for mapping of the report to a site)
   if (!exists("LOCATION_IDENTIFIER")) {
     stop("LOCATION_IDENTIFIER is not defined. Please define it in the dataprocessor_config.toml")
   }
+
+  patient_table <- get_patient_data(lock_id = "statistical reports[1]",
+                                    table_name = "v_patient")
+
+  encounter_table <- get_encounter_data(lock_id = "statistical reports[2]",
+                                        table_name = "v_encounter")
+
+  pids_per_ward_table <- get_pids_per_ward_data(lock_id = "statistical reports[3]",
+                                                table_name = "v_pids_per_ward")
+
+  complete_table <- merge_pat_enc_ward(patient_table, encounter_table, pids_per_ward_table) |>
+    calculate_age()
+
+  # DEBUG: for test reasons the start and end dates for abteilungskontakt -----------
+  #        instead of versorgungsstellenkontakt are used
+
+  FAS1 <- define_FAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
+
+  # Print the patient, encounter, and FAS1 datasets for verification
+  print(complete_table)
+  print(FAS1)
+
+  # Print the reporting period
+  print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
+
+  # Print the number of cases in the FAS1 dataset
+  print(paste0("Number of cases in FAS1: ", nrow(FAS1)))
+
 }

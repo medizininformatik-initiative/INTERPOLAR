@@ -17,6 +17,7 @@ LazyData: true
 Suggests: 
     testthat (>= 3.0.0),
 Imports: 
+    dplyr,
     data.table,
     etlutils
 Config/testthat/edition: 3
