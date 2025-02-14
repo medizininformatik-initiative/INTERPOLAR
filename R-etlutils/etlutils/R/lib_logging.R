@@ -641,7 +641,7 @@ appendDebugWarning <- function(finish_message) {
     finish_message <- paste0(
       finish_message,
       "\nAdditional Warning: The following DEBUG parameters are activated: ", debug_variable_string,
-      "\nThese parameters are only accepted for test cases!"
+      "\nThese parameters are only accepted for test cases!\n"
     )
   }
 
