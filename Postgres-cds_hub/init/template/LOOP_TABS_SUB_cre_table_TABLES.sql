@@ -5,10 +5,6 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%IF NOT TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity"%>
   <%IF TAGS "\bTYPED\b" "<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table"%>
   <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
-  hash_txt_col TEXT GENERATED ALWAYS AS (
-             <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
-             '#'
-  ) STORED, 							-- Column collection data for index to read and kollion handling 
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
