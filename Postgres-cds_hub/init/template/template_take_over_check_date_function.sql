@@ -5,8 +5,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
     current_record record;
-    new_last_pro_nr INT:=0; -- New processing number for these sync
-    last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
+    new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
     max_last_pro_nr INT; -- Last processing number over all entities
     max_ent_pro_nr INT;  -- Max processing number from a entiti
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
@@ -146,7 +145,7 @@ EXCEPTION
         last_processing_nr => CAST(new_last_pro_nr AS INT)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
-    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_raw_pro_nr:'||last_raw_pro_nr;
+    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
 

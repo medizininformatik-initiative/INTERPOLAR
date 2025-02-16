@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-01-13 09:38:21
--- Rights definition file size        : 15240 Byte
+-- Rights definition file last update : 2025-02-14 14:23:49
+-- Rights definition file size        : 15308 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-12 23:18:01
+-- Create time: 2025-02-16 09:53:41
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -34,7 +34,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
     current_record record;
-    new_last_pro_nr INT:=0; -- New processing number for these sync
+    new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
     last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
     max_last_pro_nr INT; -- Last processing number over all entities
     max_ent_pro_nr INT;  -- Max processing number from a entiti
