@@ -593,8 +593,11 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
 
-  # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
-  table[, (dbGetReadOnlyColumns(table_name)) := NULL]
+  readonly_cols <- dbGetReadOnlyColumns(table_name)
+  cols_to_remove <- intersect(readonly_cols, colnames(table))
+  if (length(cols_to_remove) > 0) {
+    table[, (cols_to_remove) := NULL]
+  }
 
   # Measure start time
   time0 <- Sys.time()
