@@ -447,6 +447,17 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
   #########################
   # START: FOR DEBUG ONLY #
   #########################
+
+  # This variable should be set to change the downloaded RAW data for DEBUG
+  # purposes. It contains a path to a script that is sourced at this point.
+  if (exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME") && nchar(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)) {
+    source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = TRUE)
+    # env <- new.env()
+    # source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = env)
+    # resource_tables <- env$changeRawData(resource_tables)
+    # env <- NULL
+  }
+
   # Prefix of all global debug variables. One for each FHIR resources.
   global_debug_filter_variable_prefix <- "DEBUG_FILTER_"
   # Get global variables by prefix
