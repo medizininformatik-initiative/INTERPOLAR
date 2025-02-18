@@ -145,7 +145,7 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
   table_name <- getViewTableName(resource_name)
   id_column <- etlutils::getIDColumn(resource_name)
   query <-paste0(
-    "SELECT * FROM ", table_name, " a\n",
+    "SELECT * FROM ", table_name, "\n",
     " WHERE last_processing_nr = ", last_processing_nr,
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
@@ -174,7 +174,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
   }
   # quote every pid and collapse the vector comma separated
   filter_column_values <- paste0("'", filter_column_values, "'", collapse = ",")
-  filter_line <- paste0("AND a.", filter_column, " IN (", filter_column_values, ")\n")
+  filter_line <- paste0("AND ", filter_column, " IN (", filter_column_values, ")\n")
   return(filter_line)
 }
 
