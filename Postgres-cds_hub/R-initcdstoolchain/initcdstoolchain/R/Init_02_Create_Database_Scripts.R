@@ -25,6 +25,28 @@ writeResultFile <- function(scriptname, content) {
   writeLines(content, paste0(getDBScriptsTargetDir(), scriptname), useBytes = TRUE, sep = "\n")
 }
 
+#' Get Common Prefix Before First Underscore
+#'
+#' This function extracts the common prefix before the first underscore
+#' from a vector of strings. If there is no common prefix, it returns NA.
+#'
+#' @param strings A character vector containing the input strings.
+#' @return A character string representing the common prefix before the first underscore, or NA if no common prefix exists.
+#' @examples
+#' getCommonPrefix(c("abc_123", "abc_456", "abc_789"))  # Returns "abc"
+#' getCommonPrefix(c("xyz_123", "abc_456"))  # Returns NA
+#' getCommonPrefix(c("test_value", "test_case"))  # Returns "test"
+#' getCommonPrefix(c("single_entry"))  # Returns "single"
+#'
+#' @export
+getCommonPrefix <- function(strings) {
+  unique_prefixes <- unique(sub("_.*", "", strings))
+  if (length(unique_prefixes) == 1) {
+    return(unique_prefixes[1])
+  }
+  return(NA_character_)
+}
+
 #' Replace and remove specific placeholders from a text
 #'
 #' This function replaces and removes lines containing only the specific placeholder surrounded
@@ -269,7 +291,17 @@ parseIFExpression <- function(expression) {
   return(list(field = matches[[1]][3], invert = trimws(toupper(matches[[1]][2])) == "NOT", pattern = etlutils::getBetweenQuotes(matches[[1]][4]), result = matches[[1]][5]))
 }
 
-convertTemplate <- function(tables_descriptions, script_rights_definition, result_file_name_column = "SCRIPTNAME", template_content = NA, template_name = NA, table_name = NA, column_name = NA, indentation = "", recursion = 0) {
+convertTemplate <- function(tables_descriptions,
+                            script_rights_definition,
+                            result_file_name_column = "SCRIPTNAME",
+                            template_content = NA,
+                            template_name = NA,
+                            table_name = NA,
+                            column_prefix = NA,
+                            column_name = NA,
+                            indentation = "",
+                            recursion = 0) {
+
   rights_first_row <- script_rights_definition[1]
   # Load SQL template
   content <- ifelse (is.na(template_content), loadTemplate(template_name), template_content)
@@ -286,7 +318,13 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
     if (startsWith(placeholder, "<%LOOP_TABS_")) {
       tables_content <- ""
       for (table_name in names(tables_descriptions)) {
-        single_table_content <- convertTemplate(tables_descriptions, script_rights_definition, template_name = placeholder, table_name = table_name, recursion = recursion + 1)
+        column_prefix <- getCommonPrefix(tables_descriptions[[table_name]][["COLUMN_NAME"]])
+        single_table_content <- convertTemplate(tables_descriptions,
+                                                script_rights_definition,
+                                                template_name = placeholder,
+                                                table_name = table_name,
+                                                column_prefix = column_prefix,
+                                                recursion = recursion + 1)
         tables_content <- paste0(tables_content, single_table_content)
       }
       tables_content <- gsub("\n$", "", tables_content)
@@ -298,7 +336,12 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
       indentation <- etlutils::getWordIndentation(content, placeholder)
       for (row in seq_len(nrow(single_table_description))) {
         column_row <- single_table_description[row]
-        single_column_content <- convertTemplate(tables_descriptions, script_rights_definition, template_name = placeholder, table_name = table_name, recursion = recursion + 1)
+        single_column_content <- convertTemplate(tables_descriptions,
+                                                 script_rights_definition,
+                                                 template_name = placeholder,
+                                                 table_name = table_name,
+                                                 column_prefix = column_prefix,
+                                                 recursion = recursion + 1)
         single_column_content_placeholders <- extractPlaceholders(single_column_content)
         for (sub_placeholder in single_column_content_placeholders) {
           # parse the columns value separator. this is a special tag which defines the separator
@@ -336,7 +379,12 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
             sub_content <- gsub(sub_placeholder, value, sub_content)
           }
         }
-        sub_content <- convertTemplate(tables_descriptions, script_rights_definition, template_content = sub_content, table_name = table_name, recursion = recursion + 1)
+        sub_content <- convertTemplate(tables_descriptions,
+                                       script_rights_definition,
+                                       template_content = sub_content,
+                                       table_name = table_name,
+                                       column_prefix = column_prefix,
+                                       recursion = recursion + 1)
         rights_content <- paste0(rights_content, sub_content)
       }
       rights_content <- gsub("\n$", "", rights_content)
@@ -356,6 +404,9 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
     } else if (placeholder == "<%SIMPLE_TABLE_NAME%>") {
       content <- gsub(placeholder, table_name, content)
 
+    } else if (placeholder == "<%COLUMN_PREFIX%>") {
+      content <- gsub(placeholder, column_prefix, content)
+
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
       condition_compare_value <- rights_first_row[[condition_arguments$field]]
@@ -374,7 +425,15 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
           template_content <- NA
           template_name <- condition_arguments$result
         }
-        condition_content <- convertTemplate(tables_descriptions, script_rights_definition, result_file_name_column, template_content, template_name, table_name, column_name, indentation, recursion = recursion + 1)
+        condition_content <- convertTemplate(tables_descriptions,
+                                             script_rights_definition,
+                                             result_file_name_column,
+                                             template_content,
+                                             template_name,
+                                             table_name,
+                                             column_name,
+                                             indentation,
+                                             recursion = recursion + 1)
         condition_content <- gsub("^\"|\"$", "", condition_content)
         condition_content <- gsub("\n$", "", condition_content)
         content <- gsub(placeholder, condition_content, content, fixed = TRUE) # fixed because the condition_content itself contains a pattern
@@ -386,6 +445,8 @@ convertTemplate <- function(tables_descriptions, script_rights_definition, resul
       placeholder_name <- extractPlaceholderName(placeholder)
       if (placeholder_name %in% names(rights_first_row)) {
         content <- gsub(placeholder, rights_first_row[[placeholder_name]], content)
+      } else {
+        #stop("Unknown placeholder: ", placeholder, " in template ", template_name, " for table ", table_name)
       }
     }
   }

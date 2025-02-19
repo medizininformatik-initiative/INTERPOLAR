@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-14 14:23:49
--- Rights definition file size        : 15308 Byte
+-- Rights definition file last update : 2025-02-19 18:30:48
+-- Rights definition file size        : 15524 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-16 09:53:41
+-- Create time: 2025-02-19 18:33:05
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  20_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -35,7 +35,6 @@ AS $$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
-    last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
     max_last_pro_nr INT; -- Last processing number over all entities
     max_ent_pro_nr INT;  -- Max processing number from a entiti
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
@@ -1643,7 +1642,7 @@ EXCEPTION
         last_processing_nr => CAST(new_last_pro_nr AS INT)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
-    RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE||' - last_raw_pro_nr:'||last_raw_pro_nr;
+    RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
 
