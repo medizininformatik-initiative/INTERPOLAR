@@ -2,6 +2,8 @@
 # Project Definition for module dataprocessor    #
 ##################################################
 
+[general]
+
 ###
 # VERBOSE LEVELS
 ###
@@ -55,22 +57,22 @@ MAX_DIR_COUNT = 5
 # ".*" as the pattern, which means "any characters any number of times".
 # If the filter result on a single Patient resoruce will provide more than one
 # Identifier, then they are written one after the other, separated by semicolons.
-#
-# acceppts every system:
+# Accepts any system with pattern ".*" (Default).
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*"
 
 # Accepts only type/coding/sytem with the exact value 'http://terminology.hl7.org/CodeSystem/v2-0203'
 # this system is the binded system for the clinical information system patient ID.
 # FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
-# alternative variant to accept every value in 'type/coding/system':
-FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
+# Alternative variant to accept any value in 'type/coding/system' with pattern ".*" (Default).
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*"
 
 # Accepts only type/coding/code with the exact value 'MR'. This value means
 # 'medical record number' in the system http://terminology.hl7.org/CodeSystem/v2-0203
-# and is the recommended code for the patient ID in the hospital (if the variable
-# is commented out then every value will be accepted). To match the start and end of the exact
-# value, use caret (^) and dollar ($) symbols.
-#FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+# and is the recommended code for the patient ID in the hospital.
+# For example: FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+# To match the start and end of the exact value, use caret (^) and dollar ($) symbols.
+# Accept any type/coding/code with pattern ".*" (Default).
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
 # in the frontend. This match must be exact, i.e. no patterns may be specified here.
