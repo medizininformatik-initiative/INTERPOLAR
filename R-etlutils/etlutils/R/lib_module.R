@@ -6,7 +6,7 @@
 #'
 #' @param module_name A character string specifying the name of the module.
 #' @param path_to_toml (Optional) A character string specifying the path to the TOML configuration file. Default is `NA`.
-#' @param hide_value_pattern (Optional) A character string pattern used to hide certain values in the logged configuration output. Default is `NA`.
+#' @param hide_value_pattern (Optional) A character string pattern used to hide certain values in the logged configuration output. Default is `""`.
 #'
 #' @details
 #' - Initializes module-specific constants using `etlutils::initModuleConstants()`.
@@ -19,7 +19,7 @@
 #'
 #'
 #' @export
-startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = NA) {
+startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "") {
   # Init module constants
   config <- etlutils::initModuleConstants(
     module_name = module_name,
