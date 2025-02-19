@@ -1,8 +1,12 @@
 -- ###################### PARAMETER ############################
 -- >>>> WICHTIG Standort / Zeitabhängig <<<<
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-values ('release_version','2.5','GitHup release version');
+values ('release_version','2.9','GitHup release version');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='release_version';
+
+insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+values ('release_version_date','2025-02-14','GitHup release version');
+--update db_config.db_parameter set parameter_value='YYYY-MM-DD' where parameter_name='release_version_date';
 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
 values ('project_participants','IMISE Leipzig','project participants to distinguish between different instances');
@@ -22,5 +26,5 @@ values ('data_import_hist_every_dataset','no','Documentation of each individual 
 --update db_config.db_parameter set parameter_value='?' where parameter_name='data_import_hist_every_dataset';
 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-values ('max_process_time_set_ready','60','Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]');
+values ('max_process_time_set_ready','120','Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='max_process_time_set_ready';

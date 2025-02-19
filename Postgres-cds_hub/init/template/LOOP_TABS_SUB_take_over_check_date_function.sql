@@ -5,17 +5,25 @@
     err_section:='<%TABLE_NAME_2%>-01';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
     data_count_update:=0;
 
+    SELECT MAX(last_processing_nr) INTO max_ent_pro_nr FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>;
+
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', '' vor Loop max_ent_pro_nr:'||max_ent_pro_nr||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+
     -- If new dataimports in raw then set process nr of checking
     FOR current_record IN (
-    SELECT <%TABLE_NAME%>_id AS id, last_check_datetime AS lcd, current_dataset_status AS cds
-    FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE last_processing_nr IN
-        (SELECT last_processing_nr FROM <%SCHEMA_2%>.<%TABLE_NAME%> WHERE <%TABLE_NAME%>_id IN 
-            (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=(SELECT MAX(last_processing_nr) FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
-            )
-         )
-    AND (last_processing_nr!=(SELECT MAX(last_processing_nr) FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>) -- if not yet compared and brought to the same level
-	 OR last_processing_nr=max_last_pro_nr -- Same processing number as in another entity that was imported (again) at the same time
-        )
+        SELECT er.<%TABLE_NAME%>_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM <%SCHEMA_2%>.<%TABLE_NAME%> er
+        JOIN <%SCHEMA_2%>.<%TABLE_NAME_2%> e ON er.<%TABLE_NAME%>_id = e.<%TABLE_NAME%>_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_ent_pro_nr
+        UNION ALL
+        SELECT er.<%TABLE_NAME%>_id AS id, er.last_check_datetime AS lcd, er.current_dataset_status AS cds
+        FROM <%SCHEMA_2%>.<%TABLE_NAME%> er
+        JOIN <%SCHEMA_2%>.<%TABLE_NAME_2%> e ON er.<%TABLE_NAME%>_id = e.<%TABLE_NAME%>_id
+        WHERE e.last_processing_nr=max_ent_pro_nr
+        AND er.last_processing_nr<>max_last_pro_nr
     )
         LOOP
             BEGIN
@@ -63,14 +71,18 @@
             END IF;
     END LOOP;
 
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', '' nach Loop max_ent_pro_nr:'||max_ent_pro_nr||''' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
+
     IF data_import_hist_every_dataset=1 THEN -- documentenion is switcht on
-        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT <%TABLE_NAME%>_id AS table_primary_key, last_processing_nr, '<%OWNER_SCHEMA%>' AS schema_name, '<%TABLE_NAME%>' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>
-        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
+        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist);
     
-        INSERT INTO db_log.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
+        INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
         ( SELECT <%TABLE_NAME_2%>_id AS table_primary_key, last_processing_nr, '<%SCHEMA_2%>' AS schema_name, '<%TABLE_NAME_2%>' AS table_name, last_pro_datetime, current_dataset_status, 'take_over_last_check_date' FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>
-        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db_log.data_import_hist);
+        EXCEPT SELECT table_primary_key, last_processing_nr,schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist);
     END IF;
     -- END <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>  --------  <%TABLE_NAME_2%>
     -----------------------------------------------------------------------------------------------------------------------

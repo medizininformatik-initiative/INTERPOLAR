@@ -14,20 +14,8 @@ rm(list = ls())
 library(etlutils)
 library(cds2db)
 
+cds2db::retrieve()
 
-# Set path for Debug config toml files
-DEBUG_PATHS_TO_CONFIG_TOMLS <- c("./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"#,
-                                 #"./debug_config_toml/debug_cds2db_config_2.toml",
-                                 #"./debug_config_toml/debug_cds2db_config_3.toml"
-                                 )
-
-if (exists("DEBUG_PATHS_TO_CONFIG_TOMLS") && length(DEBUG_PATHS_TO_CONFIG_TOMLS) > 0) {
-  for (debug_config_toml in DEBUG_PATHS_TO_CONFIG_TOMLS) {
-    cds2db::retrieve(debug_config_toml)
-  }
-} else {
-  cds2db::retrieve()
-}
 
 #' #'
 #' #' Loads all tables from subdirectory 'tables' of the last directory
