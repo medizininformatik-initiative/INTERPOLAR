@@ -5,28 +5,10 @@
 #' @export
 retrieve <- function() {
 
-  ###
-  # Init module constants
-  ###
-  config <- etlutils::initModuleConstants(
-    module_name = "db2frontend",
-    path_to_toml = "./R-db2frontend/db2frontend_config.toml"
-  )
-
-  etlutils::createDIRS(PROJECT_NAME)
-
-  ###
-  # Create globally used process_clock
-  ###
-  etlutils::createClock()
-
-  ###
-  # log all console outputs and save them at the end
-  ###
-  etlutils::startLogging(PROJECT_NAME)
-
-  # log all configuration parameters but hide value with parameter name starts with "REDCAP_"
-  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^REDCAP_")
+  # Initialize and start module
+  etlutils::startModule("db2frontend",
+                        path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+                        hide_value_pattern = "^REDCAP_")
 
   try(etlutils::runLevel1("Run Retrieve", {
 
@@ -53,12 +35,8 @@ retrieve <- function() {
     })
   }))
 
-  if (etlutils::isErrorOccured()) {
-    finish_message <- "Module 'DB2Frontend' finished with errors (see details above).\n"
-    finish_message <- paste0(finish_message, etlutils::getErrorMessage())
-  } else {
-    finish_message <- "Module 'DB2Frontend' finished with no errors.\n"
-  }
+  # Generate finish message
+  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
 
   etlutils::finalize(finish_message)
 
