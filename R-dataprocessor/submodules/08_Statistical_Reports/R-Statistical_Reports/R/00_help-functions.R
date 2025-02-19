@@ -17,7 +17,7 @@
 #' @importFrom dplyr group_by slice_max ungroup
 #'
 #' @export
-select_newest_input <- function(data, grouping_vars) {
+selectNewestInput <- function(data, grouping_vars) {
   data_current <- data |>
     dplyr::group_by(across(all_of(grouping_vars))) |>
     dplyr::slice_max(input_datetime) |>
@@ -46,7 +46,7 @@ select_newest_input <- function(data, grouping_vars) {
 #' @importFrom dplyr group_by add_count filter ungroup
 #'
 #' @export
-check_multiple_rows <- function(data, grouping_vars) {
+checkMultipleRows <- function(data, grouping_vars) {
   data_check_multiple_row <- data |>
     dplyr::group_by(across(all_of(grouping_vars))) |>
     dplyr::add_count() |>

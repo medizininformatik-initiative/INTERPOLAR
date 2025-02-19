@@ -16,21 +16,21 @@
 #' @details
 #' The function performs the following steps:
 #' 1. Checks if `LOCATION_IDENTIFIER` is defined. If not, the function stops with an error message.
-#' 2. Fetches patient data from the database using `get_patient_data()`.
-#' 3. Fetches encounter data from the database using `get_encounter_data()`.
-#' 4. Fetches data related to patients per ward using `get_pids_per_ward_data()`.
-#' 5. Merges the patient, encounter, and ward data using `merge_pat_enc_ward()` and calculates patient age
-#'    using `calculate_age()`.
-#' 6. Defines the FAS1 dataset by filtering and processing the merged data using `define_FAS1()`,
+#' 2. Fetches patient data from the database using `getPatientData()`.
+#' 3. Fetches encounter data from the database using `getEncounterData()`.
+#' 4. Fetches data related to patients per ward using `getPidsPerWardData()`.
+#' 5. Merges the patient, encounter, and ward data using `mergePatEncWard()` and calculates patient age
+#'    using `calculateAge()`.
+#' 6. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
 #'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
 #' 7. Prints the resulting datasets (`complete_table` and `FAS1`) for verification.
 #' 8. Prints the reporting period and the number of cases in the FAS1 dataset.
 #'
-#' @seealso [get_patient_data()], [get_encounter_data()], [get_pids_per_ward_data()],
-#'   [merge_pat_enc_ward()], [calculate_age()], [define_FAS1()]
+#' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
+#'   [mergePatEncWard()], [calculateAge()], [defineFAS1()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
-                                    REPORT_PERIOD_END = "2020-05-08") {
+                                    REPORT_PERIOD_END = "2020-09-02") {
 
   # TODO: include the start and end date in an interactive way ----------
 
@@ -39,22 +39,22 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
     stop("LOCATION_IDENTIFIER is not defined. Please define it in the dataprocessor_config.toml")
   }
 
-  patient_table <- get_patient_data(lock_id = "statistical reports[1]",
+  patient_table <- getPatientData(lock_id = "statistical reports[1]",
                                     table_name = "v_patient")
 
-  encounter_table <- get_encounter_data(lock_id = "statistical reports[2]",
+  encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
                                         table_name = "v_encounter")
 
-  pids_per_ward_table <- get_pids_per_ward_data(lock_id = "statistical reports[3]",
+  pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
                                                 table_name = "v_pids_per_ward")
 
-  complete_table <- merge_pat_enc_ward(patient_table, encounter_table, pids_per_ward_table) |>
-    calculate_age()
+  complete_table <- mergePatEncWard(patient_table, encounter_table, pids_per_ward_table) |>
+    calculateAge()
 
   # DEBUG: for test reasons the start and end dates for abteilungskontakt -----------
   #        instead of versorgungsstellenkontakt are used
 
-  FAS1 <- define_FAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
+  FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
 
   # Print the patient, encounter, and FAS1 datasets for verification
   print(complete_table)

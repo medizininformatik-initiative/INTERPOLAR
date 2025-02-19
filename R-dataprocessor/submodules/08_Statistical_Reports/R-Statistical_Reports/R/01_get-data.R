@@ -24,7 +24,7 @@
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
-get_patient_data <- function(lock_id, table_name) {
+getPatientData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT pat_id, pat_birthdate FROM ", table_name, "\n")
 
@@ -32,7 +32,7 @@ get_patient_data <- function(lock_id, table_name) {
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
 
-  if (check_multiple_rows(patient_table, c("pat_id"))) {
+  if (checkMultipleRows(patient_table, c("pat_id"))) {
     warning("The patient table contains multiple birth dates for the same patient. Please check the data.")
   }
 
@@ -77,7 +77,7 @@ get_patient_data <- function(lock_id, table_name) {
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
-get_encounter_data <- function(lock_id, table_name) {
+getEncounterData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT enc_id, enc_patient_ref, enc_partof_ref, enc_class_code, enc_type_code, ",
                   "enc_period_start, enc_period_end, enc_status, enc_servicetype_display, ",
@@ -119,14 +119,14 @@ get_encounter_data <- function(lock_id, table_name) {
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
-get_pids_per_ward_data <- function(lock_id, table_name) {
+getPidsPerWardData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT ward_name, patient_id, encounter_id, input_datetime ",
                   "FROM ", table_name, "\n")
 
   pid_per_ward_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
-    select_newest_input(grouping_vars=c("patient_id", "encounter_id", "ward_name")) |>
+    selectNewestInput(grouping_vars=c("patient_id", "encounter_id", "ward_name")) |>
     dplyr::arrange(patient_id, encounter_id, input_datetime)
 
   return(pid_per_ward_table)

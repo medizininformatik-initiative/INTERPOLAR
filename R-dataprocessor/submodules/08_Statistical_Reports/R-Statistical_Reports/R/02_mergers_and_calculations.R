@@ -19,7 +19,7 @@
 #'
 #' @importFrom dplyr mutate left_join
 #' @export
-merge_pat_enc_ward <- function(patient_table, encounter_table, pids_per_ward_table) {
+mergePatEncWard <- function(patient_table, encounter_table, pids_per_ward_table) {
 
   merged_table <- encounter_table |>
     dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref)) |>
@@ -54,7 +54,7 @@ merge_pat_enc_ward <- function(patient_table, encounter_table, pids_per_ward_tab
 #'
 #' @importFrom dplyr mutate
 #' @export
-calculate_age <- function(merged_table) {
+calculateAge <- function(merged_table) {
 
   merged_table_with_calc <- merged_table |>
     dplyr::mutate(age = floor(as.numeric(difftime(as.Date(enc_period_start), pat_birthdate)) / 365.25))

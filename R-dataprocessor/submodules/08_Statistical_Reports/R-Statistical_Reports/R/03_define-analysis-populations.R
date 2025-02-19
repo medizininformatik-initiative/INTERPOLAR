@@ -34,7 +34,7 @@
 #'
 #' @importFrom dplyr filter distinct arrange pull
 #' @export
-define_FAS1 <- function(complete_table, REPORT_PERIOD_START, REPORT_PERIOD_END) {
+defineFAS1 <- function(complete_table, REPORT_PERIOD_START, REPORT_PERIOD_END) {
 
   inpatient_encounters <- complete_table |>
     dplyr::filter(enc_type_code == "einrichtungskontakt" & enc_class_code == "IMP") |>
@@ -57,7 +57,7 @@ define_FAS1 <- function(complete_table, REPORT_PERIOD_START, REPORT_PERIOD_END) 
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, input_datetime_encounter)
 
   # Check if there are multiple rows for the same (ward) encounter in the FAS1 dataset
-  if (check_multiple_rows(FAS1, c("enc_id"))) {
+  if (checkMultipleRows(FAS1, c("enc_id"))) {
     warning("There are multiple rows for the same encounter. Please check the data.")
   }
 
