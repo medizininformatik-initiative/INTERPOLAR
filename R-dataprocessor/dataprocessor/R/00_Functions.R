@@ -1,6 +1,125 @@
 # Environment for saving resource data from DB
 .resource_env <- new.env()
 
+#' Compute SHA-256 hash of a processed file
+#'
+#' Reads a file, applies a given processing function to extract relevant content,
+#' and computes a SHA-256 hash of the processed content.
+#'
+#' @param file_path A string specifying the path to the file.
+#' @param processing_fn A function that processes the file and extracts the relevant content.
+#'
+#' @return A string containing the SHA-256 hash of the processed content.
+#' @importFrom digest digest
+#'
+computeFileHash <- function(file_path, processing_fn) {
+  processed_content <- processing_fn(file_path)
+  content_hash <- digest::digest(processed_content, algo = "sha256")
+  return(content_hash)
+}
+
+#' Load existing file hashes from a PostgreSQL database
+#'
+#' Queries a PostgreSQL database to retrieve the stored file hashes, which
+#' are used to detect changes in file content across runs.
+#'
+#' @param db_conn A valid database connection object (from `DBI::dbConnect`).
+#' @param table_name A string specifying the name of the table storing file hashes.
+#'
+#' @return A data frame with columns `file_name` (file identifier) and `content_hash` (SHA-256 hash).
+#'
+loadExistingHashes <- function() {
+  # Construct the SQL query to retrieve existing file hashes
+  query <- paste("SELECT file_name, content_hash FROM input_data_file_info")
+
+  # Execute the query and fetch the results
+  #existing_hashes <- etlutils::dbGetReadOnlyQuery(query, lock_id = "loadExistingHashes()")
+  etlutils::readRData("input_data_file_info", load_from_last_run = TRUE)
+
+  return(existing_hashes)
+}
+
+#' Compare file hashes and detect changes
+#'
+#' Compares the computed hashes of files against stored database hashes to determine
+#' which files have changed or are new.
+#'
+#' @param files A character vector containing file paths.
+#' @param db_hashes A data frame with columns `file_name` and `content_hash`,
+#'   representing stored hashes from the database.
+#' @param processing_fn A function that processes a file and extracts its relevant content.
+#'
+#' @return A list where each element corresponds to a file that has changed or is new.
+#'   Each entry contains `file_name` and `content_hash`.
+#'
+compareAndDetectChanges <- function(files, db_hashes, processing_fn) {
+  files_to_process <- list()
+
+  for (file in files) {
+    file_name <- basename(file)
+    content_hash <- computeFileHash(file, processing_fn)
+    existing_hash <- db_hashes$content_hash[db_hashes$file_name == file_name]
+
+    if (length(existing_hash) == 0 || existing_hash != content_hash) {
+      files_to_process[[file]] <- list(file_name = file_name, content_hash = content_hash)
+    }
+  }
+
+  return(files_to_process)
+}
+
+#' Store updated file hashes in a PostgreSQL database
+#'
+#' Saves or updates the file hashes in a specified PostgreSQL table.
+#' Only stores hashes for files that have changed or are new.
+#'
+#' @param files_to_process A list where each element contains `file_name` and `content_hash`
+#'   for files that have changed or are new.
+#'
+#' @importFrom DBI dbWriteTable
+#' @export
+storeHashesInDb <- function(files_to_process) {
+  if (length(files_to_process) == 0) return()
+
+  input_data_file_info <- do.call(rbind, lapply(files_to_process, function(x) {
+    data.frame(file_name = x$file_name, content_hash = x$content_hash)
+  }))
+
+  #etlutils::dbWriteTable(input_data_file_info, lock_id = "storeHashesInDb()")
+  etlutils::writeRData(input_data_file_info)
+
+}
+
+#' Process files and determine which need to be updated
+#'
+#' Searches for files with a given prefix in specified directories,
+#' computes their hashes after applying a processing function, and
+#' compares them to stored database hashes to detect changes.
+#' If changes are detected, the new hashes are stored in the database.
+#'
+#' @param prefix A string specifying the prefix that the files must start with.
+#' @param directories A character vector specifying the directories to search in.
+#' @param db_conn A valid database connection object (from `DBI::dbConnect`).
+#' @param table_name A string specifying the name of the table storing file hashes.
+#' @param processing_fn A function that processes a file and extracts its relevant content.
+#' @param extension A string specifying the file extension (e.g., `"xlsx"`, `"csv"`).
+#' Can be `NA` or `""` to disable extension filtering.
+#' @param recursive Logical, indicating whether to search directories recursively.
+#' Default is `FALSE`.
+#'
+#' @return A list containing files that have changed or are new.
+#' @export
+processFiles <- function(prefix, directories, db_conn, table_name, processing_fn, extension = NA, recursive = FALSE) {
+  files <- getFilesByPrefix(prefix, directories, extension, recursive)
+  if (length(files) == 0) return(list())
+
+  existing_hashes <- loadExistingHashes(db_conn, table_name)
+  files_to_process <- compareAndDetectChanges(files, existing_hashes, processing_fn)
+  storeHashesInDb(db_conn, table_name, files_to_process)
+
+  return(files_to_process)
+}
+
 #' Load and Process an MRP Table
 #'
 #' This function loads a specified MRP (Medication-Related Problem) table from an Excel file
@@ -23,28 +142,33 @@
 #'
 #' @examples
 #' # Load the Drug-Disease MRP table
-#' drug_disease_mrp_table <- loadMRPTable("Drug-Disease")
+#' drug_disease_mrp_table <- loadMRPTables("Drug-Disease")
 #'
 #' # Load another MRP table, e.g., Drug-Interaction
-#' drug_interaction_mrp_table <- loadMRPTable("Drug-Interaction")
+#' drug_interaction_mrp_table <- loadMRPTables("Drug-Interaction")
 #'
-loadMRPTable <- function(table_name, path_to_mrp_tables = "./Input-Repo") {
-  # Path to expanded MRP table
-  path_to_expanded_mrp_table <- file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table_Expanded.RData"))
+loadMRPTables <- function(table_name, paths_to_mrp_tables = "./Input-Repo") {
 
-  # Load MRP Definition
-  mrp_definition <- etlutils::readFirstExcelFileAsTableList(path_to_mrp_tables, table_name)
+  mrp_tables <- list()
+  for (path in paths_to_mrp_tables) {
+    # Path to expanded MRP table
+    path_to_expanded_mrp_table <- file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table_Expanded.RData"))
 
-  # Check if the RDS file exists and load it, otherwise preprocess the data
-  if (file.exists(path_to_expanded_mrp_table)) {
-    mrp_table <- readRDS(path_to_expanded_mrp_table)
-  } else {
-    message("Preprocessing ", table_name, " table...")
-    preprocess_function <- get(paste0("cleanAndExpandDefinition", gsub("-", "", table_name)), mode = "function", inherits = TRUE)
-    mrp_table <- preprocess_function(mrp_definition[[paste0(table_name, "-Pairs")]])
+    # Load MRP Definition
+    mrp_definition <- etlutils::readFirstExcelFileAsTableList(path_to_mrp_tables, table_name)
+
+    # Check if the RDS file exists and load it, otherwise preprocess the data
+    if (file.exists(path_to_expanded_mrp_table)) {
+      mrp_table <- readRDS(path_to_expanded_mrp_table)
+    } else {
+      message("Preprocessing ", table_name, " table...")
+      preprocess_function <- get(paste0("cleanAndExpandDefinition", gsub("-", "", table_name)), mode = "function", inherits = TRUE)
+      mrp_table <- preprocess_function(mrp_definition[[paste0(table_name, "-Pairs")]])
+    }
+    mrp_tables[[mrp_definition]] <- mrp_tables
   }
 
-  return(mrp_table)
+  return(mrp_tables)
 }
 
 #' Calculates the valid observation datetime based on the maximum LOINC validity period.
@@ -276,4 +400,71 @@ setQueryDatetime <- function() {
 #'
 getQueryDatetime <- function() {
   get("query_datetime", envir = .resource_env)
+}
+
+#' Create an Empty Data Table Based on a Database Mapping
+#'
+#' This function generates an empty `data.table` with the correct column names and R data types,
+#' based on a database schema mapping provided in `mapping_table`. The function automatically
+#' assigns the generated table to the global environment.
+#'
+#' @param mapping_table A `data.table` or `data.frame` containing the database schema mapping.
+#' It must have the following columns:
+#'   - `TABLE_NAME` (character): The name of the table (should contain only one unique value).
+#'   - `COLUMN_NAME` (character): The names of the columns.
+#'   - `COLUMN_TYPE` (character): The corresponding database column types (e.g., "int", "varchar").
+#'
+#' @return A `data.table` with the correct column names and R data types. Each column is initialized
+#' with `NA` values of the appropriate R type.
+#'
+#' @details
+#' - The function ensures that `TABLE_NAME` contains only a single unique value.
+#' - It retrieves the appropriate R data type using `etlutils::dbGetRType()`, which converts
+#'   database types to their corresponding R types.
+#' - The resulting table is created as a `data.table` and is automatically assigned to the global environment
+#'   using the extracted `TABLE_NAME` as its variable name.
+#'
+#' @examples
+#' \dontrun{
+#' # Example database mapping table
+#' mapping_table <- data.table::data.table(
+#'   TABLE_NAME = rep("my_table", 3),
+#'   COLUMN_NAME = c("id", "name", "created_at"),
+#'   COLUMN_TYPE = c("int", "varchar", "timestamp")
+#' )
+#'
+#' # Create the empty table
+#' result <- createEmptyTable(mapping_table)
+#' print(result)
+#' }
+#'
+createEmptyTable <- function(mapping_table) {
+  # Extract the desired table name from TABLE_NAME
+  table_name <- unique(mapping_table$TABLE_NAME)
+
+  # Ensure that TABLE_NAME contains only a single unique value
+  if (length(table_name) != 1) {
+    stop("The TABLE_NAME column should contain only one unique value!")
+  }
+
+  # Extract column names from COLUMN_NAME
+  column_names <- mapping_table$COLUMN_NAME
+
+  # Initialize columns with correct data types
+  columns <- setNames(vector("list", length(column_names)), column_names)
+
+  for (i in seq_along(column_names)) {
+    col_type <- mapping_table$COLUMN_TYPE[i]
+
+    # Use dbGetRType() to get the correct NA value of the corresponding R type
+    columns[[i]] <- etlutils::dbGetRType(col_type)
+  }
+
+  # Convert to a data.table with one row (all values NA but correct types)
+  result_table <- data.table::as.data.table(columns)
+
+  # Assign the table to the global environment with the correct table name
+  assign(table_name, result_table, envir = .GlobalEnv)
+
+  return(result_table)
 }

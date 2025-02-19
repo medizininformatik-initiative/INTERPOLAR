@@ -1174,3 +1174,76 @@ dbGetInfo <- function(readonly = TRUE) {
   db_connection <- dbGetConnection(readonly)
   return(dbGetInfoInternal(db_connection))
 }
+
+#' Get Corresponding R Data Type for a Given Database Type
+#'
+#' This function returns the corresponding R data type (as an NA value with the correct class)
+#' for a given database type, based on a mapping stored in `.lib_db_env$DB_R_TYPES_MAPPING`.
+#' The mapping is parsed only once and cached in `.lib_db_env` as `DB_R_TYPES_MAPPING_PARSED_LIST`.
+#'
+#' @param db_type A character string representing the database type (e.g., "varchar", "int").
+#'
+#' @return An R object initialized with NA of the corresponding type (e.g., `as.character(NA)`, `as.integer(NA)`).
+#' If no matching R type is found, an error is raised.
+#'
+#' @details
+#' The mapping is expected to be a character vector stored in `.lib_db_env$DB_R_TYPES_MAPPING`
+#' with each element formatted like: "character = 'varchar'". This function splits each element
+#' and builds a named vector where names are the database types and values are NA values of the corresponding R types.
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose .lib_db_env$DB_R_TYPES_MAPPING is defined as:
+#' # c("character = 'varchar'", "integer = 'int'", "numeric = 'double precision'",
+#' #   "POSIXct = 'timestamp'", "Date = 'date'", "logical = 'boolean'")
+#' dbGetRType("varchar")    # Should return as.character(NA)
+#' dbGetRType("int")        # Should return as.integer(NA)
+#' }
+#'
+#' @export
+dbGetRType <- function(db_type) {
+  # If the parsed mapping does not exist, create it from .lib_db_env$DB_R_TYPES_MAPPING
+  if (!exists("DB_R_TYPES_MAPPING_PARSED_LIST", envir = .lib_db_env)) {
+    if (!exists("DB_R_TYPES_MAPPING", envir = .lib_db_env)) {
+      stop("Mapping not found: .lib_db_env$DB_R_TYPES_MAPPING does not exist.")
+    }
+
+    # Split each string by " = " to separate the key (R type) and the value (database type)
+    split_list <- strsplit(.lib_db_env$DB_R_TYPES_MAPPING, " = ")
+
+    # Create a named vector using a for-loop.
+    mapping_vector <- c()
+    for (i in seq_along(split_list)) {
+      parts <- split_list[[i]]
+      r_type <- switch(tolower(trimws(parts[1])),
+                       "integer" = as.integer(NA),
+                       "character" = as.character(NA),
+                       "numeric" = as.numeric(NA),
+                       "logical" = as.logical(NA),
+                       "date" = as.Date(NA),
+                       "posixct" = as.POSIXct(NA, tz = GLOBAL_TIMEZONE),
+                       stop("Unknown R type '", parts[1], "' defined in DB_R_TYPES_MAPPING_PARSED_LIST in file cds_hub_db_config.toml") # Error for unknown types
+      )
+      db_type_key <- gsub("'", "", trimws(parts[2]))
+      mapping_vector[[db_type_key]] <- r_type
+    }
+
+    # Cache the parsed mapping in the environment.
+    assign("DB_R_TYPES_MAPPING_PARSED_LIST", mapping_vector, envir = .lib_db_env)
+  } else {
+    mapping_vector <- get("DB_R_TYPES_MAPPING_PARSED_LIST", envir = .lib_db_env)
+  }
+
+  # Default to character if db_type is empty or NA.
+  if (is.na(db_type) || nchar(trimws(db_type)) == 0) {
+    return(as.character(NA))
+  }
+
+  # Directly return the R type (NA with correct class) based on db_type.
+  if (db_type %in% names(mapping_vector)) {
+    return(mapping_vector[[db_type]])
+  }
+
+  stop(paste("No matching R type found for db type:", db_type))
+}
+
