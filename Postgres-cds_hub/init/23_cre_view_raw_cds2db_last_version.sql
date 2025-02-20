@@ -3,17 +3,17 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-20 23:08:28
--- Rights definition file size        : 15611 Byte
+-- Rights definition file last update : 2025-02-21 00:14:46
+-- Rights definition file size        : 15644 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-02-20 23:16:43
+-- Create time: 2025-02-21 00:27:36
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  23_cre_view_raw_cds2db_last_version.sql
 -- TEMPLATE:  template_cre_view5.sql
 -- OWNER_USER:  cds2db_user
 -- OWNER_SCHEMA:  cds2db_out
--- TAGS:  
+-- TAGS:  RAW
 -- TABLE_PREFIX:  v_
 -- TABLE_POSTFIX:  _raw_last_version
 -- RIGHTS:  SELECT
@@ -146,4 +146,8 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 GRANT SELECT ON TABLE cds2db_out.v_location_raw_last_version TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
+
+GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward_raw_last_version TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
+
 
