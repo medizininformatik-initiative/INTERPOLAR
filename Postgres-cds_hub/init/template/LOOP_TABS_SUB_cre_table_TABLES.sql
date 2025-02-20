@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
-             <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
+             <%LOOP_COLS "COALESCE(db.to_char_immutable(<%COLUMN_NAME%>), '#NULL#') || '|||' || -- hash from: <%COLUMN_DESCRIPTION%> (<%COLUMN_NAME%>)"%>
              '#'
       )
   ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col

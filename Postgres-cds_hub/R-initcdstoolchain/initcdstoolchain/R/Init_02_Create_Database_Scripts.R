@@ -47,6 +47,15 @@ getCommonPrefix <- function(strings) {
   return(NA_character_)
 }
 
+extractBetweenQuotes <- function(string) {
+  match <- regmatches(string, regexpr('"([^"]*)"', string))
+  if (length(match) > 0) {
+    return(sub('"', '', sub('"$', '', match)))
+  } else {
+    return(NA_character_)
+  }
+}
+
 #' Replace and remove specific placeholders from a text
 #'
 #' This function replaces and removes lines containing only the specific placeholder surrounded
@@ -292,7 +301,7 @@ parseIFExpression <- function(expression) {
   if (length(matches[[1]]) != 5 || is.na(matches[[1]][1])) {
     stop(paste0("Can not parse expression '", expression, "'"))
   }
-  return(list(field = matches[[1]][3], invert = trimws(toupper(matches[[1]][2])) == "NOT", pattern = etlutils::getBetweenQuotes(matches[[1]][4]), result = matches[[1]][5]))
+  return(list(field = matches[[1]][3], invert = trimws(toupper(matches[[1]][2])) == "NOT", pattern = extractBetweenQuotes(matches[[1]][4]), result = matches[[1]][5]))
 }
 
 convertTemplate <- function(tables_descriptions,
@@ -334,7 +343,13 @@ convertTemplate <- function(tables_descriptions,
       tables_content <- gsub("\n$", "", tables_content)
       content <- replace(placeholder, tables_content, content)
 
-    } else if (startsWith(placeholder, "<%LOOP_COLS_")) {
+    } else if (startsWith(placeholder, "<%LOOP_COLS")) {
+      loop_template_content <- extractBetweenQuotes(placeholder) # try to find the loop content in quotes in the placeholder
+      if (is.na(loop_template_content)) { # no loop content found direct in the placeholder
+        template_name <- placeholder # the placeholder is the name of the template sql file
+      } else if (!endsWith(loop_template_content, "\n")) {
+        loop_template_content <- paste0(loop_template_content, "\n")
+      }
       single_table_description <- tables_descriptions[[table_name]]
       columns_content <- ""
       indentation <- etlutils::getWordIndentation(content, placeholder)
@@ -342,7 +357,8 @@ convertTemplate <- function(tables_descriptions,
         column_row <- single_table_description[row]
         single_column_content <- convertTemplate(tables_descriptions,
                                                  script_rights_definition,
-                                                 template_name = placeholder,
+                                                 template_name = template_name,
+                                                 template_content = loop_template_content,
                                                  table_name = table_name,
                                                  column_prefix = column_prefix,
                                                  recursion = recursion + 1)
@@ -351,7 +367,7 @@ convertTemplate <- function(tables_descriptions,
           # parse the columns value separator. this is a special tag which defines the separator
           # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
           if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
-            replace = if (row == nrow(single_table_description)) "" else etlutils::getBetweenQuotes(sub_placeholder)
+            replace = if (row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
             single_column_content <- replace(sub_placeholder, replace, single_column_content)
           } else {
             sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
