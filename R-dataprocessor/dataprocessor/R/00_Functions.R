@@ -132,7 +132,7 @@ processFiles <- function(prefix, directories, db_conn, table_name, processing_fn
 #' If the RDS file does not exist, it reads the table from an Excel file and preprocesses it
 #' using a dynamically determined function (`cleanAndExpandDefinition_<table_name>`).
 #'
-loadMRPTables <- function(table_name, paths_to_mrp_tables = "./Input-Repo") {
+loadMRPTables <- function(table_name, paths_to_mrp_tables = "") {
 
   mrp_tables <- list()
   for (path in paths_to_mrp_tables) {
