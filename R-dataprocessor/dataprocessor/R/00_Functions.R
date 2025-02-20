@@ -22,15 +22,17 @@ computeFileHash <- function(file_path, processing_fn) {
 #' Queries a PostgreSQL database to retrieve the stored file hashes, which
 #' are used to detect changes in file content across runs.
 #'
+#' @param file_name A string specifying the name of the table storing file hashes.
+#'
 #' @return A data frame with columns `file_name` (file identifier) and `content_hash` (SHA-256 hash).
 #'
-loadExistingHashes <- function() {
+loadExistingHashes <- function(file_name) {
   # Construct the SQL query to retrieve existing file hashes
-  query <- paste("SELECT file_name, content_hash FROM input_data_file_info")
+  query <- paste("SELECT", file_name, "content_hash FROM input_data_file_info")
 
   # Execute the query and fetch the results
   #existing_hashes <- etlutils::dbGetReadOnlyQuery(query, lock_id = "loadExistingHashes()")
-  etlutils::readRData("input_data_file_info", load_from_last_run = TRUE)
+  existing_hashes <- etlutils::readRData("input_data_file_info", load_from_last_run = TRUE)
 
   return(existing_hashes)
 }
@@ -107,9 +109,9 @@ processFiles <- function(prefix, directories, db_conn, table_name, processing_fn
   files <- getFilesByPrefix(prefix, directories, extension, recursive)
   if (length(files) == 0) return(list())
 
-  existing_hashes <- loadExistingHashes(db_conn, table_name)
+  existing_hashes <- loadExistingHashes(table_name)
   files_to_process <- compareAndDetectChanges(files, existing_hashes, processing_fn)
-  storeHashesInDb(db_conn, table_name, files_to_process)
+  storeHashesInDb(files_to_process)
 
   return(files_to_process)
 }
