@@ -228,6 +228,10 @@ getFullTableName <- function(tablename, script_rights_definition, name_index = 1
   paste0(tablename_prefix, tablename, tablename_postfix)
 }
 
+replace <- function(original, replacement, string) {
+  gsub(original, replacement, string, fixed = TRUE)
+}
+
 #####################################
 # Crate Generated SQL Script Header #
 #####################################
@@ -328,7 +332,7 @@ convertTemplate <- function(tables_descriptions,
         tables_content <- paste0(tables_content, single_table_content)
       }
       tables_content <- gsub("\n$", "", tables_content)
-      content <- gsub(placeholder, tables_content, content)
+      content <- replace(placeholder, tables_content, content)
 
     } else if (startsWith(placeholder, "<%LOOP_COLS_")) {
       single_table_description <- tables_descriptions[[table_name]]
@@ -348,11 +352,11 @@ convertTemplate <- function(tables_descriptions,
           # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
           if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
             replace = if (row == nrow(single_table_description)) "" else etlutils::getBetweenQuotes(sub_placeholder)
-            single_column_content <- gsub(sub_placeholder, replace, single_column_content)
+            single_column_content <- replace(sub_placeholder, replace, single_column_content)
           } else {
             sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
             if (sub_placeholder_name %in% names(column_row)) {
-              single_column_content <- gsub(sub_placeholder, column_row[[sub_placeholder_name]], single_column_content)
+              single_column_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_column_content)
             }
           }
         }
@@ -362,7 +366,7 @@ convertTemplate <- function(tables_descriptions,
         columns_content <- paste0(columns_content, indent, single_column_content)
       }
       columns_content <- gsub("\n$", "", columns_content)
-      content <- gsub(placeholder, columns_content, content)
+      content <- replace(placeholder, columns_content, content)
 
     } else if (startsWith(placeholder, "<%LOOP_DEF_")) {
       rights_content <- ""
@@ -376,7 +380,7 @@ convertTemplate <- function(tables_descriptions,
             value <- rights_row[[sub_placeholder_name]]
             # missing values in the current rigths row are replaced by the value in the first row
             if (is.na(value)) value <- rights_first_row[[sub_placeholder_name]]
-            sub_content <- gsub(sub_placeholder, value, sub_content)
+            sub_content <- replace(sub_placeholder, value, sub_content)
           }
         }
         sub_content <- convertTemplate(tables_descriptions,
@@ -388,7 +392,7 @@ convertTemplate <- function(tables_descriptions,
         rights_content <- paste0(rights_content, sub_content)
       }
       rights_content <- gsub("\n$", "", rights_content)
-      content <- gsub(placeholder, rights_content, content)
+      content <- replace(placeholder, rights_content, content)
 
     } else if (startsWith(placeholder, "<%TABLE_NAME")) {
       placeholder_name <- extractPlaceholderName(placeholder)
@@ -399,13 +403,13 @@ convertTemplate <- function(tables_descriptions,
         name_index <- 1
       }
       full_table_name <- getFullTableName(table_name, rights_first_row, name_index)
-      content <- gsub(placeholder, full_table_name, content)
+      content <- replace(placeholder, full_table_name, content)
 
     } else if (placeholder == "<%SIMPLE_TABLE_NAME%>") {
-      content <- gsub(placeholder, table_name, content)
+      content <- replace(placeholder, table_name, content)
 
     } else if (placeholder == "<%COLUMN_PREFIX%>") {
-      content <- gsub(placeholder, column_prefix, content)
+      content <- replace(placeholder, column_prefix, content)
 
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
@@ -436,7 +440,7 @@ convertTemplate <- function(tables_descriptions,
                                              recursion = recursion + 1)
         condition_content <- gsub("^\"|\"$", "", condition_content)
         condition_content <- gsub("\n$", "", condition_content)
-        content <- gsub(placeholder, condition_content, content, fixed = TRUE) # fixed because the condition_content itself contains a pattern
+        content <- replace(placeholder, condition_content, content)
       } else {
         content <- removePlaceholderLines(content, placeholder)
       }
@@ -444,9 +448,7 @@ convertTemplate <- function(tables_descriptions,
     } else {
       placeholder_name <- extractPlaceholderName(placeholder)
       if (placeholder_name %in% names(rights_first_row)) {
-        content <- gsub(placeholder, rights_first_row[[placeholder_name]], content)
-      } else {
-        #stop("Unknown placeholder: ", placeholder, " in template ", template_name, " for table ", table_name)
+        content <- replace(placeholder, rights_first_row[[placeholder_name]], content)
       }
     }
   }
