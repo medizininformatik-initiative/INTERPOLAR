@@ -104,7 +104,7 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 calculateDrugDiseaseMRPs <- function() {
 
   # Load and expand Drug-Disease Definition
-  drug_disease_mrp_table <- loadMRPTables("Drug-Disease")
+  drug_disease_mrp_tables <- loadMRPTables("Drug-Disease", MRP_PAIR_LISTS_PATHS)
 
   # Load all active PIDs
   patient_ids <- getPIDs()

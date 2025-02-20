@@ -124,7 +124,7 @@ processFiles <- function(prefix, directories, db_conn, table_name, processing_fn
 #'
 #' @param table_name A character string specifying the name of the MRP table to load
 #'   (e.g., `"Drug-Disease"`, `"Drug-Interaction"`).
-#' @param paths_to_mrp_tables A character string specifying the directory where the MRP Excel files are stored.
+#' @param path_to_mrp_tables A character string specifying the directory where the MRP Excel files are stored.
 #'   Default is `"./Input-Repo"`.
 #'
 #' @return A `data.table` containing the processed MRP table.
@@ -134,29 +134,55 @@ processFiles <- function(prefix, directories, db_conn, table_name, processing_fn
 #' If the RDS file does not exist, it reads the table from an Excel file and preprocesses it
 #' using a dynamically determined function (`cleanAndExpandDefinition_<table_name>`).
 #'
-loadMRPTables <- function(table_name, paths_to_mrp_tables = "") {
+loadMRPTables <- function(table_name, path_to_mrp_tables = "") {
+
+  # Get all subdirectories in the given MRP table path
+  paths_to_mrp_tables <- list.dirs(path_to_mrp_tables, full.names = TRUE, recursive = FALSE)
 
   mrp_tables <- list()
   for (path in paths_to_mrp_tables) {
-    # Path to expanded MRP table
+    # Define file paths for the expanded MRP table and the hash file
     expanded_table_path <- file.path(path, paste0(table_name, "_MRP_Table_Expanded.RData"))
+    hash_file_path <- file.path(path, paste0(table_name, "_MRP_Table_Hash.txt"))
 
-    # Load MRP Definition from Excel
+    # Load the MRP definition from the Excel file
     mrp_definition <- etlutils::readFirstExcelFileAsTableList(path, table_name)
 
-    # Check if the RDS file exists and load it, otherwise preprocess the data
-    if (file.exists(expanded_table_path)) {
+    # Compute the hash of the current MRP definition
+    new_mrp_hash <- digest::digest(mrp_definition, algo = "sha256")
+
+    # Check if a hash file already exists
+    if (file.exists(hash_file_path)) {
+      old_mrp_hash <- readLines(hash_file_path, warn = FALSE)
+    } else {
+      old_mrp_hash <- NA  # No stored hash available
+    }
+
+    # If the hash matches and the processed table exists, load the cached version
+    if (!is.na(old_mrp_hash) && old_mrp_hash == new_mrp_hash && file.exists(expanded_table_path)) {
+      message("Loading cached ", table_name, " table from RData...")
       mrp_table <- readRDS(expanded_table_path)
     } else {
+      # If the hash has changed or no processed table exists, run preprocessing
       message("Preprocessing ", table_name, " table...")
-      preprocess_function_name <- paste0("cleanAndExpandDefinition_", gsub("-", "", table_name))
 
+      # Dynamically determine the preprocessing function name
+      preprocess_function_name <- paste0("cleanAndExpandDefinition", gsub("-", "", table_name))
+
+      # Check if the preprocessing function exists
       if (!exists(preprocess_function_name, mode = "function", inherits = TRUE)) {
         stop("Preprocessing function '", preprocess_function_name, "' not found!")
       }
 
+      # Get the preprocessing function and apply it to the MRP data
       preprocess_function <- get(preprocess_function_name, mode = "function", inherits = TRUE)
       mrp_table <- preprocess_function(mrp_definition[[paste0(table_name, "-Pairs")]])
+
+      # Save the preprocessed table as an RDS file
+      saveRDS(mrp_table, expanded_table_path)
+
+      # Save the new hash to the file
+      writeLines(new_mrp_hash, hash_file_path)
     }
 
     # Store the processed table in the result list
