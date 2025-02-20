@@ -339,8 +339,8 @@ convertTemplate <- function(tables_descriptions,
                                                 column_prefix = column_prefix,
                                                 recursion = recursion + 1)
         if (!is.na(single_table_content)) {
-        tables_content <- paste0(tables_content, single_table_content)
-      }
+          tables_content <- paste0(tables_content, single_table_content)
+        }
       }
       tables_content <- gsub("\n$", "", tables_content)
       content <- replace(placeholder, tables_content, content)
@@ -472,6 +472,12 @@ convertTemplate <- function(tables_descriptions,
   }
 
   if (recursion == 0) {
+
+    placeholders <- extractPlaceholders(content)
+    if (length(placeholders)) {
+      file_name <- rights_first_row[[result_file_name_column]]
+      warning("There are unreplaced placeholders in the file ", file_name, ":\n", placeholders)
+    }
     writeResultFile(rights_first_row[[result_file_name_column]], content)
   }
   # Write the modified content to the file
