@@ -338,7 +338,9 @@ convertTemplate <- function(tables_descriptions,
                                                 table_name = table_name,
                                                 column_prefix = column_prefix,
                                                 recursion = recursion + 1)
+        if (!is.na(single_table_content)) {
         tables_content <- paste0(tables_content, single_table_content)
+      }
       }
       tables_content <- gsub("\n$", "", tables_content)
       content <- replace(placeholder, tables_content, content)
