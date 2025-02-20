@@ -134,7 +134,7 @@ calculateDrugDiseaseMRPs <- function() {
   )
 
   # Fill column LOINC_VALIDITY_DAYS and find max value
-  observation_datetime <- calculateObservationDatetime(drug_disease_mrp_table, "LOINC_VALIDITY_DAYS", query_datetime, DEFAULT_LOINC_VALIDITY_DAYS)
+  observation_datetime <- calculateObservationDatetime(drug_disease_mrp_tables[[1]], "LOINC_VALIDITY_DAYS", query_datetime, DEFAULT_LOINC_VALIDITY_DAYS)
   # Load Observation resources referenced by Patient
   observations <- loadResourcesFromDB(
     resource_name = "observation",

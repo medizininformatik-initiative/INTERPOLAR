@@ -221,17 +221,14 @@ loadMRPTables <- function(table_name, path_to_mrp_tables = "") {
 #' }
 #'
 calculateObservationDatetime <- function(data_table, column_name = "LOINC_VALIDITY_DAYS", query_datetime, default_loinc_validity_days) {
+
   # Fill missing values in the specified column with the default value
-  data_table[[column_name]] <- ifelse(
-    is.na(data_table[[column_name]]),
-    default_loinc_validity_days,
-    data_table[[column_name]]
-  )
+  data_table[is.na(get(column_name)), (column_name) := default_loinc_validity_days]
 
   # Find max value in the specified column
-  max_loinc_validity_days <- max(data_table[[column_name]], na.rm = TRUE)
+  max_loinc_validity_days <- as.integer(max(data_table[[column_name]], na.rm = TRUE))
   # Calculate valid observation datetime
-  observation_datetime <- lubridate::ymd_hms(query_datetime) - lubridate::days(as.integer(max_loinc_validity_days))
+  observation_datetime <- lubridate::ymd_hms(query_datetime) - lubridate::days(max_loinc_validity_days)
 
   return(format(observation_datetime, "%Y-%m-%d %H:%M:%S"))
 }
