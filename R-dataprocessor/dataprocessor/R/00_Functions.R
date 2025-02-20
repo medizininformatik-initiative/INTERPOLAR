@@ -10,7 +10,6 @@
 #' @param processing_fn A function that processes the file and extracts the relevant content.
 #'
 #' @return A string containing the SHA-256 hash of the processed content.
-#' @importFrom digest digest
 #'
 computeFileHash <- function(file_path, processing_fn) {
   processed_content <- processing_fn(file_path)
@@ -76,8 +75,6 @@ compareAndDetectChanges <- function(files, db_hashes, processing_fn) {
 #' @param files_to_process A list where each element contains `file_name` and `content_hash`
 #'   for files that have changed or are new.
 #'
-#' @importFrom DBI dbWriteTable
-#' @export
 storeHashesInDb <- function(files_to_process) {
   if (length(files_to_process) == 0) return()
 
@@ -108,7 +105,7 @@ storeHashesInDb <- function(files_to_process) {
 #' Default is `FALSE`.
 #'
 #' @return A list containing files that have changed or are new.
-#' @export
+#'
 processFiles <- function(prefix, directories, db_conn, table_name, processing_fn, extension = NA, recursive = FALSE) {
   files <- getFilesByPrefix(prefix, directories, extension, recursive)
   if (length(files) == 0) return(list())
@@ -193,9 +190,11 @@ loadMRPTables <- function(table_name, paths_to_mrp_tables = "./Input-Repo") {
 #' the earliest valid observation datetime.
 #'
 #' @examples
+#' \dontrun{
 #' df <- data.frame(LOINC_VALIDITY_DAYS = c(30, 60, NA, 90))
 #' query_datetime <- as.POSIXct("2024-01-01 12:00:00")
 #' calculateObservationDatetime(df, "LOINC_VALIDITY_DAYS", query_datetime, 45)
+#' }
 #'
 calculateObservationDatetime <- function(data_table, column_name = "LOINC_VALIDITY_DAYS", query_datetime, default_loinc_validity_days) {
   # Fill missing values in the specified column with the default value
@@ -278,7 +277,7 @@ getPIDs <- function(force_reload = FALSE) {
 #'        if `FRONTEND_DISPLAYED_ENCOUNTER_CLASS` exists and is not empty. Default is `FALSE`.
 #'
 #' @return A `data.table` containing the encounters that match the specified criteria.
-#' @export
+#'
 loadEncounters <- function(patient_ids, query_datetime, force_reload = FALSE, apply_class_filter = FALSE) {
   # Check if encounters exist in the environment and if the patient IDs match
   if (!force_reload && exists("encounters", envir = .resource_env) &&
@@ -344,6 +343,7 @@ loadEncounters <- function(patient_ids, query_datetime, force_reload = FALSE, ap
 #'   Default is `"loadResourcesFromDB()"`.
 #'
 #' @return A `data.table` containing the queried resource data.
+#'
 loadResourcesFromDB <- function(resource_name, column_name, query_ids, force_reload = FALSE, remove_ref_type = FALSE, additional_query_parameter = NULL, lock_id = "loadResourcesFromDB()") {
   # Dynamic key for saved Query-IDs
   query_ids_key <- paste0(resource_name, "_query_ids")

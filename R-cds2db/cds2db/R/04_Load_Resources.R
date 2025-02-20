@@ -71,8 +71,6 @@ getCurrentDatetime <- function() {
 #'
 #' @return A character string representing the current datetime formatted for SQL queries.
 #'
-#' @export
-#'
 getQueryDatetime <- function() {
   format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
 }
