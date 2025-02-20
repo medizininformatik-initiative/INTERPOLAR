@@ -22,9 +22,6 @@ computeFileHash <- function(file_path, processing_fn) {
 #' Queries a PostgreSQL database to retrieve the stored file hashes, which
 #' are used to detect changes in file content across runs.
 #'
-#' @param db_conn A valid database connection object (from `DBI::dbConnect`).
-#' @param table_name A string specifying the name of the table storing file hashes.
-#'
 #' @return A data frame with columns `file_name` (file identifier) and `content_hash` (SHA-256 hash).
 #'
 loadExistingHashes <- function() {
@@ -125,10 +122,8 @@ processFiles <- function(prefix, directories, db_conn, table_name, processing_fn
 #'
 #' @param table_name A character string specifying the name of the MRP table to load
 #'   (e.g., `"Drug-Disease"`, `"Drug-Interaction"`).
-#' @param path_to_mrp_tables A character string specifying the directory where the MRP Excel files are stored.
+#' @param paths_to_mrp_tables A character string specifying the directory where the MRP Excel files are stored.
 #'   Default is `"./Input-Repo"`.
-#' @param path_to_expanded_mrp_table A character string specifying the path to the preprocessed RDS file.
-#'   If `NULL`, the function constructs the path automatically using `table_name`. Default is `NULL`.
 #'
 #' @return A `data.table` containing the processed MRP table.
 #'
@@ -137,32 +132,33 @@ processFiles <- function(prefix, directories, db_conn, table_name, processing_fn
 #' If the RDS file does not exist, it reads the table from an Excel file and preprocesses it
 #' using a dynamically determined function (`cleanAndExpandDefinition_<table_name>`).
 #'
-#' @examples
-#' # Load the Drug-Disease MRP table
-#' drug_disease_mrp_table <- loadMRPTables("Drug-Disease")
-#'
-#' # Load another MRP table, e.g., Drug-Interaction
-#' drug_interaction_mrp_table <- loadMRPTables("Drug-Interaction")
-#'
 loadMRPTables <- function(table_name, paths_to_mrp_tables = "./Input-Repo") {
 
   mrp_tables <- list()
   for (path in paths_to_mrp_tables) {
     # Path to expanded MRP table
-    path_to_expanded_mrp_table <- file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table_Expanded.RData"))
+    expanded_table_path <- file.path(path, paste0(table_name, "_MRP_Table_Expanded.RData"))
 
-    # Load MRP Definition
-    mrp_definition <- etlutils::readFirstExcelFileAsTableList(path_to_mrp_tables, table_name)
+    # Load MRP Definition from Excel
+    mrp_definition <- etlutils::readFirstExcelFileAsTableList(path, table_name)
 
     # Check if the RDS file exists and load it, otherwise preprocess the data
-    if (file.exists(path_to_expanded_mrp_table)) {
-      mrp_table <- readRDS(path_to_expanded_mrp_table)
+    if (file.exists(expanded_table_path)) {
+      mrp_table <- readRDS(expanded_table_path)
     } else {
       message("Preprocessing ", table_name, " table...")
-      preprocess_function <- get(paste0("cleanAndExpandDefinition", gsub("-", "", table_name)), mode = "function", inherits = TRUE)
+      preprocess_function_name <- paste0("cleanAndExpandDefinition_", gsub("-", "", table_name))
+
+      if (!exists(preprocess_function_name, mode = "function", inherits = TRUE)) {
+        stop("Preprocessing function '", preprocess_function_name, "' not found!")
+      }
+
+      preprocess_function <- get(preprocess_function_name, mode = "function", inherits = TRUE)
       mrp_table <- preprocess_function(mrp_definition[[paste0(table_name, "-Pairs")]])
     }
-    mrp_tables[[mrp_definition]] <- mrp_tables
+
+    # Store the processed table in the result list
+    mrp_tables[[path]] <- mrp_table
   }
 
   return(mrp_tables)
