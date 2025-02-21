@@ -161,13 +161,11 @@ calculateDrugDiseaseMRPs <- function() {
   # Load mrp_drug_disease template table
   mrp_drug_disease_path <- "./R-dataprocessor/submodules/02_MRP_Drug_Disease/R-MRP_Drug_Disease/inst/extdata/mrp_drug_disease.xlsx"
   mrp_drug_disease_tables <- etlutils::getTableDescriptionSplittedByTableName(mrp_drug_disease_path, "mrp_drug_disease")
-  browser()
 
-  tryCatch({
-    mrp_drug_disease <- createEmptyTable(mrp_drug_disease_tables$mrp_drug_disease)
-  }, error = function(e) {
-    stop(paste("Error while parsing table 'mrp_drug_disease':", e$message))
-  })
+  # Initialize table for calculated drug disease MRPs
+  calculated_drug_disease_mrps <- createEmptyTable(mrp_drug_disease_tables$mrp_drug_disease)
+
+  browser()
 
 }
 
