@@ -75,17 +75,18 @@ BEGIN
         ) ) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
-        status:='1/6 db.add_hist_raw_records()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
+-- wird später eingebaut
+--        status:='1/6 db.add_hist_raw_records()';
+--        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+--        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+--        ) ) AS t(res TEXT) INTO erg;
 
-        err_section:='cron_job_data_transfer-23';    err_schema:='db';    err_table:='add_hist_raw_records()';
+--        err_section:='cron_job_data_transfer-23';    err_schema:='db';    err_table:='add_hist_raw_records()';
 
-        -- FHIR Data db_log(Hist) -> cds2db_in
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.add_hist_raw_records()'
-        )) AS t(res TEXT) INTO erg;
+--        -- FHIR Data db_log(Hist) -> cds2db_in
+--        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+--        'SELECT db.add_hist_raw_records()'
+--        )) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
         status:='2/6 db.copy_raw_cds_in_to_db_log()';
