@@ -125,7 +125,7 @@ calculateDrugDiseaseMRPs <- function() {
   )
 
   # Load Medication resources referenced by MedicationRequest
-  medication_ids <- unique(medication_requests$medstat_medicationreference_ref)
+  medication_ids <- medication_requests[, unique(get(MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME))]
   medications <- loadResourcesFromDB(
     resource_name = "Medication",
     column_name = "med_id",
