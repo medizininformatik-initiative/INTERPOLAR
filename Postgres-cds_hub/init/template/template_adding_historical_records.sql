@@ -11,48 +11,45 @@ BEGIN
 -- cds2db_in.v_location_raw_last_version Block nach unten nehmen
 -- ToDo Error log einbauen
 
-/* bis zur vollständig automatischen generierung auskommentiert um manuel erst zu verbessern
-
 <%LOOP_TABS_SUB_add_hist_records%>
 
 -- Zur Zeit noch statisch -Nachladen Resourcen ohne direkten Patientenbezug
 
     ---- aus cds2db_out.v_location_raw_last_--------------------------------------------
-    SELECT res FROM pg_background_result(pg_background_launch(
-    'INSERT INTO cds2db_in.location_raw (
-        location_raw_id,
-        current_dataset_status
-    )
-    (
-	SELECT
-        location_raw_id,
-        ''reimported from database''
-        FROM cds2db_out.v_location_raw_last_version q
-        WHERE q.loc_id IN (SELECT enc_location_ref FROM cds2db_in.encounter_raw)
-        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.location_raw)
-    )'
-    ))  AS t(res TEXT) INTO erg;
+-- Temp    SELECT res FROM pg_background_result(pg_background_launch(
+-- Temp    'INSERT INTO cds2db_in.location_raw (
+-- Temp        location_raw_id,
+-- Temp        current_dataset_status
+-- Temp    )
+-- Temp    (
+-- Temp	SELECT
+-- Temp        location_raw_id,
+-- Temp        ''reimported from database''
+-- Temp        FROM cds2db_out.v_location_raw_last_version q
+-- Temp        WHERE q.loc_id IN (SELECT enc_location_ref FROM cds2db_in.encounter_raw)
+-- Temp        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.location_raw)
+-- Temp    )'
+-- Temp    ))  AS t(res TEXT) INTO erg;
 
     ---- aus cds2db_out.v_medication_raw_last_version_--------------------------------------------
-    SELECT res FROM pg_background_result(pg_background_launch(
-    'INSERT INTO cds2db_in.medication_raw (
-        medication_raw_id,
-        current_dataset_status
-    )
-    (
-	SELECT
-        medication_raw_id,
-        ''reimported from database''
-        FROM cds2db_out.v_medication_raw_last_version q
-        WHERE q.med_id IN (SELECT medreq_medicationreference_ref FROM cds2db_in.medicationRequest_raw
-                           UNION SELECT medadm_medicationreference_ref FROM cds2db_in.medicationadministration_raw
-                           UNION SELECT medstat_medicationreference_ref FROM cds2db_in.medicationstatement_raw
-                        )
-        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.medication_raw)
-    )'
-    ))  AS t(res TEXT) INTO erg;
+-- Temp    SELECT res FROM pg_background_result(pg_background_launch(
+-- Temp    'INSERT INTO cds2db_in.medication_raw (
+-- Temp        medication_raw_id,
+-- Temp        current_dataset_status
+-- Temp    )
+-- Temp    (
+-- Temp	SELECT
+-- Temp        medication_raw_id,
+-- Temp        ''reimported from database''
+-- Temp        FROM cds2db_out.v_medication_raw_last_version q
+-- Temp        WHERE q.med_id IN (SELECT medreq_medicationreference_ref FROM cds2db_in.medicationRequest_raw
+-- Temp                           UNION SELECT medadm_medicationreference_ref FROM cds2db_in.medicationadministration_raw
+-- Temp                           UNION SELECT medstat_medicationreference_ref FROM cds2db_in.medicationstatement_raw
+-- Temp                        )
+-- Temp        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.medication_raw)
+-- Temp    )'
+-- Temp    ))  AS t(res TEXT) INTO erg;
 
-/**/ -- bis zur vollständig automatischen generierung auskommentiert um manuel erst zu verbessern
-    RETURN 'ende';
+    RETURN 'Ende ohne Funktionsausführung';
 END;
 $$ LANGUAGE plpgsql;
