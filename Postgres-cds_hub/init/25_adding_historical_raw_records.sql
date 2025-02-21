@@ -59,22 +59,6 @@ BEGIN
     ))  AS t(res TEXT) INTO erg;
 
     ---- aus cds2db_out.v_patient_raw_last_version Nachladen zu akt. Patienten --------------------------------------------
-    SELECT res FROM pg_background_result(pg_background_launch(
-    'INSERT INTO cds2db_in.patient_raw (
-        patient_raw_id,
---  !!! Aufzählung der FHIR Spalten fehlt noch !!!
-        current_dataset_status
-    )
-    (
-	SELECT
-        patient_raw_id,
---  !!! Aufzählung der FHIR Spalten fehlt noch !!!
-        ''reimported from database''
-        FROM cds2db_out.v_patient_raw_last_version q
-        WHERE q.pat_patient_ref IN (SELECT pat_id FROM cds2db_in.patient_raw)
-        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.patient_raw)
-    )'
-    ))  AS t(res TEXT) INTO erg;
 
     ---- aus cds2db_out.v_condition_raw_last_version Nachladen zu akt. Patienten --------------------------------------------
     SELECT res FROM pg_background_result(pg_background_launch(
@@ -95,22 +79,6 @@ BEGIN
     ))  AS t(res TEXT) INTO erg;
 
     ---- aus cds2db_out.v_medication_raw_last_version Nachladen zu akt. Patienten --------------------------------------------
-    SELECT res FROM pg_background_result(pg_background_launch(
-    'INSERT INTO cds2db_in.medication_raw (
-        medication_raw_id,
---  !!! Aufzählung der FHIR Spalten fehlt noch !!!
-        current_dataset_status
-    )
-    (
-	SELECT
-        medication_raw_id,
---  !!! Aufzählung der FHIR Spalten fehlt noch !!!
-        ''reimported from database''
-        FROM cds2db_out.v_medication_raw_last_version q
-        WHERE q.med_patient_ref IN (SELECT pat_id FROM cds2db_in.patient_raw)
-        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.medication_raw)
-    )'
-    ))  AS t(res TEXT) INTO erg;
 
     ---- aus cds2db_out.v_medicationrequest_raw_last_version Nachladen zu akt. Patienten --------------------------------------------
     SELECT res FROM pg_background_result(pg_background_launch(
@@ -257,23 +225,6 @@ BEGIN
     ))  AS t(res TEXT) INTO erg;
 
     ---- aus cds2db_out.v_location_raw_last_version Nachladen zu akt. Patienten --------------------------------------------
-    SELECT res FROM pg_background_result(pg_background_launch(
-    'INSERT INTO cds2db_in.location_raw (
-        location_raw_id,
---  !!! Aufzählung der FHIR Spalten fehlt noch !!!
-        current_dataset_status
-    )
-    (
-	SELECT
-        location_raw_id,
---  !!! Aufzählung der FHIR Spalten fehlt noch !!!
-        ''reimported from database''
-        FROM cds2db_out.v_location_raw_last_version q
-        WHERE q.loc_patient_ref IN (SELECT pat_id FROM cds2db_in.patient_raw)
-        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM cds2db_in.location_raw)
-    )'
-    ))  AS t(res TEXT) INTO erg;
-
 
 -- Zur Zeit noch statisch -Nachladen Resourcen ohne direkten Patientenbezug
 
