@@ -9,7 +9,6 @@ runSubmodules <- function() {
   #submodule_path <- system.file("submodules", package = "dataprocessor")
   submodule_path <- "./R-dataprocessor/submodules"
 
-
   # Get list of submodule directories
   submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
 

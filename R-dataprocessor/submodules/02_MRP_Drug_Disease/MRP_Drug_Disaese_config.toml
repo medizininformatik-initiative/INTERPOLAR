@@ -4,4 +4,7 @@
 # Paths to all Excel files that are to be used in the MRP calculation.
 # This can be a list of folders or Excel files. If one or more folders are specified, all Excel
 # files are loaded from them. If one or more files are specified, only these files will be loaded.
-MRP_PAIR_LISTS_PATHS = ["./Input-Repo/MRP_Drug_Disease/"]
+MRP_PAIR_LISTS_PATHS = ["./Input-Repo/MRP_Drug_Disease"]
+
+# Default value that applies to the validity period in days for the laboratory values
+DEFAULT_LOINC_VALIDITY_DAYS = 7
