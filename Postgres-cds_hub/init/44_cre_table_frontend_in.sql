@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-14 14:23:49
--- Rights definition file size        : 15308 Byte
+-- Rights definition file last update : 2025-02-21 10:00:28
+-- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-02-16 10:24:20
+-- Create time: 2025-02-21 10:04:58
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -75,9 +75,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db2frontend_in.patient_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.patient_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "fall_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -167,9 +164,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.fall_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.fall_fe SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "medikationsanalyse_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
@@ -219,9 +213,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db2frontend_in.medikationsanalyse_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.medikationsanalyse_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "mrpdokumentation_validierung_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -491,9 +482,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "risikofaktor_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
@@ -543,9 +531,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db2frontend_in.risikofaktor_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.risikofaktor_fe SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "trigger_fe" in schema "db2frontend_in"
 -------------------------------------------------------------------------------------------------
@@ -612,9 +597,6 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db2frontend_in.trigger_fe SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db2frontend_in.trigger_fe SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------
@@ -707,7 +689,6 @@ COMMENT ON COLUMN db2frontend_in.patient_fe.last_check_datetime IS 'Time at whic
 COMMENT ON COLUMN db2frontend_in.patient_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.patient_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.patient_fe.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.fall_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)';
@@ -750,7 +731,6 @@ COMMENT ON COLUMN db2frontend_in.fall_fe.last_check_datetime IS 'Time at which d
 COMMENT ON COLUMN db2frontend_in.fall_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.fall_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.fall_fe.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.medikationsanalyse_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
@@ -774,7 +754,6 @@ COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.last_check_datetime IS 'T
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.meda_fe_id IS 'Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)';
@@ -907,7 +886,6 @@ COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.last_check_date
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.risikofaktor_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
@@ -931,7 +909,6 @@ COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.last_check_datetime IS 'Time at
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db2frontend_in.trigger_fe.trigger_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.trigger_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
 COMMENT ON COLUMN db2frontend_in.trigger_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
@@ -963,7 +940,6 @@ COMMENT ON COLUMN db2frontend_in.trigger_fe.last_check_datetime IS 'Time at whic
 COMMENT ON COLUMN db2frontend_in.trigger_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.trigger_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.trigger_fe.last_processing_nr IS 'Last processing number of the data record';
-
 
 -- Output on
 \o

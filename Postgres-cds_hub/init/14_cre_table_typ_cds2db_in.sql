@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-14 14:23:49
--- Rights definition file size        : 15308 Byte
+-- Rights definition file last update : 2025-02-21 10:00:28
+-- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-16 10:23:46
+-- Create time: 2025-02-21 10:04:29
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  14_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -197,9 +197,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.encounter SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "patient" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
@@ -256,9 +253,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.patient SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "condition" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -509,9 +503,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.condition SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "medication" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
@@ -648,9 +639,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medication SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationrequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -1121,9 +1109,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "medicationadministration" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
@@ -1364,9 +1349,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationstatement" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -1811,9 +1793,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "observation" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
@@ -2099,9 +2078,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.observation SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "diagnosticreport" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
@@ -2212,9 +2188,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "servicerequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -2354,9 +2327,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.servicerequest SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "procedure" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
@@ -2517,9 +2487,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.procedure SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "consent" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
@@ -2611,9 +2578,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.consent SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "location" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
@@ -2667,9 +2631,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.location SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "pids_per_ward" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
@@ -2692,9 +2653,6 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE cds2db_in.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------
@@ -2915,7 +2873,6 @@ COMMENT ON COLUMN cds2db_in.encounter.last_check_datetime IS 'Time at which data
 COMMENT ON COLUMN cds2db_in.encounter.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.encounter.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.encounter.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.patient.patient_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.patient.patient_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.patient.pat_id IS 'id (varchar)';
@@ -2943,7 +2900,6 @@ COMMENT ON COLUMN cds2db_in.patient.last_check_datetime IS 'Time at which data r
 COMMENT ON COLUMN cds2db_in.patient.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.patient.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.patient.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.condition.condition_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.condition.condition_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.condition.con_id IS 'id (varchar)';
@@ -3067,7 +3023,6 @@ COMMENT ON COLUMN cds2db_in.condition.last_check_datetime IS 'Time at which data
 COMMENT ON COLUMN cds2db_in.condition.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.condition.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.condition.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.medication.medication_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medication.medication_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medication.med_id IS 'id (varchar)';
@@ -3135,7 +3090,6 @@ COMMENT ON COLUMN cds2db_in.medication.last_check_datetime IS 'Time at which dat
 COMMENT ON COLUMN cds2db_in.medication.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medication.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medication.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.medicationrequest.medicationrequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationrequest.medicationrequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_id IS 'id (varchar)';
@@ -3369,7 +3323,6 @@ COMMENT ON COLUMN cds2db_in.medicationrequest.last_check_datetime IS 'Time at wh
 COMMENT ON COLUMN cds2db_in.medicationrequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medicationrequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medicationrequest.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.medicationadministration.medicationadministration_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationadministration.medicationadministration_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_id IS 'id (varchar)';
@@ -3489,7 +3442,6 @@ COMMENT ON COLUMN cds2db_in.medicationadministration.last_check_datetime IS 'Tim
 COMMENT ON COLUMN cds2db_in.medicationadministration.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medicationadministration.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medicationadministration.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.medicationstatement.medicationstatement_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationstatement.medicationstatement_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_id IS 'id (varchar)';
@@ -3710,7 +3662,6 @@ COMMENT ON COLUMN cds2db_in.medicationstatement.last_check_datetime IS 'Time at 
 COMMENT ON COLUMN cds2db_in.medicationstatement.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medicationstatement.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medicationstatement.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.observation.observation_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.observation.observation_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.observation.obs_id IS 'id (varchar)';
@@ -3852,7 +3803,6 @@ COMMENT ON COLUMN cds2db_in.observation.last_check_datetime IS 'Time at which da
 COMMENT ON COLUMN cds2db_in.observation.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.observation.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.observation.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.diagnosticreport.diagnosticreport_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.diagnosticreport_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_id IS 'id (varchar)';
@@ -3907,7 +3857,6 @@ COMMENT ON COLUMN cds2db_in.diagnosticreport.last_check_datetime IS 'Time at whi
 COMMENT ON COLUMN cds2db_in.diagnosticreport.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.servicerequest.servicerequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.servicerequest.servicerequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.servicerequest.servreq_id IS 'id (varchar)';
@@ -3976,7 +3925,6 @@ COMMENT ON COLUMN cds2db_in.servicerequest.last_check_datetime IS 'Time at which
 COMMENT ON COLUMN cds2db_in.servicerequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.servicerequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.servicerequest.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.procedure.procedure_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.procedure.procedure_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.procedure.proc_id IS 'id (varchar)';
@@ -4055,7 +4003,6 @@ COMMENT ON COLUMN cds2db_in.procedure.last_check_datetime IS 'Time at which data
 COMMENT ON COLUMN cds2db_in.procedure.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.procedure.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.procedure.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.consent.consent_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.consent.consent_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.consent.cons_id IS 'id (varchar)';
@@ -4100,7 +4047,6 @@ COMMENT ON COLUMN cds2db_in.consent.last_check_datetime IS 'Time at which data r
 COMMENT ON COLUMN cds2db_in.consent.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.consent.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.consent.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.location.location_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.location.location_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.location.loc_id IS 'id (varchar)';
@@ -4126,7 +4072,6 @@ COMMENT ON COLUMN cds2db_in.location.last_check_datetime IS 'Time at which data 
 COMMENT ON COLUMN cds2db_in.location.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.location.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.location.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.ward_name IS 'ward_name (varchar)';
@@ -4137,7 +4082,6 @@ COMMENT ON COLUMN cds2db_in.pids_per_ward.last_check_datetime IS 'Time at which 
 COMMENT ON COLUMN cds2db_in.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.last_processing_nr IS 'Last processing number of the data record';
-
 
 -- Output on
 \o

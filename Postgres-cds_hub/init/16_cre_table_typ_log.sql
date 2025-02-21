@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-14 14:23:49
--- Rights definition file size        : 15308 Byte
+-- Rights definition file last update : 2025-02-21 10:00:28
+-- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-16 10:23:59
+-- Create time: 2025-02-21 10:04:40
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  16_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -199,9 +199,6 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.encounter SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.encounter SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "patient" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient (
@@ -258,9 +255,6 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db_log.patient SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.patient SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "condition" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -511,9 +505,6 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.condition SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.condition SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "medication" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication (
@@ -650,9 +641,6 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db_log.medication SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medication SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationrequest" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -1123,9 +1111,6 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medicationrequest SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "medicationadministration" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
@@ -1366,9 +1351,6 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medicationadministration SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "medicationstatement" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -1813,9 +1795,6 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.medicationstatement SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "observation" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation (
@@ -2101,9 +2080,6 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.observation SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.observation SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "diagnosticreport" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
@@ -2214,9 +2190,6 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.diagnosticreport SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "servicerequest" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -2356,9 +2329,6 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.servicerequest SET (autovacuum_vacuum_threshold = 25000);
 
 -- Table "procedure" in schema "db_log"
 -------------------------------------------------------------------------------------------------
@@ -2519,9 +2489,6 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.procedure SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.procedure SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "consent" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent (
@@ -2613,9 +2580,6 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.consent SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.consent SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "location" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location (
@@ -2669,9 +2633,6 @@ CREATE TABLE IF NOT EXISTS db_log.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- ALTER TABLE db_log.location SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.location SET (autovacuum_vacuum_threshold = 25000);
-
 -- Table "pids_per_ward" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
@@ -2694,9 +2655,6 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE db_log.pids_per_ward SET (autovacuum_vacuum_threshold = 25000);
 
 
 ------------------------------------------------------
@@ -2931,7 +2889,6 @@ COMMENT ON COLUMN db_log.encounter.last_check_datetime IS 'Time at which data re
 COMMENT ON COLUMN db_log.encounter.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.encounter.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.encounter.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.patient.patient_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.patient.patient_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.patient.pat_id IS 'id (varchar)';
@@ -2959,7 +2916,6 @@ COMMENT ON COLUMN db_log.patient.last_check_datetime IS 'Time at which data reco
 COMMENT ON COLUMN db_log.patient.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.patient.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.patient.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.condition.condition_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.condition.condition_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.condition.con_id IS 'id (varchar)';
@@ -3083,7 +3039,6 @@ COMMENT ON COLUMN db_log.condition.last_check_datetime IS 'Time at which data re
 COMMENT ON COLUMN db_log.condition.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.condition.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.condition.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.medication.medication_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medication.medication_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medication.med_id IS 'id (varchar)';
@@ -3151,7 +3106,6 @@ COMMENT ON COLUMN db_log.medication.last_check_datetime IS 'Time at which data r
 COMMENT ON COLUMN db_log.medication.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medication.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medication.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.medicationrequest.medicationrequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationrequest.medicationrequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medicationrequest.medreq_id IS 'id (varchar)';
@@ -3385,7 +3339,6 @@ COMMENT ON COLUMN db_log.medicationrequest.last_check_datetime IS 'Time at which
 COMMENT ON COLUMN db_log.medicationrequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medicationrequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medicationrequest.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.medicationadministration.medicationadministration_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationadministration.medicationadministration_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medicationadministration.medadm_id IS 'id (varchar)';
@@ -3505,7 +3458,6 @@ COMMENT ON COLUMN db_log.medicationadministration.last_check_datetime IS 'Time a
 COMMENT ON COLUMN db_log.medicationadministration.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medicationadministration.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medicationadministration.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.medicationstatement.medicationstatement_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationstatement.medicationstatement_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medicationstatement.medstat_id IS 'id (varchar)';
@@ -3726,7 +3678,6 @@ COMMENT ON COLUMN db_log.medicationstatement.last_check_datetime IS 'Time at whi
 COMMENT ON COLUMN db_log.medicationstatement.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medicationstatement.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medicationstatement.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.observation.observation_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.observation.observation_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.observation.obs_id IS 'id (varchar)';
@@ -3868,7 +3819,6 @@ COMMENT ON COLUMN db_log.observation.last_check_datetime IS 'Time at which data 
 COMMENT ON COLUMN db_log.observation.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.observation.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.observation.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.diagnosticreport.diagnosticreport_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.diagnosticreport.diagnosticreport_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.diagnosticreport.diagrep_id IS 'id (varchar)';
@@ -3923,7 +3873,6 @@ COMMENT ON COLUMN db_log.diagnosticreport.last_check_datetime IS 'Time at which 
 COMMENT ON COLUMN db_log.diagnosticreport.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.diagnosticreport.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.diagnosticreport.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.servicerequest.servicerequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.servicerequest.servicerequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.servicerequest.servreq_id IS 'id (varchar)';
@@ -3992,7 +3941,6 @@ COMMENT ON COLUMN db_log.servicerequest.last_check_datetime IS 'Time at which da
 COMMENT ON COLUMN db_log.servicerequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.servicerequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.servicerequest.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.procedure.procedure_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.procedure.procedure_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.procedure.proc_id IS 'id (varchar)';
@@ -4071,7 +4019,6 @@ COMMENT ON COLUMN db_log.procedure.last_check_datetime IS 'Time at which data re
 COMMENT ON COLUMN db_log.procedure.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.procedure.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.procedure.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.consent.consent_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.consent.consent_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.consent.cons_id IS 'id (varchar)';
@@ -4116,7 +4063,6 @@ COMMENT ON COLUMN db_log.consent.last_check_datetime IS 'Time at which data reco
 COMMENT ON COLUMN db_log.consent.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.consent.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.consent.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.location.location_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.location.location_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.location.loc_id IS 'id (varchar)';
@@ -4142,7 +4088,6 @@ COMMENT ON COLUMN db_log.location.last_check_datetime IS 'Time at which data rec
 COMMENT ON COLUMN db_log.location.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.location.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.location.last_processing_nr IS 'Last processing number of the data record';
-
 COMMENT ON COLUMN db_log.pids_per_ward.pids_per_ward_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.pids_per_ward.ward_name IS 'ward_name (varchar)';
@@ -4153,7 +4098,6 @@ COMMENT ON COLUMN db_log.pids_per_ward.last_check_datetime IS 'Time at which dat
 COMMENT ON COLUMN db_log.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.pids_per_ward.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.pids_per_ward.last_processing_nr IS 'Last processing number of the data record';
-
 
 -- Output on
 \o
