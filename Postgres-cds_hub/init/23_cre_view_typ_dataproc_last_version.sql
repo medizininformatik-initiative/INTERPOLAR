@@ -186,7 +186,4 @@ GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 GRANT SELECT ON TABLE db2dataprocessor_out.v_location_last_version TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2dataprocessor_out.v_pids_per_ward_last_version TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
-
 

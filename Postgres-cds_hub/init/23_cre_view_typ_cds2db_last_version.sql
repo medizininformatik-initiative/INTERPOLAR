@@ -186,7 +186,4 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 GRANT SELECT ON TABLE cds2db_out.v_location_last_version TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward_last_version TO cds2db_user;
-GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
-
 
