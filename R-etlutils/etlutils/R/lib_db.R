@@ -565,7 +565,7 @@ dbGetReadOnlyColumns <- function(table_name) {
   # Wenn man sich die Tabelle aber vorher mit select * geholt hat, dann sind diese Spalten mit dabei.
   # Das hier soll in der Version 0.3.0 nochmal überarbeitet/durchdacht werden!
   # Am besten wäre es, wenn die Views bei einem select * diese Spalten gar nicht erst mit ausliefern!
-  return(c("hash_index_col", "hash_txt_col"))
+  return(c("hash_index_col"))
 }
 
 #' Insert Rows into a PostgreSQL Table
@@ -593,6 +593,7 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
 
+  # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
   readonly_cols <- dbGetReadOnlyColumns(table_name)
   cols_to_remove <- intersect(readonly_cols, colnames(table))
   if (length(cols_to_remove) > 0) {

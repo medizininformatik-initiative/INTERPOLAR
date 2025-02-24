@@ -1,0 +1,18 @@
+    ---- aus <%OWNER_SCHEMA%>.<%TABLE_NAME%> Nachladen zu akt. Patienten --------------------------------------------
+-- Temp    SELECT res FROM pg_background_result(pg_background_launch(
+-- Temp    'INSERT INTO <%SCHEMA_2%>.<%TABLE_NAME_2%> (
+-- Temp        <%TABLE_NAME_2%>_id,
+--  !!! Aufzählung der FHIR Spalten fehlt noch !!!
+-- Temp        current_dataset_status
+-- Temp    )
+-- Temp    (
+-- Temp	SELECT
+-- Temp        <%TABLE_NAME_2%>_id,
+--  !!! Aufzählung der FHIR Spalten fehlt noch !!!
+-- Temp        ''reimported from database''
+-- Temp        FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> q
+-- Temp        WHERE q.<%COLUMN_PREFIX%>_patient_ref IN (SELECT pat_id FROM <%SCHEMA_2%>.patient_raw)
+-- Temp        AND q.hash_index_col NOT IN (SELECT hash_index_col FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
+-- Temp    )'
+-- Temp    ))  AS t(res TEXT) INTO erg;
+
