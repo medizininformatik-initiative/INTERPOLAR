@@ -437,6 +437,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     additional_search_parameter = NA,
     verbose = VERBOSE
 ) {
+
   WAIT_TIMES <- 2 ** (0 : 7)
   max_trials <- length(WAIT_TIMES)
 
@@ -471,7 +472,6 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
   }
   if (total < 1) {
     if (verbose) catWarningMessage(paste0('No ', resource, 's found on FHIR Server. Return empty Table. Please note!\n'))
-    return(NA)
   }
 
   curr_len <- min(ids_at_once, length(ids))
