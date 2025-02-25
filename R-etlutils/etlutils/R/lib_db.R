@@ -17,7 +17,7 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
     schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
     admin_user = constants[["DB_ADMIN_USER"]],
     admin_password = constants[["DB_ADMIN_PASSWORD"]],
-    admin_schema = constants[["DB_ADMIN_SCHEMA"]],
+    admin_schema = constants[["DB_ADMIN_SCHEMAS"]],
     log = log)
 }
 
@@ -38,7 +38,7 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 #' @param log Logical. If \code{TRUE}, database operations will be logged.
 #' @param admin_user The admin username for authentication with the database.
 #' @param admin_password The admin password for authentication with the database.
-#' @param admin_schema_in The admin schema for reading and writing data from the database.
+#' @param admin_schemas The admin schema for reading and writing data from the database.
 #'
 #' @return This function does not return a value. It initializes the connection environment.
 #'
@@ -67,7 +67,7 @@ dbSetContext <- function(module_name,
                          log,
                          admin_user = NULL,
                          admin_password = NULL,
-                         admin_schema = NULL) {
+                         admin_schemas = NULL) {
   .lib_db_env[["MODULE_NAME"]] <- module_name
   .lib_db_env[["DB_NAME"]] <- dbname
   .lib_db_env[["DB_HOST"]] <- host
@@ -79,7 +79,7 @@ dbSetContext <- function(module_name,
   .lib_db_env[["DB_LOG"]] <- log %in% TRUE
   .lib_db_env[["DB_ADMIN_USER"]] <- admin_user
   .lib_db_env[["DB_ADMIN_PASSWORD"]] <- admin_password
-  .lib_db_env[["DB_ADMIN_SCHEMA"]] <- admin_schema
+  .lib_db_env[["DB_ADMIN_SCHEMAS"]] <- admin_schemas
 }
 
 #' Check if Database Logging is Enabled
@@ -216,7 +216,7 @@ dbGetAdminConnection <- function() {
     port = .lib_db_env[["DB_PORT"]],
     user = .lib_db_env[["DB_ADMIN_USER"]],
     password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
-    options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),
+    #options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),
     timezone = "Europe/Berlin"
   )
   # Increase memory allocation
@@ -1255,10 +1255,13 @@ dbReset <- function() {
   tables <- DBI::dbGetQuery(con, query)
   # Clear all tables
   for (i in seq_len(nrow(tables))) {
-    truncate_statement <- paste0("TRUNCATE TABLE ",
-                                  tables$schemaname[1], ".", tables$tablename[i],
-                                  " RESTART IDENTITY CASCADE;")
-    DBI::dbExecute(con, truncate_statement)
+    schema <- tables$schemaname[i]
+    if (schema %in% .lib_db_env[["DB_ADMIN_SCHEMAS"]]) {
+      truncate_statement <- paste0("TRUNCATE TABLE ",
+                                   schema, ".", tables$tablename[i],
+                                   " RESTART IDENTITY CASCADE;")
+      DBI::dbExecute(con, truncate_statement)
+    }
   }
   dbUnlock(lock_id)
   # Close connection
