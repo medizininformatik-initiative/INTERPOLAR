@@ -413,8 +413,24 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   resources in the `resource_tables` list to lowercase.
 #'
 loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
-  resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_ids_per_ward, table_descriptions$pid_dependant)
-  resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
+  ### DEBUG START ###
+  # Load Resources from RData files
+  if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
+    resource_names <- c(names(table_descriptions$pid_dependant), names(table_descriptions$pid_independant))
+    resource_tables <- list()
+    for (res in resource_names) {
+      file_path <- fhircrackr::paste_paths(DEBUG_PATH_TO_RAW_RDATA_FILES, paste0(tolower(res), "_raw.RData"))
+      if (file.exists(file_path)) {
+        resource_tables[[res]] <- readRDS(file_path)
+      }
+    }
+    # Add additional table of ward-patient ID per date
+    resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+  ### DEBUG END ###
+  } else {
+    resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_ids_per_ward, table_descriptions$pid_dependant)
+    resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
+  }
 
   #########################
   # START: FOR DEBUG ONLY #
