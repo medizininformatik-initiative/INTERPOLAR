@@ -25,7 +25,7 @@ mergePatEncWard <- function(patient_table, encounter_table, pids_per_ward_table)
     dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref)) |>
     dplyr::left_join(patient_table) |>
     dplyr::left_join(pids_per_ward_table,
-                     by = c("enc_patient_ref" = "patient_id",
+                     by = c("pat_id" = "patient_id",
                             "enc_id" = "encounter_id"),
                      suffix = c("_encounter", "_pids_per_ward"))
 

@@ -30,7 +30,7 @@
 #'   [mergePatEncWard()], [calculateAge()], [defineFAS1()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
-                                    REPORT_PERIOD_END = "2020-09-02") {
+                                    REPORT_PERIOD_END = "2025-03-05") {
 
   # TODO: include the start and end date in an interactive way ----------
 
@@ -64,6 +64,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
 
   # Print the number of cases in the FAS1 dataset
-  print(paste0("Number of cases in FAS1: ", nrow(FAS1)))
+
+  print(FAS1 |>
+          dplyr::distinct(enc_partof_ref,ward_name) |>
+          dplyr::group_by(ward_name) |>
+          dplyr::tally())
+
+  print(paste0("Number of cases in FAS1: ",
+               FAS1 |>
+                 dplyr::distinct(enc_partof_ref, ward_name) |>
+                 nrow()))
 
 }

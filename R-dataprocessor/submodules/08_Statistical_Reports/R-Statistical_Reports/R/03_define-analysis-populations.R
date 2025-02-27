@@ -23,11 +23,10 @@
 #'    encounter ID.
 #' 3. It only includes encounters where a valid `ward_name` exists (encounter is present in pids_per_ward).
 #' 4. It filters out encounters where the patient is younger than 18 years.
-#' 5. It ensures that the encounter period lasts at least one day.
-#' 6. It ensures that the encounter's start date is within the provided report period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
-#' 7. It filters encounters where the difference between the encounter start date and the report period end date is at least 7 days.
-#' 8. It ensures that the `enc_id` is unique by filtering for distinct encounters.
-#' 9. The function sorts the resulting dataset by encounter reference, encounter ID, and encounter period start and end dates.
+#' 5. It ensures that the encounter's start date is within the provided report period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
+#' 6. It filters encounters where the difference between the encounter start date and the report period end date is at least 7 days.
+#' 7. It ensures that the `enc_id` is unique by filtering for distinct encounters.
+#' 8. The function sorts the resulting dataset by encounter reference, encounter ID, and encounter period start and end dates.
 #'
 #' The function checks for the presence of multiple rows for the same encounter ID in the resulting dataset. If duplicates
 #' are found, the function returns a warning.
@@ -48,17 +47,20 @@ defineFAS1 <- function(complete_table, REPORT_PERIOD_START, REPORT_PERIOD_END) {
     #--------------------------------------------------------------------------#
     dplyr::filter(Reduce(`|`, lapply(inpatient_encounters, grepl, enc_partof_ref))) |>
     dplyr::filter(!is.na(ward_name)) |>
-    # TODO: handle NA end-dates properly -------------
-    dplyr::filter(as.numeric(enc_period_end - enc_period_start) >= 1) |>
     dplyr::filter(age >= 18) |>
     dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |>
     dplyr::filter(as.numeric(as.POSIXct(REPORT_PERIOD_END) - enc_period_start) >= 7) |>
     dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, input_datetime_encounter)
 
-  # Check if there are multiple rows for the same (ward) encounter in the FAS1 dataset
+  # Check if there are multiple rows for the same Versorgungsstellenkontakt in the FAS1 dataset
   if (checkMultipleRows(FAS1, c("enc_id"))) {
-    warning("There are multiple rows for the same encounter. Please check the data.")
+    warning("There are multiple rows for the same Versorgungsstellenkontakt. Please check the data.")
+  }
+
+  # Check if there are multiple rows for the same Einrichtungskontakt in the FAS1 dataset
+  if (checkMultipleRows(FAS1, c("enc_partof_ref"))) {
+    warning("There are multiple rows for the same Einrichtungskontakt. Please check the data.")
   }
 
   return(FAS1)

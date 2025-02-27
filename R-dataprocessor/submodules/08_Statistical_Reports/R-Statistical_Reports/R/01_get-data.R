@@ -126,7 +126,6 @@ getPidsPerWardData <- function(lock_id, table_name) {
 
   pid_per_ward_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
-    selectNewestInput(grouping_vars=c("patient_id", "encounter_id", "ward_name")) |>
     dplyr::arrange(patient_id, encounter_id, input_datetime)
 
   return(pid_per_ward_table)
