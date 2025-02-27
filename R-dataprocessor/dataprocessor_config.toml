@@ -30,17 +30,6 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 MAX_DIR_COUNT = 5
 
-[debug]
-###################
-# FOR DEBUG ONLY: #
-###################
-# Activate this date to run the analysis for a spectific date. If it is not set,
-# then time now will be taken.
-# This date must match the data in the database. Only Encounters whose start
-# date is before this date and whose end date is not set or is after this date
-# are loaded from the database.
-#DEBUG_ENCOUNTER_DATETIME = "2020-07-31 21:25:00"
-
 [analyse]
 
 # In the patient table of the frontend, the patient ID should be displayed, which
