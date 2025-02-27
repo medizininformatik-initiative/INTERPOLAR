@@ -48,11 +48,8 @@ processData <- function() {
 
   }))
 
-  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
-    etlutils::runLevel2("Close database connections", {
-      etlutils::dbCloseAllConnections()
-    })
-  }))
+  # Reset lock and close all database connections. Do not surround this with runLevelX!
+  etlutils::dbCloseAllConnections()
 
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
