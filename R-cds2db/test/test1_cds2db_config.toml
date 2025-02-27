@@ -2,6 +2,19 @@
 # all data is loaded from this folder from RData files
 DEBUG_PATH_TO_RAW_RDATA_FILES = "./R-cds2db/test/tables/"
 
+#################
+# This variable should be set to change the downloaded RAW data for DEBUG
+# purposes. It contains a path to a script that is sourced after the downloaded
+# and cracking of the FHIR RAW data.
+#################
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES = [
+   "./R-cds2db/test/test_common_data_preparation.R",
+   "./R-cds2db/test/test1_change_RAW_Data.R",
+]
+
+DEBUG_DAY = 1
+
+
 # With this filter patterns the data in the tables directory were loaded
 # from the FHIR server
 ENCOUNTER_FILTER_PATTERN_1 = [
@@ -222,15 +235,4 @@ DEBUG_IGNORE_LAST_UPDATE_DATE = true
 # NOTE: This filter does not affect any FHIR search request, but only filters the patients found
 # afterwards.
 #DEBUG_FILTER_PIDS_PATTERN = "UKB"
-
-#################
-# This variable should be set to change the downloaded RAW data for DEBUG
-# purposes. It contains a path to a script that is sourced after the downloaded
-# and cracking of the FHIR RAW data.
-#################
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME = "./R-cds2db/test/test1_change_RAW_Data.R"
-DEBUG_DAY = 1
-
-
-
 
