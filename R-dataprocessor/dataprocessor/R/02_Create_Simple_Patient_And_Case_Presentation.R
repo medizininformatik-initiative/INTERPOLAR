@@ -451,9 +451,11 @@ createFrontendTables <- function() {
     table_name <- getViewTableName("encounter")
 
     query <- paste0( "SELECT * FROM ", table_name, "\n",
-                     "  WHERE enc_patient_ref IN (", query_ids, ")\n",
-                     "    AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
-                     "    AND enc_period_start <= '", query_datetime, "'"
+                     "  WHERE encounter_raw_id in (\n",
+                     "    SELECT MAX(encounter_raw_id) FROM ", table_name, "\n",
+                     "      WHERE enc_id IN (", query_ids, ")\n",
+                     "      GROUP BY enc_id\n",
+                     "  )"
     )
 
     if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
