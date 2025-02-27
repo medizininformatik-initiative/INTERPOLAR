@@ -448,7 +448,7 @@ createFrontendTables <- function() {
       fall_gewicht_aktl_einheit = character(),
       fall_groesse = numeric(),
       fall_groesse_einheit = character(),
-      fall_bmi = numeric(),
+      #fall_bmi = numeric(),
       fall_status = character(),
       fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_complete = character()
@@ -578,7 +578,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
         data.table::set(enc_frontend_table, target_index, "fall_fe_id", pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
-        data.table::set(enc_frontend_table, target_index, "fall_ent_dat",enc_period_end)
+        data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
         # set fall_complete (derived from FHIR Encounter.status)
@@ -661,7 +661,11 @@ createFrontendTables <- function() {
 
         getObservation(OBSERVATION_BODY_WEIGHT_CODES, OBSERVATION_BODY_WEIGHT_SYSTEM, "fall_gewicht_aktuell", "fall_gewicht_aktl_einheit")
         getObservation(OBSERVATION_BODY_HEIGHT_CODES, OBSERVATION_BODY_HEIGHT_SYSTEM, "fall_groesse", "fall_groesse_einheit", obs_by_pid = TRUE)
-        getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
+        # For unknown reasons, a BMI written to the RedCap is always written back from the
+        # RedCap to the database as an empty value, which duplicates the entire data record.
+        # As the cause could not be found, we have simply deactivated the field for the time
+        # being. It is not currently displayed in the RedCap anyway.
+        #getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
 
       }
 
