@@ -72,7 +72,7 @@ getQueryDatetime <- function() {
 #' @return A character vector containing the extracted IDs, optionally unique.
 #'
 extractIDsFromReferences <- function(references, unique = TRUE) {
-  ids <- etlutils::getAfterLastSlash(references)
+  ids <- etlutils::getAfterLastSlash(na.omit(references))
   if (unique) {
     ids <- unique(ids)
   }
@@ -90,7 +90,7 @@ extractIDsFromReferences <- function(references, unique = TRUE) {
 #' Default is \code{FALSE}.
 #'
 getQueryList <- function(collection, remove_ref_type = FALSE) {
-  collection <- unique(collection)
+  collection <- unique(na.omit(collection))
   if (remove_ref_type) {
     collection <- extractIDsFromReferences(collection)
   }
@@ -445,9 +445,9 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
-    # load Encounters for all PIDs
     query_datetime <- getQueryDatetime()
-    query_ids <- getQueryList(pids_per_ward$patient_id)
+    # load Encounters for all PIDs from pids_per_ward database table
+    query_ids <- getQueryList(pids_per_ward$encounter_id)
     table_name <- getViewTableName("encounter")
 
     query <- paste0( "SELECT * FROM ", table_name, "\n",
@@ -500,8 +500,7 @@ createFrontendTables <- function() {
     }
 
     # load Conditions referenced by Encounters
-    condition_ids <- encounters$enc_diagnosis_condition_id
-    query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
+    query_ids <- getQueryList(encounters$enc_diagnosis_condition_ref, remove_ref_type = TRUE)
     table_name <- getViewTableName("condition")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
@@ -514,8 +513,9 @@ createFrontendTables <- function() {
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
 
       pid <- unique_pid_ward$patient_id[pid_index]
-      pid_encounters <- encounters[enc_patient_ref == pid]
-      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid]
+      pid_ref <- etlutils::getFHIRPatientReference(pid)
+      pid_encounters <- encounters[enc_patient_ref == pid_ref]
+      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
@@ -535,7 +535,7 @@ createFrontendTables <- function() {
       # highlighted here.
       pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
 
-      pid_patient <- patients[pat_id == extractIDsFromReferences(pid)]
+      pid_patient <- patients[pat_id == pid]
 
       # check errors no patient resource found for PID
       if (!nrow(pid_patient)) { # no Patient resource found for PID
@@ -622,7 +622,7 @@ createFrontendTables <- function() {
             # If no Observations found with the direct encounter link, so identify potencial
             # Observations by time overlap with the encounter period start and current date
             if (!nrow(observations)) {
-              additional_query_condition <- paste0("        obs_patient_ref = '", pid, "' AND\n",
+              additional_query_condition <- paste0("        obs_patient_ref = 'Patient/", pid, "' AND\n",
                                                    "        obs_effectivedatetime > '", enc_period_start, "'\n")
               query <- paste0(query_template, additional_query_condition)
 
@@ -631,7 +631,7 @@ createFrontendTables <- function() {
 
           } else {
             # Extract Observations by patient ID, but without any references to the encounter
-            additional_query_condition <- paste0("        obs_patient_ref = '", pid, "'\n")
+            additional_query_condition <- paste0("        obs_patient_ref = 'Patient/", pid, "'\n")
             query <- paste0(query_template, additional_query_condition)
 
             observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[3]")

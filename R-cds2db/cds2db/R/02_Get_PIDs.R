@@ -330,6 +330,11 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
     })
   }
 
+  # extract ID from references
+  for (i in seq_along(pids_per_ward)) {
+    pids_per_ward[[i]][, pid := etlutils::getAfterLastSlash(pid)]
+  }
+
   etlutils::runLevel3("Ensure every Encounter/Patient ID is only assigned to one ward", {
     # Combine all patient IDs from the list into a data table with their corresponding stations
     pids_per_ward_combinations <- unique(data.table::rbindlist(
