@@ -29,7 +29,7 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
   # This only occurs if the database has been reset and the dataprocessor was executed too quickly
   if (is.na(last_processing_nr)) {
     stop(paste0("In table ", table_name, " the content of column last_processing_nr in the ",
-                "database is NA, so the following SQL query will return an error:\n", statement,
+                "database is NA, so the following SQL query will return an error:\n", query,
                 "\nThis should never happen..."))
   }
   etlutils::dbGetReadOnlyQuery(query, lock_id = "loadLastImportedDatasetsFromDB()")
