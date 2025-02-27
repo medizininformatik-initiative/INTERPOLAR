@@ -35,29 +35,38 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
   etlutils::dbGetReadOnlyQuery(query, lock_id = "loadLastImportedDatasetsFromDB()")
 }
 
-#' Get Current Datetime
+#' Get the most relevant current datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME` exists, it returns its value as a POSIXct object.
-#' Otherwise, it returns the current system time.
+#' This function retrieves the latest encounter end datetime from the `encounters` table.
+#' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
+#' The result is converted to a `POSIXct` object with the appropriate timezone.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME` if it exists.
+#' @param encounters A `data.table` or `data.frame` containing encounter records,
+#'                   where `enc_period_end` represents the encounter end timestamps.
 #'
-getCurrentDatetime <- function() {
-  if (exists("DEBUG_ENCOUNTER_DATETIME")) {
-    return(etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME))
-  }
-  return(etlutils::as.POSIXctWithTimezone(Sys.time()))
+#' @return A `POSIXct` object representing the most recent encounter end datetime
+#'         or the current system time if no valid datetime is found.
+#'
+#' @export
+getCurrentDatetime <- function(encounters) {
+  encounters_end <- na.omit(encounters$enc_period_end)
+  datetime <- if (length(encounters_end)) min(encounters_end) - 1 else Sys.time()
+  return(etlutils::as.POSIXctWithTimezone(datetime))
 }
 
-#' Get Query Datetime
+#' Format datetime for SQL queries
 #'
-#' This function returns the current datetime formatted for SQL queries.
-#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
+#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
+#' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
 #'
-#' @return A character string representing the current datetime formatted for SQL queries.
+#' @param encounters A `data.table` or `data.frame` containing encounter records.
+#'                   Used to determine the latest encounter end datetime.
 #'
-getQueryDatetime <- function() {
-  format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
+#' @return A character string representing the formatted SQL datetime.
+#'
+#' @export
+getQueryDatetime <- function(encounters) {
+  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
 }
 
 #' Extract IDs from References
@@ -445,7 +454,6 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
-    query_datetime <- getQueryDatetime()
     # load Encounters for all PIDs from pids_per_ward database table
     query_ids <- getQueryList(pids_per_ward$encounter_id)
     table_name <- getViewTableName("encounter")
@@ -469,6 +477,8 @@ createFrontendTables <- function() {
     }
 
     encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
+
+    query_datetime <- getQueryDatetime(encounters)
 
     # Create a new table with rows where enc_partof_ref is NOT NA
     part_of_encounters <- encounters[!is.na(enc_partof_ref)]
