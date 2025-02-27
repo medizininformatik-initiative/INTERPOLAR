@@ -584,7 +584,7 @@ createFrontendTables <- function() {
         # set fall_complete (derived from FHIR Encounter.status)
         # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
         fall_complete <- grepl("^finished$|^cancelled$|^entered-in-error$", enc_status, ignore.case = TRUE)
-        fall_complete <- ifelse(fall_complete, "Complete", NA)
+        fall_complete <- ifelse(fall_complete, "Complete", "Incomplete")
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
         # Extract ward name from unique_pid_ward table
