@@ -650,6 +650,12 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
   # Get row count for reporting
   row_count <- nrow(table)
   if (row_count > 0) {
+
+    # ensure all empty strings are set to NA because RedCap would change it too and this
+    # will produce different datasets
+    char_cols <- names(table)[sapply(table, is.character)]
+    table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+
     db_connection <- dbGetWriteConnection()
     # Append table content
     dbLock(lock_id)
