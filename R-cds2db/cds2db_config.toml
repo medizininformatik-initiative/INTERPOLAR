@@ -80,7 +80,7 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # single status:
 #FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
 #
-# multiple status can be wtitten as comma separated list:
+# multiple status can be written as comma separated list:
 #FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
 
 
