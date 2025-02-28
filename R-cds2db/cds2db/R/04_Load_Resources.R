@@ -301,18 +301,28 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Load all data of relevant patients from FHIR server
   resource_tables_fhir <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
-  # Loop through each table name in the `resource_tables_fhir` list
-  for (table_name in names(resource_tables_fhir)) {
+  raw_fhir_resources <- resource_tables_fhir$raw_fhir_resources
+  # The pids_with_last_updated now only contains persons who were older than MIN_PATIENT_AGE at
+  # enc_period_start if the parameter MIN_PATIENT_AGE is specified.
+  pids_with_last_updated <- resource_tables_fhir$pids_with_last_updated
+
+  valid_pids <- unlist(pids_with_last_updated, use.names = FALSE)
+
+  # Iterate over each ward and filter the patient_ids_per_ward based on valid_pids
+  filtered_patient_ids_per_ward <- lapply(patient_ids_per_ward, function(dt) dt[pid %in% valid_pids])
+
+  # Loop through each table name in the `raw_fhir_resources` list
+  for (table_name in names(raw_fhir_resources)) {
     # Extract the column names from the corresponding entry in `table_descriptions`
     table_columns <- table_descriptions[[table_name]]@cols@names
-    # Subset the columns of the current table in `resource_tables_fhir` to match the columns from `table_descriptions`
-    resource_tables_fhir[[table_name]] <- resource_tables_fhir[[table_name]][, ..table_columns]
+    # Subset the columns of the current table in `raw_fhir_resources` to match the columns from `table_descriptions`
+    raw_fhir_resources[[table_name]] <- raw_fhir_resources[[table_name]][, ..table_columns]
   }
 
   # Add additional table of ward-patient ID per date
-  resource_tables_fhir[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+  raw_fhir_resources[["pids_per_ward"]] <- createWardPatientIDPerDateTable(filtered_patient_ids_per_ward)
 
-  return(resource_tables_fhir)
+  return(raw_fhir_resources)
 }
 
 #' Load Referenced Resources by Own ID from FHIR Server
