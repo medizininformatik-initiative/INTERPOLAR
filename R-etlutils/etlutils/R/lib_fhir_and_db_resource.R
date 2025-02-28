@@ -135,3 +135,26 @@ getFHIRPatientReference <- function(patient_id_or_reference) {
 getFHIREncounterReference <- function(encounter_id_or_reference) {
   getFHIRReference("Encounter", encounter_id_or_reference)
 }
+
+#' Remove FHIR-style indices from element names
+#'
+#' This function removes numerical indices enclosed in brackets (e.g., "[0]", "[1.2]")
+#' from a given vector of indexed element names.
+#'
+#' @param indexed_elements A character vector containing FHIR-style indexed element names.
+#' @param brackets A character vector of length 2 specifying the opening and closing brackets.
+#'        Default is c("[", "]").
+#'
+#' @return A character vector with FHIR-style indices removed.
+#'
+#' @examples
+#' indexed_elements <- c("[0]Patient.name", "[1.2]Observation.value", "Condition.category")
+#' removeFHIRIndices(indexed_elements)
+#'
+#' @export
+removeFHIRIndices <- function(indexed_elements, brackets = c("[", "]")) {
+  brackets_pattern <- paste0(getEscaped(brackets[1]), "([0-9]+\\.*)*", getEscaped(brackets[2]))
+  indexed_elements <- gsub(brackets_pattern, "", indexed_elements)
+  return(indexed_elements)
+}
+
