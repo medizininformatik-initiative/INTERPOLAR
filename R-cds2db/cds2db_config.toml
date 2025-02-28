@@ -55,7 +55,6 @@ FHIR_TOKEN_REFRESH_PASSWORD = ""
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests [ehemals MAX_LEN]
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE = 300  # reserve 300 characters for further parameters, whose length cannot estimated [ehemals RES_LEN]
 
-MIN_PATIENT_AGE                    = 18           # defined Age threshold in POLAR basic population
 MIN_BIRTHDAY                       = "1910-01-01" # lowest possible birthday
 DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the default birth date if the real date is missing
 
