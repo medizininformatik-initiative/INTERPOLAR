@@ -627,17 +627,61 @@ printAllTables <- function(table, table_name = NA) {
 #' This function checks for global variables starting with "DEBUG_" and appends
 #' a warning message to the given `finish_message` if any are found.
 #'
+#' If multiple DEBUG_ variables follow a sequential numbering pattern (e.g., DEBUG_VAR1 - DEBUG_VAR10),
+#' they will be grouped together to improve readability.
+#'
 #' @param finish_message A character string representing the current finish message.
 #' @return A modified finish message including a warning if DEBUG_ variables are active.
 #'
 #' @export
 appendDebugWarning <- function(finish_message) {
-  # Check if any DEBUG_ variables exist
+  # Retrieve DEBUG_ variables
   debug_variables <- getGlobalVariablesByPrefix("DEBUG_", astype = "vector")
 
-  # If there are active DEBUG variables, append a warning message
   if (length(debug_variables) > 0) {
-    debug_variable_string <- paste(names(debug_variables), collapse = ", ")
+    # Extract variable names
+    var_names <- names(debug_variables)
+
+    # Function to group sequentially numbered variables
+    group_sequential_vars <- function(vars) {
+      grouped_vars <- list()
+      used_vars <- logical(length(vars)) # Track used variables
+
+      for (i in seq_along(vars)) {
+        if (used_vars[i]) next # Skip already grouped variables
+
+        base_name <- sub("\\d+$", "", vars[i]) # Extract base name (without numbers)
+        matches <- grep(paste0("^", base_name, "\\d+$"), vars, value = TRUE) # Find matching numbered variables
+
+        if (length(matches) > 1) {
+          # Extract numbers and sort them
+          numbers <- as.integer(sub(base_name, "", matches))
+          numbers <- sort(numbers, na.last = TRUE)
+
+          # Create a range if numbers are consecutive
+          if (all(diff(numbers) == 1)) {
+            grouped_vars <- c(grouped_vars, paste0(matches[1], " - ", matches[length(matches)]))
+          } else {
+            grouped_vars <- c(grouped_vars, matches)
+          }
+
+          # Mark variables as used
+          used_vars[vars %in% matches] <- TRUE
+        } else {
+          grouped_vars <- c(grouped_vars, vars[i])
+        }
+      }
+
+      return(grouped_vars)
+    }
+
+    # Apply grouping
+    grouped_var_list <- group_sequential_vars(var_names)
+
+    # Create output string
+    debug_variable_string <- paste(grouped_var_list, collapse = ", ")
+
+    # Append warning message
     finish_message <- paste0(
       finish_message,
       "\nAdditional Warning: The following DEBUG parameters are activated: ", debug_variable_string,
