@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-02-21 10:04:01
+-- Create time: 2025-03-03 19:12:27
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  10_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_location_identifier_type_code VARCHAR,   -- location/location/identifier/type/coding/code (VARCHAR)
   enc_location_identifier_type_display VARCHAR,   -- location/location/identifier/type/coding/display (VARCHAR)
   enc_location_identifier_type_text VARCHAR,   -- location/location/identifier/type/text (VARCHAR)
+  enc_location_identifier_system VARCHAR,   -- location/location/identifier/system (VARCHAR)
+  enc_location_identifier_value VARCHAR,   -- location/location/identifier/value (VARCHAR)
   enc_location_display VARCHAR,   -- location/location/display (VARCHAR)
   enc_location_status VARCHAR,   -- location/status (VARCHAR)
   enc_location_physicaltype_system VARCHAR,   -- location/physicalType/coding/system (VARCHAR)
@@ -109,6 +111,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   enc_serviceprovider_identifier_type_code VARCHAR,   -- serviceProvider/identifier/type/coding/code (VARCHAR)
   enc_serviceprovider_identifier_type_display VARCHAR,   -- serviceProvider/identifier/type/coding/display (VARCHAR)
   enc_serviceprovider_identifier_type_text VARCHAR,   -- serviceProvider/identifier/type/text (VARCHAR)
+  enc_serviceprovider_identifier_system VARCHAR,   -- serviceProvider/identifier/system (VARCHAR)
+  enc_serviceprovider_identifier_value VARCHAR,   -- serviceProvider/identifier/value (VARCHAR)
   enc_serviceprovider_display VARCHAR,   -- serviceProvider/display (VARCHAR)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -170,6 +174,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
              COALESCE(db.to_char_immutable(enc_location_identifier_type_code), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/code (enc_location_identifier_type_code)
              COALESCE(db.to_char_immutable(enc_location_identifier_type_display), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/coding/display (enc_location_identifier_type_display)
              COALESCE(db.to_char_immutable(enc_location_identifier_type_text), '#NULL#') || '|||' || -- hash from: location/location/identifier/type/text (enc_location_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_location_identifier_system), '#NULL#') || '|||' || -- hash from: location/location/identifier/system (enc_location_identifier_system)
+             COALESCE(db.to_char_immutable(enc_location_identifier_value), '#NULL#') || '|||' || -- hash from: location/location/identifier/value (enc_location_identifier_value)
              COALESCE(db.to_char_immutable(enc_location_display), '#NULL#') || '|||' || -- hash from: location/location/display (enc_location_display)
              COALESCE(db.to_char_immutable(enc_location_status), '#NULL#') || '|||' || -- hash from: location/status (enc_location_status)
              COALESCE(db.to_char_immutable(enc_location_physicaltype_system), '#NULL#') || '|||' || -- hash from: location/physicalType/coding/system (enc_location_physicaltype_system)
@@ -185,6 +191,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
              COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_code), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/code (enc_serviceprovider_identifier_type_code)
              COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_display), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/coding/display (enc_serviceprovider_identifier_type_display)
              COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_type_text), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/type/text (enc_serviceprovider_identifier_type_text)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_system), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/system (enc_serviceprovider_identifier_system)
+             COALESCE(db.to_char_immutable(enc_serviceprovider_identifier_value), '#NULL#') || '|||' || -- hash from: serviceProvider/identifier/value (enc_serviceprovider_identifier_value)
              COALESCE(db.to_char_immutable(enc_serviceprovider_display), '#NULL#') || '|||' || -- hash from: serviceProvider/display (enc_serviceprovider_display)
              '#'
       )
@@ -331,6 +339,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_recorder_identifier_type_code VARCHAR,   -- recorder/identifier/type/coding/code (VARCHAR)
   con_recorder_identifier_type_display VARCHAR,   -- recorder/identifier/type/coding/display (VARCHAR)
   con_recorder_identifier_type_text VARCHAR,   -- recorder/identifier/type/text (VARCHAR)
+  con_recorder_identifier_system VARCHAR,   -- recorder/identifier/system (VARCHAR)
+  con_recorder_identifier_value VARCHAR,   -- recorder/identifier/value (VARCHAR)
   con_recorder_display VARCHAR,   -- recorder/display (VARCHAR)
   con_asserter_ref VARCHAR,   -- asserter/reference (VARCHAR)
   con_asserter_type VARCHAR,   -- asserter/type (VARCHAR)
@@ -340,6 +350,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_asserter_identifier_type_code VARCHAR,   -- asserter/identifier/type/coding/code (VARCHAR)
   con_asserter_identifier_type_display VARCHAR,   -- asserter/identifier/type/coding/display (VARCHAR)
   con_asserter_identifier_type_text VARCHAR,   -- asserter/identifier/type/text (VARCHAR)
+  con_asserter_identifier_system VARCHAR,   -- asserter/identifier/system (VARCHAR)
+  con_asserter_identifier_value VARCHAR,   -- asserter/identifier/value (VARCHAR)
   con_asserter_display VARCHAR,   -- asserter/display (VARCHAR)
   con_stage_summary_system VARCHAR,   -- stage/summary/coding/system (VARCHAR)
   con_stage_summary_version VARCHAR,   -- stage/summary/coding/version (VARCHAR)
@@ -354,6 +366,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_stage_assessment_identifier_type_code VARCHAR,   -- stage/assessment/identifier/type/coding/code (VARCHAR)
   con_stage_assessment_identifier_type_display VARCHAR,   -- stage/assessment/identifier/type/coding/display (VARCHAR)
   con_stage_assessment_identifier_type_text VARCHAR,   -- stage/assessment/identifier/type/text (VARCHAR)
+  con_stage_assessment_identifier_system VARCHAR,   -- stage/assessment/identifier/system (VARCHAR)
+  con_stage_assessment_identifier_value VARCHAR,   -- stage/assessment/identifier/value (VARCHAR)
   con_stage_assessment_display VARCHAR,   -- stage/assessment/display (VARCHAR)
   con_stage_type_system VARCHAR,   -- stage/type/coding/system (VARCHAR)
   con_stage_type_version VARCHAR,   -- stage/type/coding/version (VARCHAR)
@@ -369,6 +383,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   con_note_authorreference_identifier_type_code VARCHAR,   -- note/authorReference/identifier/type/coding/code (VARCHAR)
   con_note_authorreference_identifier_type_display VARCHAR,   -- note/authorReference/identifier/type/coding/display (VARCHAR)
   con_note_authorreference_identifier_type_text VARCHAR,   -- note/authorReference/identifier/type/text (VARCHAR)
+  con_note_authorreference_identifier_system VARCHAR,   -- note/authorReference/identifier/system (VARCHAR)
+  con_note_authorreference_identifier_value VARCHAR,   -- note/authorReference/identifier/value (VARCHAR)
   con_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   con_note_time VARCHAR,   -- note/time (VARCHAR)
   con_note_text VARCHAR,   -- note/text (VARCHAR)
@@ -449,6 +465,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
              COALESCE(db.to_char_immutable(con_recorder_identifier_type_code), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/code (con_recorder_identifier_type_code)
              COALESCE(db.to_char_immutable(con_recorder_identifier_type_display), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/coding/display (con_recorder_identifier_type_display)
              COALESCE(db.to_char_immutable(con_recorder_identifier_type_text), '#NULL#') || '|||' || -- hash from: recorder/identifier/type/text (con_recorder_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_system), '#NULL#') || '|||' || -- hash from: recorder/identifier/system (con_recorder_identifier_system)
+             COALESCE(db.to_char_immutable(con_recorder_identifier_value), '#NULL#') || '|||' || -- hash from: recorder/identifier/value (con_recorder_identifier_value)
              COALESCE(db.to_char_immutable(con_recorder_display), '#NULL#') || '|||' || -- hash from: recorder/display (con_recorder_display)
              COALESCE(db.to_char_immutable(con_asserter_ref), '#NULL#') || '|||' || -- hash from: asserter/reference (con_asserter_ref)
              COALESCE(db.to_char_immutable(con_asserter_type), '#NULL#') || '|||' || -- hash from: asserter/type (con_asserter_type)
@@ -458,6 +476,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
              COALESCE(db.to_char_immutable(con_asserter_identifier_type_code), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/code (con_asserter_identifier_type_code)
              COALESCE(db.to_char_immutable(con_asserter_identifier_type_display), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/coding/display (con_asserter_identifier_type_display)
              COALESCE(db.to_char_immutable(con_asserter_identifier_type_text), '#NULL#') || '|||' || -- hash from: asserter/identifier/type/text (con_asserter_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_system), '#NULL#') || '|||' || -- hash from: asserter/identifier/system (con_asserter_identifier_system)
+             COALESCE(db.to_char_immutable(con_asserter_identifier_value), '#NULL#') || '|||' || -- hash from: asserter/identifier/value (con_asserter_identifier_value)
              COALESCE(db.to_char_immutable(con_asserter_display), '#NULL#') || '|||' || -- hash from: asserter/display (con_asserter_display)
              COALESCE(db.to_char_immutable(con_stage_summary_system), '#NULL#') || '|||' || -- hash from: stage/summary/coding/system (con_stage_summary_system)
              COALESCE(db.to_char_immutable(con_stage_summary_version), '#NULL#') || '|||' || -- hash from: stage/summary/coding/version (con_stage_summary_version)
@@ -472,6 +492,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
              COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_code), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/code (con_stage_assessment_identifier_type_code)
              COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_display), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/coding/display (con_stage_assessment_identifier_type_display)
              COALESCE(db.to_char_immutable(con_stage_assessment_identifier_type_text), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/type/text (con_stage_assessment_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_system), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/system (con_stage_assessment_identifier_system)
+             COALESCE(db.to_char_immutable(con_stage_assessment_identifier_value), '#NULL#') || '|||' || -- hash from: stage/assessment/identifier/value (con_stage_assessment_identifier_value)
              COALESCE(db.to_char_immutable(con_stage_assessment_display), '#NULL#') || '|||' || -- hash from: stage/assessment/display (con_stage_assessment_display)
              COALESCE(db.to_char_immutable(con_stage_type_system), '#NULL#') || '|||' || -- hash from: stage/type/coding/system (con_stage_type_system)
              COALESCE(db.to_char_immutable(con_stage_type_version), '#NULL#') || '|||' || -- hash from: stage/type/coding/version (con_stage_type_version)
@@ -487,6 +509,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
              COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (con_note_authorreference_identifier_type_code)
              COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (con_note_authorreference_identifier_type_display)
              COALESCE(db.to_char_immutable(con_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (con_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/system (con_note_authorreference_identifier_system)
+             COALESCE(db.to_char_immutable(con_note_authorreference_identifier_value), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/value (con_note_authorreference_identifier_value)
              COALESCE(db.to_char_immutable(con_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (con_note_authorreference_display)
              COALESCE(db.to_char_immutable(con_note_time), '#NULL#') || '|||' || -- hash from: note/time (con_note_time)
              COALESCE(db.to_char_immutable(con_note_text), '#NULL#') || '|||' || -- hash from: note/text (con_note_text)
@@ -562,6 +586,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   med_ingredient_itemreference_identifier_type_code VARCHAR,   -- ingredient/itemReference/identifier/type/coding/code (VARCHAR)
   med_ingredient_itemreference_identifier_type_display VARCHAR,   -- ingredient/itemReference/identifier/type/coding/display (VARCHAR)
   med_ingredient_itemreference_identifier_type_text VARCHAR,   -- ingredient/itemReference/identifier/type/text (VARCHAR)
+  med_ingredient_itemreference_identifier_system VARCHAR,   -- ingredient/itemReference/identifier/system (VARCHAR)
+  med_ingredient_itemreference_identifier_value VARCHAR,   -- ingredient/itemReference/identifier/value (VARCHAR)
   med_ingredient_itemreference_display VARCHAR,   -- ingredient/itemReference/display (VARCHAR)
   med_ingredient_isactive VARCHAR,   -- ingredient/isActive (VARCHAR)
   hash_index_col TEXT GENERATED ALWAYS AS (
@@ -624,6 +650,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
              COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/code (med_ingredient_itemreference_identifier_type_code)
              COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/coding/display (med_ingredient_itemreference_identifier_type_display)
              COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/type/text (med_ingredient_itemreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_system), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/system (med_ingredient_itemreference_identifier_system)
+             COALESCE(db.to_char_immutable(med_ingredient_itemreference_identifier_value), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/identifier/value (med_ingredient_itemreference_identifier_value)
              COALESCE(db.to_char_immutable(med_ingredient_itemreference_display), '#NULL#') || '|||' || -- hash from: ingredient/itemReference/display (med_ingredient_itemreference_display)
              COALESCE(db.to_char_immutable(med_ingredient_isactive), '#NULL#') || '|||' || -- hash from: ingredient/isActive (med_ingredient_isactive)
              '#'
@@ -679,6 +707,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_reportedreference_identifier_type_code VARCHAR,   -- reportedReference/identifier/type/coding/code (VARCHAR)
   medreq_reportedreference_identifier_type_display VARCHAR,   -- reportedReference/identifier/type/coding/display (VARCHAR)
   medreq_reportedreference_identifier_type_text VARCHAR,   -- reportedReference/identifier/type/text (VARCHAR)
+  medreq_reportedreference_identifier_system VARCHAR,   -- reportedReference/identifier/system (VARCHAR)
+  medreq_reportedreference_identifier_value VARCHAR,   -- reportedReference/identifier/value (VARCHAR)
   medreq_reportedreference_display VARCHAR,   -- reportedReference/display (VARCHAR)
   medreq_medicationcodeableconcept_system VARCHAR,   -- medicationCodeableConcept/coding/system (VARCHAR)
   medreq_medicationcodeableconcept_version VARCHAR,   -- medicationCodeableConcept/coding/version (VARCHAR)
@@ -693,6 +723,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_supportinginformation_identifier_type_code VARCHAR,   -- supportingInformation/identifier/type/coding/code (VARCHAR)
   medreq_supportinginformation_identifier_type_display VARCHAR,   -- supportingInformation/identifier/type/coding/display (VARCHAR)
   medreq_supportinginformation_identifier_type_text VARCHAR,   -- supportingInformation/identifier/type/text (VARCHAR)
+  medreq_supportinginformation_identifier_system VARCHAR,   -- supportingInformation/identifier/system (VARCHAR)
+  medreq_supportinginformation_identifier_value VARCHAR,   -- supportingInformation/identifier/value (VARCHAR)
   medreq_supportinginformation_display VARCHAR,   -- supportingInformation/display (VARCHAR)
   medreq_authoredon VARCHAR,   -- authoredOn (VARCHAR)
   medreq_requester_ref VARCHAR,   -- requester/reference (VARCHAR)
@@ -703,6 +735,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_requester_identifier_type_code VARCHAR,   -- requester/identifier/type/coding/code (VARCHAR)
   medreq_requester_identifier_type_display VARCHAR,   -- requester/identifier/type/coding/display (VARCHAR)
   medreq_requester_identifier_type_text VARCHAR,   -- requester/identifier/type/text (VARCHAR)
+  medreq_requester_identifier_system VARCHAR,   -- requester/identifier/system (VARCHAR)
+  medreq_requester_identifier_value VARCHAR,   -- requester/identifier/value (VARCHAR)
   medreq_requester_display VARCHAR,   -- requester/display (VARCHAR)
   medreq_reasoncode_system VARCHAR,   -- reasonCode/coding/system (VARCHAR)
   medreq_reasoncode_version VARCHAR,   -- reasonCode/coding/version (VARCHAR)
@@ -717,6 +751,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_reasonreference_identifier_type_code VARCHAR,   -- reasonReference/identifier/type/coding/code (VARCHAR)
   medreq_reasonreference_identifier_type_display VARCHAR,   -- reasonReference/identifier/type/coding/display (VARCHAR)
   medreq_reasonreference_identifier_type_text VARCHAR,   -- reasonReference/identifier/type/text (VARCHAR)
+  medreq_reasonreference_identifier_system VARCHAR,   -- reasonReference/identifier/system (VARCHAR)
+  medreq_reasonreference_identifier_value VARCHAR,   -- reasonReference/identifier/value (VARCHAR)
   medreq_reasonreference_display VARCHAR,   -- reasonReference/display (VARCHAR)
   medreq_basedon_ref VARCHAR,   -- basedOn/reference (VARCHAR)
   medreq_basedon_type VARCHAR,   -- basedOn/type (VARCHAR)
@@ -726,6 +762,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_basedon_identifier_type_code VARCHAR,   -- basedOn/identifier/type/coding/code (VARCHAR)
   medreq_basedon_identifier_type_display VARCHAR,   -- basedOn/identifier/type/coding/display (VARCHAR)
   medreq_basedon_identifier_type_text VARCHAR,   -- basedOn/identifier/type/text (VARCHAR)
+  medreq_basedon_identifier_system VARCHAR,   -- basedOn/identifier/system (VARCHAR)
+  medreq_basedon_identifier_value VARCHAR,   -- basedOn/identifier/value (VARCHAR)
   medreq_basedon_display VARCHAR,   -- basedOn/display (VARCHAR)
   medreq_note_authorstring VARCHAR,   -- note/authorString (VARCHAR)
   medreq_note_authorreference_ref VARCHAR,   -- note/authorReference/reference (VARCHAR)
@@ -736,6 +774,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medreq_note_authorreference_identifier_type_code VARCHAR,   -- note/authorReference/identifier/type/coding/code (VARCHAR)
   medreq_note_authorreference_identifier_type_display VARCHAR,   -- note/authorReference/identifier/type/coding/display (VARCHAR)
   medreq_note_authorreference_identifier_type_text VARCHAR,   -- note/authorReference/identifier/type/text (VARCHAR)
+  medreq_note_authorreference_identifier_system VARCHAR,   -- note/authorReference/identifier/system (VARCHAR)
+  medreq_note_authorreference_identifier_value VARCHAR,   -- note/authorReference/identifier/value (VARCHAR)
   medreq_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   medreq_note_time VARCHAR,   -- note/time (VARCHAR)
   medreq_note_text VARCHAR,   -- note/text (VARCHAR)
@@ -907,6 +947,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/code (medreq_reportedreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/coding/display (medreq_reportedreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/type/text (medreq_reportedreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_system), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/system (medreq_reportedreference_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_reportedreference_identifier_value), '#NULL#') || '|||' || -- hash from: reportedReference/identifier/value (medreq_reportedreference_identifier_value)
              COALESCE(db.to_char_immutable(medreq_reportedreference_display), '#NULL#') || '|||' || -- hash from: reportedReference/display (medreq_reportedreference_display)
              COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_system), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/system (medreq_medicationcodeableconcept_system)
              COALESCE(db.to_char_immutable(medreq_medicationcodeableconcept_version), '#NULL#') || '|||' || -- hash from: medicationCodeableConcept/coding/version (medreq_medicationcodeableconcept_version)
@@ -921,6 +963,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_code), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/code (medreq_supportinginformation_identifier_type_code)
              COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_display), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/display (medreq_supportinginformation_identifier_type_display)
              COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_type_text), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/text (medreq_supportinginformation_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_system), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/system (medreq_supportinginformation_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_supportinginformation_identifier_value), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/value (medreq_supportinginformation_identifier_value)
              COALESCE(db.to_char_immutable(medreq_supportinginformation_display), '#NULL#') || '|||' || -- hash from: supportingInformation/display (medreq_supportinginformation_display)
              COALESCE(db.to_char_immutable(medreq_authoredon), '#NULL#') || '|||' || -- hash from: authoredOn (medreq_authoredon)
              COALESCE(db.to_char_immutable(medreq_requester_ref), '#NULL#') || '|||' || -- hash from: requester/reference (medreq_requester_ref)
@@ -931,6 +975,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_requester_identifier_type_code), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/code (medreq_requester_identifier_type_code)
              COALESCE(db.to_char_immutable(medreq_requester_identifier_type_display), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/display (medreq_requester_identifier_type_display)
              COALESCE(db.to_char_immutable(medreq_requester_identifier_type_text), '#NULL#') || '|||' || -- hash from: requester/identifier/type/text (medreq_requester_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_system), '#NULL#') || '|||' || -- hash from: requester/identifier/system (medreq_requester_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_requester_identifier_value), '#NULL#') || '|||' || -- hash from: requester/identifier/value (medreq_requester_identifier_value)
              COALESCE(db.to_char_immutable(medreq_requester_display), '#NULL#') || '|||' || -- hash from: requester/display (medreq_requester_display)
              COALESCE(db.to_char_immutable(medreq_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medreq_reasoncode_system)
              COALESCE(db.to_char_immutable(medreq_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medreq_reasoncode_version)
@@ -945,6 +991,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medreq_reasonreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medreq_reasonreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medreq_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/system (medreq_reasonreference_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_reasonreference_identifier_value), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/value (medreq_reasonreference_identifier_value)
              COALESCE(db.to_char_immutable(medreq_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medreq_reasonreference_display)
              COALESCE(db.to_char_immutable(medreq_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medreq_basedon_ref)
              COALESCE(db.to_char_immutable(medreq_basedon_type), '#NULL#') || '|||' || -- hash from: basedOn/type (medreq_basedon_type)
@@ -954,6 +1002,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (medreq_basedon_identifier_type_code)
              COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (medreq_basedon_identifier_type_display)
              COALESCE(db.to_char_immutable(medreq_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (medreq_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/system (medreq_basedon_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_basedon_identifier_value), '#NULL#') || '|||' || -- hash from: basedOn/identifier/value (medreq_basedon_identifier_value)
              COALESCE(db.to_char_immutable(medreq_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (medreq_basedon_display)
              COALESCE(db.to_char_immutable(medreq_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medreq_note_authorstring)
              COALESCE(db.to_char_immutable(medreq_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medreq_note_authorreference_ref)
@@ -964,6 +1014,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medreq_note_authorreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medreq_note_authorreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medreq_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/system (medreq_note_authorreference_identifier_system)
+             COALESCE(db.to_char_immutable(medreq_note_authorreference_identifier_value), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/value (medreq_note_authorreference_identifier_value)
              COALESCE(db.to_char_immutable(medreq_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medreq_note_authorreference_display)
              COALESCE(db.to_char_immutable(medreq_note_time), '#NULL#') || '|||' || -- hash from: note/time (medreq_note_time)
              COALESCE(db.to_char_immutable(medreq_note_text), '#NULL#') || '|||' || -- hash from: note/text (medreq_note_text)
@@ -1150,6 +1202,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_supportinginformation_identifier_type_code VARCHAR,   -- supportingInformation/identifier/type/coding/code (VARCHAR)
   medadm_supportinginformation_identifier_type_display VARCHAR,   -- supportingInformation/identifier/type/coding/display (VARCHAR)
   medadm_supportinginformation_identifier_type_text VARCHAR,   -- supportingInformation/identifier/type/text (VARCHAR)
+  medadm_supportinginformation_identifier_system VARCHAR,   -- supportingInformation/identifier/system (VARCHAR)
+  medadm_supportinginformation_identifier_value VARCHAR,   -- supportingInformation/identifier/value (VARCHAR)
   medadm_supportinginformation_display VARCHAR,   -- supportingInformation/display (VARCHAR)
   medadm_effectivedatetime VARCHAR,   -- effectiveDateTime (VARCHAR)
   medadm_effectiveperiod_start VARCHAR,   -- effectivePeriod/start (VARCHAR)
@@ -1172,6 +1226,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_reasonreference_identifier_type_code VARCHAR,   -- reasonReference/identifier/type/coding/code (VARCHAR)
   medadm_reasonreference_identifier_type_display VARCHAR,   -- reasonReference/identifier/type/coding/display (VARCHAR)
   medadm_reasonreference_identifier_type_text VARCHAR,   -- reasonReference/identifier/type/text (VARCHAR)
+  medadm_reasonreference_identifier_system VARCHAR,   -- reasonReference/identifier/system (VARCHAR)
+  medadm_reasonreference_identifier_value VARCHAR,   -- reasonReference/identifier/value (VARCHAR)
   medadm_reasonreference_display VARCHAR,   -- reasonReference/display (VARCHAR)
   medadm_request_ref VARCHAR,   -- request/reference (VARCHAR)
   medadm_note_authorstring VARCHAR,   -- note/authorString (VARCHAR)
@@ -1183,6 +1239,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medadm_note_authorreference_identifier_type_code VARCHAR,   -- note/authorReference/identifier/type/coding/code (VARCHAR)
   medadm_note_authorreference_identifier_type_display VARCHAR,   -- note/authorReference/identifier/type/coding/display (VARCHAR)
   medadm_note_authorreference_identifier_type_text VARCHAR,   -- note/authorReference/identifier/type/text (VARCHAR)
+  medadm_note_authorreference_identifier_system VARCHAR,   -- note/authorReference/identifier/system (VARCHAR)
+  medadm_note_authorreference_identifier_value VARCHAR,   -- note/authorReference/identifier/value (VARCHAR)
   medadm_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   medadm_note_time VARCHAR,   -- note/time (VARCHAR)
   medadm_note_text VARCHAR,   -- note/text (VARCHAR)
@@ -1264,6 +1322,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
              COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_code), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/code (medadm_supportinginformation_identifier_type_code)
              COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_display), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/coding/display (medadm_supportinginformation_identifier_type_display)
              COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_type_text), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/type/text (medadm_supportinginformation_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_system), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/system (medadm_supportinginformation_identifier_system)
+             COALESCE(db.to_char_immutable(medadm_supportinginformation_identifier_value), '#NULL#') || '|||' || -- hash from: supportingInformation/identifier/value (medadm_supportinginformation_identifier_value)
              COALESCE(db.to_char_immutable(medadm_supportinginformation_display), '#NULL#') || '|||' || -- hash from: supportingInformation/display (medadm_supportinginformation_display)
              COALESCE(db.to_char_immutable(medadm_effectivedatetime), '#NULL#') || '|||' || -- hash from: effectiveDateTime (medadm_effectivedatetime)
              COALESCE(db.to_char_immutable(medadm_effectiveperiod_start), '#NULL#') || '|||' || -- hash from: effectivePeriod/start (medadm_effectiveperiod_start)
@@ -1286,6 +1346,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
              COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medadm_reasonreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medadm_reasonreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medadm_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/system (medadm_reasonreference_identifier_system)
+             COALESCE(db.to_char_immutable(medadm_reasonreference_identifier_value), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/value (medadm_reasonreference_identifier_value)
              COALESCE(db.to_char_immutable(medadm_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medadm_reasonreference_display)
              COALESCE(db.to_char_immutable(medadm_request_ref), '#NULL#') || '|||' || -- hash from: request/reference (medadm_request_ref)
              COALESCE(db.to_char_immutable(medadm_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medadm_note_authorstring)
@@ -1297,6 +1359,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
              COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medadm_note_authorreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medadm_note_authorreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medadm_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/system (medadm_note_authorreference_identifier_system)
+             COALESCE(db.to_char_immutable(medadm_note_authorreference_identifier_value), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/value (medadm_note_authorreference_identifier_value)
              COALESCE(db.to_char_immutable(medadm_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medadm_note_authorreference_display)
              COALESCE(db.to_char_immutable(medadm_note_time), '#NULL#') || '|||' || -- hash from: note/time (medadm_note_time)
              COALESCE(db.to_char_immutable(medadm_note_text), '#NULL#') || '|||' || -- hash from: note/text (medadm_note_text)
@@ -1373,6 +1437,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_basedon_identifier_type_code VARCHAR,   -- basedOn/identifier/type/coding/code (VARCHAR)
   medstat_basedon_identifier_type_display VARCHAR,   -- basedOn/identifier/type/coding/display (VARCHAR)
   medstat_basedon_identifier_type_text VARCHAR,   -- basedOn/identifier/type/text (VARCHAR)
+  medstat_basedon_identifier_system VARCHAR,   -- basedOn/identifier/system (VARCHAR)
+  medstat_basedon_identifier_value VARCHAR,   -- basedOn/identifier/value (VARCHAR)
   medstat_basedon_display VARCHAR,   -- basedOn/display (VARCHAR)
   medstat_status VARCHAR,   -- status (VARCHAR)
   medstat_statusreason_system VARCHAR,   -- statusReason/coding/system (VARCHAR)
@@ -1403,6 +1469,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_informationsource_identifier_type_code VARCHAR,   -- informationSource/identifier/type/coding/code (VARCHAR)
   medstat_informationsource_identifier_type_display VARCHAR,   -- informationSource/identifier/type/coding/display (VARCHAR)
   medstat_informationsource_identifier_type_text VARCHAR,   -- informationSource/identifier/type/text (VARCHAR)
+  medstat_informationsource_identifier_system VARCHAR,   -- informationSource/identifier/system (VARCHAR)
+  medstat_informationsource_identifier_value VARCHAR,   -- informationSource/identifier/value (VARCHAR)
   medstat_informationsource_display VARCHAR,   -- informationSource/display (VARCHAR)
   medstat_derivedfrom_ref VARCHAR,   -- derivedFrom/reference (VARCHAR)
   medstat_derivedfrom_type VARCHAR,   -- derivedFrom/type (VARCHAR)
@@ -1412,6 +1480,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_derivedfrom_identifier_type_code VARCHAR,   -- derivedFrom/identifier/type/coding/code (VARCHAR)
   medstat_derivedfrom_identifier_type_display VARCHAR,   -- derivedFrom/identifier/type/coding/display (VARCHAR)
   medstat_derivedfrom_identifier_type_text VARCHAR,   -- derivedFrom/identifier/type/text (VARCHAR)
+  medstat_derivedfrom_identifier_system VARCHAR,   -- derivedFrom/identifier/system (VARCHAR)
+  medstat_derivedfrom_identifier_value VARCHAR,   -- derivedFrom/identifier/value (VARCHAR)
   medstat_derivedfrom_display VARCHAR,   -- derivedFrom/display (VARCHAR)
   medstat_reasoncode_system VARCHAR,   -- reasonCode/coding/system (VARCHAR)
   medstat_reasoncode_version VARCHAR,   -- reasonCode/coding/version (VARCHAR)
@@ -1426,6 +1496,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_reasonreference_identifier_type_code VARCHAR,   -- reasonReference/identifier/type/coding/code (VARCHAR)
   medstat_reasonreference_identifier_type_display VARCHAR,   -- reasonReference/identifier/type/coding/display (VARCHAR)
   medstat_reasonreference_identifier_type_text VARCHAR,   -- reasonReference/identifier/type/text (VARCHAR)
+  medstat_reasonreference_identifier_system VARCHAR,   -- reasonReference/identifier/system (VARCHAR)
+  medstat_reasonreference_identifier_value VARCHAR,   -- reasonReference/identifier/value (VARCHAR)
   medstat_reasonreference_display VARCHAR,   -- reasonReference/display (VARCHAR)
   medstat_note_authorstring VARCHAR,   -- note/authorString (VARCHAR)
   medstat_note_authorreference_ref VARCHAR,   -- note/authorReference/reference (VARCHAR)
@@ -1436,6 +1508,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medstat_note_authorreference_identifier_type_code VARCHAR,   -- note/authorReference/identifier/type/coding/code (VARCHAR)
   medstat_note_authorreference_identifier_type_display VARCHAR,   -- note/authorReference/identifier/type/coding/display (VARCHAR)
   medstat_note_authorreference_identifier_type_text VARCHAR,   -- note/authorReference/identifier/type/text (VARCHAR)
+  medstat_note_authorreference_identifier_system VARCHAR,   -- note/authorReference/identifier/system (VARCHAR)
+  medstat_note_authorreference_identifier_value VARCHAR,   -- note/authorReference/identifier/value (VARCHAR)
   medstat_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   medstat_note_time VARCHAR,   -- note/time (VARCHAR)
   medstat_note_text VARCHAR,   -- note/text (VARCHAR)
@@ -1588,6 +1662,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
              COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (medstat_basedon_identifier_type_code)
              COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (medstat_basedon_identifier_type_display)
              COALESCE(db.to_char_immutable(medstat_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (medstat_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/system (medstat_basedon_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_basedon_identifier_value), '#NULL#') || '|||' || -- hash from: basedOn/identifier/value (medstat_basedon_identifier_value)
              COALESCE(db.to_char_immutable(medstat_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (medstat_basedon_display)
              COALESCE(db.to_char_immutable(medstat_status), '#NULL#') || '|||' || -- hash from: status (medstat_status)
              COALESCE(db.to_char_immutable(medstat_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (medstat_statusreason_system)
@@ -1618,6 +1694,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
              COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_code), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/code (medstat_informationsource_identifier_type_code)
              COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_display), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/coding/display (medstat_informationsource_identifier_type_display)
              COALESCE(db.to_char_immutable(medstat_informationsource_identifier_type_text), '#NULL#') || '|||' || -- hash from: informationSource/identifier/type/text (medstat_informationsource_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_system), '#NULL#') || '|||' || -- hash from: informationSource/identifier/system (medstat_informationsource_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_informationsource_identifier_value), '#NULL#') || '|||' || -- hash from: informationSource/identifier/value (medstat_informationsource_identifier_value)
              COALESCE(db.to_char_immutable(medstat_informationsource_display), '#NULL#') || '|||' || -- hash from: informationSource/display (medstat_informationsource_display)
              COALESCE(db.to_char_immutable(medstat_derivedfrom_ref), '#NULL#') || '|||' || -- hash from: derivedFrom/reference (medstat_derivedfrom_ref)
              COALESCE(db.to_char_immutable(medstat_derivedfrom_type), '#NULL#') || '|||' || -- hash from: derivedFrom/type (medstat_derivedfrom_type)
@@ -1627,6 +1705,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
              COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_code), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/code (medstat_derivedfrom_identifier_type_code)
              COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_display), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/coding/display (medstat_derivedfrom_identifier_type_display)
              COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_type_text), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/type/text (medstat_derivedfrom_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_system), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/system (medstat_derivedfrom_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_derivedfrom_identifier_value), '#NULL#') || '|||' || -- hash from: derivedFrom/identifier/value (medstat_derivedfrom_identifier_value)
              COALESCE(db.to_char_immutable(medstat_derivedfrom_display), '#NULL#') || '|||' || -- hash from: derivedFrom/display (medstat_derivedfrom_display)
              COALESCE(db.to_char_immutable(medstat_reasoncode_system), '#NULL#') || '|||' || -- hash from: reasonCode/coding/system (medstat_reasoncode_system)
              COALESCE(db.to_char_immutable(medstat_reasoncode_version), '#NULL#') || '|||' || -- hash from: reasonCode/coding/version (medstat_reasoncode_version)
@@ -1641,6 +1721,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
              COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (medstat_reasonreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (medstat_reasonreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (medstat_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/system (medstat_reasonreference_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_reasonreference_identifier_value), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/value (medstat_reasonreference_identifier_value)
              COALESCE(db.to_char_immutable(medstat_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (medstat_reasonreference_display)
              COALESCE(db.to_char_immutable(medstat_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (medstat_note_authorstring)
              COALESCE(db.to_char_immutable(medstat_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (medstat_note_authorreference_ref)
@@ -1651,6 +1733,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
              COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (medstat_note_authorreference_identifier_type_code)
              COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (medstat_note_authorreference_identifier_type_display)
              COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (medstat_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/system (medstat_note_authorreference_identifier_system)
+             COALESCE(db.to_char_immutable(medstat_note_authorreference_identifier_value), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/value (medstat_note_authorreference_identifier_value)
              COALESCE(db.to_char_immutable(medstat_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (medstat_note_authorreference_display)
              COALESCE(db.to_char_immutable(medstat_note_time), '#NULL#') || '|||' || -- hash from: note/time (medstat_note_time)
              COALESCE(db.to_char_immutable(medstat_note_text), '#NULL#') || '|||' || -- hash from: note/text (medstat_note_text)
@@ -1815,6 +1899,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_basedon_identifier_type_code VARCHAR,   -- basedOn/identifier/type/coding/code (VARCHAR)
   obs_basedon_identifier_type_display VARCHAR,   -- basedOn/identifier/type/coding/display (VARCHAR)
   obs_basedon_identifier_type_text VARCHAR,   -- basedOn/identifier/type/text (VARCHAR)
+  obs_basedon_identifier_system VARCHAR,   -- basedOn/identifier/system (VARCHAR)
+  obs_basedon_identifier_value VARCHAR,   -- basedOn/identifier/value (VARCHAR)
   obs_basedon_display VARCHAR,   -- basedOn/display (VARCHAR)
   obs_status VARCHAR,   -- status (VARCHAR)
   obs_category_system VARCHAR,   -- category/coding/system (VARCHAR)
@@ -1871,6 +1957,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_note_authorreference_identifier_type_code VARCHAR,   -- note/authorReference/identifier/type/coding/code (VARCHAR)
   obs_note_authorreference_identifier_type_display VARCHAR,   -- note/authorReference/identifier/type/coding/display (VARCHAR)
   obs_note_authorreference_identifier_type_text VARCHAR,   -- note/authorReference/identifier/type/text (VARCHAR)
+  obs_note_authorreference_identifier_system VARCHAR,   -- note/authorReference/identifier/system (VARCHAR)
+  obs_note_authorreference_identifier_value VARCHAR,   -- note/authorReference/identifier/value (VARCHAR)
   obs_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   obs_note_time VARCHAR,   -- note/time (VARCHAR)
   obs_note_text VARCHAR,   -- note/text (VARCHAR)
@@ -1887,6 +1975,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_performer_identifier_type_code VARCHAR,   -- performer/identifier/type/coding/code (VARCHAR)
   obs_performer_identifier_type_display VARCHAR,   -- performer/identifier/type/coding/display (VARCHAR)
   obs_performer_identifier_type_text VARCHAR,   -- performer/identifier/type/text (VARCHAR)
+  obs_performer_identifier_system VARCHAR,   -- performer/identifier/system (VARCHAR)
+  obs_performer_identifier_value VARCHAR,   -- performer/identifier/value (VARCHAR)
   obs_performer_display VARCHAR,   -- performer/display (VARCHAR)
   obs_referencerange_low_value VARCHAR,   -- referenceRange/low/value (VARCHAR)
   obs_referencerange_low_unit VARCHAR,   -- referenceRange/low/unit (VARCHAR)
@@ -1923,6 +2013,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   obs_hasmember_identifier_type_code VARCHAR,   -- hasMember/identifier/type/coding/code (VARCHAR)
   obs_hasmember_identifier_type_display VARCHAR,   -- hasMember/identifier/type/coding/display (VARCHAR)
   obs_hasmember_identifier_type_text VARCHAR,   -- hasMember/identifier/type/text (VARCHAR)
+  obs_hasmember_identifier_system VARCHAR,   -- hasMember/identifier/system (VARCHAR)
+  obs_hasmember_identifier_value VARCHAR,   -- hasMember/identifier/value (VARCHAR)
   obs_hasmember_display VARCHAR,   -- hasMember/display (VARCHAR)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -1951,6 +2043,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
              COALESCE(db.to_char_immutable(obs_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (obs_basedon_identifier_type_code)
              COALESCE(db.to_char_immutable(obs_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (obs_basedon_identifier_type_display)
              COALESCE(db.to_char_immutable(obs_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (obs_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/system (obs_basedon_identifier_system)
+             COALESCE(db.to_char_immutable(obs_basedon_identifier_value), '#NULL#') || '|||' || -- hash from: basedOn/identifier/value (obs_basedon_identifier_value)
              COALESCE(db.to_char_immutable(obs_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (obs_basedon_display)
              COALESCE(db.to_char_immutable(obs_status), '#NULL#') || '|||' || -- hash from: status (obs_status)
              COALESCE(db.to_char_immutable(obs_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (obs_category_system)
@@ -2007,6 +2101,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
              COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (obs_note_authorreference_identifier_type_code)
              COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (obs_note_authorreference_identifier_type_display)
              COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (obs_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/system (obs_note_authorreference_identifier_system)
+             COALESCE(db.to_char_immutable(obs_note_authorreference_identifier_value), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/value (obs_note_authorreference_identifier_value)
              COALESCE(db.to_char_immutable(obs_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (obs_note_authorreference_display)
              COALESCE(db.to_char_immutable(obs_note_time), '#NULL#') || '|||' || -- hash from: note/time (obs_note_time)
              COALESCE(db.to_char_immutable(obs_note_text), '#NULL#') || '|||' || -- hash from: note/text (obs_note_text)
@@ -2023,6 +2119,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
              COALESCE(db.to_char_immutable(obs_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (obs_performer_identifier_type_code)
              COALESCE(db.to_char_immutable(obs_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (obs_performer_identifier_type_display)
              COALESCE(db.to_char_immutable(obs_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (obs_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_system), '#NULL#') || '|||' || -- hash from: performer/identifier/system (obs_performer_identifier_system)
+             COALESCE(db.to_char_immutable(obs_performer_identifier_value), '#NULL#') || '|||' || -- hash from: performer/identifier/value (obs_performer_identifier_value)
              COALESCE(db.to_char_immutable(obs_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (obs_performer_display)
              COALESCE(db.to_char_immutable(obs_referencerange_low_value), '#NULL#') || '|||' || -- hash from: referenceRange/low/value (obs_referencerange_low_value)
              COALESCE(db.to_char_immutable(obs_referencerange_low_unit), '#NULL#') || '|||' || -- hash from: referenceRange/low/unit (obs_referencerange_low_unit)
@@ -2059,6 +2157,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
              COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_code), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/code (obs_hasmember_identifier_type_code)
              COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_display), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/coding/display (obs_hasmember_identifier_type_display)
              COALESCE(db.to_char_immutable(obs_hasmember_identifier_type_text), '#NULL#') || '|||' || -- hash from: hasMember/identifier/type/text (obs_hasmember_identifier_type_text)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_system), '#NULL#') || '|||' || -- hash from: hasMember/identifier/system (obs_hasmember_identifier_system)
+             COALESCE(db.to_char_immutable(obs_hasmember_identifier_value), '#NULL#') || '|||' || -- hash from: hasMember/identifier/value (obs_hasmember_identifier_value)
              COALESCE(db.to_char_immutable(obs_hasmember_display), '#NULL#') || '|||' || -- hash from: hasMember/display (obs_hasmember_display)
              '#'
       )
@@ -2114,6 +2214,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagrep_performer_identifier_type_code VARCHAR,   -- performer/identifier/type/coding/code (VARCHAR)
   diagrep_performer_identifier_type_display VARCHAR,   -- performer/identifier/type/coding/display (VARCHAR)
   diagrep_performer_identifier_type_text VARCHAR,   -- performer/identifier/type/text (VARCHAR)
+  diagrep_performer_identifier_system VARCHAR,   -- performer/identifier/system (VARCHAR)
+  diagrep_performer_identifier_value VARCHAR,   -- performer/identifier/value (VARCHAR)
   diagrep_performer_display VARCHAR,   -- performer/display (VARCHAR)
   diagrep_conclusion VARCHAR,   -- conclusion (VARCHAR)
   diagrep_conclusioncode_system VARCHAR,   -- conclusionCode/coding/system (VARCHAR)
@@ -2163,6 +2265,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
              COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (diagrep_performer_identifier_type_code)
              COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (diagrep_performer_identifier_type_display)
              COALESCE(db.to_char_immutable(diagrep_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (diagrep_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_system), '#NULL#') || '|||' || -- hash from: performer/identifier/system (diagrep_performer_identifier_system)
+             COALESCE(db.to_char_immutable(diagrep_performer_identifier_value), '#NULL#') || '|||' || -- hash from: performer/identifier/value (diagrep_performer_identifier_value)
              COALESCE(db.to_char_immutable(diagrep_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (diagrep_performer_display)
              COALESCE(db.to_char_immutable(diagrep_conclusion), '#NULL#') || '|||' || -- hash from: conclusion (diagrep_conclusion)
              COALESCE(db.to_char_immutable(diagrep_conclusioncode_system), '#NULL#') || '|||' || -- hash from: conclusionCode/coding/system (diagrep_conclusioncode_system)
@@ -2208,6 +2312,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_basedon_identifier_type_code VARCHAR,   -- basedOn/identifier/type/coding/code (VARCHAR)
   servreq_basedon_identifier_type_display VARCHAR,   -- basedOn/identifier/type/coding/display (VARCHAR)
   servreq_basedon_identifier_type_text VARCHAR,   -- basedOn/identifier/type/text (VARCHAR)
+  servreq_basedon_identifier_system VARCHAR,   -- basedOn/identifier/system (VARCHAR)
+  servreq_basedon_identifier_value VARCHAR,   -- basedOn/identifier/value (VARCHAR)
   servreq_basedon_display VARCHAR,   -- basedOn/display (VARCHAR)
   servreq_status VARCHAR,   -- status (VARCHAR)
   servreq_intent VARCHAR,   -- intent (VARCHAR)
@@ -2230,6 +2336,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_requester_identifier_type_code VARCHAR,   -- requester/identifier/type/coding/code (VARCHAR)
   servreq_requester_identifier_type_display VARCHAR,   -- requester/identifier/type/coding/display (VARCHAR)
   servreq_requester_identifier_type_text VARCHAR,   -- requester/identifier/type/text (VARCHAR)
+  servreq_requester_identifier_system VARCHAR,   -- requester/identifier/system (VARCHAR)
+  servreq_requester_identifier_value VARCHAR,   -- requester/identifier/value (VARCHAR)
   servreq_requester_display VARCHAR,   -- requester/display (VARCHAR)
   servreq_performer_ref VARCHAR,   -- performer/reference (VARCHAR)
   servreq_performer_type VARCHAR,   -- performer/type (VARCHAR)
@@ -2239,6 +2347,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servreq_performer_identifier_type_code VARCHAR,   -- performer/identifier/type/coding/code (VARCHAR)
   servreq_performer_identifier_type_display VARCHAR,   -- performer/identifier/type/coding/display (VARCHAR)
   servreq_performer_identifier_type_text VARCHAR,   -- performer/identifier/type/text (VARCHAR)
+  servreq_performer_identifier_system VARCHAR,   -- performer/identifier/system (VARCHAR)
+  servreq_performer_identifier_value VARCHAR,   -- performer/identifier/value (VARCHAR)
   servreq_performer_display VARCHAR,   -- performer/display (VARCHAR)
   servreq_locationcode_system VARCHAR,   -- locationCode/coding/system (VARCHAR)
   servreq_locationcode_version VARCHAR,   -- locationCode/coding/version (VARCHAR)
@@ -2271,6 +2381,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
              COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (servreq_basedon_identifier_type_code)
              COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (servreq_basedon_identifier_type_display)
              COALESCE(db.to_char_immutable(servreq_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (servreq_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/system (servreq_basedon_identifier_system)
+             COALESCE(db.to_char_immutable(servreq_basedon_identifier_value), '#NULL#') || '|||' || -- hash from: basedOn/identifier/value (servreq_basedon_identifier_value)
              COALESCE(db.to_char_immutable(servreq_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (servreq_basedon_display)
              COALESCE(db.to_char_immutable(servreq_status), '#NULL#') || '|||' || -- hash from: status (servreq_status)
              COALESCE(db.to_char_immutable(servreq_intent), '#NULL#') || '|||' || -- hash from: intent (servreq_intent)
@@ -2293,6 +2405,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
              COALESCE(db.to_char_immutable(servreq_requester_identifier_type_code), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/code (servreq_requester_identifier_type_code)
              COALESCE(db.to_char_immutable(servreq_requester_identifier_type_display), '#NULL#') || '|||' || -- hash from: requester/identifier/type/coding/display (servreq_requester_identifier_type_display)
              COALESCE(db.to_char_immutable(servreq_requester_identifier_type_text), '#NULL#') || '|||' || -- hash from: requester/identifier/type/text (servreq_requester_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_system), '#NULL#') || '|||' || -- hash from: requester/identifier/system (servreq_requester_identifier_system)
+             COALESCE(db.to_char_immutable(servreq_requester_identifier_value), '#NULL#') || '|||' || -- hash from: requester/identifier/value (servreq_requester_identifier_value)
              COALESCE(db.to_char_immutable(servreq_requester_display), '#NULL#') || '|||' || -- hash from: requester/display (servreq_requester_display)
              COALESCE(db.to_char_immutable(servreq_performer_ref), '#NULL#') || '|||' || -- hash from: performer/reference (servreq_performer_ref)
              COALESCE(db.to_char_immutable(servreq_performer_type), '#NULL#') || '|||' || -- hash from: performer/type (servreq_performer_type)
@@ -2302,6 +2416,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
              COALESCE(db.to_char_immutable(servreq_performer_identifier_type_code), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/code (servreq_performer_identifier_type_code)
              COALESCE(db.to_char_immutable(servreq_performer_identifier_type_display), '#NULL#') || '|||' || -- hash from: performer/identifier/type/coding/display (servreq_performer_identifier_type_display)
              COALESCE(db.to_char_immutable(servreq_performer_identifier_type_text), '#NULL#') || '|||' || -- hash from: performer/identifier/type/text (servreq_performer_identifier_type_text)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_system), '#NULL#') || '|||' || -- hash from: performer/identifier/system (servreq_performer_identifier_system)
+             COALESCE(db.to_char_immutable(servreq_performer_identifier_value), '#NULL#') || '|||' || -- hash from: performer/identifier/value (servreq_performer_identifier_value)
              COALESCE(db.to_char_immutable(servreq_performer_display), '#NULL#') || '|||' || -- hash from: performer/display (servreq_performer_display)
              COALESCE(db.to_char_immutable(servreq_locationcode_system), '#NULL#') || '|||' || -- hash from: locationCode/coding/system (servreq_locationcode_system)
              COALESCE(db.to_char_immutable(servreq_locationcode_version), '#NULL#') || '|||' || -- hash from: locationCode/coding/version (servreq_locationcode_version)
@@ -2347,6 +2463,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_basedon_identifier_type_code VARCHAR,   -- basedOn/identifier/type/coding/code (VARCHAR)
   proc_basedon_identifier_type_display VARCHAR,   -- basedOn/identifier/type/coding/display (VARCHAR)
   proc_basedon_identifier_type_text VARCHAR,   -- basedOn/identifier/type/text (VARCHAR)
+  proc_basedon_identifier_system VARCHAR,   -- basedOn/identifier/system (VARCHAR)
+  proc_basedon_identifier_value VARCHAR,   -- basedOn/identifier/value (VARCHAR)
   proc_basedon_display VARCHAR,   -- basedOn/display (VARCHAR)
   proc_status VARCHAR,   -- status (VARCHAR)
   proc_statusreason_system VARCHAR,   -- statusReason/coding/system (VARCHAR)
@@ -2380,6 +2498,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_reasonreference_identifier_type_code VARCHAR,   -- reasonReference/identifier/type/coding/code (VARCHAR)
   proc_reasonreference_identifier_type_display VARCHAR,   -- reasonReference/identifier/type/coding/display (VARCHAR)
   proc_reasonreference_identifier_type_text VARCHAR,   -- reasonReference/identifier/type/text (VARCHAR)
+  proc_reasonreference_identifier_system VARCHAR,   -- reasonReference/identifier/system (VARCHAR)
+  proc_reasonreference_identifier_value VARCHAR,   -- reasonReference/identifier/value (VARCHAR)
   proc_reasonreference_display VARCHAR,   -- reasonReference/display (VARCHAR)
   proc_note_authorstring VARCHAR,   -- note/authorString (VARCHAR)
   proc_note_authorreference_ref VARCHAR,   -- note/authorReference/reference (VARCHAR)
@@ -2390,6 +2510,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   proc_note_authorreference_identifier_type_code VARCHAR,   -- note/authorReference/identifier/type/coding/code (VARCHAR)
   proc_note_authorreference_identifier_type_display VARCHAR,   -- note/authorReference/identifier/type/coding/display (VARCHAR)
   proc_note_authorreference_identifier_type_text VARCHAR,   -- note/authorReference/identifier/type/text (VARCHAR)
+  proc_note_authorreference_identifier_system VARCHAR,   -- note/authorReference/identifier/system (VARCHAR)
+  proc_note_authorreference_identifier_value VARCHAR,   -- note/authorReference/identifier/value (VARCHAR)
   proc_note_authorreference_display VARCHAR,   -- note/authorReference/display (VARCHAR)
   proc_note_time VARCHAR,   -- note/time (VARCHAR)
   proc_note_text VARCHAR,   -- note/text (VARCHAR)
@@ -2420,6 +2542,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
              COALESCE(db.to_char_immutable(proc_basedon_identifier_type_code), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/code (proc_basedon_identifier_type_code)
              COALESCE(db.to_char_immutable(proc_basedon_identifier_type_display), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/coding/display (proc_basedon_identifier_type_display)
              COALESCE(db.to_char_immutable(proc_basedon_identifier_type_text), '#NULL#') || '|||' || -- hash from: basedOn/identifier/type/text (proc_basedon_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_system), '#NULL#') || '|||' || -- hash from: basedOn/identifier/system (proc_basedon_identifier_system)
+             COALESCE(db.to_char_immutable(proc_basedon_identifier_value), '#NULL#') || '|||' || -- hash from: basedOn/identifier/value (proc_basedon_identifier_value)
              COALESCE(db.to_char_immutable(proc_basedon_display), '#NULL#') || '|||' || -- hash from: basedOn/display (proc_basedon_display)
              COALESCE(db.to_char_immutable(proc_status), '#NULL#') || '|||' || -- hash from: status (proc_status)
              COALESCE(db.to_char_immutable(proc_statusreason_system), '#NULL#') || '|||' || -- hash from: statusReason/coding/system (proc_statusreason_system)
@@ -2453,6 +2577,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
              COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/code (proc_reasonreference_identifier_type_code)
              COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/coding/display (proc_reasonreference_identifier_type_display)
              COALESCE(db.to_char_immutable(proc_reasonreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/type/text (proc_reasonreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_system), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/system (proc_reasonreference_identifier_system)
+             COALESCE(db.to_char_immutable(proc_reasonreference_identifier_value), '#NULL#') || '|||' || -- hash from: reasonReference/identifier/value (proc_reasonreference_identifier_value)
              COALESCE(db.to_char_immutable(proc_reasonreference_display), '#NULL#') || '|||' || -- hash from: reasonReference/display (proc_reasonreference_display)
              COALESCE(db.to_char_immutable(proc_note_authorstring), '#NULL#') || '|||' || -- hash from: note/authorString (proc_note_authorstring)
              COALESCE(db.to_char_immutable(proc_note_authorreference_ref), '#NULL#') || '|||' || -- hash from: note/authorReference/reference (proc_note_authorreference_ref)
@@ -2463,6 +2589,8 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
              COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_code), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/code (proc_note_authorreference_identifier_type_code)
              COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_display), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/coding/display (proc_note_authorreference_identifier_type_display)
              COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_type_text), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/type/text (proc_note_authorreference_identifier_type_text)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_system), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/system (proc_note_authorreference_identifier_system)
+             COALESCE(db.to_char_immutable(proc_note_authorreference_identifier_value), '#NULL#') || '|||' || -- hash from: note/authorReference/identifier/value (proc_note_authorreference_identifier_value)
              COALESCE(db.to_char_immutable(proc_note_authorreference_display), '#NULL#') || '|||' || -- hash from: note/authorReference/display (proc_note_authorreference_display)
              COALESCE(db.to_char_immutable(proc_note_time), '#NULL#') || '|||' || -- hash from: note/time (proc_note_time)
              COALESCE(db.to_char_immutable(proc_note_text), '#NULL#') || '|||' || -- hash from: note/text (proc_note_text)
@@ -2837,6 +2965,8 @@ COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_identifier_type_version I
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_identifier_type_code IS 'location/location/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_identifier_type_display IS 'location/location/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_identifier_type_text IS 'location/location/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_identifier_system IS 'location/location/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_identifier_value IS 'location/location/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_display IS 'location/location/display (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_status IS 'location/status (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_location_physicaltype_system IS 'location/physicalType/coding/system (varchar)';
@@ -2852,6 +2982,8 @@ COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_ve
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_code IS 'serviceProvider/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_display IS 'serviceProvider/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_identifier_type_text IS 'serviceProvider/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_identifier_system IS 'serviceProvider/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_identifier_value IS 'serviceProvider/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_serviceprovider_display IS 'serviceProvider/display (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.encounter_raw.last_check_datetime IS 'Time at which data record was last checked';
@@ -2960,6 +3092,8 @@ COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_identifier_type_version I
 COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_identifier_type_code IS 'recorder/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_identifier_type_display IS 'recorder/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_identifier_type_text IS 'recorder/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_identifier_system IS 'recorder/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_identifier_value IS 'recorder/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_recorder_display IS 'recorder/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_ref IS 'asserter/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_type IS 'asserter/type (varchar)';
@@ -2969,6 +3103,8 @@ COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_identifier_type_version I
 COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_identifier_type_code IS 'asserter/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_identifier_type_display IS 'asserter/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_identifier_type_text IS 'asserter/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_identifier_system IS 'asserter/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_identifier_value IS 'asserter/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_asserter_display IS 'asserter/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_summary_system IS 'stage/summary/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_summary_version IS 'stage/summary/coding/version (varchar)';
@@ -2983,6 +3119,8 @@ COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_identifier_type_v
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_identifier_type_code IS 'stage/assessment/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_identifier_type_display IS 'stage/assessment/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_identifier_type_text IS 'stage/assessment/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_identifier_system IS 'stage/assessment/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_identifier_value IS 'stage/assessment/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_assessment_display IS 'stage/assessment/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_type_system IS 'stage/type/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_stage_type_version IS 'stage/type/coding/version (varchar)';
@@ -2998,6 +3136,8 @@ COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_identifier_ty
 COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_note_authorreference_display IS 'note/authorReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_note_time IS 'note/time (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_note_text IS 'note/text (varchar)';
@@ -3065,6 +3205,8 @@ COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_identifi
 COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_identifier_type_code IS 'ingredient/itemReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_identifier_type_display IS 'ingredient/itemReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_identifier_type_text IS 'ingredient/itemReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_identifier_system IS 'ingredient/itemReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_identifier_value IS 'ingredient/itemReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_itemreference_display IS 'ingredient/itemReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_ingredient_isactive IS 'ingredient/isActive (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.input_datetime IS 'Time at which the data record is inserted';
@@ -3112,6 +3254,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_ident
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_type_code IS 'reportedReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_type_display IS 'reportedReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_type_text IS 'reportedReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_system IS 'reportedReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_identifier_value IS 'reportedReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reportedreference_display IS 'reportedReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
@@ -3126,6 +3270,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_i
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_code IS 'supportingInformation/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_display IS 'supportingInformation/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_type_text IS 'supportingInformation/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_system IS 'supportingInformation/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_identifier_value IS 'supportingInformation/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_supportinginformation_display IS 'supportingInformation/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_authoredon IS 'authoredOn (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_ref IS 'requester/reference (varchar)';
@@ -3136,6 +3282,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_identifier_ty
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_identifier_type_code IS 'requester/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_identifier_type_display IS 'requester/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_identifier_type_text IS 'requester/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_identifier_system IS 'requester/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_identifier_value IS 'requester/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_requester_display IS 'requester/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasoncode_system IS 'reasonCode/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasoncode_version IS 'reasonCode/coding/version (varchar)';
@@ -3150,6 +3298,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_identif
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_reasonreference_display IS 'reasonReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_ref IS 'basedOn/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_type IS 'basedOn/type (varchar)';
@@ -3159,6 +3309,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_basedon_display IS 'basedOn/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorstring IS 'note/authorString (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
@@ -3169,6 +3321,8 @@ COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_id
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_authorreference_display IS 'note/authorReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_time IS 'note/time (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_note_text IS 'note/text (varchar)';
@@ -3347,6 +3501,8 @@ COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginform
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_type_code IS 'supportingInformation/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_type_display IS 'supportingInformation/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_type_text IS 'supportingInformation/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_system IS 'supportingInformation/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginformation_identifier_value IS 'supportingInformation/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_supportinginformation_display IS 'supportingInformation/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_effectivedatetime IS 'effectiveDateTime (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_effectiveperiod_start IS 'effectivePeriod/start (varchar)';
@@ -3369,6 +3525,8 @@ COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_reasonreference_display IS 'reasonReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_request_ref IS 'request/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorstring IS 'note/authorString (varchar)';
@@ -3380,6 +3538,8 @@ COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorrefer
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_authorreference_display IS 'note/authorReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_time IS 'note/time (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_note_text IS 'note/text (varchar)';
@@ -3448,6 +3608,8 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_identifier_t
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_display IS 'basedOn/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_statusreason_system IS 'statusReason/coding/system (varchar)';
@@ -3478,6 +3640,8 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_id
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_type_code IS 'informationSource/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_type_display IS 'informationSource/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_type_text IS 'informationSource/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_system IS 'informationSource/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_identifier_value IS 'informationSource/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_informationsource_display IS 'informationSource/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_ref IS 'derivedFrom/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_type IS 'derivedFrom/type (varchar)';
@@ -3487,6 +3651,8 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifi
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_type_code IS 'derivedFrom/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_type_display IS 'derivedFrom/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_type_text IS 'derivedFrom/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_system IS 'derivedFrom/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_identifier_value IS 'derivedFrom/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_derivedfrom_display IS 'derivedFrom/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasoncode_system IS 'reasonCode/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasoncode_version IS 'reasonCode/coding/version (varchar)';
@@ -3501,6 +3667,8 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_iden
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_reasonreference_display IS 'reasonReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorstring IS 'note/authorString (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
@@ -3511,6 +3679,8 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_authorreference_display IS 'note/authorReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_time IS 'note/time (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_note_text IS 'note/text (varchar)';
@@ -3667,6 +3837,8 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_type_version 
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_basedon_display IS 'basedOn/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_category_system IS 'category/coding/system (varchar)';
@@ -3723,6 +3895,8 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_identifier_
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_authorreference_display IS 'note/authorReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_time IS 'note/time (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_note_text IS 'note/text (varchar)';
@@ -3739,6 +3913,8 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_identifier_type_versio
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_identifier_system IS 'performer/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_identifier_value IS 'performer/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_performer_display IS 'performer/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_referencerange_low_value IS 'referenceRange/low/value (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_referencerange_low_unit IS 'referenceRange/low/unit (varchar)';
@@ -3775,6 +3951,8 @@ COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_identifier_type_versio
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_identifier_type_code IS 'hasMember/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_identifier_type_display IS 'hasMember/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_identifier_type_text IS 'hasMember/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_identifier_system IS 'hasMember/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_identifier_value IS 'hasMember/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_hasmember_display IS 'hasMember/display (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.observation_raw.last_check_datetime IS 'Time at which data record was last checked';
@@ -3822,6 +4000,8 @@ COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_ty
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_system IS 'performer/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_identifier_value IS 'performer/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_performer_display IS 'performer/display (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_conclusion IS 'conclusion (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_conclusioncode_system IS 'conclusionCode/coding/system (varchar)';
@@ -3859,6 +4039,8 @@ COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_type_v
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_basedon_display IS 'basedOn/display (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_intent IS 'intent (varchar)';
@@ -3881,6 +4063,8 @@ COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_identifier_type
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_identifier_type_code IS 'requester/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_identifier_type_display IS 'requester/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_identifier_type_text IS 'requester/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_identifier_system IS 'requester/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_identifier_value IS 'requester/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_requester_display IS 'requester/display (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_ref IS 'performer/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_type IS 'performer/type (varchar)';
@@ -3890,6 +4074,8 @@ COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_identifier_type
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_identifier_system IS 'performer/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_identifier_value IS 'performer/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_performer_display IS 'performer/display (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_locationcode_system IS 'locationCode/coding/system (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_locationcode_version IS 'locationCode/coding/version (varchar)';
@@ -3927,6 +4113,8 @@ COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_type_version I
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_basedon_display IS 'basedOn/display (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_statusreason_system IS 'statusReason/coding/system (varchar)';
@@ -3960,6 +4148,8 @@ COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_identifier_type_v
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_reasonreference_display IS 'reasonReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorstring IS 'note/authorString (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
@@ -3970,6 +4160,8 @@ COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_identifier_t
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_authorreference_display IS 'note/authorReference/display (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_time IS 'note/time (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_note_text IS 'note/text (varchar)';
