@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-03 20:21:45
+-- Create time: 2025-03-03 21:51:09
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -470,7 +470,10 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrp_bewertung_fe (
   retrolektive_mrp_bewertung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
-  NA  NA  NA  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
+  record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
+  redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)
+  redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
+  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
   mrp_fe_id  varchar,   -- Datenbank-FK der Medikationsanalyse (varchar)
   ret_bewerter1  varchar,   -- Nutzername des 1. Bewerter des ret. MRP (varchar)
   ret_header  varchar,   -- descriptive item only for frontend - femb der Variablen pat_name, pat_vorname, pat_cis_pid, ret_meda_id, ret_id (varchar)
@@ -570,7 +573,10 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrp_bewertung_fe (
   NA
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
-             NA             NA             NA             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
+             COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
+             COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (redcap_repeat_instrument)
+             COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (redcap_repeat_instance)
+             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
              COALESCE(db.to_char_immutable(mrp_fe_id ), '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (mrp_fe_id )
              COALESCE(db.to_char_immutable(ret_bewerter1 ), '#NULL#') || '|||' || -- hash from: Nutzername des 1. Bewerter des ret. MRP (ret_bewerter1 )
              COALESCE(db.to_char_immutable(ret_header ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen pat_name, pat_vorname, pat_cis_pid, ret_meda_id, ret_id (ret_header )
@@ -1079,7 +1085,10 @@ COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.current_dataset_status 
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
 COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.retrolektive_mrp_bewertung_fe_id IS 'Primary key of the entity';
-NANANACOMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.mrp_fe_id  IS 'Datenbank-FK der Medikationsanalyse (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.ret_bewerter1  IS 'Nutzername des 1. Bewerter des ret. MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrp_bewertung_fe.ret_header  IS 'descriptive item only for frontend - femb der Variablen pat_name, pat_vorname, pat_cis_pid, ret_meda_id, ret_id (varchar)';

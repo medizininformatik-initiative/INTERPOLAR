@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-03 20:21:45
+-- Create time: 2025-03-03 21:51:09
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
