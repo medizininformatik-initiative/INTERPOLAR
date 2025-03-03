@@ -138,12 +138,12 @@ getFHIREncounterReference <- function(encounter_id_or_reference) {
 
 #' Remove FHIR-style indices from element names
 #'
-#' This function removes numerical indices enclosed in brackets (e.g., "[0]", "[1.2]")
+#' This function removes numerical indices enclosed in brackets (e.g., "\\[0\\]", "\\[1.2\\]")
 #' from a given vector of indexed element names.
 #'
 #' @param indexed_elements A character vector containing FHIR-style indexed element names.
 #' @param brackets A character vector of length 2 specifying the opening and closing brackets.
-#'        Default is c("[", "]").
+#'        Default is c("\\[", "\\]").
 #'
 #' @return A character vector with FHIR-style indices removed.
 #'
