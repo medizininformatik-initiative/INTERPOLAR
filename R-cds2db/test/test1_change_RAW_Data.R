@@ -4,13 +4,22 @@ if (exists("DEBUG_DAY")) {
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
-    #etlutils::dbReset()
+    etlutils::dbReset()
+    pats <- namedListByValue("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004")
+  } else if (DEBUG_DAY == 2) {
+    pats <- namedListByValue("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0005")
+  } else if (DEBUG_DAY == 3) {
+  } else if (DEBUG_DAY == 4) {
   }
 
   #resource_tables <- retainRAWTables("Patient", "Encounter")
-  resource_tables <- getFilteredRAWResources("UKB-0001")
+  resource_tables <- getFilteredRAWResources(pats)
   # short reference to Encounter table
   dt_enc <- resource_tables[["Encounter"]]
+
+  colnames_pattern_diagnosis <- "^enc_diagnosis_"
+  colnames_pattern_servicetype <- "^enc_servicetype_"
+
   # Identify columns starting with "enc_diagnosis_"
   enc_diagnosis_cols <- grep("^enc_diagnosis_", names(dt_enc), value = TRUE)
   # Identify columns starting with "enc_diagnosis_"
@@ -18,7 +27,37 @@ if (exists("DEBUG_DAY")) {
   # Set first value before " ~ " and remove the rest
   dt_enc[, (enc_diagnosis_cols) := lapply(.SD, function(x) sub(" ~ .*", "", x)), .SDcols = enc_diagnosis_cols]
 
-  #browser()
+  changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_start", getFormattedRAWDateTime(offset_days = 1))
+  changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_period_start", getFormattedRAWDateTime(offset_days = 2))
+  changeDataForPID(dt_enc, pats$`UKB-0003`, "enc_period_start", getFormattedRAWDateTime(offset_days = 3))
+  changeDataForPID(dt_enc, pats$`UKB-0004`, "enc_period_start", getFormattedRAWDateTime(offset_days = 4))
+  changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_period_start", getFormattedRAWDateTime(offset_days = 5))
+
+  ### Add encounters with type "Versorgungstellenkontakt" ###
+
+  # Find rows where enc_id ends with -A-<NUMBER> (= Abteilungskontakt)
+  pattern <- "-A-(\\d+)$"
+
+  rows_to_duplicate <- dt_enc[grepl(pattern, enc_id)]
+
+  # Duplicate and modify enc_id
+  if (nrow(rows_to_duplicate) > 0) {
+    # Extract the number at the end and append "-V-<number>"
+    rows_to_duplicate[, enc_id := sub(pattern, "-A-\\1-V-\\1", enc_id)]
+
+
+    # Replace enc_type_code only in duplicated rows
+    rows_to_duplicate[, enc_type_code := sub("\\](.*)", "]versorgungsstellenkontakt", enc_type_code)]
+
+    # Replace enc_type_display only in duplicated rows
+    rows_to_duplicate[, enc_type_display := sub("\\](.*)", "]Versorgungsstellenkontakt", enc_type_display)]
+
+    # Delete Fachabteilungsschlüssel
+    rows_to_duplicate[, (enc_servicetype_cols) := NA]
+
+    # Append new rows to dt_enc
+    dt_enc <- rbind(dt_enc, rows_to_duplicate)
+  }
 
   if (DEBUG_DAY == 1) {
     # Set all encounter to "in-progress" and delete end date
@@ -26,27 +65,26 @@ if (exists("DEBUG_DAY")) {
     dt_enc[, enc_period_end := NA]
     dt_enc[, (enc_diagnosis_cols) := NA]
 
-    enc_start <- getFormattedRAWDateTime()
-    dt_enc[, enc_period_start := enc_start]
-
-
-
   } else if (DEBUG_DAY == 2) {
 
-    # Patient 2: unverändert zu Tag 1
-    dt_enc[pats_enc$p2, enc_status := "in-progress"]
-    dt_enc[pats_enc$p2, enc_period_end := NA]
-    dt_enc[pats_enc$p2, (enc_diagnosis_cols) := NA]
+    # Patient 1: unverändert zu Tag 1
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_status", "in-progress")
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_end", NA)
+    changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
 
-    # Patient 3: Fall weiter in progress, vorhandene Diagnose wird nicht gelöscht
-    dt_enc[pats_enc$p3, enc_status := "in-progress"]
-    dt_enc[pats_enc$p3, enc_period_end := NA]
+    # Patient 2: Fall weiter in progress, vorhandene Diagnose wird nicht gelöscht
+    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_status", "in-progress")
+    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_period_end", NA)
 
-    # Patient 4: Fall beendet, Diagnose ist nun vorhanden
-    # entspricht Originaldaten, daher hier keine Änderung
+    # Patient 3: Fall beendet, Diagnose ist nun vorhanden
+    # entspricht Originaldaten, daher nur das Enddatum anpassen
+    changeDataForPID(dt_enc, pats$`UKB-0003`, "enc_period_end", getFormattedRAWDateTime(offset_days = 0.5))
 
-    # Patient 6: Fall beendet, keine Diagnose
-    dt_enc[pats_enc$p6, (enc_diagnosis_cols) := NA]
+    # Patient 4: ist nicht mehr in den Daten (hat Station verlassen)
+
+    # Patient 5: Fall neu hinzugekommen. Hat schon Diagnose
+    changeDataForPID(dt_enc, pats$`UKB-0005`, colnames_pattern_diagnosis, NA)
+    changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_period_end", NA)
 
     # # Patient 10: neuer Fall ohne Diagnose
     # dt_enc[pats_enc$p10, enc_status := "in-progress"]
@@ -58,6 +96,6 @@ if (exists("DEBUG_DAY")) {
   } else if (DEBUG_DAY == 4) {
 
   }
-  # only to create a statment in Debug cases
-  dt_enc <- dt_enc
+
+  resource_tables[["Encounter"]] <- dt_enc
 }

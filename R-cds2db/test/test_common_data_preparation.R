@@ -1,7 +1,7 @@
 #' Filter raw resource tables based on patient IDs
 #'
 #' This function filters resource tables from `resource_tables` based on patient IDs provided as input.
-#' It extracts the actual patient identifiers from the input using `etlutils::getAfterLastSlash(...)`
+#' It extracts the actual patient identifiers from the input using `etlutils::getAfterLastSlash()`
 #' and constructs different reference formats depending on the resource type. The function supports
 #' different types of patient identifier columns and applies filtering accordingly.
 #'
@@ -11,15 +11,14 @@
 #' - **Ward PID tables (`pid`)** are matched directly against the extracted patient IDs.
 #' - **Non-patient referencing tables** (e.g., `Location`, `Medication`) are returned unfiltered.
 #'
-#' @param ... Character strings representing patient IDs (e.g., `"UKB-0001"`).
+#' @param patient_ids A character vector representing patient IDs (e.g., `c("UKB-0001", "UKB-0002")`).
 #'
 #' @return A named list of `data.table` objects, where each table is filtered based on patient
 #'         identifiers if applicable.
 #'
-#' @export
-getFilteredRAWResources <- function(...) {
+getFilteredRAWResources <- function(patient_ids) {
   filtered_resources <- list()
-  ids <- etlutils::getAfterLastSlash(...)
+  ids <- etlutils::getAfterLastSlash(patient_ids)
   refs <- paste0("[1.1]Patient/", ids)
 
   for (resource_name in names(resource_tables)) {
@@ -40,7 +39,6 @@ getFilteredRAWResources <- function(...) {
 
   return(filtered_resources)
 }
-
 #' Retain specific resource tables while clearing others
 #'
 #' This function retains only the specified tables from `resource_tables`, while all other tables
@@ -52,7 +50,6 @@ getFilteredRAWResources <- function(...) {
 #' @return A modified named list of `data.table` objects, where only the specified tables remain
 #'         unchanged, and all others are cleared (empty but with the same structure).
 #'
-#' @export
 retainRAWTables <- function(...) {
   table_names <- c(..., "pids_per_ward")
   for (name in names(resource_tables)) {
@@ -77,11 +74,59 @@ retainRAWTables <- function(...) {
 #'
 #' @return A character string with the formatted datetime.
 #'
-#' @export
 getFormattedRAWDateTime <- function(datetime = Sys.time(), offset_days = 2) {
   # Subtract the specified number of days from the given datetime
   datetime <- datetime - offset_days * 86400
 
   # Format as "[1.1]YYYY-MM-DDTHH:MM:SS+02:00"
   format(datetime, "[1.1]%Y-%m-%dT%H:%M:%S%z")
+}
+
+#' Update values in a data.table based on patient ID and column name pattern
+#'
+#' This function updates one or more columns in a `data.table` (`table`) based on a given patient ID (`pid`).
+#' The row selection criteria depend on the structure of the table:
+#'
+#' - If the table contains a `pat_id` column, rows are selected where `pat_id` matches `pid` or `"[1]"` followed by `pid`.
+#' - Otherwise, if a column ending in `_patient_ref` exists, rows are selected where the extracted patient ID
+#'   (obtained via `etlutils::getAfterLastSlash()`) matches `pid`.
+#' - If no such identifying columns exist, the table remains unchanged.
+#'
+#' The function allows updating multiple columns that match a given pattern, including exact column names.
+#'
+#' @param table A `data.table` containing patient data.
+#' @param pid A character string representing the patient ID to match.
+#' @param pattern A character string specifying a pattern or exact column name to match.
+#' @param new_value The new value to assign to the selected rows in the matching columns.
+#'
+#' @return The modified `data.table` with updated values in the specified columns.
+#'
+#' @export
+changeDataForPID <- function(table, pid, pattern, new_value) {
+  colnames <- names(table)
+
+  # Identify rows to update
+  rows_to_update <- NULL
+
+  if ("pat_id" %in% colnames) {
+    rows_to_update <- which(table$pat_id == pid | table$pat_id == paste0("[1]", pid))
+  } else {
+    ref_col <- colnames[endsWith(colnames, "_patient_ref")]
+
+    if (length(ref_col) > 0) {
+      ref_col <- ref_col[1]  # Take the first matching column if multiple exist
+      extracted_pid <- etlutils::getAfterLastSlash(table[[ref_col]])
+      rows_to_update <- which(extracted_pid == pid)
+    } else {
+      return(table) # No matching column found, return unchanged data.table
+    }
+  }
+
+  # Identify columns matching the pattern (supporting exact names)
+  matching_columns <- colnames[colnames == pattern | grepl(pattern, colnames)]
+
+  if (length(matching_columns) > 0 && length(rows_to_update) > 0) {
+    # Update matching columns
+    table[rows_to_update, (matching_columns) := lapply(.SD, function(x) new_value), .SDcols = matching_columns]
+  }
 }

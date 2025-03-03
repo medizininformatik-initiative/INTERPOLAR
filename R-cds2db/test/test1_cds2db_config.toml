@@ -12,9 +12,6 @@ DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES = [
    "./R-cds2db/test/test1_change_RAW_Data.R",
 ]
 
-DEBUG_DAY = 1
-
-
 # With this filter patterns the data in the tables directory were loaded
 # from the FHIR server
 ENCOUNTER_FILTER_PATTERN_1 = [
