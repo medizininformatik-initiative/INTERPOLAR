@@ -10,31 +10,6 @@ processData <- function() {
   etlutils::startModule("dataprocessor",
                         path_to_toml = "./R-dataprocessor/dataprocessor_config.toml")
 
-  #
-  #
-  # ###
-  # # Read the module configuration toml file.
-  # ###
-  # config <- etlutils::initModuleConstants(
-  #   module_name <- "dataprocessor",
-  #   path_to_toml = "./R-dataprocessor/dataprocessor_config.toml"
-  # )
-  #
-  # etlutils::createDIRS(PROJECT_NAME)
-  #
-  # ###
-  # # Create globally used process_clock
-  # ###
-  # etlutils::createClock()
-  #
-  # ###
-  # # log all console outputs and save them at the end
-  # ###
-  # etlutils::startLogging(PROJECT_NAME)
-  #
-  # # log all configuration parameters but hide value with parameter name starts with "FHIR_"
-  # etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
-
   try(etlutils::runLevel1("Run Dataprocessor", {
 
     # Reset lock from unfinished previous dataprocessor run
@@ -55,5 +30,9 @@ processData <- function() {
   finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
 
   etlutils::finalize(finish_message)
+
+  if (etlutils::isErrorOccured()) {
+    stop(finish_message)
+  }
 
 }
