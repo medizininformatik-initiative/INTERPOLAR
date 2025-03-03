@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-03 21:51:09
+-- Create time: 2025-03-03 22:36:35
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  42_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1158,7 +1158,7 @@ BEGIN
                                 ret_massn_am2___9,
                                 ret_massn_am2___10,
                                 ret_femb_21,
-                                ret_massn_orga1 ,
+                                ret_massn_orga2,
                                 ret_massn_orga2___1,
                                 ret_massn_orga2___2,
                                 ret_massn_orga2___3,
@@ -1267,7 +1267,7 @@ BEGIN
                                 current_record.ret_massn_am2___9,
                                 current_record.ret_massn_am2___10,
                                 current_record.ret_femb_21,
-                                current_record.ret_massn_orga1 ,
+                                current_record.ret_massn_orga2,
                                 current_record.ret_massn_orga2___1,
                                 current_record.ret_massn_orga2___2,
                                 current_record.ret_massn_orga2___3,

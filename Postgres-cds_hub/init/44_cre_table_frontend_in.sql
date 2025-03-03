@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-03-03 21:51:00
+-- Create time: 2025-03-03 22:36:28
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -532,7 +532,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
   ret_massn_orga1___7 varchar,   -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
   ret_massn_orga1___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
   ret_femb_14 varchar,   -- descriptive item only for frontend - femb der Variablen ret_notiz1 (varchar)
-  NA  ret_femb_15 varchar,   -- descriptive item only for frontend - femb der Variablen ret_2ndbewertung (varchar)
+  ret_notiz1 varchar,   -- Notiz (varchar)
+  ret_femb_15 varchar,   -- descriptive item only for frontend - femb der Variablen ret_2ndbewertung (varchar)
   ret_2ndbewertung  varchar,   -- Indikator um 2. Bewertung durchzuführen  (varchar)
   ret_2ndbewertung___1 varchar,   -- 1 - 2nd Look | Zweite MRP-Bewertung durchführen (varchar)
   ret_bewerter2_pipeline  varchar,   -- Erstellung des Nutzername des 2. Bewerter  (varchar)
@@ -562,7 +563,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
   ret_massn_am2___9 varchar,   -- 9, Information an Patient (varchar)
   ret_massn_am2___10 varchar,   -- 10, TDM oder Laborkontrolle emfohlen (varchar)
   ret_femb_21 varchar,   -- descriptive item only for frontend - femb der Variablen ret_massn_orga2 (varchar)
-  ret_massn_orga1  varchar,   -- ORGA: Organisatorisch (varchar)
+  ret_massn_orga2 varchar,   -- ORGA: Organisatorisch (varchar)
   ret_massn_orga2___1 varchar,   -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
   ret_massn_orga2___2 varchar,   -- 2 - CIRS-/AMK-Meldung (varchar)
   ret_massn_orga2___3 varchar,   -- 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)
@@ -572,7 +573,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
   ret_massn_orga2___7 varchar,   -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
   ret_massn_orga2___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
   ret_femb_22 varchar,   -- descriptive item only for frontend - femb der Variablen ret_notiz2 (varchar)
-  NA
+  ret_notiz2 varchar,   -- Notiz (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
@@ -635,7 +636,8 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
              COALESCE(db.to_char_immutable(ret_massn_orga1___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga1___7)
              COALESCE(db.to_char_immutable(ret_massn_orga1___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga1___8)
              COALESCE(db.to_char_immutable(ret_femb_14), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_notiz1 (ret_femb_14)
-             NA             COALESCE(db.to_char_immutable(ret_femb_15), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_2ndbewertung (ret_femb_15)
+             COALESCE(db.to_char_immutable(ret_notiz1), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz1)
+             COALESCE(db.to_char_immutable(ret_femb_15), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_2ndbewertung (ret_femb_15)
              COALESCE(db.to_char_immutable(ret_2ndbewertung ), '#NULL#') || '|||' || -- hash from: Indikator um 2. Bewertung durchzuführen  (ret_2ndbewertung )
              COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look | Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
              COALESCE(db.to_char_immutable(ret_bewerter2_pipeline ), '#NULL#') || '|||' || -- hash from: Erstellung des Nutzername des 2. Bewerter  (ret_bewerter2_pipeline )
@@ -665,7 +667,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
              COALESCE(db.to_char_immutable(ret_massn_am2___9), '#NULL#') || '|||' || -- hash from: 9, Information an Patient (ret_massn_am2___9)
              COALESCE(db.to_char_immutable(ret_massn_am2___10), '#NULL#') || '|||' || -- hash from: 10, TDM oder Laborkontrolle emfohlen (ret_massn_am2___10)
              COALESCE(db.to_char_immutable(ret_femb_21), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_massn_orga2 (ret_femb_21)
-             COALESCE(db.to_char_immutable(ret_massn_orga1 ), '#NULL#') || '|||' || -- hash from: ORGA: Organisatorisch (ret_massn_orga1 )
+             COALESCE(db.to_char_immutable(ret_massn_orga2), '#NULL#') || '|||' || -- hash from: ORGA: Organisatorisch (ret_massn_orga2)
              COALESCE(db.to_char_immutable(ret_massn_orga2___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga2___1)
              COALESCE(db.to_char_immutable(ret_massn_orga2___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga2___2)
              COALESCE(db.to_char_immutable(ret_massn_orga2___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (ret_massn_orga2___3)
@@ -675,7 +677,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
              COALESCE(db.to_char_immutable(ret_massn_orga2___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga2___7)
              COALESCE(db.to_char_immutable(ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
              COALESCE(db.to_char_immutable(ret_femb_22), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_notiz2 (ret_femb_22)
-             NA
+             COALESCE(db.to_char_immutable(ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
              '#'
       )
   ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -1154,7 +1156,8 @@ COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1__
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___8 IS '8 - Sensibilisierung/Schulung (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_14 IS 'descriptive item only for frontend - femb der Variablen ret_notiz1 (varchar)';
-NACOMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_15 IS 'descriptive item only for frontend - femb der Variablen ret_2ndbewertung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_notiz1 IS 'Notiz (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_15 IS 'descriptive item only for frontend - femb der Variablen ret_2ndbewertung (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_2ndbewertung  IS 'Indikator um 2. Bewertung durchzuführen  (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look | Zweite MRP-Bewertung durchführen (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_bewerter2_pipeline  IS 'Erstellung des Nutzername des 2. Bewerter  (varchar)';
@@ -1184,7 +1187,7 @@ COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___8
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___9 IS '9, Information an Patient (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___10 IS '10, TDM oder Laborkontrolle emfohlen (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_21 IS 'descriptive item only for frontend - femb der Variablen ret_massn_orga2 (varchar)';
-COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1  IS 'ORGA: Organisatorisch (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2 IS 'ORGA: Organisatorisch (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___3 IS '3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)';
@@ -1194,7 +1197,7 @@ COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2__
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___8 IS '8 - Sensibilisierung/Schulung (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_22 IS 'descriptive item only for frontend - femb der Variablen ret_notiz2 (varchar)';
-NA
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_notiz2 IS 'Notiz (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.current_dataset_status IS 'Processing status of the data record';
