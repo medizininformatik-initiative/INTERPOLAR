@@ -3,7 +3,7 @@
 #' from Database to Frontend and back.
 #'
 #' @export
-retrieve <- function() {
+startDB2Frontend <- function() {
 
   # Initialize and start module
   etlutils::startModule("db2frontend",
