@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-02-21 10:04:58
+-- Create time: 2025-03-03 22:36:28
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)
+  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
   pat_header varchar,   -- descriptive item only for frontend (varchar)
   pat_id varchar,   -- Patient-identifier FHIR Daten (varchar)
   pat_femb_1 varchar,   -- descriptive item only for frontend - Fieldembedding (femb) der Variablen pat_cis_pid, pat_name, pat_vorname, pat_gebdat,pat_geschlecht (varchar)
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
              COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (redcap_repeat_instrument)
              COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (redcap_repeat_instance)
+             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
              COALESCE(db.to_char_immutable(pat_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (pat_header)
              COALESCE(db.to_char_immutable(pat_id), '#NULL#') || '|||' || -- hash from: Patient-identifier FHIR Daten (pat_id)
              COALESCE(db.to_char_immutable(pat_femb_1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Fieldembedding (femb) der Variablen pat_cis_pid, pat_name, pat_vorname, pat_gebdat,pat_geschlecht (pat_femb_1)
@@ -81,76 +83,50 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
 CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
   fall_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
-  fall_header varchar,   -- descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)
-  fall_id varchar,   -- Fall-ID RedCap FHIR Daten (varchar)
-  fall_pat_id varchar,   -- Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)
-  patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
-  fall_femb_1 varchar,   -- descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :   fall (varchar)
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
+  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
+  fall_header varchar,   -- descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)
+  patient_id_fk int,   -- Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)
+  fall_pat_id varchar,   -- Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)
+  fall_femb_1 varchar,   -- descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)
+  fall_femb_2 varchar,   -- descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)
+  fall_id varchar,   -- Fall-ID RedCap FHIR Daten (varchar)
   fall_studienphase varchar,   -- Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)
   fall_station varchar,   -- Station wie vom DIZ Definiert (varchar)
-  fall_zimmernr varchar,   -- Zimmernummer wie vom DIZ Definiert (varchar)
   fall_aufn_dat timestamp,   -- Aufnahmedatum (timestamp)
-  fall_aufn_diag varchar,   -- Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)
+  fall_zimmernr varchar,   -- Zimmernummer wie vom DIZ Definiert (varchar)
+  fall_aufn_diag varchar,   -- Diagnose(n) bei Aufnahme (wird nur zum lesen sein) (varchar)
   fall_gewicht_aktuell double precision,   -- aktuelles Gewicht (Kg) (double precision)
   fall_gewicht_aktl_einheit varchar,   -- Einheit des Gewichts (varchar)
   fall_groesse double precision,   -- Größe (cm) (double precision)
   fall_groesse_einheit varchar,   -- Einheit der Größe (varchar)
   fall_bmi double precision,   -- BMI (double precision)
-  fall_femb_2 varchar,   -- descriptive item only for frontend - femb der Variablen fall_nieren_insuf_chron, fall_nieren_insuf_ausmass_lbl, fall_nieren_insuf_ausmass (varchar)
-  fall_femb_3 varchar,   -- descriptive item only for frontend - femb der Variablen fall_nieren_insuf_dialysev_lbl, fall_nieren_insuf_dialysev (varchar)
-  fall_femb_4 varchar,   -- descriptive item only for frontend - femb der Variablen fall_leber_insuf, fall_leber_insuf_ausmass_lbl, fall_leber_insuf_ausmass (varchar)
-  fall_femb_5 varchar,   -- descriptive item only for frontend - femb der Variablen fall_schwanger_mo_lbl, fall_schwanger_mo (varchar)
-  fall_femb_6 varchar,   -- descriptive item only for frontend - femb der Variablen fall_status, fall_ent_dat (varchar)
-  fall_nieren_insuf_chron varchar,   -- 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (varchar)
-  fall_nieren_insuf_ausmass_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
-  fall_nieren_insuf_ausmass varchar,   -- aktuelles Ausmaß - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 (varchar)
-  fall_nieren_insuf_dialysev_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
-  fall_nieren_insuf_dialysev varchar,   -- Nierenersatzverfahren - 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (varchar)
-  fall_leber_insuf varchar,   -- Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (varchar)
-  fall_leber_insuf_ausmass_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
-  fall_leber_insuf_ausmass varchar,   -- aktuelles Ausmaß -1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß  (varchar)
-  fall_schwanger_mo varchar,   -- Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)
-  fall_schwanger_mo_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   fall_status varchar,   -- Status des Falls (varchar)
   fall_ent_dat timestamp,   -- Entlassdatum (timestamp)
   fall_complete varchar,   -- Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
-             COALESCE(db.to_char_immutable(fall_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (fall_header)
-             COALESCE(db.to_char_immutable(fall_id), '#NULL#') || '|||' || -- hash from: Fall-ID RedCap FHIR Daten (fall_id)
-             COALESCE(db.to_char_immutable(fall_pat_id), '#NULL#') || '|||' || -- hash from: Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (fall_pat_id)
-             COALESCE(db.to_char_immutable(patient_id_fk), '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (patient_id_fk)
-             COALESCE(db.to_char_immutable(fall_femb_1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (fall_femb_1)
              COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :   fall (redcap_repeat_instrument)
              COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (redcap_repeat_instance)
+             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
+             COALESCE(db.to_char_immutable(fall_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (fall_header)
+             COALESCE(db.to_char_immutable(patient_id_fk), '#NULL#') || '|||' || -- hash from: Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (patient_id_fk)
+             COALESCE(db.to_char_immutable(fall_pat_id), '#NULL#') || '|||' || -- hash from: Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (fall_pat_id)
+             COALESCE(db.to_char_immutable(fall_femb_1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (fall_femb_1)
+             COALESCE(db.to_char_immutable(fall_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (fall_femb_2)
+             COALESCE(db.to_char_immutable(fall_id), '#NULL#') || '|||' || -- hash from: Fall-ID RedCap FHIR Daten (fall_id)
              COALESCE(db.to_char_immutable(fall_studienphase), '#NULL#') || '|||' || -- hash from: Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (fall_studienphase)
              COALESCE(db.to_char_immutable(fall_station), '#NULL#') || '|||' || -- hash from: Station wie vom DIZ Definiert (fall_station)
-             COALESCE(db.to_char_immutable(fall_zimmernr), '#NULL#') || '|||' || -- hash from: Zimmernummer wie vom DIZ Definiert (fall_zimmernr)
              COALESCE(db.to_char_immutable(fall_aufn_dat), '#NULL#') || '|||' || -- hash from: Aufnahmedatum (fall_aufn_dat)
-             COALESCE(db.to_char_immutable(fall_aufn_diag), '#NULL#') || '|||' || -- hash from: Diagnose(n) bei Aufnahme (wird nur zum lesen sein (fall_aufn_diag)
+             COALESCE(db.to_char_immutable(fall_zimmernr), '#NULL#') || '|||' || -- hash from: Zimmernummer wie vom DIZ Definiert (fall_zimmernr)
+             COALESCE(db.to_char_immutable(fall_aufn_diag), '#NULL#') || '|||' || -- hash from: Diagnose(n) bei Aufnahme (wird nur zum lesen sein) (fall_aufn_diag)
              COALESCE(db.to_char_immutable(fall_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (Kg) (fall_gewicht_aktuell)
              COALESCE(db.to_char_immutable(fall_gewicht_aktl_einheit), '#NULL#') || '|||' || -- hash from: Einheit des Gewichts (fall_gewicht_aktl_einheit)
              COALESCE(db.to_char_immutable(fall_groesse), '#NULL#') || '|||' || -- hash from: Größe (cm) (fall_groesse)
              COALESCE(db.to_char_immutable(fall_groesse_einheit), '#NULL#') || '|||' || -- hash from: Einheit der Größe (fall_groesse_einheit)
              COALESCE(db.to_char_immutable(fall_bmi), '#NULL#') || '|||' || -- hash from: BMI (fall_bmi)
-             COALESCE(db.to_char_immutable(fall_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_nieren_insuf_chron, fall_nieren_insuf_ausmass_lbl, fall_nieren_insuf_ausmass (fall_femb_2)
-             COALESCE(db.to_char_immutable(fall_femb_3), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_nieren_insuf_dialysev_lbl, fall_nieren_insuf_dialysev (fall_femb_3)
-             COALESCE(db.to_char_immutable(fall_femb_4), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_leber_insuf, fall_leber_insuf_ausmass_lbl, fall_leber_insuf_ausmass (fall_femb_4)
-             COALESCE(db.to_char_immutable(fall_femb_5), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_schwanger_mo_lbl, fall_schwanger_mo (fall_femb_5)
-             COALESCE(db.to_char_immutable(fall_femb_6), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen fall_status, fall_ent_dat (fall_femb_6)
-             COALESCE(db.to_char_immutable(fall_nieren_insuf_chron), '#NULL#') || '|||' || -- hash from: 1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (fall_nieren_insuf_chron)
-             COALESCE(db.to_char_immutable(fall_nieren_insuf_ausmass_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (fall_nieren_insuf_ausmass_lbl)
-             COALESCE(db.to_char_immutable(fall_nieren_insuf_ausmass), '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 (fall_nieren_insuf_ausmass)
-             COALESCE(db.to_char_immutable(fall_nieren_insuf_dialysev_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (fall_nieren_insuf_dialysev_lbl)
-             COALESCE(db.to_char_immutable(fall_nieren_insuf_dialysev), '#NULL#') || '|||' || -- hash from: Nierenersatzverfahren - 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (fall_nieren_insuf_dialysev)
-             COALESCE(db.to_char_immutable(fall_leber_insuf), '#NULL#') || '|||' || -- hash from: Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (fall_leber_insuf)
-             COALESCE(db.to_char_immutable(fall_leber_insuf_ausmass_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (fall_leber_insuf_ausmass_lbl)
-             COALESCE(db.to_char_immutable(fall_leber_insuf_ausmass), '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß -1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß  (fall_leber_insuf_ausmass)
-             COALESCE(db.to_char_immutable(fall_schwanger_mo), '#NULL#') || '|||' || -- hash from: Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (fall_schwanger_mo)
-             COALESCE(db.to_char_immutable(fall_schwanger_mo_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (fall_schwanger_mo_lbl)
              COALESCE(db.to_char_immutable(fall_status), '#NULL#') || '|||' || -- hash from: Status des Falls (fall_status)
              COALESCE(db.to_char_immutable(fall_ent_dat), '#NULL#') || '|||' || -- hash from: Entlassdatum (fall_ent_dat)
              COALESCE(db.to_char_immutable(fall_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (fall_complete)
@@ -169,16 +145,39 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
 CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
   medikationsanalyse_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
-  meda_header varchar,   -- descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)
-  meda_femb_1 varchar,   -- descriptive item only for frontend - femb der Variable meda_dat (varchar)
-  meda_femb_2 varchar,   -- descriptive item only for frontend - femb der Variable meda_ma_thueberw (varchar)
-  meda_femb_3 varchar,   -- descriptive item only for frontend - femb der Variablen meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (varchar)
-  fall_fe_id int,   -- Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (varchar)
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
-  meda_dat timestamp,   -- Datum der Medikationsanalyse (timestamp)
+  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
+  fall_fe_id int,   -- Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)
+  meda_anlage varchar,   -- Nutzername Formular angelegt (varchar)
+  meda_edit varchar,   -- Nutzername Formular zuletzt bearbeitet (varchar)
+  meda_header varchar,   -- descriptive item only for frontend - femb der Variable pat_name, pat_vorname, pat_cis_pid, fall_meda_id, meda_id (varchar)
+  fall_meda_id varchar,   -- SQL-Abfrage innerhalb REDCap, um Fall-ID der Medikationsanalyse manuell zuordnen zu können. (varchar)
+  meda_id varchar,   -- ID der Medikationsanalyse in REDCap (varchar)
+  meda_femb_1 varchar,   -- descriptive item only for frontend - femb der Variable meda_gewicht_aktuell, meda_gewicht_aktl_einheit, meda_groesse, meda_groesse_einheit,  meda_nieren_insuf_chron, meda_nieren_insuf_ausmass_lbl, meda_nieren_insuf_ausmass (varchar)
+  meda_gewicht_aktuell varchar,   -- aktuelles Gewicht (Kg) zum Zeitpunkt der Medikationsanalyse (varchar)
+  meda_gewicht_aktl_einheit varchar,   -- Einheit des Gewichts zum Zeitpunkt der Medikationsanalyse (varchar)
+  meda_groesse varchar,   -- Größe (cm) zum Zeitpunkt der Medikationsanalyse (varchar)
+  meda_groesse_einheit varchar,   -- Einheit der Größe zum Zeitpunkt der Medikationsanalyse (varchar)
+  meda_bmi  varchar,   -- BMI zum Zeitpunkt der Medikationsanalyse (varchar)
+  meda_nieren_insuf_chron varchar,   -- Angabe chron. Niereninsuffizienz - 1, ja | 0, nein | -1, nicht bekannt (varchar)
+  meda_nieren_insuf_ausmass_lbl varchar,   -- descriptive item only for frontend  (varchar)
+  meda_nieren_insuf_ausmass varchar,   -- Ausmaß chron. Niereninsuffizienz - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 | 6, Nierenersatzverfahren (varchar)
+  meda_femb_2 varchar,   -- descriptive item only for frontend - femb der Variable meda_nieren_insuf_dialysev_lbl, meda_nieren_insuf_dialysev (varchar)
+  meda_nieren_insuf_dialysev_lbl varchar,   -- descriptive item only for frontend  (varchar)
+  meda_nieren_insuf_dialysev varchar,   -- Dialyse bei chron. Niereninsuffizienz - 1, Hämodialyse | 2, Kont. Hämofiltration&nbsp;&nbsp;&nbsp; | 3, Peritonealdialyse (varchar)
+  meda_femb_3 varchar,   -- descriptive item only for frontend - femb der Variablen meda_leber_insuf, meda_leber_insuf_ausmass_lbl, meda_leber_insuf_ausmass (varchar)
+  meda_leber_insuf varchar,   -- Angabe chron. Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekannt -1, Ausmaß unbekannt (varchar)
+  meda_leber_insuf_ausmass_lbl varchar,   -- descriptive item only for frontend  (varchar)
+  meda_leber_insuf_ausmass varchar,   -- Ausamaß chron. Leberinsuffizienz - 1, Leicht (Child-Pugh A) | 2, Mittel (Child-Pugh B) | 3, Schwer (Child-Pugh C) (varchar)
+  meda_femb_4 varchar,   -- descriptive item only for frontend - femb der Variablen meda_schwanger_mo (varchar)
+  meda_schwanger_mo varchar,   -- Angabe der Schwangerschaft/Schwangerschaftsmonate - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)
+  meda_femb_5 varchar,   -- descriptive item only for frontend - femb der Variable meda_typ, meda_dat (varchar)
   meda_typ varchar,   -- Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (varchar)
+  meda_dat timestamp,   -- Datum der Medikationsanalyse (timestamp)
+  meda_femb_6 varchar,   -- descriptive item only for frontend - femb der Variable meda_ma_thueberw (varchar)
   meda_ma_thueberw varchar,   -- Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (varchar)
+  meda_femb_7 varchar,   -- descriptive item only for frontend - femb der Variable meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (varchar)
   meda_mrp_detekt varchar,   -- MRP detektiert? - 1, Ja|0, Nein (varchar)
   meda_aufwand_zeit varchar,   -- Zeitaufwand Medikationsanalyse - 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (varchar)
   meda_aufwand_zeit_and_lbl int,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (int)
@@ -188,16 +187,39 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
-             COALESCE(db.to_char_immutable(meda_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (meda_header)
-             COALESCE(db.to_char_immutable(meda_femb_1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_dat (meda_femb_1)
-             COALESCE(db.to_char_immutable(meda_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_ma_thueberw (meda_femb_2)
-             COALESCE(db.to_char_immutable(meda_femb_3), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (meda_femb_3)
-             COALESCE(db.to_char_immutable(fall_fe_id), '#NULL#') || '|||' || -- hash from: Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (fall_fe_id)
              COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (redcap_repeat_instrument)
              COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (redcap_repeat_instance)
-             COALESCE(db.to_char_immutable(meda_dat), '#NULL#') || '|||' || -- hash from: Datum der Medikationsanalyse (meda_dat)
+             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
+             COALESCE(db.to_char_immutable(fall_fe_id), '#NULL#') || '|||' || -- hash from: Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (fall_fe_id)
+             COALESCE(db.to_char_immutable(meda_anlage), '#NULL#') || '|||' || -- hash from: Nutzername Formular angelegt (meda_anlage)
+             COALESCE(db.to_char_immutable(meda_edit), '#NULL#') || '|||' || -- hash from: Nutzername Formular zuletzt bearbeitet (meda_edit)
+             COALESCE(db.to_char_immutable(meda_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable pat_name, pat_vorname, pat_cis_pid, fall_meda_id, meda_id (meda_header)
+             COALESCE(db.to_char_immutable(fall_meda_id), '#NULL#') || '|||' || -- hash from: SQL-Abfrage innerhalb REDCap, um Fall-ID der Medikationsanalyse manuell zuordnen zu können. (fall_meda_id)
+             COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: ID der Medikationsanalyse in REDCap (meda_id)
+             COALESCE(db.to_char_immutable(meda_femb_1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_gewicht_aktuell, meda_gewicht_aktl_einheit, meda_groesse, meda_groesse_einheit,  meda_nieren_insuf_chron, meda_nieren_insuf_ausmass_lbl, meda_nieren_insuf_ausmass (meda_femb_1)
+             COALESCE(db.to_char_immutable(meda_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (Kg) zum Zeitpunkt der Medikationsanalyse (meda_gewicht_aktuell)
+             COALESCE(db.to_char_immutable(meda_gewicht_aktl_einheit), '#NULL#') || '|||' || -- hash from: Einheit des Gewichts zum Zeitpunkt der Medikationsanalyse (meda_gewicht_aktl_einheit)
+             COALESCE(db.to_char_immutable(meda_groesse), '#NULL#') || '|||' || -- hash from: Größe (cm) zum Zeitpunkt der Medikationsanalyse (meda_groesse)
+             COALESCE(db.to_char_immutable(meda_groesse_einheit), '#NULL#') || '|||' || -- hash from: Einheit der Größe zum Zeitpunkt der Medikationsanalyse (meda_groesse_einheit)
+             COALESCE(db.to_char_immutable(meda_bmi ), '#NULL#') || '|||' || -- hash from: BMI zum Zeitpunkt der Medikationsanalyse (meda_bmi )
+             COALESCE(db.to_char_immutable(meda_nieren_insuf_chron), '#NULL#') || '|||' || -- hash from: Angabe chron. Niereninsuffizienz - 1, ja | 0, nein | -1, nicht bekannt (meda_nieren_insuf_chron)
+             COALESCE(db.to_char_immutable(meda_nieren_insuf_ausmass_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend  (meda_nieren_insuf_ausmass_lbl)
+             COALESCE(db.to_char_immutable(meda_nieren_insuf_ausmass), '#NULL#') || '|||' || -- hash from: Ausmaß chron. Niereninsuffizienz - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 | 6, Nierenersatzverfahren (meda_nieren_insuf_ausmass)
+             COALESCE(db.to_char_immutable(meda_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_nieren_insuf_dialysev_lbl, meda_nieren_insuf_dialysev (meda_femb_2)
+             COALESCE(db.to_char_immutable(meda_nieren_insuf_dialysev_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend  (meda_nieren_insuf_dialysev_lbl)
+             COALESCE(db.to_char_immutable(meda_nieren_insuf_dialysev), '#NULL#') || '|||' || -- hash from: Dialyse bei chron. Niereninsuffizienz - 1, Hämodialyse | 2, Kont. Hämofiltration&nbsp;&nbsp;&nbsp; | 3, Peritonealdialyse (meda_nieren_insuf_dialysev)
+             COALESCE(db.to_char_immutable(meda_femb_3), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen meda_leber_insuf, meda_leber_insuf_ausmass_lbl, meda_leber_insuf_ausmass (meda_femb_3)
+             COALESCE(db.to_char_immutable(meda_leber_insuf), '#NULL#') || '|||' || -- hash from: Angabe chron. Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekannt -1, Ausmaß unbekannt (meda_leber_insuf)
+             COALESCE(db.to_char_immutable(meda_leber_insuf_ausmass_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend  (meda_leber_insuf_ausmass_lbl)
+             COALESCE(db.to_char_immutable(meda_leber_insuf_ausmass), '#NULL#') || '|||' || -- hash from: Ausamaß chron. Leberinsuffizienz - 1, Leicht (Child-Pugh A) | 2, Mittel (Child-Pugh B) | 3, Schwer (Child-Pugh C) (meda_leber_insuf_ausmass)
+             COALESCE(db.to_char_immutable(meda_femb_4), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen meda_schwanger_mo (meda_femb_4)
+             COALESCE(db.to_char_immutable(meda_schwanger_mo), '#NULL#') || '|||' || -- hash from: Angabe der Schwangerschaft/Schwangerschaftsmonate - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (meda_schwanger_mo)
+             COALESCE(db.to_char_immutable(meda_femb_5), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_typ, meda_dat (meda_femb_5)
              COALESCE(db.to_char_immutable(meda_typ), '#NULL#') || '|||' || -- hash from: Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (meda_typ)
+             COALESCE(db.to_char_immutable(meda_dat), '#NULL#') || '|||' || -- hash from: Datum der Medikationsanalyse (meda_dat)
+             COALESCE(db.to_char_immutable(meda_femb_6), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_ma_thueberw (meda_femb_6)
              COALESCE(db.to_char_immutable(meda_ma_thueberw), '#NULL#') || '|||' || -- hash from: Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (meda_ma_thueberw)
+             COALESCE(db.to_char_immutable(meda_femb_7), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (meda_femb_7)
              COALESCE(db.to_char_immutable(meda_mrp_detekt), '#NULL#') || '|||' || -- hash from: MRP detektiert? - 1, Ja|0, Nein (meda_mrp_detekt)
              COALESCE(db.to_char_immutable(meda_aufwand_zeit), '#NULL#') || '|||' || -- hash from: Zeitaufwand Medikationsanalyse - 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (meda_aufwand_zeit)
              COALESCE(db.to_char_immutable(meda_aufwand_zeit_and_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (meda_aufwand_zeit_and_lbl)
@@ -219,61 +241,48 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
 CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrpdokumentation_validierung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
   record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
-  meda_fe_id int,   -- Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)
   redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)
   redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
-  mrp_header varchar,   -- descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)
+  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
+  meda_fe_id int,   -- Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)
+  mrp_anlage  varchar,   -- Nutzername Formular angelegt (varchar)
+  mrp_edit  varchar,   -- Nutzername Formular zuletzt bearbeitet (varchar)
+  mrp_header varchar,   -- descriptive item only for frontend - femb der Variable pat_name, pat_vorname, pat_cis_pid, mrp_meda_id, mrp_id (varchar)
+  mrp_meda_id  varchar,   -- SQL-Abfrage innerhalb REDCap, um Fall-ID der Medikationsanalyse manuell zuordnen zu können. (varchar)
+  mrp_id  varchar,   -- ID des MRP in REDCap (varchar)
   mrp_femb_1 varchar,   -- descriptive item only for frontend - femb der Variable mrp_entd_dat (varchar)
-  mrp_femb_2 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (varchar)
-  mrp_femb_3 varchar,   -- descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (varchar)
-  mrp_pi_info varchar,   -- descriptive item only for frontend (varchar)
-  mrp_pi_info___1 varchar,   -- descriptive item only for frontend (varchar)
-  mrp_mf_info varchar,   -- descriptive item only for frontend (varchar)
-  mrp_mf_info___1 varchar,   -- descriptive item only for frontend (varchar)
-  mrp_pi_info_txt varchar,   -- descriptive item only for frontend (varchar)
-  mrp_mf_info_txt varchar,   -- descriptive item only for frontend (varchar)
-  mrp_femb_4 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (varchar)
-  mrp_femb_5 varchar,   -- descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (varchar)
-  mrp_femb_6 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (varchar)
   mrp_entd_dat timestamp,   -- Datum des MRP (timestamp)
+  mrp_entd_algorithmisch varchar,   -- MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein; nur noch als  @HIDDEN (varchar)
+  mrp_femb_2 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (varchar)
   mrp_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
-  mrp_entd_algorithmisch varchar,   -- MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (varchar)
   mrp_hinweisgeber_lbl varchar,   -- descriptive item only for frontend (varchar)
   mrp_hinweisgeber varchar,   -- Hinweisgeber auf das MRP (varchar)
-  mrp_gewissheit_lbl varchar,   -- descriptive item only for frontend (varchar)
-  mrp_gewissheit varchar,   -- Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)
-  mrp_femb_22 varchar,   -- descriptive item only for frontend - femb der Variablen (varchar)
-  mrp_gewissheit_oth varchar,   -- Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)
-  mrp_femb_23 varchar,   -- descriptive item only for frontend (varchar)
+  mrp_femb_3 varchar,   -- descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (varchar)
   mrp_hinweisgeber_oth varchar,   -- Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)
-  mrp_gewiss_grund_abl_lbl varchar,   -- descriptive item only for frontend (varchar)
-  mrp_gewiss_grund_abl varchar,   -- Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, Sonstiges (varchar)
-  mrp_gewiss_grund_abl_sonst_lbl varchar,   -- descriptive item only for frontend (varchar)
-  mrp_gewiss_grund_abl_sonst varchar,   -- Bitte näher beschreiben (varchar)
-  mrp_femb_7 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_sonst_lbl, mrp_gewiss_grund_abl_sonst (varchar)
-  mrp_femb_8 varchar,   -- descriptive item only for frontend - femb der Variable mrp_wirkstoff (varchar)
-  mrp_femb_9 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc1_lbl, mrp_atc1 (varchar)
-  mrp_femb_10 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (varchar)
-  mrp_femb_11 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (varchar)
-  mrp_femb_12 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (varchar)
+  mrp_femb_4 varchar,   -- descriptive item only for frontend - femb der Variable mrp_wirkstoff (varchar)
   mrp_wirkstoff varchar,   -- Wirkstoff betroffen? - 1, Ja | 0, Nein (varchar)
+  mrp_femb_5 varchar,   -- descriptive item only for frontend - femb der Variable mrp_atc1_lbl, mrp_atc1 (varchar)
   mrp_atc1_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   mrp_atc1 varchar,   -- 1. Medikament ATC / Name- https://www.bfarm.de/SharedDocs/Downloads/DE/Kodiersysteme/ATC/atc-ddd-amtlich-2024.pdf?__blob=publicationFile (varchar)
+  mrp_femb_6 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (varchar)
   mrp_atc2_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   mrp_atc2 varchar,   -- 2. Medikament ATC / Name (varchar)
+  mrp_femb_7 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (varchar)
   mrp_atc3_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   mrp_atc3 varchar,   -- 3. Medikament ATC / Name (varchar)
+  mrp_femb_8 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (varchar)
   mrp_atc4_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   mrp_atc4 varchar,   -- 4. Medikament ATC / Name (varchar)
+  mrp_femb_9 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_atc5_lbl, mrp_atc5 (varchar)
   mrp_atc5_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   mrp_atc5 varchar,   -- 5. Medikament ATC / Name (varchar)
-  mrp_femb_13 varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  mrp_femb_10 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (varchar)
   mrp_med_prod varchar,   -- Medizinprodukt betroffen? - 1, Ja | 0, Nein, (varchar)
   mrp_med_prod_sonst_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
   mrp_med_prod_sonst varchar,   -- Bezeichnung Präparat (varchar)
   mrp_dokup_fehler varchar,   -- Frage / Fehlerbeschreibung (varchar)
   mrp_dokup_intervention varchar,   -- Intervention / Vorschlag zur Fehlervermeldung (varchar)
-  mrp_femb_14 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (varchar)
+  mrp_femb_11 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_pigrund (varchar)
   mrp_pigrund varchar,   -- PI-Grund (varchar)
   mrp_pigrund___1 varchar,   -- 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)
   mrp_pigrund___2 varchar,   -- 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)
@@ -302,18 +311,13 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrp_pigrund___25 varchar,   -- 25 - S: Beschaffung/Kosten (varchar)
   mrp_pigrund___26 varchar,   -- 26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF) (varchar)
   mrp_pigrund___27 varchar,   -- 27 - S: Schulung/Beratung eines Patienten (varchar)
-  mrp_femb_15 varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
-  mrp_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
-  mrp_ip_klasse___1 varchar,   -- 1 - Drug - Drug (varchar)
-  mrp_ip_klasse___2 varchar,   -- 2 - Drug - Drug-Group (varchar)
-  mrp_ip_klasse___3 varchar,   -- 3 - Drug - Disease (varchar)
-  mrp_ip_klasse___4 varchar,   -- 4 - Drug - Labor (varchar)
-  mrp_ip_klasse___5 varchar,   -- 5 - Drug - Age (Priscus 2.0 o. Dosis) (varchar)
-  mrp_femb_16 varchar,   -- descriptive item only for frontend - femb der Variable mrp_ip_klasse (varchar)
-  mrp_femb_17 varchar,   -- descriptive item only for frontend - femb der Variable mrp_ip_klasse_disease (varchar)
+  mrp_femb_12 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_ip_klasse (varchar)
+  mrp_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) - 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis) (varchar)
+  mrp_femb_13 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_ip_klasse_disease (varchar)
   mrp_ip_klasse_disease varchar,   -- Disease (varchar)
+  mrp_femb_14 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_ip_klasse_labor (varchar)
   mrp_ip_klasse_labor varchar,   -- Labor (varchar)
-  mrp_femb_18 varchar,   -- descriptive item only for frontend - femb der Variable mrp_ip_klasse_labor (varchar)
+  mrp_femb_15 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_massn_am (varchar)
   mrp_massn_am varchar,   -- AM: Arzneimitte (varchar)
   mrp_massn_am___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   mrp_massn_am___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
@@ -325,7 +329,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrp_massn_am___8 varchar,   -- 8 - Information an Arzt/Pflege (varchar)
   mrp_massn_am___9 varchar,   -- 9 - Information an Patient (varchar)
   mrp_massn_am___10 varchar,   -- 10 - TDM oder Laborkontrolle emfohlen (varchar)
-  mrp_femb_19 varchar,   -- descriptive item only for frontend - femb der Variable mrp_massn_am (varchar)
+  mrp_femb_16 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_massn_orga (varchar)
   mrp_massn_orga varchar,   -- ORGA: Organisatorisch (varchar)
   mrp_massn_orga___1 varchar,   -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
   mrp_massn_orga___2 varchar,   -- 2 - CIRS-/AMK-Meldung (varchar)
@@ -335,9 +339,9 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   mrp_massn_orga___6 varchar,   -- 6 - Optimierung der internen und externene Kommunikation (varchar)
   mrp_massn_orga___7 varchar,   -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
   mrp_massn_orga___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
-  mrp_femb_20 varchar,   -- descriptive item only for frontend - femb der Variable mrp_massn_orga (varchar)
+  mrp_femb_17 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_notiz (varchar)
   mrp_notiz varchar,   -- Notiz (varchar)
-  mrp_femb_21 varchar,   -- descriptive item only for frontend - femb der Variable mrp_notiz (varchar)
+  mrp_femb_18 varchar,   -- descriptive item only for frontend - femb der Variablen mrp_dokup_hand_emp_akz, mrp_merp, mrp_merp_info (varchar)
   mrp_dokup_hand_emp_akz varchar,   -- Handlungsempfehlung akzeptiert? - 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4 , Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst (varchar)
   mrp_merp varchar,   -- NCC MERP Score - A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I  (varchar)
   mrp_merp_info varchar,   -- descriptive item only for frontend (varchar)
@@ -347,61 +351,48 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
              COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
-             COALESCE(db.to_char_immutable(meda_fe_id), '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (meda_fe_id)
              COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (redcap_repeat_instrument)
              COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (redcap_repeat_instance)
-             COALESCE(db.to_char_immutable(mrp_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (mrp_header)
+             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
+             COALESCE(db.to_char_immutable(meda_fe_id), '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (meda_fe_id)
+             COALESCE(db.to_char_immutable(mrp_anlage ), '#NULL#') || '|||' || -- hash from: Nutzername Formular angelegt (mrp_anlage )
+             COALESCE(db.to_char_immutable(mrp_edit ), '#NULL#') || '|||' || -- hash from: Nutzername Formular zuletzt bearbeitet (mrp_edit )
+             COALESCE(db.to_char_immutable(mrp_header), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable pat_name, pat_vorname, pat_cis_pid, mrp_meda_id, mrp_id (mrp_header)
+             COALESCE(db.to_char_immutable(mrp_meda_id ), '#NULL#') || '|||' || -- hash from: SQL-Abfrage innerhalb REDCap, um Fall-ID der Medikationsanalyse manuell zuordnen zu können. (mrp_meda_id )
+             COALESCE(db.to_char_immutable(mrp_id ), '#NULL#') || '|||' || -- hash from: ID des MRP in REDCap (mrp_id )
              COALESCE(db.to_char_immutable(mrp_femb_1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_entd_dat (mrp_femb_1)
-             COALESCE(db.to_char_immutable(mrp_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (mrp_femb_2)
-             COALESCE(db.to_char_immutable(mrp_femb_3), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (mrp_femb_3)
-             COALESCE(db.to_char_immutable(mrp_pi_info), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_pi_info)
-             COALESCE(db.to_char_immutable(mrp_pi_info___1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_pi_info___1)
-             COALESCE(db.to_char_immutable(mrp_mf_info), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_mf_info)
-             COALESCE(db.to_char_immutable(mrp_mf_info___1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_mf_info___1)
-             COALESCE(db.to_char_immutable(mrp_pi_info_txt), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_pi_info_txt)
-             COALESCE(db.to_char_immutable(mrp_mf_info_txt), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_mf_info_txt)
-             COALESCE(db.to_char_immutable(mrp_femb_4), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (mrp_femb_4)
-             COALESCE(db.to_char_immutable(mrp_femb_5), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (mrp_femb_5)
-             COALESCE(db.to_char_immutable(mrp_femb_6), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (mrp_femb_6)
              COALESCE(db.to_char_immutable(mrp_entd_dat), '#NULL#') || '|||' || -- hash from: Datum des MRP (mrp_entd_dat)
+             COALESCE(db.to_char_immutable(mrp_entd_algorithmisch), '#NULL#') || '|||' || -- hash from: MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein; nur noch als  @HIDDEN (mrp_entd_algorithmisch)
+             COALESCE(db.to_char_immutable(mrp_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (mrp_femb_2)
              COALESCE(db.to_char_immutable(mrp_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (mrp_kurzbeschr)
-             COALESCE(db.to_char_immutable(mrp_entd_algorithmisch), '#NULL#') || '|||' || -- hash from: MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (mrp_entd_algorithmisch)
              COALESCE(db.to_char_immutable(mrp_hinweisgeber_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_hinweisgeber_lbl)
              COALESCE(db.to_char_immutable(mrp_hinweisgeber), '#NULL#') || '|||' || -- hash from: Hinweisgeber auf das MRP (mrp_hinweisgeber)
-             COALESCE(db.to_char_immutable(mrp_gewissheit_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_gewissheit_lbl)
-             COALESCE(db.to_char_immutable(mrp_gewissheit), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (mrp_gewissheit)
-             COALESCE(db.to_char_immutable(mrp_femb_22), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen (mrp_femb_22)
-             COALESCE(db.to_char_immutable(mrp_gewissheit_oth), '#NULL#') || '|||' || -- hash from: Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (mrp_gewissheit_oth)
-             COALESCE(db.to_char_immutable(mrp_femb_23), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_femb_23)
+             COALESCE(db.to_char_immutable(mrp_femb_3), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (mrp_femb_3)
              COALESCE(db.to_char_immutable(mrp_hinweisgeber_oth), '#NULL#') || '|||' || -- hash from: Textfeld, wenn mrp_hinweisgeber = 7 (andere) (mrp_hinweisgeber_oth)
-             COALESCE(db.to_char_immutable(mrp_gewiss_grund_abl_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_gewiss_grund_abl_lbl)
-             COALESCE(db.to_char_immutable(mrp_gewiss_grund_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, Sonstiges (mrp_gewiss_grund_abl)
-             COALESCE(db.to_char_immutable(mrp_gewiss_grund_abl_sonst_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_gewiss_grund_abl_sonst_lbl)
-             COALESCE(db.to_char_immutable(mrp_gewiss_grund_abl_sonst), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (mrp_gewiss_grund_abl_sonst)
-             COALESCE(db.to_char_immutable(mrp_femb_7), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_sonst_lbl, mrp_gewiss_grund_abl_sonst (mrp_femb_7)
-             COALESCE(db.to_char_immutable(mrp_femb_8), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_wirkstoff (mrp_femb_8)
-             COALESCE(db.to_char_immutable(mrp_femb_9), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc1_lbl, mrp_atc1 (mrp_femb_9)
-             COALESCE(db.to_char_immutable(mrp_femb_10), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (mrp_femb_10)
-             COALESCE(db.to_char_immutable(mrp_femb_11), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (mrp_femb_11)
-             COALESCE(db.to_char_immutable(mrp_femb_12), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (mrp_femb_12)
+             COALESCE(db.to_char_immutable(mrp_femb_4), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_wirkstoff (mrp_femb_4)
              COALESCE(db.to_char_immutable(mrp_wirkstoff), '#NULL#') || '|||' || -- hash from: Wirkstoff betroffen? - 1, Ja | 0, Nein (mrp_wirkstoff)
+             COALESCE(db.to_char_immutable(mrp_femb_5), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_atc1_lbl, mrp_atc1 (mrp_femb_5)
              COALESCE(db.to_char_immutable(mrp_atc1_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_atc1_lbl)
              COALESCE(db.to_char_immutable(mrp_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name- https://www.bfarm.de/SharedDocs/Downloads/DE/Kodiersysteme/ATC/atc-ddd-amtlich-2024.pdf?__blob=publicationFile (mrp_atc1)
+             COALESCE(db.to_char_immutable(mrp_femb_6), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (mrp_femb_6)
              COALESCE(db.to_char_immutable(mrp_atc2_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_atc2_lbl)
              COALESCE(db.to_char_immutable(mrp_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (mrp_atc2)
+             COALESCE(db.to_char_immutable(mrp_femb_7), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (mrp_femb_7)
              COALESCE(db.to_char_immutable(mrp_atc3_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_atc3_lbl)
              COALESCE(db.to_char_immutable(mrp_atc3), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name (mrp_atc3)
+             COALESCE(db.to_char_immutable(mrp_femb_8), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (mrp_femb_8)
              COALESCE(db.to_char_immutable(mrp_atc4_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_atc4_lbl)
              COALESCE(db.to_char_immutable(mrp_atc4), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name (mrp_atc4)
+             COALESCE(db.to_char_immutable(mrp_femb_9), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_atc5_lbl, mrp_atc5 (mrp_femb_9)
              COALESCE(db.to_char_immutable(mrp_atc5_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_atc5_lbl)
              COALESCE(db.to_char_immutable(mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
-             COALESCE(db.to_char_immutable(mrp_femb_13), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_femb_13)
+             COALESCE(db.to_char_immutable(mrp_femb_10), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (mrp_femb_10)
              COALESCE(db.to_char_immutable(mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? - 1, Ja | 0, Nein, (mrp_med_prod)
              COALESCE(db.to_char_immutable(mrp_med_prod_sonst_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_med_prod_sonst_lbl)
              COALESCE(db.to_char_immutable(mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
              COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung (mrp_dokup_fehler)
              COALESCE(db.to_char_immutable(mrp_dokup_intervention), '#NULL#') || '|||' || -- hash from: Intervention / Vorschlag zur Fehlervermeldung (mrp_dokup_intervention)
-             COALESCE(db.to_char_immutable(mrp_femb_14), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (mrp_femb_14)
+             COALESCE(db.to_char_immutable(mrp_femb_11), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_pigrund (mrp_femb_11)
              COALESCE(db.to_char_immutable(mrp_pigrund), '#NULL#') || '|||' || -- hash from: PI-Grund (mrp_pigrund)
              COALESCE(db.to_char_immutable(mrp_pigrund___1), '#NULL#') || '|||' || -- hash from: 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (mrp_pigrund___1)
              COALESCE(db.to_char_immutable(mrp_pigrund___2), '#NULL#') || '|||' || -- hash from: 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (mrp_pigrund___2)
@@ -430,18 +421,13 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_pigrund___25), '#NULL#') || '|||' || -- hash from: 25 - S: Beschaffung/Kosten (mrp_pigrund___25)
              COALESCE(db.to_char_immutable(mrp_pigrund___26), '#NULL#') || '|||' || -- hash from: 26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF) (mrp_pigrund___26)
              COALESCE(db.to_char_immutable(mrp_pigrund___27), '#NULL#') || '|||' || -- hash from: 27 - S: Schulung/Beratung eines Patienten (mrp_pigrund___27)
-             COALESCE(db.to_char_immutable(mrp_femb_15), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (mrp_femb_15)
-             COALESCE(db.to_char_immutable(mrp_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse)
-             COALESCE(db.to_char_immutable(mrp_ip_klasse___1), '#NULL#') || '|||' || -- hash from: 1 - Drug - Drug (mrp_ip_klasse___1)
-             COALESCE(db.to_char_immutable(mrp_ip_klasse___2), '#NULL#') || '|||' || -- hash from: 2 - Drug - Drug-Group (mrp_ip_klasse___2)
-             COALESCE(db.to_char_immutable(mrp_ip_klasse___3), '#NULL#') || '|||' || -- hash from: 3 - Drug - Disease (mrp_ip_klasse___3)
-             COALESCE(db.to_char_immutable(mrp_ip_klasse___4), '#NULL#') || '|||' || -- hash from: 4 - Drug - Labor (mrp_ip_klasse___4)
-             COALESCE(db.to_char_immutable(mrp_ip_klasse___5), '#NULL#') || '|||' || -- hash from: 5 - Drug - Age (Priscus 2.0 o. Dosis) (mrp_ip_klasse___5)
-             COALESCE(db.to_char_immutable(mrp_femb_16), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_ip_klasse (mrp_femb_16)
-             COALESCE(db.to_char_immutable(mrp_femb_17), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_ip_klasse_disease (mrp_femb_17)
+             COALESCE(db.to_char_immutable(mrp_femb_12), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_ip_klasse (mrp_femb_12)
+             COALESCE(db.to_char_immutable(mrp_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) - 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis) (mrp_ip_klasse)
+             COALESCE(db.to_char_immutable(mrp_femb_13), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_ip_klasse_disease (mrp_femb_13)
              COALESCE(db.to_char_immutable(mrp_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (mrp_ip_klasse_disease)
+             COALESCE(db.to_char_immutable(mrp_femb_14), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_ip_klasse_labor (mrp_femb_14)
              COALESCE(db.to_char_immutable(mrp_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (mrp_ip_klasse_labor)
-             COALESCE(db.to_char_immutable(mrp_femb_18), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_ip_klasse_labor (mrp_femb_18)
+             COALESCE(db.to_char_immutable(mrp_femb_15), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_massn_am (mrp_femb_15)
              COALESCE(db.to_char_immutable(mrp_massn_am), '#NULL#') || '|||' || -- hash from: AM: Arzneimitte (mrp_massn_am)
              COALESCE(db.to_char_immutable(mrp_massn_am___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (mrp_massn_am___1)
              COALESCE(db.to_char_immutable(mrp_massn_am___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (mrp_massn_am___2)
@@ -453,7 +439,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_massn_am___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (mrp_massn_am___8)
              COALESCE(db.to_char_immutable(mrp_massn_am___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (mrp_massn_am___9)
              COALESCE(db.to_char_immutable(mrp_massn_am___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (mrp_massn_am___10)
-             COALESCE(db.to_char_immutable(mrp_femb_19), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_massn_am (mrp_femb_19)
+             COALESCE(db.to_char_immutable(mrp_femb_16), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_massn_orga (mrp_femb_16)
              COALESCE(db.to_char_immutable(mrp_massn_orga), '#NULL#') || '|||' || -- hash from: ORGA: Organisatorisch (mrp_massn_orga)
              COALESCE(db.to_char_immutable(mrp_massn_orga___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (mrp_massn_orga___1)
              COALESCE(db.to_char_immutable(mrp_massn_orga___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (mrp_massn_orga___2)
@@ -463,15 +449,235 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_massn_orga___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (mrp_massn_orga___6)
              COALESCE(db.to_char_immutable(mrp_massn_orga___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (mrp_massn_orga___7)
              COALESCE(db.to_char_immutable(mrp_massn_orga___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (mrp_massn_orga___8)
-             COALESCE(db.to_char_immutable(mrp_femb_20), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_massn_orga (mrp_femb_20)
+             COALESCE(db.to_char_immutable(mrp_femb_17), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_notiz (mrp_femb_17)
              COALESCE(db.to_char_immutable(mrp_notiz), '#NULL#') || '|||' || -- hash from: Notiz (mrp_notiz)
-             COALESCE(db.to_char_immutable(mrp_femb_21), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variable mrp_notiz (mrp_femb_21)
+             COALESCE(db.to_char_immutable(mrp_femb_18), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen mrp_dokup_hand_emp_akz, mrp_merp, mrp_merp_info (mrp_femb_18)
              COALESCE(db.to_char_immutable(mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || -- hash from: Handlungsempfehlung akzeptiert? - 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4 , Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst (mrp_dokup_hand_emp_akz)
              COALESCE(db.to_char_immutable(mrp_merp), '#NULL#') || '|||' || -- hash from: NCC MERP Score - A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I  (mrp_merp)
              COALESCE(db.to_char_immutable(mrp_merp_info), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend (mrp_merp_info)
              COALESCE(db.to_char_immutable(mrp_merp_info___1), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Blendet NCC MERP Index ein/aus (mrp_merp_info___1)
              COALESCE(db.to_char_immutable(mrp_merp_txt), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Beinhaltet NCC MERP Index als PDF (mrp_merp_txt)
              COALESCE(db.to_char_immutable(mrpdokumentation_validierung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status, wenn ein Pflichtitem fehlt Status bei Import wieder auf Incomplete setzen  - 0, Incomplete | 1, Unverified | 2, Complete (mrpdokumentation_validierung_complete)
+             '#'
+      )
+  ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
+  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Time at which the data record is inserted
+  last_check_datetime TIMESTAMP DEFAULT NULL,                   -- Time at which data record was last checked
+  current_dataset_status VARCHAR DEFAULT 'input',               -- Processing status of the data record
+  input_processing_nr INT,                                      -- (First) Processing number of the data record
+  last_processing_nr INT                                        -- Last processing number of the data record
+);
+
+-- Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+-------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrp_bewertung_fe (
+  retrolektive_mrp_bewertung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  record_id varchar,   -- Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)
+  redcap_repeat_instrument varchar,   -- Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)
+  redcap_repeat_instance varchar,   -- Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)
+  redcap_data_access_group varchar,   -- Funktion als Datensatzfilter nach Stationen (varchar)
+  mrp_fe_id  varchar,   -- Datenbank-FK der Medikationsanalyse (varchar)
+  ret_bewerter1  varchar,   -- Nutzername des 1. Bewerter des ret. MRP (varchar)
+  ret_header  varchar,   -- descriptive item only for frontend - femb der Variablen pat_name, pat_vorname, pat_cis_pid, ret_meda_id, ret_id (varchar)
+  ret_id  varchar,   -- ID des ret. MRP in REDCap (varchar)
+  ret_meda_id  varchar,   -- Zuordnung zur ID der Medikationsanalyse-ID in REDCap zu der das MRP hätte gefunden werden können. (varchar)
+  ret_femb_1  varchar,   -- descriptive item only for frontend - femb der Variablen ret_meda_dat (varchar)
+  ret_meda_dat1 timestamp,   -- Datum der 1. Bewertung (timestamp)
+  ret_femb_2 varchar,   -- descriptive item only for frontend - femb der Variablen ret_kurzbeschr (varchar)
+  ret_kurzbeschr varchar,   -- Kurzbeschreibung des ret. MRPs (varchar)
+  ret_femb_4 varchar,   -- descriptive item only for frontend - femb der Variablen ret_ip_klasse (varchar)
+  ret_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) - 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis) (varchar)
+  ret_femb_3 varchar,   -- descriptive item only for frontend - femb der Variablen ret_atc1_lbl, ret_atc1 (varchar)
+  ret_atc1_lbl  varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_atc1 varchar,   -- 1. Medikament ATC / Name (varchar)
+  ret_femb_5 varchar,   -- descriptive item only for frontend - femb der Variablen ret_atc2_lbl, ret_atc2 (varchar)
+  ret_atc2_lbl  varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_atc2 varchar,   -- 2. Medikament ATC / Name (varchar)
+  ret_femb_6 varchar,   -- descriptive item only for frontend - femb der Variablen ret_ip_klasse_disease  (varchar)
+  ret_ip_klasse_disease  varchar,   -- Disease (varchar)
+  ret_femb_7 varchar,   -- descriptive item only for frontend - femb der Variablen ret_ip_klasse_labor (varchar)
+  ret_ip_klasse_labor  varchar,   -- Labor (varchar)
+  ret_femb_8 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewissheit1_lbl, ret_gewissheit1, ret_mrp_zuordnung1_lbl, ret_mrp_zuordnung1 (varchar)
+  ret_gewissheit1_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_gewissheit1 varchar,   -- 1. Bewertung des ret. MRP - 1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)
+  ret_mrp_zuordnung1_lbl  varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_mrp_zuordnung1  varchar,   -- SQL-Abfrage innerhalb REDCap, um ret. MRP auf Grundlage von ret_meda_id dem vorher gefundenen MRP zuordnen zu können (varchar)
+  ret_femb_9 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewissheit_oth1 (varchar)
+  ret_gewissheit_oth1 varchar,   -- Weitere Informationen - Textfeld, wenn ret_gewissheit1 = 3 (andere) (varchar)
+  ret_femb_10 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl1  (varchar)
+  ret_gewiss_grund_abl1  varchar,   -- Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, Sonstiges  (varchar)
+  ret_femb_11 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl1  (varchar)
+  ret_gewiss_grund_abl_sons1_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_gewiss_grund_abl_sonst1 varchar,   -- Weitere Informationen - Textfeld, wenn ret_gewissheit1 = 4 (andere) (varchar)
+  ret_femb_12 varchar,   -- descriptive item only for frontend - femb der Variablen ret_massn_am1 (varchar)
+  ret_massn_am1 varchar,   -- AM: Arzneimittel (varchar)
+  ret_massn_am1___1 varchar,   -- 1, Anweisung für die Applikation geben (varchar)
+  ret_massn_am1___2 varchar,   -- 2, Arzneimittel ändern (varchar)
+  ret_massn_am1___3 varchar,   -- 3, Arzneimittel stoppen/pausieren (varchar)
+  ret_massn_am1___4 varchar,   -- 4, Arzneimittel neu ansetzen (varchar)
+  ret_massn_am1___5 varchar,   -- 5, Dosierung ändern (varchar)
+  ret_massn_am1___6 varchar,   -- 6, Formulierung ändern (varchar)
+  ret_massn_am1___7 varchar,   -- 7, Hilfe bei Beschaffung (varchar)
+  ret_massn_am1___8 varchar,   -- 8, Information an Arzt/Pflege (varchar)
+  ret_massn_am1___9 varchar,   -- 9, Information an Patient (varchar)
+  ret_massn_am1___10 varchar,   -- 10, TDM oder Laborkontrolle emfohlen (varchar)
+  ret_femb_13 varchar,   -- descriptive item only for frontend - femb der Variablen ret_massn_orga1  (varchar)
+  ret_massn_orga1  varchar,   -- ORGA: Organisatorisch (varchar)
+  ret_massn_orga1___1 varchar,   -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
+  ret_massn_orga1___2 varchar,   -- 2 - CIRS-/AMK-Meldung (varchar)
+  ret_massn_orga1___3 varchar,   -- 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)
+  ret_massn_orga1___4 varchar,   -- 4 - Etablierung einer Doppelkontrolle (varchar)
+  ret_massn_orga1___5 varchar,   -- 5 - Lieferantenwechsel (varchar)
+  ret_massn_orga1___6 varchar,   -- 6 - Optimierung der internen und externene Kommunikation (varchar)
+  ret_massn_orga1___7 varchar,   -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
+  ret_massn_orga1___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
+  ret_femb_14 varchar,   -- descriptive item only for frontend - femb der Variablen ret_notiz1 (varchar)
+  ret_notiz1 varchar,   -- Notiz (varchar)
+  ret_femb_15 varchar,   -- descriptive item only for frontend - femb der Variablen ret_2ndbewertung (varchar)
+  ret_2ndbewertung  varchar,   -- Indikator um 2. Bewertung durchzuführen  (varchar)
+  ret_2ndbewertung___1 varchar,   -- 1 - 2nd Look | Zweite MRP-Bewertung durchführen (varchar)
+  ret_bewerter2_pipeline  varchar,   -- Erstellung des Nutzername des 2. Bewerter  (varchar)
+  ret_bewerter2  varchar,   -- Nutzername des 2. Bewerter des ret. MRP (varchar)
+  ret_femb_16 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewissheit2_lbl, ret_gewissheit2, ret_mrp_zuordnung2_lbl, ret_mrp_zuordnung2 (varchar)
+  ret_gewissheit2_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_gewissheit2 varchar,   -- 2. Bewertung des ret. MRP - 1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)
+  ret_mrp_zuordnung2_lbl  varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_mrp_zuordnung2 varchar,   -- SQL-Abfrage innerhalb REDCap, um ret. MRP auf Grundlage von ret_meda_id dem vorher gefundenen MRP zuordnen zu können (varchar)
+  ret_femb_17 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewissheit_oth2 (varchar)
+  ret_gewissheit_oth2 varchar,   -- Weitere Informationen - Textfeld, wenn ret_gewissheit2 = 3 (andere) (varchar)
+  ret_femb_18 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl2 (varchar)
+  ret_gewiss_grund_abl2 varchar,   -- Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, Sonstiges  (varchar)
+  ret_femb_19 varchar,   -- descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl2 (varchar)
+  ret_gewiss_grund_abl_sons2_lbl varchar,   -- descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)
+  ret_gewiss_grund_abl_sonst2 varchar,   -- Weitere Informationen - Textfeld, wenn ret_gewissheit2 = 4 (andere) (varchar)
+  ret_femb_20 varchar,   -- descriptive item only for frontend - femb der Variablen ret_massn_am2 (varchar)
+  ret_massn_am2 varchar,   -- AM: Arzneimittel (varchar)
+  ret_massn_am2___1 varchar,   -- 1, Anweisung für die Applikation geben (varchar)
+  ret_massn_am2___2 varchar,   -- 2, Arzneimittel ändern (varchar)
+  ret_massn_am2___3 varchar,   -- 3, Arzneimittel stoppen/pausieren (varchar)
+  ret_massn_am2___4 varchar,   -- 4, Arzneimittel neu ansetzen (varchar)
+  ret_massn_am2___5 varchar,   -- 5, Dosierung ändern (varchar)
+  ret_massn_am2___6 varchar,   -- 6, Formulierung ändern (varchar)
+  ret_massn_am2___7 varchar,   -- 7, Hilfe bei Beschaffung (varchar)
+  ret_massn_am2___8 varchar,   -- 8, Information an Arzt/Pflege (varchar)
+  ret_massn_am2___9 varchar,   -- 9, Information an Patient (varchar)
+  ret_massn_am2___10 varchar,   -- 10, TDM oder Laborkontrolle emfohlen (varchar)
+  ret_femb_21 varchar,   -- descriptive item only for frontend - femb der Variablen ret_massn_orga2 (varchar)
+  ret_massn_orga2 varchar,   -- ORGA: Organisatorisch (varchar)
+  ret_massn_orga2___1 varchar,   -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
+  ret_massn_orga2___2 varchar,   -- 2 - CIRS-/AMK-Meldung (varchar)
+  ret_massn_orga2___3 varchar,   -- 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)
+  ret_massn_orga2___4 varchar,   -- 4 - Etablierung einer Doppelkontrolle (varchar)
+  ret_massn_orga2___5 varchar,   -- 5 - Lieferantenwechsel (varchar)
+  ret_massn_orga2___6 varchar,   -- 6 - Optimierung der internen und externene Kommunikation (varchar)
+  ret_massn_orga2___7 varchar,   -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
+  ret_massn_orga2___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
+  ret_femb_22 varchar,   -- descriptive item only for frontend - femb der Variablen ret_notiz2 (varchar)
+  ret_notiz2 varchar,   -- Notiz (varchar)
+  hash_index_col TEXT GENERATED ALWAYS AS (
+      md5(
+             COALESCE(db.to_char_immutable(record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (record_id)
+             COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (redcap_repeat_instrument)
+             COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (redcap_repeat_instance)
+             COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Funktion als Datensatzfilter nach Stationen (redcap_data_access_group)
+             COALESCE(db.to_char_immutable(mrp_fe_id ), '#NULL#') || '|||' || -- hash from: Datenbank-FK der Medikationsanalyse (mrp_fe_id )
+             COALESCE(db.to_char_immutable(ret_bewerter1 ), '#NULL#') || '|||' || -- hash from: Nutzername des 1. Bewerter des ret. MRP (ret_bewerter1 )
+             COALESCE(db.to_char_immutable(ret_header ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen pat_name, pat_vorname, pat_cis_pid, ret_meda_id, ret_id (ret_header )
+             COALESCE(db.to_char_immutable(ret_id ), '#NULL#') || '|||' || -- hash from: ID des ret. MRP in REDCap (ret_id )
+             COALESCE(db.to_char_immutable(ret_meda_id ), '#NULL#') || '|||' || -- hash from: Zuordnung zur ID der Medikationsanalyse-ID in REDCap zu der das MRP hätte gefunden werden können. (ret_meda_id )
+             COALESCE(db.to_char_immutable(ret_femb_1 ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_meda_dat (ret_femb_1 )
+             COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der 1. Bewertung (ret_meda_dat1)
+             COALESCE(db.to_char_immutable(ret_femb_2), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_kurzbeschr (ret_femb_2)
+             COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des ret. MRPs (ret_kurzbeschr)
+             COALESCE(db.to_char_immutable(ret_femb_4), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_ip_klasse (ret_femb_4)
+             COALESCE(db.to_char_immutable(ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) - 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis) (ret_ip_klasse)
+             COALESCE(db.to_char_immutable(ret_femb_3), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_atc1_lbl, ret_atc1 (ret_femb_3)
+             COALESCE(db.to_char_immutable(ret_atc1_lbl ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_atc1_lbl )
+             COALESCE(db.to_char_immutable(ret_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name (ret_atc1)
+             COALESCE(db.to_char_immutable(ret_femb_5), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_atc2_lbl, ret_atc2 (ret_femb_5)
+             COALESCE(db.to_char_immutable(ret_atc2_lbl ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_atc2_lbl )
+             COALESCE(db.to_char_immutable(ret_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (ret_atc2)
+             COALESCE(db.to_char_immutable(ret_femb_6), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_ip_klasse_disease  (ret_femb_6)
+             COALESCE(db.to_char_immutable(ret_ip_klasse_disease ), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease )
+             COALESCE(db.to_char_immutable(ret_femb_7), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_ip_klasse_labor (ret_femb_7)
+             COALESCE(db.to_char_immutable(ret_ip_klasse_labor ), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor )
+             COALESCE(db.to_char_immutable(ret_femb_8), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewissheit1_lbl, ret_gewissheit1, ret_mrp_zuordnung1_lbl, ret_mrp_zuordnung1 (ret_femb_8)
+             COALESCE(db.to_char_immutable(ret_gewissheit1_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_gewissheit1_lbl)
+             COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: 1. Bewertung des ret. MRP - 1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (ret_gewissheit1)
+             COALESCE(db.to_char_immutable(ret_mrp_zuordnung1_lbl ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_mrp_zuordnung1_lbl )
+             COALESCE(db.to_char_immutable(ret_mrp_zuordnung1 ), '#NULL#') || '|||' || -- hash from: SQL-Abfrage innerhalb REDCap, um ret. MRP auf Grundlage von ret_meda_id dem vorher gefundenen MRP zuordnen zu können (ret_mrp_zuordnung1 )
+             COALESCE(db.to_char_immutable(ret_femb_9), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewissheit_oth1 (ret_femb_9)
+             COALESCE(db.to_char_immutable(ret_gewissheit_oth1), '#NULL#') || '|||' || -- hash from: Weitere Informationen - Textfeld, wenn ret_gewissheit1 = 3 (andere) (ret_gewissheit_oth1)
+             COALESCE(db.to_char_immutable(ret_femb_10), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl1  (ret_femb_10)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl1 ), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, Sonstiges  (ret_gewiss_grund_abl1 )
+             COALESCE(db.to_char_immutable(ret_femb_11), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl1  (ret_femb_11)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sons1_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_gewiss_grund_abl_sons1_lbl)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Weitere Informationen - Textfeld, wenn ret_gewissheit1 = 4 (andere) (ret_gewiss_grund_abl_sonst1)
+             COALESCE(db.to_char_immutable(ret_femb_12), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_massn_am1 (ret_femb_12)
+             COALESCE(db.to_char_immutable(ret_massn_am1), '#NULL#') || '|||' || -- hash from: AM: Arzneimittel (ret_massn_am1)
+             COALESCE(db.to_char_immutable(ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1, Anweisung für die Applikation geben (ret_massn_am1___1)
+             COALESCE(db.to_char_immutable(ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2, Arzneimittel ändern (ret_massn_am1___2)
+             COALESCE(db.to_char_immutable(ret_massn_am1___3), '#NULL#') || '|||' || -- hash from: 3, Arzneimittel stoppen/pausieren (ret_massn_am1___3)
+             COALESCE(db.to_char_immutable(ret_massn_am1___4), '#NULL#') || '|||' || -- hash from: 4, Arzneimittel neu ansetzen (ret_massn_am1___4)
+             COALESCE(db.to_char_immutable(ret_massn_am1___5), '#NULL#') || '|||' || -- hash from: 5, Dosierung ändern (ret_massn_am1___5)
+             COALESCE(db.to_char_immutable(ret_massn_am1___6), '#NULL#') || '|||' || -- hash from: 6, Formulierung ändern (ret_massn_am1___6)
+             COALESCE(db.to_char_immutable(ret_massn_am1___7), '#NULL#') || '|||' || -- hash from: 7, Hilfe bei Beschaffung (ret_massn_am1___7)
+             COALESCE(db.to_char_immutable(ret_massn_am1___8), '#NULL#') || '|||' || -- hash from: 8, Information an Arzt/Pflege (ret_massn_am1___8)
+             COALESCE(db.to_char_immutable(ret_massn_am1___9), '#NULL#') || '|||' || -- hash from: 9, Information an Patient (ret_massn_am1___9)
+             COALESCE(db.to_char_immutable(ret_massn_am1___10), '#NULL#') || '|||' || -- hash from: 10, TDM oder Laborkontrolle emfohlen (ret_massn_am1___10)
+             COALESCE(db.to_char_immutable(ret_femb_13), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_massn_orga1  (ret_femb_13)
+             COALESCE(db.to_char_immutable(ret_massn_orga1 ), '#NULL#') || '|||' || -- hash from: ORGA: Organisatorisch (ret_massn_orga1 )
+             COALESCE(db.to_char_immutable(ret_massn_orga1___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga1___1)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga1___2)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (ret_massn_orga1___3)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (ret_massn_orga1___4)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (ret_massn_orga1___5)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (ret_massn_orga1___6)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga1___7)
+             COALESCE(db.to_char_immutable(ret_massn_orga1___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga1___8)
+             COALESCE(db.to_char_immutable(ret_femb_14), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_notiz1 (ret_femb_14)
+             COALESCE(db.to_char_immutable(ret_notiz1), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz1)
+             COALESCE(db.to_char_immutable(ret_femb_15), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_2ndbewertung (ret_femb_15)
+             COALESCE(db.to_char_immutable(ret_2ndbewertung ), '#NULL#') || '|||' || -- hash from: Indikator um 2. Bewertung durchzuführen  (ret_2ndbewertung )
+             COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look | Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
+             COALESCE(db.to_char_immutable(ret_bewerter2_pipeline ), '#NULL#') || '|||' || -- hash from: Erstellung des Nutzername des 2. Bewerter  (ret_bewerter2_pipeline )
+             COALESCE(db.to_char_immutable(ret_bewerter2 ), '#NULL#') || '|||' || -- hash from: Nutzername des 2. Bewerter des ret. MRP (ret_bewerter2 )
+             COALESCE(db.to_char_immutable(ret_femb_16), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewissheit2_lbl, ret_gewissheit2, ret_mrp_zuordnung2_lbl, ret_mrp_zuordnung2 (ret_femb_16)
+             COALESCE(db.to_char_immutable(ret_gewissheit2_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_gewissheit2_lbl)
+             COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: 2. Bewertung des ret. MRP - 1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (ret_gewissheit2)
+             COALESCE(db.to_char_immutable(ret_mrp_zuordnung2_lbl ), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_mrp_zuordnung2_lbl )
+             COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: SQL-Abfrage innerhalb REDCap, um ret. MRP auf Grundlage von ret_meda_id dem vorher gefundenen MRP zuordnen zu können (ret_mrp_zuordnung2)
+             COALESCE(db.to_char_immutable(ret_femb_17), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewissheit_oth2 (ret_femb_17)
+             COALESCE(db.to_char_immutable(ret_gewissheit_oth2), '#NULL#') || '|||' || -- hash from: Weitere Informationen - Textfeld, wenn ret_gewissheit2 = 3 (andere) (ret_gewissheit_oth2)
+             COALESCE(db.to_char_immutable(ret_femb_18), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl2 (ret_femb_18)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl2), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, Sonstiges  (ret_gewiss_grund_abl2)
+             COALESCE(db.to_char_immutable(ret_femb_19), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl2 (ret_femb_19)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sons2_lbl), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - Label für femb (korrespondierende Variable) (ret_gewiss_grund_abl_sons2_lbl)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Weitere Informationen - Textfeld, wenn ret_gewissheit2 = 4 (andere) (ret_gewiss_grund_abl_sonst2)
+             COALESCE(db.to_char_immutable(ret_femb_20), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_massn_am2 (ret_femb_20)
+             COALESCE(db.to_char_immutable(ret_massn_am2), '#NULL#') || '|||' || -- hash from: AM: Arzneimittel (ret_massn_am2)
+             COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1, Anweisung für die Applikation geben (ret_massn_am2___1)
+             COALESCE(db.to_char_immutable(ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2, Arzneimittel ändern (ret_massn_am2___2)
+             COALESCE(db.to_char_immutable(ret_massn_am2___3), '#NULL#') || '|||' || -- hash from: 3, Arzneimittel stoppen/pausieren (ret_massn_am2___3)
+             COALESCE(db.to_char_immutable(ret_massn_am2___4), '#NULL#') || '|||' || -- hash from: 4, Arzneimittel neu ansetzen (ret_massn_am2___4)
+             COALESCE(db.to_char_immutable(ret_massn_am2___5), '#NULL#') || '|||' || -- hash from: 5, Dosierung ändern (ret_massn_am2___5)
+             COALESCE(db.to_char_immutable(ret_massn_am2___6), '#NULL#') || '|||' || -- hash from: 6, Formulierung ändern (ret_massn_am2___6)
+             COALESCE(db.to_char_immutable(ret_massn_am2___7), '#NULL#') || '|||' || -- hash from: 7, Hilfe bei Beschaffung (ret_massn_am2___7)
+             COALESCE(db.to_char_immutable(ret_massn_am2___8), '#NULL#') || '|||' || -- hash from: 8, Information an Arzt/Pflege (ret_massn_am2___8)
+             COALESCE(db.to_char_immutable(ret_massn_am2___9), '#NULL#') || '|||' || -- hash from: 9, Information an Patient (ret_massn_am2___9)
+             COALESCE(db.to_char_immutable(ret_massn_am2___10), '#NULL#') || '|||' || -- hash from: 10, TDM oder Laborkontrolle emfohlen (ret_massn_am2___10)
+             COALESCE(db.to_char_immutable(ret_femb_21), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_massn_orga2 (ret_femb_21)
+             COALESCE(db.to_char_immutable(ret_massn_orga2), '#NULL#') || '|||' || -- hash from: ORGA: Organisatorisch (ret_massn_orga2)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga2___1)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga2___2)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (ret_massn_orga2___3)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (ret_massn_orga2___4)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (ret_massn_orga2___5)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (ret_massn_orga2___6)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga2___7)
+             COALESCE(db.to_char_immutable(ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
+             COALESCE(db.to_char_immutable(ret_femb_22), '#NULL#') || '|||' || -- hash from: descriptive item only for frontend - femb der Variablen ret_notiz2 (ret_femb_22)
+             COALESCE(db.to_char_immutable(ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
              '#'
       )
   ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -644,6 +850,16 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.mrpdokumentation_va
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2frontend_in.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 
+-- Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+GRANT TRIGGER ON db2frontend_in.retrolektive_mrp_bewertung_fe TO db2frontend_user;
+GRANT USAGE ON SCHEMA db2frontend_in TO db2frontend_user;
+GRANT USAGE ON db.db_seq TO db2frontend_user;
+
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.retrolektive_mrp_bewertung_fe TO db2frontend_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2frontend_in.retrolektive_mrp_bewertung_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2frontend_in.retrolektive_mrp_bewertung_fe TO db_log_user; -- Additional authorizations for testing
+
 -- Table "risikofaktor_fe" in schema "db2frontend_in"
 ----------------------------------------------------
 GRANT TRIGGER ON db2frontend_in.risikofaktor_fe TO db2frontend_user;
@@ -674,6 +890,7 @@ COMMENT ON COLUMN db2frontend_in.patient_fe.patient_fe_id IS 'Primary key of the
 COMMENT ON COLUMN db2frontend_in.patient_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 COMMENT ON COLUMN db2frontend_in.patient_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
 COMMENT ON COLUMN db2frontend_in.patient_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instrument :  patient - darf nicht besetzt werden muss nur für den sycronisationsvorgang vorhanden sein (varchar)';
+COMMENT ON COLUMN db2frontend_in.patient_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
 COMMENT ON COLUMN db2frontend_in.patient_fe.pat_header IS 'descriptive item only for frontend (varchar)';
 COMMENT ON COLUMN db2frontend_in.patient_fe.pat_id IS 'Patient-identifier FHIR Daten (varchar)';
 COMMENT ON COLUMN db2frontend_in.patient_fe.pat_femb_1 IS 'descriptive item only for frontend - Fieldembedding (femb) der Variablen pat_cis_pid, pat_name, pat_vorname, pat_gebdat,pat_geschlecht (varchar)';
@@ -691,38 +908,25 @@ COMMENT ON COLUMN db2frontend_in.patient_fe.input_processing_nr IS '(First) Proc
 COMMENT ON COLUMN db2frontend_in.patient_fe.last_processing_nr IS 'Last processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.fall_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_id IS 'Fall-ID RedCap FHIR Daten (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_pat_id IS 'Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_1 IS 'descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :   fall (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanz  (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_pat_id IS 'Patienten-ID zu dem Fall gehört (FHIR Patient:pat_id) (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_1 IS 'descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_2 IS 'descriptive item only for frontend - femb der Variablen fall_id, fall_station, fall_aufn_dat, fall_zimmernr, fall_aufn_diag, fall_gewicht_aktuell, fall_gewicht_aktl_einheit, fall_groesse, fall_groesse_einheit (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_id IS 'Fall-ID RedCap FHIR Daten (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_studienphase IS 'Alt: (1, Usual Care (UC) | 2, Interventional Care (IC) | 3, Pilotphase (P) ) (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_station IS 'Station wie vom DIZ Definiert (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_zimmernr IS 'Zimmernummer wie vom DIZ Definiert (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (timestamp)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_aufn_diag IS 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_zimmernr IS 'Zimmernummer wie vom DIZ Definiert (varchar)';
+COMMENT ON COLUMN db2frontend_in.fall_fe.fall_aufn_diag IS 'Diagnose(n) bei Aufnahme (wird nur zum lesen sein) (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_gewicht_aktuell IS 'aktuelles Gewicht (Kg) (double precision)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_gewicht_aktl_einheit IS 'Einheit des Gewichts (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_groesse IS 'Größe (cm) (double precision)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_groesse_einheit IS 'Einheit der Größe (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_bmi IS 'BMI (double precision)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_2 IS 'descriptive item only for frontend - femb der Variablen fall_nieren_insuf_chron, fall_nieren_insuf_ausmass_lbl, fall_nieren_insuf_ausmass (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_3 IS 'descriptive item only for frontend - femb der Variablen fall_nieren_insuf_dialysev_lbl, fall_nieren_insuf_dialysev (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_4 IS 'descriptive item only for frontend - femb der Variablen fall_leber_insuf, fall_leber_insuf_ausmass_lbl, fall_leber_insuf_ausmass (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_5 IS 'descriptive item only for frontend - femb der Variablen fall_schwanger_mo_lbl, fall_schwanger_mo (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_femb_6 IS 'descriptive item only for frontend - femb der Variablen fall_status, fall_ent_dat (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_nieren_insuf_chron IS '1, ja | 0, nein | -1, nicht bekanntChronische Niereninsuffizienz (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_nieren_insuf_ausmass_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_nieren_insuf_ausmass IS 'aktuelles Ausmaß - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_nieren_insuf_dialysev_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_nieren_insuf_dialysev IS 'Nierenersatzverfahren - 1, Hämodialyse | 2, Kont. Hämofiltration | 3, Peritonealdialyse | 4, keineDialyseverfahren (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_leber_insuf IS 'Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekanntLeberinsuffizienz (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_leber_insuf_ausmass_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_leber_insuf_ausmass IS 'aktuelles Ausmaß -1, Ausmaß unbekannt | 2, Leicht (Child-Pugh A) | 3, Mittel (Child-Pugh B) | 4, Schwer (Child-Pugh C)aktuelles Ausmaß  (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_schwanger_mo IS 'Schwangerschaftsmonat - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)';
-COMMENT ON COLUMN db2frontend_in.fall_fe.fall_schwanger_mo_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_status IS 'Status des Falls (varchar)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_ent_dat IS 'Entlassdatum (timestamp)';
 COMMENT ON COLUMN db2frontend_in.fall_fe.fall_complete IS 'Frontend Complete-Status - Incomplete | 1, Unverified | 2, Complete (varchar)';
@@ -733,16 +937,39 @@ COMMENT ON COLUMN db2frontend_in.fall_fe.input_processing_nr IS '(First) Process
 COMMENT ON COLUMN db2frontend_in.fall_fe.last_processing_nr IS 'Last processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.medikationsanalyse_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
-COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_1 IS 'descriptive item only for frontend - femb der Variable meda_dat (varchar)';
-COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_2 IS 'descriptive item only for frontend - femb der Variable meda_ma_thueberw (varchar)';
-COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_3 IS 'descriptive item only for frontend - femb der Variablen meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (varchar)';
-COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.fall_fe_id IS 'Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  medikationsanalyse (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
-COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (timestamp)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.fall_fe_id IS 'Datenbank-FK des Falls (Fall: v_fall_all . fall_id) -> Dataprocessor setzt id: meda_dat in [fall_aufn_dat;fall_ent_dat] (int)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_anlage IS 'Nutzername Formular angelegt (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_edit IS 'Nutzername Formular zuletzt bearbeitet (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_header IS 'descriptive item only for frontend - femb der Variable pat_name, pat_vorname, pat_cis_pid, fall_meda_id, meda_id (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.fall_meda_id IS 'SQL-Abfrage innerhalb REDCap, um Fall-ID der Medikationsanalyse manuell zuordnen zu können. (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_id IS 'ID der Medikationsanalyse in REDCap (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_1 IS 'descriptive item only for frontend - femb der Variable meda_gewicht_aktuell, meda_gewicht_aktl_einheit, meda_groesse, meda_groesse_einheit,  meda_nieren_insuf_chron, meda_nieren_insuf_ausmass_lbl, meda_nieren_insuf_ausmass (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_gewicht_aktuell IS 'aktuelles Gewicht (Kg) zum Zeitpunkt der Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_gewicht_aktl_einheit IS 'Einheit des Gewichts zum Zeitpunkt der Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_groesse IS 'Größe (cm) zum Zeitpunkt der Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_groesse_einheit IS 'Einheit der Größe zum Zeitpunkt der Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_bmi  IS 'BMI zum Zeitpunkt der Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_nieren_insuf_chron IS 'Angabe chron. Niereninsuffizienz - 1, ja | 0, nein | -1, nicht bekannt (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_nieren_insuf_ausmass_lbl IS 'descriptive item only for frontend  (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_nieren_insuf_ausmass IS 'Ausmaß chron. Niereninsuffizienz - 1, Ausmaß unbekannt | 2, 45-59 ml/min/1,73 m2 | 3, 30-44 ml/min/1,73 m2 | 4, 15-29 ml/min/1,73 m2 | 5, < 15 ml/min/1,73 m2 | 6, Nierenersatzverfahren (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_2 IS 'descriptive item only for frontend - femb der Variable meda_nieren_insuf_dialysev_lbl, meda_nieren_insuf_dialysev (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_nieren_insuf_dialysev_lbl IS 'descriptive item only for frontend  (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_nieren_insuf_dialysev IS 'Dialyse bei chron. Niereninsuffizienz - 1, Hämodialyse | 2, Kont. Hämofiltration&nbsp;&nbsp;&nbsp; | 3, Peritonealdialyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_3 IS 'descriptive item only for frontend - femb der Variablen meda_leber_insuf, meda_leber_insuf_ausmass_lbl, meda_leber_insuf_ausmass (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_leber_insuf IS 'Angabe chron. Leberinsuffizienz - 1, ja | 0, nein | -1, nicht bekannt -1, Ausmaß unbekannt (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_leber_insuf_ausmass_lbl IS 'descriptive item only for frontend  (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_leber_insuf_ausmass IS 'Ausamaß chron. Leberinsuffizienz - 1, Leicht (Child-Pugh A) | 2, Mittel (Child-Pugh B) | 3, Schwer (Child-Pugh C) (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_4 IS 'descriptive item only for frontend - femb der Variablen meda_schwanger_mo (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_schwanger_mo IS 'Angabe der Schwangerschaft/Schwangerschaftsmonate - 0, keine Schwangerschaft | 1, 1 | 2, 2 | 3, 3 | 4, 4 | 5, 5 | 6, 6 | 7, 7 | 8, 8 | 9, 9 (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_5 IS 'descriptive item only for frontend - femb der Variable meda_typ, meda_dat (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_typ IS 'Typ der Medikationsanalyse - 1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA  (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (timestamp)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_6 IS 'descriptive item only for frontend - femb der Variable meda_ma_thueberw (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_ma_thueberw IS 'Medikationsanalyse / Therapieüberwachung in 24-48h - 1, Ja | 0, Nein (varchar)';
+COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_femb_7 IS 'descriptive item only for frontend - femb der Variable meda_mrp_detekt, meda_aufwand_zeit, meda_aufwand_zeit_and_lbl, meda_aufwand_zeit_and, meda_notiz (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_mrp_detekt IS 'MRP detektiert? - 1, Ja|0, Nein (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_aufwand_zeit IS 'Zeitaufwand Medikationsanalyse - 0, <= 5 min | 1, 6-10 min | 2, 11-20 min | 3, 21-30 min | 4, >30 min | 5, Angabe abgelehntZeitaufwand Medikationsanalyse [Min] (varchar)';
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.meda_aufwand_zeit_and_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (int)';
@@ -756,61 +983,48 @@ COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.input_processing_nr IS '(
 COMMENT ON COLUMN db2frontend_in.medikationsanalyse_fe.last_processing_nr IS 'Last processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.meda_fe_id IS 'Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_header IS 'descriptive item only for frontend - Gesamtüberischt Patienten, Falldaten, gegenwärtige Formular-Instanzen  (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.meda_fe_id IS 'Datenbank-FK der Medikationsanalyse (Medikationsanalyse: medikationsanalyse_fe_id) -> Dataprocessor setzt id: mrp_entd_dat(Tag)=meda_dat(Tag) (int)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_anlage  IS 'Nutzername Formular angelegt (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_edit  IS 'Nutzername Formular zuletzt bearbeitet (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_header IS 'descriptive item only for frontend - femb der Variable pat_name, pat_vorname, pat_cis_pid, mrp_meda_id, mrp_id (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_meda_id  IS 'SQL-Abfrage innerhalb REDCap, um Fall-ID der Medikationsanalyse manuell zuordnen zu können. (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_id  IS 'ID des MRP in REDCap (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_1 IS 'descriptive item only for frontend - femb der Variable mrp_entd_dat (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_2 IS 'descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_3 IS 'descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info___1 IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info___1 IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pi_info_txt IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_mf_info_txt IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_4 IS 'descriptive item only for frontend - femb der Variablen mrp_gewissheit_lbl, mrp_gewissheit (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_5 IS 'descriptive item only for frontend - femb der Variable mrp_gewissheit_oth (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_6 IS 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_lbl, mrp_gewiss_grund_abl (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (timestamp)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein; nur noch als  @HIDDEN (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_2 IS 'descriptive item only for frontend - femb der Variablen mrp_kurzbeschr, mrp_entd_algorithmisch, mrp_hinweisgeber_lbl, mrp_hinweisgeber (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? - 1, Ja | 0, Nein (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber_lbl IS 'descriptive item only for frontend (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber IS 'Hinweisgeber auf das MRP (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewissheit_lbl IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewissheit IS 'Sicherheit des detektierten MRP - 1, MRP bestätigt | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_22 IS 'descriptive item only for frontend - femb der Variablen (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewissheit_oth IS 'Textfeld, wenn mrp_gewissheit = 2 MRP möglich, weitere Informationen nötig (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_23 IS 'descriptive item only for frontend (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_3 IS 'descriptive item only for frontend - femb der Variable mrp_hinweisgeber_oth (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth IS 'Textfeld, wenn mrp_hinweisgeber = 7 (andere) (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_lbl IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl IS 'Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, MRP sachlich richtig, aber von Stationsapotheker vorher identifiziert | 5, Sonstiges (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst_lbl IS 'descriptive item only for frontend (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_gewiss_grund_abl_sonst IS 'Bitte näher beschreiben (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_7 IS 'descriptive item only for frontend - femb der Variablen mrp_gewiss_grund_abl_sonst_lbl, mrp_gewiss_grund_abl_sonst (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_8 IS 'descriptive item only for frontend - femb der Variable mrp_wirkstoff (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_9 IS 'descriptive item only for frontend - femb der Variablen mrp_atc1_lbl, mrp_atc1 (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_10 IS 'descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_11 IS 'descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_12 IS 'descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_4 IS 'descriptive item only for frontend - femb der Variable mrp_wirkstoff (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_wirkstoff IS 'Wirkstoff betroffen? - 1, Ja | 0, Nein (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_5 IS 'descriptive item only for frontend - femb der Variable mrp_atc1_lbl, mrp_atc1 (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc1_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc1 IS '1. Medikament ATC / Name- https://www.bfarm.de/SharedDocs/Downloads/DE/Kodiersysteme/ATC/atc-ddd-amtlich-2024.pdf?__blob=publicationFile (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_6 IS 'descriptive item only for frontend - femb der Variablen mrp_atc2_lbl, mrp_atc2 (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc2_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc2 IS '2. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_7 IS 'descriptive item only for frontend - femb der Variablen mrp_atc3_lbl, mrp_atc3 (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc3_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc3 IS '3. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_8 IS 'descriptive item only for frontend - femb der Variablen mrp_atc4_lbl, mrp_atc4 (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc4_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc4 IS '4. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_9 IS 'descriptive item only for frontend - femb der Variablen mrp_atc5_lbl, mrp_atc5 (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc5_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_atc5 IS '5. Medikament ATC / Name (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_13 IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_10 IS 'descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_med_prod IS 'Medizinprodukt betroffen? - 1, Ja | 0, Nein, (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst IS 'Bezeichnung Präparat (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_intervention IS 'Intervention / Vorschlag zur Fehlervermeldung (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_14 IS 'descriptive item only for frontend - femb der Variablen mrp_med_prod, mrp_med_prod_sonst_lbl, mrp_med_prod_sonst (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_11 IS 'descriptive item only for frontend - femb der Variablen mrp_pigrund (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund IS 'PI-Grund (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___1 IS '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___2 IS '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)';
@@ -839,18 +1053,13 @@ COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___2
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___25 IS '25 - S: Beschaffung/Kosten (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___26 IS '26 - S: Keine Pause von AM, die prä-OP pausiert werden müssen (MF) (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_pigrund___27 IS '27 - S: Schulung/Beratung eines Patienten (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_15 IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___1 IS '1 - Drug - Drug (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___2 IS '2 - Drug - Drug-Group (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___3 IS '3 - Drug - Disease (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___4 IS '4 - Drug - Labor (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse___5 IS '5 - Drug - Age (Priscus 2.0 o. Dosis) (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_16 IS 'descriptive item only for frontend - femb der Variable mrp_ip_klasse (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_17 IS 'descriptive item only for frontend - femb der Variable mrp_ip_klasse_disease (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_12 IS 'descriptive item only for frontend - femb der Variablen mrp_ip_klasse (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse IS 'MRP-Klasse (INTERPOLAR) - 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis) (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_13 IS 'descriptive item only for frontend - femb der Variablen mrp_ip_klasse_disease (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease IS 'Disease (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_14 IS 'descriptive item only for frontend - femb der Variablen mrp_ip_klasse_labor (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor IS 'Labor (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_18 IS 'descriptive item only for frontend - femb der Variable mrp_ip_klasse_labor (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_15 IS 'descriptive item only for frontend - femb der Variablen mrp_massn_am (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am IS 'AM: Arzneimitte (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___2 IS '2 - Arzneimittel ändern (varchar)';
@@ -862,7 +1071,7 @@ COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___8 IS '8 - Information an Arzt/Pflege (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___9 IS '9 - Information an Patient (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_am___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_19 IS 'descriptive item only for frontend - femb der Variable mrp_massn_am (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_16 IS 'descriptive item only for frontend - femb der Variablen mrp_massn_orga (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga IS 'ORGA: Organisatorisch (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
@@ -872,9 +1081,9 @@ COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga_
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_massn_orga___8 IS '8 - Sensibilisierung/Schulung (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_20 IS 'descriptive item only for frontend - femb der Variable mrp_massn_orga (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_17 IS 'descriptive item only for frontend - femb der Variablen mrp_notiz (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_notiz IS 'Notiz (varchar)';
-COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_21 IS 'descriptive item only for frontend - femb der Variable mrp_notiz (varchar)';
+COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_femb_18 IS 'descriptive item only for frontend - femb der Variablen mrp_dokup_hand_emp_akz, mrp_merp, mrp_merp_info (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz IS 'Handlungsempfehlung akzeptiert? - 1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4 , Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp IS 'NCC MERP Score - A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I  (varchar)';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.mrp_merp_info IS 'descriptive item only for frontend (varchar)';
@@ -886,6 +1095,114 @@ COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.last_check_date
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.retrolektive_mrp_bewertung_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.redcap_repeat_instrument IS 'Frontend interne Datensatzverwaltung - Instrument :  MRP-Dokumentation / -Validierung  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.redcap_repeat_instance IS 'Frontend interne Datensatzverwaltung - Instanz des Instruments - Numerisch : 1…n (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.redcap_data_access_group IS 'Funktion als Datensatzfilter nach Stationen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.mrp_fe_id  IS 'Datenbank-FK der Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_bewerter1  IS 'Nutzername des 1. Bewerter des ret. MRP (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_header  IS 'descriptive item only for frontend - femb der Variablen pat_name, pat_vorname, pat_cis_pid, ret_meda_id, ret_id (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_id  IS 'ID des ret. MRP in REDCap (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_meda_id  IS 'Zuordnung zur ID der Medikationsanalyse-ID in REDCap zu der das MRP hätte gefunden werden können. (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_1  IS 'descriptive item only for frontend - femb der Variablen ret_meda_dat (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_meda_dat1 IS 'Datum der 1. Bewertung (timestamp)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_2 IS 'descriptive item only for frontend - femb der Variablen ret_kurzbeschr (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des ret. MRPs (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_4 IS 'descriptive item only for frontend - femb der Variablen ret_ip_klasse (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_ip_klasse IS 'MRP-Klasse (INTERPOLAR) - 1, Drug - Drug | 2, Drug - Drug-Group | 3, Drug - Disease | 4, Drug - Labor | 5, Drug - Age (Priscus 2.0 o. Dosis) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_3 IS 'descriptive item only for frontend - femb der Variablen ret_atc1_lbl, ret_atc1 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_atc1_lbl  IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_atc1 IS '1. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_5 IS 'descriptive item only for frontend - femb der Variablen ret_atc2_lbl, ret_atc2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_atc2_lbl  IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_atc2 IS '2. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_6 IS 'descriptive item only for frontend - femb der Variablen ret_ip_klasse_disease  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_ip_klasse_disease  IS 'Disease (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_7 IS 'descriptive item only for frontend - femb der Variablen ret_ip_klasse_labor (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_ip_klasse_labor  IS 'Labor (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_8 IS 'descriptive item only for frontend - femb der Variablen ret_gewissheit1_lbl, ret_gewissheit1, ret_mrp_zuordnung1_lbl, ret_mrp_zuordnung1 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewissheit1_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewissheit1 IS '1. Bewertung des ret. MRP - 1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_mrp_zuordnung1_lbl  IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_mrp_zuordnung1  IS 'SQL-Abfrage innerhalb REDCap, um ret. MRP auf Grundlage von ret_meda_id dem vorher gefundenen MRP zuordnen zu können (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_9 IS 'descriptive item only for frontend - femb der Variablen ret_gewissheit_oth1 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewissheit_oth1 IS 'Weitere Informationen - Textfeld, wenn ret_gewissheit1 = 3 (andere) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_10 IS 'descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl1  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewiss_grund_abl1  IS 'Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, Sonstiges  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_11 IS 'descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl1  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewiss_grund_abl_sons1_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewiss_grund_abl_sonst1 IS 'Weitere Informationen - Textfeld, wenn ret_gewissheit1 = 4 (andere) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_12 IS 'descriptive item only for frontend - femb der Variablen ret_massn_am1 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1 IS 'AM: Arzneimittel (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___1 IS '1, Anweisung für die Applikation geben (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___2 IS '2, Arzneimittel ändern (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___3 IS '3, Arzneimittel stoppen/pausieren (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___4 IS '4, Arzneimittel neu ansetzen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___5 IS '5, Dosierung ändern (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___6 IS '6, Formulierung ändern (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___7 IS '7, Hilfe bei Beschaffung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___8 IS '8, Information an Arzt/Pflege (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___9 IS '9, Information an Patient (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am1___10 IS '10, TDM oder Laborkontrolle emfohlen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_13 IS 'descriptive item only for frontend - femb der Variablen ret_massn_orga1  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1  IS 'ORGA: Organisatorisch (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___3 IS '3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___5 IS '5 - Lieferantenwechsel (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga1___8 IS '8 - Sensibilisierung/Schulung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_14 IS 'descriptive item only for frontend - femb der Variablen ret_notiz1 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_notiz1 IS 'Notiz (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_15 IS 'descriptive item only for frontend - femb der Variablen ret_2ndbewertung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_2ndbewertung  IS 'Indikator um 2. Bewertung durchzuführen  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look | Zweite MRP-Bewertung durchführen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_bewerter2_pipeline  IS 'Erstellung des Nutzername des 2. Bewerter  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_bewerter2  IS 'Nutzername des 2. Bewerter des ret. MRP (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_16 IS 'descriptive item only for frontend - femb der Variablen ret_gewissheit2_lbl, ret_gewissheit2, ret_mrp_zuordnung2_lbl, ret_mrp_zuordnung2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewissheit2_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewissheit2 IS '2. Bewertung des ret. MRP - 1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_mrp_zuordnung2_lbl  IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_mrp_zuordnung2 IS 'SQL-Abfrage innerhalb REDCap, um ret. MRP auf Grundlage von ret_meda_id dem vorher gefundenen MRP zuordnen zu können (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_17 IS 'descriptive item only for frontend - femb der Variablen ret_gewissheit_oth2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewissheit_oth2 IS 'Weitere Informationen - Textfeld, wenn ret_gewissheit2 = 3 (andere) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_18 IS 'descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewiss_grund_abl2 IS 'Grund für nicht Bestätigung - 1, MRP sachlich falsch (keine Kontraindikation) | 2, MRP sachlich richtig, aber falsche Datengrundlage | 3, MRP sachlich richtig, aber klinisch nicht relevant | 4, Sonstiges  (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_19 IS 'descriptive item only for frontend - femb der Variablen ret_gewiss_grund_abl2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewiss_grund_abl_sons2_lbl IS 'descriptive item only for frontend - Label für femb (korrespondierende Variable) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Weitere Informationen - Textfeld, wenn ret_gewissheit2 = 4 (andere) (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_20 IS 'descriptive item only for frontend - femb der Variablen ret_massn_am2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2 IS 'AM: Arzneimittel (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___1 IS '1, Anweisung für die Applikation geben (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___2 IS '2, Arzneimittel ändern (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___3 IS '3, Arzneimittel stoppen/pausieren (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___4 IS '4, Arzneimittel neu ansetzen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___5 IS '5, Dosierung ändern (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___6 IS '6, Formulierung ändern (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___7 IS '7, Hilfe bei Beschaffung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___8 IS '8, Information an Arzt/Pflege (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___9 IS '9, Information an Patient (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_am2___10 IS '10, TDM oder Laborkontrolle emfohlen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_21 IS 'descriptive item only for frontend - femb der Variablen ret_massn_orga2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2 IS 'ORGA: Organisatorisch (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___3 IS '3 - Einbindung anderer Berurfsgruppen z.B. des Stationsapothekers (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___5 IS '5 - Lieferantenwechsel (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_massn_orga2___8 IS '8 - Sensibilisierung/Schulung (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_femb_22 IS 'descriptive item only for frontend - femb der Variablen ret_notiz2 (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.ret_notiz2 IS 'Notiz (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrp_bewertung_fe.last_processing_nr IS 'Last processing number of the data record';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.risikofaktor_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.record_id IS 'Record ID RedCap - besetzt/vorgegeben mit Datenbankinternen ID des Patienten - wird im Redcap in allen Instanzen  des Patienten verwendet (varchar)';
 COMMENT ON COLUMN db2frontend_in.risikofaktor_fe.patient_id_fk IS 'Datenbank-FK des Patienten (Patient: patient_fe_id=Patient.record_id) (int)';
@@ -1097,6 +1414,44 @@ ON db2frontend_in.mrpdokumentation_validierung_fe (
 ----------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db2frontend_in_mrpdokumentation_validierung_fe_hash
 ON db2frontend_in.mrpdokumentation_validierung_fe (
+   hash_index_col -- Column for automatic hash value for comparing FHIR data
+);
+
+------------------------- Index for db2frontend_in - retrolektive_mrp_bewertung_fe ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_retrolektive_mrp_bewertung_fe_id ON db2frontend_in.retrolektive_mrp_bewertung_fe ( retrolektive_mrp_bewertung_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+
+-- Index idx_db2frontend_in_retrolektive_mrp_bewertung_fe_input_dt for Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_retrolektive_mrp_bewertung_fe_input_dt
+ON db2frontend_in.retrolektive_mrp_bewertung_fe (
+   input_datetime DESC -- Time at which the data record is inserted
+);
+
+-- Index idx_db2frontend_in_retrolektive_mrp_bewertung_fe_input_pnr for Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_retrolektive_mrp_bewertung_fe_input_pnr
+ON db2frontend_in.retrolektive_mrp_bewertung_fe (
+   input_processing_nr DESC -- (First) Processing number of the data record
+);
+
+-- Index idx_db2frontend_in_retrolektive_mrp_bewertung_fe_last_dt for Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_retrolektive_mrp_bewertung_fe_last_dt
+ON db2frontend_in.retrolektive_mrp_bewertung_fe (
+   last_check_datetime DESC -- Time at which data record was last checked
+);
+
+-- Index idx_db2frontend_in_retrolektive_mrp_bewertung_fe_last_dt for Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_retrolektive_mrp_bewertung_fe_last_pnr
+ON db2frontend_in.retrolektive_mrp_bewertung_fe (
+   last_processing_nr DESC -- Last processing number of the data record
+);
+
+-- Index idx_db2frontend_in_retrolektive_mrp_bewertung_fe_hash for Table "retrolektive_mrp_bewertung_fe" in schema "db2frontend_in"
+----------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_db2frontend_in_retrolektive_mrp_bewertung_fe_hash
+ON db2frontend_in.retrolektive_mrp_bewertung_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 

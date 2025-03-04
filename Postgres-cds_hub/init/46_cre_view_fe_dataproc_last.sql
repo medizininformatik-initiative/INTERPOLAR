@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-02-21 10:05:09
+-- Create time: 2025-03-03 20:21:49
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  46_cre_view_fe_dataproc_last.sql
 -- TEMPLATE:  template_cre_view3.sql
@@ -49,6 +49,11 @@ SELECT * FROM db_log.mrpdokumentation_validierung_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.mrpdokumentation_validierung_fe)
 );
 
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_retrolektive_mrp_bewertung_fe_last AS (
+SELECT * FROM db_log.retrolektive_mrp_bewertung_fe
+WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.retrolektive_mrp_bewertung_fe)
+);
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_risikofaktor_fe_last AS (
 SELECT * FROM db_log.risikofaktor_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.risikofaktor_fe)
@@ -70,6 +75,9 @@ GRANT SELECT ON TABLE db2dataprocessor_out.v_medikationsanalyse_fe_last TO db2da
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 GRANT SELECT ON TABLE db2dataprocessor_out.v_mrpdokumentation_validierung_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+
+GRANT SELECT ON TABLE db2dataprocessor_out.v_retrolektive_mrp_bewertung_fe_last TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 GRANT SELECT ON TABLE db2dataprocessor_out.v_risikofaktor_fe_last TO db2dataprocessor_user;
