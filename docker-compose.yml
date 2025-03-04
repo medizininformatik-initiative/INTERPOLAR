@@ -3,23 +3,23 @@ services:
   # FHIR Server for testing/simulating
   # replace it with the productive FHIR Server and/or configure this
   # FHIR Server in the services below.
-#  blaze-DIC:
-#    image: "samply/blaze:latest"
-#    restart: unless-stopped
-#    environment:
-#      BASE_URL: "http://localhost:8080"
-#      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
-#      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
-#      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
-#      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
-#      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
-#    ports:
-#      - "127.0.0.1:8080:8080"
-#    networks:
-#      - internal
-#      - external
-#    volumes:
-#      - "blaze-data-DIC:/app/data"
+  blaze-DIC:
+    image: "samply/blaze:latest"
+    restart: unless-stopped
+    environment:
+      BASE_URL: "http://blaze-DIC:8080"
+      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
+      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
+      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
+      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
+      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - internal
+      - external
+    volumes:
+      - "blaze-data-DIC:/app/data"
 
   # SQL Server for redcap
   redcap_db:
@@ -124,6 +124,7 @@ services:
       - ./outputLocal:/src/outputLocal
       - ./outputGlobal:/src/outputGlobal
       - ./R-cds2db/cds2db_config.toml:/src/R-cds2db/cds2db_config.toml
+      - ./R-cds2db/debug_config_toml:/src/R-cds2db/debug_config_toml
       - ./R-cds2db/source_PIDs.txt:/src/R-cds2db/source_PIDs.txt
       - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
@@ -157,7 +158,7 @@ secrets:
     file: ./REDCap-db/.env_redcap_db.password
 
 volumes:
-    #blaze-data-DIC:
+    blaze-data-DIC:
     redcap-db-data:
     cds_hub_db-data:
     pgadmin-data:

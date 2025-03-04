@@ -17,7 +17,7 @@
 # VL_70_DOWNLOAD            = 7
 # VL_80_COI_PROCESSING      = 8
 # VL_90_FHIR_RESPONSE       = 9
-VERBOSE               = 10 # Retrieval / analysis verbose level
+VERBOSE               = 1 # Retrieval / analysis verbose level
 
 #################
 # Set true if every sourcing of the 00_Main file should create result directories in the
@@ -42,7 +42,8 @@ MAX_DIR_COUNT = 5
 # the corresponding certificates in the 'r-env' service in the 'volumes' section of
 # docker-compose.yml so that these certificates can be checked in the CDS Tool Chain.
 # Otherwise the connection cannot be established.
-FHIR_SERVER_ENDPOINT = "https://mii-agiop-3p.life.uni-leipzig.de/blaze"
+#FHIR_SERVER_ENDPOINT = "https://mii-agiop-3p.life.uni-leipzig.d_e/blaze"
+FHIR_SERVER_ENDPOINT = "http://blaze-dic:8080/fhir"
 FHIR_SERVER_USER = ""
 FHIR_SERVER_PASS = ""
 
@@ -78,7 +79,7 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 #
 #################
 # single status:
-#FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
+FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
 #
 # multiple status can be wtitten as comma separated list:
 #FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
@@ -128,23 +129,23 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # If 2 or more patterns overlap, then the same Encounter will be assigned to multiple wards. This
 # is not allowed and will lead to an error.
 ENCOUNTER_FILTER_PATTERN_1 = [
-  "ward_name = 'Station 1'",
-  "location.location.reference = 'Location/location_id_1'",
-  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "ward_name = 'Station 1'" #,
+#  "location.location.reference = 'Location/location_id_1'",
+#  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+#  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_2 = [
-  "ward_name = 'Station 2'",
-  "location.location.reference = 'Location/location_id_2'",
-  "serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+#  "ward_name = 'Station 2'"#,
+##  "location.location.reference = 'Location/location_id_2'",
+##  "serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_3 = [
-  "ward_name = 'Station 3'",
-  "location.location.reference = 'Location/location_id_3'",
-  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+#  "ward_name = 'Station 3'",
+#  "location.location.reference = 'Location/location_id_3'",
+#  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
+#  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 
@@ -164,11 +165,11 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # Since the end date of Encounters cannot be queried without a FHIR Custom Search parameter, all
 # queries for the Encounter date always refer to its start date.
 #DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
-#DEBUG_ENCOUNTER_DATETIME_END = "2020-08-30 21:25:00"
+#DEBUG_ENCOUNTER_DATETIME_END = "2020-12-31 21:25:00"
 
 # If this parameter is activated, only those whose subject ID is in this list are found in the initial
 # encounter request.
-#DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003"#, "UKB-0004", "UKB-0005",
+#DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
 #                                 "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
 #                                 "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015"
 #                                 ]
@@ -251,7 +252,6 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # afterwards.
 #DEBUG_FILTER_PIDS_PATTERN = "UKB"
 
-DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_2.toml"
 
 [database]
 
