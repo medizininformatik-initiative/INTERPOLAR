@@ -40,16 +40,17 @@ defineFAS1 <- function(complete_table, REPORT_PERIOD_START, REPORT_PERIOD_END) {
     dplyr::pull(enc_id)
 
   FAS1 <- complete_table |>
-    # dplyr::filter(enc_type_code == "versorgungsstellenkontakt")
+    # dplyr::filter(enc_type_code == "versorgungsstellenkontakt") |>
     #--------------------------------------------------------------------------#
     # DEBUG: for testing purposes "abteilungskontakt" is used instead ------------
     dplyr::filter(enc_type_code == "abteilungskontakt") |>
     #--------------------------------------------------------------------------#
-    dplyr::filter(Reduce(`|`, lapply(inpatient_encounters, grepl, enc_partof_ref))) |>
+    dplyr::filter(main_enc_id %in% inpatient_encounters) |>
     dplyr::filter(!is.na(ward_name)) |>
     dplyr::filter(age >= 18) |>
     dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |>
-    dplyr::filter(as.numeric(as.POSIXct(REPORT_PERIOD_END) - enc_period_start) >= 7) |>
+    # not needed anymore
+    # dplyr::filter(as.numeric(as.POSIXct(REPORT_PERIOD_END) - enc_period_start) >= 7) |>
     dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, input_datetime_encounter)
 

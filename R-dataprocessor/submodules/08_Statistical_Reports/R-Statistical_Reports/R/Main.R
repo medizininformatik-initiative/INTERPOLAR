@@ -19,15 +19,16 @@
 #' 2. Fetches patient data from the database using `getPatientData()`.
 #' 3. Fetches encounter data from the database using `getEncounterData()`.
 #' 4. Fetches data related to patients per ward using `getPidsPerWardData()`.
-#' 5. Merges the patient, encounter, and ward data using `mergePatEncWard()` and calculates patient age
-#'    using `calculateAge()`.
+#' 5. Merges the patient, encounter, and ward data using `mergePatEncWard()`, adds the main encounter ID
+#'    using `addMainEncId()`, adds the main encounter period start using `addMainEncPeriodStart()`, and
+#'    calculates patient age using `calculateAge()`.
 #' 6. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
 #'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
 #' 7. Prints the resulting datasets (`complete_table` and `FAS1`) for verification.
 #' 8. Prints the reporting period and the number of cases in the FAS1 dataset.
 #'
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#'   [mergePatEncWard()], [calculateAge()], [defineFAS1()]
+#'   [mergePatEncWard()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
                                     REPORT_PERIOD_END = "2025-03-05") {
@@ -49,6 +50,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
                                                 table_name = "v_pids_per_ward")
 
   complete_table <- mergePatEncWard(patient_table, encounter_table, pids_per_ward_table) |>
+    addMainEncId() |>
+    addMainEncPeriodStart() |>
     calculateAge()
 
   # DEBUG: for test reasons the start and end dates for abteilungskontakt -----------
@@ -57,8 +60,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
 
   # Print the patient, encounter, and FAS1 datasets for verification
-  print(complete_table)
-  print(FAS1)
+  print(complete_table, width = Inf)
+  print(FAS1, width = Inf)
 
   # Print the reporting period
   print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))

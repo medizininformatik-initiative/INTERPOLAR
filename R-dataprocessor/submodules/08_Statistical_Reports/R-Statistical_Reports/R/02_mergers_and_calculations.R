@@ -28,9 +28,90 @@ mergePatEncWard <- function(patient_table, encounter_table, pids_per_ward_table)
                      by = c("pat_id" = "patient_id",
                             "enc_id" = "encounter_id"),
                      suffix = c("_encounter", "_pids_per_ward"))
+  return(merged_table)
+}
+
+#------------------------------------------------------------------------------#
+
+#' Add Main Encounter ID to Merged Table
+#'
+#' This function adds a new column `main_enc_id` to the merged dataset. It determines
+#' the main encounter ID by checking whether an encounter is an inpatient facility
+#' contact (`einrichtungskontakt`) of class `IMP`. If so, the encounter ID itself
+#' is used as the `main_enc_id`; otherwise, the function extracts the reference ID
+#' from `enc_partof_ref`.
+#'
+#' @param merged_table A data frame or tibble containing patient and encounter data.
+#'   This table must include columns such as `enc_partof_ref`, `enc_type_code`,
+#'   `enc_class_code`, and `enc_id`.
+#'
+#' @return A data frame or tibble with an additional column `main_enc_id`,
+#'   representing the primary inpatient encounter ID.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Checks if `enc_partof_ref` is `NA` and if the encounter is an inpatient facility contact (`einrichtungskontakt`) of class `IMP`.
+#' 2. If both conditions are met, assigns the `enc_id` as the `main_enc_id`.
+#' 3. If not, extracts the reference ID from `enc_partof_ref`, removing the `"Encounter/"` prefix.
+#'
+#' @importFrom dplyr mutate if_else
+#' @export
+addMainEncId <- function(merged_table) {
+  merged_table <- merged_table |>
+    dplyr::mutate(main_enc_id = dplyr::if_else(is.na(enc_partof_ref) &
+                                                 enc_type_code == "einrichtungskontakt" &
+                                                 enc_class_code == "IMP",
+                                               enc_id,
+                                               sub("^Encounter/", "", enc_partof_ref)))
 
   return(merged_table)
 }
+
+#------------------------------------------------------------------------------#
+
+#' Add Main Encounter Period Start to Merged Table
+#'
+#' This function adds a new column `main_enc_period_start` to the merged dataset.
+#' It determines the start date of the main inpatient encounter by checking whether
+#' an encounter is an inpatient facility contact (`einrichtungskontakt`) of class `IMP`.
+#' If so, it assigns the encounter’s own start date as `main_enc_period_start` and assigns it
+#' within the same main encounter group.
+#'
+#' @param merged_table A data frame or tibble containing patient and encounter data.
+#'   This table must include columns such as `enc_partof_ref`, `enc_type_code`,
+#'   `enc_class_code`, `enc_id`, and `enc_period_start`.
+#'
+#' @return A data frame or tibble with an additional column `main_enc_period_start`,
+#'   representing start date of the main inpatient encounter.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Checks if `enc_partof_ref` is `NA` and if the encounter is an inpatient facility
+#'    contact (`einrichtungskontakt`) of class `IMP`.
+#' 2. If both conditions are met, assigns `enc_period_start` as `main_enc_period_start`.
+#' 3. Otherwise, sets `main_enc_period_start` as `NA`.
+#' 4. Groups the dataset by `main_enc_id` and assigns the (only) non-NA
+#'    `main_enc_period_start` within the group.
+#' 5. Ungroups the dataset to return the final modified table.
+#'
+#' @importFrom dplyr mutate if_else group_by ungroup
+#' @export
+addMainEncPeriodStart <- function(merged_table) {
+  merged_table <- merged_table |>
+    dplyr::mutate(main_enc_period_start = dplyr::if_else(is.na(enc_partof_ref) &
+                                                           enc_type_code == "einrichtungskontakt" &
+                                                           enc_class_code == "IMP",
+                                                         enc_period_start,
+                                                         NA)) |>
+    dplyr::group_by(main_enc_id) |>
+    dplyr::mutate(main_enc_period_start = dplyr::if_else(is.na(main_enc_period_start),
+                                                         min(main_enc_period_start, na.rm = TRUE),
+                                                         main_enc_period_start)) |>
+    dplyr::ungroup()
+
+  return(merged_table)
+}
+
 
 #------------------------------------------------------------------------------#
 
@@ -41,13 +122,13 @@ mergePatEncWard <- function(patient_table, encounter_table, pids_per_ward_table)
 #' calculating the difference between the encounter's start date and the patient's birthdate.
 #'
 #' @param merged_table A data frame or tibble containing the merged patient and encounter data.
-#'   It should include columns such as `pat_birthdate` and `enc_period_start`.
+#'   It should include columns such as `pat_birthdate` and `main_enc_period_start`.
 #'
 #' @return A data frame or tibble that includes the original data with an additional `age` column,
-#'   representing the age of the patient at the start of the encounter period.
+#'   representing the age of the patient at the start of the main encounter period.
 #'
 #' @details
-#' This function calculates the age by using the `enc_period_start` (the start date of the encounter)
+#' This function calculates the age by using the `main_enc_period_start` (the start date of the main encounter)
 #' and `pat_birthdate` (the patient's birthdate) columns in the merged data. The result is a new
 #' column `age` that is the patient's age at the time of the encounter start date, calculated in years
 #' (with precision to the nearest whole number).
@@ -57,7 +138,7 @@ mergePatEncWard <- function(patient_table, encounter_table, pids_per_ward_table)
 calculateAge <- function(merged_table) {
 
   merged_table_with_calc <- merged_table |>
-    dplyr::mutate(age = floor(as.numeric(difftime(as.Date(enc_period_start), pat_birthdate)) / 365.25))
+    dplyr::mutate(age = floor(as.numeric(difftime(as.Date(main_enc_period_start), pat_birthdate)) / 365.25))
 
   return(merged_table_with_calc)
 }
