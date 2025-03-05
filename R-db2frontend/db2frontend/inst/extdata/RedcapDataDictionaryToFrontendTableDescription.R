@@ -26,6 +26,9 @@ dt <- dt[, ..new_names]
 # Remove rows with Field Type == "descriptive"
 dt <- dt[COLUMN_TYPE != "descriptive"]
 
+# **Remove rows where COLUMN_NAME matches TABLE_NAME with "_fe_id" suffix**
+dt <- dt[!(grepl("_fe_id$", COLUMN_NAME) & paste0(TABLE_NAME, "_fe_id") == COLUMN_NAME)]
+
 # Mapping Field Type and Validation Type to PostgreSQL-compatible types
 type_mapping <- list(
   "text" = "varchar",
@@ -60,10 +63,6 @@ dt[, COLUMN_TYPE := fifelse(
   COLUMN_TYPE
 )]
 
-# # Fill missing TABLE_NAME values with the last observed non-missing value (LOCF)
-# dt[, TABLE_NAME := fifelse(TABLE_NAME == "", NA_character_, TABLE_NAME)]  # Convert empty strings to NA
-# dt[, TABLE_NAME := zoo::na.locf(TABLE_NAME, na.rm = FALSE)]  # Alternative ohne nafill()
-
 # Remove any existing rows that match the standard column names to avoid duplicates
 standard_col_names <- c("record_id", "redcap_repeat_instrument", "redcap_repeat_instance", "redcap_data_access_group")
 dt <- dt[!(COLUMN_NAME %in% standard_col_names)]
@@ -80,14 +79,28 @@ standard_rows <- data.table(
   COLUMN_TYPE = "varchar"
 )
 
-# Split by TABLE_NAME, add standard rows, and recombine
+# Split by TABLE_NAME
 dt_list <- split(dt, by = "TABLE_NAME", keep.by = FALSE)
 
-dt_list <- lapply(names(dt_list), function(tbl) {
+# Iterate over tables and add standard rows + _complete row
+for (tbl in names(dt_list)) {
   table_data <- dt_list[[tbl]]
+
+  # Add standard rows at the beginning
   table_data <- rbind(data.table(TABLE_NAME = tbl, standard_rows), table_data, fill = TRUE)
-  return(table_data)
-})
+
+  # Add _complete row at the end
+  complete_row <- data.table(
+    TABLE_NAME = tbl,
+    COLUMN_NAME = paste0(tbl, "_complete"),
+    COLUMN_DESCRIPTION = "Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete",
+    COLUMN_TYPE = "varchar"
+  )
+  table_data <- rbind(table_data, complete_row, fill = TRUE)
+
+  # Update dt_list
+  dt_list[[tbl]] <- table_data
+}
 
 # Combine all tables back into one data.table
 dt <- rbindlist(dt_list, fill = TRUE)
@@ -106,5 +119,3 @@ dt[, COLUMN_DESCRIPTION := gsub("<[^>]+>", "", COLUMN_DESCRIPTION)]
 
 # Save the final data.table as an Excel file
 openxlsx::write.xlsx(dt, "./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description_generated.xlsx", colNames = TRUE)
-
-
