@@ -45,13 +45,13 @@ for (i in 1:nrow(dt)) {
         TABLE_NAME = row$TABLE_NAME,
         COLUMN_NAME = paste0(row$COLUMN_NAME, "___", option_number),
         COLUMN_DESCRIPTION = option,  # Behalte den vollen Text
-        COLUMN_TYPE = "checkbox",
+        COLUMN_TYPE = row$COLUMN_TYPE,  # Behalte den ursprünglichen Typ für Mapping
         VALIDATION_TYPE = row$VALIDATION_TYPE
       )
       expanded_rows <- rbindlist(list(expanded_rows, new_row), fill = TRUE)  # Sichere Kombination
     }
   } else {
-    expanded_rows <- rbindlist(list(expanded_rows, as.data.table(row[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE)])), fill = TRUE)
+    expanded_rows <- rbindlist(list(expanded_rows, as.data.table(row[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE, VALIDATION_TYPE)])), fill = TRUE)
   }
 }
 # Update dt with expanded rows
@@ -64,7 +64,7 @@ type_mapping <- list(
   "dropdown" = "varchar",
   "radio" = "varchar",
   "yesno" = "varchar",
-  "checkbox" = "varchar",
+  "checkbox" = "varchar",  # Checkboxen bleiben varchar
   "calc" = "double precision",
   "integer" = "int",
   "number" = "double precision",
