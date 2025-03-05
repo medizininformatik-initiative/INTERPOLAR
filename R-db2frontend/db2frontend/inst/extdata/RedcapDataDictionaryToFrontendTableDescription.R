@@ -9,7 +9,7 @@ library(data.table)
 library(openxlsx)
 
 # Load the CSV file as a data.table
-dt <- fread("./R-db2frontend/db2frontend/inst/extdata/INTERPOLARDev_DataDictionary_mit_Datentypen_2025-03-04.csv", encoding = "UTF-8")
+dt <- fread("./R-db2frontend/db2frontend/inst/extdata/Frontend_DataDictionary.csv", encoding = "UTF-8")
 
 # Rename columns
 column_names <- c("Variable / Field Name", "Form Name", "Field Type", "Field Label",
