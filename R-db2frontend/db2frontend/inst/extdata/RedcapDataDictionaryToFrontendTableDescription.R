@@ -12,13 +12,11 @@ library(openxlsx)
 dt <- fread("./R-db2frontend/db2frontend/inst/extdata/INTERPOLARDev_DataDictionary_mit_Datentypen_2025-03-04.csv", encoding = "UTF-8")
 
 # Rename columns
-column_names <- c("Variable / Field Name", "Form Name", "Field Type", "Field Label", "Text Validation Type OR Show Slider Number")
-new_names <- c("COLUMN_NAME", "TABLE_NAME", "COLUMN_TYPE", "COLUMN_DESCRIPTION", "VALIDATION_TYPE")
+column_names <- c("Variable / Field Name", "Form Name", "Field Type", "Field Label",
+                  "Text Validation Type OR Show Slider Number", "Choices, Calculations, OR Slider Labels")
+new_names <- c("COLUMN_NAME", "TABLE_NAME", "COLUMN_TYPE", "COLUMN_DESCRIPTION",
+               "VALIDATION_TYPE", "CHOICES")
 setnames(dt, column_names, new_names)
-
-# Keep only specific TABLE_NAME values (after renaming columns)
-allowed_tables <- c("patient", "fall", "medikationsanalyse", "mrpdokumentation_validierung")
-dt <- dt[TABLE_NAME %in% allowed_tables | TABLE_NAME == ""]
 
 # Remove unnecessary columns (keep only the renamed ones)
 dt <- dt[, ..new_names]
@@ -28,6 +26,36 @@ dt <- dt[COLUMN_TYPE != "descriptive"]
 
 # **Remove rows where COLUMN_NAME matches TABLE_NAME with "_fe_id" suffix**
 dt <- dt[!(grepl("_fe_id$", COLUMN_NAME) & paste0(TABLE_NAME, "_fe_id") == COLUMN_NAME)]
+
+
+# **Expand only checkbox fields into multiple rows using a for-loop**
+expanded_rows <- data.table()  # Leere data.table für das Ergebnis
+for (i in 1:nrow(dt)) {
+  row <- dt[i]
+
+  # Falls es eine Checkbox ist, spalte sie in mehrere Zeilen auf
+  if (row$COLUMN_TYPE == "checkbox") {
+    options <- unlist(strsplit(row$CHOICES, " \\| "))  # Split bei " | "
+
+    # Erstelle für jede Option eine neue Zeile
+    for (option in options) {
+      option <- gsub(",", " -", option)  # Ersetze Komma durch " -"
+      option_number <- gsub(" -.*", "", option)  # Extrahiere die Nummer vor dem Trennzeichen
+      new_row <- data.table(
+        TABLE_NAME = row$TABLE_NAME,
+        COLUMN_NAME = paste0(row$COLUMN_NAME, "___", option_number),
+        COLUMN_DESCRIPTION = option,  # Behalte den vollen Text
+        COLUMN_TYPE = "checkbox",
+        VALIDATION_TYPE = row$VALIDATION_TYPE
+      )
+      expanded_rows <- rbindlist(list(expanded_rows, new_row), fill = TRUE)  # Sichere Kombination
+    }
+  } else {
+    expanded_rows <- rbindlist(list(expanded_rows, as.data.table(row[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE)])), fill = TRUE)
+  }
+}
+# Update dt with expanded rows
+dt <- expanded_rows
 
 # Mapping Field Type and Validation Type to PostgreSQL-compatible types
 type_mapping <- list(
