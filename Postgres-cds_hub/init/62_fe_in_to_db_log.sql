@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-05 14:46:32
+-- Create time: 2025-03-05 15:57:37
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1007,7 +1007,6 @@ BEGIN
                                 ret_notiz1,
                                 ret_meda_dat2,
                                 ret_2ndbewertung___1,
-                                ret_2ndbewertung___Zweite MRP-Bewertung durchführen,
                                 ret_bewerter2_pipeline,
                                 ret_bewerter2,
                                 ret_gewissheit2,
@@ -1082,7 +1081,6 @@ BEGIN
                                 current_record.ret_notiz1,
                                 current_record.ret_meda_dat2,
                                 current_record.ret_2ndbewertung___1,
-                                current_record.ret_2ndbewertung___Zweite MRP-Bewertung durchführen,
                                 current_record.ret_bewerter2_pipeline,
                                 current_record.ret_bewerter2,
                                 current_record.ret_gewissheit2,

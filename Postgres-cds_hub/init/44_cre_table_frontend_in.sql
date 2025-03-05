@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-03-05 14:46:19
+-- Create time: 2025-03-05 15:57:29
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  44_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -411,8 +411,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrpbewertung_fe (
   ret_massn_orga1___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
   ret_notiz1 varchar,   -- Notiz (varchar)
   ret_meda_dat2 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
-  ret_2ndbewertung___1 varchar,   -- 1 - 2nd Look (varchar)
-  ret_2ndbewertung___Zweite MRP-Bewertung durchführen varchar,   -- Zweite MRP-Bewertung durchführen (varchar)
+  ret_2ndbewertung___1 varchar,   -- 1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)
   ret_bewerter2_pipeline varchar,   -- Bewerter2 Pipeline (varchar)
   ret_bewerter2 varchar,   -- 2. Bewertung von (varchar)
   ret_gewissheit2 varchar,   -- Sicherheit des detektierten MRP (varchar)
@@ -481,8 +480,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(ret_massn_orga1___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga1___8)
              COALESCE(db.to_char_immutable(ret_notiz1), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz1)
              COALESCE(db.to_char_immutable(ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
-             COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look (ret_2ndbewertung___1)
-             COALESCE(db.to_char_immutable(ret_2ndbewertung___Zweite MRP-Bewertung durchführen), '#NULL#') || '|||' || -- hash from: Zweite MRP-Bewertung durchführen (ret_2ndbewertung___Zweite MRP-Bewertung durchführen)
+             COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
              COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from: Bewerter2 Pipeline (ret_bewerter2_pipeline)
              COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
              COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
@@ -925,8 +923,7 @@ COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___8 IS '8 - Sensibilisierung/Schulung (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_notiz1 IS 'Notiz (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_meda_dat2 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
-COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look (varchar)';
-COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_2ndbewertung___Zweite MRP-Bewertung durchführen IS 'Zweite MRP-Bewertung durchführen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS 'Bewerter2 Pipeline (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
