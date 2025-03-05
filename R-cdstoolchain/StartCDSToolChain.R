@@ -10,7 +10,9 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
-debug_days <- c(1:2)  # Liste der Durchläufe
+DEBUG_DATE <- "2025-03-03 16:23:45 CET"
+
+debug_days <- c(1)  # Liste der Durchläufe
 
 for (i in seq_along(debug_days)) {
   DEBUG_DAY <- debug_days[i]

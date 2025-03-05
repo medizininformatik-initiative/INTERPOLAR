@@ -74,7 +74,8 @@ retainRAWTables <- function(...) {
 #'
 #' @return A character string with the formatted datetime.
 #'
-getFormattedRAWDateTime <- function(datetime = Sys.time(), offset_days = 2) {
+getFormattedRAWDateTime <- function(datetime = DEBUG_DATE, offset_days = 1) {
+  datetime <- as.POSIXct(datetime)
   # Subtract the specified number of days from the given datetime
   datetime <- datetime - offset_days * 86400
 

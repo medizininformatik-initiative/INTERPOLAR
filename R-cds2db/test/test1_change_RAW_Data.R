@@ -6,11 +6,23 @@ if (exists("DEBUG_DAY")) {
     # clear database on Day 1
     etlutils::dbReset()
     pats <- namedListByValue("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004")
-  } else if (DEBUG_DAY == 2) {
-    pats <- namedListByValue("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0005")
-  } else if (DEBUG_DAY == 3) {
-  } else if (DEBUG_DAY == 4) {
+  } else{
+    if (DEBUG_DAY == 2) {
+      pats <- c("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0005")
+    } else if (DEBUG_DAY == 3) {
+    } else if (DEBUG_DAY == 4) {
+    }
+#browser()
+    # Load all encounters from the database which, according to the database, have not yet ended on the
+    # ‘current’ date and determine the PIDs.
+    # Background: We want to track all cases that have ever been on a relevant station until they are completed.
+    patient_ids_db <- etlutils::getAfterLastSlash(getActiveEncounterPIDsFromDB())
+
+    pats <- namedListByValue(unique(c(pats, patient_ids_db)))
   }
+
+
+
 
   #resource_tables <- retainRAWTables("Patient", "Encounter")
   resource_tables <- getFilteredRAWResources(pats)
@@ -32,7 +44,7 @@ if (exists("DEBUG_DAY")) {
   changeDataForPID(dt_enc, pats$`UKB-0003`, "enc_period_start", getFormattedRAWDateTime(offset_days = 3))
   changeDataForPID(dt_enc, pats$`UKB-0004`, "enc_period_start", getFormattedRAWDateTime(offset_days = 4))
   changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_period_start", getFormattedRAWDateTime(offset_days = 5))
-
+#browser()
   ### Add encounters with type "Versorgungstellenkontakt" ###
 
   # Find rows where enc_id ends with -A-<NUMBER> (= Abteilungskontakt)
@@ -80,7 +92,8 @@ if (exists("DEBUG_DAY")) {
     # entspricht Originaldaten, daher nur das Enddatum anpassen
     changeDataForPID(dt_enc, pats$`UKB-0003`, "enc_period_end", getFormattedRAWDateTime(offset_days = 0.5))
 
-    # Patient 4: ist nicht mehr in den Daten (hat Station verlassen)
+    # Patient 4: ist durch letzten DB Stand wieder in den Daten (hatte Station laut FHIR verlassen)
+    changeDataForPID(dt_enc, pats$`UKB-0004`, "enc_period_end", getFormattedRAWDateTime(offset_days = 0.6))
 
     # Patient 5: Fall neu hinzugekommen. Hat schon Diagnose
     changeDataForPID(dt_enc, pats$`UKB-0005`, colnames_pattern_diagnosis, NA)
