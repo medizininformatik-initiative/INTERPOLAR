@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-21 10:00:28
+-- Rights definition file last update : 2025-03-05 12:14:14
 -- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2025-03-03 20:21:49
+-- Create time: 2025-03-05 14:46:32
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  52_cre_view_fe_out.sql
 -- TEMPLATE:  template_cre_view3.sql
@@ -50,9 +50,9 @@ SELECT * FROM db_log.mrpdokumentation_validierung_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.mrpdokumentation_validierung_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrp_bewertung AS (
-SELECT * FROM db_log.retrolektive_mrp_bewertung_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.retrolektive_mrp_bewertung_fe)
+CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrpbewertung AS (
+SELECT * FROM db_log.retrolektive_mrpbewertung_fe
+WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.retrolektive_mrpbewertung_fe)
 );
 
 CREATE OR REPLACE VIEW db2frontend_out.v_risikofaktor AS (
@@ -82,8 +82,8 @@ GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db2front
 GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrp_bewertung TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrp_bewertung TO db_user;
+GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_risikofaktor TO db2frontend_user;
