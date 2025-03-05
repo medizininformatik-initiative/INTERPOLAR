@@ -143,6 +143,10 @@ dt[is.na(TABLE_NAME), TABLE_NAME := ""]
 # Keep only relevant columns and ensure correct order
 dt <- dt[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE)]
 
+# Remove line breaks and trim COLUMN_DESCRIPTION
+dt[, COLUMN_DESCRIPTION := gsub("[\r\n]+", " ", COLUMN_DESCRIPTION)]
+dt[, COLUMN_DESCRIPTION := trimws(COLUMN_DESCRIPTION)]
+
 # Remove HTML tags from COLUMN_DESCRIPTION
 dt[, COLUMN_DESCRIPTION := gsub("<[^>]+>", "", COLUMN_DESCRIPTION)]
 
