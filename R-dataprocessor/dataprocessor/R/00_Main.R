@@ -5,49 +5,10 @@
 #'
 #' @export
 processData <- function() {
-  ###
-  # Read the module configuration toml file.
-  ###
-  config <- etlutils::initModuleConstants(
-    module_name <- "dataprocessor",
-    path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
-    defaults = c(
-      MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30,
 
-      # default medication resource should be MedicationRequest and its
-      # timestamps
-      MEDICATION_REQUEST_RESOURCE = "MedicationRequest",
-      MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id",
-      MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id",
-      MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event",
-      MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start",
-      MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end",
-
-      # The default for the FHIR 'system', the 'type/coding/system' and
-      # 'type/coding/code' of the PID entry in the frontend
-      # result table for patients are empty strings, so all Identifiers
-      # found in the FHIR data will be displayed in the frontend tables
-      # (multiple values will be separated by semicolon)
-      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = "",
-      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "",
-      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ""
-    )
-  )
-
-  etlutils::createDIRS(PROJECT_NAME)
-
-  ###
-  # Create globally used process_clock
-  ###
-  etlutils::createClock()
-
-  ###
-  # log all console outputs and save them at the end
-  ###
-  etlutils::startLogging(PROJECT_NAME)
-
-  # log all configuration parameters but hide value with parameter name starts with "FHIR_"
-  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^FHIR_")
+  # Initialize and start module
+  etlutils::startModule("dataprocessor",
+                        path_to_toml = "./R-dataprocessor/dataprocessor_config.toml")
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
@@ -62,19 +23,16 @@ processData <- function() {
 
   }))
 
-  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
-    etlutils::runLevel2("Close database connections", {
-      etlutils::dbCloseAllConnections()
-    })
-  }))
+  # Reset lock and close all database connections. Do not surround this with runLevelX!
+  etlutils::dbCloseAllConnections()
 
-  if (etlutils::isErrorOccured()) {
-    finish_message <- "Module 'dataprocessor' finished with errors (see details above).\n"
-    finish_message <- paste0(finish_message, etlutils::getErrorMessage())
-  } else {
-    finish_message <- "Module 'dataprocessor' finished with no errors.\n"
-  }
+  # Generate finish message
+  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
 
   etlutils::finalize(finish_message)
+
+  if (etlutils::isErrorOccured()) {
+    stop(finish_message)
+  }
 
 }

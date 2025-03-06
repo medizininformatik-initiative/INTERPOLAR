@@ -19,6 +19,9 @@ retrieve <- function() {
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
+      if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
+        PATH_TO_PID_LIST_FILE <- fhircrackr::paste_paths(DEBUG_PATH_TO_RAW_RDATA_FILES, "pids_per_ward_raw.RData")
+      }
       patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists("PATH_TO_PID_LIST_FILE"), PATH_TO_PID_LIST_FILE, NA))
       all_wards_empty <- length(unlist(patient_IDs_per_ward)) == 0
     })
@@ -100,11 +103,8 @@ retrieve <- function() {
 
   }))
 
-  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
-    etlutils::runLevel2("Close database connections", {
-      etlutils::dbCloseAllConnections()
-    })
-  }))
+  # Reset lock and close all database connections. Do not surround this with runLevelX!
+  etlutils::dbCloseAllConnections()
 
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
@@ -121,5 +121,9 @@ retrieve <- function() {
   finish_message <- etlutils::appendDebugWarning(finish_message)
 
   etlutils::finalize(finish_message)
+
+  if (etlutils::isErrorOccured()) {
+    stop(finish_message)
+  }
 
 }

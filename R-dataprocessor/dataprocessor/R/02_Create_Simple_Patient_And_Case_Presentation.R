@@ -29,46 +29,63 @@ loadLastImportedDatasetsFromDB <- function(table_name) {
   # This only occurs if the database has been reset and the dataprocessor was executed too quickly
   if (is.na(last_processing_nr)) {
     stop(paste0("In table ", table_name, " the content of column last_processing_nr in the ",
-                "database is NA, so the following SQL query will return an error:\n", statement,
+                "database is NA, so the following SQL query will return an error:\n", query,
                 "\nThis should never happen..."))
   }
   etlutils::dbGetReadOnlyQuery(query, lock_id = "loadLastImportedDatasetsFromDB()")
 }
 
-#' Get Current Datetime
+#' Get the most relevant current datetime
 #'
-#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME` exists, it returns its value as a POSIXct object.
-#' Otherwise, it returns the current system time.
+#' This function retrieves the latest encounter end datetime from the `encounters` table.
+#' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
+#' The result is converted to a `POSIXct` object with the appropriate timezone.
 #'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME` if it exists.
+#' @param encounters A `data.table` or `data.frame` containing encounter records,
+#'                   where `enc_period_end` represents the encounter end timestamps.
 #'
-getCurrentDatetime <- function() {
-  if (exists("DEBUG_ENCOUNTER_DATETIME")) {
-    return(etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME))
-  }
-  return(etlutils::as.POSIXctWithTimezone(Sys.time()))
+#' @return A `POSIXct` object representing the most recent encounter end datetime
+#'         or the current system time if no valid datetime is found.
+#'
+#' @export
+getCurrentDatetime <- function(encounters) {
+  encounters_end <- na.omit(encounters$enc_period_end)
+  datetime <- if (length(encounters_end)) min(encounters_end) - 1 else Sys.time()
+  return(etlutils::as.POSIXctWithTimezone(datetime))
 }
 
-#' Get Query Datetime
+#' Format datetime for SQL queries
 #'
-#' This function returns the current datetime formatted for SQL queries.
-#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
+#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
+#' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
 #'
-#' @return A character string representing the current datetime formatted for SQL queries.
+#' @param encounters A `data.table` or `data.frame` containing encounter records.
+#'                   Used to determine the latest encounter end datetime.
 #'
-getQueryDatetime <- function() {
-  format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
+#' @return A character string representing the formatted SQL datetime.
+#'
+#' @export
+getQueryDatetime <- function(encounters) {
+  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
 }
 
 #' Extract IDs from References
 #'
-#' This function extracts IDs from a vector of references by getting the substring after the last slash in each reference.
+#' This function extracts IDs from a vector of references by getting the
+#' substring after the last slash in each reference.Optionally, duplicate IDs
+#' can be removed.
 #'
 #' @param references A character vector of references from which to extract IDs.
-#' @return A character vector containing the extracted IDs.
+#' @param unique A logical value indicating whether to return only unique IDs.
+#' Default is TRUE.
+#' @return A character vector containing the extracted IDs, optionally unique.
 #'
-extractIDsFromReferences <- function(references) {
-  etlutils::getAfterLastSlash(references)
+extractIDsFromReferences <- function(references, unique = TRUE) {
+  ids <- etlutils::getAfterLastSlash(na.omit(references))
+  if (unique) {
+    ids <- unique(ids)
+  }
+  return(ids)
 }
 
 #' Get Query List
@@ -82,6 +99,7 @@ extractIDsFromReferences <- function(references) {
 #' Default is \code{FALSE}.
 #'
 getQueryList <- function(collection, remove_ref_type = FALSE) {
+  collection <- unique(na.omit(collection))
   if (remove_ref_type) {
     collection <- extractIDsFromReferences(collection)
   }
@@ -136,7 +154,7 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
   table_name <- getViewTableName(resource_name)
   id_column <- etlutils::getIDColumn(resource_name)
   query <-paste0(
-    "SELECT * FROM ", table_name, " a\n",
+    "SELECT * FROM ", table_name, "\n",
     " WHERE last_processing_nr = ", last_processing_nr,
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
@@ -165,7 +183,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
   }
   # quote every pid and collapse the vector comma separated
   filter_column_values <- paste0("'", filter_column_values, "'", collapse = ",")
-  filter_line <- paste0("AND a.", filter_column, " IN (", filter_column_values, ")\n")
+  filter_line <- paste0("AND ", filter_column, " IN (", filter_column_values, ")\n")
   return(filter_line)
 }
 
@@ -430,21 +448,22 @@ createFrontendTables <- function() {
       fall_gewicht_aktl_einheit = character(),
       fall_groesse = numeric(),
       fall_groesse_einheit = character(),
-      fall_bmi = numeric(),
+      #fall_bmi = numeric(),
       fall_status = character(),
       fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_complete = character()
     )
 
-    # load Encounters for all PIDs
-    query_datetime <- getQueryDatetime()
-    query_ids <- getQueryList(pids_per_ward$patient_id)
+    # load Encounters for all PIDs from pids_per_ward database table
+    query_ids <- getQueryList(pids_per_ward$encounter_id)
     table_name <- getViewTableName("encounter")
 
     query <- paste0( "SELECT * FROM ", table_name, "\n",
-                     "  WHERE enc_patient_ref IN (", query_ids, ")\n",
-                     "    AND (enc_period_end IS NULL OR enc_period_end > '", query_datetime, "')\n",
-                     "    AND enc_period_start <= '", query_datetime, "'"
+                     "  WHERE encounter_raw_id in (\n",
+                     "    SELECT MAX(encounter_raw_id) FROM ", table_name, "\n",
+                     "      WHERE enc_id IN (", query_ids, ")\n",
+                     "      GROUP BY enc_id\n",
+                     "  )"
     )
 
     if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
@@ -458,6 +477,8 @@ createFrontendTables <- function() {
     }
 
     encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
+
+    query_datetime <- getQueryDatetime(encounters)
 
     # Create a new table with rows where enc_partof_ref is NOT NA
     part_of_encounters <- encounters[!is.na(enc_partof_ref)]
@@ -491,8 +512,7 @@ createFrontendTables <- function() {
     }
 
     # load Conditions referenced by Encounters
-    condition_ids <- encounters$enc_diagnosis_condition_id
-    query_ids <- getQueryList(condition_ids, remove_ref_type = TRUE)
+    query_ids <- getQueryList(encounters$enc_diagnosis_condition_ref, remove_ref_type = TRUE)
     table_name <- getViewTableName("condition")
     query <- paste0("SELECT * FROM ", table_name, "\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
@@ -505,8 +525,9 @@ createFrontendTables <- function() {
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
 
       pid <- unique_pid_ward$patient_id[pid_index]
-      pid_encounters <- encounters[enc_patient_ref == pid]
-      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid]
+      pid_ref <- etlutils::getFHIRPatientReference(pid)
+      pid_encounters <- encounters[enc_patient_ref == pid_ref]
+      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
 
       # check possible errors
       if (!nrow(pid_encounters)) { # no encounter for PID found
@@ -526,7 +547,7 @@ createFrontendTables <- function() {
       # highlighted here.
       pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
 
-      pid_patient <- patients[pat_id == extractIDsFromReferences(pid)]
+      pid_patient <- patients[pat_id == pid]
 
       # check errors no patient resource found for PID
       if (!nrow(pid_patient)) { # no Patient resource found for PID
@@ -557,13 +578,13 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
         data.table::set(enc_frontend_table, target_index, "fall_fe_id", pid_encounters[[i]]$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
-        data.table::set(enc_frontend_table, target_index, "fall_ent_dat",enc_period_end)
+        data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
         # set fall_complete (derived from FHIR Encounter.status)
         # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
         fall_complete <- grepl("^finished$|^cancelled$|^entered-in-error$", enc_status, ignore.case = TRUE)
-        fall_complete <- ifelse(fall_complete, "Complete", NA)
+        fall_complete <- ifelse(fall_complete, "Complete", "Incomplete")
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
         # Extract ward name from unique_pid_ward table
@@ -580,7 +601,7 @@ createFrontendTables <- function() {
 
         # Extract location informations
         if (exists("MISSING_PART_OF_REFERENCE")) {
-          filtered_pid_part_of_encounters <- pid_part_of_encounters[enc_identifier_value == enc_identifier_value]
+          filtered_pid_part_of_encounters <- pid_part_of_encounters[get("enc_identifier_value") == enc_identifier_value]
         } else {
           searched_encounter <- paste0("Encounter/", enc_id)
           filtered_pid_part_of_encounters <- pid_part_of_encounters[grepl(searched_encounter, enc_partof_ref)]
@@ -613,7 +634,7 @@ createFrontendTables <- function() {
             # If no Observations found with the direct encounter link, so identify potencial
             # Observations by time overlap with the encounter period start and current date
             if (!nrow(observations)) {
-              additional_query_condition <- paste0("        obs_patient_ref = '", pid, "' AND\n",
+              additional_query_condition <- paste0("        obs_patient_ref = 'Patient/", pid, "' AND\n",
                                                    "        obs_effectivedatetime > '", enc_period_start, "'\n")
               query <- paste0(query_template, additional_query_condition)
 
@@ -622,7 +643,7 @@ createFrontendTables <- function() {
 
           } else {
             # Extract Observations by patient ID, but without any references to the encounter
-            additional_query_condition <- paste0("        obs_patient_ref = '", pid, "'\n")
+            additional_query_condition <- paste0("        obs_patient_ref = 'Patient/", pid, "'\n")
             query <- paste0(query_template, additional_query_condition)
 
             observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[3]")
@@ -640,7 +661,11 @@ createFrontendTables <- function() {
 
         getObservation(OBSERVATION_BODY_WEIGHT_CODES, OBSERVATION_BODY_WEIGHT_SYSTEM, "fall_gewicht_aktuell", "fall_gewicht_aktl_einheit")
         getObservation(OBSERVATION_BODY_HEIGHT_CODES, OBSERVATION_BODY_HEIGHT_SYSTEM, "fall_groesse", "fall_groesse_einheit", obs_by_pid = TRUE)
-        getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
+        # For unknown reasons, a BMI written to the RedCap is always written back from the
+        # RedCap to the database as an empty value, which duplicates the entire data record.
+        # As the cause could not be found, we have simply deactivated the field for the time
+        # being. It is not currently displayed in the RedCap anyway.
+        #getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
 
       }
 

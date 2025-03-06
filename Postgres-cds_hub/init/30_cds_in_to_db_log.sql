@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-01-13 09:38:21
--- Rights definition file size        : 15240 Byte
+-- Rights definition file last update : 2025-02-21 10:00:28
+-- Rights definition file size        : 15641 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-02-12 20:32:42
+-- Create time: 2025-03-03 19:12:52
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  12_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -125,35 +125,35 @@ BEGIN
         -- Start encounter_raw  --------   encounter_raw  --------   encounter_raw  --------   encounter_raw
         err_section:='encounter_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.encounter_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='encounter_raw-05';    err_schema:='cds2db_in';    err_table:='encounter_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.encounter_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='encounter_raw-10';    err_schema:='db_log';    err_table:='encounter_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.encounter_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='encounter_raw-15';    err_schema:='db_log';    err_table:='encounter_raw';
                         IF data_count = 0
                         THEN
@@ -218,6 +218,8 @@ BEGIN
                                 enc_location_identifier_type_code,
                                 enc_location_identifier_type_display,
                                 enc_location_identifier_type_text,
+                                enc_location_identifier_system,
+                                enc_location_identifier_value,
                                 enc_location_display,
                                 enc_location_status,
                                 enc_location_physicaltype_system,
@@ -233,6 +235,8 @@ BEGIN
                                 enc_serviceprovider_identifier_type_code,
                                 enc_serviceprovider_identifier_type_display,
                                 enc_serviceprovider_identifier_type_text,
+                                enc_serviceprovider_identifier_system,
+                                enc_serviceprovider_identifier_value,
                                 enc_serviceprovider_display,
                                 input_datetime,
                                 last_check_datetime,
@@ -299,6 +303,8 @@ BEGIN
                                 current_record.enc_location_identifier_type_code,
                                 current_record.enc_location_identifier_type_display,
                                 current_record.enc_location_identifier_type_text,
+                                current_record.enc_location_identifier_system,
+                                current_record.enc_location_identifier_value,
                                 current_record.enc_location_display,
                                 current_record.enc_location_status,
                                 current_record.enc_location_physicaltype_system,
@@ -314,13 +320,15 @@ BEGIN
                                 current_record.enc_serviceprovider_identifier_type_code,
                                 current_record.enc_serviceprovider_identifier_type_display,
                                 current_record.enc_serviceprovider_identifier_type_text,
+                                current_record.enc_serviceprovider_identifier_system,
+                                current_record.enc_serviceprovider_identifier_value,
                                 current_record.enc_serviceprovider_display,
                                 current_record.input_datetime,
                                 last_pro_datetime,
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='encounter_raw-20';    err_schema:='cds2db_in';    err_table:='encounter_raw';
                             DELETE FROM cds2db_in.encounter_raw WHERE encounter_raw_id = current_record.encounter_raw_id;
@@ -333,7 +341,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='encounter_raw-30';    err_schema:='cds2db_in';    err_table:='encounter_raw';
                             DELETE FROM cds2db_in.encounter_raw WHERE encounter_raw_id = current_record.encounter_raw_id;
@@ -346,8 +354,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE encounter_raw_id = current_record.encounter_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -367,11 +375,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='encounter_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -379,27 +387,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='encounter_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'encounter_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'encounter_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'encounter_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='encounter_raw-50';    err_schema:='/';    err_table:='/';
         -- END encounter_raw  --------   encounter_raw  --------   encounter_raw  --------   encounter_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -409,35 +417,35 @@ BEGIN
         -- Start patient_raw  --------   patient_raw  --------   patient_raw  --------   patient_raw
         err_section:='patient_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.patient_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='patient_raw-05';    err_schema:='cds2db_in';    err_table:='patient_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.patient_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='patient_raw-10';    err_schema:='db_log';    err_table:='patient_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.patient_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='patient_raw-15';    err_schema:='db_log';    err_table:='patient_raw';
                         IF data_count = 0
                         THEN
@@ -496,7 +504,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='patient_raw-20';    err_schema:='cds2db_in';    err_table:='patient_raw';
                             DELETE FROM cds2db_in.patient_raw WHERE patient_raw_id = current_record.patient_raw_id;
@@ -509,7 +517,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='patient_raw-30';    err_schema:='cds2db_in';    err_table:='patient_raw';
                             DELETE FROM cds2db_in.patient_raw WHERE patient_raw_id = current_record.patient_raw_id;
@@ -522,8 +530,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE patient_raw_id = current_record.patient_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -543,11 +551,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='patient_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -555,27 +563,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='patient_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'patient_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'patient_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'patient_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='patient_raw-50';    err_schema:='/';    err_table:='/';
         -- END patient_raw  --------   patient_raw  --------   patient_raw  --------   patient_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -585,35 +593,35 @@ BEGIN
         -- Start condition_raw  --------   condition_raw  --------   condition_raw  --------   condition_raw
         err_section:='condition_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.condition_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='condition_raw-05';    err_schema:='cds2db_in';    err_table:='condition_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.condition_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='condition_raw-10';    err_schema:='db_log';    err_table:='condition_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.condition_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='condition_raw-15';    err_schema:='db_log';    err_table:='condition_raw';
                         IF data_count = 0
                         THEN
@@ -695,6 +703,8 @@ BEGIN
                                 con_recorder_identifier_type_code,
                                 con_recorder_identifier_type_display,
                                 con_recorder_identifier_type_text,
+                                con_recorder_identifier_system,
+                                con_recorder_identifier_value,
                                 con_recorder_display,
                                 con_asserter_ref,
                                 con_asserter_type,
@@ -704,6 +714,8 @@ BEGIN
                                 con_asserter_identifier_type_code,
                                 con_asserter_identifier_type_display,
                                 con_asserter_identifier_type_text,
+                                con_asserter_identifier_system,
+                                con_asserter_identifier_value,
                                 con_asserter_display,
                                 con_stage_summary_system,
                                 con_stage_summary_version,
@@ -718,6 +730,8 @@ BEGIN
                                 con_stage_assessment_identifier_type_code,
                                 con_stage_assessment_identifier_type_display,
                                 con_stage_assessment_identifier_type_text,
+                                con_stage_assessment_identifier_system,
+                                con_stage_assessment_identifier_value,
                                 con_stage_assessment_display,
                                 con_stage_type_system,
                                 con_stage_type_version,
@@ -733,6 +747,8 @@ BEGIN
                                 con_note_authorreference_identifier_type_code,
                                 con_note_authorreference_identifier_type_display,
                                 con_note_authorreference_identifier_type_text,
+                                con_note_authorreference_identifier_system,
+                                con_note_authorreference_identifier_value,
                                 con_note_authorreference_display,
                                 con_note_time,
                                 con_note_text,
@@ -818,6 +834,8 @@ BEGIN
                                 current_record.con_recorder_identifier_type_code,
                                 current_record.con_recorder_identifier_type_display,
                                 current_record.con_recorder_identifier_type_text,
+                                current_record.con_recorder_identifier_system,
+                                current_record.con_recorder_identifier_value,
                                 current_record.con_recorder_display,
                                 current_record.con_asserter_ref,
                                 current_record.con_asserter_type,
@@ -827,6 +845,8 @@ BEGIN
                                 current_record.con_asserter_identifier_type_code,
                                 current_record.con_asserter_identifier_type_display,
                                 current_record.con_asserter_identifier_type_text,
+                                current_record.con_asserter_identifier_system,
+                                current_record.con_asserter_identifier_value,
                                 current_record.con_asserter_display,
                                 current_record.con_stage_summary_system,
                                 current_record.con_stage_summary_version,
@@ -841,6 +861,8 @@ BEGIN
                                 current_record.con_stage_assessment_identifier_type_code,
                                 current_record.con_stage_assessment_identifier_type_display,
                                 current_record.con_stage_assessment_identifier_type_text,
+                                current_record.con_stage_assessment_identifier_system,
+                                current_record.con_stage_assessment_identifier_value,
                                 current_record.con_stage_assessment_display,
                                 current_record.con_stage_type_system,
                                 current_record.con_stage_type_version,
@@ -856,6 +878,8 @@ BEGIN
                                 current_record.con_note_authorreference_identifier_type_code,
                                 current_record.con_note_authorreference_identifier_type_display,
                                 current_record.con_note_authorreference_identifier_type_text,
+                                current_record.con_note_authorreference_identifier_system,
+                                current_record.con_note_authorreference_identifier_value,
                                 current_record.con_note_authorreference_display,
                                 current_record.con_note_time,
                                 current_record.con_note_text,
@@ -864,7 +888,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='condition_raw-20';    err_schema:='cds2db_in';    err_table:='condition_raw';
                             DELETE FROM cds2db_in.condition_raw WHERE condition_raw_id = current_record.condition_raw_id;
@@ -877,7 +901,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='condition_raw-30';    err_schema:='cds2db_in';    err_table:='condition_raw';
                             DELETE FROM cds2db_in.condition_raw WHERE condition_raw_id = current_record.condition_raw_id;
@@ -890,8 +914,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE condition_raw_id = current_record.condition_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -911,11 +935,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='condition_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -923,27 +947,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='condition_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'condition_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'condition_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'condition_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='condition_raw-50';    err_schema:='/';    err_table:='/';
         -- END condition_raw  --------   condition_raw  --------   condition_raw  --------   condition_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -953,35 +977,35 @@ BEGIN
         -- Start medication_raw  --------   medication_raw  --------   medication_raw  --------   medication_raw
         err_section:='medication_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medication_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='medication_raw-05';    err_schema:='cds2db_in';    err_table:='medication_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.medication_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='medication_raw-10';    err_schema:='db_log';    err_table:='medication_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medication_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='medication_raw-15';    err_schema:='db_log';    err_table:='medication_raw';
                         IF data_count = 0
                         THEN
@@ -1046,6 +1070,8 @@ BEGIN
                                 med_ingredient_itemreference_identifier_type_code,
                                 med_ingredient_itemreference_identifier_type_display,
                                 med_ingredient_itemreference_identifier_type_text,
+                                med_ingredient_itemreference_identifier_system,
+                                med_ingredient_itemreference_identifier_value,
                                 med_ingredient_itemreference_display,
                                 med_ingredient_isactive,
                                 input_datetime,
@@ -1113,6 +1139,8 @@ BEGIN
                                 current_record.med_ingredient_itemreference_identifier_type_code,
                                 current_record.med_ingredient_itemreference_identifier_type_display,
                                 current_record.med_ingredient_itemreference_identifier_type_text,
+                                current_record.med_ingredient_itemreference_identifier_system,
+                                current_record.med_ingredient_itemreference_identifier_value,
                                 current_record.med_ingredient_itemreference_display,
                                 current_record.med_ingredient_isactive,
                                 current_record.input_datetime,
@@ -1120,7 +1148,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='medication_raw-20';    err_schema:='cds2db_in';    err_table:='medication_raw';
                             DELETE FROM cds2db_in.medication_raw WHERE medication_raw_id = current_record.medication_raw_id;
@@ -1133,7 +1161,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='medication_raw-30';    err_schema:='cds2db_in';    err_table:='medication_raw';
                             DELETE FROM cds2db_in.medication_raw WHERE medication_raw_id = current_record.medication_raw_id;
@@ -1146,8 +1174,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medication_raw_id = current_record.medication_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -1167,11 +1195,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medication_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -1179,27 +1207,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='medication_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medication_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medication_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medication_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='medication_raw-50';    err_schema:='/';    err_table:='/';
         -- END medication_raw  --------   medication_raw  --------   medication_raw  --------   medication_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -1209,35 +1237,35 @@ BEGIN
         -- Start medicationrequest_raw  --------   medicationrequest_raw  --------   medicationrequest_raw  --------   medicationrequest_raw
         err_section:='medicationrequest_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationrequest_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='medicationrequest_raw-05';    err_schema:='cds2db_in';    err_table:='medicationrequest_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.medicationrequest_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='medicationrequest_raw-10';    err_schema:='db_log';    err_table:='medicationrequest_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medicationrequest_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='medicationrequest_raw-15';    err_schema:='db_log';    err_table:='medicationrequest_raw';
                         IF data_count = 0
                         THEN
@@ -1283,6 +1311,8 @@ BEGIN
                                 medreq_reportedreference_identifier_type_code,
                                 medreq_reportedreference_identifier_type_display,
                                 medreq_reportedreference_identifier_type_text,
+                                medreq_reportedreference_identifier_system,
+                                medreq_reportedreference_identifier_value,
                                 medreq_reportedreference_display,
                                 medreq_medicationcodeableconcept_system,
                                 medreq_medicationcodeableconcept_version,
@@ -1297,6 +1327,8 @@ BEGIN
                                 medreq_supportinginformation_identifier_type_code,
                                 medreq_supportinginformation_identifier_type_display,
                                 medreq_supportinginformation_identifier_type_text,
+                                medreq_supportinginformation_identifier_system,
+                                medreq_supportinginformation_identifier_value,
                                 medreq_supportinginformation_display,
                                 medreq_authoredon,
                                 medreq_requester_ref,
@@ -1307,6 +1339,8 @@ BEGIN
                                 medreq_requester_identifier_type_code,
                                 medreq_requester_identifier_type_display,
                                 medreq_requester_identifier_type_text,
+                                medreq_requester_identifier_system,
+                                medreq_requester_identifier_value,
                                 medreq_requester_display,
                                 medreq_reasoncode_system,
                                 medreq_reasoncode_version,
@@ -1321,6 +1355,8 @@ BEGIN
                                 medreq_reasonreference_identifier_type_code,
                                 medreq_reasonreference_identifier_type_display,
                                 medreq_reasonreference_identifier_type_text,
+                                medreq_reasonreference_identifier_system,
+                                medreq_reasonreference_identifier_value,
                                 medreq_reasonreference_display,
                                 medreq_basedon_ref,
                                 medreq_basedon_type,
@@ -1330,6 +1366,8 @@ BEGIN
                                 medreq_basedon_identifier_type_code,
                                 medreq_basedon_identifier_type_display,
                                 medreq_basedon_identifier_type_text,
+                                medreq_basedon_identifier_system,
+                                medreq_basedon_identifier_value,
                                 medreq_basedon_display,
                                 medreq_note_authorstring,
                                 medreq_note_authorreference_ref,
@@ -1340,6 +1378,8 @@ BEGIN
                                 medreq_note_authorreference_identifier_type_code,
                                 medreq_note_authorreference_identifier_type_display,
                                 medreq_note_authorreference_identifier_type_text,
+                                medreq_note_authorreference_identifier_system,
+                                medreq_note_authorreference_identifier_value,
                                 medreq_note_authorreference_display,
                                 medreq_note_time,
                                 medreq_note_text,
@@ -1516,6 +1556,8 @@ BEGIN
                                 current_record.medreq_reportedreference_identifier_type_code,
                                 current_record.medreq_reportedreference_identifier_type_display,
                                 current_record.medreq_reportedreference_identifier_type_text,
+                                current_record.medreq_reportedreference_identifier_system,
+                                current_record.medreq_reportedreference_identifier_value,
                                 current_record.medreq_reportedreference_display,
                                 current_record.medreq_medicationcodeableconcept_system,
                                 current_record.medreq_medicationcodeableconcept_version,
@@ -1530,6 +1572,8 @@ BEGIN
                                 current_record.medreq_supportinginformation_identifier_type_code,
                                 current_record.medreq_supportinginformation_identifier_type_display,
                                 current_record.medreq_supportinginformation_identifier_type_text,
+                                current_record.medreq_supportinginformation_identifier_system,
+                                current_record.medreq_supportinginformation_identifier_value,
                                 current_record.medreq_supportinginformation_display,
                                 current_record.medreq_authoredon,
                                 current_record.medreq_requester_ref,
@@ -1540,6 +1584,8 @@ BEGIN
                                 current_record.medreq_requester_identifier_type_code,
                                 current_record.medreq_requester_identifier_type_display,
                                 current_record.medreq_requester_identifier_type_text,
+                                current_record.medreq_requester_identifier_system,
+                                current_record.medreq_requester_identifier_value,
                                 current_record.medreq_requester_display,
                                 current_record.medreq_reasoncode_system,
                                 current_record.medreq_reasoncode_version,
@@ -1554,6 +1600,8 @@ BEGIN
                                 current_record.medreq_reasonreference_identifier_type_code,
                                 current_record.medreq_reasonreference_identifier_type_display,
                                 current_record.medreq_reasonreference_identifier_type_text,
+                                current_record.medreq_reasonreference_identifier_system,
+                                current_record.medreq_reasonreference_identifier_value,
                                 current_record.medreq_reasonreference_display,
                                 current_record.medreq_basedon_ref,
                                 current_record.medreq_basedon_type,
@@ -1563,6 +1611,8 @@ BEGIN
                                 current_record.medreq_basedon_identifier_type_code,
                                 current_record.medreq_basedon_identifier_type_display,
                                 current_record.medreq_basedon_identifier_type_text,
+                                current_record.medreq_basedon_identifier_system,
+                                current_record.medreq_basedon_identifier_value,
                                 current_record.medreq_basedon_display,
                                 current_record.medreq_note_authorstring,
                                 current_record.medreq_note_authorreference_ref,
@@ -1573,6 +1623,8 @@ BEGIN
                                 current_record.medreq_note_authorreference_identifier_type_code,
                                 current_record.medreq_note_authorreference_identifier_type_display,
                                 current_record.medreq_note_authorreference_identifier_type_text,
+                                current_record.medreq_note_authorreference_identifier_system,
+                                current_record.medreq_note_authorreference_identifier_value,
                                 current_record.medreq_note_authorreference_display,
                                 current_record.medreq_note_time,
                                 current_record.medreq_note_text,
@@ -1708,7 +1760,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='medicationrequest_raw-20';    err_schema:='cds2db_in';    err_table:='medicationrequest_raw';
                             DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
@@ -1721,7 +1773,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='medicationrequest_raw-30';    err_schema:='cds2db_in';    err_table:='medicationrequest_raw';
                             DELETE FROM cds2db_in.medicationrequest_raw WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
@@ -1734,8 +1786,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -1755,11 +1807,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationrequest_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -1767,27 +1819,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='medicationrequest_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationrequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationrequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationrequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='medicationrequest_raw-50';    err_schema:='/';    err_table:='/';
         -- END medicationrequest_raw  --------   medicationrequest_raw  --------   medicationrequest_raw  --------   medicationrequest_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -1797,35 +1849,35 @@ BEGIN
         -- Start medicationadministration_raw  --------   medicationadministration_raw  --------   medicationadministration_raw  --------   medicationadministration_raw
         err_section:='medicationadministration_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationadministration_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='medicationadministration_raw-05';    err_schema:='cds2db_in';    err_table:='medicationadministration_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.medicationadministration_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='medicationadministration_raw-10';    err_schema:='db_log';    err_table:='medicationadministration_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medicationadministration_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='medicationadministration_raw-15';    err_schema:='db_log';    err_table:='medicationadministration_raw';
                         IF data_count = 0
                         THEN
@@ -1874,6 +1926,8 @@ BEGIN
                                 medadm_supportinginformation_identifier_type_code,
                                 medadm_supportinginformation_identifier_type_display,
                                 medadm_supportinginformation_identifier_type_text,
+                                medadm_supportinginformation_identifier_system,
+                                medadm_supportinginformation_identifier_value,
                                 medadm_supportinginformation_display,
                                 medadm_effectivedatetime,
                                 medadm_effectiveperiod_start,
@@ -1896,6 +1950,8 @@ BEGIN
                                 medadm_reasonreference_identifier_type_code,
                                 medadm_reasonreference_identifier_type_display,
                                 medadm_reasonreference_identifier_type_text,
+                                medadm_reasonreference_identifier_system,
+                                medadm_reasonreference_identifier_value,
                                 medadm_reasonreference_display,
                                 medadm_request_ref,
                                 medadm_note_authorstring,
@@ -1907,6 +1963,8 @@ BEGIN
                                 medadm_note_authorreference_identifier_type_code,
                                 medadm_note_authorreference_identifier_type_display,
                                 medadm_note_authorreference_identifier_type_text,
+                                medadm_note_authorreference_identifier_system,
+                                medadm_note_authorreference_identifier_value,
                                 medadm_note_authorreference_display,
                                 medadm_note_time,
                                 medadm_note_text,
@@ -1993,6 +2051,8 @@ BEGIN
                                 current_record.medadm_supportinginformation_identifier_type_code,
                                 current_record.medadm_supportinginformation_identifier_type_display,
                                 current_record.medadm_supportinginformation_identifier_type_text,
+                                current_record.medadm_supportinginformation_identifier_system,
+                                current_record.medadm_supportinginformation_identifier_value,
                                 current_record.medadm_supportinginformation_display,
                                 current_record.medadm_effectivedatetime,
                                 current_record.medadm_effectiveperiod_start,
@@ -2015,6 +2075,8 @@ BEGIN
                                 current_record.medadm_reasonreference_identifier_type_code,
                                 current_record.medadm_reasonreference_identifier_type_display,
                                 current_record.medadm_reasonreference_identifier_type_text,
+                                current_record.medadm_reasonreference_identifier_system,
+                                current_record.medadm_reasonreference_identifier_value,
                                 current_record.medadm_reasonreference_display,
                                 current_record.medadm_request_ref,
                                 current_record.medadm_note_authorstring,
@@ -2026,6 +2088,8 @@ BEGIN
                                 current_record.medadm_note_authorreference_identifier_type_code,
                                 current_record.medadm_note_authorreference_identifier_type_display,
                                 current_record.medadm_note_authorreference_identifier_type_text,
+                                current_record.medadm_note_authorreference_identifier_system,
+                                current_record.medadm_note_authorreference_identifier_value,
                                 current_record.medadm_note_authorreference_display,
                                 current_record.medadm_note_time,
                                 current_record.medadm_note_text,
@@ -2068,7 +2132,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='medicationadministration_raw-20';    err_schema:='cds2db_in';    err_table:='medicationadministration_raw';
                             DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
@@ -2081,7 +2145,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='medicationadministration_raw-30';    err_schema:='cds2db_in';    err_table:='medicationadministration_raw';
                             DELETE FROM cds2db_in.medicationadministration_raw WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
@@ -2094,8 +2158,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -2115,11 +2179,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationadministration_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -2127,27 +2191,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='medicationadministration_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationadministration_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationadministration_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationadministration_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='medicationadministration_raw-50';    err_schema:='/';    err_table:='/';
         -- END medicationadministration_raw  --------   medicationadministration_raw  --------   medicationadministration_raw  --------   medicationadministration_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -2157,35 +2221,35 @@ BEGIN
         -- Start medicationstatement_raw  --------   medicationstatement_raw  --------   medicationstatement_raw  --------   medicationstatement_raw
         err_section:='medicationstatement_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.medicationstatement_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='medicationstatement_raw-05';    err_schema:='cds2db_in';    err_table:='medicationstatement_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.medicationstatement_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='medicationstatement_raw-10';    err_schema:='db_log';    err_table:='medicationstatement_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.medicationstatement_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='medicationstatement_raw-15';    err_schema:='db_log';    err_table:='medicationstatement_raw';
                         IF data_count = 0
                         THEN
@@ -2217,6 +2281,8 @@ BEGIN
                                 medstat_basedon_identifier_type_code,
                                 medstat_basedon_identifier_type_display,
                                 medstat_basedon_identifier_type_text,
+                                medstat_basedon_identifier_system,
+                                medstat_basedon_identifier_value,
                                 medstat_basedon_display,
                                 medstat_status,
                                 medstat_statusreason_system,
@@ -2247,6 +2313,8 @@ BEGIN
                                 medstat_informationsource_identifier_type_code,
                                 medstat_informationsource_identifier_type_display,
                                 medstat_informationsource_identifier_type_text,
+                                medstat_informationsource_identifier_system,
+                                medstat_informationsource_identifier_value,
                                 medstat_informationsource_display,
                                 medstat_derivedfrom_ref,
                                 medstat_derivedfrom_type,
@@ -2256,6 +2324,8 @@ BEGIN
                                 medstat_derivedfrom_identifier_type_code,
                                 medstat_derivedfrom_identifier_type_display,
                                 medstat_derivedfrom_identifier_type_text,
+                                medstat_derivedfrom_identifier_system,
+                                medstat_derivedfrom_identifier_value,
                                 medstat_derivedfrom_display,
                                 medstat_reasoncode_system,
                                 medstat_reasoncode_version,
@@ -2270,6 +2340,8 @@ BEGIN
                                 medstat_reasonreference_identifier_type_code,
                                 medstat_reasonreference_identifier_type_display,
                                 medstat_reasonreference_identifier_type_text,
+                                medstat_reasonreference_identifier_system,
+                                medstat_reasonreference_identifier_value,
                                 medstat_reasonreference_display,
                                 medstat_note_authorstring,
                                 medstat_note_authorreference_ref,
@@ -2280,6 +2352,8 @@ BEGIN
                                 medstat_note_authorreference_identifier_type_code,
                                 medstat_note_authorreference_identifier_type_display,
                                 medstat_note_authorreference_identifier_type_text,
+                                medstat_note_authorreference_identifier_system,
+                                medstat_note_authorreference_identifier_value,
                                 medstat_note_authorreference_display,
                                 medstat_note_time,
                                 medstat_note_text,
@@ -2437,6 +2511,8 @@ BEGIN
                                 current_record.medstat_basedon_identifier_type_code,
                                 current_record.medstat_basedon_identifier_type_display,
                                 current_record.medstat_basedon_identifier_type_text,
+                                current_record.medstat_basedon_identifier_system,
+                                current_record.medstat_basedon_identifier_value,
                                 current_record.medstat_basedon_display,
                                 current_record.medstat_status,
                                 current_record.medstat_statusreason_system,
@@ -2467,6 +2543,8 @@ BEGIN
                                 current_record.medstat_informationsource_identifier_type_code,
                                 current_record.medstat_informationsource_identifier_type_display,
                                 current_record.medstat_informationsource_identifier_type_text,
+                                current_record.medstat_informationsource_identifier_system,
+                                current_record.medstat_informationsource_identifier_value,
                                 current_record.medstat_informationsource_display,
                                 current_record.medstat_derivedfrom_ref,
                                 current_record.medstat_derivedfrom_type,
@@ -2476,6 +2554,8 @@ BEGIN
                                 current_record.medstat_derivedfrom_identifier_type_code,
                                 current_record.medstat_derivedfrom_identifier_type_display,
                                 current_record.medstat_derivedfrom_identifier_type_text,
+                                current_record.medstat_derivedfrom_identifier_system,
+                                current_record.medstat_derivedfrom_identifier_value,
                                 current_record.medstat_derivedfrom_display,
                                 current_record.medstat_reasoncode_system,
                                 current_record.medstat_reasoncode_version,
@@ -2490,6 +2570,8 @@ BEGIN
                                 current_record.medstat_reasonreference_identifier_type_code,
                                 current_record.medstat_reasonreference_identifier_type_display,
                                 current_record.medstat_reasonreference_identifier_type_text,
+                                current_record.medstat_reasonreference_identifier_system,
+                                current_record.medstat_reasonreference_identifier_value,
                                 current_record.medstat_reasonreference_display,
                                 current_record.medstat_note_authorstring,
                                 current_record.medstat_note_authorreference_ref,
@@ -2500,6 +2582,8 @@ BEGIN
                                 current_record.medstat_note_authorreference_identifier_type_code,
                                 current_record.medstat_note_authorreference_identifier_type_display,
                                 current_record.medstat_note_authorreference_identifier_type_text,
+                                current_record.medstat_note_authorreference_identifier_system,
+                                current_record.medstat_note_authorreference_identifier_value,
                                 current_record.medstat_note_authorreference_display,
                                 current_record.medstat_note_time,
                                 current_record.medstat_note_text,
@@ -2630,7 +2714,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='medicationstatement_raw-20';    err_schema:='cds2db_in';    err_table:='medicationstatement_raw';
                             DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
@@ -2643,7 +2727,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='medicationstatement_raw-30';    err_schema:='cds2db_in';    err_table:='medicationstatement_raw';
                             DELETE FROM cds2db_in.medicationstatement_raw WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
@@ -2656,8 +2740,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -2677,11 +2761,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='medicationstatement_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -2689,27 +2773,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='medicationstatement_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'medicationstatement_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'medicationstatement_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'medicationstatement_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='medicationstatement_raw-50';    err_schema:='/';    err_table:='/';
         -- END medicationstatement_raw  --------   medicationstatement_raw  --------   medicationstatement_raw  --------   medicationstatement_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -2719,35 +2803,35 @@ BEGIN
         -- Start observation_raw  --------   observation_raw  --------   observation_raw  --------   observation_raw
         err_section:='observation_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.observation_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='observation_raw-05';    err_schema:='cds2db_in';    err_table:='observation_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.observation_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='observation_raw-10';    err_schema:='db_log';    err_table:='observation_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.observation_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='observation_raw-15';    err_schema:='db_log';    err_table:='observation_raw';
                         IF data_count = 0
                         THEN
@@ -2779,6 +2863,8 @@ BEGIN
                                 obs_basedon_identifier_type_code,
                                 obs_basedon_identifier_type_display,
                                 obs_basedon_identifier_type_text,
+                                obs_basedon_identifier_system,
+                                obs_basedon_identifier_value,
                                 obs_basedon_display,
                                 obs_status,
                                 obs_category_system,
@@ -2835,6 +2921,8 @@ BEGIN
                                 obs_note_authorreference_identifier_type_code,
                                 obs_note_authorreference_identifier_type_display,
                                 obs_note_authorreference_identifier_type_text,
+                                obs_note_authorreference_identifier_system,
+                                obs_note_authorreference_identifier_value,
                                 obs_note_authorreference_display,
                                 obs_note_time,
                                 obs_note_text,
@@ -2851,6 +2939,8 @@ BEGIN
                                 obs_performer_identifier_type_code,
                                 obs_performer_identifier_type_display,
                                 obs_performer_identifier_type_text,
+                                obs_performer_identifier_system,
+                                obs_performer_identifier_value,
                                 obs_performer_display,
                                 obs_referencerange_low_value,
                                 obs_referencerange_low_unit,
@@ -2887,6 +2977,8 @@ BEGIN
                                 obs_hasmember_identifier_type_code,
                                 obs_hasmember_identifier_type_display,
                                 obs_hasmember_identifier_type_text,
+                                obs_hasmember_identifier_system,
+                                obs_hasmember_identifier_value,
                                 obs_hasmember_display,
                                 input_datetime,
                                 last_check_datetime,
@@ -2920,6 +3012,8 @@ BEGIN
                                 current_record.obs_basedon_identifier_type_code,
                                 current_record.obs_basedon_identifier_type_display,
                                 current_record.obs_basedon_identifier_type_text,
+                                current_record.obs_basedon_identifier_system,
+                                current_record.obs_basedon_identifier_value,
                                 current_record.obs_basedon_display,
                                 current_record.obs_status,
                                 current_record.obs_category_system,
@@ -2976,6 +3070,8 @@ BEGIN
                                 current_record.obs_note_authorreference_identifier_type_code,
                                 current_record.obs_note_authorreference_identifier_type_display,
                                 current_record.obs_note_authorreference_identifier_type_text,
+                                current_record.obs_note_authorreference_identifier_system,
+                                current_record.obs_note_authorreference_identifier_value,
                                 current_record.obs_note_authorreference_display,
                                 current_record.obs_note_time,
                                 current_record.obs_note_text,
@@ -2992,6 +3088,8 @@ BEGIN
                                 current_record.obs_performer_identifier_type_code,
                                 current_record.obs_performer_identifier_type_display,
                                 current_record.obs_performer_identifier_type_text,
+                                current_record.obs_performer_identifier_system,
+                                current_record.obs_performer_identifier_value,
                                 current_record.obs_performer_display,
                                 current_record.obs_referencerange_low_value,
                                 current_record.obs_referencerange_low_unit,
@@ -3028,13 +3126,15 @@ BEGIN
                                 current_record.obs_hasmember_identifier_type_code,
                                 current_record.obs_hasmember_identifier_type_display,
                                 current_record.obs_hasmember_identifier_type_text,
+                                current_record.obs_hasmember_identifier_system,
+                                current_record.obs_hasmember_identifier_value,
                                 current_record.obs_hasmember_display,
                                 current_record.input_datetime,
                                 last_pro_datetime,
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='observation_raw-20';    err_schema:='cds2db_in';    err_table:='observation_raw';
                             DELETE FROM cds2db_in.observation_raw WHERE observation_raw_id = current_record.observation_raw_id;
@@ -3047,7 +3147,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='observation_raw-30';    err_schema:='cds2db_in';    err_table:='observation_raw';
                             DELETE FROM cds2db_in.observation_raw WHERE observation_raw_id = current_record.observation_raw_id;
@@ -3060,8 +3160,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE observation_raw_id = current_record.observation_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -3081,11 +3181,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='observation_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -3093,27 +3193,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='observation_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'observation_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'observation_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'observation_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='observation_raw-50';    err_schema:='/';    err_table:='/';
         -- END observation_raw  --------   observation_raw  --------   observation_raw  --------   observation_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -3123,35 +3223,35 @@ BEGIN
         -- Start diagnosticreport_raw  --------   diagnosticreport_raw  --------   diagnosticreport_raw  --------   diagnosticreport_raw
         err_section:='diagnosticreport_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.diagnosticreport_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='diagnosticreport_raw-05';    err_schema:='cds2db_in';    err_table:='diagnosticreport_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.diagnosticreport_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='diagnosticreport_raw-10';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.diagnosticreport_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='diagnosticreport_raw-15';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
                         IF data_count = 0
                         THEN
@@ -3198,6 +3298,8 @@ BEGIN
                                 diagrep_performer_identifier_type_code,
                                 diagrep_performer_identifier_type_display,
                                 diagrep_performer_identifier_type_text,
+                                diagrep_performer_identifier_system,
+                                diagrep_performer_identifier_value,
                                 diagrep_performer_display,
                                 diagrep_conclusion,
                                 diagrep_conclusioncode_system,
@@ -3252,6 +3354,8 @@ BEGIN
                                 current_record.diagrep_performer_identifier_type_code,
                                 current_record.diagrep_performer_identifier_type_display,
                                 current_record.diagrep_performer_identifier_type_text,
+                                current_record.diagrep_performer_identifier_system,
+                                current_record.diagrep_performer_identifier_value,
                                 current_record.diagrep_performer_display,
                                 current_record.diagrep_conclusion,
                                 current_record.diagrep_conclusioncode_system,
@@ -3264,7 +3368,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='diagnosticreport_raw-20';    err_schema:='cds2db_in';    err_table:='diagnosticreport_raw';
                             DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
@@ -3277,7 +3381,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='diagnosticreport_raw-30';    err_schema:='cds2db_in';    err_table:='diagnosticreport_raw';
                             DELETE FROM cds2db_in.diagnosticreport_raw WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
@@ -3290,8 +3394,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -3311,11 +3415,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='diagnosticreport_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -3323,27 +3427,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='diagnosticreport_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'diagnosticreport_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'diagnosticreport_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'diagnosticreport_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='diagnosticreport_raw-50';    err_schema:='/';    err_table:='/';
         -- END diagnosticreport_raw  --------   diagnosticreport_raw  --------   diagnosticreport_raw  --------   diagnosticreport_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -3353,35 +3457,35 @@ BEGIN
         -- Start servicerequest_raw  --------   servicerequest_raw  --------   servicerequest_raw  --------   servicerequest_raw
         err_section:='servicerequest_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.servicerequest_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='servicerequest_raw-05';    err_schema:='cds2db_in';    err_table:='servicerequest_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.servicerequest_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='servicerequest_raw-10';    err_schema:='db_log';    err_table:='servicerequest_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.servicerequest_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='servicerequest_raw-15';    err_schema:='db_log';    err_table:='servicerequest_raw';
                         IF data_count = 0
                         THEN
@@ -3412,6 +3516,8 @@ BEGIN
                                 servreq_basedon_identifier_type_code,
                                 servreq_basedon_identifier_type_display,
                                 servreq_basedon_identifier_type_text,
+                                servreq_basedon_identifier_system,
+                                servreq_basedon_identifier_value,
                                 servreq_basedon_display,
                                 servreq_status,
                                 servreq_intent,
@@ -3434,6 +3540,8 @@ BEGIN
                                 servreq_requester_identifier_type_code,
                                 servreq_requester_identifier_type_display,
                                 servreq_requester_identifier_type_text,
+                                servreq_requester_identifier_system,
+                                servreq_requester_identifier_value,
                                 servreq_requester_display,
                                 servreq_performer_ref,
                                 servreq_performer_type,
@@ -3443,6 +3551,8 @@ BEGIN
                                 servreq_performer_identifier_type_code,
                                 servreq_performer_identifier_type_display,
                                 servreq_performer_identifier_type_text,
+                                servreq_performer_identifier_system,
+                                servreq_performer_identifier_value,
                                 servreq_performer_display,
                                 servreq_locationcode_system,
                                 servreq_locationcode_version,
@@ -3480,6 +3590,8 @@ BEGIN
                                 current_record.servreq_basedon_identifier_type_code,
                                 current_record.servreq_basedon_identifier_type_display,
                                 current_record.servreq_basedon_identifier_type_text,
+                                current_record.servreq_basedon_identifier_system,
+                                current_record.servreq_basedon_identifier_value,
                                 current_record.servreq_basedon_display,
                                 current_record.servreq_status,
                                 current_record.servreq_intent,
@@ -3502,6 +3614,8 @@ BEGIN
                                 current_record.servreq_requester_identifier_type_code,
                                 current_record.servreq_requester_identifier_type_display,
                                 current_record.servreq_requester_identifier_type_text,
+                                current_record.servreq_requester_identifier_system,
+                                current_record.servreq_requester_identifier_value,
                                 current_record.servreq_requester_display,
                                 current_record.servreq_performer_ref,
                                 current_record.servreq_performer_type,
@@ -3511,6 +3625,8 @@ BEGIN
                                 current_record.servreq_performer_identifier_type_code,
                                 current_record.servreq_performer_identifier_type_display,
                                 current_record.servreq_performer_identifier_type_text,
+                                current_record.servreq_performer_identifier_system,
+                                current_record.servreq_performer_identifier_value,
                                 current_record.servreq_performer_display,
                                 current_record.servreq_locationcode_system,
                                 current_record.servreq_locationcode_version,
@@ -3522,7 +3638,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='servicerequest_raw-20';    err_schema:='cds2db_in';    err_table:='servicerequest_raw';
                             DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
@@ -3535,7 +3651,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='servicerequest_raw-30';    err_schema:='cds2db_in';    err_table:='servicerequest_raw';
                             DELETE FROM cds2db_in.servicerequest_raw WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
@@ -3548,8 +3664,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE servicerequest_raw_id = current_record.servicerequest_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -3569,11 +3685,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='servicerequest_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -3581,27 +3697,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='servicerequest_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'servicerequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'servicerequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'servicerequest_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='servicerequest_raw-50';    err_schema:='/';    err_table:='/';
         -- END servicerequest_raw  --------   servicerequest_raw  --------   servicerequest_raw  --------   servicerequest_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -3611,35 +3727,35 @@ BEGIN
         -- Start procedure_raw  --------   procedure_raw  --------   procedure_raw  --------   procedure_raw
         err_section:='procedure_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.procedure_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='procedure_raw-05';    err_schema:='cds2db_in';    err_table:='procedure_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.procedure_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='procedure_raw-10';    err_schema:='db_log';    err_table:='procedure_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.procedure_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='procedure_raw-15';    err_schema:='db_log';    err_table:='procedure_raw';
                         IF data_count = 0
                         THEN
@@ -3671,6 +3787,8 @@ BEGIN
                                 proc_basedon_identifier_type_code,
                                 proc_basedon_identifier_type_display,
                                 proc_basedon_identifier_type_text,
+                                proc_basedon_identifier_system,
+                                proc_basedon_identifier_value,
                                 proc_basedon_display,
                                 proc_status,
                                 proc_statusreason_system,
@@ -3704,6 +3822,8 @@ BEGIN
                                 proc_reasonreference_identifier_type_code,
                                 proc_reasonreference_identifier_type_display,
                                 proc_reasonreference_identifier_type_text,
+                                proc_reasonreference_identifier_system,
+                                proc_reasonreference_identifier_value,
                                 proc_reasonreference_display,
                                 proc_note_authorstring,
                                 proc_note_authorreference_ref,
@@ -3714,6 +3834,8 @@ BEGIN
                                 proc_note_authorreference_identifier_type_code,
                                 proc_note_authorreference_identifier_type_display,
                                 proc_note_authorreference_identifier_type_text,
+                                proc_note_authorreference_identifier_system,
+                                proc_note_authorreference_identifier_value,
                                 proc_note_authorreference_display,
                                 proc_note_time,
                                 proc_note_text,
@@ -3749,6 +3871,8 @@ BEGIN
                                 current_record.proc_basedon_identifier_type_code,
                                 current_record.proc_basedon_identifier_type_display,
                                 current_record.proc_basedon_identifier_type_text,
+                                current_record.proc_basedon_identifier_system,
+                                current_record.proc_basedon_identifier_value,
                                 current_record.proc_basedon_display,
                                 current_record.proc_status,
                                 current_record.proc_statusreason_system,
@@ -3782,6 +3906,8 @@ BEGIN
                                 current_record.proc_reasonreference_identifier_type_code,
                                 current_record.proc_reasonreference_identifier_type_display,
                                 current_record.proc_reasonreference_identifier_type_text,
+                                current_record.proc_reasonreference_identifier_system,
+                                current_record.proc_reasonreference_identifier_value,
                                 current_record.proc_reasonreference_display,
                                 current_record.proc_note_authorstring,
                                 current_record.proc_note_authorreference_ref,
@@ -3792,6 +3918,8 @@ BEGIN
                                 current_record.proc_note_authorreference_identifier_type_code,
                                 current_record.proc_note_authorreference_identifier_type_display,
                                 current_record.proc_note_authorreference_identifier_type_text,
+                                current_record.proc_note_authorreference_identifier_system,
+                                current_record.proc_note_authorreference_identifier_value,
                                 current_record.proc_note_authorreference_display,
                                 current_record.proc_note_time,
                                 current_record.proc_note_text,
@@ -3800,7 +3928,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='procedure_raw-20';    err_schema:='cds2db_in';    err_table:='procedure_raw';
                             DELETE FROM cds2db_in.procedure_raw WHERE procedure_raw_id = current_record.procedure_raw_id;
@@ -3813,7 +3941,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='procedure_raw-30';    err_schema:='cds2db_in';    err_table:='procedure_raw';
                             DELETE FROM cds2db_in.procedure_raw WHERE procedure_raw_id = current_record.procedure_raw_id;
@@ -3826,8 +3954,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE procedure_raw_id = current_record.procedure_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -3847,11 +3975,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='procedure_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -3859,27 +3987,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='procedure_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'procedure_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'procedure_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'procedure_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='procedure_raw-50';    err_schema:='/';    err_table:='/';
         -- END procedure_raw  --------   procedure_raw  --------   procedure_raw  --------   procedure_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -3889,35 +4017,35 @@ BEGIN
         -- Start consent_raw  --------   consent_raw  --------   consent_raw  --------   consent_raw
         err_section:='consent_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.consent_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='consent_raw-05';    err_schema:='cds2db_in';    err_table:='consent_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.consent_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='consent_raw-10';    err_schema:='db_log';    err_table:='consent_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.consent_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='consent_raw-15';    err_schema:='db_log';    err_table:='consent_raw';
                         IF data_count = 0
                         THEN
@@ -4010,7 +4138,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='consent_raw-20';    err_schema:='cds2db_in';    err_table:='consent_raw';
                             DELETE FROM cds2db_in.consent_raw WHERE consent_raw_id = current_record.consent_raw_id;
@@ -4023,7 +4151,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='consent_raw-30';    err_schema:='cds2db_in';    err_table:='consent_raw';
                             DELETE FROM cds2db_in.consent_raw WHERE consent_raw_id = current_record.consent_raw_id;
@@ -4036,8 +4164,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE consent_raw_id = current_record.consent_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -4057,11 +4185,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='consent_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -4069,27 +4197,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='consent_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'consent_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'consent_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'consent_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='consent_raw-50';    err_schema:='/';    err_table:='/';
         -- END consent_raw  --------   consent_raw  --------   consent_raw  --------   consent_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -4099,35 +4227,35 @@ BEGIN
         -- Start location_raw  --------   location_raw  --------   location_raw  --------   location_raw
         err_section:='location_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.location_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='location_raw-05';    err_schema:='cds2db_in';    err_table:='location_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.location_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='location_raw-10';    err_schema:='db_log';    err_table:='location_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.location_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='location_raw-15';    err_schema:='db_log';    err_table:='location_raw';
                         IF data_count = 0
                         THEN
@@ -4182,7 +4310,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='location_raw-20';    err_schema:='cds2db_in';    err_table:='location_raw';
                             DELETE FROM cds2db_in.location_raw WHERE location_raw_id = current_record.location_raw_id;
@@ -4195,7 +4323,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='location_raw-30';    err_schema:='cds2db_in';    err_table:='location_raw';
                             DELETE FROM cds2db_in.location_raw WHERE location_raw_id = current_record.location_raw_id;
@@ -4208,8 +4336,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE location_raw_id = current_record.location_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -4229,11 +4357,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='location_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -4241,27 +4369,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='location_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'location_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'location_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'location_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='location_raw-50';    err_schema:='/';    err_table:='/';
         -- END location_raw  --------   location_raw  --------   location_raw  --------   location_raw
         -----------------------------------------------------------------------------------------------------------------------
@@ -4271,35 +4399,35 @@ BEGIN
         -- Start pids_per_ward_raw  --------   pids_per_ward_raw  --------   pids_per_ward_raw  --------   pids_per_ward_raw
         err_section:='pids_per_ward_raw-01';
         SELECT COUNT(1) INTO data_count_all FROM cds2db_in.pids_per_ward_raw; -- Counting new records in the source
-    
+
         IF data_count_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
             ))  AS t(res TEXT) INTO timestamp_ent_start;
-            
+
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'', last_change_timestamp=CURRENT_TIMESTAMP
             copy_raw_cds_in_to_db_log'' WHERE pc_name=''timepoint_2_cron_job_data_transfer'''
             ) ) AS t(res TEXT) INTO erg;
-        
+
             data_count:=0; data_count_update:=0; data_count_new:=0;
-        
+
             err_section:='pids_per_ward_raw-05';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
-        
+
             FOR current_record IN (SELECT * FROM cds2db_in.pids_per_ward_raw)
                 LOOP
                     BEGIN
                         IF last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO last_pro_nr; END IF; -- Get the processing number for this process only if records found
-                        
+
                         data_count_pro_processed:=data_count_pro_processed+1; -- count processes ds since last info
                         data_count_last_status_set:=data_count_last_status_set+1; -- counting processing ds over all
-        
+
                         err_section:='pids_per_ward_raw-10';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
                         SELECT count(1) INTO data_count
                         FROM db_log.pids_per_ward_raw target_record
                         WHERE target_record.hash_index_col = current_record.hash_index_col
                         ;
-        
+
                         err_section:='pids_per_ward_raw-15';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
                         IF data_count = 0
                         THEN
@@ -4324,7 +4452,7 @@ BEGIN
                                 last_pro_nr,
                                 last_pro_nr
                             );
-        
+
                             -- Delete importet datasets
                             err_section:='pids_per_ward_raw-20';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
                             DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
@@ -4337,7 +4465,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-        
+
                             -- Delete updatet datasets
                             err_section:='pids_per_ward_raw-30';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
                             DELETE FROM cds2db_in.pids_per_ward_raw WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
@@ -4350,8 +4478,8 @@ BEGIN
                             , current_dataset_status = 'ERROR func: copy_raw_cds_in_to_db_log'
                             , last_processing_nr = last_pro_nr
                             WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
-      
-        
+
+
                             SELECT db.error_log(
                                 err_schema => CAST(err_schema AS varchar),                    -- err_schema (varchar) Schema, in dem der Fehler auftrat
                                 err_objekt => CAST('db.copy_raw_cds_in_to_db_log()' AS varchar), -- err_objekt (varchar) Objekt (Tabelle, Funktion, etc.)
@@ -4371,11 +4499,11 @@ BEGIN
                         ))  AS t(res TEXT) INTO erg;
                         data_count_last_status_set:=0;
                     END IF;
-    
+
             END LOOP;
-            
+
             data_count_pro_upd:=data_count_pro_upd+data_count_update; -- count update datasets to all upd ds
-        
+
             IF data_import_hist_every_dataset=1 and data_count_all>0 THEN -- documentenion is switcht on
                 err_section:='pids_per_ward_raw-40';    err_schema:='db_log';    err_table:='data_import_hist';
                 INSERT INTO db.data_import_hist (table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, current_dataset_status, function_name)
@@ -4383,27 +4511,27 @@ BEGIN
                 EXCEPT SELECT table_primary_key, last_processing_nr, variable_name, schema_name, table_name, last_pro_datetime, current_dataset_status, function_name FROM db.data_import_hist h WHERE h.last_processing_nr=last_pro_nr
                 );
             END IF;
-    
+
             -- Collect and save counts for the entity
             err_section:='pids_per_ward_raw-45';    err_schema:='db_log';    err_table:='data_import_hist';
             data_count_pro_new:=data_count_pro_new+data_count_new;
             -- calculation of the time period
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
             'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
-            ))  AS t(res TEXT) INTO timestamp_ent_end;    
-            
+            ))  AS t(res TEXT) INTO timestamp_ent_end;
+
             SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_ent_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_ent_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_ent_start||' o '||timestamp_ent_end INTO tmp_sec, temp;
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_new', 'db_log', 'pids_per_ward_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_new, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_update', 'db_log', 'pids_per_ward_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_update, tmp_sec, temp);
-        
+
             INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
             VALUES ( last_pro_nr,'data_count_all', 'db_log', 'pids_per_ward_raw', last_pro_datetime, 'copy_raw_cds_in_to_db_log', data_count_all, tmp_sec, temp);
         END IF; -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-    
+
         err_section:='pids_per_ward_raw-50';    err_schema:='/';    err_table:='/';
         -- END pids_per_ward_raw  --------   pids_per_ward_raw  --------   pids_per_ward_raw  --------   pids_per_ward_raw
         -----------------------------------------------------------------------------------------------------------------------

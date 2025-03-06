@@ -5,13 +5,9 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%IF NOT TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity"%>
   <%IF TAGS "\bTYPED\b" "<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table"%>
   <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
-  hash_txt_col TEXT GENERATED ALWAYS AS (
-             <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
-             '#'
-  ) STORED, 							-- Column collection data for index to read and kollion handling 
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
-             <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_HASH%>
+             <%LOOP_COLS "COALESCE(db.to_char_immutable(<%COLUMN_NAME%>), '#NULL#') || '|||' || -- hash from: <%COLUMN_DESCRIPTION%> (<%COLUMN_NAME%>)"%>
              '#'
       )
   ) STORED,							-- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -21,7 +17,4 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   input_processing_nr INT,                                      -- (First) Processing number of the data record
   last_processing_nr INT                                        -- Last processing number of the data record
 );
-
--- ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_scale_factor = 0.01);
--- ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> SET (autovacuum_vacuum_threshold = 25000);
 

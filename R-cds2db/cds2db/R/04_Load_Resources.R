@@ -293,54 +293,36 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   # Get the date for every PID when the Patient resource was written to the database the last time
   pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
 
-  etlutils::catList(pids_with_last_updated, "Date for every PID when the Patient resource was written to the database the last time:\n", "\n")
+  etlutils::catList(pids_with_last_updated,
+                    prefix = "Date for every PID when the Patient resource was written to the database the last time:\n",
+                    suffix = "\n",
+                    na_replacement = "Not present in DB")
 
   # Load all data of relevant patients from FHIR server
   resource_tables_fhir <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
-  # Generate table names by appending the suffix "_raw_last" to the names of tables in `table_descriptions`
-  table_names <- paste0(names(table_descriptions), "_raw_last")
-  # Read the tables from the database using the generated table names
-  resource_tables_db <- etlutils::dbReadTables(table_names, lock_id = "getLastPatientUpdateDate()[2]")
-  # Remove the "_raw_last" suffix from the table names in `resource_tables_db`
-  names(resource_tables_db) <- gsub("_raw_last$", "", names(resource_tables_db))
+  raw_fhir_resources <- resource_tables_fhir$raw_fhir_resources
+  # The pids_with_last_updated now only contains persons who were older than MIN_PATIENT_AGE at
+  # enc_period_start if the parameter MIN_PATIENT_AGE is specified.
+  pids_with_last_updated <- resource_tables_fhir$pids_with_last_updated
 
-  # remove all "old" data loaded from DB which has an update from the FHIR server
-  for (table_name in names(resource_tables_fhir)) {
+  valid_pids <- unlist(pids_with_last_updated, use.names = FALSE)
 
-    fhir_data <- resource_tables_fhir[[table_name]]
-    db_data <- resource_tables_db[[table_name]]
+  # Iterate over each ward and filter the patient_ids_per_ward based on valid_pids
+  filtered_patient_ids_per_ward <- lapply(patient_ids_per_ward, function(dt) dt[pid %in% valid_pids])
 
-    id_column <- etlutils::getIDColumn(table_name)
-    common_columns <- intersect(names(db_data), names(fhir_data))  # Ensure only existing columns are used
-
-    # Remove columns that do not exist in the FHIR table (modifies db_data in-place)
-    setcolorder(db_data, common_columns)
-    db_data <- db_data[, ..common_columns]  # This step still creates a copy, but it's necessary
-
-    # Remove rows where the ID exists in the FHIR table
-    ids_to_remove <- fhir_data[[id_column]]
-    db_data <- db_data[!(get(id_column) %in% ids_to_remove)]  # This step creates a copy
-
-    # Save the modified table back to the list
-    resource_tables_db[[table_name]] <- db_data
-  }
-
-  # Merge the tables from the original list (`table_names`) and the database tables (`resource_tables_db`) into a single list
-  full_tables <- etlutils::mergeTablesUnion(resource_tables_fhir, resource_tables_db)
-
-  # Loop through each table name in the `full_tables` list
-  for (full_table_name in names(full_tables)) {
+  # Loop through each table name in the `raw_fhir_resources` list
+  for (table_name in names(raw_fhir_resources)) {
     # Extract the column names from the corresponding entry in `table_descriptions`
-    full_table_columns <- table_descriptions[[full_table_name]]@cols@names
-    # Subset the columns of the current table in `full_tables` to match the columns from `table_descriptions`
-    full_tables[[full_table_name]] <- full_tables[[full_table_name]][, ..full_table_columns]
+    table_columns <- table_descriptions[[table_name]]@cols@names
+    # Subset the columns of the current table in `raw_fhir_resources` to match the columns from `table_descriptions`
+    raw_fhir_resources[[table_name]] <- raw_fhir_resources[[table_name]][, ..table_columns]
   }
 
   # Add additional table of ward-patient ID per date
-  full_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+  raw_fhir_resources[["pids_per_ward"]] <- createWardPatientIDPerDateTable(filtered_patient_ids_per_ward)
 
-  return(full_tables)
+  return(raw_fhir_resources)
 }
 
 #' Load Referenced Resources by Own ID from FHIR Server
@@ -441,12 +423,37 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   resources in the `resource_tables` list to lowercase.
 #'
 loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions) {
-  resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_ids_per_ward, table_descriptions$pid_dependant)
-  resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
+  ### DEBUG START ###
+  # Load Resources from RData files
+  if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
+    resource_names <- c(names(table_descriptions$pid_dependant), names(table_descriptions$pid_independant))
+    resource_tables <- list()
+    for (res in resource_names) {
+      file_path <- fhircrackr::paste_paths(DEBUG_PATH_TO_RAW_RDATA_FILES, paste0(tolower(res), "_raw.RData"))
+      if (file.exists(file_path)) {
+        resource_tables[[res]] <- readRDS(file_path)
+      }
+    }
+    # Add additional table of ward-patient ID per date
+    resource_tables[["pids_per_ward"]] <- createWardPatientIDPerDateTable(patient_ids_per_ward)
+  ### DEBUG END ###
+  } else {
+    resource_tables <- loadResourcesByPatientIDFromFHIRServer(patient_ids_per_ward, table_descriptions$pid_dependant)
+    resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
+  }
 
   #########################
   # START: FOR DEBUG ONLY #
   #########################
+
+  # This variable should be set to change the downloaded RAW data for DEBUG
+  # purposes. It contains paths to scripts that is sourced at this point in the given order
+  if (exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES") && length(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES)) {
+    for (script_name in DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES) {
+      source(script_name, local = TRUE)
+    }
+  }
+
   # Prefix of all global debug variables. One for each FHIR resources.
   global_debug_filter_variable_prefix <- "DEBUG_FILTER_"
   # Get global variables by prefix
