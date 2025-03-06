@@ -10,12 +10,11 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
-DEBUG_DATE <- "2025-03-03 16:23:45 CET"
+DEBUG_DATES <- c("2025-03-05 13:55:45 CET",
+                 "2025-03-06 13:55:45 CET")
 
-debug_days <- c(1)  # Liste der Durchläufe
-
-for (i in seq_along(debug_days)) {
-  DEBUG_DAY <- debug_days[i]
+for (i in seq_along(DEBUG_DATES)) {
+  DEBUG_DAY <- i
 
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
   tryCatch({
@@ -39,7 +38,7 @@ for (i in seq_along(debug_days)) {
       message("Ignoring expected error: ", e$message)
 
       # `next` nur ausführen, wenn nicht im letzten Schleifendurchlauf
-      if (i < length(debug_days)) {
+      if (i < length(DEBUG_DATES)) {
         next
       }
     } else {
