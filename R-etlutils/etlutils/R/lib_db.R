@@ -15,6 +15,9 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
     password = constants[[paste0("DB_", module_name_upper, "_PASSWORD")]],
     schema_in = constants[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
     schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
+    admin_user = constants[["DB_ADMIN_USER"]],
+    admin_password = constants[["DB_ADMIN_PASSWORD"]],
+    admin_schema = constants[["DB_ADMIN_SCHEMAS"]],
     log = log)
 }
 
@@ -33,6 +36,9 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 #' @param schema_in The input schema for reading data from the database.
 #' @param schema_out The output schema for writing data to the database.
 #' @param log Logical. If \code{TRUE}, database operations will be logged.
+#' @param admin_user The admin username for authentication with the database.
+#' @param admin_password The admin password for authentication with the database.
+#' @param admin_schemas The admin schema for reading and writing data from the database.
 #'
 #' @return This function does not return a value. It initializes the connection environment.
 #'
@@ -50,7 +56,18 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 #' )
 #'
 #' @export
-dbSetContext <- function(module_name, dbname, host, port, user, password, schema_in, schema_out, log) {
+dbSetContext <- function(module_name,
+                         dbname,
+                         host,
+                         port,
+                         user,
+                         password,
+                         schema_in,
+                         schema_out,
+                         log,
+                         admin_user = NULL,
+                         admin_password = NULL,
+                         admin_schemas = NULL) {
   .lib_db_env[["MODULE_NAME"]] <- module_name
   .lib_db_env[["DB_NAME"]] <- dbname
   .lib_db_env[["DB_HOST"]] <- host
@@ -60,6 +77,9 @@ dbSetContext <- function(module_name, dbname, host, port, user, password, schema
   .lib_db_env[["DB_SCHEMA_IN"]] <- schema_in
   .lib_db_env[["DB_SCHEMA_OUT"]] <- schema_out
   .lib_db_env[["DB_LOG"]] <- log %in% TRUE
+  .lib_db_env[["DB_ADMIN_USER"]] <- admin_user
+  .lib_db_env[["DB_ADMIN_PASSWORD"]] <- admin_password
+  .lib_db_env[["DB_ADMIN_SCHEMAS"]] <- admin_schemas
 }
 
 #' Check if Database Logging is Enabled
@@ -177,6 +197,31 @@ dbGetConnection <- function(readonly) {
   }
 
   return(db_connection)
+}
+
+#' Establish a PostgreSQL admin connection
+#'
+#' This function creates and returns a database connection using the PostgreSQL
+#' driver (`RPostgres::Postgres()`) with admin credentials. The connection is
+#' configured using environment variables stored in `.lib_db_env`. Additionally,
+#' it sets the working memory allocation (`work_mem`) to `32MB`.
+#'
+#' @return A `DBIConnection` object representing the active database connection.
+#'
+dbGetAdminConnection <- function() {
+  admin_connection <- DBI::dbConnect(
+    RPostgres::Postgres(),
+    dbname = .lib_db_env[["DB_NAME"]],
+    host = .lib_db_env[["DB_HOST"]],
+    port = .lib_db_env[["DB_PORT"]],
+    user = .lib_db_env[["DB_ADMIN_USER"]],
+    password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
+    #options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),
+    timezone = "Europe/Berlin"
+  )
+  # Increase memory allocation
+  DBI::dbExecute(admin_connection, "set work_mem to '32MB';")
+  return(admin_connection)
 }
 
 #' Get Database Read Connection
@@ -565,7 +610,7 @@ dbGetReadOnlyColumns <- function(table_name) {
   # Wenn man sich die Tabelle aber vorher mit select * geholt hat, dann sind diese Spalten mit dabei.
   # Das hier soll in der Version 0.3.0 nochmal überarbeitet/durchdacht werden!
   # Am besten wäre es, wenn die Views bei einem select * diese Spalten gar nicht erst mit ausliefern!
-  return(c("hash_index_col", "hash_txt_col"))
+  return(c("hash_index_col"))
 }
 
 #' Insert Rows into a PostgreSQL Table
@@ -594,13 +639,23 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
   table_name <- tolower(table_name)
 
   # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
-  table[, (dbGetReadOnlyColumns(table_name)) := NULL]
+  readonly_cols <- dbGetReadOnlyColumns(table_name)
+  cols_to_remove <- intersect(readonly_cols, colnames(table))
+  if (length(cols_to_remove) > 0) {
+    table[, (cols_to_remove) := NULL]
+  }
 
   # Measure start time
   time0 <- Sys.time()
   # Get row count for reporting
   row_count <- nrow(table)
   if (row_count > 0) {
+
+    # ensure all empty strings are set to NA because RedCap would change it too and this
+    # will produce different datasets
+    char_cols <- names(table)[sapply(table, is.character)]
+    table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+
     db_connection <- dbGetWriteConnection()
     # Append table content
     dbLock(lock_id)
@@ -1125,14 +1180,14 @@ dbGetInfoInternal <- function(db_connection = dbGetReadConnection()) {
   if (inherits(db_connection, "PqConnection")) {
     tryCatch({
       # Fetch additional details using SQL queries
-      additional_info <- DBI::dbGetQuery(db_connection, "
-        SELECT
+      additional_info <- DBI::dbGetQuery(db_connection,
+        "SELECT
           current_user AS user,
           current_database() AS database,
           inet_server_addr() AS host,
           inet_server_port() AS port,
-          current_setting('server_version') AS version;
-      ")
+          current_setting('server_version') AS version;"
+      )
     }, error = function(e) {
       warning("Failed to fetch additional PostgreSQL details: ", conditionMessage(e))
     })
@@ -1186,3 +1241,36 @@ dbGetInfo <- function(readonly = TRUE) {
   db_connection <- dbGetConnection(readonly)
   return(dbGetInfoInternal(db_connection))
 }
+
+#' Reset the database by truncating all tables in the `db_log` schema
+#'
+#' This function connects to the database using `dbGetAdminConnection()`, retrieves
+#' all tables in the `db_log` schema, and truncates them using `TRUNCATE TABLE ...
+#' RESTART IDENTITY CASCADE;`. This operation deletes all rows while resetting
+#' identity sequences. After execution, the database connection is closed.
+#'
+#' @return None. The function executes the reset operation directly on the database.
+#'
+#' @export
+dbReset <- function() {
+  con <- dbGetAdminConnection()
+  query <- "SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN ('db_log');"
+  lock_id <- "Clear database"
+  dbLock(lock_id)
+  # get all tables to clear
+  tables <- DBI::dbGetQuery(con, query)
+  # Clear all tables
+  for (i in seq_len(nrow(tables))) {
+    schema <- tables$schemaname[i]
+    if (schema %in% .lib_db_env[["DB_ADMIN_SCHEMAS"]]) {
+      truncate_statement <- paste0("TRUNCATE TABLE ",
+                                   schema, ".", tables$tablename[i],
+                                   " RESTART IDENTITY CASCADE;")
+      DBI::dbExecute(con, truncate_statement)
+    }
+  }
+  dbUnlock(lock_id)
+  # Close connection
+  DBI::dbDisconnect(con)
+}
+

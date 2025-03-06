@@ -88,6 +88,11 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #'
 parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 
+  # this should be only used for debug/tests
+  if (endsWith(path_to_PID_list_file, ".RData")) {
+    return(readRDS(path_to_PID_list_file))
+  }
+
   # Helper function to process the PIDs of a single ward
   processWardPIDs <- function(single_ward_pids, ward_name, pids_per_ward) {
     if (!is.na(ward_name) && length(single_ward_pids) > 0) {
@@ -295,10 +300,13 @@ getEncounters <- function(table_description, current_datetime) {
 #' @return the relevant patient IDs per ward
 #'
 getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) {
+
   read_pids_from_file <- !is.na(path_to_PID_list_file)
   if (read_pids_from_file) {
     etlutils::runLevel3(paste("Get Patient IDs by file", path_to_PID_list_file), {
       pids_per_ward <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
+      data.table::setnames(pids_per_ward, "patient_id", "pid")
+      pids_per_ward <- split(pids_per_ward[, !("ward_name"), with = FALSE], pids_per_ward$ward_name)
     })
   } else {
     etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
@@ -320,6 +328,11 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       # now filter the encounters with the patterns and then extract the PIDs
       pids_per_ward <- getPIDsPerWard(encounters, filter_patterns)
     })
+  }
+
+  # extract ID from references
+  for (i in seq_along(pids_per_ward)) {
+    pids_per_ward[[i]][, pid := etlutils::getAfterLastSlash(pid)]
   }
 
   etlutils::runLevel3("Ensure every Encounter/Patient ID is only assigned to one ward", {

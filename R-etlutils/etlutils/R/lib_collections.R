@@ -183,34 +183,43 @@ getIndices <- function(filter_string, delimiter = ",", range_delimiter = "-") {
 #' are handled recursively. The user can specify a prefix and suffix to wrap the output, and an
 #' optional `hide_value_pattern` to hide values based on a pattern. If an element's value matches
 #' the `hide_value_pattern`, it will display "<Not empty list>" for lists or "<Not empty string>"
-#' for non-empty strings.
+#' for non-empty strings. Users can also specify a replacement for `NA` names in the output.
 #'
 #' @param input_list A named list or a list of lists to be printed.
 #' @param prefix A string to print before the list output (optional, default is an empty string).
 #' @param suffix A string to print after the list output (optional, default is an empty string).
 #' @param hide_value_pattern A regular expression pattern to hide the values of specific list
 #' elements (optional, default is an empty string). If empty, no values are hidden.
+#' @param na_replacement A string to replace `NA` names in the output (optional, default is `NA`).
 #'
 #' @return None. Prints the list elements to the console.
 #'
 #' @examples
-#' my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "", e = "test")
+#' my_list <- list(a = 1, b = list(x = 10, y = NA), c = 3, d = "", b = "test")
 #' catList(my_list, prefix = "Start:\n", suffix = "End\n")
 #' catList(my_list, hide_value_pattern = "c")
 #' catList(my_list, hide_value_pattern = "e")
 #' catList(my_list, hide_value_pattern = "e|b")
 #'
+#' # Example with NA as a list name
+#' test_list <- list(a = "value1", b = "value2")
+#' test_list[[NA_character_]] <- "valueNA"
+#' names(test_list)[2] <- NA  # Explicitly set NA as a name
+#'
+#' catList(test_list)
+#' catList(test_list, na_replacement = "<Unnamed>")
+#'
 #' @export
-catList <- function(input_list, prefix = "", suffix = "", hide_value_pattern = "") {
+catList <- function(input_list, prefix = "", suffix = "", hide_value_pattern = "", na_replacement = NA) {
   # Print the prefix
   cat(prefix)
 
   # Initialize an empty list to store combined values for each date
   combined_list <- list()
 
-  # Iterate over the input list to combine values by date
+  # Iterate over the input list to combine values by name
   for (i in seq_along(input_list)) {
-    # Get the current name (date) and value (list of items)
+    # Get the current name and value
     name <- names(input_list)[i]
     value <- input_list[[i]]
 
@@ -226,28 +235,43 @@ catList <- function(input_list, prefix = "", suffix = "", hide_value_pattern = "
         } else {
           value <- getPrintString(value) # Assuming `getPrintString` is defined
         }
-      } else if (hide_value && !is.null(value) && !is.na(value) && nchar(as.character(value)) > 0) {
+      } else if (hide_value && !is.null(value) && !is.na(value) && nzchar(as.character(value))) {
         # Handle non-empty, non-list values
         value <- paste("<Not empty", typeof(value), "value>")
       }
     }
 
-    # Combine values for the same name (dates)
-    if (is.null(combined_list[[name]])) {
-      combined_list[[name]] <- value
+    # Combine values for the same name
+    if (is.na(name)) {
+      na_index <- which(is.na(names(combined_list)))
+      if (length(na_index) == 0) {
+        combined_list[[length(combined_list) + 1]] <- value
+        names(combined_list)[length(combined_list)] <- NA
+      } else {
+        combined_list[[na_index[1]]] <- c(combined_list[[na_index[1]]], value)
+      }
     } else {
       combined_list[[name]] <- c(combined_list[[name]], value)
     }
   }
 
-  # Now we process combined values (for dates)
+  # Process and print combined values
   for (name in names(combined_list)) {
+    # Handle NA names explicitly
+    if (is.na(name)) {
+      na_index <- which(is.na(names(combined_list)))
+      value <- combined_list[[na_index[1]]]
+      display_name <- if (is.na(na_replacement)) "NA" else na_replacement  # Replace NA name if specified
+    } else {
+      value <- combined_list[[name]]
+      display_name <- name
+    }
+
     # If multiple values exist, paste them together
-    value <- combined_list[[name]]
     value <- paste(value, collapse = ", ")
 
     # Print the combined output
-    cat(paste0(name, " = ", value, "\n"))
+    cat(paste0(display_name, " = ", value, "\n"))
   }
 
   # Print the suffix
