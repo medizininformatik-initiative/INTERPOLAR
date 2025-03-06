@@ -1,13 +1,3 @@
-#' Retrieve Frontend Table Names
-#'
-#' This function returns a vector of predefined frontend table names used in the REDCap export
-#' process.
-#'
-getFrontendTableNames <- function() {
-  # TODO: Read this information from frontend_table_desciptin.xlsx
-  c("patient", "fall", "medikationsanalyse", "mrpdokumentation_validierung")
-}
-
 #' Copy REDCap Content to Database
 #'
 #' This function retrieves data from an existing REDCap project and imports this data into
@@ -28,7 +18,8 @@ importRedcap2DB <- function() {
     # Connect to REDCap
     frontend_connection <- getRedcapConnection()
 
-    form_names <- getFrontendTableNames()
+    # form names are the names of the elements in the splitted frontend table description
+    form_names <- names(getFrontendTableDescription())
 
     tables2Export <- list()
 
