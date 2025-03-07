@@ -23,24 +23,29 @@ importDB2Redcap <- function() {
 
   # Iterate over tables and columns to fetch and send data
   for (table_name in names(table_description)) {
-    db_generated_id_column_name <- paste0(table_name, "_fe_id")
-    columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
 
-    # Create SQL query dynamically based on columns
-    query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
+    if(!(table_name %in% c("risikofaktor", "trigger"))) {
 
-    # Fetch data from the database
-    data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+      if (table_name %in% "mrpdokumentation_validierung") browser()
 
-    # Import data to REDCap
-    tryCatch({
-      redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
-    }, error = function(e) {
-      message("This error may have occurred because the user preferences in the Redcap project ",
-              "have been changed. Use the default values if possible.")
-      stop(e$message)
-    })
+      db_generated_id_column_name <- paste0(table_name, "_fe_id")
+      columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
 
+      # Create SQL query dynamically based on columns
+      query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
+
+      # Fetch data from the database
+      data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+
+      # Import data to REDCap
+      tryCatch({
+        redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
+      }, error = function(e) {
+        message("This error may have occurred because the user preferences in the Redcap project ",
+                "have been changed. Use the default values if possible.")
+        stop(e$message)
+      })
+    }
   }
 
 }

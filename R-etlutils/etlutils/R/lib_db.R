@@ -275,7 +275,15 @@ dbGetSingleValue <- function(query) {
 #'         If no result is found, \code{NULL} is returned.
 #'
 dbGetStatus <- function() {
-  dbGetSingleValue("SELECT db.data_transfer_status();")
+  status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+  if (grepl("WaitForCronJob", status)) {
+    admin_connection <- dbGetAdminConnection()
+    DBI::dbGetQuery(admin_connection, "UPDATE db_config.db_process_control
+                    SET pc_value='ReadyToConnect', last_change_timestamp=CURRENT_TIMESTAMP
+                    WHERE pc_name='semaphor_cron_job_data_transfer';")
+    status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+  }
+  return(status)
 }
 
 #' Check Database Semaphore Status
@@ -402,6 +410,16 @@ dbLock <- function(lock_id) {
   }
 }
 
+dbTransferDataInternal <- function() {
+  admin_connection <- dbGetAdminConnection()
+  DBI::dbGetQuery(admin_connection, "SELECT db.add_hist_raw_records();")
+  DBI::dbGetQuery(admin_connection, "SELECT db.copy_raw_cds_in_to_db_log();")
+  DBI::dbGetQuery(admin_connection, "SELECT db.copy_type_cds_in_to_db_log();")
+  DBI::dbGetQuery(admin_connection, "SELECT db.take_over_last_check_date();")
+  DBI::dbGetQuery(admin_connection, "SELECT db.copy_fe_dp_in_to_db_log();")
+  DBI::dbGetQuery(admin_connection, "SELECT db.copy_fe_fe_in_to_db_log();")
+}
+
 #' Unlock a Database for Read or Write Access
 #'
 #' This function unlocks the database using a specified lock ID. It ensures
@@ -422,6 +440,9 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
   if (!is.null(lock_id)) {
     full_lock_id <- dbCreateLockID(lock_id)
     dbLog("Try to unlock database with lock_id: '", full_lock_id, "' and readonly: ", readonly)
+    if (!readonly) {
+      dbTransferDataInternal()
+    }
     unlock_request <- paste0("SELECT db.data_transfer_start('", dbGetModuleName(), "', '", full_lock_id, "', ", readonly, ");")
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (dbLog()) {

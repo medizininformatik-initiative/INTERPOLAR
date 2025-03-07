@@ -25,9 +25,12 @@ importRedcap2DB <- function() {
 
     # Get data from REDCap
     for (form_name in form_names) {
+
+      if (form_name %in% "mrpdokumentation_validierung") browser()
       dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
       redcapAPI::reviewInvalidRecords(dt)
       data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
+      etlutils::writeRData(dt, paste(form_name, DEBUG_DAY))
       tables2Export[[form_name]] <- dt
     }
 
