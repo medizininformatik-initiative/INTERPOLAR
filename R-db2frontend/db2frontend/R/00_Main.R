@@ -27,11 +27,13 @@ startDB2Frontend <- function() {
     # Import Data from Database to Frontend
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
       importDB2Redcap()
+      #browser()
     })
 
     # Import Data from Frontend to Database
     etlutils::runLevel2("Run Import Data from Frontend to Database", {
       importRedcap2DB()
+      #browser()
     })
 
   }))

@@ -95,7 +95,7 @@ getActiveEncounterPIDsFromDB <- function() {
   datetime <- query_datetime[["start_datetime"]]
 
   # Create the SQL-Query
-  query <- paste0(
+  query1 <- paste0(
     "WITH latest_encounter AS (\n",
     "  SELECT\n",
     "    enc_id,\n",
@@ -115,6 +115,15 @@ getActiveEncounterPIDsFromDB <- function() {
     "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
   )
 
+  query <- paste0(
+    "SELECT DISTINCT enc_patient_ref\n",
+    "FROM v_encounter_last_version\n",
+    "  WHERE enc_period_start <= '", datetime, "'\n",
+    "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
+  )
+  cat(query1)
+  cat(query)
+#browser()
   # Run the SQL query and return patient IDs
   patient_ids_active <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getActiveEncounterPIDsFromDB()")
 
@@ -445,7 +454,7 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
   #########################
   # START: FOR DEBUG ONLY #
   #########################
-
+#browser()
   # This variable should be set to change the downloaded RAW data for DEBUG
   # purposes. It contains paths to scripts that is sourced at this point in the given order
   if (exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES") && length(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES)) {
@@ -453,6 +462,7 @@ loadResourcesFromFHIRServer <- function(patient_ids_per_ward, table_descriptions
       source(script_name, local = TRUE)
     }
   }
+#browser()
 
   # Prefix of all global debug variables. One for each FHIR resources.
   global_debug_filter_variable_prefix <- "DEBUG_FILTER_"

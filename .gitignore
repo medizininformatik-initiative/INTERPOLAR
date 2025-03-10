@@ -8,8 +8,12 @@
 *.core.prefs
 outputLocal
 outputGlobal
-*.RData
+.RData
 *.Rd
 REDCap-app/html/redcap
 REDCap-app/html/redcapdocs
 REDCap-app/log
+Input-Repo/*.xlsx
+Input-Repo/**/*.xlsx
+*.~lock.*.xlsx\#
+*- Kopie*

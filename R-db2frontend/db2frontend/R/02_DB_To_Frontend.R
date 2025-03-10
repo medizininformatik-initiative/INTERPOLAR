@@ -14,7 +14,7 @@
 #' into REDCap and does not return a value.
 #'
 importDB2Redcap <- function() {
-
+#browser()
   # Connect to REDCap
   frontend_connection <- getRedcapConnection()
 

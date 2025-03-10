@@ -457,6 +457,9 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
            "The current status is: " , status, "\n",
            dbGetInfo(readonly))
     }
+    if (!readonly) {
+      DBI::dbGetQuery(dbGetAdminConnection(), "SELECT db.cron_job_data_transfer();")
+    }
   }
   return(unlock_successful)
 }

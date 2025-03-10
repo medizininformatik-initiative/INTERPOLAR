@@ -18,6 +18,7 @@ processData <- function() {
     })
 
     etlutils::runLevel2("Create Frontend Tables for Patient and Encounter", {
+      #browser()
       createFrontendTables()
     })
 

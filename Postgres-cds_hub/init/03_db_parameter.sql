@@ -18,7 +18,7 @@ values ('database_initialization_time',to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD HH2
 --update db_config.db_parameter set parameter_value='?' where parameter_name='database_initialization_time';
 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-values ('pause_after_process_execution','10','Pause after copy process execution in second [5-30 sec]');
+values ('pause_after_process_execution','40','Pause after copy process execution in second [5-30 sec]');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='pause_after_process_execution';
 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)

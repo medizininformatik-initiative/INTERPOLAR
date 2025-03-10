@@ -15,3 +15,31 @@ library(etlutils)
 library(cds2db)
 
 cds2db::retrieve()
+
+
+
+#'
+#' Loads all tables from subdirectory 'tables' of the last directory
+#' in the given tale_path.
+#'
+loadTables <- function(table_path, name_pattern = NA) {
+  table_names <- list.files(path = table_path, pattern = ".\\.RData$")
+  if (!is.na(name_pattern)) {
+    table_names <- table_names[grep(name_pattern, table_names, ignore.case = TRUE)]
+  }
+  tables <- list()
+  for (table_name in table_names) {
+    full_table_path <- paste0(table_path, table_name)
+    table <- try(readRDS(full_table_path), silent = TRUE)
+    if (data.table::is.data.table(table)) {
+      tables <- append(tables, list(table))
+      names(tables)[length(tables)] <- gsub("\\.RData$", "", table_name)
+    }
+  }
+  return(tables)
+}
+
+# tables <- loadTables("./outputLocal/cds2db/tables/")
+#
+# etlutils::writeExcelFile(tables = tables$encounter_raw, file_name = "Encounter_RAW.xlsx", with_column_names = TRUE)
+# etlutils::writeExcelFile(tables = tables$encounter, file_name = "Encounter_TYPED.xlsx", with_column_names = TRUE)
