@@ -21,12 +21,14 @@ importDB2Redcap <- function() {
   # Get splitted frontend table descriptions
   table_description <- getFrontendTableDescription()
 
+  table_names <- names(table_description)
+
   # Iterate over tables and columns to fetch and send data
-  for (table_name in names(table_description)) {
+  for (i in seq_along(table_names)) {
+
+    table_name <- table_names[i]
 
     if(!(table_name %in% c("risikofaktor", "trigger"))) {
-
-      if (table_name %in% "mrpdokumentation_validierung") browser()
 
       db_generated_id_column_name <- paste0(table_name, "_fe_id")
       columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
@@ -36,6 +38,9 @@ importDB2Redcap <- function() {
 
       # Fetch data from the database
       data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+
+      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
+      etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name))
 
       # Import data to REDCap
       tryCatch({
