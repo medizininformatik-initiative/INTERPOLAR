@@ -17,6 +17,13 @@ startDB2Frontend <- function() {
       etlutils::dbResetLock()
     })
 
+    # Delete Redcap content (DEBUG and TESTS)
+    if (exists("DEBUG_DAY") && DEBUG_DAY == 1) {
+      etlutils::runLevel2("DEBUG_DAY == 1 -> Delete all Redcap records", {
+        deleteRedcapContent()
+      })
+    }
+
     # Import Data from Database to Frontend
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
       importDB2Redcap()
