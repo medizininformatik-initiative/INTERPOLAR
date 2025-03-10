@@ -1263,35 +1263,70 @@ dbGetInfo <- function(readonly = TRUE) {
   return(dbGetInfoInternal(db_connection))
 }
 
-#' Reset the database by truncating all tables in the `db_log` schema
+#' Reset the database by truncating all tables in the specified schemas.
 #'
 #' This function connects to the database using `dbGetAdminConnection()`, retrieves
-#' all tables in the `db_log` schema, and truncates them using `TRUNCATE TABLE ...
-#' RESTART IDENTITY CASCADE;`. This operation deletes all rows while resetting
-#' identity sequences. After execution, the database connection is closed.
+#' all tables in the via "DB_ADMIN_SCHEMAS" provided schemas, and truncates them using
+#' `TRUNCATE TABLE ... RESTART IDENTITY CASCADE;`. This operation deletes all rows
+#' while resetting identity sequences. After execution, the database connection is closed.
 #'
-#' @return None. The function executes the reset operation directly on the database.
+#' If any tables still contain data after truncation, their names and row counts
+#' are printed to help diagnose potential issues.
 #'
 #' @export
 dbReset <- function() {
   con <- dbGetAdminConnection()
-  query <- "SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN ('db_log');"
+
+  # Convert schemas vector into SQL-friendly format
+  schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
+
+  query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
+
   lock_id <- "Clear database"
   dbLock(lock_id)
-  # get all tables to clear
+
+  # Get all tables to clear
   tables <- DBI::dbGetQuery(con, query)
-  # Clear all tables
+
+  # Clear all tables in the provided schemas
   for (i in seq_len(nrow(tables))) {
     schema <- tables$schemaname[i]
-    if (schema %in% .lib_db_env[["DB_ADMIN_SCHEMAS"]]) {
-      truncate_statement <- paste0("TRUNCATE TABLE ",
-                                   schema, ".", tables$tablename[i],
-                                   " RESTART IDENTITY CASCADE;")
+    table_name <- tables$tablename[i]
+
+    truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
+
+    tryCatch({
       DBI::dbExecute(con, truncate_statement)
+    }, error = function(e) {
+      message("Error truncating table: ", schema, ".", table_name)
+      message("Error message: ", e$message)
+    })
+  }
+
+  # Check if tables still contain data after truncation
+  remaining_data <- data.table()
+  for (i in seq_len(nrow(tables))) {
+    schema <- tables$schemaname[i]
+    table_name <- tables$tablename[i]
+
+    query <- paste0("SELECT COUNT(*) AS row_count FROM ", schema, ".", table_name, ";")
+    row_count <- DBI::dbGetQuery(con, query)$row_count
+
+    if (row_count > 0) {
+      remaining_data <- data.table::rbindlist(list(remaining_data, data.table(SCHEMA = schema, TABLE = table_name, ROWS = row_count)))
     }
   }
+
+  # Print results
+  if (nrow(remaining_data) > 0) {
+    print("The following tables still contain data after truncation:")
+    print(remaining_data)
+  } else {
+    print("All tables have been successfully truncated.")
+  }
+
   dbUnlock(lock_id)
+
   # Close connection
   DBI::dbDisconnect(con)
 }
-
