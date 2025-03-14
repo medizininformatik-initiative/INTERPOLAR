@@ -77,26 +77,28 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # The following expression styles are allowed:
 #
 #################
-# single status:
-#FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
-#
 # multiple status can be written as comma separated list:
 #FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
 
-
 #################
+# Attention: This filter is relevant for two queries:
+# 1. For the FHIR query to limit the first encounter query to find PIDs per ward.
 # Only encounters with exactly this classes are found. If this Debug parameter is not set, then the
 # class attribute will not be considered in the FHIR search request.
 # See https://simplifier.net/packages/de.basisprofil.r4/1.4.0/files/656744
+#  Code   Display
+#  AMB    ambulatory
+#  IMP    inpatient encounter
+#  PRENC  pre-admission
+#  VR     virtual
+#  SS     short stay
+#  HH     home health
 #
-# The following expression styles are allowed:
+# 2. For the SQL query on the database to find the active PIDs in the Encounter table.
 #
 #################
-# single class:
-#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP"
-#
-# multiple classes can be wtitten as comma separated list:
-#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,AMB"
+# multiple classes can be written as comma separated list:
+#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 
 
 #################
