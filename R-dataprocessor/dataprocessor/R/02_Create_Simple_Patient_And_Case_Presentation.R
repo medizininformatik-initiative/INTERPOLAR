@@ -290,6 +290,32 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
     lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
 }
 
+#' Find Related Partof Encounters for a Main Encounter
+#'
+#' This function identifies valid part encounters that are associated with a given main encounter.
+#' A part encounter is considered valid if:
+#' - It starts on or after the main encounter's start time.
+#' - If both the main and part encounters have an end time, the part encounter must end on or before the main encounter's end time.
+#'
+#' @param main_encounter A **data.table** containing a single row with the main encounter information.
+#' It should include `enc_period_start` and optionally `enc_period_end`.
+#' @param pid_part_of_encounters A **data.table** with multiple part encounters, each having
+#' `enc_period_start` and optionally `enc_period_end`.
+#'
+#' @return A filtered **data.table** containing only the part encounters that meet the conditions.
+#'
+findPartOfEncounters <- function(main_encounter, pid_part_of_encounters) {
+  # Condition 1: The part encounter must start on or after the main encounter starts
+  condition_start <- pid_part_of_encounters$enc_period_start >= main_encounter$enc_period_start
+
+  # Condition 2: Compare enc_period_end only if both values are not NA
+  condition_end <- is.na(main_encounter$enc_period_end) |
+    is.na(pid_part_of_encounters$enc_period_end) |
+    (pid_part_of_encounters$enc_period_end <= main_encounter$enc_period_end)
+
+  result <- pid_part_of_encounters[condition_start & condition_end]
+}
+
 #' Function to filter rows and combine `enc_identifier_value` for multiple `location_codes`
 #'
 #' This function filters rows from the provided data based on multiple `location_codes`
@@ -586,9 +612,12 @@ createFrontendTables <- function() {
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
 
-        # Extract location informations
-        if (exists("MISSING_PART_OF_REFERENCE")) {
-          filtered_pid_part_of_encounters <- pid_part_of_encounters[get("enc_identifier_value") == enc_identifier_value]
+        #####Start: Find Locations for column 'fall_zimmernr'#####
+        # Check if any partof reference NA, so find partof encounters via start- and enddate
+        # Else find partof encounters via partof reference
+        if (any(is.na(pid_part_of_encounters$enc_partof_ref))) {
+          # Find related part encounters for a main encounter
+          filtered_pid_part_of_encounters <- findPartOfEncounters(pid_encounter, pid_part_of_encounters)
         } else {
           searched_encounter <- paste0("Encounter/", enc_id)
           filtered_pid_part_of_encounters <- pid_part_of_encounters[grepl(searched_encounter, enc_partof_ref)]
