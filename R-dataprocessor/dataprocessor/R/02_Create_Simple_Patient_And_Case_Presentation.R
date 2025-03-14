@@ -549,20 +549,21 @@ createFrontendTables <- function() {
       for (i in 1:length(pid_encounters)) {
         target_index <- start_index + i
 
+        pid_encounter <- pid_encounters[[i]]
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        enc_id <- pid_encounters[[i]]$enc_id[1]
-        enc_identifier_value <- pid_encounters[[i]]$enc_identifier_value[1]
-        enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounters[[i]]$enc_period_start[1])
-        enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounters[[i]]$enc_period_end[1])
-        enc_status <- pid_encounters[[i]]$enc_status[1]
+        enc_id <- pid_encounter$enc_id[1]
+        enc_identifier_value <- pid_encounter$enc_identifier_value[1]
+        enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_start[1])
+        enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_end[1])
+        enc_status <- pid_encounter$enc_status[1]
         data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
-        data.table::set(enc_frontend_table, target_index, "fall_fe_id", pid_encounters[[i]]$encounter_id[1])
+        data.table::set(enc_frontend_table, target_index, "fall_fe_id", pid_encounter$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
         data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
@@ -577,7 +578,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
 
         # Extract the admission diagnosis
-        admission_diagnoses <- pid_encounters[[i]][enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
+        admission_diagnoses <- pid_encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
         admission_diagnoses <- unique(admission_diagnoses)
         admission_diagnoses <- extractIDsFromReferences(admission_diagnoses)
         admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
