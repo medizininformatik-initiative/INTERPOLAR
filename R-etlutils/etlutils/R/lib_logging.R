@@ -147,7 +147,22 @@ isDebugTestError <- function(err = NA) {
   if (all(is.na(err))) {
     err <- getErrorMessage()
   }
-  grepl("DEBUG_ENCOUNTER_REQUEST_TEST", err)
+
+  # Check if the error message starts with one of the expected patterns
+  valid_start <- grepl('Error in (etlutils::)?checkDebugTestError\\("\\w+', err)
+
+  if (!valid_start) {
+    return(FALSE)  # Return FALSE immediately if the start does not match
+  }
+
+  # Regex pattern for the uppercase part with underscores
+  pattern <- "\\b(DEBUG_[A-Z_]*)\\b"
+
+  # Extract occurrences of the pattern
+  matches <- regmatches(err, gregexpr(pattern, err))[[1]]
+
+  # Check if at least two matches exist and they are identical
+  return (length(matches) >= 2 && identical(matches[1], matches[2]))
 }
 
 #' Check for Debug Test Error
@@ -635,6 +650,11 @@ printAllTables <- function(table, table_name = NA) {
 #'
 #' @export
 appendDebugWarning <- function(finish_message) {
+  # do not append anything in debiug test error cases
+  if (isDebugTestError()) {
+    return(finish_message)
+  }
+
   # Retrieve DEBUG_ variables
   debug_variables <- getGlobalVariablesByPrefix("DEBUG_", astype = "vector")
 
@@ -716,8 +736,11 @@ generateFinishMessage <- function(PROJECT_NAME) {
       finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with ERRORS (see details above).\n")
     }
 
+    error_message <- as.character(etlutils::getErrorMessage())
+
     # Remove irrelevant part from the error message
-    error_message <- sub("^[^:]*: \n  ", "", etlutils::getErrorMessage())
+    error_message <- sub("^[^\n]*\n?", "", error_message)
+
     finish_message <- paste0(finish_message, error_message)
 
   } else {
