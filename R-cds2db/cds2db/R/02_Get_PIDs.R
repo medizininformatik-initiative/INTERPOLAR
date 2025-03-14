@@ -369,7 +369,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward in file '", path_to_PID_list_file, "'.\n",
                               error_message_part,
                               etlutils::getPrintString(duplicates_pids_per_ward))
-      stop(error_message)
+      etlutils::catWarningMessage(error_message) # first this was an stop error but now it is a warning
     }
   })
 
