@@ -260,6 +260,10 @@ getEncounters <- function(table_description, current_datetime) {
         parameters = parameters
       )
 
+      if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS")) {
+        request_encounter <- paste0(request_encounter, FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS)
+      }
+
       # stop the execution and print the current result of FHIR search request (DEBUG)
       etlutils::checkDebugTestError("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST", request_encounter)
 
