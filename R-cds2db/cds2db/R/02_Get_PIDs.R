@@ -221,8 +221,12 @@ getEncounters <- function(table_description, current_datetime) {
       # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
       # will be comma separated pasted together.
       if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
-        encounter_status <- paste(FHIR_SEARCH_ENCOUNTER_STATUS, collapse = ",")
-      } else {
+        if (!nchar(trimws(FHIR_SEARCH_ENCOUNTER_STATUS))) { # Intentionally empty status
+          encounter_status <- NA_character_
+        } else {
+          encounter_status <- paste(FHIR_SEARCH_ENCOUNTER_STATUS, collapse = ",")
+        }
+      } else { # Default is "in-progress"
         encounter_status <- "in-progress"
       }
 
