@@ -44,8 +44,4 @@ startDB2Frontend <- function() {
 
   etlutils::finalize(finish_message)
 
-  if (etlutils::isErrorOccured()) {
-    stop(finish_message)
-  }
-
 }

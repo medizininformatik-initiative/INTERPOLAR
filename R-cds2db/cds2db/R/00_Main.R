@@ -122,8 +122,4 @@ retrieve <- function() {
 
   etlutils::finalize(finish_message)
 
-  if (etlutils::isErrorOccured()) {
-    stop(finish_message)
-  }
-
 }
