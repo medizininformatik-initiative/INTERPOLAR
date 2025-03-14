@@ -475,6 +475,7 @@ createFrontendTables <- function() {
       }
     }
 
+    # Get encounters from database
     encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
 
     query_datetime <- getQueryDatetime(encounters)
@@ -484,30 +485,16 @@ createFrontendTables <- function() {
     # Remove those rows from the original table
     encounters <- encounters[is.na(enc_partof_ref)]
 
-    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")) {
-      #TODO AXS prüfen ob dieser Code durch die Funktion convertFilterPatterns aus cds2db ersetzt werden kann
-      encounter_filter_patterns <- etlutils::getVarByNameOrDefaultIfMissing("FRONTEND_DISPLAYED_ENCOUNTER_FILTER")
-      filter_patterns <- list()
-      for (filter_pattern in encounter_filter_patterns) {
-        and_conditions <- list()
-        filter_pattern_conditions <- unlist(strsplit(filter_pattern, "\\+"))
-        for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
-          condition_key_value <- unlist(strsplit(condition, "="))
-          condition_column <- trimws(condition_key_value[1])
-          condition_value <- etlutils::getBetweenQuotes(condition_key_value[2])
-          and_conditions[[condition_column]] <- condition_value
-        }
-        filter_patterns[[paste0("Condition_", length(filter_patterns) + 1)]] <- and_conditions
-      }
-      encounters_lists <- etlutils::filterResources(encounters, filter_patterns, return_removed = TRUE)
-      # Extract the table with rows that were kept_resources (matched the filter conditions)
-      encounters <- encounters_lists$kept_resources
-      # Extract the table with rows that were removed_resources (did not match the filter conditions)
-      part_of_encounters_filtered <- encounters_lists$removed_resources
+    # Define encounter filter pattern list to find all 'Einrichtungskontakte'
+    filter_pattern <- list("filter_condition" = list(enc_type_code = "einrichtungskontakt"))
+    encounters_lists <- etlutils::filterResources(encounters, filter_pattern, return_removed = TRUE)
+    # Extract the table with rows that were kept_resources (matched the filter conditions)
+    encounters <- encounters_lists$kept_resources
+    # Extract the table with rows that were removed_resources (did not match the filter conditions)
+    part_of_encounters_filtered <- encounters_lists$removed_resources
 
-      if(nrow(part_of_encounters_filtered)) {
-        part_of_encounters <- unique(rbind(part_of_encounters, part_of_encounters_filtered))
-      }
+    if(nrow(part_of_encounters_filtered)) {
+      part_of_encounters <- unique(rbind(part_of_encounters, part_of_encounters_filtered))
     }
 
     # load Conditions referenced by Encounters
