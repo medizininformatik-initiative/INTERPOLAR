@@ -351,7 +351,7 @@ combineEncounterLocations <- function(data, location_labels) {
     # Filter rows based on the specified location_code in enc_location_physicaltype_code
     filtered_values <- data[
       enc_location_physicaltype_code == location_code,  # Filter condition
-      enc_location_display                              # Extract the values from enc_identifier_value
+      get(FRONTEND_DISPLAYED_ROOM_AND_BED_PATH) # Extract the values from enc_identifier_value
     ]
     # Check if there are valid values and filter out NA or empty values
     valid_values <- filtered_values[!is.na(filtered_values) & filtered_values != ""]
