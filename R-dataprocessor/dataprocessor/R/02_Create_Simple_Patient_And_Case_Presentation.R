@@ -623,11 +623,27 @@ createFrontendTables <- function() {
           filtered_pid_part_of_encounters <- pid_part_of_encounters[grepl(searched_encounter, enc_partof_ref)]
         }
 
+        # Filter for newest encounter locations
+        # 1. Filter out rows where 'enc_location_physicaltype_code' is NA and only keep rows where
+        # 'enc_location_physicaltype_code' is "ro" or "bd"
+        filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[
+          !is.na(enc_location_physicaltype_code) &
+          enc_location_physicaltype_code %in% c("ro", "bd")
+          ]
+        # 2. Select all rows with the maximum 'enc_period_start'
+        filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
+        # 3. For each type ("ro" and "bd"), select the first row based on the original order
+        first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
+        first_bed_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "bd"][1, ]
+        # 4. Combine the results: first room row, and first bed row
+        filtered_pid_part_of_encounters <- rbind(first_room_row, first_bed_row)
+
         # Define the mapping of location codes to labels
         location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
         # Call the function with the filtered_pid_part_of_encounters data and the location_labels
         combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
         data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
+        #####End: Find Locations for column 'fall_zimmernr'#####
 
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA, obs_by_pid = FALSE) {
