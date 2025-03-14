@@ -456,11 +456,10 @@ createFrontendTables <- function() {
 
     # load Encounters for all PIDs from pids_per_ward database table
     query_ids <- getQueryList(pids_per_ward$encounter_id)
-    table_name <- getViewTableName("encounter")
 
-    query <- paste0( "SELECT * FROM ", table_name, "\n",
+    query <- paste0( "SELECT * FROM v_encounter\n",
                      "  WHERE encounter_raw_id in (\n",
-                     "    SELECT MAX(encounter_raw_id) FROM ", table_name, "\n",
+                     "    SELECT MAX(encounter_raw_id) FROM v_encounter\n",
                      "      WHERE enc_id IN (", query_ids, ")\n",
                      "      GROUP BY enc_id\n",
                      "  )"
@@ -513,8 +512,8 @@ createFrontendTables <- function() {
 
     # load Conditions referenced by Encounters
     query_ids <- getQueryList(encounters$enc_diagnosis_condition_ref, remove_ref_type = TRUE)
-    table_name <- getViewTableName("condition")
-    query <- paste0("SELECT * FROM ", table_name, "\n",
+
+    query <- paste0("SELECT * FROM v_condition\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
 
     conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
@@ -616,10 +615,9 @@ createFrontendTables <- function() {
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA, obs_by_pid = FALSE) {
           codes <- parseQueryList(codes)
-          table_name <- getViewTableName("observation")
 
           # Query template to get desired Observations from DB
-          query_template <- paste0("SELECT * FROM ", table_name, "\n",
+          query_template <- paste0("SELECT * FROM v_observation\n",
                           "  WHERE obs_code_code IN (", codes, ") AND\n",
                           "        obs_code_system = '", system, "' AND\n",
                           "        obs_effectivedatetime < '", query_datetime, "' AND\n")
@@ -679,8 +677,7 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward_table_name <- getViewTableName("pids_per_ward")
-  pids_per_ward <- loadLastImportedDatasetsFromDB(pids_per_ward_table_name)
+  pids_per_ward <- loadLastImportedDatasetsFromDB("v_pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
