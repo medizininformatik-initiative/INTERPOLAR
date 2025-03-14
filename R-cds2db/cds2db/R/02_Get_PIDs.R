@@ -235,8 +235,8 @@ getEncounters <- function(table_description, current_datetime) {
 
       # filtering for the IDs of referenced Locations in the Encounters
       encounter_locations <- NA
-      if (exists("FHIR_SEARCH_LOCATION_IDS")) {
-        encounter_locations <- paste(FHIR_SEARCH_LOCATION_IDS, collapse = ",")
+      if (exists("FHIR_SEARCH_ENCOUNTER_LOCATION_IDS")) {
+        encounter_locations <- paste(FHIR_SEARCH_ENCOUNTER_LOCATION_IDS, collapse = ",")
       }
 
       parameters <- c(
