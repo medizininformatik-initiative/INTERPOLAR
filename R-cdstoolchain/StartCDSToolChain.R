@@ -22,8 +22,11 @@ for (i in seq_along(DEBUG_DATES)) {
     options(error = NULL)
     # browser()
     cds2db::retrieve()
+    #browser()
     dataprocessor::processData()
+    #browser()
     db2frontend::startDB2Frontend()
+    #browser()
   }, error = function(e) {
     # Split the error message into individual lines
     error_lines <- unlist(strsplit(e$message, "\n"))

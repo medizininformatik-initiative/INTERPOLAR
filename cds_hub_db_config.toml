@@ -2,8 +2,10 @@
 # General database settings for all users/schemes #
 ###################################################
 
-DB_HOST = "cds_hub"
-DB_PORT = 5432
+#DB_HOST = "cds_hub"
+#DB_HOST = "172.18.145.250"
+DB_HOST = "127.0.0.1"
+DB_PORT = 25432
 DB_NAME = "cds_hub_db"
 
 ##########################
@@ -11,8 +13,8 @@ DB_NAME = "cds_hub_db"
 ##########################
 
 DB_ADMIN_USER      = "cds_hub_db_admin"
-DB_ADMIN_PASSWORD  = "DB Admin Password from Postgres-cds_hub/.env_cds_hub_db_admin.password"
-DB_ADMIN_SCHEMAS    = ["db_log"]
+DB_ADMIN_PASSWORD  = "2389673289479283"
+DB_ADMIN_SCHEMAS    = ["db_log", "cds2db_in", "dataprocessor_in", "db2frontend_in"]
 
 ##########################
 # CDS2DB module settings #

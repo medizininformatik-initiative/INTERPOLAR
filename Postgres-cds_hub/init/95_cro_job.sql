@@ -15,7 +15,7 @@ DECLARE
     err_pid VARCHAR;
     set_sem_erg BOOLEAN;
 BEGIN
-    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory
 
     -- Doppelt angelegte Cron-Jobs deaktivieren
     err_section:='cron_job_data_transfer_break-01';    err_schema:='cron';    err_table:='job';
@@ -34,7 +34,7 @@ BEGIN
         status='ReadyToConnect';
     END IF;
 
-    SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory 
+    SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory
 
     err_section:='cron_job_data_transfer-10';    err_schema:='db_config';    err_table:='/';
     IF status like 'Ongoing%' THEN -- Notaus überprüfen
@@ -229,7 +229,7 @@ END;
 $$ LANGUAGE plpgsql; -- db.cron_job_data_transfer
 
 -- Datatransfer Job anlegen
-SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
+--SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Anhalten
@@ -276,20 +276,20 @@ BEGIN
 
         err_section:='db.data_transfer_stop-16';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-        IF num=0 THEN   
-            LOOP 
+        IF num=0 THEN
+            LOOP
                 SELECT pg_sleep(1) INTO temp; -- Time to write data
 
                 err_section:='db.data_transfer_stop-17';    err_schema:='db_config';    err_table:='db_process_control';
                 SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-    
+
                 -- Überprüfen, ob der Wert geschrieben wurde
                 IF num > 0 THEN EXIT; -- Schleife beenden
                 END IF;
-    
+
                 -- Inkrementieren der Schleifenvariable
                 i := i - 1;
-    
+
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
                     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
@@ -312,7 +312,7 @@ BEGIN
                 IF num=0 THEN RETURN FALSE; END IF;
             END LOOP;
         END IF;
-	
+
     	RETURN TRUE; -- semaphore set successfully
     ELSE
         err_section:='db.data_transfer_stop-20';    err_schema:='db_config';    err_table:='db_process_control';
@@ -398,20 +398,20 @@ BEGIN
 
         err_section:='db.data_transfer_start-18';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-        IF num=0 THEN   
-            LOOP 
+        IF num=0 THEN
+            LOOP
                 SELECT pg_sleep(1) INTO temp; -- Time to write data
 
                 err_section:='db.data_transfer_start-19';    err_schema:='db_config';    err_table:='db_process_control';
                 SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-    
+
                 -- Überprüfen, ob der Wert geschrieben wurde
                 IF num > 0 THEN EXIT; -- Schleife beenden
                 END IF;
-    
+
                 -- Inkrementieren der Schleifenvariable
                 i := i - 1;
-    
+
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
                     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
@@ -537,7 +537,7 @@ BEGIN
 
     err_section:='db.data_transfer_reset_lock-07';    err_schema:='db_log';    err_table:='data_import_hist';
     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist;
-    
+
     err_section:='db.data_transfer_reset_lock-10';    err_schema:='db';    err_table:='error_log';
     SELECT db.error_log(
         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -561,20 +561,20 @@ BEGIN
 
         err_section:='db.data_transfer_reset_lock-18';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-        IF num=0 THEN   
-            LOOP 
+        IF num=0 THEN
+            LOOP
                 SELECT pg_sleep(1) INTO temp; -- Time to write data
 
                 err_section:='db.data_transfer_reset_lock-19';    err_schema:='db_config';    err_table:='db_process_control';
                 SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-    
+
                 -- Überprüfen, ob der Wert geschrieben wurde
                 IF num > 0 THEN EXIT; -- Schleife beenden
                 END IF;
-    
+
                 -- Inkrementieren der Schleifenvariable
                 i := i - 1;
-    
+
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
                     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
@@ -597,7 +597,7 @@ BEGIN
                 IF num=0 THEN RETURN FALSE; END IF;
             END LOOP;
         END IF;
-	
+
         RETURN TRUE; -- semaphore set successfully
     ELSE
         err_section:='db.data_transfer_reset_lock-21';    err_schema:='db_config';    err_table:='db_process_control';
@@ -670,7 +670,7 @@ EXCEPTION
         err_variables => CAST('Tab: db_process_control' AS VARCHAR),  -- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(num AS INT)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
-    
+
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql; --db.data_transfer_status
