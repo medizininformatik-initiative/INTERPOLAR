@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-05 12:14:14
--- Rights definition file size        : 15641 Byte
+-- Rights definition file last update : 2025-03-13 10:06:46
+-- Rights definition file size        : 15694 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-05 15:57:37
+-- Create time: 2025-03-17 14:58:39
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  43_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -730,8 +730,10 @@ BEGIN
                                 mrp_pigrund___26,
                                 mrp_pigrund___27,
                                 mrp_ip_klasse,
+                                mrp_ip_klasse_01,
                                 mrp_ip_klasse_disease,
                                 mrp_ip_klasse_labor,
+                                mrp_ip_klasse_nieren_insuf,
                                 mrp_massn_am___1,
                                 mrp_massn_am___2,
                                 mrp_massn_am___3,
@@ -813,8 +815,10 @@ BEGIN
                                 current_record.mrp_pigrund___26,
                                 current_record.mrp_pigrund___27,
                                 current_record.mrp_ip_klasse,
+                                current_record.mrp_ip_klasse_01,
                                 current_record.mrp_ip_klasse_disease,
                                 current_record.mrp_ip_klasse_labor,
+                                current_record.mrp_ip_klasse_nieren_insuf,
                                 current_record.mrp_massn_am___1,
                                 current_record.mrp_massn_am___2,
                                 current_record.mrp_massn_am___3,
@@ -977,15 +981,19 @@ BEGIN
                                 ret_meda_dat1,
                                 ret_kurzbeschr,
                                 ret_ip_klasse,
+                                ret_ip_klasse_01,
                                 ret_atc1,
                                 ret_atc2,
                                 ret_ip_klasse_disease,
                                 ret_ip_klasse_labor,
+                                ret_ip_klasse_nieren_insuf,
                                 ret_gewissheit1,
                                 ret_mrp_zuordnung1,
-                                ret_gewissheit_oth1,
-                                ret_gewiss_grund_abl1,
+                                ret_gewissheit1_oth,
+                                ret_gewiss_grund1_abl,
                                 ret_gewiss_grund_abl_sonst1,
+                                ret_gewiss_grund_abl_klin1,
+                                ret_gewiss_grund_abl_klin1_neg___1,
                                 ret_massn_am1___1,
                                 ret_massn_am1___2,
                                 ret_massn_am1___3,
@@ -1014,6 +1022,8 @@ BEGIN
                                 ret_gewissheit2_oth,
                                 ret_gewiss_grund2_abl,
                                 ret_gewiss_grund_abl_sonst2,
+                                ret_gewiss_grund_abl_klin2,
+                                ret_gewiss_grund_abl_klin_neg___1,
                                 ret_massn_am2___1,
                                 ret_massn_am2___2,
                                 ret_massn_am2___3,
@@ -1051,15 +1061,19 @@ BEGIN
                                 current_record.ret_meda_dat1,
                                 current_record.ret_kurzbeschr,
                                 current_record.ret_ip_klasse,
+                                current_record.ret_ip_klasse_01,
                                 current_record.ret_atc1,
                                 current_record.ret_atc2,
                                 current_record.ret_ip_klasse_disease,
                                 current_record.ret_ip_klasse_labor,
+                                current_record.ret_ip_klasse_nieren_insuf,
                                 current_record.ret_gewissheit1,
                                 current_record.ret_mrp_zuordnung1,
-                                current_record.ret_gewissheit_oth1,
-                                current_record.ret_gewiss_grund_abl1,
+                                current_record.ret_gewissheit1_oth,
+                                current_record.ret_gewiss_grund1_abl,
                                 current_record.ret_gewiss_grund_abl_sonst1,
+                                current_record.ret_gewiss_grund_abl_klin1,
+                                current_record.ret_gewiss_grund_abl_klin1_neg___1,
                                 current_record.ret_massn_am1___1,
                                 current_record.ret_massn_am1___2,
                                 current_record.ret_massn_am1___3,
@@ -1088,6 +1102,8 @@ BEGIN
                                 current_record.ret_gewissheit2_oth,
                                 current_record.ret_gewiss_grund2_abl,
                                 current_record.ret_gewiss_grund_abl_sonst2,
+                                current_record.ret_gewiss_grund_abl_klin2,
+                                current_record.ret_gewiss_grund_abl_klin_neg___1,
                                 current_record.ret_massn_am2___1,
                                 current_record.ret_massn_am2___2,
                                 current_record.ret_massn_am2___3,
