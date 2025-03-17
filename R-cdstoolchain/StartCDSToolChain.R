@@ -13,17 +13,29 @@ library(db2frontend)
 DEBUG_DATES <- c("2025-03-05 13:55:45 CET",
                  "2025-03-06 13:55:45 CET")
 
+# Reset error status
+options(error = NULL)
+
 for (i in seq_along(DEBUG_DATES)) {
   DEBUG_DAY <- i
 
-  cat("START DEBUG_DAY", DEBUG_DAY, "\n")
+  if (!etlutils::isErrorOccured()) {
+    cat("START DEBUG_DAY", DEBUG_DAY, "\n")
+  }
+
   tryCatch({
-    # Fehlerstatus zurücksetzen
-    options(error = NULL)
-    # browser()
-    cds2db::retrieve()
-    dataprocessor::processData()
-    db2frontend::startDB2Frontend()
+    if (!etlutils::isErrorOccured()) {
+      cds2db::retrieve()
+    }
+    if (!etlutils::isErrorOccured()) {
+      dataprocessor::processData()
+    }
+    if (!etlutils::isErrorOccured()) {
+      db2frontend::startDB2Frontend()
+    }
+    if (etlutils::isErrorOccured()) {
+      stop(etlutils::getErrorMessage())
+    }
   }, error = function(e) {
     # Split the error message into individual lines
     error_lines <- unlist(strsplit(e$message, "\n"))
@@ -40,10 +52,16 @@ for (i in seq_along(DEBUG_DATES)) {
         next
       }
     } else {
-      stop(e)  # Abort on other errors
+      # the submodules log their errors itself -> we must check
+      # if etlutils::isErrorOccured() and if TRUE then do nothing
+      # here. The hard stop here would message the error again in
+      # an inappropriate way.
+      #stop(e)  # Abort on other errors
     }
   })
-  cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  if (!etlutils::isErrorOccured()) {
+    cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  }
 }
 
 #'
