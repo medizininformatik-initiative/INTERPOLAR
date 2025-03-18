@@ -49,6 +49,9 @@ if (exists("DEBUG_DAY")) {
 
   # Duplicate and modify enc_id
   if (nrow(rows_to_duplicate) > 0) {
+    # Set correct partof reference to the Abteilungskontakt
+    rows_to_duplicate <- rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*", paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
+
     # Extract the number at the end and append "-V-<number>"
     rows_to_duplicate[, enc_id := sub(pattern, "-A-\\1-V-\\1", enc_id)]
 
