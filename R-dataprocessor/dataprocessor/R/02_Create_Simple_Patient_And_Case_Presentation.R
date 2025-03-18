@@ -336,15 +336,21 @@ findPartOfEncounters <- function(main_encounter, pid_part_of_encounters) {
 #' \dontrun{
 #' # Example data
 #' library(data.table)
+#' FRONTEND_DISPLAYED_ROOM_AND_BED_PATH <- "enc_location_display"
 #' pid_part_of_encounters <- data.table(
 #'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd", "bd"),
 #'   enc_location_display = c("ID_001", "ID_002", "ID_003", "ID_004", "ID_004")
 #' )
 #' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
+#' locations <- combineEncounterLocations(pid_part_of_encounters, location_labels)
+#' location_labels <- c(ro = "Room", bd = "Bed")
 #' combineEncounterLocations(pid_part_of_encounters, location_labels)
 #' }
 #'
 combineEncounterLocations <- function(data, location_labels) {
+  if (!exists("FRONTEND_DISPLAYED_ROOM_AND_BED_PATH")) {
+    return("")
+  }
   location_codes <- names(location_labels)
   # Apply the filtering and combining for each location_code and concatenate the results
   combined_results <- sapply(location_codes, function(location_code) {
