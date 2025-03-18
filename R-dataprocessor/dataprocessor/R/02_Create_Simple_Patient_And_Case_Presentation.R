@@ -514,23 +514,17 @@ createFrontendTables <- function() {
 
     # Create a new table with rows where enc_partof_ref is NOT NA
     part_of_encounters <- encounters[!is.na(enc_partof_ref)]
-    # Remove those rows from the original table
-    encounters <- encounters[is.na(enc_partof_ref)]
 
-    # Define encounter filter pattern list to find all 'Einrichtungskontakte'
-    filter_pattern <- list("filter_condition" = list(enc_type_code = "einrichtungskontakt"))
-    encounters_lists <- etlutils::filterResources(encounters, filter_pattern, return_removed = TRUE)
-    # Extract the table with rows that were kept_resources (matched the filter conditions)
-    encounters <- encounters_lists$kept_resources
-    # Extract the table with rows that were removed_resources (did not match the filter conditions)
-    part_of_encounters_filtered <- encounters_lists$removed_resources
-
-    if(nrow(part_of_encounters_filtered)) {
-      part_of_encounters <- unique(rbind(part_of_encounters, part_of_encounters_filtered))
+    # Second way to find all partof encounters if there are no partof references
+    if (!length(part_of_encounters)) {
+      part_of_encounters <- encounters[enc_type_code != "einrichtungskontakt"]
     }
 
+    # Remove the rows that exist in part_of_encounters from encounters
+    main_encounters <- encounters[!enc_id %in% part_of_encounters$enc_id]
+
     # load Conditions referenced by Encounters
-    query_ids <- getQueryList(encounters$enc_diagnosis_condition_ref, remove_ref_type = TRUE)
+    query_ids <- getQueryList(main_encounters$enc_diagnosis_condition_ref, remove_ref_type = TRUE)
 
     query <- paste0("SELECT * FROM v_condition\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
@@ -544,7 +538,7 @@ createFrontendTables <- function() {
 
       pid <- unique_pid_ward$patient_id[pid_index]
       pid_ref <- etlutils::getFHIRPatientReference(pid)
-      pid_encounters <- encounters[enc_patient_ref == pid_ref]
+      pid_encounters <- main_encounters[enc_patient_ref == pid_ref]
       pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
 
       # check possible errors
