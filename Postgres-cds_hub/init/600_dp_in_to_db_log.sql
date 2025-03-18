@@ -3,13 +3,13 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-13 10:06:46
--- Rights definition file size        : 15694 Byte
+-- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-17 14:58:36
+-- Create time: 2025-03-18 13:56:25
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
--- SCRIPTNAME:  42_cre_table_frontend_log.sql
+-- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
@@ -19,7 +19,7 @@
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
 -- GRANT_TARGET_USER (2):  db_user
--- COPY_FUNC_SCRIPTNAME:  60_dp_in_to_db_log.sql
+-- COPY_FUNC_SCRIPTNAME:  600_dp_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_fe_dp_in_to_db_log
 -- SCHEMA_2:  db2dataprocessor_in
