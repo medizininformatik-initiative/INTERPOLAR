@@ -412,12 +412,17 @@ dbLock <- function(lock_id) {
 
 dbTransferDataInternal <- function() {
   admin_connection <- dbGetAdminConnection()
-  DBI::dbGetQuery(admin_connection, "SELECT db.add_hist_raw_records();")
-  DBI::dbGetQuery(admin_connection, "SELECT db.copy_raw_cds_in_to_db_log();")
-  DBI::dbGetQuery(admin_connection, "SELECT db.copy_type_cds_in_to_db_log();")
-  DBI::dbGetQuery(admin_connection, "SELECT db.take_over_last_check_date();")
-  DBI::dbGetQuery(admin_connection, "SELECT db.copy_fe_dp_in_to_db_log();")
-  DBI::dbGetQuery(admin_connection, "SELECT db.copy_fe_fe_in_to_db_log();")
+  queries <- c(
+    "SELECT db.add_hist_raw_records();",
+    "SELECT db.copy_raw_cds_in_to_db_log();",
+    "SELECT db.copy_type_cds_in_to_db_log();",
+    "SELECT db.take_over_last_check_date();",
+    "SELECT db.copy_fe_dp_in_to_db_log();",
+    "SELECT db.copy_fe_fe_in_to_db_log();"
+  )
+  for (query in queries) {
+    DBI::dbGetQuery(admin_connection, query)
+  }
 }
 
 #' Unlock a Database for Read or Write Access
@@ -440,9 +445,6 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
   if (!is.null(lock_id)) {
     full_lock_id <- dbCreateLockID(lock_id)
     dbLog("Try to unlock database with lock_id: '", full_lock_id, "' and readonly: ", readonly)
-    if (!readonly) {
-      dbTransferDataInternal()
-    }
     unlock_request <- paste0("SELECT db.data_transfer_start('", dbGetModuleName(), "', '", full_lock_id, "', ", readonly, ");")
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (dbLog()) {
@@ -457,6 +459,9 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
            "The current status is: " , status, "\n",
            dbGetInfo(readonly))
     }
+    # if (!readonly) {
+    #   dbTransferDataInternal()
+    # }
   }
   return(unlock_successful)
 }
