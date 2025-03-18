@@ -70,7 +70,9 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 
 # This parameter should contain the FHIR element where the name of the room and bed can be found.
-FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_display"
+# This must be the name of a column in the encounter database table (see Table_Description.xlsx in
+# the cds2db module). Examples:
+#FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_display"
 #FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_identifier_value"
 
 # The codes for height, weight and BMI can be customised here. If several codes
