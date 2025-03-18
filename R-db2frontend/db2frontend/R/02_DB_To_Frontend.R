@@ -28,7 +28,8 @@ importDB2Redcap <- function() {
 
     table_name <- table_names[i]
 
-    if(!(table_name %in% c("risikofaktor", "trigger"))) {
+    #TODO. klären, warum diese beiden Tabels hier ausgeschlossen wurden und ob das wirklich sein muss
+#    if(!(table_name %in% c("risikofaktor", "trigger"))) {
 
       db_generated_id_column_name <- paste0(table_name, "_fe_id")
       columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
@@ -50,7 +51,7 @@ importDB2Redcap <- function() {
                 "have been changed. Use the default values if possible.")
         stop(e$message)
       })
-    }
+#    }
   }
 
 }
