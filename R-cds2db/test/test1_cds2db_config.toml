@@ -121,7 +121,7 @@ ENCOUNTER_FILTER_PATTERN_3 = [
   "id = 'UKFAU-0010-E-1-A-1'",
   "id = 'UKFAU-0011-E-1'",
   "id = 'UKFAU-0011-E-1-A-1'",
-#  "location.location.reference = 'Location/location_id_3'",
+#  "location/location/reference = 'Location/location_id_3'",
 #  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
 #  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
