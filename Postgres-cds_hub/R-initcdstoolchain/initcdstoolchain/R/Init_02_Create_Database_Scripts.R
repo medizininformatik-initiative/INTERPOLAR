@@ -2,7 +2,7 @@
 # be taken into account (FALSE) or ignored (TRUE) when generating the database scripts.
 IGNORE_DEFINED_COLUMN_WIDTHS = TRUE
 
-# The Fhircrackr places the indices before each value in brackets, indicating where in the
+# The fhircrackr places the indices before each value in brackets, indicating where in the
 # structure of the resource a column value was located. In addition, a separator is inserted between
 # the list values (in our case length 3). The memory requirement for these indices and the separator
 # should not exceed 15 and must be added to each single_length in the RAW tables.
@@ -328,89 +328,86 @@ convertTemplate <- function(tables_descriptions,
   for (placeholder in placeholders) {
     # replace complex placeholders
 
-    if (startsWith(placeholder, "<%LOOP_TABS_")) {
-      tables_content <- ""
-      for (table_name in names(tables_descriptions)) {
-        column_prefix <- getCommonPrefix(tables_descriptions[[table_name]][["COLUMN_NAME"]])
-        single_table_content <- convertTemplate(tables_descriptions,
-                                                script_rights_definition,
-                                                template_name = placeholder,
-                                                table_name = table_name,
-                                                column_prefix = column_prefix,
-                                                recursion = recursion + 1)
-        if (!is.na(single_table_content)) {
-          tables_content <- paste0(tables_content, single_table_content)
-        }
-      }
-      tables_content <- gsub("\n$", "", tables_content)
-      content <- replace(placeholder, tables_content, content)
-
-    } else if (startsWith(placeholder, "<%LOOP_COLS")) {
+    if (startsWith(placeholder, "<%LOOP_")) {
       loop_template_content <- extractBetweenQuotes(placeholder) # try to find the loop content in quotes in the placeholder
       if (is.na(loop_template_content)) { # no loop content found direct in the placeholder
         template_name <- placeholder # the placeholder is the name of the template sql file
       } else if (!endsWith(loop_template_content, "\n")) {
         loop_template_content <- paste0(loop_template_content, "\n")
       }
-      single_table_description <- tables_descriptions[[table_name]]
-      columns_content <- ""
       indentation <- etlutils::getWordIndentation(content, placeholder)
-      for (row in seq_len(nrow(single_table_description))) {
-        column_row <- single_table_description[row]
-        single_column_content <- convertTemplate(tables_descriptions,
-                                                 script_rights_definition,
-                                                 template_name = template_name,
-                                                 template_content = loop_template_content,
-                                                 table_name = table_name,
-                                                 column_prefix = column_prefix,
-                                                 recursion = recursion + 1)
-        single_column_content_placeholders <- extractPlaceholders(single_column_content)
-        for (sub_placeholder in single_column_content_placeholders) {
-          # parse the columns value separator. this is a special tag which defines the separator
-          # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
-          if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
-            replace = if (row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
-            single_column_content <- replace(sub_placeholder, replace, single_column_content)
-          } else {
-            sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
-            if (sub_placeholder_name %in% names(column_row)) {
-              single_column_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_column_content)
+      loop_content <- ""
+
+      if (startsWith(placeholder, "<%LOOP_TABS_")) {
+        for (table_name in names(tables_descriptions)) {
+          column_prefix <- getCommonPrefix(tables_descriptions[[table_name]][["COLUMN_NAME"]])
+          single_table_content <- convertTemplate(tables_descriptions,
+                                                  script_rights_definition,
+                                                  template_name = placeholder,
+                                                  table_name = table_name,
+                                                  column_prefix = column_prefix,
+                                                  recursion = recursion + 1)
+          if (!is.na(single_table_content)) {
+            loop_content <- paste0(loop_content, single_table_content)
+          }
+        }
+
+      } else if (startsWith(placeholder, "<%LOOP_COLS")) {
+        single_table_description <- tables_descriptions[[table_name]]
+        for (row in seq_len(nrow(single_table_description))) {
+          column_row <- single_table_description[row]
+          single_column_content <- convertTemplate(tables_descriptions,
+                                                   script_rights_definition,
+                                                   template_name = template_name,
+                                                   template_content = loop_template_content,
+                                                   table_name = table_name,
+                                                   column_prefix = column_prefix,
+                                                   recursion = recursion + 1)
+          single_column_content_placeholders <- extractPlaceholders(single_column_content)
+          for (sub_placeholder in single_column_content_placeholders) {
+            # parse the columns value separator. this is a special tag which defines the separator
+            # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
+            if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
+              replace = if (row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
+              single_column_content <- replace(sub_placeholder, replace, single_column_content)
+            } else {
+              sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
+              if (sub_placeholder_name %in% names(column_row)) {
+                single_column_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_column_content)
+              }
             }
           }
+          # set indentation, but not for the first column (first column gets its indentation from
+          # the line with the placeholder itself
+          indent <- ifelse(row == 1, "", indentation)
+          loop_content <- paste0(loop_content, indent, single_column_content)
         }
-        # set indentation, but not for the first column (first column gets its indentation from
-        # the line with the placeholder itself
-        indent <- ifelse(row == 1, "", indentation)
-        columns_content <- paste0(columns_content, indent, single_column_content)
-      }
-      columns_content <- gsub("\n$", "", columns_content)
-      content <- replace(placeholder, columns_content, content)
 
-    } else if (startsWith(placeholder, "<%LOOP_DEF_")) {
-      rights_content <- ""
-      for (row in seq_len(nrow(script_rights_definition))) {
-        sub_content <- loadTemplate(placeholder)
-        sub_content_placeholders <- extractPlaceholders(sub_content)
-        rights_row <- script_rights_definition[row]
-        for (sub_placeholder in sub_content_placeholders) {
-          sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
-          if (sub_placeholder_name %in% names(rights_row)) {
-            value <- rights_row[[sub_placeholder_name]]
-            # missing values in the current rigths row are replaced by the value in the first row
-            if (is.na(value)) value <- rights_first_row[[sub_placeholder_name]]
-            sub_content <- replace(sub_placeholder, value, sub_content)
+      } else if (startsWith(placeholder, "<%LOOP_DEF_")) {
+        for (row in seq_len(nrow(script_rights_definition))) {
+          sub_content <- loadTemplate(placeholder)
+          sub_content_placeholders <- extractPlaceholders(sub_content)
+          rights_row <- script_rights_definition[row]
+          for (sub_placeholder in sub_content_placeholders) {
+            sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
+            if (sub_placeholder_name %in% names(rights_row)) {
+              value <- rights_row[[sub_placeholder_name]]
+              # missing values in the current rigths row are replaced by the value in the first row
+              if (is.na(value)) value <- rights_first_row[[sub_placeholder_name]]
+              sub_content <- replace(sub_placeholder, value, sub_content)
+            }
           }
+          sub_content <- convertTemplate(tables_descriptions,
+                                         script_rights_definition,
+                                         template_content = sub_content,
+                                         table_name = table_name,
+                                         column_prefix = column_prefix,
+                                         recursion = recursion + 1)
+          loop_content <- paste0(loop_content, sub_content)
         }
-        sub_content <- convertTemplate(tables_descriptions,
-                                       script_rights_definition,
-                                       template_content = sub_content,
-                                       table_name = table_name,
-                                       column_prefix = column_prefix,
-                                       recursion = recursion + 1)
-        rights_content <- paste0(rights_content, sub_content)
       }
-      rights_content <- gsub("\n$", "", rights_content)
-      content <- replace(placeholder, rights_content, content)
+      loop_content <- gsub("\n$", "", loop_content)
+      content <- replace(placeholder, loop_content, content)
 
     } else if (startsWith(placeholder, "<%TABLE_NAME")) {
       placeholder_name <- extractPlaceholderName(placeholder)
