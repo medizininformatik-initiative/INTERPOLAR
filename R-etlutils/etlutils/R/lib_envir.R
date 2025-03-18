@@ -207,3 +207,24 @@ getVarByNameOrDefaultIfMissing <- function(var_name, default = NA) if (exists(va
 isDefinedAndTrue <- function(variable_name, envir = parent.frame()) {
   return(exists(variable_name, envir = envir) && isTRUE(get(variable_name, envir = envir)))
 }
+
+#' Check for the existence of mandatory parameters
+#'
+#' This function verifies whether all specified mandatory parameters exist in the current environment.
+#' If any of the parameters are missing, an error is raised, listing the missing parameters.
+#'
+#' @param mandatory_parameters A character vector containing the names of the parameters to check.
+#'
+#' @return None. The function stops execution if any mandatory parameters are missing.
+#'
+checkMandatoryParameters <- function(mandatory_parameters) {
+  missing_parameters <- c()
+  for (param in mandatory_parameters) {
+    if (!exists(param)) {
+      missing_parameters <- c(missing_parameters, param)
+    }
+  }
+  if (length(missing_parameters)) {
+    stop("The following parameters are mandatory and must be defined in the modules toml file:\n     ", paste0(missing_parameters, collapse = "\n     "))
+  }
+}

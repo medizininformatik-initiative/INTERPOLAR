@@ -5,10 +5,13 @@
 #' @export
 retrieve <- function() {
 
+  mandatory_parameters <- c("FHIR_SEARCH_ENCOUNTER_CLASS")
+
   # Initialize and start module
   etlutils::startModule("cds2db",
                         path_to_toml = "./R-cds2db/cds2db_config.toml",
-                        hide_value_pattern = "^FHIR_(?!SEARCH_).+")
+                        hide_value_pattern = "^FHIR_(?!SEARCH_).+",
+                        mandatory_parameters = mandatory_parameters)
 
   try(etlutils::runLevel1("Run Retrieve", {
 

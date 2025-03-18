@@ -5,35 +5,43 @@
 #' It ensures that the module environment is properly configured before execution.
 #'
 #' @param module_name A character string specifying the name of the module.
-#' @param path_to_toml (Optional) A character string specifying the path to the TOML configuration file. Default is `NA`.
-#' @param hide_value_pattern (Optional) A character string pattern used to hide certain values in the logged configuration output. Default is `""`.
+#' @param path_to_toml (Optional) A character string specifying the path to the
+#' TOML configuration file. Default is `NA`.
+#' @param hide_value_pattern (Optional) A character string pattern used to hide
+#' certain values in the logged configuration output. Default is `""`.
+#' @param mandatory_parameters (Optional) A character vector containing the names
+#' of mandatory parameters. If these parameters are not found in the configuration
+#' file, an error is thrown.
 #'
 #' @details
-#' - Initializes module-specific constants using `etlutils::initModuleConstants()`.
-#' - Creates necessary directories using `etlutils::createDIRS()`.
-#' - Initializes a global process clock using `etlutils::createClock()`.
-#' - Starts logging all console outputs using `etlutils::startLogging()`.
+#' - Initializes module-specific constants using `initModuleConstants()`.
+#' - Creates necessary directories using `createDIRS()`.
+#' - Initializes a global process clock using `createClock()`.
+#' - Starts logging all console outputs using `startLogging()`.
 #' - Logs all configuration parameters while optionally hiding values that match `hide_value_pattern`.
 #'
 #' @return This function does not return a value. It performs setup operations as a side effect.
 #'
 #'
 #' @export
-startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "") {
+startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "", mandatory_parameters = c()) {
   # Init module constants
-  config <- etlutils::initModuleConstants(
+  config <- initModuleConstants(
     module_name = module_name,
     path_to_toml = path_to_toml
   )
 
+  # Check for mandatory parameters
+  checkMandatoryParameters(mandatory_parameters)
+
   # Create necessary directories
-  etlutils::createDIRS(module_name)
+  createDIRS(module_name)
   # Create globally used process clock
-  etlutils::createClock()
+  createClock()
   # Start logging console outputs
-  etlutils::startLogging(module_name)
+  startLogging(module_name)
   # Log all configuration parameters, optionally hiding values based on the pattern
-  etlutils::catList(config, prefix = "Configuration:\n--------------\n", suffix = "\n", hide_value_pattern)
+  catList(config, prefix = "Configuration:\n--------------\n", suffix = "\n", hide_value_pattern)
 }
 
 #' #' Store Finish Data in a Log File
