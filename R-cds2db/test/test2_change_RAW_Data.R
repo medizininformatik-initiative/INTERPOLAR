@@ -5,21 +5,24 @@ if (exists("DEBUG_DAY")) {
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
     etlutils::dbReset()
-    pats <- namedListByValue("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004")
+    pats <- c("UKB-0001")
   } else{
     if (DEBUG_DAY == 2) {
-      pats <- c("UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005")
+      pats <- c("UKB-0001")
     } else if (DEBUG_DAY == 3) {
-      pats <- c("UKB-0001", "UKB-0002", "UKB-0005")
+      pats <- c("UKB-0001")
     } else if (DEBUG_DAY == 4) {
+      pats <- c()
     }
     # Load all encounters from the database which, according to the database, have not yet ended on the
     # ‘current’ date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant station until they are completed.
     patient_ids_db <- etlutils::getAfterLastSlash(getActiveEncounterPIDsFromDB())
 
-    pats <- namedListByValue(unique(c(pats, patient_ids_db)))
+    pats <- unique(c(pats, patient_ids_db))
   }
+
+  pats <- namedListByValue(pats)
 
   #resource_tables <- retainRAWTables("Patient", "Encounter")
   resource_tables <- getFilteredRAWResources(pats)
@@ -58,8 +61,14 @@ if (exists("DEBUG_DAY")) {
     # Replace enc_type_display only in duplicated rows
     rows_to_duplicate[, enc_type_display := sub("\\](.*)", "]Versorgungsstellenkontakt", enc_type_display)]
 
+    browser()
+
     # Delete Fachabteilungsschlüssel
     rows_to_duplicate[, (enc_servicetype_cols) := NA]
+
+    # Add room and bed
+    rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [1.2.1.1]bd"]
+    rows_to_duplicate[, enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [1.2.1.1]Bett 2"]
 
     # Append new rows to dt_enc
     dt_enc <- rbind(dt_enc, rows_to_duplicate)
@@ -83,33 +92,11 @@ if (exists("DEBUG_DAY")) {
     changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
 
-    # Patient 2: Fall weiter in progress, vorhandene Diagnose wird nicht gelöscht
-    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_status", "in-progress")
-    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_period_end", NA)
-    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
-
-    # Patient 3: Fall beendet, Diagnose ist nun vorhanden
-    # entspricht Originaldaten, daher nur das Enddatum anpassen
-    changeDataForPID(dt_enc, pats$`UKB-0003`, "enc_period_end", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.5))
-    changeDataForPID(dt_enc, pats$`UKB-0003`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
-
-    # Patient 4: ist nicht mehr in den Daten (hat Station verlassen)
-    changeDataForPID(dt_enc, pats$`UKB-0004`, "enc_period_end", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.6))
-    changeDataForPID(dt_enc, pats$`UKB-0004`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
-
-    # Patient 5: Fall neu hinzugekommen. Hat schon Diagnose
-    changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_status", "in-progress")
-    changeDataForPID(dt_enc, pats$`UKB-0005`, colnames_pattern_diagnosis, NA)
-    changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_period_end", NA)
-    changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
-
-    # # Patient 10: neuer Fall ohne Diagnose
-    # dt_enc[pats_enc$p10, enc_status := "in-progress"]
-    # dt_enc[pats_enc$p10, enc_period_end := NA]
-    # dt_enc[pats_enc$p10, (enc_diagnosis_cols) := NA]
-
-
   } else if (DEBUG_DAY == 3) {
+
+    # Patient 1: ist nicht mehr in den Daten (hat Station verlassen)
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_end", getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.6))
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.1))
 
   } else if (DEBUG_DAY == 4) {
 
