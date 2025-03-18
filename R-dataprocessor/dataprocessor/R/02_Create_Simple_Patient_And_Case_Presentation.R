@@ -628,8 +628,8 @@ createFrontendTables <- function() {
         # 'enc_location_physicaltype_code' is "ro" or "bd"
         filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[
           !is.na(enc_location_physicaltype_code) &
-          enc_location_physicaltype_code %in% c("ro", "bd")
-          ]
+            enc_location_physicaltype_code %in% c("ro", "bd")
+        ]
         # 2. Select all rows with the maximum 'enc_period_start'
         filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
         # 3. For each type ("ro" and "bd"), select the first row based on the original order
@@ -651,9 +651,9 @@ createFrontendTables <- function() {
 
           # Query template to get desired Observations from DB
           query_template <- paste0("SELECT * FROM v_observation\n",
-                          "  WHERE obs_code_code IN (", codes, ") AND\n",
-                          "        obs_code_system = '", system, "' AND\n",
-                          "        obs_effectivedatetime < '", query_datetime, "' AND\n")
+                                   "  WHERE obs_code_code IN (", codes, ") AND\n",
+                                   "        obs_code_system = '", system, "' AND\n",
+                                   "        obs_effectivedatetime < '", query_datetime, "' AND\n")
 
           if (isFALSE(obs_by_pid)) {
             # Extract the Observations by direct encounter references
