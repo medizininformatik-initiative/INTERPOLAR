@@ -201,21 +201,32 @@ stopOnMissingValue <- function(table_line, ...) { # ... = column names
   }
 }
 
-loadTemplate <- function(template_filename) {
-  # the name can be a placeholder -> try to load a template with the same name
-  if (grepl("^<%.*%>$", template_filename)) {
-    template_filename <- substr(template_filename, 3, nchar(template_filename) - 2)
+getTemplateContent <- function(filename_or_placeholder) {
+  # try to find the content in quotes in the placeholder
+  template_content <- extractBetweenQuotes(filename_or_placeholder)
+  if (is.na(template_content)) { # no content found direct in the placeholder
+    template_filename <- filename_or_placeholder # the placeholder is the name of the template sql file
+
+    # the name can be a placeholder -> try to load a template with the same name
+    if (grepl("^<%.*%>$", template_filename)) {
+      template_filename <- substr(template_filename, 3, nchar(template_filename) - 2)
+    }
+    if (!endsWith(template_filename, ".sql")) {
+      template_filename <- paste0(template_filename, ".sql")
+    }
+    full_template_filename <- paste0(getTemplateDir(), template_filename)
+    template_content <- etlutils::readFileAsString(full_template_filename)
   }
-  if (!endsWith(template_filename, ".sql")) {
-    template_filename <- paste0(template_filename, ".sql")
+
+  if (!endsWith(template_content, "\n")) {
+    template_content <- paste0(template_content, "\n")
   }
-  full_template_filename <- paste0(getTemplateDir(), template_filename)
-  etlutils::readFileAsString(full_template_filename)
+  return(template_content)
 }
 
 copyTemplate <- function(script_rights_definition) {
   scriptname <- script_rights_definition[1]$SCRIPTNAME
-  content <- loadTemplate(paste0("template_", scriptname))
+  content <- getTemplateContent(paste0("template_", scriptname))
   # Write the unmodified content to the file
   writeResultFile(scriptname, content)
 }
@@ -317,7 +328,7 @@ convertTemplate <- function(tables_descriptions,
 
   rights_first_row <- script_rights_definition[1]
   # Load SQL template
-  content <- ifelse (is.na(template_content), loadTemplate(template_name), template_content)
+  content <- ifelse (is.na(template_content), getTemplateContent(template_name), template_content)
   if (recursion == 0) {
     header <- createHeader(script_rights_definition)
     content <- paste0(header, content)
@@ -329,12 +340,7 @@ convertTemplate <- function(tables_descriptions,
     # replace complex placeholders
 
     if (startsWith(placeholder, "<%LOOP_")) {
-      loop_template_content <- extractBetweenQuotes(placeholder) # try to find the loop content in quotes in the placeholder
-      if (is.na(loop_template_content)) { # no loop content found direct in the placeholder
-        template_name <- placeholder # the placeholder is the name of the template sql file
-      } else if (!endsWith(loop_template_content, "\n")) {
-        loop_template_content <- paste0(loop_template_content, "\n")
-      }
+      loop_template_content <- getTemplateContent(placeholder)
       indentation <- etlutils::getWordIndentation(content, placeholder)
       loop_content <- ""
 
@@ -385,7 +391,7 @@ convertTemplate <- function(tables_descriptions,
 
       } else if (startsWith(placeholder, "<%LOOP_DEF_")) {
         for (row in seq_len(nrow(script_rights_definition))) {
-          sub_content <- loadTemplate(placeholder)
+          sub_content <- loop_template_content
           sub_content_placeholders <- extractPlaceholders(sub_content)
           rights_row <- script_rights_definition[row]
           for (sub_placeholder in sub_content_placeholders) {
