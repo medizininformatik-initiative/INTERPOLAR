@@ -3,39 +3,41 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-05 12:14:14
--- Rights definition file size        : 15641 Byte
+-- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file size        : 15699 Byte
 --
--- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-05 15:57:34
+-- Create SQL Tables in Schema "db2dataprocessor_in"
+-- Create time: 2025-03-18 13:56:14
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
--- SCRIPTNAME:  43_cre_table_frontend_log.sql
+-- SCRIPTNAME:  400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
--- OWNER_USER:  db_log_user
--- OWNER_SCHEMA:  db_log
--- TAGS:  INT_ID
+-- OWNER_USER:  db2dataprocessor_user
+-- OWNER_SCHEMA:  db2dataprocessor_in
+-- TAGS:  
 -- TABLE_PREFIX:  
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
--- GRANT_TARGET_USER:  db_log_user
+-- RIGHTS (3):  SELECT
+-- GRANT_TARGET_USER:  db2dataprocessor_user
 -- GRANT_TARGET_USER (2):  db_user
--- COPY_FUNC_SCRIPTNAME:  62_fe_in_to_db_log.sql
--- COPY_FUNC_TEMPLATE:  template_copy_function.sql
--- COPY_FUNC_NAME:  copy_fe_fe_in_to_db_log
--- SCHEMA_2:  db2frontend_in
--- TABLE_POSTFIX_2:  _fe
+-- GRANT_TARGET_USER (3):  db_log_user
+-- COPY_FUNC_SCRIPTNAME:  
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  
+-- SCHEMA_2:  
+-- TABLE_POSTFIX_2:  
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
 -----------------------------------------------------
--- Create SQL Tables in Schema "db_log" --
+-- Create SQL Tables in Schema "db2dataprocessor_in" --
 -----------------------------------------------------
 
--- Table "patient_fe" in schema "db_log"
+-- Table "patient_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.patient_fe (
-  patient_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
+  patient_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -72,10 +74,10 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "fall_fe" in schema "db_log"
+-- Table "fall_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.fall_fe (
-  fall_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
+  fall_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -128,10 +130,10 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "medikationsanalyse_fe" in schema "db_log"
+-- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
-  medikationsanalyse_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
+  medikationsanalyse_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -198,10 +200,10 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
-  mrpdokumentation_validierung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
+  mrpdokumentation_validierung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -223,7 +225,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_atc5 varchar,   -- 5. Medikament ATC / Name (varchar)
   mrp_med_prod varchar,   -- Medizinprodukt betroffen? (varchar)
   mrp_med_prod_sonst varchar,   -- Bezeichnung Präparat (varchar)
-  mrp_dokup_fehler varchar,   -- Frage / Fehlerbeschreibung    (varchar)
+  mrp_dokup_fehler varchar,   -- Frage / Fehlerbeschreibung  (varchar)
   mrp_dokup_intervention varchar,   -- Intervention / Vorschlag zur Fehlervermeldung (varchar)
   mrp_pigrund___1 varchar,   -- 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)
   mrp_pigrund___2 varchar,   -- 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)
@@ -253,8 +255,10 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_pigrund___26 varchar,   -- 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (varchar)
   mrp_pigrund___27 varchar,   -- 27 - S: Schulung/Beratung eines Patienten (varchar)
   mrp_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
+  mrp_ip_klasse_01 varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
   mrp_ip_klasse_disease varchar,   -- Disease (varchar)
   mrp_ip_klasse_labor varchar,   -- Labor (varchar)
+  mrp_ip_klasse_nieren_insuf varchar,   -- Grad der Nierenfunktionseinschränkung (varchar)
   mrp_massn_am___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   mrp_massn_am___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   mrp_massn_am___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -301,7 +305,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
              COALESCE(db.to_char_immutable(mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? (mrp_med_prod)
              COALESCE(db.to_char_immutable(mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
-             COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung    (mrp_dokup_fehler)
+             COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung  (mrp_dokup_fehler)
              COALESCE(db.to_char_immutable(mrp_dokup_intervention), '#NULL#') || '|||' || -- hash from: Intervention / Vorschlag zur Fehlervermeldung (mrp_dokup_intervention)
              COALESCE(db.to_char_immutable(mrp_pigrund___1), '#NULL#') || '|||' || -- hash from: 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (mrp_pigrund___1)
              COALESCE(db.to_char_immutable(mrp_pigrund___2), '#NULL#') || '|||' || -- hash from: 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (mrp_pigrund___2)
@@ -331,8 +335,10 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_pigrund___26), '#NULL#') || '|||' || -- hash from: 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (mrp_pigrund___26)
              COALESCE(db.to_char_immutable(mrp_pigrund___27), '#NULL#') || '|||' || -- hash from: 27 - S: Schulung/Beratung eines Patienten (mrp_pigrund___27)
              COALESCE(db.to_char_immutable(mrp_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse)
+             COALESCE(db.to_char_immutable(mrp_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse_01)
              COALESCE(db.to_char_immutable(mrp_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (mrp_ip_klasse_disease)
              COALESCE(db.to_char_immutable(mrp_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (mrp_ip_klasse_labor)
+             COALESCE(db.to_char_immutable(mrp_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (mrp_ip_klasse_nieren_insuf)
              COALESCE(db.to_char_immutable(mrp_massn_am___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (mrp_massn_am___1)
              COALESCE(db.to_char_immutable(mrp_massn_am___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (mrp_massn_am___2)
              COALESCE(db.to_char_immutable(mrp_massn_am___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (mrp_massn_am___3)
@@ -366,10 +372,10 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
-  retrolektive_mrpbewertung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
+  retrolektive_mrpbewertung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -380,15 +386,19 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   ret_meda_dat1 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
   ret_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
   ret_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
+  ret_ip_klasse_01 varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
   ret_atc1 varchar,   -- 1. Medikament ATC / Name: (varchar)
   ret_atc2 varchar,   -- 2. Medikament ATC / Name (varchar)
   ret_ip_klasse_disease varchar,   -- Disease (varchar)
   ret_ip_klasse_labor varchar,   -- Labor (varchar)
+  ret_ip_klasse_nieren_insuf varchar,   -- Grad der Nierenfunktionseinschränkung (varchar)
   ret_gewissheit1 varchar,   -- Sicherheit des detektierten MRP (varchar)
   ret_mrp_zuordnung1 varchar,   -- Zuordnung zu manuellem MRP (varchar)
-  ret_gewissheit_oth1 varchar,   -- Weitere Informationen (varchar)
-  ret_gewiss_grund_abl1 varchar,   -- Grund für nicht Bestätigung (varchar)
+  ret_gewissheit1_oth varchar,   -- Weitere Informationen (varchar)
+  ret_gewiss_grund1_abl varchar,   -- Grund für nicht Bestätigung (varchar)
   ret_gewiss_grund_abl_sonst1 varchar,   -- Bitte näher beschreiben (varchar)
+  ret_gewiss_grund_abl_klin1 varchar,   -- WARUM ist das MRP nicht klinisch relevant (varchar)
+  ret_gewiss_grund_abl_klin1_neg___1 varchar,   -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
   ret_massn_am1___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   ret_massn_am1___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   ret_massn_am1___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -417,6 +427,8 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   ret_gewissheit2_oth varchar,   -- Weitere Informationen (varchar)
   ret_gewiss_grund2_abl varchar,   -- Grund für nicht Bestätigung (varchar)
   ret_gewiss_grund_abl_sonst2 varchar,   -- Bitte näher beschreiben (varchar)
+  ret_gewiss_grund_abl_klin2 varchar,   -- WARUM ist das MRP nicht klinisch relevant (varchar)
+  ret_gewiss_grund_abl_klin_neg___1 varchar,   -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
   ret_massn_am2___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   ret_massn_am2___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   ret_massn_am2___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -449,15 +461,19 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
              COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
              COALESCE(db.to_char_immutable(ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse)
+             COALESCE(db.to_char_immutable(ret_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse_01)
              COALESCE(db.to_char_immutable(ret_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name: (ret_atc1)
              COALESCE(db.to_char_immutable(ret_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (ret_atc2)
              COALESCE(db.to_char_immutable(ret_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease)
              COALESCE(db.to_char_immutable(ret_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor)
+             COALESCE(db.to_char_immutable(ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (ret_ip_klasse_nieren_insuf)
              COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit1)
              COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
-             COALESCE(db.to_char_immutable(ret_gewissheit_oth1), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit_oth1)
-             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl1), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund_abl1)
+             COALESCE(db.to_char_immutable(ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
              COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin1)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
              COALESCE(db.to_char_immutable(ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am1___1)
              COALESCE(db.to_char_immutable(ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am1___2)
              COALESCE(db.to_char_immutable(ret_massn_am1___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am1___3)
@@ -486,6 +502,8 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
              COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
              COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin2)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin_neg___1)
              COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
              COALESCE(db.to_char_immutable(ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
              COALESCE(db.to_char_immutable(ret_massn_am2___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am2___3)
@@ -516,10 +534,10 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "risikofaktor_fe" in schema "db_log"
+-- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
-  risikofaktor_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
+  risikofaktor_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -570,10 +588,10 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "trigger_fe" in schema "db_log"
+-- Table "trigger_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
-  trigger_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
+  trigger_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   record_id varchar,   -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
@@ -642,640 +660,648 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
 
 
 ------------------------------------------------------
--- SQL Role / Trigger in Schema "db_log" --
+-- SQL Role / Trigger in Schema "db2dataprocessor_in" --
 ------------------------------------------------------
 
 
--- Table "patient_fe" in schema "db_log"
+-- Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.patient_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.patient_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.patient_fe TO db_log_user; -- Additional authorizations for testing
 
--- Table "fall_fe" in schema "db_log"
+-- Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.fall_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.fall_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.fall_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.fall_fe TO db_log_user; -- Additional authorizations for testing
 
--- Table "medikationsanalyse_fe" in schema "db_log"
+-- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.medikationsanalyse_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medikationsanalyse_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.medikationsanalyse_fe TO db_log_user; -- Additional authorizations for testing
 
--- Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.mrpdokumentation_validierung_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe TO db_log_user; -- Additional authorizations for testing
 
--- Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.retrolektive_mrpbewertung_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.retrolektive_mrpbewertung_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.retrolektive_mrpbewertung_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.retrolektive_mrpbewertung_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe TO db_log_user; -- Additional authorizations for testing
 
--- Table "risikofaktor_fe" in schema "db_log"
+-- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.risikofaktor_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.risikofaktor_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.risikofaktor_fe TO db_log_user; -- Additional authorizations for testing
 
--- Table "trigger_fe" in schema "db_log"
+-- Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.trigger_fe TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON db2dataprocessor_in.trigger_fe TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
+GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.trigger_fe TO db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db2dataprocessor_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_user; -- Additional authorizations for testing
+GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_log_user; -- Additional authorizations for testing
 
 ------------------------------------------------------
--- Comments on Tables in Schema "db_log" --
+-- Comments on Tables in Schema "db2dataprocessor_in" --
 ------------------------------------------------------
 -- Output off
 \o /dev/null
 
-COMMENT ON COLUMN db_log.patient_fe.patient_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.patient_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.pat_id IS 'Patient-identifier (FHIR) (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.pat_cis_pid IS 'Patient-identifier (KIS) (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.pat_name IS 'Patientenname (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.pat_vorname IS 'Patientenvorname (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.pat_gebdat IS 'Geburtsdatum (date)';
-COMMENT ON COLUMN db_log.patient_fe.pat_aktuell_alter IS 'aktuelles Patientenalter (Jahre) (double precision)';
-COMMENT ON COLUMN db_log.patient_fe.pat_geschlecht IS 'Geschlecht (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.patient_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.patient_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.patient_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.patient_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.patient_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.patient_fe.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.fall_fe.fall_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.fall_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.patient_id_fk IS 'verstecktes Feld für patient_id_fk (int)';
-COMMENT ON COLUMN db_log.fall_fe.fall_pat_id IS 'verstecktes Feld für fall_pat_id (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_id IS 'Fall-ID (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_studienphase IS 'Studienphase (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_station IS 'Station (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (timestamp)';
-COMMENT ON COLUMN db_log.fall_fe.fall_zimmernr IS 'Zimmer-Nr. (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_aufn_diag IS 'Diagnose(n) bei Aufnahme (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_gewicht_aktuell IS 'aktuelles Gewicht (double precision)';
-COMMENT ON COLUMN db_log.fall_fe.fall_gewicht_aktl_einheit IS 'aktuelles Gewicht: Einheit (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_groesse IS 'Größe (double precision)';
-COMMENT ON COLUMN db_log.fall_fe.fall_groesse_einheit IS 'Größe: Einheit (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_bmi IS 'BMI (double precision)';
-COMMENT ON COLUMN db_log.fall_fe.fall_status IS 'Fallstatus (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_ent_dat IS 'Entlassdatum (timestamp)';
-COMMENT ON COLUMN db_log.fall_fe.fall_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.fall_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.fall_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.fall_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.fall_fe.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.medikationsanalyse_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_anlage IS 'Formular angelegt von (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_edit IS 'Formular zuletzt bearbeitet von (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.fall_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> Fall (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_id IS 'ID Medikationsanalyse (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_typ IS 'Typ der Medikationsanalyse (MA) (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (timestamp)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_gewicht_aktuell IS 'aktuelles Gewicht (double precision)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_gewicht_aktl_einheit IS 'aktuelles Gewicht: Einheit (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_groesse IS 'Größe (double precision)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_groesse_einheit IS 'Größe: Einheit (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_bmi IS 'BMI (double precision)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_nieren_insuf_chron IS 'Chronische Niereninsuffizienz (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_nieren_insuf_ausmass IS 'aktuelles Ausmaß (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_nieren_insuf_dialysev IS 'Nierenersatzverfahren (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_leber_insuf IS 'Leberinsuffizienz (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_leber_insuf_ausmass IS 'aktuelles Ausmaß (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_schwanger_mo IS 'Schwangerschaftsmonat (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_ma_thueberw IS 'Wiedervorlage Medikationsanalyse in 24-48h (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_mrp_detekt IS 'MRP detektiert? (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit IS 'Zeitaufwand Medikationsanalyse (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit_and IS 'genaue Dauer in Minuten (int)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_notiz IS 'Notizfeld (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.medikationsanalyse_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_anlage IS 'Formular angelegt von (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_edit IS 'Formular zuletzt bearbeitet von (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> MRP (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_id IS 'MRP-ID (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (timestamp)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber IS 'Hinweisgeber auf das MRP (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth IS 'Anderer Hinweisgeber (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_wirkstoff IS 'Wirkstoff betroffen? (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc1 IS '1. Medikament ATC / Name: (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc2 IS '2. Medikament ATC / Name (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc3 IS '3. Medikament ATC / Name (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc4 IS '4. Medikament ATC / Name (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc5 IS '5. Medikament ATC / Name (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod IS 'Medizinprodukt betroffen? (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod_sonst IS 'Bezeichnung Präparat (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung    (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_intervention IS 'Intervention / Vorschlag zur Fehlervermeldung (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___1 IS '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___2 IS '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___3 IS '3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___4 IS '4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___5 IS '5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___6 IS '6 - AM: Übertragungsfehler (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___7 IS '7 - AM: Substitution aut idem/aut simile (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___8 IS '8 - AM: (Klare) Indikation - aber kein Medikament angeordnet (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___9 IS '9 - AM: Stellfehler (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___10 IS '10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___11 IS '11 - AM: Doppelverordnung (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___12 IS '12 - ANW: Applikation (Dauer) (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___13 IS '13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___14 IS '14 - ANW: Applikation (Art) (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___15 IS '15 - ANW: Anfrage zur Administration/Kompatibilität (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___16 IS '16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___17 IS '17 - D: (Fehlerhafte) Dosis (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___18 IS '18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___19 IS '19 - D: (Fehlerhaftes) Dosisinterval (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___20 IS '20 - Interaktion (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___21 IS '21 - Kontraindikation (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___22 IS '22 - Nebenwirkungen (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___23 IS '23 - S: Beratung/Auswahl eines Arzneistoffs (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___24 IS '24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___25 IS '25 - S: Beschaffung/Kosten (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___26 IS '26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___27 IS '27 - S: Schulung/Beratung eines Patienten (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease IS 'Disease (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor IS 'Labor (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___1 IS '1 - Anweisung für die Applikation geben (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___2 IS '2 - Arzneimittel ändern (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___5 IS '5 - Dosierung ändern (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___6 IS '6 - Formulierung ändern (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___7 IS '7 - Hilfe bei Beschaffung (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___8 IS '8 - Information an Arzt/Pflege (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___9 IS '9 - Information an Patient (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___3 IS '3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___5 IS '5 - Lieferantenwechsel (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_orga___8 IS '8 - Sensibilisierung/Schulung (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_notiz IS 'Notiz (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz IS 'Handlungsempfehlung akzeptiert? (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp IS 'NCC MERP Score (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp_info___1 IS '1 - NCC MERP Index (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter1 IS '1. Bewertung von (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung Meda -> rMRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_atc1 IS '1. Medikament ATC / Name: (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_atc2 IS '2. Medikament ATC / Name (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_disease IS 'Disease (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_labor IS 'Labor (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1 IS 'Sicherheit des detektierten MRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung1 IS 'Zuordnung zu manuellem MRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit_oth1 IS 'Weitere Informationen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl1 IS 'Grund für nicht Bestätigung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst1 IS 'Bitte näher beschreiben (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___1 IS '1 - Anweisung für die Applikation geben (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___2 IS '2 - Arzneimittel ändern (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___5 IS '5 - Dosierung ändern (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___6 IS '6 - Formulierung ändern (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___7 IS '7 - Hilfe bei Beschaffung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___8 IS '8 - Information an Arzt/Pflege (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___9 IS '9 - Information an Patient (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___3 IS '3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___5 IS '5 - Lieferantenwechsel (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga1___8 IS '8 - Sensibilisierung/Schulung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_notiz1 IS 'Notiz (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat2 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS 'Bewerter2 Pipeline (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl IS 'Grund für nicht Bestätigung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Bitte näher beschreiben (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___1 IS '1 - Anweisung für die Applikation geben (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___2 IS '2 - Arzneimittel ändern (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___5 IS '5 - Dosierung ändern (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___6 IS '6 - Formulierung ändern (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___7 IS '7 - Hilfe bei Beschaffung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___8 IS '8 - Information an Arzt/Pflege (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___9 IS '9 - Information an Patient (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___3 IS '3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___5 IS '5 - Lieferantenwechsel (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___8 IS '8 - Sensibilisierung/Schulung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_notiz2 IS 'Notiz (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.risikofaktor_fe.risikofaktor_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.risikofaktor_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_gerhemmer IS 'Ger.hemmer (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_tah IS 'TAH (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_immunsupp IS 'Immunsupp. (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_tumorth IS 'Tumorth. (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_opiat IS 'Opiat (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_atcn IS 'ATC N (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_ait IS 'AIT (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_anzam IS 'Anz AM (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_priscus IS 'PRISCUS (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_qtc IS 'QTc (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_meld IS 'MELD (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_dialyse IS 'Dialyse (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_entern IS 'ent. Ern. (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfkt_anz_rskamklassen IS 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (double precision)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.risikofaktor_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.risikofaktor_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.risikofaktor_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.risikofaktor_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.risikofaktor_fe.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.trigger_fe.trigger_fe_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.trigger_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
-COMMENT ON COLUMN db_log.trigger_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
-COMMENT ON COLUMN db_log.trigger_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
-COMMENT ON COLUMN db_log.trigger_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_ast IS 'AST↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_alt IS 'ALT↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_crp IS 'CRP↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_leuk_penie IS 'Leuko↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_leuk_ose IS 'Leuko↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_thrmb_penie IS 'Thrombo↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_aptt IS 'aPTT (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hyp_haem IS 'Hb↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_glyk IS 'Glc↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_glyk IS 'Glc↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_bilirbnm IS 'Bili↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_ck IS 'CK↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_serablmn IS 'Alb↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_nat IS 'Na+↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_nat IS 'Na+↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hyper_kal IS 'K+↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_hypo_kal IS 'K+↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_inr_ern IS 'INR Antikoag↓ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_inr_erh IS 'INR ↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_inr_erh_antikoa IS 'INR Antikoag↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_krea IS 'Krea↑ (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trg_egfr IS 'eGFR<30 (int)';
-COMMENT ON COLUMN db_log.trigger_fe.trigger_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
-COMMENT ON COLUMN db_log.trigger_fe.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.trigger_fe.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.trigger_fe.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.trigger_fe.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.trigger_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.patient_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_id IS 'Patient-identifier (FHIR) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_cis_pid IS 'Patient-identifier (KIS) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_name IS 'Patientenname (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_vorname IS 'Patientenvorname (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_gebdat IS 'Geburtsdatum (date)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_aktuell_alter IS 'aktuelles Patientenalter (Jahre) (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.pat_geschlecht IS 'Geschlecht (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.patient_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.patient_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.patient_id_fk IS 'verstecktes Feld für patient_id_fk (int)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_pat_id IS 'verstecktes Feld für fall_pat_id (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_id IS 'Fall-ID (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_studienphase IS 'Studienphase (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_station IS 'Station (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (timestamp)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_zimmernr IS 'Zimmer-Nr. (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_aufn_diag IS 'Diagnose(n) bei Aufnahme (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_gewicht_aktuell IS 'aktuelles Gewicht (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_gewicht_aktl_einheit IS 'aktuelles Gewicht: Einheit (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_groesse IS 'Größe (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_groesse_einheit IS 'Größe: Einheit (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_bmi IS 'BMI (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_status IS 'Fallstatus (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_ent_dat IS 'Entlassdatum (timestamp)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.fall_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.medikationsanalyse_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_anlage IS 'Formular angelegt von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_edit IS 'Formular zuletzt bearbeitet von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.fall_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> Fall (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_id IS 'ID Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_typ IS 'Typ der Medikationsanalyse (MA) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (timestamp)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_gewicht_aktuell IS 'aktuelles Gewicht (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_gewicht_aktl_einheit IS 'aktuelles Gewicht: Einheit (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_groesse IS 'Größe (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_groesse_einheit IS 'Größe: Einheit (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_bmi IS 'BMI (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_nieren_insuf_chron IS 'Chronische Niereninsuffizienz (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_nieren_insuf_ausmass IS 'aktuelles Ausmaß (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_nieren_insuf_dialysev IS 'Nierenersatzverfahren (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_leber_insuf IS 'Leberinsuffizienz (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_leber_insuf_ausmass IS 'aktuelles Ausmaß (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_schwanger_mo IS 'Schwangerschaftsmonat (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_ma_thueberw IS 'Wiedervorlage Medikationsanalyse in 24-48h (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_mrp_detekt IS 'MRP detektiert? (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_aufwand_zeit IS 'Zeitaufwand Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_aufwand_zeit_and IS 'genaue Dauer in Minuten (int)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.meda_notiz IS 'Notizfeld (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.medikationsanalyse_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_anlage IS 'Formular angelegt von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_edit IS 'Formular zuletzt bearbeitet von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> MRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_id IS 'MRP-ID (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (timestamp)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber IS 'Hinweisgeber auf das MRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_hinweisgeber_oth IS 'Anderer Hinweisgeber (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_wirkstoff IS 'Wirkstoff betroffen? (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc1 IS '1. Medikament ATC / Name: (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc2 IS '2. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc3 IS '3. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc4 IS '4. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc5 IS '5. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod IS 'Medizinprodukt betroffen? (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst IS 'Bezeichnung Präparat (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung  (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_intervention IS 'Intervention / Vorschlag zur Fehlervermeldung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___1 IS '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___2 IS '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___3 IS '3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___4 IS '4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___5 IS '5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___6 IS '6 - AM: Übertragungsfehler (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___7 IS '7 - AM: Substitution aut idem/aut simile (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___8 IS '8 - AM: (Klare) Indikation - aber kein Medikament angeordnet (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___9 IS '9 - AM: Stellfehler (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___10 IS '10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___11 IS '11 - AM: Doppelverordnung (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___12 IS '12 - ANW: Applikation (Dauer) (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___13 IS '13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___14 IS '14 - ANW: Applikation (Art) (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___15 IS '15 - ANW: Anfrage zur Administration/Kompatibilität (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___16 IS '16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___17 IS '17 - D: (Fehlerhafte) Dosis (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___18 IS '18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___19 IS '19 - D: (Fehlerhaftes) Dosisinterval (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___20 IS '20 - Interaktion (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___21 IS '21 - Kontraindikation (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___22 IS '22 - Nebenwirkungen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___23 IS '23 - S: Beratung/Auswahl eines Arzneistoffs (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___24 IS '24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___25 IS '25 - S: Beschaffung/Kosten (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___26 IS '26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_pigrund___27 IS '27 - S: Schulung/Beratung eines Patienten (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_01 IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease IS 'Disease (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor IS 'Labor (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_ip_klasse_nieren_insuf IS 'Grad der Nierenfunktionseinschränkung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___1 IS '1 - Anweisung für die Applikation geben (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___2 IS '2 - Arzneimittel ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___5 IS '5 - Dosierung ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___6 IS '6 - Formulierung ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___7 IS '7 - Hilfe bei Beschaffung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___8 IS '8 - Information an Arzt/Pflege (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___9 IS '9 - Information an Patient (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_am___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___3 IS '3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___5 IS '5 - Lieferantenwechsel (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_orga___8 IS '8 - Sensibilisierung/Schulung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_notiz IS 'Notiz (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz IS 'Handlungsempfehlung akzeptiert? (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp IS 'NCC MERP Score (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info___1 IS '1 - NCC MERP Index (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter1 IS '1. Bewertung von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung Meda -> rMRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_ip_klasse_01 IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_atc1 IS '1. Medikament ATC / Name: (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_atc2 IS '2. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_ip_klasse_disease IS 'Disease (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_ip_klasse_labor IS 'Labor (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_ip_klasse_nieren_insuf IS 'Grad der Nierenfunktionseinschränkung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewissheit1 IS 'Sicherheit des detektierten MRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung1 IS 'Zuordnung zu manuellem MRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewissheit1_oth IS 'Weitere Informationen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund1_abl IS 'Grund für nicht Bestätigung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst1 IS 'Bitte näher beschreiben (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___1 IS '1 - Anweisung für die Applikation geben (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___2 IS '2 - Arzneimittel ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___5 IS '5 - Dosierung ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___6 IS '6 - Formulierung ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___7 IS '7 - Hilfe bei Beschaffung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___8 IS '8 - Information an Arzt/Pflege (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___9 IS '9 - Information an Patient (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am1___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___3 IS '3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___5 IS '5 - Lieferantenwechsel (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga1___8 IS '8 - Sensibilisierung/Schulung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_notiz1 IS 'Notiz (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_meda_dat2 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS 'Bewerter2 Pipeline (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl IS 'Grund für nicht Bestätigung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Bitte näher beschreiben (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___1 IS '1 - Anweisung für die Applikation geben (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___2 IS '2 - Arzneimittel ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___4 IS '4 - Arzneimittel neu ansetzen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___5 IS '5 - Dosierung ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___6 IS '6 - Formulierung ändern (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___7 IS '7 - Hilfe bei Beschaffung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___8 IS '8 - Information an Arzt/Pflege (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___9 IS '9 - Information an Patient (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___10 IS '10 - TDM oder Laborkontrolle emfohlen (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___1 IS '1 - Aushändigung einer Information/eines Medikationsplans (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___2 IS '2 - CIRS-/AMK-Meldung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___3 IS '3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___4 IS '4 - Etablierung einer Doppelkontrolle (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___5 IS '5 - Lieferantenwechsel (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___6 IS '6 - Optimierung der internen und externene Kommunikation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_orga2___8 IS '8 - Sensibilisierung/Schulung (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_notiz2 IS 'Notiz (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.risikofaktor_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_gerhemmer IS 'Ger.hemmer (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_tah IS 'TAH (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_immunsupp IS 'Immunsupp. (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_tumorth IS 'Tumorth. (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_opiat IS 'Opiat (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_atcn IS 'ATC N (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_ait IS 'AIT (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_anzam IS 'Anz AM (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_priscus IS 'PRISCUS (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_qtc IS 'QTc (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_meld IS 'MELD (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_dialyse IS 'Dialyse (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfk_entern IS 'ent. Ern. (int)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.rskfkt_anz_rskamklassen IS 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (double precision)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.risikofaktor_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trigger_fe_id IS 'Primary key of the entity';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_ast IS 'AST↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_alt IS 'ALT↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_crp IS 'CRP↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_leuk_penie IS 'Leuko↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_leuk_ose IS 'Leuko↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_thrmb_penie IS 'Thrombo↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_aptt IS 'aPTT (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hyp_haem IS 'Hb↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hypo_glyk IS 'Glc↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hyper_glyk IS 'Glc↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hyper_bilirbnm IS 'Bili↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_ck IS 'CK↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hypo_serablmn IS 'Alb↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hypo_nat IS 'Na+↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hyper_nat IS 'Na+↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hyper_kal IS 'K+↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_hypo_kal IS 'K+↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_inr_ern IS 'INR Antikoag↓ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_inr_erh IS 'INR ↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_inr_erh_antikoa IS 'INR Antikoag↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_krea IS 'Krea↑ (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trg_egfr IS 'eGFR<30 (int)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trigger_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.last_processing_nr IS 'Last processing number of the data record';
 
 -- Output on
 \o
 
 ------------------------------------------------------
--- INDEX for IDs on Tables in Schema "db_log" --
+-- INDEX for IDs on Tables in Schema "db2dataprocessor_in" --
 ------------------------------------------------------
 
-------------------------- Index for db_log - patient_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_patient_fe_id ON db_log.patient_fe ( patient_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - patient_fe ---------------------------------
 
--- Index idx_db_log_patient_fe_input_dt for Table "patient_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_patient_fe_input_dt for Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_input_dt
-ON db_log.patient_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_patient_fe_input_dt
+ON db2dataprocessor_in.patient_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_patient_fe_input_pnr for Table "patient_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_patient_fe_input_pnr for Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_input_pnr
-ON db_log.patient_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_patient_fe_input_pnr
+ON db2dataprocessor_in.patient_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_patient_fe_last_dt for Table "patient_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_patient_fe_last_dt for Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_last_dt
-ON db_log.patient_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_patient_fe_last_dt
+ON db2dataprocessor_in.patient_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_patient_fe_last_dt for Table "patient_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_patient_fe_last_dt for Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_last_pnr
-ON db_log.patient_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_patient_fe_last_pnr
+ON db2dataprocessor_in.patient_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_patient_fe_hash for Table "patient_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_patient_fe_hash for Table "patient_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_fe_hash
-ON db_log.patient_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_patient_fe_hash
+ON db2dataprocessor_in.patient_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - fall_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_fall_fe_id ON db_log.fall_fe ( fall_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - fall_fe ---------------------------------
 
--- Index idx_db_log_fall_fe_input_dt for Table "fall_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_fall_fe_input_dt for Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_input_dt
-ON db_log.fall_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_fall_fe_input_dt
+ON db2dataprocessor_in.fall_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_fall_fe_input_pnr for Table "fall_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_fall_fe_input_pnr for Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_input_pnr
-ON db_log.fall_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_fall_fe_input_pnr
+ON db2dataprocessor_in.fall_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_fall_fe_last_dt for Table "fall_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_fall_fe_last_dt for Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_last_dt
-ON db_log.fall_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_fall_fe_last_dt
+ON db2dataprocessor_in.fall_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_fall_fe_last_dt for Table "fall_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_fall_fe_last_dt for Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_last_pnr
-ON db_log.fall_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_fall_fe_last_pnr
+ON db2dataprocessor_in.fall_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_fall_fe_hash for Table "fall_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_fall_fe_hash for Table "fall_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_fall_fe_hash
-ON db_log.fall_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_fall_fe_hash
+ON db2dataprocessor_in.fall_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - medikationsanalyse_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe ( medikationsanalyse_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - medikationsanalyse_fe ---------------------------------
 
--- Index idx_db_log_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_input_dt
-ON db_log.medikationsanalyse_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_medikationsanalyse_fe_input_dt
+ON db2dataprocessor_in.medikationsanalyse_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_medikationsanalyse_fe_input_pnr for Table "medikationsanalyse_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_medikationsanalyse_fe_input_pnr for Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_input_pnr
-ON db_log.medikationsanalyse_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_medikationsanalyse_fe_input_pnr
+ON db2dataprocessor_in.medikationsanalyse_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_last_dt
-ON db_log.medikationsanalyse_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_medikationsanalyse_fe_last_dt
+ON db2dataprocessor_in.medikationsanalyse_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_medikationsanalyse_fe_last_dt for Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_last_pnr
-ON db_log.medikationsanalyse_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_medikationsanalyse_fe_last_pnr
+ON db2dataprocessor_in.medikationsanalyse_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_medikationsanalyse_fe_hash for Table "medikationsanalyse_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_medikationsanalyse_fe_hash for Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medikationsanalyse_fe_hash
-ON db_log.medikationsanalyse_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_medikationsanalyse_fe_hash
+ON db2dataprocessor_in.medikationsanalyse_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - mrpdokumentation_validierung_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe ( mrpdokumentation_validierung_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - mrpdokumentation_validierung_fe ---------------------------------
 
--- Index idx_db_log_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_input_dt
-ON db_log.mrpdokumentation_validierung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_input_dt
+ON db2dataprocessor_in.mrpdokumentation_validierung_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_mrpdokumentation_validierung_fe_input_pnr for Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_input_pnr for Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_input_pnr
-ON db_log.mrpdokumentation_validierung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_input_pnr
+ON db2dataprocessor_in.mrpdokumentation_validierung_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_last_dt
-ON db_log.mrpdokumentation_validierung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_last_dt
+ON db2dataprocessor_in.mrpdokumentation_validierung_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_last_dt for Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_last_pnr
-ON db_log.mrpdokumentation_validierung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_last_pnr
+ON db2dataprocessor_in.mrpdokumentation_validierung_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_mrpdokumentation_validierung_fe_hash for Table "mrpdokumentation_validierung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_hash for Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_mrpdokumentation_validierung_fe_hash
-ON db_log.mrpdokumentation_validierung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_mrpdokumentation_validierung_fe_hash
+ON db2dataprocessor_in.mrpdokumentation_validierung_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - retrolektive_mrpbewertung_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe ( retrolektive_mrpbewertung_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - retrolektive_mrpbewertung_fe ---------------------------------
 
--- Index idx_db_log_retrolektive_mrpbewertung_fe_input_dt for Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_input_dt for Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_retrolektive_mrpbewertung_fe_input_dt
-ON db_log.retrolektive_mrpbewertung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_input_dt
+ON db2dataprocessor_in.retrolektive_mrpbewertung_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_retrolektive_mrpbewertung_fe_input_pnr for Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_input_pnr for Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_retrolektive_mrpbewertung_fe_input_pnr
-ON db_log.retrolektive_mrpbewertung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_input_pnr
+ON db2dataprocessor_in.retrolektive_mrpbewertung_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_retrolektive_mrpbewertung_fe_last_dt for Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_last_dt for Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_retrolektive_mrpbewertung_fe_last_dt
-ON db_log.retrolektive_mrpbewertung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_last_dt
+ON db2dataprocessor_in.retrolektive_mrpbewertung_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_retrolektive_mrpbewertung_fe_last_dt for Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_last_dt for Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_retrolektive_mrpbewertung_fe_last_pnr
-ON db_log.retrolektive_mrpbewertung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_last_pnr
+ON db2dataprocessor_in.retrolektive_mrpbewertung_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_retrolektive_mrpbewertung_fe_hash for Table "retrolektive_mrpbewertung_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_hash for Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_retrolektive_mrpbewertung_fe_hash
-ON db_log.retrolektive_mrpbewertung_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_retrolektive_mrpbewertung_fe_hash
+ON db2dataprocessor_in.retrolektive_mrpbewertung_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - risikofaktor_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_risikofaktor_fe_id ON db_log.risikofaktor_fe ( risikofaktor_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - risikofaktor_fe ---------------------------------
 
--- Index idx_db_log_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_input_dt
-ON db_log.risikofaktor_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_risikofaktor_fe_input_dt
+ON db2dataprocessor_in.risikofaktor_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_risikofaktor_fe_input_pnr for Table "risikofaktor_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_risikofaktor_fe_input_pnr for Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_input_pnr
-ON db_log.risikofaktor_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_risikofaktor_fe_input_pnr
+ON db2dataprocessor_in.risikofaktor_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_last_dt
-ON db_log.risikofaktor_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_risikofaktor_fe_last_dt
+ON db2dataprocessor_in.risikofaktor_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_risikofaktor_fe_last_dt for Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_last_pnr
-ON db_log.risikofaktor_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_risikofaktor_fe_last_pnr
+ON db2dataprocessor_in.risikofaktor_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_risikofaktor_fe_hash for Table "risikofaktor_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_risikofaktor_fe_hash for Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_risikofaktor_fe_hash
-ON db_log.risikofaktor_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_risikofaktor_fe_hash
+ON db2dataprocessor_in.risikofaktor_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - trigger_fe ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_trigger_fe_id ON db_log.trigger_fe ( trigger_fe_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp
+------------------------- Index for db2dataprocessor_in - trigger_fe ---------------------------------
 
--- Index idx_db_log_trigger_fe_input_dt for Table "trigger_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_trigger_fe_input_dt for Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_input_dt
-ON db_log.trigger_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_trigger_fe_input_dt
+ON db2dataprocessor_in.trigger_fe (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_trigger_fe_input_pnr for Table "trigger_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_trigger_fe_input_pnr for Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_input_pnr
-ON db_log.trigger_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_trigger_fe_input_pnr
+ON db2dataprocessor_in.trigger_fe (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_trigger_fe_last_dt for Table "trigger_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_trigger_fe_last_dt for Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_last_dt
-ON db_log.trigger_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_trigger_fe_last_dt
+ON db2dataprocessor_in.trigger_fe (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_trigger_fe_last_dt for Table "trigger_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_trigger_fe_last_dt for Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_last_pnr
-ON db_log.trigger_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_trigger_fe_last_pnr
+ON db2dataprocessor_in.trigger_fe (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_trigger_fe_hash for Table "trigger_fe" in schema "db_log"
+-- Index idx_db2dataprocessor_in_trigger_fe_hash for Table "trigger_fe" in schema "db2dataprocessor_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_trigger_fe_hash
-ON db_log.trigger_fe (
+CREATE INDEX IF NOT EXISTS idx_db2dataprocessor_in_trigger_fe_hash
+ON db2dataprocessor_in.trigger_fe (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 

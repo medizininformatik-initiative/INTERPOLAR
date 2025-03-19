@@ -3,13 +3,13 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-05 12:14:14
--- Rights definition file size        : 15641 Byte
+-- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-05 15:57:31
+-- Create time: 2025-03-18 13:56:25
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
--- SCRIPTNAME:  42_cre_table_frontend_log.sql
+-- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
@@ -19,10 +19,10 @@
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
 -- GRANT_TARGET_USER (2):  db_user
--- COPY_FUNC_SCRIPTNAME:  60_dp_in_to_db_log.sql
+-- COPY_FUNC_SCRIPTNAME:  620_fe_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
--- COPY_FUNC_NAME:  copy_fe_dp_in_to_db_log
--- SCHEMA_2:  db2dataprocessor_in
+-- COPY_FUNC_NAME:  copy_fe_fe_in_to_db_log
+-- SCHEMA_2:  db2frontend_in
 -- TABLE_POSTFIX_2:  _fe
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_atc5 varchar,   -- 5. Medikament ATC / Name (varchar)
   mrp_med_prod varchar,   -- Medizinprodukt betroffen? (varchar)
   mrp_med_prod_sonst varchar,   -- Bezeichnung Präparat (varchar)
-  mrp_dokup_fehler varchar,   -- Frage / Fehlerbeschreibung    (varchar)
+  mrp_dokup_fehler varchar,   -- Frage / Fehlerbeschreibung  (varchar)
   mrp_dokup_intervention varchar,   -- Intervention / Vorschlag zur Fehlervermeldung (varchar)
   mrp_pigrund___1 varchar,   -- 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)
   mrp_pigrund___2 varchar,   -- 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)
@@ -253,8 +253,10 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_pigrund___26 varchar,   -- 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (varchar)
   mrp_pigrund___27 varchar,   -- 27 - S: Schulung/Beratung eines Patienten (varchar)
   mrp_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
+  mrp_ip_klasse_01 varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
   mrp_ip_klasse_disease varchar,   -- Disease (varchar)
   mrp_ip_klasse_labor varchar,   -- Labor (varchar)
+  mrp_ip_klasse_nieren_insuf varchar,   -- Grad der Nierenfunktionseinschränkung (varchar)
   mrp_massn_am___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   mrp_massn_am___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   mrp_massn_am___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -301,7 +303,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
              COALESCE(db.to_char_immutable(mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? (mrp_med_prod)
              COALESCE(db.to_char_immutable(mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
-             COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung    (mrp_dokup_fehler)
+             COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung  (mrp_dokup_fehler)
              COALESCE(db.to_char_immutable(mrp_dokup_intervention), '#NULL#') || '|||' || -- hash from: Intervention / Vorschlag zur Fehlervermeldung (mrp_dokup_intervention)
              COALESCE(db.to_char_immutable(mrp_pigrund___1), '#NULL#') || '|||' || -- hash from: 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (mrp_pigrund___1)
              COALESCE(db.to_char_immutable(mrp_pigrund___2), '#NULL#') || '|||' || -- hash from: 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (mrp_pigrund___2)
@@ -331,8 +333,10 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_pigrund___26), '#NULL#') || '|||' || -- hash from: 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (mrp_pigrund___26)
              COALESCE(db.to_char_immutable(mrp_pigrund___27), '#NULL#') || '|||' || -- hash from: 27 - S: Schulung/Beratung eines Patienten (mrp_pigrund___27)
              COALESCE(db.to_char_immutable(mrp_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse)
+             COALESCE(db.to_char_immutable(mrp_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse_01)
              COALESCE(db.to_char_immutable(mrp_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (mrp_ip_klasse_disease)
              COALESCE(db.to_char_immutable(mrp_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (mrp_ip_klasse_labor)
+             COALESCE(db.to_char_immutable(mrp_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (mrp_ip_klasse_nieren_insuf)
              COALESCE(db.to_char_immutable(mrp_massn_am___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (mrp_massn_am___1)
              COALESCE(db.to_char_immutable(mrp_massn_am___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (mrp_massn_am___2)
              COALESCE(db.to_char_immutable(mrp_massn_am___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (mrp_massn_am___3)
@@ -380,15 +384,19 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   ret_meda_dat1 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
   ret_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
   ret_ip_klasse varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
+  ret_ip_klasse_01 varchar,   -- MRP-Klasse (INTERPOLAR) (varchar)
   ret_atc1 varchar,   -- 1. Medikament ATC / Name: (varchar)
   ret_atc2 varchar,   -- 2. Medikament ATC / Name (varchar)
   ret_ip_klasse_disease varchar,   -- Disease (varchar)
   ret_ip_klasse_labor varchar,   -- Labor (varchar)
+  ret_ip_klasse_nieren_insuf varchar,   -- Grad der Nierenfunktionseinschränkung (varchar)
   ret_gewissheit1 varchar,   -- Sicherheit des detektierten MRP (varchar)
   ret_mrp_zuordnung1 varchar,   -- Zuordnung zu manuellem MRP (varchar)
-  ret_gewissheit_oth1 varchar,   -- Weitere Informationen (varchar)
-  ret_gewiss_grund_abl1 varchar,   -- Grund für nicht Bestätigung (varchar)
+  ret_gewissheit1_oth varchar,   -- Weitere Informationen (varchar)
+  ret_gewiss_grund1_abl varchar,   -- Grund für nicht Bestätigung (varchar)
   ret_gewiss_grund_abl_sonst1 varchar,   -- Bitte näher beschreiben (varchar)
+  ret_gewiss_grund_abl_klin1 varchar,   -- WARUM ist das MRP nicht klinisch relevant (varchar)
+  ret_gewiss_grund_abl_klin1_neg___1 varchar,   -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
   ret_massn_am1___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   ret_massn_am1___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   ret_massn_am1___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -417,6 +425,8 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   ret_gewissheit2_oth varchar,   -- Weitere Informationen (varchar)
   ret_gewiss_grund2_abl varchar,   -- Grund für nicht Bestätigung (varchar)
   ret_gewiss_grund_abl_sonst2 varchar,   -- Bitte näher beschreiben (varchar)
+  ret_gewiss_grund_abl_klin2 varchar,   -- WARUM ist das MRP nicht klinisch relevant (varchar)
+  ret_gewiss_grund_abl_klin_neg___1 varchar,   -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
   ret_massn_am2___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   ret_massn_am2___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   ret_massn_am2___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -449,15 +459,19 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
              COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
              COALESCE(db.to_char_immutable(ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse)
+             COALESCE(db.to_char_immutable(ret_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse_01)
              COALESCE(db.to_char_immutable(ret_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name: (ret_atc1)
              COALESCE(db.to_char_immutable(ret_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (ret_atc2)
              COALESCE(db.to_char_immutable(ret_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease)
              COALESCE(db.to_char_immutable(ret_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor)
+             COALESCE(db.to_char_immutable(ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (ret_ip_klasse_nieren_insuf)
              COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit1)
              COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
-             COALESCE(db.to_char_immutable(ret_gewissheit_oth1), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit_oth1)
-             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl1), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund_abl1)
+             COALESCE(db.to_char_immutable(ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
              COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin1)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
              COALESCE(db.to_char_immutable(ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am1___1)
              COALESCE(db.to_char_immutable(ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am1___2)
              COALESCE(db.to_char_immutable(ret_massn_am1___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am1___3)
@@ -486,6 +500,8 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
              COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
              COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin2)
+             COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin_neg___1)
              COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
              COALESCE(db.to_char_immutable(ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
              COALESCE(db.to_char_immutable(ret_massn_am2___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am2___3)
@@ -814,7 +830,7 @@ COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc4 IS '4. Medikam
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_atc5 IS '5. Medikament ATC / Name (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod IS 'Medizinprodukt betroffen? (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_med_prod_sonst IS 'Bezeichnung Präparat (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung    (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung  (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_intervention IS 'Intervention / Vorschlag zur Fehlervermeldung (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___1 IS '1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___2 IS '2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)';
@@ -844,8 +860,10 @@ COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___25 IS '25
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___26 IS '26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_pigrund___27 IS '27 - S: Schulung/Beratung eines Patienten (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_01 IS 'MRP-Klasse (INTERPOLAR) (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_disease IS 'Disease (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_labor IS 'Labor (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_ip_klasse_nieren_insuf IS 'Grad der Nierenfunktionseinschränkung (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___2 IS '2 - Arzneimittel ändern (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_massn_am___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
@@ -885,15 +903,19 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung 
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_01 IS 'MRP-Klasse (INTERPOLAR) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_atc1 IS '1. Medikament ATC / Name: (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_atc2 IS '2. Medikament ATC / Name (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_disease IS 'Disease (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_labor IS 'Labor (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_nieren_insuf IS 'Grad der Nierenfunktionseinschränkung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1 IS 'Sicherheit des detektierten MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung1 IS 'Zuordnung zu manuellem MRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit_oth1 IS 'Weitere Informationen (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl1 IS 'Grund für nicht Bestätigung (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1_oth IS 'Weitere Informationen (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund1_abl IS 'Grund für nicht Bestätigung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst1 IS 'Bitte näher beschreiben (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___2 IS '2 - Arzneimittel ändern (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
@@ -922,6 +944,8 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuo
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl IS 'Grund für nicht Bestätigung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Bitte näher beschreiben (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___2 IS '2 - Arzneimittel ändern (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';

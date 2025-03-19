@@ -3,22 +3,21 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-05 12:14:14
--- Rights definition file size        : 15641 Byte
+-- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file size        : 15699 Byte
 --
--- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2025-03-05 14:46:32
+-- Create SQL Tables in Schema "db2dataprocessor_out"
+-- Create time: 2025-03-18 13:56:29
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
--- SCRIPTNAME:  52_cre_view_fe_out.sql
+-- SCRIPTNAME:  460_cre_view_fe_dataproc_last.sql
 -- TEMPLATE:  template_cre_view3.sql
--- OWNER_USER:  db2frontend_user
--- OWNER_SCHEMA:  db2frontend_out
+-- OWNER_USER:  db2dataprocessor_user
+-- OWNER_SCHEMA:  db2dataprocessor_out
 -- TAGS:  
 -- TABLE_PREFIX:  v_
--- TABLE_POSTFIX:  
+-- TABLE_POSTFIX:  _fe_last
 -- RIGHTS:  SELECT
--- GRANT_TARGET_USER:  db2frontend_user
--- GRANT_TARGET_USER (2):  db_user
+-- GRANT_TARGET_USER:  db2dataprocessor_user
 -- COPY_FUNC_SCRIPTNAME:  
 -- COPY_FUNC_TEMPLATE:  
 -- COPY_FUNC_NAME:  
@@ -28,70 +27,63 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
---Create View for frontend tables for schema db2frontend_out
+--Create View for frontend tables for schema db2dataprocessor_out
 
-CREATE OR REPLACE VIEW db2frontend_out.v_patient AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_fe_last AS (
 SELECT * FROM db_log.patient_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.patient_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_fall AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_fall_fe_last AS (
 SELECT * FROM db_log.fall_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.fall_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_medikationsanalyse AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_medikationsanalyse_fe_last AS (
 SELECT * FROM db_log.medikationsanalyse_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.medikationsanalyse_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_mrpdokumentation_validierung AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_mrpdokumentation_validierung_fe_last AS (
 SELECT * FROM db_log.mrpdokumentation_validierung_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.mrpdokumentation_validierung_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrpbewertung AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_retrolektive_mrpbewertung_fe_last AS (
 SELECT * FROM db_log.retrolektive_mrpbewertung_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.retrolektive_mrpbewertung_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_risikofaktor AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_risikofaktor_fe_last AS (
 SELECT * FROM db_log.risikofaktor_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.risikofaktor_fe)
 );
 
-CREATE OR REPLACE VIEW db2frontend_out.v_trigger AS (
+CREATE OR REPLACE VIEW db2dataprocessor_out.v_trigger_fe_last AS (
 SELECT * FROM db_log.trigger_fe
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI') FROM db_log.trigger_fe)
 );
 
---SQL Role for Views in Schema db2frontend_out
-GRANT SELECT ON TABLE db2frontend_out.v_patient TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_patient TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+--SQL Role for Views in Schema db2dataprocessor_out
+GRANT SELECT ON TABLE db2dataprocessor_out.v_patient_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_fall TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_fall TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+GRANT SELECT ON TABLE db2dataprocessor_out.v_fall_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_medikationsanalyse TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_medikationsanalyse TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+GRANT SELECT ON TABLE db2dataprocessor_out.v_medikationsanalyse_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+GRANT SELECT ON TABLE db2dataprocessor_out.v_mrpdokumentation_validierung_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+GRANT SELECT ON TABLE db2dataprocessor_out.v_retrolektive_mrpbewertung_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_risikofaktor TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_risikofaktor TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+GRANT SELECT ON TABLE db2dataprocessor_out.v_risikofaktor_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db_user;
-GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
+GRANT SELECT ON TABLE db2dataprocessor_out.v_trigger_fe_last TO db2dataprocessor_user;
+GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 

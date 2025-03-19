@@ -3,13 +3,13 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-21 10:00:28
--- Rights definition file size        : 15641 Byte
+-- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-03-03 22:58:36
+-- Create time: 2025-03-18 13:56:11
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
--- SCRIPTNAME:  25_adding_historical_raw_records.sql
+-- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
 -- OWNER_USER:  cds2db_user
 -- OWNER_SCHEMA:  cds2db_out

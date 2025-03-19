@@ -3,40 +3,38 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-02-21 10:00:28
--- Rights definition file size        : 15641 Byte
+-- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file size        : 15699 Byte
 --
--- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-03 19:13:08
+-- Create SQL Tables in Schema "cds2db_in"
+-- Create time: 2025-03-18 13:55:33
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
--- SCRIPTNAME:  16_cre_table_typ_log.sql
+-- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
--- OWNER_USER:  db_log_user
--- OWNER_SCHEMA:  db_log
+-- OWNER_USER:  cds2db_user
+-- OWNER_SCHEMA:  cds2db_in
 -- TAGS:  TYPED
 -- TABLE_PREFIX:  
 -- TABLE_POSTFIX:  
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
--- RIGHTS (3):  SELECT
--- GRANT_TARGET_USER:  db_log_user
+-- GRANT_TARGET_USER:  cds2db_user
 -- GRANT_TARGET_USER (2):  db_user
--- GRANT_TARGET_USER (3):  cds2db_user
--- COPY_FUNC_SCRIPTNAME:  31_cds_in_to_db_log.sql
--- COPY_FUNC_TEMPLATE:  template_copy_function.sql
--- COPY_FUNC_NAME:  copy_type_cds_in_to_db_log
--- SCHEMA_2:  cds2db_in
+-- COPY_FUNC_SCRIPTNAME:  150_get_last_processing_nr_typed.sql
+-- COPY_FUNC_TEMPLATE:  template_get_last_pnr_typed.sql
+-- COPY_FUNC_NAME:  get_last_processing_nr_typed
+-- SCHEMA_2:  db_log
 -- TABLE_POSTFIX_2:  
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
 -----------------------------------------------------
--- Create SQL Tables in Schema "db_log" --
+-- Create SQL Tables in Schema "cds2db_in" --
 -----------------------------------------------------
 
--- Table "encounter" in schema "db_log"
+-- Table "encounter" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.encounter (
+CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   encounter_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   enc_id varchar,   -- id (varchar)
@@ -207,9 +205,9 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "patient" in schema "db_log"
+-- Table "patient" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.patient (
+CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   patient_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   pat_id varchar,   -- id (varchar)
@@ -264,9 +262,9 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "condition" in schema "db_log"
+-- Table "condition" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.condition (
+CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   condition_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   con_id varchar,   -- id (varchar)
@@ -529,9 +527,9 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "medication" in schema "db_log"
+-- Table "medication" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.medication (
+CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medication_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   med_id varchar,   -- id (varchar)
@@ -670,9 +668,9 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "medicationrequest" in schema "db_log"
+-- Table "medicationrequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
+CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationrequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medreq_id varchar,   -- id (varchar)
@@ -1163,9 +1161,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "medicationadministration" in schema "db_log"
+-- Table "medicationadministration" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
+CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationadministration_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medadm_id varchar,   -- id (varchar)
@@ -1416,9 +1414,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "medicationstatement" in schema "db_log"
+-- Table "medicationstatement" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
+CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   medicationstatement_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   medstat_id varchar,   -- id (varchar)
@@ -1879,9 +1877,9 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "observation" in schema "db_log"
+-- Table "observation" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.observation (
+CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   observation_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   obs_id varchar,   -- id (varchar)
@@ -2180,9 +2178,9 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "diagnosticreport" in schema "db_log"
+-- Table "diagnosticreport" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
+CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   diagnosticreport_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   diagrep_id varchar,   -- id (varchar)
@@ -2295,9 +2293,9 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "servicerequest" in schema "db_log"
+-- Table "servicerequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.servicerequest (
+CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   servicerequest_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   servreq_id varchar,   -- id (varchar)
@@ -2446,9 +2444,9 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "procedure" in schema "db_log"
+-- Table "procedure" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.procedure (
+CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   procedure_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   proc_id varchar,   -- id (varchar)
@@ -2617,9 +2615,9 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "consent" in schema "db_log"
+-- Table "consent" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.consent (
+CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   consent_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   cons_id varchar,   -- id (varchar)
@@ -2708,9 +2706,9 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "location" in schema "db_log"
+-- Table "location" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.location (
+CREATE TABLE IF NOT EXISTS cds2db_in.location (
   location_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   location_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   loc_id varchar,   -- id (varchar)
@@ -2761,9 +2759,9 @@ CREATE TABLE IF NOT EXISTS db_log.location (
   last_processing_nr INT                                        -- Last processing number of the data record
 );
 
--- Table "pids_per_ward" in schema "db_log"
+-- Table "pids_per_ward" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
+CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
   pids_per_ward_raw_id int NOT NULL, -- Primary key of the corresponding raw table
   ward_name varchar,   -- ward_name (varchar)
@@ -2786,2047 +2784,2033 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
 
 
 ------------------------------------------------------
--- SQL Role / Trigger in Schema "db_log" --
+-- SQL Role / Trigger in Schema "cds2db_in" --
 ------------------------------------------------------
 
 
--- Table "encounter" in schema "db_log"
+-- Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.encounter TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.encounter TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.encounter TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.encounter TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.encounter TO db_user; -- Additional authorizations for testing
 
--- Table "patient" in schema "db_log"
+-- Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.patient TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.patient TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.patient TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.patient TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.patient TO db_user; -- Additional authorizations for testing
 
--- Table "condition" in schema "db_log"
+-- Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.condition TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.condition TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.condition TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.condition TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.condition TO db_user; -- Additional authorizations for testing
 
--- Table "medication" in schema "db_log"
+-- Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.medication TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.medication TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medication TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.medication TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medication TO db_user; -- Additional authorizations for testing
 
--- Table "medicationrequest" in schema "db_log"
+-- Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.medicationrequest TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.medicationrequest TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationrequest TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.medicationrequest TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationrequest TO db_user; -- Additional authorizations for testing
 
--- Table "medicationadministration" in schema "db_log"
+-- Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.medicationadministration TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.medicationadministration TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationadministration TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.medicationadministration TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationadministration TO db_user; -- Additional authorizations for testing
 
--- Table "medicationstatement" in schema "db_log"
+-- Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.medicationstatement TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.medicationstatement TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.medicationstatement TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.medicationstatement TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.medicationstatement TO db_user; -- Additional authorizations for testing
 
--- Table "observation" in schema "db_log"
+-- Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.observation TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.observation TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.observation TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.observation TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.observation TO db_user; -- Additional authorizations for testing
 
--- Table "diagnosticreport" in schema "db_log"
+-- Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.diagnosticreport TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.diagnosticreport TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.diagnosticreport TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.diagnosticreport TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.diagnosticreport TO db_user; -- Additional authorizations for testing
 
--- Table "servicerequest" in schema "db_log"
+-- Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.servicerequest TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.servicerequest TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.servicerequest TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.servicerequest TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.servicerequest TO db_user; -- Additional authorizations for testing
 
--- Table "procedure" in schema "db_log"
+-- Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.procedure TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.procedure TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.procedure TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.procedure TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.procedure TO db_user; -- Additional authorizations for testing
 
--- Table "consent" in schema "db_log"
+-- Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.consent TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.consent TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.consent TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.consent TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.consent TO db_user; -- Additional authorizations for testing
 
--- Table "location" in schema "db_log"
+-- Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.location TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.location TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.location TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.location TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.location TO db_user; -- Additional authorizations for testing
 
--- Table "pids_per_ward" in schema "db_log"
+-- Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-GRANT TRIGGER ON db_log.pids_per_ward TO db_log_user;
-GRANT USAGE ON SCHEMA db_log TO db_log_user;
-GRANT USAGE ON db.db_seq TO db_log_user;
+GRANT TRIGGER ON cds2db_in.pids_per_ward TO cds2db_user;
+GRANT USAGE ON SCHEMA cds2db_in TO cds2db_user;
+GRANT USAGE ON db.db_seq TO cds2db_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.pids_per_ward TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db_log.pids_per_ward TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO cds2db_user; -- Additional authorizations for testing
+GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO db_user; -- Additional authorizations for testing
 
 ------------------------------------------------------
--- Comments on Tables in Schema "db_log" --
+-- Comments on Tables in Schema "cds2db_in" --
 ------------------------------------------------------
 -- Output off
 \o /dev/null
 
-COMMENT ON COLUMN db_log.encounter.encounter_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.encounter.encounter_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.encounter.enc_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.encounter.enc_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.encounter.enc_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.encounter.enc_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_partof_ref IS 'partOf/reference (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_class_system IS 'class/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_class_version IS 'class/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_class_code IS 'class/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_class_display IS 'class/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_type_system IS 'type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_type_version IS 'type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_type_code IS 'type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_type_display IS 'type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_type_text IS 'type/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_servicetype_system IS 'serviceType/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_servicetype_version IS 'serviceType/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_servicetype_code IS 'serviceType/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_servicetype_display IS 'serviceType/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_servicetype_text IS 'serviceType/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_period_start IS 'period/start (timestamp)';
-COMMENT ON COLUMN db_log.encounter.enc_period_end IS 'period/end (timestamp)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_condition_ref IS 'diagnosis/condition/reference (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_use_system IS 'diagnosis/use/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_use_version IS 'diagnosis/use/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_use_code IS 'diagnosis/use/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_use_display IS 'diagnosis/use/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_use_text IS 'diagnosis/use/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_diagnosis_rank IS 'diagnosis/rank (int)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_admitsource_system IS 'hospitalization/admitSource/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_admitsource_version IS 'hospitalization/admitSource/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_admitsource_code IS 'hospitalization/admitSource/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_admitsource_display IS 'hospitalization/admitSource/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_admitsource_text IS 'hospitalization/admitSource/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_dischargedisposition_system IS 'hospitalization/dischargeDisposition/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_dischargedisposition_version IS 'hospitalization/dischargeDisposition/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_dischargedisposition_code IS 'hospitalization/dischargeDisposition/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_dischargedisposition_display IS 'hospitalization/dischargeDisposition/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_hospitalization_dischargedisposition_text IS 'hospitalization/dischargeDisposition/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_ref IS 'location/location/reference (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_type IS 'location/location/type (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_use IS 'location/location/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_type_system IS 'location/location/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_type_version IS 'location/location/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_type_code IS 'location/location/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_type_display IS 'location/location/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_type_text IS 'location/location/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_system IS 'location/location/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_identifier_value IS 'location/location/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_display IS 'location/location/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_status IS 'location/status (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_physicaltype_system IS 'location/physicalType/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_physicaltype_version IS 'location/physicalType/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_physicaltype_code IS 'location/physicalType/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_physicaltype_display IS 'location/physicalType/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_location_physicaltype_text IS 'location/physicalType/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_ref IS 'serviceProvider/reference (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_type IS 'serviceProvider/type (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_use IS 'serviceProvider/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_type_system IS 'serviceProvider/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_type_version IS 'serviceProvider/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_type_code IS 'serviceProvider/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_type_display IS 'serviceProvider/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_type_text IS 'serviceProvider/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_system IS 'serviceProvider/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_identifier_value IS 'serviceProvider/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.encounter.enc_serviceprovider_display IS 'serviceProvider/display (varchar)';
-COMMENT ON COLUMN db_log.encounter.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.encounter.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.encounter.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.encounter.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.encounter.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.patient.patient_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.patient.patient_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.patient.pat_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.patient.pat_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.patient.pat_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.patient.pat_name_text IS 'name/text (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_name_family IS 'name/family (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_name_given IS 'name/given (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_gender IS 'gender (varchar)';
-COMMENT ON COLUMN db_log.patient.pat_birthdate IS 'birthDate (date)';
-COMMENT ON COLUMN db_log.patient.pat_address_postalcode IS 'address/postalCode (varchar)';
-COMMENT ON COLUMN db_log.patient.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.patient.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.patient.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.patient.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.patient.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.condition.condition_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.condition.condition_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.condition.con_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.condition.con_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.condition.con_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.condition.con_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.condition.con_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.condition.con_clinicalstatus_system IS 'clinicalStatus/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_clinicalstatus_version IS 'clinicalStatus/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_clinicalstatus_code IS 'clinicalStatus/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_clinicalstatus_display IS 'clinicalStatus/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_clinicalstatus_text IS 'clinicalStatus/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_verificationstatus_system IS 'verificationStatus/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_verificationstatus_version IS 'verificationStatus/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_verificationstatus_code IS 'verificationStatus/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_verificationstatus_display IS 'verificationStatus/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_verificationstatus_text IS 'verificationStatus/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_severity_system IS 'severity/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_severity_version IS 'severity/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_severity_code IS 'severity/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_severity_display IS 'severity/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_severity_text IS 'severity/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_code_system IS 'code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_code_version IS 'code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_code_code IS 'code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_code_display IS 'code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_code_text IS 'code/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_bodysite_system IS 'bodySite/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_bodysite_version IS 'bodySite/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_bodysite_code IS 'bodySite/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_bodysite_display IS 'bodySite/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_bodysite_text IS 'bodySite/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_onsetperiod_start IS 'onsetPeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_onsetperiod_end IS 'onsetPeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_onsetdatetime IS 'onsetDateTime (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_abatementdatetime IS 'abatementDateTime (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_abatementage_value IS 'abatementAge/value (double precision)';
-COMMENT ON COLUMN db_log.condition.con_abatementage_comparator IS 'abatementAge/comparator (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementage_unit IS 'abatementAge/unit (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementage_system IS 'abatementAge/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementage_code IS 'abatementAge/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementperiod_start IS 'abatementPeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_abatementperiod_end IS 'abatementPeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_low_value IS 'abatementRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_low_unit IS 'abatementRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_low_system IS 'abatementRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_low_code IS 'abatementRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_high_value IS 'abatementRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_high_unit IS 'abatementRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_high_system IS 'abatementRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementrange_high_code IS 'abatementRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_abatementstring IS 'abatementString (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recordeddate IS 'recordedDate (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_recorder_ref IS 'recorder/reference (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_type IS 'recorder/type (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_use IS 'recorder/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_type_system IS 'recorder/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_type_version IS 'recorder/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_type_code IS 'recorder/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_type_display IS 'recorder/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_type_text IS 'recorder/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_system IS 'recorder/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_identifier_value IS 'recorder/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.condition.con_recorder_display IS 'recorder/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_ref IS 'asserter/reference (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_type IS 'asserter/type (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_use IS 'asserter/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_type_system IS 'asserter/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_type_version IS 'asserter/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_type_code IS 'asserter/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_type_display IS 'asserter/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_type_text IS 'asserter/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_system IS 'asserter/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_identifier_value IS 'asserter/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.condition.con_asserter_display IS 'asserter/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_summary_system IS 'stage/summary/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_summary_version IS 'stage/summary/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_summary_code IS 'stage/summary/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_summary_display IS 'stage/summary/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_summary_text IS 'stage/summary/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_ref IS 'stage/assessment/reference (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_type IS 'stage/assessment/type (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_use IS 'stage/assessment/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_type_system IS 'stage/assessment/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_type_version IS 'stage/assessment/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_type_code IS 'stage/assessment/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_type_display IS 'stage/assessment/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_type_text IS 'stage/assessment/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_system IS 'stage/assessment/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_identifier_value IS 'stage/assessment/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_assessment_display IS 'stage/assessment/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_type_system IS 'stage/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_type_version IS 'stage/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_type_code IS 'stage/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_type_display IS 'stage/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_stage_type_text IS 'stage/type/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorstring IS 'note/authorString (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_type IS 'note/authorReference/type (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_authorreference_display IS 'note/authorReference/display (varchar)';
-COMMENT ON COLUMN db_log.condition.con_note_time IS 'note/time (timestamp)';
-COMMENT ON COLUMN db_log.condition.con_note_text IS 'note/text (varchar)';
-COMMENT ON COLUMN db_log.condition.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.condition.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.condition.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.condition.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.condition.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.medication.medication_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.medication.medication_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.medication.med_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.medication.med_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.medication.med_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.medication.med_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medication.med_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.medication.med_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.medication.med_code_system IS 'code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_code_version IS 'code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medication.med_code_code IS 'code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_code_display IS 'code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medication.med_code_text IS 'code/text (varchar)';
-COMMENT ON COLUMN db_log.medication.med_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.medication.med_form_system IS 'form/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_form_version IS 'form/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medication.med_form_code IS 'form/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_form_display IS 'form/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medication.med_form_text IS 'form/text (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_numerator_value IS 'amount/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medication.med_amount_numerator_comparator IS 'amount/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_numerator_unit IS 'amount/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_numerator_system IS 'amount/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_numerator_code IS 'amount/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_denominator_value IS 'amount/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medication.med_amount_denominator_comparator IS 'amount/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_denominator_unit IS 'amount/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_denominator_system IS 'amount/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_amount_denominator_code IS 'amount/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_numerator_value IS 'ingredient/strength/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_numerator_comparator IS 'ingredient/strength/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_numerator_unit IS 'ingredient/strength/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_numerator_system IS 'ingredient/strength/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_numerator_code IS 'ingredient/strength/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_denominator_value IS 'ingredient/strength/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_denominator_comparator IS 'ingredient/strength/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_denominator_unit IS 'ingredient/strength/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_denominator_system IS 'ingredient/strength/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_strength_denominator_code IS 'ingredient/strength/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemcodeableconcept_system IS 'ingredient/itemCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemcodeableconcept_version IS 'ingredient/itemCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemcodeableconcept_code IS 'ingredient/itemCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemcodeableconcept_display IS 'ingredient/itemCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemcodeableconcept_text IS 'ingredient/itemCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_ref IS 'ingredient/itemReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_type IS 'ingredient/itemReference/type (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_use IS 'ingredient/itemReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_type_system IS 'ingredient/itemReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_type_version IS 'ingredient/itemReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_type_code IS 'ingredient/itemReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_type_display IS 'ingredient/itemReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_type_text IS 'ingredient/itemReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_system IS 'ingredient/itemReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_identifier_value IS 'ingredient/itemReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_itemreference_display IS 'ingredient/itemReference/display (varchar)';
-COMMENT ON COLUMN db_log.medication.med_ingredient_isactive IS 'ingredient/isActive (boolean)';
-COMMENT ON COLUMN db_log.medication.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.medication.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.medication.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.medication.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.medication.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.medicationrequest.medicationrequest_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.medicationrequest.medicationrequest_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_medicationreference_ref IS 'medicationReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_statusreason_system IS 'statusReason/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_statusreason_version IS 'statusReason/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_statusreason_code IS 'statusReason/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_statusreason_display IS 'statusReason/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_statusreason_text IS 'statusReason/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_intend IS 'intend (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_priority IS 'priority (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedboolean IS 'reportedBoolean (boolean)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_ref IS 'reportedReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_type IS 'reportedReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_use IS 'reportedReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_type_system IS 'reportedReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_type_version IS 'reportedReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_type_code IS 'reportedReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_type_display IS 'reportedReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_type_text IS 'reportedReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_system IS 'reportedReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_identifier_value IS 'reportedReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reportedreference_display IS 'reportedReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_medicationcodeableconcept_code IS 'medicationCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_medicationcodeableconcept_display IS 'medicationCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_medicationcodeableconcept_text IS 'medicationCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_ref IS 'supportingInformation/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_type IS 'supportingInformation/type (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_use IS 'supportingInformation/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_type_system IS 'supportingInformation/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_type_version IS 'supportingInformation/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_type_code IS 'supportingInformation/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_type_display IS 'supportingInformation/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_type_text IS 'supportingInformation/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_system IS 'supportingInformation/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_identifier_value IS 'supportingInformation/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_supportinginformation_display IS 'supportingInformation/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_authoredon IS 'authoredOn (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_ref IS 'requester/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_type IS 'requester/type (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_use IS 'requester/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_type_system IS 'requester/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_type_version IS 'requester/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_type_code IS 'requester/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_type_display IS 'requester/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_type_text IS 'requester/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_system IS 'requester/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_identifier_value IS 'requester/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_requester_display IS 'requester/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasoncode_system IS 'reasonCode/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasoncode_version IS 'reasonCode/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasoncode_code IS 'reasonCode/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasoncode_display IS 'reasonCode/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasoncode_text IS 'reasonCode/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_ref IS 'reasonReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_type IS 'reasonReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_reasonreference_display IS 'reasonReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_ref IS 'basedOn/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_type IS 'basedOn/type (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_basedon_display IS 'basedOn/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorstring IS 'note/authorString (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_type IS 'note/authorReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_authorreference_display IS 'note/authorReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_time IS 'note/time (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_note_text IS 'note/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_sequence IS 'dosageInstruction/sequence (int)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_text IS 'dosageInstruction/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_additionalinstruction_system IS 'dosageInstruction/additionalInstruction/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_additionalinstruction_version IS 'dosageInstruction/additionalInstruction/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_additionalinstruction_code IS 'dosageInstruction/additionalInstruction/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_additionalinstruction_display IS 'dosageInstruction/additionalInstruction/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_additionalinstruction_text IS 'dosageInstruction/additionalInstruction/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_patientinstruction IS 'dosageInstruction/patientInstruction (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_event IS 'dosageInstruction/timing/event (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_value IS 'dosageInstruction/timing/repeat/boundsDuration/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_comparator IS 'dosageInstruction/timing/repeat/boundsDuration/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_unit IS 'dosageInstruction/timing/repeat/boundsDuration/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_system IS 'dosageInstruction/timing/repeat/boundsDuration/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_code IS 'dosageInstruction/timing/repeat/boundsDuration/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_value IS 'dosageInstruction/timing/repeat/boundsRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_unit IS 'dosageInstruction/timing/repeat/boundsRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_system IS 'dosageInstruction/timing/repeat/boundsRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_code IS 'dosageInstruction/timing/repeat/boundsRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_value IS 'dosageInstruction/timing/repeat/boundsRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_unit IS 'dosageInstruction/timing/repeat/boundsRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_system IS 'dosageInstruction/timing/repeat/boundsRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_code IS 'dosageInstruction/timing/repeat/boundsRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsperiod_start IS 'dosageInstruction/timing/repeat/boundsPeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_boundsperiod_end IS 'dosageInstruction/timing/repeat/boundsPeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_count IS 'dosageInstruction/timing/repeat/count (int)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_countmax IS 'dosageInstruction/timing/repeat/countMax (int)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_duration IS 'dosageInstruction/timing/repeat/duration (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_durationmax IS 'dosageInstruction/timing/repeat/durationMax (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_durationunit IS 'dosageInstruction/timing/repeat/durationUnit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_frequency IS 'dosageInstruction/timing/repeat/frequency (int)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_frequencymax IS 'dosageInstruction/timing/repeat/frequencyMax (int)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_period IS 'dosageInstruction/timing/repeat/period (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_periodmax IS 'dosageInstruction/timing/repeat/periodMax (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_periodunit IS 'dosageInstruction/timing/repeat/periodUnit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_dayofweek IS 'dosageInstruction/timing/repeat/dayOfWeek (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_timeofday IS 'dosageInstruction/timing/repeat/timeOfDay (time)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_when IS 'dosageInstruction/timing/repeat/when (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_repeat_offset IS 'dosageInstruction/timing/repeat/offset (int)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_code_system IS 'dosageInstruction/timing/code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_code_version IS 'dosageInstruction/timing/code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_code_code IS 'dosageInstruction/timing/code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_code_display IS 'dosageInstruction/timing/code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_timing_code_text IS 'dosageInstruction/timing/code/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_asneededboolean IS 'dosageInstruction/asNeededBoolean (boolean)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_system IS 'dosageInstruction/asNeededCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_version IS 'dosageInstruction/asNeededCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_code IS 'dosageInstruction/asNeededCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_display IS 'dosageInstruction/asNeededCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_text IS 'dosageInstruction/asNeededCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_site_system IS 'dosageInstruction/site/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_site_version IS 'dosageInstruction/site/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_site_code IS 'dosageInstruction/site/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_site_display IS 'dosageInstruction/site/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_site_text IS 'dosageInstruction/site/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_route_system IS 'dosageInstruction/route/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_route_version IS 'dosageInstruction/route/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_route_code IS 'dosageInstruction/route/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_route_display IS 'dosageInstruction/route/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_route_text IS 'dosageInstruction/route/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_method_system IS 'dosageInstruction/method/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_method_version IS 'dosageInstruction/method/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_method_code IS 'dosageInstruction/method/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_method_display IS 'dosageInstruction/method/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_method_text IS 'dosageInstruction/method/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_system IS 'dosageInstruction/doseAndRate/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_version IS 'dosageInstruction/doseAndRate/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_code IS 'dosageInstruction/doseAndRate/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_display IS 'dosageInstruction/doseAndRate/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_type_text IS 'dosageInstruction/doseAndRate/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_value IS 'dosageInstruction/doseAndRate/doseRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_unit IS 'dosageInstruction/doseAndRate/doseRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_system IS 'dosageInstruction/doseAndRate/doseRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_code IS 'dosageInstruction/doseAndRate/doseRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_value IS 'dosageInstruction/doseAndRate/doseRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_unit IS 'dosageInstruction/doseAndRate/doseRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_system IS 'dosageInstruction/doseAndRate/doseRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_code IS 'dosageInstruction/doseAndRate/doseRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_value IS 'dosageInstruction/doseAndRate/doseQuantity/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_comparator IS 'dosageInstruction/doseAndRate/doseQuantity/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_unit IS 'dosageInstruction/doseAndRate/doseQuantity/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_system IS 'dosageInstruction/doseAndRate/doseQuantity/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_code IS 'dosageInstruction/doseAndRate/doseQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_value IS 'dosageInstruction/doseAndRate/rateRatio/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator IS 'dosageInstruction/doseAndRate/rateRatio/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_unit IS 'dosageInstruction/doseAndRate/rateRatio/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_system IS 'dosageInstruction/doseAndRate/rateRatio/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_code IS 'dosageInstruction/doseAndRate/rateRatio/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_value IS 'dosageInstruction/doseAndRate/rateRatio/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator IS 'dosageInstruction/doseAndRate/rateRatio/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_unit IS 'dosageInstruction/doseAndRate/rateRatio/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_system IS 'dosageInstruction/doseAndRate/rateRatio/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_code IS 'dosageInstruction/doseAndRate/rateRatio/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_value IS 'dosageInstruction/doseAndRate/rateRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_unit IS 'dosageInstruction/doseAndRate/rateRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_system IS 'dosageInstruction/doseAndRate/rateRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_code IS 'dosageInstruction/doseAndRate/rateRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_value IS 'dosageInstruction/doseAndRate/rateRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_unit IS 'dosageInstruction/doseAndRate/rateRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_system IS 'dosageInstruction/doseAndRate/rateRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_code IS 'dosageInstruction/doseAndRate/rateRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_value IS 'dosageInstruction/doseAndRate/rateQuantity/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_unit IS 'dosageInstruction/doseAndRate/rateQuantity/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_system IS 'dosageInstruction/doseAndRate/rateQuantity/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_code IS 'dosageInstruction/doseAndRate/rateQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_value IS 'dosageInstruction/maxDosePerPeriod/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_comparator IS 'dosageInstruction/maxDosePerPeriod/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_unit IS 'dosageInstruction/maxDosePerPeriod/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_system IS 'dosageInstruction/maxDosePerPeriod/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_code IS 'dosageInstruction/maxDosePerPeriod/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_value IS 'dosageInstruction/maxDosePerPeriod/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_comparator IS 'dosageInstruction/maxDosePerPeriod/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_unit IS 'dosageInstruction/maxDosePerPeriod/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_system IS 'dosageInstruction/maxDosePerPeriod/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_code IS 'dosageInstruction/maxDosePerPeriod/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_value IS 'dosageInstruction/maxDosePerAdministration/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_unit IS 'dosageInstruction/maxDosePerAdministration/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_system IS 'dosageInstruction/maxDosePerAdministration/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperadministration_code IS 'dosageInstruction/maxDosePerAdministration/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_value IS 'dosageInstruction/maxDosePerLifetime/value (double precision)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_unit IS 'dosageInstruction/maxDosePerLifetime/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_system IS 'dosageInstruction/maxDosePerLifetime/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_code IS 'dosageInstruction/maxDosePerLifetime/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_substitution_reason_system IS 'substitution/reason/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_substitution_reason_version IS 'substitution/reason/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_substitution_reason_code IS 'substitution/reason/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_substitution_reason_display IS 'substitution/reason/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.medreq_substitution_reason_text IS 'substitution/reason/text (varchar)';
-COMMENT ON COLUMN db_log.medicationrequest.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.medicationrequest.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.medicationrequest.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.medicationrequest.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.medicationrequest.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.medicationadministration.medicationadministration_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.medicationadministration.medicationadministration_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_encounter_ref IS 'context/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_partof_ref IS 'partOf/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_statusreason_system IS 'statusReason/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_statusreason_version IS 'statusReason/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_statusreason_code IS 'statusReason/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_statusreason_display IS 'statusReason/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_statusreason_text IS 'statusReason/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_medicationreference_ref IS 'medicationReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_medicationcodeableconcept_code IS 'medicationCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_medicationcodeableconcept_display IS 'medicationCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_medicationcodeableconcept_text IS 'medicationCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_ref IS 'supportingInformation/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_type IS 'supportingInformation/type (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_use IS 'supportingInformation/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_type_system IS 'supportingInformation/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_type_version IS 'supportingInformation/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_type_code IS 'supportingInformation/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_type_display IS 'supportingInformation/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_type_text IS 'supportingInformation/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_system IS 'supportingInformation/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_identifier_value IS 'supportingInformation/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_supportinginformation_display IS 'supportingInformation/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_effectivedatetime IS 'effectiveDateTime (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_effectiveperiod_start IS 'effectivePeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_effectiveperiod_end IS 'effectivePeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_performer_function_system IS 'performer/function/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_performer_function_version IS 'performer/function/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_performer_function_code IS 'performer/function/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_performer_function_display IS 'performer/function/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_performer_function_text IS 'performer/function/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasoncode_system IS 'reasonCode/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasoncode_version IS 'reasonCode/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasoncode_code IS 'reasonCode/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasoncode_display IS 'reasonCode/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasoncode_text IS 'reasonCode/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_ref IS 'reasonReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_type IS 'reasonReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_reasonreference_display IS 'reasonReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_request_ref IS 'request/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorstring IS 'note/authorString (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_type IS 'note/authorReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_authorreference_display IS 'note/authorReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_time IS 'note/time (timestamp)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_note_text IS 'note/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_text IS 'dosage/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_site_system IS 'dosage/site/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_site_version IS 'dosage/site/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_site_code IS 'dosage/site/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_site_display IS 'dosage/site/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_site_text IS 'dosage/site/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_route_system IS 'dosage/route/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_route_version IS 'dosage/route/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_route_code IS 'dosage/route/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_route_display IS 'dosage/route/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_route_text IS 'dosage/route/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_method_system IS 'dosage/method/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_method_version IS 'dosage/method/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_method_code IS 'dosage/method/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_method_display IS 'dosage/method/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_method_text IS 'dosage/method/text (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_dose_value IS 'dosage/dose/value (double precision)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_dose_unit IS 'dosage/dose/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_dose_system IS 'dosage/dose/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_dose_code IS 'dosage/dose/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_numerator_value IS 'dosage/rateRatio/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_numerator_comparator IS 'dosage/rateRatio/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_numerator_unit IS 'dosage/rateRatio/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_numerator_system IS 'dosage/rateRatio/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_numerator_code IS 'dosage/rateRatio/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_denominator_value IS 'dosage/rateRatio/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_denominator_comparator IS 'dosage/rateRatio/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_denominator_unit IS 'dosage/rateRatio/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_denominator_system IS 'dosage/rateRatio/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_rateratio_denominator_code IS 'dosage/rateRatio/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_ratequantity_value IS 'dosage/rateQuantity/value (double precision)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_ratequantity_unit IS 'dosage/rateQuantity/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_ratequantity_system IS 'dosage/rateQuantity/system (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.medadm_dosage_ratequantity_code IS 'dosage/rateQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.medicationadministration.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.medicationadministration.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.medicationadministration.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.medicationadministration.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.medicationadministration.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.medicationstatement.medicationstatement_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.medicationstatement.medicationstatement_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_encounter_ref IS 'context/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_partof_ref IS 'partOf/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_ref IS 'basedOn/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_type IS 'basedOn/type (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_basedon_display IS 'basedOn/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_statusreason_system IS 'statusReason/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_statusreason_version IS 'statusReason/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_statusreason_code IS 'statusReason/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_statusreason_display IS 'statusReason/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_statusreason_text IS 'statusReason/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_medicationreference_ref IS 'medicationReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_medicationcodeableconcept_code IS 'medicationCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_medicationcodeableconcept_display IS 'medicationCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_medicationcodeableconcept_text IS 'medicationCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_effectivedatetime IS 'effectiveDateTime (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_effectiveperiod_start IS 'effectivePeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_effectiveperiod_end IS 'effectivePeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dateasserted IS 'dateAsserted (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_ref IS 'informationSource/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_type IS 'informationSource/type (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_use IS 'informationSource/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_type_system IS 'informationSource/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_type_version IS 'informationSource/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_type_code IS 'informationSource/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_type_display IS 'informationSource/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_type_text IS 'informationSource/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_system IS 'informationSource/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_identifier_value IS 'informationSource/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_informationsource_display IS 'informationSource/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_ref IS 'derivedFrom/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_type IS 'derivedFrom/type (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_use IS 'derivedFrom/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_type_system IS 'derivedFrom/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_type_version IS 'derivedFrom/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_type_code IS 'derivedFrom/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_type_display IS 'derivedFrom/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_type_text IS 'derivedFrom/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_system IS 'derivedFrom/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_identifier_value IS 'derivedFrom/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_derivedfrom_display IS 'derivedFrom/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasoncode_system IS 'reasonCode/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasoncode_version IS 'reasonCode/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasoncode_code IS 'reasonCode/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasoncode_display IS 'reasonCode/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasoncode_text IS 'reasonCode/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_ref IS 'reasonReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_type IS 'reasonReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_reasonreference_display IS 'reasonReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorstring IS 'note/authorString (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_type IS 'note/authorReference/type (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_authorreference_display IS 'note/authorReference/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_time IS 'note/time (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_note_text IS 'note/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_sequence IS 'dosage/sequence (int)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_text IS 'dosage/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_additionalinstruction_system IS 'dosage/additionalInstruction/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_additionalinstruction_version IS 'dosage/additionalInstruction/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_additionalinstruction_code IS 'dosage/additionalInstruction/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_additionalinstruction_display IS 'dosage/additionalInstruction/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_additionalinstruction_text IS 'dosage/additionalInstruction/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_patientinstruction IS 'dosage/patientInstruction (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_event IS 'dosage/timing/event (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_value IS 'dosage/timing/repeat/boundsDuration/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_comparator IS 'dosage/timing/repeat/boundsDuration/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_unit IS 'dosage/timing/repeat/boundsDuration/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_system IS 'dosage/timing/repeat/boundsDuration/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsduration_code IS 'dosage/timing/repeat/boundsDuration/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_value IS 'dosage/timing/repeat/boundsRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_unit IS 'dosage/timing/repeat/boundsRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_system IS 'dosage/timing/repeat/boundsRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_code IS 'dosage/timing/repeat/boundsRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_value IS 'dosage/timing/repeat/boundsRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_unit IS 'dosage/timing/repeat/boundsRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_system IS 'dosage/timing/repeat/boundsRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_code IS 'dosage/timing/repeat/boundsRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsperiod_start IS 'dosage/timing/repeat/boundsPeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_boundsperiod_end IS 'dosage/timing/repeat/boundsPeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_count IS 'dosage/timing/repeat/count (int)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_countmax IS 'dosage/timing/repeat/countMax (int)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_duration IS 'dosage/timing/repeat/duration (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_durationmax IS 'dosage/timing/repeat/durationMax (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_durationunit IS 'dosage/timing/repeat/durationUnit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_frequency IS 'dosage/timing/repeat/frequency (int)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_frequencymax IS 'dosage/timing/repeat/frequencyMax (int)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_period IS 'dosage/timing/repeat/period (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_periodmax IS 'dosage/timing/repeat/periodMax (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_periodunit IS 'dosage/timing/repeat/periodUnit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_dayofweek IS 'dosage/timing/repeat/dayOfWeek (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_timeofday IS 'dosage/timing/repeat/timeOfDay (time)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_when IS 'dosage/timing/repeat/when (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_repeat_offset IS 'dosage/timing/repeat/offset (int)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_code_system IS 'dosage/timing/code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_code_version IS 'dosage/timing/code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_code_code IS 'dosage/timing/code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_code_display IS 'dosage/timing/code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_timing_code_text IS 'dosage/timing/code/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_asneededboolean IS 'dosage/asNeededBoolean (boolean)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_asneededcodeableconcept_system IS 'dosage/asNeededCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_asneededcodeableconcept_version IS 'dosage/asNeededCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_asneededcodeableconcept_code IS 'dosage/asNeededCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_asneededcodeableconcept_display IS 'dosage/asNeededCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_asneededcodeableconcept_text IS 'dosage/asNeededCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_site_system IS 'dosage/site/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_site_version IS 'dosage/site/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_site_code IS 'dosage/site/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_site_display IS 'dosage/site/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_site_text IS 'dosage/site/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_route_system IS 'dosage/route/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_route_version IS 'dosage/route/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_route_code IS 'dosage/route/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_route_display IS 'dosage/route/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_route_text IS 'dosage/route/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_method_system IS 'dosage/method/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_method_version IS 'dosage/method/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_method_code IS 'dosage/method/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_method_display IS 'dosage/method/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_method_text IS 'dosage/method/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_type_system IS 'dosage/doseAndRate/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_type_version IS 'dosage/doseAndRate/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_type_code IS 'dosage/doseAndRate/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_type_display IS 'dosage/doseAndRate/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_type_text IS 'dosage/doseAndRate/type/text (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_value IS 'dosage/doseAndRate/doseRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_unit IS 'dosage/doseAndRate/doseRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_system IS 'dosage/doseAndRate/doseRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_low_code IS 'dosage/doseAndRate/doseRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_value IS 'dosage/doseAndRate/doseRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_unit IS 'dosage/doseAndRate/doseRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_system IS 'dosage/doseAndRate/doseRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_doserange_high_code IS 'dosage/doseAndRate/doseRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_value IS 'dosage/doseAndRate/doseQuantity/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_comparator IS 'dosage/doseAndRate/doseQuantity/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_unit IS 'dosage/doseAndRate/doseQuantity/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_system IS 'dosage/doseAndRate/doseQuantity/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_dosequantity_code IS 'dosage/doseAndRate/doseQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_value IS 'dosage/doseAndRate/rateRatio/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_comparator IS 'dosage/doseAndRate/rateRatio/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_unit IS 'dosage/doseAndRate/rateRatio/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_system IS 'dosage/doseAndRate/rateRatio/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_code IS 'dosage/doseAndRate/rateRatio/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_value IS 'dosage/doseAndRate/rateRatio/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_comparator IS 'dosage/doseAndRate/rateRatio/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_unit IS 'dosage/doseAndRate/rateRatio/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_system IS 'dosage/doseAndRate/rateRatio/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_code IS 'dosage/doseAndRate/rateRatio/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_value IS 'dosage/doseAndRate/rateRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_unit IS 'dosage/doseAndRate/rateRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_system IS 'dosage/doseAndRate/rateRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_low_code IS 'dosage/doseAndRate/rateRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_value IS 'dosage/doseAndRate/rateRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_unit IS 'dosage/doseAndRate/rateRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_system IS 'dosage/doseAndRate/rateRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_raterange_high_code IS 'dosage/doseAndRate/rateRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_value IS 'dosage/doseAndRate/rateQuantity/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_unit IS 'dosage/doseAndRate/rateQuantity/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_system IS 'dosage/doseAndRate/rateQuantity/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_doseandrate_ratequantity_code IS 'dosage/doseAndRate/rateQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_value IS 'dosage/maxDosePerPeriod/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_comparator IS 'dosage/maxDosePerPeriod/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_unit IS 'dosage/maxDosePerPeriod/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_system IS 'dosage/maxDosePerPeriod/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_code IS 'dosage/maxDosePerPeriod/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_value IS 'dosage/maxDosePerPeriod/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_comparator IS 'dosage/maxDosePerPeriod/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_unit IS 'dosage/maxDosePerPeriod/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_system IS 'dosage/maxDosePerPeriod/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_code IS 'dosage/maxDosePerPeriod/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperadministration_value IS 'dosage/maxDosePerAdministration/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperadministration_unit IS 'dosage/maxDosePerAdministration/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperadministration_system IS 'dosage/maxDosePerAdministration/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperadministration_code IS 'dosage/maxDosePerAdministration/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_value IS 'dosage/maxDosePerLifetime/value (double precision)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_unit IS 'dosage/maxDosePerLifetime/unit (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_system IS 'dosage/maxDosePerLifetime/system (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.medstat_dosage_maxdoseperlifetime_code IS 'dosage/maxDosePerLifetime/code (varchar)';
-COMMENT ON COLUMN db_log.medicationstatement.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.medicationstatement.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.medicationstatement.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.medicationstatement.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.medicationstatement.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.observation.observation_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.observation.observation_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.observation.obs_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.observation.obs_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.observation.obs_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.observation.obs_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_partof_ref IS 'partOf/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_ref IS 'basedOn/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_type IS 'basedOn/type (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_basedon_display IS 'basedOn/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_code_system IS 'code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_code_version IS 'code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_code_code IS 'code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_code_display IS 'code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_code_text IS 'code/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_effectivedatetime IS 'effectiveDateTime (timestamp)';
-COMMENT ON COLUMN db_log.observation.obs_issued IS 'issued (timestamp)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_low_value IS 'valueRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_low_unit IS 'valueRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_low_system IS 'valueRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_low_code IS 'valueRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_high_value IS 'valueRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_high_unit IS 'valueRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_high_system IS 'valueRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuerange_high_code IS 'valueRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_numerator_value IS 'valueRatio/numerator/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_numerator_comparator IS 'valueRatio/numerator/comparator (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_numerator_unit IS 'valueRatio/numerator/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_numerator_system IS 'valueRatio/numerator/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_numerator_code IS 'valueRatio/numerator/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_denominator_value IS 'valueRatio/denominator/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_denominator_comparator IS 'valueRatio/denominator/comparator (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_denominator_unit IS 'valueRatio/denominator/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_denominator_system IS 'valueRatio/denominator/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valueratio_denominator_code IS 'valueRatio/denominator/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuequantity_value IS 'valueQuantity/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_valuequantity_comparator IS 'valueQuantity/comparator (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuequantity_unit IS 'valueQuantity/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuequantity_system IS 'valueQuantity/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuequantity_code IS 'valueQuantity/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_system IS 'valueCodeableConcept/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_version IS 'valueCodeableConcept/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_code IS 'valueCodeableConcept/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_display IS 'valueCodeableConcept/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_valuecodeableconcept_text IS 'valueCodeableConcept/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_system IS 'dataAbsentReason/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_version IS 'dataAbsentReason/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_code IS 'dataAbsentReason/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_display IS 'dataAbsentReason/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_dataabsentreason_text IS 'dataAbsentReason/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorstring IS 'note/authorString (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_type IS 'note/authorReference/type (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_authorreference_display IS 'note/authorReference/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_note_time IS 'note/time (timestamp)';
-COMMENT ON COLUMN db_log.observation.obs_note_text IS 'note/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_method_system IS 'method/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_method_version IS 'method/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_method_code IS 'method/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_method_display IS 'method/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_method_text IS 'method/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_ref IS 'performer/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_type IS 'performer/type (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_use IS 'performer/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_type_system IS 'performer/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_type_version IS 'performer/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_system IS 'performer/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_identifier_value IS 'performer/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_performer_display IS 'performer/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_low_value IS 'referenceRange/low/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_low_unit IS 'referenceRange/low/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_low_system IS 'referenceRange/low/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_low_code IS 'referenceRange/low/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_high_value IS 'referenceRange/high/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_high_unit IS 'referenceRange/high/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_high_system IS 'referenceRange/high/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_high_code IS 'referenceRange/high/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_type_system IS 'referenceRange/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_type_version IS 'referenceRange/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_type_code IS 'referenceRange/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_type_display IS 'referenceRange/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_type_text IS 'referenceRange/type/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_appliesto_system IS 'referenceRange/appliesTo/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_appliesto_version IS 'referenceRange/appliesTo/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_appliesto_code IS 'referenceRange/appliesTo/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_appliesto_display IS 'referenceRange/appliesTo/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_appliesto_text IS 'referenceRange/appliesTo/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_low_value IS 'referenceRange/age/low/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_low_unit IS 'referenceRange/age/low/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_low_system IS 'referenceRange/age/low/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_low_code IS 'referenceRange/age/low/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_high_value IS 'referenceRange/age/high/value (double precision)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_high_unit IS 'referenceRange/age/high/unit (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_high_system IS 'referenceRange/age/high/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_age_high_code IS 'referenceRange/age/high/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_referencerange_text IS 'referenceRange/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_ref IS 'hasMember/reference (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_type IS 'hasMember/type (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_use IS 'hasMember/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_type_system IS 'hasMember/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_type_version IS 'hasMember/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_type_code IS 'hasMember/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_type_display IS 'hasMember/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_type_text IS 'hasMember/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_system IS 'hasMember/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_identifier_value IS 'hasMember/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.observation.obs_hasmember_display IS 'hasMember/display (varchar)';
-COMMENT ON COLUMN db_log.observation.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.observation.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.observation.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.observation.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.observation.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.diagnosticreport.diagnosticreport_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.diagnosticreport.diagnosticreport_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_partof_ref IS 'partOf/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_result_ref IS 'result/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_basedon_ref IS 'basedOn/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_code_system IS 'code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_code_version IS 'code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_code_code IS 'code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_code_display IS 'code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_code_text IS 'code/text (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_effectivedatetime IS 'effectiveDateTime (timestamp)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_issued IS 'issued (timestamp)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_ref IS 'performer/reference (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_type IS 'performer/type (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_use IS 'performer/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_type_system IS 'performer/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_type_version IS 'performer/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_system IS 'performer/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_identifier_value IS 'performer/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_performer_display IS 'performer/display (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_conclusion IS 'conclusion (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_conclusioncode_system IS 'conclusionCode/coding/system (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_conclusioncode_version IS 'conclusionCode/coding/version (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_conclusioncode_code IS 'conclusionCode/coding/code (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_conclusioncode_display IS 'conclusionCode/coding/display (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.diagrep_conclusioncode_text IS 'conclusionCode/text (varchar)';
-COMMENT ON COLUMN db_log.diagnosticreport.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.diagnosticreport.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.diagnosticreport.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.diagnosticreport.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.diagnosticreport.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.servicerequest.servicerequest_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.servicerequest.servicerequest_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.servicerequest.servreq_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_ref IS 'basedOn/reference (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_type IS 'basedOn/type (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_basedon_display IS 'basedOn/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_intent IS 'intent (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_code_system IS 'code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_code_version IS 'code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_code_code IS 'code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_code_display IS 'code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_code_text IS 'code/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_authoredon IS 'authoredOn (timestamp)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_ref IS 'requester/reference (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_type IS 'requester/type (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_use IS 'requester/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_type_system IS 'requester/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_type_version IS 'requester/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_type_code IS 'requester/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_type_display IS 'requester/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_type_text IS 'requester/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_system IS 'requester/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_identifier_value IS 'requester/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_requester_display IS 'requester/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_ref IS 'performer/reference (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_type IS 'performer/type (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_use IS 'performer/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_type_system IS 'performer/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_type_version IS 'performer/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_system IS 'performer/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_identifier_value IS 'performer/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_performer_display IS 'performer/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_locationcode_system IS 'locationCode/coding/system (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_locationcode_version IS 'locationCode/coding/version (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_locationcode_code IS 'locationCode/coding/code (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_locationcode_display IS 'locationCode/coding/display (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.servreq_locationcode_text IS 'locationCode/text (varchar)';
-COMMENT ON COLUMN db_log.servicerequest.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.servicerequest.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.servicerequest.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.servicerequest.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.servicerequest.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.procedure.procedure_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.procedure.procedure_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.procedure.proc_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_encounter_ref IS 'encounter/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_patient_ref IS 'subject/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_partof_ref IS 'partOf/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_ref IS 'basedOn/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_type IS 'basedOn/type (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_basedon_display IS 'basedOn/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_statusreason_system IS 'statusReason/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_statusreason_version IS 'statusReason/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_statusreason_code IS 'statusReason/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_statusreason_display IS 'statusReason/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_statusreason_text IS 'statusReason/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_category_system IS 'category/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_category_version IS 'category/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_category_code IS 'category/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_category_display IS 'category/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_category_text IS 'category/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_code_system IS 'code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_code_version IS 'code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_code_code IS 'code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_code_display IS 'code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_code_text IS 'code/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_performeddatetime IS 'performedDateTime (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_performedperiod_start IS 'performedPeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_performedperiod_end IS 'performedPeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_reasoncode_system IS 'reasonCode/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasoncode_version IS 'reasonCode/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasoncode_code IS 'reasonCode/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasoncode_display IS 'reasonCode/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasoncode_text IS 'reasonCode/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_ref IS 'reasonReference/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_type IS 'reasonReference/type (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_reasonreference_display IS 'reasonReference/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorstring IS 'note/authorString (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_type IS 'note/authorReference/type (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_authorreference_display IS 'note/authorReference/display (varchar)';
-COMMENT ON COLUMN db_log.procedure.proc_note_time IS 'note/time (timestamp)';
-COMMENT ON COLUMN db_log.procedure.proc_note_text IS 'note/text (varchar)';
-COMMENT ON COLUMN db_log.procedure.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.procedure.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.procedure.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.procedure.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.procedure.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.consent.consent_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.consent.consent_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.consent.cons_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_patient_ref IS 'patient/reference (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_scope_system IS 'scope/coding/system (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_scope_version IS 'scope/coding/version (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_scope_code IS 'scope/coding/code (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_scope_display IS 'scope/coding/display (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_scope_text IS 'scope/text (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_datetime IS 'dateTime (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_provision_type IS 'provision/type (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_period_start IS 'provision/period/start (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_provision_period_end IS 'provision/period/end (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_system IS 'provision/actor/role/coding/system (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_version IS 'provision/actor/role/coding/version (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_code IS 'provision/actor/role/coding/code (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_display IS 'provision/actor/role/coding/display (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_text IS 'provision/actor/role/text (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_code_system IS 'provision/code/coding/system (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_code_version IS 'provision/code/coding/version (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_code_code IS 'provision/code/coding/code (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_code_display IS 'provision/code/coding/display (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_code_text IS 'provision/code/text (varchar)';
-COMMENT ON COLUMN db_log.consent.cons_provision_dataperiod_start IS 'provision/dataPeriod/start (timestamp)';
-COMMENT ON COLUMN db_log.consent.cons_provision_dataperiod_end IS 'provision/dataPeriod/end (timestamp)';
-COMMENT ON COLUMN db_log.consent.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.consent.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.consent.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.consent.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.consent.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.location.location_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.location.location_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.location.loc_id IS 'id (varchar)';
-COMMENT ON COLUMN db_log.location.loc_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN db_log.location.loc_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
-COMMENT ON COLUMN db_log.location.loc_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN db_log.location.loc_identifier_start IS 'identifier/start (timestamp)';
-COMMENT ON COLUMN db_log.location.loc_identifier_end IS 'identifier/end (timestamp)';
-COMMENT ON COLUMN db_log.location.loc_status IS 'status (varchar)';
-COMMENT ON COLUMN db_log.location.loc_name IS 'name (varchar)';
-COMMENT ON COLUMN db_log.location.loc_description IS 'description (varchar)';
-COMMENT ON COLUMN db_log.location.loc_alias IS 'alias (varchar)';
-COMMENT ON COLUMN db_log.location.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.location.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.location.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.location.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.location.last_processing_nr IS 'Last processing number of the data record';
-COMMENT ON COLUMN db_log.pids_per_ward.pids_per_ward_id IS 'Primary key of the entity';
-COMMENT ON COLUMN db_log.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
-COMMENT ON COLUMN db_log.pids_per_ward.ward_name IS 'ward_name (varchar)';
-COMMENT ON COLUMN db_log.pids_per_ward.patient_id IS 'patient_id (varchar)';
-COMMENT ON COLUMN db_log.pids_per_ward.encounter_id IS 'encounter_id (varchar)';
-COMMENT ON COLUMN db_log.pids_per_ward.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN db_log.pids_per_ward.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN db_log.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN db_log.pids_per_ward.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN db_log.pids_per_ward.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.encounter.encounter_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.encounter.encounter_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.encounter.enc_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_class_system IS 'class/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_class_version IS 'class/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_class_code IS 'class/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_class_display IS 'class/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_type_system IS 'type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_type_version IS 'type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_type_code IS 'type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_type_display IS 'type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_type_text IS 'type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_servicetype_system IS 'serviceType/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_servicetype_version IS 'serviceType/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_servicetype_code IS 'serviceType/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_servicetype_display IS 'serviceType/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_servicetype_text IS 'serviceType/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_period_start IS 'period/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_period_end IS 'period/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_condition_ref IS 'diagnosis/condition/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_use_system IS 'diagnosis/use/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_use_version IS 'diagnosis/use/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_use_code IS 'diagnosis/use/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_use_display IS 'diagnosis/use/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_use_text IS 'diagnosis/use/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_diagnosis_rank IS 'diagnosis/rank (int)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_admitsource_system IS 'hospitalization/admitSource/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_admitsource_version IS 'hospitalization/admitSource/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_admitsource_code IS 'hospitalization/admitSource/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_admitsource_display IS 'hospitalization/admitSource/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_admitsource_text IS 'hospitalization/admitSource/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_dischargedisposition_system IS 'hospitalization/dischargeDisposition/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_dischargedisposition_version IS 'hospitalization/dischargeDisposition/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_dischargedisposition_code IS 'hospitalization/dischargeDisposition/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_dischargedisposition_display IS 'hospitalization/dischargeDisposition/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_hospitalization_dischargedisposition_text IS 'hospitalization/dischargeDisposition/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_ref IS 'location/location/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_type IS 'location/location/type (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_use IS 'location/location/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_type_system IS 'location/location/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_type_version IS 'location/location/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_type_code IS 'location/location/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_type_display IS 'location/location/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_type_text IS 'location/location/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_system IS 'location/location/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_identifier_value IS 'location/location/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_display IS 'location/location/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_status IS 'location/status (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_physicaltype_system IS 'location/physicalType/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_physicaltype_version IS 'location/physicalType/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_physicaltype_code IS 'location/physicalType/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_physicaltype_display IS 'location/physicalType/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_location_physicaltype_text IS 'location/physicalType/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_ref IS 'serviceProvider/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_type IS 'serviceProvider/type (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_use IS 'serviceProvider/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_type_system IS 'serviceProvider/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_type_version IS 'serviceProvider/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_type_code IS 'serviceProvider/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_type_display IS 'serviceProvider/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_type_text IS 'serviceProvider/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_system IS 'serviceProvider/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_identifier_value IS 'serviceProvider/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_serviceprovider_display IS 'serviceProvider/display (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.encounter.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.encounter.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.encounter.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.encounter.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.patient.patient_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.patient.patient_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.patient.pat_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.patient.pat_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.patient.pat_name_text IS 'name/text (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_name_family IS 'name/family (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_name_given IS 'name/given (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_gender IS 'gender (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.pat_birthdate IS 'birthDate (date)';
+COMMENT ON COLUMN cds2db_in.patient.pat_address_postalcode IS 'address/postalCode (varchar)';
+COMMENT ON COLUMN cds2db_in.patient.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.patient.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.patient.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.patient.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.patient.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.condition.condition_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.condition.condition_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.condition.con_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_clinicalstatus_system IS 'clinicalStatus/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_clinicalstatus_version IS 'clinicalStatus/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_clinicalstatus_code IS 'clinicalStatus/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_clinicalstatus_display IS 'clinicalStatus/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_clinicalstatus_text IS 'clinicalStatus/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_verificationstatus_system IS 'verificationStatus/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_verificationstatus_version IS 'verificationStatus/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_verificationstatus_code IS 'verificationStatus/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_verificationstatus_display IS 'verificationStatus/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_verificationstatus_text IS 'verificationStatus/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_severity_system IS 'severity/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_severity_version IS 'severity/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_severity_code IS 'severity/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_severity_display IS 'severity/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_severity_text IS 'severity/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_code_system IS 'code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_code_version IS 'code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_code_code IS 'code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_code_display IS 'code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_code_text IS 'code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_bodysite_system IS 'bodySite/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_bodysite_version IS 'bodySite/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_bodysite_code IS 'bodySite/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_bodysite_display IS 'bodySite/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_bodysite_text IS 'bodySite/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_onsetperiod_start IS 'onsetPeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_onsetperiod_end IS 'onsetPeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_onsetdatetime IS 'onsetDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementdatetime IS 'abatementDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementage_value IS 'abatementAge/value (double precision)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementage_comparator IS 'abatementAge/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementage_unit IS 'abatementAge/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementage_system IS 'abatementAge/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementage_code IS 'abatementAge/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementperiod_start IS 'abatementPeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementperiod_end IS 'abatementPeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_low_value IS 'abatementRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_low_unit IS 'abatementRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_low_system IS 'abatementRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_low_code IS 'abatementRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_high_value IS 'abatementRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_high_unit IS 'abatementRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_high_system IS 'abatementRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementrange_high_code IS 'abatementRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_abatementstring IS 'abatementString (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recordeddate IS 'recordedDate (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_ref IS 'recorder/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_type IS 'recorder/type (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_use IS 'recorder/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_type_system IS 'recorder/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_type_version IS 'recorder/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_type_code IS 'recorder/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_type_display IS 'recorder/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_type_text IS 'recorder/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_system IS 'recorder/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_identifier_value IS 'recorder/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_recorder_display IS 'recorder/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_ref IS 'asserter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_type IS 'asserter/type (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_use IS 'asserter/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_type_system IS 'asserter/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_type_version IS 'asserter/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_type_code IS 'asserter/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_type_display IS 'asserter/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_type_text IS 'asserter/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_system IS 'asserter/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_identifier_value IS 'asserter/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_asserter_display IS 'asserter/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_summary_system IS 'stage/summary/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_summary_version IS 'stage/summary/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_summary_code IS 'stage/summary/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_summary_display IS 'stage/summary/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_summary_text IS 'stage/summary/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_ref IS 'stage/assessment/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_type IS 'stage/assessment/type (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_use IS 'stage/assessment/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_type_system IS 'stage/assessment/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_type_version IS 'stage/assessment/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_type_code IS 'stage/assessment/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_type_display IS 'stage/assessment/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_type_text IS 'stage/assessment/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_system IS 'stage/assessment/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_identifier_value IS 'stage/assessment/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_assessment_display IS 'stage/assessment/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_type_system IS 'stage/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_type_version IS 'stage/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_type_code IS 'stage/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_type_display IS 'stage/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_stage_type_text IS 'stage/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorstring IS 'note/authorString (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_type IS 'note/authorReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_authorreference_display IS 'note/authorReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_time IS 'note/time (timestamp)';
+COMMENT ON COLUMN cds2db_in.condition.con_note_text IS 'note/text (varchar)';
+COMMENT ON COLUMN cds2db_in.condition.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.condition.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.condition.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.condition.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.condition.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medication.medication_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medication.medication_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.medication.med_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.medication.med_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medication.med_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medication.med_code_system IS 'code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_code_version IS 'code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_code_code IS 'code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_code_display IS 'code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_code_text IS 'code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_form_system IS 'form/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_form_version IS 'form/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_form_code IS 'form/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_form_display IS 'form/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_form_text IS 'form/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_numerator_value IS 'amount/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_numerator_comparator IS 'amount/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_numerator_unit IS 'amount/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_numerator_system IS 'amount/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_numerator_code IS 'amount/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_denominator_value IS 'amount/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_denominator_comparator IS 'amount/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_denominator_unit IS 'amount/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_denominator_system IS 'amount/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_amount_denominator_code IS 'amount/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_numerator_value IS 'ingredient/strength/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_numerator_comparator IS 'ingredient/strength/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_numerator_unit IS 'ingredient/strength/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_numerator_system IS 'ingredient/strength/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_numerator_code IS 'ingredient/strength/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_denominator_value IS 'ingredient/strength/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_denominator_comparator IS 'ingredient/strength/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_denominator_unit IS 'ingredient/strength/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_denominator_system IS 'ingredient/strength/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_strength_denominator_code IS 'ingredient/strength/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemcodeableconcept_system IS 'ingredient/itemCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemcodeableconcept_version IS 'ingredient/itemCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemcodeableconcept_code IS 'ingredient/itemCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemcodeableconcept_display IS 'ingredient/itemCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemcodeableconcept_text IS 'ingredient/itemCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_ref IS 'ingredient/itemReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_type IS 'ingredient/itemReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_use IS 'ingredient/itemReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_type_system IS 'ingredient/itemReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_type_version IS 'ingredient/itemReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_type_code IS 'ingredient/itemReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_type_display IS 'ingredient/itemReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_type_text IS 'ingredient/itemReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_system IS 'ingredient/itemReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_identifier_value IS 'ingredient/itemReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_itemreference_display IS 'ingredient/itemReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medication.med_ingredient_isactive IS 'ingredient/isActive (boolean)';
+COMMENT ON COLUMN cds2db_in.medication.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.medication.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.medication.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.medication.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medication.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medicationrequest_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medicationrequest_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_medicationreference_ref IS 'medicationReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_statusreason_system IS 'statusReason/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_statusreason_version IS 'statusReason/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_statusreason_code IS 'statusReason/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_statusreason_display IS 'statusReason/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_statusreason_text IS 'statusReason/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_intend IS 'intend (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_priority IS 'priority (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedboolean IS 'reportedBoolean (boolean)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_ref IS 'reportedReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_type IS 'reportedReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_use IS 'reportedReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_type_system IS 'reportedReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_type_version IS 'reportedReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_type_code IS 'reportedReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_type_display IS 'reportedReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_type_text IS 'reportedReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_system IS 'reportedReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_identifier_value IS 'reportedReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reportedreference_display IS 'reportedReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_medicationcodeableconcept_code IS 'medicationCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_medicationcodeableconcept_display IS 'medicationCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_medicationcodeableconcept_text IS 'medicationCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_ref IS 'supportingInformation/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_type IS 'supportingInformation/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_use IS 'supportingInformation/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_system IS 'supportingInformation/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_version IS 'supportingInformation/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_code IS 'supportingInformation/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_display IS 'supportingInformation/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_type_text IS 'supportingInformation/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_system IS 'supportingInformation/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_identifier_value IS 'supportingInformation/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_supportinginformation_display IS 'supportingInformation/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_authoredon IS 'authoredOn (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_ref IS 'requester/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_type IS 'requester/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_use IS 'requester/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_type_system IS 'requester/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_type_version IS 'requester/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_type_code IS 'requester/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_type_display IS 'requester/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_type_text IS 'requester/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_system IS 'requester/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_identifier_value IS 'requester/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_requester_display IS 'requester/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasoncode_system IS 'reasonCode/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasoncode_version IS 'reasonCode/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasoncode_code IS 'reasonCode/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasoncode_display IS 'reasonCode/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasoncode_text IS 'reasonCode/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_ref IS 'reasonReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_type IS 'reasonReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_reasonreference_display IS 'reasonReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_ref IS 'basedOn/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_type IS 'basedOn/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_basedon_display IS 'basedOn/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorstring IS 'note/authorString (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_type IS 'note/authorReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_authorreference_display IS 'note/authorReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_time IS 'note/time (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_note_text IS 'note/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_sequence IS 'dosageInstruction/sequence (int)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_text IS 'dosageInstruction/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_additionalinstruction_system IS 'dosageInstruction/additionalInstruction/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_additionalinstruction_version IS 'dosageInstruction/additionalInstruction/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_additionalinstruction_code IS 'dosageInstruction/additionalInstruction/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_additionalinstruction_display IS 'dosageInstruction/additionalInstruction/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_additionalinstruction_text IS 'dosageInstruction/additionalInstruction/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_patientinstruction IS 'dosageInstruction/patientInstruction (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_event IS 'dosageInstruction/timing/event (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_value IS 'dosageInstruction/timing/repeat/boundsDuration/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_comparator IS 'dosageInstruction/timing/repeat/boundsDuration/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_unit IS 'dosageInstruction/timing/repeat/boundsDuration/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_system IS 'dosageInstruction/timing/repeat/boundsDuration/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsduration_code IS 'dosageInstruction/timing/repeat/boundsDuration/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_value IS 'dosageInstruction/timing/repeat/boundsRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_unit IS 'dosageInstruction/timing/repeat/boundsRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_system IS 'dosageInstruction/timing/repeat/boundsRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_low_code IS 'dosageInstruction/timing/repeat/boundsRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_value IS 'dosageInstruction/timing/repeat/boundsRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_unit IS 'dosageInstruction/timing/repeat/boundsRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_system IS 'dosageInstruction/timing/repeat/boundsRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsrange_high_code IS 'dosageInstruction/timing/repeat/boundsRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsperiod_start IS 'dosageInstruction/timing/repeat/boundsPeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_boundsperiod_end IS 'dosageInstruction/timing/repeat/boundsPeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_count IS 'dosageInstruction/timing/repeat/count (int)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_countmax IS 'dosageInstruction/timing/repeat/countMax (int)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_duration IS 'dosageInstruction/timing/repeat/duration (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_durationmax IS 'dosageInstruction/timing/repeat/durationMax (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_durationunit IS 'dosageInstruction/timing/repeat/durationUnit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_frequency IS 'dosageInstruction/timing/repeat/frequency (int)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_frequencymax IS 'dosageInstruction/timing/repeat/frequencyMax (int)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_period IS 'dosageInstruction/timing/repeat/period (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_periodmax IS 'dosageInstruction/timing/repeat/periodMax (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_periodunit IS 'dosageInstruction/timing/repeat/periodUnit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_dayofweek IS 'dosageInstruction/timing/repeat/dayOfWeek (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_timeofday IS 'dosageInstruction/timing/repeat/timeOfDay (time)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_when IS 'dosageInstruction/timing/repeat/when (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_repeat_offset IS 'dosageInstruction/timing/repeat/offset (int)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_code_system IS 'dosageInstruction/timing/code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_code_version IS 'dosageInstruction/timing/code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_code_code IS 'dosageInstruction/timing/code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_code_display IS 'dosageInstruction/timing/code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_timing_code_text IS 'dosageInstruction/timing/code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_asneededboolean IS 'dosageInstruction/asNeededBoolean (boolean)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_system IS 'dosageInstruction/asNeededCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_version IS 'dosageInstruction/asNeededCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_code IS 'dosageInstruction/asNeededCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_display IS 'dosageInstruction/asNeededCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_asneededcodeableconcept_text IS 'dosageInstruction/asNeededCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_site_system IS 'dosageInstruction/site/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_site_version IS 'dosageInstruction/site/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_site_code IS 'dosageInstruction/site/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_site_display IS 'dosageInstruction/site/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_site_text IS 'dosageInstruction/site/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_route_system IS 'dosageInstruction/route/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_route_version IS 'dosageInstruction/route/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_route_code IS 'dosageInstruction/route/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_route_display IS 'dosageInstruction/route/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_route_text IS 'dosageInstruction/route/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_method_system IS 'dosageInstruction/method/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_method_version IS 'dosageInstruction/method/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_method_code IS 'dosageInstruction/method/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_method_display IS 'dosageInstruction/method/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_method_text IS 'dosageInstruction/method/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_type_system IS 'dosageInstruction/doseAndRate/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_type_version IS 'dosageInstruction/doseAndRate/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_type_code IS 'dosageInstruction/doseAndRate/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_type_display IS 'dosageInstruction/doseAndRate/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_type_text IS 'dosageInstruction/doseAndRate/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_value IS 'dosageInstruction/doseAndRate/doseRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_unit IS 'dosageInstruction/doseAndRate/doseRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_system IS 'dosageInstruction/doseAndRate/doseRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_low_code IS 'dosageInstruction/doseAndRate/doseRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_value IS 'dosageInstruction/doseAndRate/doseRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_unit IS 'dosageInstruction/doseAndRate/doseRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_system IS 'dosageInstruction/doseAndRate/doseRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_doserange_high_code IS 'dosageInstruction/doseAndRate/doseRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_value IS 'dosageInstruction/doseAndRate/doseQuantity/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_comparator IS 'dosageInstruction/doseAndRate/doseQuantity/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_unit IS 'dosageInstruction/doseAndRate/doseQuantity/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_system IS 'dosageInstruction/doseAndRate/doseQuantity/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_dosequantity_code IS 'dosageInstruction/doseAndRate/doseQuantity/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_value IS 'dosageInstruction/doseAndRate/rateRatio/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_comparator IS 'dosageInstruction/doseAndRate/rateRatio/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_unit IS 'dosageInstruction/doseAndRate/rateRatio/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_system IS 'dosageInstruction/doseAndRate/rateRatio/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_numerator_code IS 'dosageInstruction/doseAndRate/rateRatio/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_value IS 'dosageInstruction/doseAndRate/rateRatio/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_comparator IS 'dosageInstruction/doseAndRate/rateRatio/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_unit IS 'dosageInstruction/doseAndRate/rateRatio/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_system IS 'dosageInstruction/doseAndRate/rateRatio/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_rateratio_denominator_code IS 'dosageInstruction/doseAndRate/rateRatio/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_value IS 'dosageInstruction/doseAndRate/rateRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_unit IS 'dosageInstruction/doseAndRate/rateRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_system IS 'dosageInstruction/doseAndRate/rateRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_low_code IS 'dosageInstruction/doseAndRate/rateRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_value IS 'dosageInstruction/doseAndRate/rateRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_unit IS 'dosageInstruction/doseAndRate/rateRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_system IS 'dosageInstruction/doseAndRate/rateRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_raterange_high_code IS 'dosageInstruction/doseAndRate/rateRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_value IS 'dosageInstruction/doseAndRate/rateQuantity/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_unit IS 'dosageInstruction/doseAndRate/rateQuantity/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_system IS 'dosageInstruction/doseAndRate/rateQuantity/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_doseandrate_ratequantity_code IS 'dosageInstruction/doseAndRate/rateQuantity/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_value IS 'dosageInstruction/maxDosePerPeriod/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_comparator IS 'dosageInstruction/maxDosePerPeriod/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_unit IS 'dosageInstruction/maxDosePerPeriod/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_system IS 'dosageInstruction/maxDosePerPeriod/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_numerator_code IS 'dosageInstruction/maxDosePerPeriod/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_value IS 'dosageInstruction/maxDosePerPeriod/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_comparator IS 'dosageInstruction/maxDosePerPeriod/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_unit IS 'dosageInstruction/maxDosePerPeriod/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_system IS 'dosageInstruction/maxDosePerPeriod/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperperiod_denominator_code IS 'dosageInstruction/maxDosePerPeriod/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperadministration_value IS 'dosageInstruction/maxDosePerAdministration/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperadministration_unit IS 'dosageInstruction/maxDosePerAdministration/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperadministration_system IS 'dosageInstruction/maxDosePerAdministration/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperadministration_code IS 'dosageInstruction/maxDosePerAdministration/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_value IS 'dosageInstruction/maxDosePerLifetime/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_unit IS 'dosageInstruction/maxDosePerLifetime/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_system IS 'dosageInstruction/maxDosePerLifetime/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_doseinstruc_maxdoseperlifetime_code IS 'dosageInstruction/maxDosePerLifetime/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_substitution_reason_system IS 'substitution/reason/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_substitution_reason_version IS 'substitution/reason/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_substitution_reason_code IS 'substitution/reason/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_substitution_reason_display IS 'substitution/reason/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_substitution_reason_text IS 'substitution/reason/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationrequest.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.medicationrequest.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.medicationrequest.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.medicationrequest.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medicationrequest.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medicationadministration_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medicationadministration_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_encounter_ref IS 'context/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_statusreason_system IS 'statusReason/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_statusreason_version IS 'statusReason/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_statusreason_code IS 'statusReason/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_statusreason_display IS 'statusReason/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_statusreason_text IS 'statusReason/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_medicationreference_ref IS 'medicationReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_medicationcodeableconcept_code IS 'medicationCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_medicationcodeableconcept_display IS 'medicationCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_medicationcodeableconcept_text IS 'medicationCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_ref IS 'supportingInformation/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_type IS 'supportingInformation/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_use IS 'supportingInformation/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_system IS 'supportingInformation/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_version IS 'supportingInformation/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_code IS 'supportingInformation/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_display IS 'supportingInformation/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_type_text IS 'supportingInformation/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_system IS 'supportingInformation/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_identifier_value IS 'supportingInformation/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_supportinginformation_display IS 'supportingInformation/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_effectivedatetime IS 'effectiveDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_effectiveperiod_start IS 'effectivePeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_effectiveperiod_end IS 'effectivePeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_performer_function_system IS 'performer/function/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_performer_function_version IS 'performer/function/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_performer_function_code IS 'performer/function/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_performer_function_display IS 'performer/function/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_performer_function_text IS 'performer/function/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasoncode_system IS 'reasonCode/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasoncode_version IS 'reasonCode/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasoncode_code IS 'reasonCode/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasoncode_display IS 'reasonCode/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasoncode_text IS 'reasonCode/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_ref IS 'reasonReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_type IS 'reasonReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_reasonreference_display IS 'reasonReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_request_ref IS 'request/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorstring IS 'note/authorString (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_type IS 'note/authorReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_authorreference_display IS 'note/authorReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_time IS 'note/time (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_note_text IS 'note/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_text IS 'dosage/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_site_system IS 'dosage/site/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_site_version IS 'dosage/site/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_site_code IS 'dosage/site/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_site_display IS 'dosage/site/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_site_text IS 'dosage/site/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_route_system IS 'dosage/route/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_route_version IS 'dosage/route/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_route_code IS 'dosage/route/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_route_display IS 'dosage/route/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_route_text IS 'dosage/route/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_method_system IS 'dosage/method/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_method_version IS 'dosage/method/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_method_code IS 'dosage/method/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_method_display IS 'dosage/method/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_method_text IS 'dosage/method/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_dose_value IS 'dosage/dose/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_dose_unit IS 'dosage/dose/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_dose_system IS 'dosage/dose/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_dose_code IS 'dosage/dose/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_numerator_value IS 'dosage/rateRatio/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_numerator_comparator IS 'dosage/rateRatio/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_numerator_unit IS 'dosage/rateRatio/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_numerator_system IS 'dosage/rateRatio/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_numerator_code IS 'dosage/rateRatio/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_denominator_value IS 'dosage/rateRatio/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_denominator_comparator IS 'dosage/rateRatio/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_denominator_unit IS 'dosage/rateRatio/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_denominator_system IS 'dosage/rateRatio/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_rateratio_denominator_code IS 'dosage/rateRatio/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_ratequantity_value IS 'dosage/rateQuantity/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_ratequantity_unit IS 'dosage/rateQuantity/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_ratequantity_system IS 'dosage/rateQuantity/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_dosage_ratequantity_code IS 'dosage/rateQuantity/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.medicationadministration.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.medicationadministration.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.medicationadministration.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medicationadministration.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medicationstatement_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medicationstatement_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_encounter_ref IS 'context/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_ref IS 'basedOn/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_type IS 'basedOn/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_basedon_display IS 'basedOn/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_statusreason_system IS 'statusReason/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_statusreason_version IS 'statusReason/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_statusreason_code IS 'statusReason/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_statusreason_display IS 'statusReason/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_statusreason_text IS 'statusReason/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_medicationreference_ref IS 'medicationReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_medicationcodeableconcept_system IS 'medicationCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_medicationcodeableconcept_version IS 'medicationCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_medicationcodeableconcept_code IS 'medicationCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_medicationcodeableconcept_display IS 'medicationCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_medicationcodeableconcept_text IS 'medicationCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_effectivedatetime IS 'effectiveDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_effectiveperiod_start IS 'effectivePeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_effectiveperiod_end IS 'effectivePeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dateasserted IS 'dateAsserted (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_ref IS 'informationSource/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_type IS 'informationSource/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_use IS 'informationSource/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_type_system IS 'informationSource/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_type_version IS 'informationSource/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_type_code IS 'informationSource/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_type_display IS 'informationSource/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_type_text IS 'informationSource/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_system IS 'informationSource/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_identifier_value IS 'informationSource/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_informationsource_display IS 'informationSource/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_ref IS 'derivedFrom/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_type IS 'derivedFrom/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_use IS 'derivedFrom/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_type_system IS 'derivedFrom/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_type_version IS 'derivedFrom/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_type_code IS 'derivedFrom/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_type_display IS 'derivedFrom/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_type_text IS 'derivedFrom/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_system IS 'derivedFrom/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_identifier_value IS 'derivedFrom/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_derivedfrom_display IS 'derivedFrom/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasoncode_system IS 'reasonCode/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasoncode_version IS 'reasonCode/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasoncode_code IS 'reasonCode/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasoncode_display IS 'reasonCode/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasoncode_text IS 'reasonCode/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_ref IS 'reasonReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_type IS 'reasonReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_reasonreference_display IS 'reasonReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorstring IS 'note/authorString (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_type IS 'note/authorReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_authorreference_display IS 'note/authorReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_time IS 'note/time (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_note_text IS 'note/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_sequence IS 'dosage/sequence (int)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_text IS 'dosage/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_additionalinstruction_system IS 'dosage/additionalInstruction/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_additionalinstruction_version IS 'dosage/additionalInstruction/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_additionalinstruction_code IS 'dosage/additionalInstruction/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_additionalinstruction_display IS 'dosage/additionalInstruction/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_additionalinstruction_text IS 'dosage/additionalInstruction/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_patientinstruction IS 'dosage/patientInstruction (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_event IS 'dosage/timing/event (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsduration_value IS 'dosage/timing/repeat/boundsDuration/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsduration_comparator IS 'dosage/timing/repeat/boundsDuration/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsduration_unit IS 'dosage/timing/repeat/boundsDuration/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsduration_system IS 'dosage/timing/repeat/boundsDuration/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsduration_code IS 'dosage/timing/repeat/boundsDuration/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_value IS 'dosage/timing/repeat/boundsRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_unit IS 'dosage/timing/repeat/boundsRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_system IS 'dosage/timing/repeat/boundsRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_low_code IS 'dosage/timing/repeat/boundsRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_value IS 'dosage/timing/repeat/boundsRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_unit IS 'dosage/timing/repeat/boundsRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_system IS 'dosage/timing/repeat/boundsRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsrange_high_code IS 'dosage/timing/repeat/boundsRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsperiod_start IS 'dosage/timing/repeat/boundsPeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_boundsperiod_end IS 'dosage/timing/repeat/boundsPeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_count IS 'dosage/timing/repeat/count (int)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_countmax IS 'dosage/timing/repeat/countMax (int)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_duration IS 'dosage/timing/repeat/duration (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_durationmax IS 'dosage/timing/repeat/durationMax (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_durationunit IS 'dosage/timing/repeat/durationUnit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_frequency IS 'dosage/timing/repeat/frequency (int)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_frequencymax IS 'dosage/timing/repeat/frequencyMax (int)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_period IS 'dosage/timing/repeat/period (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_periodmax IS 'dosage/timing/repeat/periodMax (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_periodunit IS 'dosage/timing/repeat/periodUnit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_dayofweek IS 'dosage/timing/repeat/dayOfWeek (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_timeofday IS 'dosage/timing/repeat/timeOfDay (time)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_when IS 'dosage/timing/repeat/when (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_repeat_offset IS 'dosage/timing/repeat/offset (int)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_code_system IS 'dosage/timing/code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_code_version IS 'dosage/timing/code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_code_code IS 'dosage/timing/code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_code_display IS 'dosage/timing/code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_timing_code_text IS 'dosage/timing/code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_asneededboolean IS 'dosage/asNeededBoolean (boolean)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_asneededcodeableconcept_system IS 'dosage/asNeededCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_asneededcodeableconcept_version IS 'dosage/asNeededCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_asneededcodeableconcept_code IS 'dosage/asNeededCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_asneededcodeableconcept_display IS 'dosage/asNeededCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_asneededcodeableconcept_text IS 'dosage/asNeededCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_site_system IS 'dosage/site/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_site_version IS 'dosage/site/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_site_code IS 'dosage/site/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_site_display IS 'dosage/site/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_site_text IS 'dosage/site/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_route_system IS 'dosage/route/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_route_version IS 'dosage/route/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_route_code IS 'dosage/route/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_route_display IS 'dosage/route/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_route_text IS 'dosage/route/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_method_system IS 'dosage/method/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_method_version IS 'dosage/method/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_method_code IS 'dosage/method/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_method_display IS 'dosage/method/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_method_text IS 'dosage/method/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_type_system IS 'dosage/doseAndRate/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_type_version IS 'dosage/doseAndRate/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_type_code IS 'dosage/doseAndRate/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_type_display IS 'dosage/doseAndRate/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_type_text IS 'dosage/doseAndRate/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_low_value IS 'dosage/doseAndRate/doseRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_low_unit IS 'dosage/doseAndRate/doseRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_low_system IS 'dosage/doseAndRate/doseRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_low_code IS 'dosage/doseAndRate/doseRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_high_value IS 'dosage/doseAndRate/doseRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_high_unit IS 'dosage/doseAndRate/doseRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_high_system IS 'dosage/doseAndRate/doseRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_doserange_high_code IS 'dosage/doseAndRate/doseRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_dosequantity_value IS 'dosage/doseAndRate/doseQuantity/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_dosequantity_comparator IS 'dosage/doseAndRate/doseQuantity/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_dosequantity_unit IS 'dosage/doseAndRate/doseQuantity/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_dosequantity_system IS 'dosage/doseAndRate/doseQuantity/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_dosequantity_code IS 'dosage/doseAndRate/doseQuantity/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_value IS 'dosage/doseAndRate/rateRatio/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_comparator IS 'dosage/doseAndRate/rateRatio/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_unit IS 'dosage/doseAndRate/rateRatio/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_system IS 'dosage/doseAndRate/rateRatio/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_numerator_code IS 'dosage/doseAndRate/rateRatio/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_value IS 'dosage/doseAndRate/rateRatio/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_comparator IS 'dosage/doseAndRate/rateRatio/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_unit IS 'dosage/doseAndRate/rateRatio/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_system IS 'dosage/doseAndRate/rateRatio/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_rateratio_denominator_code IS 'dosage/doseAndRate/rateRatio/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_low_value IS 'dosage/doseAndRate/rateRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_low_unit IS 'dosage/doseAndRate/rateRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_low_system IS 'dosage/doseAndRate/rateRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_low_code IS 'dosage/doseAndRate/rateRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_high_value IS 'dosage/doseAndRate/rateRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_high_unit IS 'dosage/doseAndRate/rateRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_high_system IS 'dosage/doseAndRate/rateRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_raterange_high_code IS 'dosage/doseAndRate/rateRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_ratequantity_value IS 'dosage/doseAndRate/rateQuantity/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_ratequantity_unit IS 'dosage/doseAndRate/rateQuantity/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_ratequantity_system IS 'dosage/doseAndRate/rateQuantity/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_doseandrate_ratequantity_code IS 'dosage/doseAndRate/rateQuantity/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_value IS 'dosage/maxDosePerPeriod/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_comparator IS 'dosage/maxDosePerPeriod/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_unit IS 'dosage/maxDosePerPeriod/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_system IS 'dosage/maxDosePerPeriod/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_numerator_code IS 'dosage/maxDosePerPeriod/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_value IS 'dosage/maxDosePerPeriod/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_comparator IS 'dosage/maxDosePerPeriod/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_unit IS 'dosage/maxDosePerPeriod/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_system IS 'dosage/maxDosePerPeriod/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperperiod_denominator_code IS 'dosage/maxDosePerPeriod/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperadministration_value IS 'dosage/maxDosePerAdministration/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperadministration_unit IS 'dosage/maxDosePerAdministration/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperadministration_system IS 'dosage/maxDosePerAdministration/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperadministration_code IS 'dosage/maxDosePerAdministration/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperlifetime_value IS 'dosage/maxDosePerLifetime/value (double precision)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperlifetime_unit IS 'dosage/maxDosePerLifetime/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperlifetime_system IS 'dosage/maxDosePerLifetime/system (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_dosage_maxdoseperlifetime_code IS 'dosage/maxDosePerLifetime/code (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.medicationstatement.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.medicationstatement.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.medicationstatement.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.medicationstatement.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.observation.observation_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.observation.observation_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.observation.obs_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.observation.obs_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.observation.obs_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.observation.obs_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_ref IS 'basedOn/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_type IS 'basedOn/type (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_basedon_display IS 'basedOn/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_code_system IS 'code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_code_version IS 'code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_code_code IS 'code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_code_display IS 'code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_code_text IS 'code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_effectivedatetime IS 'effectiveDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.observation.obs_issued IS 'issued (timestamp)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_low_value IS 'valueRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_low_unit IS 'valueRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_low_system IS 'valueRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_low_code IS 'valueRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_high_value IS 'valueRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_high_unit IS 'valueRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_high_system IS 'valueRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuerange_high_code IS 'valueRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_numerator_value IS 'valueRatio/numerator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_numerator_comparator IS 'valueRatio/numerator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_numerator_unit IS 'valueRatio/numerator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_numerator_system IS 'valueRatio/numerator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_numerator_code IS 'valueRatio/numerator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_denominator_value IS 'valueRatio/denominator/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_denominator_comparator IS 'valueRatio/denominator/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_denominator_unit IS 'valueRatio/denominator/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_denominator_system IS 'valueRatio/denominator/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valueratio_denominator_code IS 'valueRatio/denominator/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuequantity_value IS 'valueQuantity/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuequantity_comparator IS 'valueQuantity/comparator (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuequantity_unit IS 'valueQuantity/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuequantity_system IS 'valueQuantity/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuequantity_code IS 'valueQuantity/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuecodeableconcept_system IS 'valueCodeableConcept/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuecodeableconcept_version IS 'valueCodeableConcept/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuecodeableconcept_code IS 'valueCodeableConcept/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuecodeableconcept_display IS 'valueCodeableConcept/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_valuecodeableconcept_text IS 'valueCodeableConcept/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_dataabsentreason_system IS 'dataAbsentReason/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_dataabsentreason_version IS 'dataAbsentReason/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_dataabsentreason_code IS 'dataAbsentReason/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_dataabsentreason_display IS 'dataAbsentReason/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_dataabsentreason_text IS 'dataAbsentReason/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorstring IS 'note/authorString (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_type IS 'note/authorReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_authorreference_display IS 'note/authorReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_time IS 'note/time (timestamp)';
+COMMENT ON COLUMN cds2db_in.observation.obs_note_text IS 'note/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_method_system IS 'method/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_method_version IS 'method/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_method_code IS 'method/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_method_display IS 'method/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_method_text IS 'method/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_ref IS 'performer/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_type IS 'performer/type (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_use IS 'performer/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_type_system IS 'performer/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_type_version IS 'performer/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_system IS 'performer/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_identifier_value IS 'performer/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_performer_display IS 'performer/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_low_value IS 'referenceRange/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_low_unit IS 'referenceRange/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_low_system IS 'referenceRange/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_low_code IS 'referenceRange/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_high_value IS 'referenceRange/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_high_unit IS 'referenceRange/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_high_system IS 'referenceRange/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_high_code IS 'referenceRange/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_type_system IS 'referenceRange/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_type_version IS 'referenceRange/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_type_code IS 'referenceRange/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_type_display IS 'referenceRange/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_type_text IS 'referenceRange/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_appliesto_system IS 'referenceRange/appliesTo/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_appliesto_version IS 'referenceRange/appliesTo/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_appliesto_code IS 'referenceRange/appliesTo/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_appliesto_display IS 'referenceRange/appliesTo/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_appliesto_text IS 'referenceRange/appliesTo/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_low_value IS 'referenceRange/age/low/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_low_unit IS 'referenceRange/age/low/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_low_system IS 'referenceRange/age/low/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_low_code IS 'referenceRange/age/low/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_high_value IS 'referenceRange/age/high/value (double precision)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_high_unit IS 'referenceRange/age/high/unit (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_high_system IS 'referenceRange/age/high/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_age_high_code IS 'referenceRange/age/high/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_referencerange_text IS 'referenceRange/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_ref IS 'hasMember/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_type IS 'hasMember/type (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_use IS 'hasMember/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_type_system IS 'hasMember/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_type_version IS 'hasMember/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_type_code IS 'hasMember/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_type_display IS 'hasMember/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_type_text IS 'hasMember/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_system IS 'hasMember/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_identifier_value IS 'hasMember/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.obs_hasmember_display IS 'hasMember/display (varchar)';
+COMMENT ON COLUMN cds2db_in.observation.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.observation.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.observation.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.observation.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.observation.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagnosticreport_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagnosticreport_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_result_ref IS 'result/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_basedon_ref IS 'basedOn/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_code_system IS 'code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_code_version IS 'code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_code_code IS 'code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_code_display IS 'code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_code_text IS 'code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_effectivedatetime IS 'effectiveDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_issued IS 'issued (timestamp)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_ref IS 'performer/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_type IS 'performer/type (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_use IS 'performer/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_type_system IS 'performer/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_type_version IS 'performer/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_system IS 'performer/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_identifier_value IS 'performer/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_performer_display IS 'performer/display (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_conclusion IS 'conclusion (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_conclusioncode_system IS 'conclusionCode/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_conclusioncode_version IS 'conclusionCode/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_conclusioncode_code IS 'conclusionCode/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_conclusioncode_display IS 'conclusionCode/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_conclusioncode_text IS 'conclusionCode/text (varchar)';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.diagnosticreport.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.servicerequest.servicerequest_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.servicerequest.servicerequest_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_ref IS 'basedOn/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_type IS 'basedOn/type (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_basedon_display IS 'basedOn/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_intent IS 'intent (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_code_system IS 'code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_code_version IS 'code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_code_code IS 'code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_code_display IS 'code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_code_text IS 'code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_authoredon IS 'authoredOn (timestamp)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_ref IS 'requester/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_type IS 'requester/type (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_use IS 'requester/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_type_system IS 'requester/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_type_version IS 'requester/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_type_code IS 'requester/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_type_display IS 'requester/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_type_text IS 'requester/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_system IS 'requester/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_identifier_value IS 'requester/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_requester_display IS 'requester/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_ref IS 'performer/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_type IS 'performer/type (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_use IS 'performer/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_type_system IS 'performer/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_type_version IS 'performer/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_type_code IS 'performer/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_type_display IS 'performer/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_type_text IS 'performer/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_system IS 'performer/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_identifier_value IS 'performer/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_performer_display IS 'performer/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_locationcode_system IS 'locationCode/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_locationcode_version IS 'locationCode/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_locationcode_code IS 'locationCode/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_locationcode_display IS 'locationCode/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.servreq_locationcode_text IS 'locationCode/text (varchar)';
+COMMENT ON COLUMN cds2db_in.servicerequest.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.servicerequest.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.servicerequest.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.servicerequest.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.servicerequest.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.procedure.procedure_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.procedure.procedure_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.procedure.proc_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_encounter_ref IS 'encounter/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_patient_ref IS 'subject/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_partof_ref IS 'partOf/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_ref IS 'basedOn/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_type IS 'basedOn/type (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_use IS 'basedOn/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_type_system IS 'basedOn/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_type_version IS 'basedOn/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_type_code IS 'basedOn/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_type_display IS 'basedOn/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_type_text IS 'basedOn/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_system IS 'basedOn/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_identifier_value IS 'basedOn/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_basedon_display IS 'basedOn/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_statusreason_system IS 'statusReason/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_statusreason_version IS 'statusReason/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_statusreason_code IS 'statusReason/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_statusreason_display IS 'statusReason/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_statusreason_text IS 'statusReason/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_category_text IS 'category/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_code_system IS 'code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_code_version IS 'code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_code_code IS 'code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_code_display IS 'code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_code_text IS 'code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_performeddatetime IS 'performedDateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_performedperiod_start IS 'performedPeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_performedperiod_end IS 'performedPeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasoncode_system IS 'reasonCode/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasoncode_version IS 'reasonCode/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasoncode_code IS 'reasonCode/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasoncode_display IS 'reasonCode/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasoncode_text IS 'reasonCode/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_ref IS 'reasonReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_type IS 'reasonReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_use IS 'reasonReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_type_system IS 'reasonReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_type_version IS 'reasonReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_type_code IS 'reasonReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_type_display IS 'reasonReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_type_text IS 'reasonReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_system IS 'reasonReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_identifier_value IS 'reasonReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_reasonreference_display IS 'reasonReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorstring IS 'note/authorString (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_ref IS 'note/authorReference/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_type IS 'note/authorReference/type (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_use IS 'note/authorReference/identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_type_system IS 'note/authorReference/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_type_version IS 'note/authorReference/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_type_code IS 'note/authorReference/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_type_display IS 'note/authorReference/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_type_text IS 'note/authorReference/identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_system IS 'note/authorReference/identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_identifier_value IS 'note/authorReference/identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_authorreference_display IS 'note/authorReference/display (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_time IS 'note/time (timestamp)';
+COMMENT ON COLUMN cds2db_in.procedure.proc_note_text IS 'note/text (varchar)';
+COMMENT ON COLUMN cds2db_in.procedure.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.procedure.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.procedure.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.procedure.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.procedure.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.consent.consent_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.consent.consent_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.consent.cons_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_patient_ref IS 'patient/reference (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_scope_system IS 'scope/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_scope_version IS 'scope/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_scope_code IS 'scope/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_scope_display IS 'scope/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_scope_text IS 'scope/text (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_datetime IS 'dateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_type IS 'provision/type (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_period_start IS 'provision/period/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_period_end IS 'provision/period/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_actor_role_system IS 'provision/actor/role/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_actor_role_version IS 'provision/actor/role/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_actor_role_code IS 'provision/actor/role/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_actor_role_display IS 'provision/actor/role/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_actor_role_text IS 'provision/actor/role/text (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_code_system IS 'provision/code/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_code_version IS 'provision/code/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_code_code IS 'provision/code/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_code_display IS 'provision/code/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_code_text IS 'provision/code/text (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_dataperiod_start IS 'provision/dataPeriod/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_provision_dataperiod_end IS 'provision/dataPeriod/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.consent.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.consent.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.consent.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.consent.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.location.location_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.location.location_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.location.loc_id IS 'id (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_meta_versionid IS 'meta/versionId (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_meta_lastupdated IS 'meta/lastUpdated (timestamp)';
+COMMENT ON COLUMN cds2db_in.location.loc_meta_profile IS 'meta/profile (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_use IS 'identifier/use (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_type_system IS 'identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_type_version IS 'identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_type_code IS 'identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_type_display IS 'identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_type_text IS 'identifier/type/text (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_system IS 'identifier/system (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_value IS 'identifier/value (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_start IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.location.loc_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN cds2db_in.location.loc_status IS 'status (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_name IS 'name (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_description IS 'description (varchar)';
+COMMENT ON COLUMN cds2db_in.location.loc_alias IS 'alias (varchar)';
+COMMENT ON COLUMN cds2db_in.location.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.location.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.location.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.location.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.location.last_processing_nr IS 'Last processing number of the data record';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.ward_name IS 'ward_name (varchar)';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.patient_id IS 'patient_id (varchar)';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.encounter_id IS 'encounter_id (varchar)';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.input_datetime IS 'Time at which the data record is inserted';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.last_check_datetime IS 'Time at which data record was last checked';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.input_processing_nr IS '(First) Processing number of the data record';
+COMMENT ON COLUMN cds2db_in.pids_per_ward.last_processing_nr IS 'Last processing number of the data record';
 
 -- Output on
 \o
 
 ------------------------------------------------------
--- INDEX for IDs on Tables in Schema "db_log" --
+-- INDEX for IDs on Tables in Schema "cds2db_in" --
 ------------------------------------------------------
 
-------------------------- Index for db_log - encounter ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_encounter_raw_id ON db_log.encounter ( encounter_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - encounter ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_encounter_raw_id ON cds2db_in.encounter ( encounter_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_encounter_input_dt for Table "encounter" in schema "db_log"
+-- Index idx_cds2db_in_encounter_input_dt for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_input_dt
-ON db_log.encounter (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_input_dt
+ON cds2db_in.encounter (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_encounter_input_pnr for Table "encounter" in schema "db_log"
+-- Index idx_cds2db_in_encounter_input_pnr for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_input_pnr
-ON db_log.encounter (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_input_pnr
+ON cds2db_in.encounter (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_encounter_last_dt for Table "encounter" in schema "db_log"
+-- Index idx_cds2db_in_encounter_last_dt for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_last_dt
-ON db_log.encounter (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_last_dt
+ON cds2db_in.encounter (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_encounter_last_dt for Table "encounter" in schema "db_log"
+-- Index idx_cds2db_in_encounter_last_dt for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_last_pnr
-ON db_log.encounter (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_last_pnr
+ON cds2db_in.encounter (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_encounter_hash for Table "encounter" in schema "db_log"
+-- Index idx_cds2db_in_encounter_hash for Table "encounter" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_hash
-ON db_log.encounter (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_hash
+ON cds2db_in.encounter (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - patient ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_patient_raw_id ON db_log.patient ( patient_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - patient ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_patient_raw_id ON cds2db_in.patient ( patient_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_patient_input_dt for Table "patient" in schema "db_log"
+-- Index idx_cds2db_in_patient_input_dt for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_input_dt
-ON db_log.patient (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_input_dt
+ON cds2db_in.patient (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_patient_input_pnr for Table "patient" in schema "db_log"
+-- Index idx_cds2db_in_patient_input_pnr for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_input_pnr
-ON db_log.patient (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_input_pnr
+ON cds2db_in.patient (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_patient_last_dt for Table "patient" in schema "db_log"
+-- Index idx_cds2db_in_patient_last_dt for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_last_dt
-ON db_log.patient (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_last_dt
+ON cds2db_in.patient (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_patient_last_dt for Table "patient" in schema "db_log"
+-- Index idx_cds2db_in_patient_last_dt for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_last_pnr
-ON db_log.patient (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_last_pnr
+ON cds2db_in.patient (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_patient_hash for Table "patient" in schema "db_log"
+-- Index idx_cds2db_in_patient_hash for Table "patient" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_hash
-ON db_log.patient (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_hash
+ON cds2db_in.patient (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - condition ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_condition_raw_id ON db_log.condition ( condition_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - condition ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_condition_raw_id ON cds2db_in.condition ( condition_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_condition_input_dt for Table "condition" in schema "db_log"
+-- Index idx_cds2db_in_condition_input_dt for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_input_dt
-ON db_log.condition (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_input_dt
+ON cds2db_in.condition (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_condition_input_pnr for Table "condition" in schema "db_log"
+-- Index idx_cds2db_in_condition_input_pnr for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_input_pnr
-ON db_log.condition (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_input_pnr
+ON cds2db_in.condition (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_condition_last_dt for Table "condition" in schema "db_log"
+-- Index idx_cds2db_in_condition_last_dt for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_last_dt
-ON db_log.condition (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_last_dt
+ON cds2db_in.condition (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_condition_last_dt for Table "condition" in schema "db_log"
+-- Index idx_cds2db_in_condition_last_dt for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_last_pnr
-ON db_log.condition (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_last_pnr
+ON cds2db_in.condition (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_condition_hash for Table "condition" in schema "db_log"
+-- Index idx_cds2db_in_condition_hash for Table "condition" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_hash
-ON db_log.condition (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_hash
+ON cds2db_in.condition (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - medication ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medication_raw_id ON db_log.medication ( medication_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - medication ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_medication_raw_id ON cds2db_in.medication ( medication_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_medication_input_dt for Table "medication" in schema "db_log"
+-- Index idx_cds2db_in_medication_input_dt for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_input_dt
-ON db_log.medication (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_input_dt
+ON cds2db_in.medication (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_medication_input_pnr for Table "medication" in schema "db_log"
+-- Index idx_cds2db_in_medication_input_pnr for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_input_pnr
-ON db_log.medication (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_input_pnr
+ON cds2db_in.medication (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_medication_last_dt for Table "medication" in schema "db_log"
+-- Index idx_cds2db_in_medication_last_dt for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_last_dt
-ON db_log.medication (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_last_dt
+ON cds2db_in.medication (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_medication_last_dt for Table "medication" in schema "db_log"
+-- Index idx_cds2db_in_medication_last_dt for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_last_pnr
-ON db_log.medication (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_last_pnr
+ON cds2db_in.medication (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_medication_hash for Table "medication" in schema "db_log"
+-- Index idx_cds2db_in_medication_hash for Table "medication" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_hash
-ON db_log.medication (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_hash
+ON cds2db_in.medication (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - medicationrequest ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_id ON db_log.medicationrequest ( medicationrequest_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - medicationrequest ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_id ON cds2db_in.medicationrequest ( medicationrequest_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_medicationrequest_input_dt for Table "medicationrequest" in schema "db_log"
+-- Index idx_cds2db_in_medicationrequest_input_dt for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_input_dt
-ON db_log.medicationrequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_input_dt
+ON cds2db_in.medicationrequest (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_medicationrequest_input_pnr for Table "medicationrequest" in schema "db_log"
+-- Index idx_cds2db_in_medicationrequest_input_pnr for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_input_pnr
-ON db_log.medicationrequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_input_pnr
+ON cds2db_in.medicationrequest (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_medicationrequest_last_dt for Table "medicationrequest" in schema "db_log"
+-- Index idx_cds2db_in_medicationrequest_last_dt for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_last_dt
-ON db_log.medicationrequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_last_dt
+ON cds2db_in.medicationrequest (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_medicationrequest_last_dt for Table "medicationrequest" in schema "db_log"
+-- Index idx_cds2db_in_medicationrequest_last_dt for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_last_pnr
-ON db_log.medicationrequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_last_pnr
+ON cds2db_in.medicationrequest (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_medicationrequest_hash for Table "medicationrequest" in schema "db_log"
+-- Index idx_cds2db_in_medicationrequest_hash for Table "medicationrequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_hash
-ON db_log.medicationrequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_hash
+ON cds2db_in.medicationrequest (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - medicationadministration ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_id ON db_log.medicationadministration ( medicationadministration_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - medicationadministration ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_id ON cds2db_in.medicationadministration ( medicationadministration_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_medicationadministration_input_dt for Table "medicationadministration" in schema "db_log"
+-- Index idx_cds2db_in_medicationadministration_input_dt for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_input_dt
-ON db_log.medicationadministration (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_input_dt
+ON cds2db_in.medicationadministration (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_medicationadministration_input_pnr for Table "medicationadministration" in schema "db_log"
+-- Index idx_cds2db_in_medicationadministration_input_pnr for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_input_pnr
-ON db_log.medicationadministration (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_input_pnr
+ON cds2db_in.medicationadministration (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_medicationadministration_last_dt for Table "medicationadministration" in schema "db_log"
+-- Index idx_cds2db_in_medicationadministration_last_dt for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_last_dt
-ON db_log.medicationadministration (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_last_dt
+ON cds2db_in.medicationadministration (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_medicationadministration_last_dt for Table "medicationadministration" in schema "db_log"
+-- Index idx_cds2db_in_medicationadministration_last_dt for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_last_pnr
-ON db_log.medicationadministration (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_last_pnr
+ON cds2db_in.medicationadministration (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_medicationadministration_hash for Table "medicationadministration" in schema "db_log"
+-- Index idx_cds2db_in_medicationadministration_hash for Table "medicationadministration" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_hash
-ON db_log.medicationadministration (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_hash
+ON cds2db_in.medicationadministration (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - medicationstatement ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_id ON db_log.medicationstatement ( medicationstatement_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - medicationstatement ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_id ON cds2db_in.medicationstatement ( medicationstatement_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_medicationstatement_input_dt for Table "medicationstatement" in schema "db_log"
+-- Index idx_cds2db_in_medicationstatement_input_dt for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_input_dt
-ON db_log.medicationstatement (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_input_dt
+ON cds2db_in.medicationstatement (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_medicationstatement_input_pnr for Table "medicationstatement" in schema "db_log"
+-- Index idx_cds2db_in_medicationstatement_input_pnr for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_input_pnr
-ON db_log.medicationstatement (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_input_pnr
+ON cds2db_in.medicationstatement (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_medicationstatement_last_dt for Table "medicationstatement" in schema "db_log"
+-- Index idx_cds2db_in_medicationstatement_last_dt for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_last_dt
-ON db_log.medicationstatement (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_last_dt
+ON cds2db_in.medicationstatement (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_medicationstatement_last_dt for Table "medicationstatement" in schema "db_log"
+-- Index idx_cds2db_in_medicationstatement_last_dt for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_last_pnr
-ON db_log.medicationstatement (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_last_pnr
+ON cds2db_in.medicationstatement (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_medicationstatement_hash for Table "medicationstatement" in schema "db_log"
+-- Index idx_cds2db_in_medicationstatement_hash for Table "medicationstatement" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_hash
-ON db_log.medicationstatement (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_hash
+ON cds2db_in.medicationstatement (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - observation ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_observation_raw_id ON db_log.observation ( observation_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - observation ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_observation_raw_id ON cds2db_in.observation ( observation_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_observation_input_dt for Table "observation" in schema "db_log"
+-- Index idx_cds2db_in_observation_input_dt for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_input_dt
-ON db_log.observation (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_input_dt
+ON cds2db_in.observation (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_observation_input_pnr for Table "observation" in schema "db_log"
+-- Index idx_cds2db_in_observation_input_pnr for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_input_pnr
-ON db_log.observation (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_input_pnr
+ON cds2db_in.observation (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_observation_last_dt for Table "observation" in schema "db_log"
+-- Index idx_cds2db_in_observation_last_dt for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_last_dt
-ON db_log.observation (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_last_dt
+ON cds2db_in.observation (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_observation_last_dt for Table "observation" in schema "db_log"
+-- Index idx_cds2db_in_observation_last_dt for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_last_pnr
-ON db_log.observation (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_last_pnr
+ON cds2db_in.observation (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_observation_hash for Table "observation" in schema "db_log"
+-- Index idx_cds2db_in_observation_hash for Table "observation" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_hash
-ON db_log.observation (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_hash
+ON cds2db_in.observation (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - diagnosticreport ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_id ON db_log.diagnosticreport ( diagnosticreport_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - diagnosticreport ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport ( diagnosticreport_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_diagnosticreport_input_dt for Table "diagnosticreport" in schema "db_log"
+-- Index idx_cds2db_in_diagnosticreport_input_dt for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_input_dt
-ON db_log.diagnosticreport (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_input_dt
+ON cds2db_in.diagnosticreport (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_diagnosticreport_input_pnr for Table "diagnosticreport" in schema "db_log"
+-- Index idx_cds2db_in_diagnosticreport_input_pnr for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_input_pnr
-ON db_log.diagnosticreport (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_input_pnr
+ON cds2db_in.diagnosticreport (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_diagnosticreport_last_dt for Table "diagnosticreport" in schema "db_log"
+-- Index idx_cds2db_in_diagnosticreport_last_dt for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_last_dt
-ON db_log.diagnosticreport (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_last_dt
+ON cds2db_in.diagnosticreport (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_diagnosticreport_last_dt for Table "diagnosticreport" in schema "db_log"
+-- Index idx_cds2db_in_diagnosticreport_last_dt for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_last_pnr
-ON db_log.diagnosticreport (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_last_pnr
+ON cds2db_in.diagnosticreport (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_diagnosticreport_hash for Table "diagnosticreport" in schema "db_log"
+-- Index idx_cds2db_in_diagnosticreport_hash for Table "diagnosticreport" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_hash
-ON db_log.diagnosticreport (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_hash
+ON cds2db_in.diagnosticreport (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - servicerequest ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_id ON db_log.servicerequest ( servicerequest_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - servicerequest ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_id ON cds2db_in.servicerequest ( servicerequest_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_servicerequest_input_dt for Table "servicerequest" in schema "db_log"
+-- Index idx_cds2db_in_servicerequest_input_dt for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_input_dt
-ON db_log.servicerequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_input_dt
+ON cds2db_in.servicerequest (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_servicerequest_input_pnr for Table "servicerequest" in schema "db_log"
+-- Index idx_cds2db_in_servicerequest_input_pnr for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_input_pnr
-ON db_log.servicerequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_input_pnr
+ON cds2db_in.servicerequest (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_servicerequest_last_dt for Table "servicerequest" in schema "db_log"
+-- Index idx_cds2db_in_servicerequest_last_dt for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_last_dt
-ON db_log.servicerequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_last_dt
+ON cds2db_in.servicerequest (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_servicerequest_last_dt for Table "servicerequest" in schema "db_log"
+-- Index idx_cds2db_in_servicerequest_last_dt for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_last_pnr
-ON db_log.servicerequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_last_pnr
+ON cds2db_in.servicerequest (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_servicerequest_hash for Table "servicerequest" in schema "db_log"
+-- Index idx_cds2db_in_servicerequest_hash for Table "servicerequest" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_hash
-ON db_log.servicerequest (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_hash
+ON cds2db_in.servicerequest (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - procedure ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_procedure_raw_id ON db_log.procedure ( procedure_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - procedure ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_procedure_raw_id ON cds2db_in.procedure ( procedure_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_procedure_input_dt for Table "procedure" in schema "db_log"
+-- Index idx_cds2db_in_procedure_input_dt for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_input_dt
-ON db_log.procedure (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_input_dt
+ON cds2db_in.procedure (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_procedure_input_pnr for Table "procedure" in schema "db_log"
+-- Index idx_cds2db_in_procedure_input_pnr for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_input_pnr
-ON db_log.procedure (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_input_pnr
+ON cds2db_in.procedure (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_procedure_last_dt for Table "procedure" in schema "db_log"
+-- Index idx_cds2db_in_procedure_last_dt for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_last_dt
-ON db_log.procedure (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_last_dt
+ON cds2db_in.procedure (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_procedure_last_dt for Table "procedure" in schema "db_log"
+-- Index idx_cds2db_in_procedure_last_dt for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_last_pnr
-ON db_log.procedure (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_last_pnr
+ON cds2db_in.procedure (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_procedure_hash for Table "procedure" in schema "db_log"
+-- Index idx_cds2db_in_procedure_hash for Table "procedure" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_hash
-ON db_log.procedure (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_hash
+ON cds2db_in.procedure (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - consent ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_consent_raw_id ON db_log.consent ( consent_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - consent ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_consent_raw_id ON cds2db_in.consent ( consent_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_consent_input_dt for Table "consent" in schema "db_log"
+-- Index idx_cds2db_in_consent_input_dt for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_input_dt
-ON db_log.consent (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_input_dt
+ON cds2db_in.consent (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_consent_input_pnr for Table "consent" in schema "db_log"
+-- Index idx_cds2db_in_consent_input_pnr for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_input_pnr
-ON db_log.consent (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_input_pnr
+ON cds2db_in.consent (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_consent_last_dt for Table "consent" in schema "db_log"
+-- Index idx_cds2db_in_consent_last_dt for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_last_dt
-ON db_log.consent (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_last_dt
+ON cds2db_in.consent (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_consent_last_dt for Table "consent" in schema "db_log"
+-- Index idx_cds2db_in_consent_last_dt for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_last_pnr
-ON db_log.consent (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_last_pnr
+ON cds2db_in.consent (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_consent_hash for Table "consent" in schema "db_log"
+-- Index idx_cds2db_in_consent_hash for Table "consent" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_hash
-ON db_log.consent (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_hash
+ON cds2db_in.consent (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - location ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_location_raw_id ON db_log.location ( location_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - location ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_location_raw_id ON cds2db_in.location ( location_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_location_input_dt for Table "location" in schema "db_log"
+-- Index idx_cds2db_in_location_input_dt for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_location_input_dt
-ON db_log.location (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_input_dt
+ON cds2db_in.location (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_location_input_pnr for Table "location" in schema "db_log"
+-- Index idx_cds2db_in_location_input_pnr for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_location_input_pnr
-ON db_log.location (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_input_pnr
+ON cds2db_in.location (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_location_last_dt for Table "location" in schema "db_log"
+-- Index idx_cds2db_in_location_last_dt for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_location_last_dt
-ON db_log.location (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_last_dt
+ON cds2db_in.location (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_location_last_dt for Table "location" in schema "db_log"
+-- Index idx_cds2db_in_location_last_dt for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_location_last_pnr
-ON db_log.location (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_last_pnr
+ON cds2db_in.location (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_location_hash for Table "location" in schema "db_log"
+-- Index idx_cds2db_in_location_hash for Table "location" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_location_hash
-ON db_log.location (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_hash
+ON cds2db_in.location (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-------------------------- Index for db_log - pids_per_ward ---------------------------------
-  CREATE INDEX IF NOT EXISTS idx_pids_per_ward_raw_id ON db_log.pids_per_ward ( pids_per_ward_raw_id DESC); -- Primary key of the corresponding raw table
+------------------------- Index for cds2db_in - pids_per_ward ---------------------------------
+  CREATE INDEX IF NOT EXISTS idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward ( pids_per_ward_raw_id DESC); -- Primary key of the corresponding raw table
 
--- Index idx_db_log_pids_per_ward_input_dt for Table "pids_per_ward" in schema "db_log"
+-- Index idx_cds2db_in_pids_per_ward_input_dt for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_input_dt
-ON db_log.pids_per_ward (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_input_dt
+ON cds2db_in.pids_per_ward (
    input_datetime DESC -- Time at which the data record is inserted
 );
 
--- Index idx_db_log_pids_per_ward_input_pnr for Table "pids_per_ward" in schema "db_log"
+-- Index idx_cds2db_in_pids_per_ward_input_pnr for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_input_pnr
-ON db_log.pids_per_ward (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_input_pnr
+ON cds2db_in.pids_per_ward (
    input_processing_nr DESC -- (First) Processing number of the data record
 );
 
--- Index idx_db_log_pids_per_ward_last_dt for Table "pids_per_ward" in schema "db_log"
+-- Index idx_cds2db_in_pids_per_ward_last_dt for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_last_dt
-ON db_log.pids_per_ward (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_last_dt
+ON cds2db_in.pids_per_ward (
    last_check_datetime DESC -- Time at which data record was last checked
 );
 
--- Index idx_db_log_pids_per_ward_last_dt for Table "pids_per_ward" in schema "db_log"
+-- Index idx_cds2db_in_pids_per_ward_last_dt for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_last_pnr
-ON db_log.pids_per_ward (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_last_pnr
+ON cds2db_in.pids_per_ward (
    last_processing_nr DESC -- Last processing number of the data record
 );
 
--- Index idx_db_log_pids_per_ward_hash for Table "pids_per_ward" in schema "db_log"
+-- Index idx_cds2db_in_pids_per_ward_hash for Table "pids_per_ward" in schema "cds2db_in"
 ----------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_log_pids_per_ward_hash
-ON db_log.pids_per_ward (
+CREATE INDEX IF NOT EXISTS idx_cds2db_in_pids_per_ward_hash
+ON cds2db_in.pids_per_ward (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
