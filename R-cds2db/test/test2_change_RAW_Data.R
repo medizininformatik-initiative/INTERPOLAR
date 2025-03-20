@@ -33,11 +33,9 @@ if (exists("DEBUG_DAY")) {
   # vector of column names
   colnames_pattern_diagnosis <- "^enc_diagnosis_"
   colnames_pattern_servicetype <- "^enc_servicetype_"
+  enc_diagnosis_cols <- grep(colnames_pattern_diagnosis, names(dt_enc), value = TRUE)
+  enc_servicetype_cols <- grep(colnames_pattern_servicetype, names(dt_enc), value = TRUE)
 
-  # Identify columns starting with "enc_diagnosis_"
-  enc_diagnosis_cols <- grep("^enc_diagnosis_", names(dt_enc), value = TRUE)
-  # Identify columns starting with "enc_diagnosis_"
-  enc_servicetype_cols <- grep("^enc_servicetype_", names(dt_enc), value = TRUE)
   # Remove multiple diagnoses to prevent splitting the main encounter to multiple
   # lines after fhir_melt (= set first value before " ~ " and remove the rest)
   dt_enc[, (enc_diagnosis_cols) := lapply(.SD, function(x) sub(" ~ .*", "", x)), .SDcols = enc_diagnosis_cols]
@@ -60,8 +58,7 @@ if (exists("DEBUG_DAY")) {
     # Set correct partof reference to the Abteilungskontakt for every new created
     # Versorgungsstellenkontakt (same value as the still existing Abteilungskontakt
     # enc_id of the row)
-    # Set correct partof reference to the Abteilungskontakt
-    rows_to_duplicate <- rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*", paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
+    rows_to_duplicate[, enc_partof_ref := paste0("Encounter/", sub(".*]", "", enc_id))]
 
     # Extract the number at the end of the enc_id and append "-V-<number>" to
     # create a new unique enc_id for every Versorgungsstellenkontakt
@@ -80,9 +77,8 @@ if (exists("DEBUG_DAY")) {
 
     # Add room and bed
     rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [2.1.1.1]bd"]
-    rows_to_duplicate[, enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 2"]
+    rows_to_duplicate[, enc_location_identifier_value := paste0("[1.1.1.1]Raum", .I, " ~ [2.1.1.1]Bett ", .I)]
 
-    # Append new rows to dt_enc
     # Append the new Versorgungsstellenkontakt rows to the Encounter table
     dt_enc <- rbind(dt_enc, rows_to_duplicate)
   }
@@ -94,7 +90,7 @@ if (exists("DEBUG_DAY")) {
     for (i in seq_along(pats)) {
       changeDataForPID(dt_enc, pats[[i]], "enc_status", "in-progress")
       changeDataForPID(dt_enc, pats[[i]], "enc_period_end", NA)
-      changeDataForPID(dt_enc, pats[[i]], "enc_diagnosis_cols", NA)
+      changeDataForPID(dt_enc, pats[[i]], colnames_pattern_diagnosis, NA)
       changeDataForPID(dt_enc, pats[[i]], "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
     }
 
