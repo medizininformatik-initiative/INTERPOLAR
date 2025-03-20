@@ -29,7 +29,6 @@ for (i in seq_along(DEBUG_DATES)) {
   diff <- capture.output(print(end_day - start_day))
   day_times <- append(day_times, paste("Day", i, "took", diff))
   print(day_times[i])
-  browser()
 }
 end_full <- Sys.time()
 
