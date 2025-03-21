@@ -58,7 +58,7 @@ if (exists("DEBUG_DAY")) {
     # Set correct partof reference to the Abteilungskontakt for every new created
     # Versorgungsstellenkontakt (same value as the still existing Abteilungskontakt
     # enc_id of the row)
-    rows_to_duplicate[, enc_partof_ref := paste0("Encounter/", sub(".*]", "", enc_id))]
+    rows_to_duplicate <- rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*", paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
 
     # Extract the number at the end of the enc_id and append "-V-<number>" to
     # create a new unique enc_id for every Versorgungsstellenkontakt
@@ -75,7 +75,7 @@ if (exists("DEBUG_DAY")) {
     # Delete Fachabteilungsschlüssel
     rows_to_duplicate[, (enc_servicetype_cols) := NA]
 
-    # Add room and bed
+    # Add room and bed as two new locations
     rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [2.1.1.1]bd"]
     rows_to_duplicate[, enc_location_identifier_value := paste0("[1.1.1.1]Raum", .I, " ~ [2.1.1.1]Bett ", .I)]
 
