@@ -51,6 +51,7 @@ FHIR_TOKEN_REFRESH_URL      = ""
 FHIR_TOKEN_REFRESH_USER     = ""
 FHIR_TOKEN_REFRESH_PASSWORD = ""
 
+FHIR_SEARCH_CURL_TIMEOUT = 1800 # timeout for curl requests on a FHIR server in seconds
 
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests [ehemals MAX_LEN]
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE = 300  # reserve 300 characters for further parameters, whose length cannot estimated [ehemals RES_LEN]
@@ -59,7 +60,7 @@ MIN_BIRTHDAY                       = "1910-01-01" # lowest possible birthday
 DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the default birth date if the real date is missing
 
 MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
-COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
+#COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
 SORT                               = ""  # some Fhir server require a sort parameter per default
 IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
 
@@ -76,26 +77,28 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # The following expression styles are allowed:
 #
 #################
-# single status:
-#FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
-#
 # multiple status can be written as comma separated list:
 #FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
 
-
 #################
+# Attention: This filter is relevant for two queries:
+# 1. For the FHIR query to limit the first encounter query to find PIDs per ward.
 # Only encounters with exactly this classes are found. If this Debug parameter is not set, then the
 # class attribute will not be considered in the FHIR search request.
 # See https://simplifier.net/packages/de.basisprofil.r4/1.4.0/files/656744
+#  Code   Display
+#  AMB    ambulatory
+#  IMP    inpatient encounter
+#  PRENC  pre-admission
+#  VR     virtual
+#  SS     short stay
+#  HH     home health
 #
-# The following expression styles are allowed:
+# 2. For the SQL query on the database to find the active PIDs in the Encounter table.
 #
 #################
-# single class:
-#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP"
-#
-# multiple classes can be wtitten as comma separated list:
-#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,AMB"
+# multiple classes can be written as comma separated list:
+#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 
 
 #################
@@ -103,11 +106,19 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # a list or comma-separated and thus appended to the FHIR search query in order to find the relevant
 # Encounters.
 #################
-#FHIR_SEARCH_LOCATION_IDS = [
+#FHIR_SEARCH_ENCOUNTER_LOCATION_IDS = [
 #  "location_id_1",
 #  "location_id_2",
 #  "location_id_3"
 #]
+
+#################
+# This parameter is appended to the existing FHIR search query exactly as specified. Theoretically,
+# it can also be used to replace the other FHIR_SEARCH_ENCOUNTER parameters. It can be used to
+# further restrict the initially downloaded encounters in a meaningful way.
+#################
+#FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS = "&_summary=count"
+
 
 [retrieve.patient_id_filtering]
 
@@ -128,20 +139,20 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # is not allowed and will lead to an error.
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
-  "location.location.reference = 'Location/location_id_1'",
+  "location/location/reference = 'Location/location_id_1'",
   "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
   "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_2 = [
   "ward_name = 'Station 2'",
-  "location.location.reference = 'Location/location_id_2'",
+  "location/location/reference = 'Location/location_id_2'",
   "serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_3 = [
   "ward_name = 'Station 3'",
-  "location.location.reference = 'Location/location_id_3'",
+  "location/location/reference = 'Location/location_id_3'",
   "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
   "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]

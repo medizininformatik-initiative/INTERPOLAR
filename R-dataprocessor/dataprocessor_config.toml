@@ -69,22 +69,11 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 # they have not yet ended.
 FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 
-# Additional filter with which all encounters are filtered out for which the following filters do
-# not apply. This can be used if, for example, the "Fachabteilungskontakt" do not have a partof
-# relationship with the "Einrichtungskontakt" and can therefore only be removed using this filter.
-# Same for the "Versorgungsstellenkontakt".
-# An Encounter will be accepted, if at least one condition is fulfilled (OR connected). A condition
-# defines which expressions of the Encounter should have which value. The values can be defined as
-# grep patterns. Multilpe subconditions can be connected by '+' (logcal AND). All Patterns are Case
-# INSENSITIVE!
-#FRONTEND_DISPLAYED_ENCOUNTER_FILTER = [
-#               "enc_type_code = 'einrichtungskontakt' + enc_type_display = 'Einrichtungskontakt'",
-#               "enc_type_system = 'http://fhir.de/CodeSystem/Kontaktebene'"
-#               ]
-
-# If there are no partof references for encounter, then the relationship between
-# “Versorgungsstellenkontakt” and “Fachabteilungskontakt” must be found via the encounter identifier.
-#MISSING_PART_OF_REFERENCE = true
+# This parameter should contain the FHIR element where the name of the room and bed can be found.
+# This must be the name of a column in the encounter database table (see Table_Description.xlsx in
+# the cds2db module). Examples:
+#FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_display"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_identifier_value"
 
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.

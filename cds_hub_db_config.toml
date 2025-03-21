@@ -7,14 +7,6 @@ DB_PORT = 5432
 DB_NAME = "cds_hub_db"
 
 ##########################
-# CDS Hub Admin settings #
-##########################
-
-DB_ADMIN_USER      = "cds_hub_db_admin"
-DB_ADMIN_PASSWORD  = "DB Admin Password from Postgres-cds_hub/.env_cds_hub_db_admin.password"
-DB_ADMIN_SCHEMAS    = ["db_log"]
-
-##########################
 # CDS2DB module settings #
 ##########################
 

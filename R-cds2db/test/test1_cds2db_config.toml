@@ -121,7 +121,7 @@ ENCOUNTER_FILTER_PATTERN_3 = [
   "id = 'UKFAU-0010-E-1-A-1'",
   "id = 'UKFAU-0011-E-1'",
   "id = 'UKFAU-0011-E-1-A-1'",
-#  "location.location.reference = 'Location/location_id_3'",
+#  "location/location/reference = 'Location/location_id_3'",
 #  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
 #  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
@@ -159,7 +159,7 @@ DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004",
 # This will only output the request, but not execute the entire 'cds2db' module.
 # Use this to see the result of the above debug parameters or, without the debug parameters, the
 # first FHIR search request for Encounter.
-#DEBUG_ENCOUNTER_REQUEST_TEST = true
+#DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
 
 [retrieve.debug.all_resource.fhir_search]
 

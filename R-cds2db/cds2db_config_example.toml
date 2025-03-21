@@ -108,7 +108,7 @@ FHIR_SEARCH_ENCOUNTER_STATUS = "finished"
 # a list or comma-separated and thus appended to the FHIR search query in order to find the relevant
 # Encounters.
 #################
-#FHIR_SEARCH_LOCATION_IDS = [
+#FHIR_SEARCH_ENCOUNTER_LOCATION_IDS = [
 #  "location_id_1",
 #  "location_id_2",
 #  "location_id_3"
@@ -179,7 +179,7 @@ DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004",
 # This will only output the request, but not execute the entire 'cds2db' module.
 # Use this to see the result of the above debug parameters or, without the debug parameters, the
 # first FHIR search request for Encounter.
-#DEBUG_ENCOUNTER_REQUEST_TEST = true
+#DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
 
 [retrieve.debug.all_resource.fhir_search]
 

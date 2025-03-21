@@ -94,23 +94,11 @@ getActiveEncounterPIDsFromDB <- function() {
   query_datetime <- getQueryDatetime()
   datetime <- query_datetime[["start_datetime"]]
 
-  # Create the SQL-Query
   query <- paste0(
-    "WITH latest_encounter AS (\n",
-    "  SELECT\n",
-    "    enc_id,\n",
-    "    enc_patient_ref,\n",
-    "    enc_period_start,\n",
-    "    enc_period_end,\n",
-    "    ROW_NUMBER() OVER (\n",
-    "      PARTITION BY enc_id\n",
-    "      ORDER BY input_datetime DESC\n",
-    "    ) AS row_num\n",
-    "  FROM v_encounter\n",
-    ")\n",
     "SELECT DISTINCT enc_patient_ref\n",
-    "FROM latest_encounter\n",
-    "WHERE row_num = 1\n",
+    "FROM v_encounter_last_version\n",
+    "WHERE enc_class_code IN (", paste0("'", strsplit(FHIR_SEARCH_ENCOUNTER_CLASS, ",")[[1]], "'", collapse = ", "), ")\n",
+    "  AND enc_status = 'in-progress'\n",
     "  AND enc_period_start <= '", datetime, "'\n",
     "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
   )
@@ -259,8 +247,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
 
     # Create the query for the last insert/update date for every ID
     query <- paste0(
-      "SELECT pat_id,\n",
-      "       COALESCE(MAX(last_check_datetime), MAX(input_datetime)) AS last_insert_datetime\n",
+      "SELECT pat_id, MAX(last_check_datetime) AS last_insert_datetime\n",
       "FROM v_patient\n",
       "WHERE pat_id = ANY($1::text[])\n",
       "GROUP BY pat_id;"

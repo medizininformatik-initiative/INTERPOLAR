@@ -1,13 +1,3 @@
-#' Retrieve Frontend Table Names
-#'
-#' This function returns a vector of predefined frontend table names used in the REDCap export
-#' process.
-#'
-getFrontendTableNames <- function() {
-  # TODO: Read this information from frontend_table_desciptin.xlsx
-  c("patient", "fall", "medikationsanalyse", "mrpdokumentation_validierung")
-}
-
 #' Copy REDCap Content to Database
 #'
 #' This function retrieves data from an existing REDCap project and imports this data into
@@ -28,15 +18,29 @@ importRedcap2DB <- function() {
     # Connect to REDCap
     frontend_connection <- getRedcapConnection()
 
-    form_names <- getFrontendTableNames()
+    # form names are the names of the elements in the splitted frontend table description
+    form_names <- names(getFrontendTableDescription())
 
     tables2Export <- list()
 
     # Get data from REDCap
-    for (form_name in form_names) {
+    for (i in seq_along(form_names)) {
+
+      form_name <- form_names[i]
+
       dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
       redcapAPI::reviewInvalidRecords(dt)
       data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
+
+      # Redcap creates invalid entries for unknown reasons where the _complete column is NA, which
+      # should never be and leads to an error when we transfer these records back to Redcap. We
+      # therefore delete them here.
+      complete_column_name <- paste0(form_name, "_complete")
+      dt <- dt[!is.na(dt[[complete_column_name]]), ]
+
+      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
+      etlutils::writeRData(dt, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
+
       tables2Export[[form_name]] <- dt
     }
 

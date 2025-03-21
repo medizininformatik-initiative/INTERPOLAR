@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(cdstoolchaintest)
+library(cdstoolchain)
 
-test_check("cdstoolchaintest")
+test_check("cdstoolchain")
