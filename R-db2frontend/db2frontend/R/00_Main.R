@@ -5,10 +5,18 @@
 #' @export
 startDB2Frontend <- function() {
 
+  reset_lock_only <- etlutils::isDefinedAndTrue("RESET_LOCK")
+
   # Initialize and start module
   etlutils::startModule("db2frontend",
                         path_to_toml = "./R-db2frontend/db2frontend_config.toml",
-                        hide_value_pattern = "^REDCAP_")
+                        hide_value_pattern = "^REDCAP_",
+                        init_constants_only = reset_lock_only)
+
+  if (reset_lock_only) {
+    etlutils::dbResetLock()
+    return()
+  }
 
   try(etlutils::runLevel1("Run Retrieve", {
 

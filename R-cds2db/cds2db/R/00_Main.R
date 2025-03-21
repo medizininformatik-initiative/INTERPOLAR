@@ -7,11 +7,19 @@ retrieve <- function() {
 
   mandatory_parameters <- c("FHIR_SEARCH_ENCOUNTER_CLASS")
 
+  reset_lock_only <- etlutils::isDefinedAndTrue("RESET_LOCK")
+
   # Initialize and start module
   etlutils::startModule("cds2db",
                         path_to_toml = "./R-cds2db/cds2db_config.toml",
                         hide_value_pattern = "^FHIR_(?!SEARCH_).+",
-                        mandatory_parameters = mandatory_parameters)
+                        mandatory_parameters = mandatory_parameters,
+                        init_constants_only = reset_lock_only)
+
+  if (reset_lock_only) {
+    etlutils::dbResetLock()
+    return()
+  }
 
   try(etlutils::runLevel1("Run Retrieve", {
 

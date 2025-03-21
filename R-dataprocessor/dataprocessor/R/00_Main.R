@@ -6,9 +6,17 @@
 #' @export
 processData <- function() {
 
+  reset_lock_only <- etlutils::isDefinedAndTrue("RESET_LOCK")
+
   # Initialize and start module
   etlutils::startModule("dataprocessor",
-                        path_to_toml = "./R-dataprocessor/dataprocessor_config.toml")
+                        path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+                        init_constants_only = reset_lock_only)
+
+  if (reset_lock_only) {
+    etlutils::dbResetLock()
+    return()
+  }
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
