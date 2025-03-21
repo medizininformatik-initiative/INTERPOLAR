@@ -134,7 +134,7 @@ parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 #'
 #' @return A named list where each element is a data.table with `pid` and `encounter_id` for a specific ward.
 #'
-getPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
+extractPIDsPerWard <- function(encounters, all_wards_filter_patterns) {
 
   pids_per_ward <- list()
 
@@ -334,7 +334,7 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data
       # now filter the encounters with the patterns and then extract the PIDs
-      pids_per_ward <- getPIDsPerWard(encounters, filter_patterns)
+      pids_per_ward <- extractPIDsPerWard(encounters, filter_patterns)
     })
   }
 
