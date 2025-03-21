@@ -661,6 +661,11 @@ dbGetReadOnlyColumns <- function(table_name) {
 #'   operation if logging is enabled.
 #'
 dbAddContent <- function(table_name, table, lock_id = NULL) {
+
+  if (!length(table) || !nrow(table)) {
+    return()
+  }
+
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
 

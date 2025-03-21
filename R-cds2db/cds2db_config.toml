@@ -167,8 +167,6 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # This mechanism is also used for running integration tests.
 #################
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
-#DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_2.toml"
-#DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_3.toml"
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/test/test1_cds2db_config.toml"
 
 

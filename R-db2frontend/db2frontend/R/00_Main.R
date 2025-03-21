@@ -1,14 +1,26 @@
+#' Starts the db2frontend ETL job
 #'
-#' Starts the retrieval for this project. This is the main start function start the ETL job
-#' from Database to Frontend and back.
+#' This is the main entry point for the ETL process that transfers data between
+#' the database and the frontend (Redcap) and back. It initializes the `db2frontend`
+#' module, optionally resets the ETL lock, deletes Redcap content (in debug mode),
+#' and runs both import directions. If `reset_lock_only` is set to `TRUE`, the function
+#' only resets the lock and exits without executing the ETL job.
+#'
+#' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
 #'
 #' @export
-startDB2Frontend <- function() {
+startDB2Frontend <- function(reset_lock_only = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("db2frontend",
                         path_to_toml = "./R-db2frontend/db2frontend_config.toml",
-                        hide_value_pattern = "^REDCAP_")
+                        hide_value_pattern = "^REDCAP_",
+                        init_constants_only = reset_lock_only)
+
+  if (reset_lock_only) {
+    etlutils::dbResetLock()
+    return()
+  }
 
   try(etlutils::runLevel1("Run Retrieve", {
 

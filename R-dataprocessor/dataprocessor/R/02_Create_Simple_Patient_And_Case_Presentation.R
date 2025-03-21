@@ -468,7 +468,6 @@ createFrontendTables <- function() {
       fall_id	= character(), # v_encounter -> enc_id
       fall_pat_id	= character(), # v_patient -> pat_id
       patient_id_fk	= character(), # v_patient -> patient_id
-      fall_fe_id	= character(), # v_encounter -> encounter_id
       redcap_repeat_instrument = character(),
       redcap_repeat_instance = character(),
       fall_studienphase = character(),
@@ -589,7 +588,6 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
         data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
-        data.table::set(enc_frontend_table, target_index, "fall_fe_id", pid_encounter$encounter_id[1])
         data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
         data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
@@ -784,8 +782,8 @@ createFrontendTables <- function() {
   # set the maximum (= last valid) 'patient_id' for all remaining lines per 'pat_id'
   patients_from_database[, patient_id := max(patient_id), by = pat_id]
 
-  # make sure that it is a single patient resource by choosing the last of the potencial list
-  # if there are multiple rows then all differen values of a column will be pasted as stings
+  # make sure that it is a single patient resource by choosing the last of the potential list
+  # if there are multiple rows then all different values of a column will be pasted as stings
   # delimited by "; " in one row
   patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
 

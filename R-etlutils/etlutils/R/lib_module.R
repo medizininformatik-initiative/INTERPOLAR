@@ -12,36 +12,39 @@
 #' @param mandatory_parameters (Optional) A character vector containing the names
 #' of mandatory parameters. If these parameters are not found in the configuration
 #' file, an error is thrown.
+#' @param init_constants_only A logical value indicating whether only module constants
+#' should be initialized (`TRUE`) or if the full module setup (including directory creation,
+#' logging, and process clock initialization) should be performed (`FALSE`).
 #'
 #' @details
 #' - Initializes module-specific constants using `initModuleConstants()`.
-#' - Creates necessary directories using `createDIRS()`.
-#' - Initializes a global process clock using `createClock()`.
-#' - Starts logging all console outputs using `startLogging()`.
+#' - Creates necessary directories using `createDIRS()`, if `init_constants_only = FALSE`.
+#' - Initializes a global process clock using `createClock()`, if `init_constants_only = FALSE`.
+#' - Starts logging all console outputs using `startLogging()`, if `init_constants_only = FALSE`.
 #' - Logs all configuration parameters while optionally hiding values that match `hide_value_pattern`.
 #'
 #' @return This function does not return a value. It performs setup operations as a side effect.
 #'
-#'
 #' @export
-startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "", mandatory_parameters = c()) {
+startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "", mandatory_parameters = c(), init_constants_only) {
   # Init module constants
   config <- initModuleConstants(
     module_name = module_name,
     path_to_toml = path_to_toml
   )
 
-  # Check for mandatory parameters
-  checkMandatoryParameters(mandatory_parameters)
-
-  # Create necessary directories
-  createDIRS(module_name)
-  # Create globally used process clock
-  createClock()
-  # Start logging console outputs
-  startLogging(module_name)
-  # Log all configuration parameters, optionally hiding values based on the pattern
-  catList(config, prefix = "Configuration:\n--------------\n", suffix = "\n", hide_value_pattern)
+  if(!init_constants_only) {
+    # Check for mandatory parameters
+    checkMandatoryParameters(mandatory_parameters)
+    # Create necessary directories
+    createDIRS(module_name)
+    # Create globally used process clock
+    createClock()
+    # Start logging console outputs
+    startLogging(module_name)
+    # Log all configuration parameters, optionally hiding values based on the pattern
+    catList(config, prefix = "Configuration:\n--------------\n", suffix = "\n", hide_value_pattern)
+  }
 }
 
 #' #' Store Finish Data in a Log File
