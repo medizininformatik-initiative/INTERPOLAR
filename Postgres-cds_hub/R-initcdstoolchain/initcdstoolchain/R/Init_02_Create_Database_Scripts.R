@@ -362,31 +362,31 @@ convertTemplate <- function(tables_descriptions,
         single_table_description <- tables_descriptions[[table_name]]
         for (row in seq_len(nrow(single_table_description))) {
           column_row <- single_table_description[row]
-          single_column_content <- convertTemplate(tables_descriptions,
+          single_loop_content <- convertTemplate(tables_descriptions,
                                                    script_rights_definition,
                                                    template_name = template_name,
                                                    template_content = loop_template_content,
                                                    table_name = table_name,
                                                    column_prefix = column_prefix,
                                                    recursion = recursion + 1)
-          single_column_content_placeholders <- extractPlaceholders(single_column_content)
-          for (sub_placeholder in single_column_content_placeholders) {
+          single_loop_content_placeholders <- extractPlaceholders(single_loop_content)
+          for (sub_placeholder in single_loop_content_placeholders) {
             # parse the columns value separator. this is a special tag which defines the separator
             # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
             if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
               replace = if (row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
-              single_column_content <- replace(sub_placeholder, replace, single_column_content)
+              single_loop_content <- replace(sub_placeholder, replace, single_loop_content)
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
               if (sub_placeholder_name %in% names(column_row)) {
-                single_column_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_column_content)
+                single_loop_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_loop_content)
               }
             }
           }
           # set indentation, but not for the first column (first column gets its indentation from
           # the line with the placeholder itself
           indent <- ifelse(row == 1, "", indentation)
-          loop_content <- paste0(loop_content, indent, single_column_content)
+          loop_content <- paste0(loop_content, indent, single_loop_content)
         }
 
       } else if (startsWith(placeholder, "<%LOOP_DEF_")) {
