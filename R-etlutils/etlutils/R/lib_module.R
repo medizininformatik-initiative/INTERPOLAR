@@ -33,7 +33,7 @@ startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "",
     path_to_toml = path_to_toml
   )
 
-  if(init_constants_only) {
+  if(!init_constants_only) {
     # Check for mandatory parameters
     checkMandatoryParameters(mandatory_parameters)
     # Create necessary directories

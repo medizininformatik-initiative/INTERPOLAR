@@ -14,6 +14,22 @@ if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
 }
 
+args <- commandArgs(trailingOnly = TRUE)
+for (arg in args) {
+  if (arg %in% c("--resetLock", "--resetLockAndStop")) {
+    message("Resetting lock")
+    cds2db::retrieve(reset_lock_only = TRUE)
+    dataprocessor::processData(reset_lock_only = TRUE)
+    db2frontend::startDB2Frontend(reset_lock_only = TRUE)
+    message("All locks resettet")
+    if (arg == "--resetLockAndStop") {
+      quit(status = 0, save = "no")  # clean exit without error
+    }
+  } else {
+    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop")
+  }
+}
+
 tryCatch({
   if (!etlutils::isErrorOccured()) {
     cds2db::retrieve()

@@ -1,13 +1,16 @@
+#' Starts the ETL retrieval process from FHIR to the database
 #'
-#' Starts the retrieval for this project. This is the main start function start the ETL job
-#' from FHIR to Database
+#' This is the main entry point for the ETL process. It initializes the module,
+#' validates mandatory parameters, and starts the data retrieval workflow from
+#' the FHIR API to the database. If `reset_lock_only` is set to `TRUE`, only
+#' the lock is reset and the function exits without running the ETL process.
+#'
+#' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
 #'
 #' @export
-retrieve <- function() {
+retrieve <- function(reset_lock_only = FALSE) {
 
   mandatory_parameters <- c("FHIR_SEARCH_ENCOUNTER_CLASS")
-
-  reset_lock_only <- etlutils::isDefinedAndTrue("RESET_LOCK")
 
   # Initialize and start module
   etlutils::startModule("cds2db",

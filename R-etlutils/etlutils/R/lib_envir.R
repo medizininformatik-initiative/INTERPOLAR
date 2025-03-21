@@ -93,12 +93,15 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #' @param defaults A named vector of default values for variables. Missing variables after loading
 #'        the TOML file are initialized with these values.
 #' @param envir The environment where variables should be assigned. Default is `.GlobalEnv`.
+#' @param init_constants_only A logical value indicating whether only module constants
+#' should be initialized (`TRUE`) or if the full module setup (including directory creation,
+#' logging, and process clock initialization) should be performed (`FALSE`).
 #'
 #' @return A list containing all initialized constants, including updated values from the debug file
 #'         and merged constants from the database configuration, if provided.
 #'
 #' @export
-initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir = .GlobalEnv) {
+initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
 
   # Set the project name in the specified environment
   assign("PROJECT_NAME", module_name, envir = envir)
