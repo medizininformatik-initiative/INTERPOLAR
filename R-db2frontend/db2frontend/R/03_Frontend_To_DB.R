@@ -15,18 +15,22 @@
 #'
 importRedcap2DB <- function() {
 
-    # Connect to REDCap
-    frontend_connection <- getRedcapConnection()
+  # Connect to REDCap
+  frontend_connection <- getRedcapConnection()
 
-    # form names are the names of the elements in the splitted frontend table description
-    form_names <- names(getFrontendTableDescription())
+  # form names are the names of the elements in the splitted frontend table description
+  form_names <- names(getFrontendTableDescription())
 
-    tables2Export <- list()
+  tables2Export <- list()
 
-    # Get data from REDCap
-    for (i in seq_along(form_names)) {
+  # Get data from REDCap
+  for (i in seq_along(form_names)) {
+    form_name <- form_names[i]
 
-      form_name <- form_names[i]
+    #TODO: Die Instanzen Risikofaktoren und Trigger werden nicht korrekt aus dem REDCap exportiert.
+    # Aktuelle Lösung: Die Tabellen Risikofaktoren und Trigger werden nicht in das Frontend importiert.
+    # Ob diese Instanzen überhaupt eine Relevanz haben, muss noch geklärt werden.
+    if(!(form_name %in% c("risikofaktor", "trigger"))) {
 
       dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
       redcapAPI::reviewInvalidRecords(dt)
@@ -43,13 +47,14 @@ importRedcap2DB <- function() {
 
       tables2Export[[form_name]] <- dt
     }
+  }
 
-    # Write tables to database
-    tables <- list()
-    for (i in seq_along(tables2Export)) {
-      table_name <- paste0(names(tables2Export)[i], "_fe")
-      tables2Export[[i]] <- etlutils::dbConvertToDBTypes(tables2Export[[i]], table_name)
-      tables[[table_name]] <- tables2Export[[i]]
-    }
-    etlutils::dbWriteTables(tables, lock_id = "importRedcap2DB()")
+  # Write tables to database
+  tables <- list()
+  for (i in seq_along(tables2Export)) {
+    table_name <- paste0(names(tables2Export)[i], "_fe")
+    tables2Export[[i]] <- etlutils::dbConvertToDBTypes(tables2Export[[i]], table_name)
+    tables[[table_name]] <- tables2Export[[i]]
+  }
+  etlutils::dbWriteTables(tables, lock_id = "importRedcap2DB()")
 }
