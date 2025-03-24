@@ -1,20 +1,3 @@
-#' Retrieve Database Table and Column Names
-#'
-#' This function returns a list of predefined database table names and their associated column names
-#' that are used in the database export and REDCap import process.
-#'
-getDBTableAndColumnNames <- function() {
-  # TODO: can we get this from an external source?
-  list(v_patient = c("record_id", "patient_fe_id", "pat_id", "pat_cis_pid", "pat_name", "pat_vorname",
-                     "pat_gebdat", "pat_aktuell_alter", "pat_geschlecht", "patient_complete"),
-       v_fall = c("record_id", "redcap_repeat_instrument", "redcap_repeat_instance", "patient_id_fk",
-                  "fall_fe_id", "fall_pat_id", "fall_id", "fall_studienphase",
-                  "fall_station", "fall_aufn_dat", "fall_aufn_diag", "fall_gewicht_aktuell",
-                  "fall_gewicht_aktl_einheit", "fall_groesse", "fall_groesse_einheit",
-                  "fall_status", "fall_ent_dat", "fall_complete")
-  )
-}
-
 #' Copy Database Content to Frontend
 #'
 #' This function retrieves data from the view or table in a database
@@ -35,18 +18,27 @@ importDB2Redcap <- function() {
   # Connect to REDCap
   frontend_connection <- getRedcapConnection()
 
-  # Get table and column names
-  db_table_and_columns <- getDBTableAndColumnNames()
+  # Get splitted frontend table descriptions
+  table_description <- getFrontendTableDescription()
+
+  table_names <- names(table_description)
 
   # Iterate over tables and columns to fetch and send data
-  for (table_name in names(db_table_and_columns)) {
-    columns <- db_table_and_columns[[table_name]]
+  for (i in seq_along(table_names)) {
+
+    table_name <- table_names[i]
+
+    db_generated_id_column_name <- paste0(table_name, "_fe_id")
+    columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
 
     # Create SQL query dynamically based on columns
-    query <- sprintf("SELECT %s FROM %s", paste(columns, collapse = ", "), table_name)
+    query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
 
     # Fetch data from the database
     data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+
+    table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
+    etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name))
 
     # Import data to REDCap
     tryCatch({
@@ -56,7 +48,6 @@ importDB2Redcap <- function() {
               "have been changed. Use the default values if possible.")
       stop(e$message)
     })
-
   }
 
 }

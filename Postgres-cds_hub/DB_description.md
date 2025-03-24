@@ -72,82 +72,97 @@ Teilweise werden diese Skripte mit Hilfe von Templates und Konfigurationsdateien
 
 Bei der Initalisierung der Datenbank ist darauf zu achten das alle Skripte fehlerfrei ausgeführt werden, um die Funktionalität zu gewährleisten.
 
-### 01_main_user_schema_sequence
+### 001_main_user_schema_sequence
 Initialisierung aller Schemata, Nutzer und Sequenzen. Passwörter für die verschiedenen Datenbanknutzer der Bereiche (Module / Schnittstellen) sind hier zu setzen.
 
-### 02_db_config_tools
+### 002_db_config_tools
 Allgemeines Skript zur Anlage von Hilfsansichten oder Hilfs-Jobs, z.B. eine Übersicht der Cron-Jobs oder der Bereinigung von Cron-Job-Berichten.
 
-### 03_db_parameter.sql
+### 003_db_parameter.sql
 Allgemeines Skript zum anlegen und initialiesieren von Parametern. Teils allgemein teils Standortspeziefisch (ab Release v0.2.5).
 
-### 10_cre_table_raw_cds2db_in
+### 100_cre_table_raw_cds2db_in
 Erstellen der Strukturen für die FHIR-Daten (Rohdaten) im Importschema cds2db_in. Dabei werden eindeutige Primärschlüssel vergeben sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
 
-### 12_cre_table_raw_db_log
+### 120_cre_table_raw_db_log
 Erstellen der Strukturen zur dauerhaften speicherung für die FHIR-Daten (Rohdaten) im Kern (db_log) sowie Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 14_cre_table_typ_cds2db_in
+### 140_cre_table_typ_cds2db_in
 Erstellen der Strukturen für die FHIR-Daten nach dem diese typiesiert und aufgeschlüsselt wurden (Verwendbare Daten) im Importschema cds2db_in. Dabei werden eindeutige Primärschlüssel vergeben, die technischen Primärschlüssel der Raw-Daten referenziert sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
 
-### 15_get_last_processing_nr_typed
+### 150_get_last_processing_nr_typed
 Generierte Funktion um die letzte Prozessingnuber der Daten im Kern zu ermitteln (Verarbeitungsnummer des letzten konsistenten Datenstandes).
 
-### 16_cre_table_typ_log
+### 160_cre_table_typ_log
 Erstellen der Strukturen für die FHIR-Daten nach dem diese typiesiert und aufgeschlüsselt wurden (Verwendbare Daten). Um diese dauerhaft im Kern (db_log) zu speichern. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 18_cre_view_typ_raw_type_diff_log
+### 180_cre_view_typ_raw_type_diff_log
 Erstellt Views im Schnittstellenschema cds2db_out um alle Datensätze zu listen, welche bereits als Raw-Daten im Kern dauerhaft gespeichert wurden, jedoch noch nicht typiesiert und aufgeschlüsselt sind (Erkennung über tecnische Datenbankinterne Primrschlüssel). Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 19_cre_view_typ_dataproc_all
+### 190_cre_view_typ_dataproc_all
 Erstellt Views im Schnittstellenschema db2dataprocessor_out um alle verwendbaren (getypten, aufgeschlüsselt) FHIR-Daten dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 20_take_over_check_date
-Funktion welche in den Datensätzen dokumentiert wann zuletzt bearbeitet wurden - mit Processing-Nr.
+### 200_take_over_check_date
+Funktion welche in den Datensätzen übergreifend dokumentiert in welchem Zeitraum die Datensätze barbeitet wurden - mit (Start- / Last-) Processing-Nr.
 
-### 21_cre_view_typ_cds2db_all
+### 210_cre_view_typ_cds2db_all
 Erstellt Views im Schnittstellenschema cds2db_out um Daten die für den Import der FHIR Daten notwenig sind zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 22_cre_view_raw_cds2db_last
-Erstellt Views im Schnittstellenschema cds2db_out um die letzten Raw-Daten für einen optimierten Import der FHIR Daten bereit zus stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+### 220_cre_view_raw_cds2db_last
+Erstellt Views im Schnittstellenschema cds2db_out um die beim letzten Import übertragenen Raw-Daten anzuzeigen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 30_cds_in_to_db_log
+### 230_cre_view_raw_cds2db_last_version
+Erstellt Views im Schnittstellenschema cds2db_out um von allen jemals importierten FHIR-Daten (raw) die letzte Version anzuzeigen. Wird in der Funktion db.add_hist_raw_records() (siehe 250_adding_historical_raw_records) verwendet um den Import der FHIR Daten zu optimieren indem durch abgleich des Zeitstempels der letzten Änderung doppeltes Nachladen vermieden wird. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
+### 230_cre_view_raw_dataproc_last_version
+Erstellt Views im Schnittstellenschema db2dataprocessor_out um von allen jemals importierten FHIR-Daten (raw) die letzte Version anzuzeigen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
+### 230_cre_view_typ_cds2db_last_version
+Erstellt Views im Schnittstellenschema cds2db_out um von allen jemals importierten FHIR-Daten die getypt wurden die letzte Version anzuzeigen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
+### 230_cre_view_typ_dataproc_last_version
+Erstellt Views im Schnittstellenschema db2dataprocessor_out um von allen jemals importierten FHIR-Daten die getypt wurden die letzte Version anzuzeigen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
+### 250_adding_historical_raw_records
+Erstellt die Funktion db.add_hist_raw_records() um den Import der FHIR Daten zu optimieren indem durch abgleich des Zeitstempels der letzten Änderung doppeltes Nachladen vermieden wird.
+
+### 300_cds_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_raw_cds_in_to_db_log) für die FHIR-Daten vom Schnittstellenschema cds2db_in in den Kern (db_log) für die Raw-Daten. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
-### 31_cds_in_to_db_log
+### 310_cds_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_type_cds_in_to_db_log) für die FHIR-Daten vom Schnittstellenschema cds2db_in in den Kern (db_log) für die getypten und aufgeschlüsselten Daten. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
-### 40_cre_table_typ_dataproc_in
+### 400_cre_table_typ_dataproc_in
 Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für das Frontend im Schnittstellenschema db2dataprocessor_in. Dabei werden eindeutige Primärschlüssel vergeben, die technischen Primärschlüssel der FHIR-Daten referenziert sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
 
-### 42_cre_table_frontent_log / 43_cre_table_frontent_log
+### 420_cre_table_frontent_log / 430_cre_table_frontent_log
 Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für das Frontend zum dauerhaften Speichern im Schema db_log. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 44_cre_table_frontent_in
+### 440_cre_table_frontent_in
 Erstellen der Strukturen im Schnittstellenschema db2frontend_in um Daten vom Modul Frontend (wieder) entgegen zu nehmen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 45_cre_table_frontend_in_trig
+### 450_cre_table_frontend_in_trig
 Zusätzlich zu den Tabellen in Skript 44 - Trigger welche den Datensätzen die erstmalig im Frontend erzeugt eine eindeutige primary key in der Datenbank setzen.
 
-### 46_cre_view_fe_dataproc_last
+### 460_cre_view_fe_dataproc_last
 Erstellt Views im Schnittstellenschema db2dataprocessor_out um die aktuellesten Studiendaten dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 47_cre_view_fe_dataproc_all
+### 470_cre_view_fe_dataproc_all
 Erstellt Views im Schnittstellenschema db2dataprocessor_out um alle Studiendaten (inc. Historische) dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 52_cre_view_fe_out
+### 520_cre_view_fe_out
 Erstellt Views im Schnittstellenschema db2frontend_out um aktuelle Daten aus dem Kern dem Frontend zur Übergabe bereit zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 60_dp_in_to_db_log
+### 600_dp_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_fe_dp_in_to_db_log) für die Studiendaten (Frontend) vom Schnittstellenschema db2dataprocessor_in in den Kern (db_log) zur dauerhaften speicherung. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
-### 62_fe_in_to_db_log
+### 620_fe_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_fe_fe_in_to_db_log) für die Studiendaten (Frontend) vom Schnittstellenschema db2frontend_in in den Kern (db_log) zur dauerhaften speicherung. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
-### 95_cro_job
+### 950_cro_job
 Erstellt eine zentralen cron-job der alle Überführungsfunktionen der Datenbank steuert und ausführt.
 
-### 98_dev_and_test
+### 980_dev_and_test
 Anlegen von Hilfstabellen für Tests und Entwicklung - nicht Produktiv.
 
 ## Namenskonvention Views und Tabellen

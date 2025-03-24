@@ -147,7 +147,22 @@ isDebugTestError <- function(err = NA) {
   if (all(is.na(err))) {
     err <- getErrorMessage()
   }
-  grepl("DEBUG_TEST_", err)
+
+  # Check if the error message starts with one of the expected patterns
+  valid_start <- grepl('Error in (etlutils::)?checkDebugTestError\\("\\w+', err)
+
+  if (!valid_start) {
+    return(FALSE)  # Return FALSE immediately if the start does not match
+  }
+
+  # Regex pattern for the uppercase part with underscores
+  pattern <- "\\b(DEBUG_[A-Z_]*)\\b"
+
+  # Extract occurrences of the pattern
+  matches <- regmatches(err, gregexpr(pattern, err))[[1]]
+
+  # Check if at least two matches exist and they are identical
+  return (length(matches) >= 2 && identical(matches[1], matches[2]))
 }
 
 #' Check for Debug Test Error
@@ -620,4 +635,117 @@ printAllTables <- function(table, table_name = NA) {
     }
     printTableSummary(table, table_name)
   }
+}
+
+#' Append a Warning if DEBUG_ Variables are Active
+#'
+#' This function checks for global variables starting with "DEBUG_" and appends
+#' a warning message to the given `finish_message` if any are found.
+#'
+#' If multiple DEBUG_ variables follow a sequential numbering pattern (e.g., DEBUG_VAR1 - DEBUG_VAR10),
+#' they will be grouped together to improve readability.
+#'
+#' @param finish_message A character string representing the current finish message.
+#' @return A modified finish message including a warning if DEBUG_ variables are active.
+#'
+#' @export
+appendDebugWarning <- function(finish_message) {
+  # do not append anything in debiug test error cases
+  if (isDebugTestError()) {
+    return(finish_message)
+  }
+
+  # Retrieve DEBUG_ variables
+  debug_variables <- getGlobalVariablesByPrefix("DEBUG_", astype = "vector")
+
+  if (length(debug_variables) > 0) {
+    # Extract variable names
+    var_names <- names(debug_variables)
+
+    # Function to group sequentially numbered variables
+    group_sequential_vars <- function(vars) {
+      grouped_vars <- list()
+      used_vars <- logical(length(vars)) # Track used variables
+
+      for (i in seq_along(vars)) {
+        if (used_vars[i]) next # Skip already grouped variables
+
+        base_name <- sub("\\d+$", "", vars[i]) # Extract base name (without numbers)
+        matches <- grep(paste0("^", base_name, "\\d+$"), vars, value = TRUE) # Find matching numbered variables
+
+        if (length(matches) > 1) {
+          # Extract numbers and sort them
+          numbers <- as.integer(sub(base_name, "", matches))
+          numbers <- sort(numbers, na.last = TRUE)
+
+          # Create a range if numbers are consecutive
+          if (all(diff(numbers) == 1)) {
+            grouped_vars <- c(grouped_vars, paste0(matches[1], " - ", matches[length(matches)]))
+          } else {
+            grouped_vars <- c(grouped_vars, matches)
+          }
+
+          # Mark variables as used
+          used_vars[vars %in% matches] <- TRUE
+        } else {
+          grouped_vars <- c(grouped_vars, vars[i])
+        }
+      }
+
+      return(grouped_vars)
+    }
+
+    # Apply grouping
+    grouped_var_list <- group_sequential_vars(var_names)
+
+    # Create output string
+    debug_variable_string <- paste(grouped_var_list, collapse = ", ")
+
+    # Append warning message
+    finish_message <- paste0(
+      finish_message,
+      "\nAdditional Warning: The following DEBUG parameters are activated: ", debug_variable_string,
+      "\nThese parameters are only accepted for test cases!\n"
+    )
+  }
+
+  return(finish_message)
+}
+
+#' Generate a Finish Message for a Module
+#'
+#' This function generates a finish message for a given module based on the error state.
+#' If an error has occurred, it extracts the relevant error message and appends it to the finish message.
+#' If no error has occurred, it returns a success message.
+#'
+#' @param PROJECT_NAME A character string specifying the name of the module.
+#'
+#' @return A character string containing the generated finish message.
+#'
+#' @examples
+#' PROJECT_NAME <- "cds2db"
+#' finish_message <- generateFinishMessage(PROJECT_NAME)
+#' cat(finish_message)
+#'
+#' @export
+generateFinishMessage <- function(PROJECT_NAME) {
+  if (etlutils::isErrorOccured()) {
+    if (etlutils::isDebugTestError()) {
+      finish_message <- paste0("\nModule '", PROJECT_NAME, "' Debug Test Message:\n")
+    } else {
+      finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with ERRORS (see details above).\n")
+    }
+
+    error_message <- as.character(etlutils::getErrorMessage())
+
+    # Remove irrelevant part from the error message
+    error_message <- sub("^[^\n]*\n?", "", error_message)
+
+    finish_message <- paste0(finish_message, error_message)
+
+  } else {
+    finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with no errors.\n")
+  }
+
+  return(finish_message)
 }

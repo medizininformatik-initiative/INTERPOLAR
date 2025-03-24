@@ -20,3 +20,9 @@
 
 -- Output on
 \o
+
+------------------------------------------------------
+-- INDEX for IDs on Tables in Schema "<%OWNER_SCHEMA%>" --
+------------------------------------------------------
+
+<%LOOP_TABS_SUB_cre_table_INDEX_ID%>

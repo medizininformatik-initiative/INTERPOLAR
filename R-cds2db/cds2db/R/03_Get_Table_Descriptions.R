@@ -57,10 +57,12 @@ getTableDescriptionsTable <- function(columns = NA) {
 #'
 #' @keywords data manipulation
 getFhircrackrTableDescriptions <- function(table_description_table = NA) {
+
   isPIDDependant <- function(table_description) {
     resource_name <- table_description@resource@.Data
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
   }
+
   if (is.na(table_description_table)) {
     table_description_table <- getTableDescriptionsTable(c("RESOURCE", "COLUMN_NAME", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
   }

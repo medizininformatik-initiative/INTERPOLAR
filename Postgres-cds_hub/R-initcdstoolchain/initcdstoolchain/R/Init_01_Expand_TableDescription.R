@@ -1,3 +1,20 @@
+#' Retrieve the first non-NA resource abbreviation
+#'
+#' This function searches for a given `resource_name` in the `RESOURCE` column
+#' of `table_description_collapsed` and returns the first non-NA value from
+#' the corresponding `RESOURCE_PREFIX` column.
+#'
+#' @param table_description_collapsed A data.table containing the columns
+#'        `RESOURCE` and `RESOURCE_PREFIX`.
+#' @param resource_name A character string specifying the resource name to search for.
+#'
+#' @return The first non-NA value from the `RESOURCE_PREFIX` column corresponding
+#'         to the given `resource_name`, or `NA` if no match is found.
+#'
+getResourceAbbreviation <- function(table_description_collapsed, resource_name) {
+  first_prefix <- na.omit(table_description_collapsed$RESOURCE_PREFIX[table_description_collapsed$RESOURCE == resource_name])[1]
+}
+
 #' Extract Replacement Patterns from a Table
 #'
 #' Extracts replacement patterns and their corresponding strings from a given table. This function
@@ -145,6 +162,8 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   }
 
   table[, COLUMN_NAME := NA_character_]
+  table[, FHIR_ID_COLUMN_NAME := NA_character_]
+  table[, REFERENCE_ID_COLUMN_NAME := NA_character_]
   resource_prefix <- NA
 
   expand_table_names <- names(expansion_tables)
@@ -153,6 +172,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   while (row <= last_row_index) {
 
     if (!is.na(table$RESOURCE[row])) {
+      resource <- table$RESOURCE[row]
       if (!is.na(table$RESOURCE_PREFIX[row])) {
         resource_prefix <- paste0(table$RESOURCE_PREFIX[row], '_')
       } else {
@@ -210,6 +230,14 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       table[row, COLUMN_NAME := full_column_name]
       row <- row + 1
     }
+
+    reference_type <- new_table[row, REFERENCE_TYPES]
+    if (!is.na(reference_type) && nchar(reference_type)) {
+      new_table[row, FHIR_ID_COLUMN_NAME := paste0(resource_prefix, "id")]
+      reference_prefix <- getResourceAbbreviation(table_description_collapsed, reference_type)
+      new_table[row, REFERENCE_ID_COLUMN_NAME := paste0(reference_prefix, "_id")]
+    }
+
   }
 
   # set the column 'COLUMN_NAME' directly in front of column 'FHIR_EXPRESSION'

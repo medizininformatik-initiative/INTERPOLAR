@@ -6,4 +6,3 @@ COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.last_check_datetime IS 'Time a
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.last_processing_nr IS 'Last processing number of the data record';
-
