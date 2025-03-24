@@ -43,7 +43,7 @@ startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "",
     # Start logging console outputs
     startLogging(module_name)
     # Log all configuration parameters, optionally hiding values based on the pattern
-    catList(config, prefix = "Configuration:\n--------------\n", suffix = "\n", hide_value_pattern)
+    catList(config, prefix = "\n---------------------------\nConfiguration:\n---------------------------\n", suffix = "\n", hide_value_pattern)
   }
 }
 
