@@ -8,6 +8,6 @@
 #' @importFrom data.table setDF
 #' @importFrom data.table setDT
 #' @importFrom methods new
-#' @importFrom rlang :=
+#' @importFrom data.table :=
 ## usethis namespace: end
 NULL

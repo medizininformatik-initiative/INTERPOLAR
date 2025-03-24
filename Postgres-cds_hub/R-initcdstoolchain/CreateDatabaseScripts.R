@@ -15,4 +15,7 @@ rm(list = ls())
 library(etlutils)
 library(initcdstoolchain)
 
+start <- Sys.time()
 initcdstoolchain::initDatabaseScripts()
+end <- Sys.time()
+print(end - start)

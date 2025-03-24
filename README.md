@@ -104,7 +104,13 @@ Ein typischer Ablauf sieht wie folgt aus:
     docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
     ```
 
-Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) auszuführen. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
+Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
+
+Laufen die manuellen Schritte ohne Fehler, kann der folgende Befehl genutzt werden, um alle Schritte hintereinander auszuführen:
+```console
+docker compose run --rm --no-deps r-env Rscript R-cdstoolchain/StartCDSToolChain.R
+```
+
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

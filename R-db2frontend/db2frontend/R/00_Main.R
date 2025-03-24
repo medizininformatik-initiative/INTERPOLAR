@@ -1,35 +1,26 @@
+#' Starts the db2frontend ETL job
 #'
-#' Starts the retrieval for this project. This is the main start function start the ETL job
-#' from Database to Frontend and back.
+#' This is the main entry point for the ETL process that transfers data between
+#' the database and the frontend (Redcap) and back. It initializes the `db2frontend`
+#' module, optionally resets the ETL lock, deletes Redcap content (in debug mode),
+#' and runs both import directions. If `reset_lock_only` is set to `TRUE`, the function
+#' only resets the lock and exits without executing the ETL job.
 #'
-#' @param debug_path_to_config_toml Debug parameter for loading an optional debug config.toml file
+#' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
 #'
 #' @export
-retrieve <- function(debug_path_to_config_toml = NA) {
+startDB2Frontend <- function(reset_lock_only = FALSE) {
 
-  ###
-  # Init module constants
-  ###
-  config <- etlutils::initModuleConstants(
-    module_name = "db2frontend",
-    path_to_toml = "./R-db2frontend/db2frontend_config.toml",
-    debug_path_to_config_toml = debug_path_to_config_toml
-  )
+  # Initialize and start module
+  etlutils::startModule("db2frontend",
+                        path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+                        hide_value_pattern = "^REDCAP_",
+                        init_constants_only = reset_lock_only)
 
-  etlutils::createDIRS(PROJECT_NAME)
-
-  ###
-  # Create globally used process_clock
-  ###
-  etlutils::createClock()
-
-  ###
-  # log all console outputs and save them at the end
-  ###
-  etlutils::startLogging(PROJECT_NAME)
-
-  # log all configuration parameters but hide value with parameter name starts with "REDCAP_"
-  etlutils::catList(config, "Configuration:\n--------------\n", "\n", "^REDCAP_")
+  if (reset_lock_only) {
+    etlutils::dbResetLock()
+    return()
+  }
 
   try(etlutils::runLevel1("Run Retrieve", {
 
@@ -37,6 +28,13 @@ retrieve <- function(debug_path_to_config_toml = NA) {
     etlutils::runLevel2("Reset database lock from unfinished previous run", {
       etlutils::dbResetLock()
     })
+
+    # Delete Redcap content (DEBUG and TESTS)
+    if (exists("DEBUG_DAY") && DEBUG_DAY == 1) {
+      etlutils::runLevel2("DEBUG_DAY == 1 -> Delete all Redcap records", {
+        deleteRedcapContent()
+      })
+    }
 
     # Import Data from Database to Frontend
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
@@ -50,18 +48,11 @@ retrieve <- function(debug_path_to_config_toml = NA) {
 
   }))
 
-  try(etlutils::runLevel1(paste("Finishing", PROJECT_NAME), {
-    etlutils::runLevel2("Close database connections", {
-      etlutils::dbCloseAllConnections()
-    })
-  }))
+  # Reset lock and close all database connections. Do not surround this with runLevelX!
+  etlutils::dbCloseAllConnections()
 
-  if (etlutils::isErrorOccured()) {
-    finish_message <- "Module 'DB2Frontend' finished with errors (see details above).\n"
-    finish_message <- paste0(finish_message, etlutils::getErrorMessage())
-  } else {
-    finish_message <- "Module 'DB2Frontend' finished with no errors.\n"
-  }
+  # Generate finish message
+  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
 
   etlutils::finalize(finish_message)
 
