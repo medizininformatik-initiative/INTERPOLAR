@@ -2,7 +2,7 @@
 # Project Definition for module dataprocessor    #
 ##################################################
 
-[global]
+[general]
 
 ###
 # VERBOSE LEVELS
@@ -30,21 +30,7 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 MAX_DIR_COUNT = 5
 
-# List of all paths that are to be used as input directories for data
-INPUT_REPO_PATHS = ["./Input-Repo"]
-
-[debug]
-###################
-# FOR DEBUG ONLY: #
-###################
-# Activate this date to run the analysis for a spectific date. If it is not set,
-# then time now will be taken.
-# This date must match the data in the database. Only Encounters whose start
-# date is before this date and whose end date is not set or is after this date
-# are loaded from the database.
-#DEBUG_ENCOUNTER_DATETIME = "2020-07-31 21:25:00"
-
-[frontend]
+[analyse]
 
 # In the patient table of the frontend, the patient ID should be displayed, which
 # can be used to search for further information on the patient in other systems.
@@ -60,22 +46,22 @@ INPUT_REPO_PATHS = ["./Input-Repo"]
 # ".*" as the pattern, which means "any characters any number of times".
 # If the filter result on a single Patient resoruce will provide more than one
 # Identifier, then they are written one after the other, separated by semicolons.
-#
-# acceppts every system:
+# Accepts any system with pattern ".*" (Default).
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*"
 
 # Accepts only type/coding/sytem with the exact value 'http://terminology.hl7.org/CodeSystem/v2-0203'
 # this system is the binded system for the clinical information system patient ID.
 # FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
-# alternative variant to accept every value in 'type/coding/system':
-FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
+# Alternative variant to accept any value in 'type/coding/system' with pattern ".*" (Default).
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*"
 
 # Accepts only type/coding/code with the exact value 'MR'. This value means
 # 'medical record number' in the system http://terminology.hl7.org/CodeSystem/v2-0203
-# and is the recommended code for the patient ID in the hospital (if the variable
-# is commented out then every value will be accepted). To match the start and end of the exact
-# value, use caret (^) and dollar ($) symbols.
-#FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+# and is the recommended code for the patient ID in the hospital.
+# For example: FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+# To match the start and end of the exact value, use caret (^) and dollar ($) symbols.
+# Accept any type/coding/code with pattern ".*" (Default).
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
 # in the frontend. This match must be exact, i.e. no patterns may be specified here.
@@ -83,22 +69,11 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
 # they have not yet ended.
 FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 
-# Additional filter with which all encounters are filtered out for which the following filters do
-# not apply. This can be used if, for example, the "Fachabteilungskontakt" do not have a partof
-# relationship with the "Einrichtungskontakt" and can therefore only be removed using this filter.
-# Same for the "Versorgungsstellenkontakt".
-# An Encounter will be accepted, if at least one condition is fulfilled (OR connected). A condition
-# defines which expressions of the Encounter should have which value. The values can be defined as
-# grep patterns. Multilpe subconditions can be connected by '+' (logcal AND). All Patterns are Case
-# INSENSITIVE!
-#FRONTEND_DISPLAYED_ENCOUNTER_FILTER = [
-#               "enc_type_code = 'einrichtungskontakt' + enc_type_display = 'Einrichtungskontakt'",
-#               "enc_type_system = 'http://fhir.de/CodeSystem/Kontaktebene'"
-#               ]
-
-# If there are no partof references for encounter, then the relationship between
-# “Versorgungsstellenkontakt” and “Fachabteilungskontakt” must be found via the encounter identifier.
-#MISSING_PART_OF_REFERENCE = true
+# This parameter should contain the FHIR element where the name of the room and bed can be found.
+# This must be the name of a column in the encounter database table (see Table_Description.xlsx in
+# the cds2db module). Examples:
+#FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_display"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_PATH = "enc_location_identifier_value"
 
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.
@@ -108,51 +83,6 @@ OBSERVATION_BODY_HEIGHT_SYSTEM = "http://loinc.org"
 OBSERVATION_BODY_HEIGHT_CODES  = "8302-2"
 OBSERVATION_BMI_SYSTEM         = "http://loinc.org"
 OBSERVATION_BMI_CODES          = "39156-5"
-
-
-[mrp_calculation]
-
-# Number of days to look into the future when searching for MRPs. If missing, default is 30.
-MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE = 30
-
-# Actually, only MedicationRequest should be used here, as it contains the prescription, the start time and the dosing
-# schedule. However, you can also use a different medication resource for testing purposes, even if the meaning is not
-# actually correct.
-[mrp_calculation.used_medication_request_resource]
-
-# Description of the follwing variables:
-#                                  MEDICATION_REQUEST_RESOURCE: Medication Resource Name (as in FHIR)
-#  MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME: Name of the column with the encounter reference
-# MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME: Name of the column with the Medication reference
-#            MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME: Name of the column with the time stamp when the
-#                                                               administrationof the medication should start or takes
-#                                                               place once
-#         MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME: Name of the column with the time stamp when the repeated
-#                                                               administration of the medication should begin
-#           MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME: Name of the column with the time stamp when the repeated
-#                                                               administration of the medication should end
-
-#MEDICATION_REQUEST_RESOURCE = "MedicationRequest"
-#MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medreq_encounter_id"
-#MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medreq_medicationreference_id"
-#MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event"
-#MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start"
-#MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end"
-
-MEDICATION_REQUEST_RESOURCE = "MedicationAdministration"
-MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medadm_encounter_ref"
-MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medadm_medicationreference_ref"
-MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medadm_effectivedatetime"
-MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medadm_effectiveperiod_start"
-MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medadm_effectiveperiod_end"
-
-#MEDICATION_REQUEST_RESOURCE = "MedicationStatement"
-#MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME = "medstat_encounter_ref"
-#MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME = "medstat_medicationreference_ref"
-#MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medstat_effectivedatetime"
-#MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medstat_effectiveperiod_start"
-#MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medstat_effectiveperiod_end"
-
 
 [database]
 

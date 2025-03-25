@@ -437,6 +437,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
     additional_search_parameter = NA,
     verbose = VERBOSE
 ) {
+
   WAIT_TIMES <- 2 ** (0 : 7)
   max_trials <- length(WAIT_TIMES)
 
@@ -471,7 +472,6 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
   }
   if (total < 1) {
     if (verbose) catWarningMessage(paste0('No ', resource, 's found on FHIR Server. Return empty Table. Please note!\n'))
-    return(NA)
   }
 
   curr_len <- min(ids_at_once, length(ids))
@@ -745,16 +745,31 @@ loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated 
 #' updated date indicates the point from which updated FHIR resources for the respective PID should be downloaded.
 #' @param table_descriptions A list of table descriptions for different FHIR resource types.
 #' @param resources_add_search_parameter A named list of additional search parameters for each resource type (optional).
+#' @param patient_age_at_enc_start Patient minimum age at encounter start time.
+#' @param index_brackets A character of length one or two used for the indices of multiple entries.
+#' The first one is the opening bracket and the second one the closing bracket. Vectors of length
+#' one will be recycled. Defaults to character(0), i.e. no brackets, meaning that multiple entries
+#' won't be indexed.
 #'
 #' @return A list containing a data table for each resource type, with resource type names as the keys.
 #' @export
-loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descriptions, resources_add_search_parameter = NA) {
+loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated,
+                                           table_descriptions,
+                                           resources_add_search_parameter = NA,
+                                           patient_age_at_enc_start = if (exists("MIN_PATIENT_AGE", envir = .GlobalEnv)) as.integer(MIN_PATIENT_AGE) else 0,
+                                           index_brackets = c("[", "]")) {
   # Split patient IDs by their last updated date
   date_to_pids <- mapDatesToPids(pids_with_last_updated)
   # Initialize an empty list to store the results for each resource type
-  resource_name_to_resources <- list()
+  raw_fhir_resources <- list()
+  consider_patient_age <- patient_age_at_enc_start > 0 && !is.null(table_descriptions[["Encounter"]]) && !is.null(table_descriptions[["Patient"]])
+  if (consider_patient_age) {
+    table_descriptions <- c(list(Encounter = table_descriptions$Encounter), table_descriptions[names(table_descriptions) != "Encounter"])
+    table_descriptions <- c(list(Patient = table_descriptions$Patient), table_descriptions[names(table_descriptions) != "Patient"])
+  }
   # Loop through each resource type description in `table_descriptions`
-  for (table_description in table_descriptions) {
+  for (resource_name in names(table_descriptions)) {
+    table_description <- table_descriptions[[resource_name]]
     # Extract the resource_name name from the current `table_description` object
     resource_name <- table_description@resource@.Data
     # Iterate over each unique last updated date
@@ -770,33 +785,67 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descrip
       if (!nchar(additional_search_parameter) == 0 || is.null(additional_search_parameter)) {
         # Load and process FHIR resources for the current patient IDs and resource_name type
         resource_table <- loadFHIRResourcesByPID(date_to_pids[[i]], table_description, last_updated, additional_search_parameter)
-        # If `resource_table` is valid (not NA), add it to `resource_name_to_resources`
+        # If `resource_table` is valid (not NA), add it to `raw_fhir_resources`
         if (!isSimpleNA(resource_table)) {
           # Combine resources for each resource type across multiple patient IDs
-          if (!is.null(resource_name_to_resources[[resource_name]])) {
+          if (!is.null(raw_fhir_resources[[resource_name]])) {
             if (nrow(resource_table)) {
               # Append new resources to existing ones with rbind
-              resource_name_to_resources[[resource_name]] <- rbind(
-                resource_name_to_resources[[resource_name]],
+              raw_fhir_resources[[resource_name]] <- rbind(
+                raw_fhir_resources[[resource_name]],
                 resource_table
               )
             }
           } else {
             # If this is the first occurrence, simply assign the table (even if nrow is 0)
-            resource_name_to_resources[[resource_name]] <- resource_table
+            raw_fhir_resources[[resource_name]] <- resource_table
           }
         }
       } else {
         # if there are no IDs -> create an empty table with all needed columns as character columns
         resource_name <- table_description@resource@.Data
-        resource_name_to_resources <- createResourceTable(
+        raw_fhir_resources <- createResourceTable(
           table_description,
           resource_key = resource_name,
-          resource_collection = resource_name_to_resources
+          resource_collection = raw_fhir_resources
         )
       }
     }
-    resource_table <- resource_name_to_resources[[resource_name]]
+
+    # At this point, both Encounter and Patient resources have been loaded
+    if (consider_patient_age && resource_name == "Encounter") {
+
+      table_enc <- raw_fhir_resources[["Encounter"]][, c("enc_patient_ref", "enc_period_start")]
+      table_pat <- raw_fhir_resources[["Patient"]][, c("pat_id", "pat_birthdate")]
+      table_enc <- fhircrackr::fhir_rm_indices(table_enc, index_brackets)
+      table_pat <- fhircrackr::fhir_rm_indices(table_pat, index_brackets)
+      table_enc[, pat_id := getAfterLastSlash(enc_patient_ref)]
+      table_enc[, enc_patient_ref := NULL]
+      table_enc$enc_period_start <- as.POSIXct(table_enc$enc_period_start)
+      table_pat$pat_birthdate <- as.POSIXct(table_pat$pat_birthdate)
+      table_enc[, min_pat_birthdate := min(enc_period_start) - lubridate::years(patient_age_at_enc_start), by = pat_id]
+      table_enc <- unique(table_enc[, enc_period_start := NULL])
+
+      table_enc <- merge(table_enc, table_pat, by = "pat_id")
+      min_age_pat_ids <- table_enc[pat_birthdate < min_pat_birthdate]$pat_id
+
+      # behalte alle pids die schon mal in der db waren
+      already_known_min_age_pids <- pids_with_last_updated[which(!is.na(names(pids_with_last_updated)))]
+      min_age_pat_ids <- unique(c(min_age_pat_ids, unlist(already_known_min_age_pids, use.names = FALSE)))
+
+      indexed_min_age_pat_ids <- paste0("[1]", min_age_pat_ids)
+      indexed_min_age_pat_refs <- paste0("[1.1]Patient/", min_age_pat_ids)
+
+      raw_fhir_resources[["Patient"]] <- raw_fhir_resources[["Patient"]][pat_id %in% indexed_min_age_pat_ids]
+      raw_fhir_resources[["Encounter"]] <- raw_fhir_resources[["Encounter"]][enc_patient_ref %in% indexed_min_age_pat_refs]
+
+      filtered_pids <- lapply(pids_with_last_updated, function(x) x[x %in% min_age_pat_ids])
+      pids_with_last_updated <- Filter(function(x) length(x) > 0, filtered_pids)
+
+    }
+
+    resource_table <- raw_fhir_resources[[resource_name]]
+
     if (!is.null(resource_table) && nrow(resource_table)) {
       printAllTables(resource_table, resource_name)
     } else if (!nchar(additional_search_parameter) && !is.null(additional_search_parameter)) {
@@ -806,7 +855,7 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated, table_descrip
     }
   }
   # Return the list of resource data tables, with resource types as the keys
-  return(resource_name_to_resources)
+  return(list(raw_fhir_resources = raw_fhir_resources, pids_with_last_updated = pids_with_last_updated))
 }
 
 #' Creates a mapping of unique dates to patient IDs

@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.4.1
+FROM rocker/r-ver:4.4.3
 
 # Select cran mirror
 
@@ -77,6 +77,11 @@ COPY R-dataprocessor R-dataprocessor
 RUN R CMD build R-dataprocessor/dataprocessor
 
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-dataprocessor/dataprocessor
+
+# R-cdstoolchain
+
+COPY R-cdstoolchain R-cdstoolchain
+
 
 # cleanup
 

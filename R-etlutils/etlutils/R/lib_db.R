@@ -15,6 +15,9 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
     password = constants[[paste0("DB_", module_name_upper, "_PASSWORD")]],
     schema_in = constants[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
     schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
+    admin_user = constants[["DB_ADMIN_USER"]],
+    admin_password = constants[["DB_ADMIN_PASSWORD"]],
+    admin_schema = constants[["DB_ADMIN_SCHEMAS"]],
     log = log)
 }
 
@@ -33,6 +36,9 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 #' @param schema_in The input schema for reading data from the database.
 #' @param schema_out The output schema for writing data to the database.
 #' @param log Logical. If \code{TRUE}, database operations will be logged.
+#' @param admin_user The admin username for authentication with the database.
+#' @param admin_password The admin password for authentication with the database.
+#' @param admin_schemas The admin schema for reading and writing data from the database.
 #'
 #' @return This function does not return a value. It initializes the connection environment.
 #'
@@ -50,7 +56,18 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 #' )
 #'
 #' @export
-dbSetContext <- function(module_name, dbname, host, port, user, password, schema_in, schema_out, log) {
+dbSetContext <- function(module_name,
+                         dbname,
+                         host,
+                         port,
+                         user,
+                         password,
+                         schema_in,
+                         schema_out,
+                         log,
+                         admin_user = NULL,
+                         admin_password = NULL,
+                         admin_schemas = NULL) {
   .lib_db_env[["MODULE_NAME"]] <- module_name
   .lib_db_env[["DB_NAME"]] <- dbname
   .lib_db_env[["DB_HOST"]] <- host
@@ -60,6 +77,9 @@ dbSetContext <- function(module_name, dbname, host, port, user, password, schema
   .lib_db_env[["DB_SCHEMA_IN"]] <- schema_in
   .lib_db_env[["DB_SCHEMA_OUT"]] <- schema_out
   .lib_db_env[["DB_LOG"]] <- log %in% TRUE
+  .lib_db_env[["DB_ADMIN_USER"]] <- admin_user
+  .lib_db_env[["DB_ADMIN_PASSWORD"]] <- admin_password
+  .lib_db_env[["DB_ADMIN_SCHEMAS"]] <- admin_schemas
 }
 
 #' Check if Database Logging is Enabled
@@ -179,6 +199,31 @@ dbGetConnection <- function(readonly) {
   return(db_connection)
 }
 
+#' Establish a PostgreSQL admin connection
+#'
+#' This function creates and returns a database connection using the PostgreSQL
+#' driver (`RPostgres::Postgres()`) with admin credentials. The connection is
+#' configured using environment variables stored in `.lib_db_env`. Additionally,
+#' it sets the working memory allocation (`work_mem`) to `32MB`.
+#'
+#' @return A `DBIConnection` object representing the active database connection.
+#'
+dbGetAdminConnection <- function() {
+  admin_connection <- DBI::dbConnect(
+    RPostgres::Postgres(),
+    dbname = .lib_db_env[["DB_NAME"]],
+    host = .lib_db_env[["DB_HOST"]],
+    port = .lib_db_env[["DB_PORT"]],
+    user = .lib_db_env[["DB_ADMIN_USER"]],
+    password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
+    #options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),
+    timezone = "Europe/Berlin"
+  )
+  # Increase memory allocation
+  DBI::dbExecute(admin_connection, "set work_mem to '32MB';")
+  return(admin_connection)
+}
+
 #' Get Database Read Connection
 #'
 #' This function retrieves a read-only database connection for the default schema.
@@ -230,7 +275,7 @@ dbGetSingleValue <- function(query) {
 #'         If no result is found, \code{NULL} is returned.
 #'
 dbGetStatus <- function() {
-  dbGetSingleValue("SELECT db.data_transfer_status();")
+  status <- dbGetSingleValue("SELECT db.data_transfer_status();")
 }
 
 #' Check Database Semaphore Status
@@ -357,6 +402,21 @@ dbLock <- function(lock_id) {
   }
 }
 
+dbTransferDataInternal <- function() {
+  admin_connection <- dbGetAdminConnection()
+  queries <- c(
+    "SELECT db.add_hist_raw_records();",
+    "SELECT db.copy_raw_cds_in_to_db_log();",
+    "SELECT db.copy_type_cds_in_to_db_log();",
+    "SELECT db.take_over_last_check_date();",
+    "SELECT db.copy_fe_dp_in_to_db_log();",
+    "SELECT db.copy_fe_fe_in_to_db_log();"
+  )
+  for (query in queries) {
+    DBI::dbGetQuery(admin_connection, query)
+  }
+}
+
 #' Unlock a Database for Read or Write Access
 #'
 #' This function unlocks the database using a specified lock ID. It ensures
@@ -391,6 +451,9 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
            "The current status is: " , status, "\n",
            dbGetInfo(readonly))
     }
+    # if (!readonly) {
+    #   dbTransferDataInternal()
+    # }
   }
   return(unlock_successful)
 }
@@ -565,7 +628,7 @@ dbGetReadOnlyColumns <- function(table_name) {
   # Wenn man sich die Tabelle aber vorher mit select * geholt hat, dann sind diese Spalten mit dabei.
   # Das hier soll in der Version 0.3.0 nochmal überarbeitet/durchdacht werden!
   # Am besten wäre es, wenn die Views bei einem select * diese Spalten gar nicht erst mit ausliefern!
-  return(c("hash_index_col", "hash_txt_col"))
+  return(c("hash_index_col"))
 }
 
 #' Insert Rows into a PostgreSQL Table
@@ -590,17 +653,32 @@ dbGetReadOnlyColumns <- function(table_name) {
 #'   operation if logging is enabled.
 #'
 dbAddContent <- function(table_name, table, lock_id = NULL) {
+
+  if (!length(table) || !nrow(table)) {
+    return()
+  }
+
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
 
   # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
-  table[, (dbGetReadOnlyColumns(table_name)) := NULL]
+  readonly_cols <- dbGetReadOnlyColumns(table_name)
+  cols_to_remove <- intersect(readonly_cols, colnames(table))
+  if (length(cols_to_remove) > 0) {
+    table[, (cols_to_remove) := NULL]
+  }
 
   # Measure start time
   time0 <- Sys.time()
   # Get row count for reporting
   row_count <- nrow(table)
   if (row_count > 0) {
+
+    # ensure all empty strings are set to NA because RedCap would change it too and this
+    # will produce different datasets
+    char_cols <- names(table)[sapply(table, is.character)]
+    table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+
     db_connection <- dbGetWriteConnection()
     # Append table content
     dbLock(lock_id)
@@ -1125,14 +1203,14 @@ dbGetInfoInternal <- function(db_connection = dbGetReadConnection()) {
   if (inherits(db_connection, "PqConnection")) {
     tryCatch({
       # Fetch additional details using SQL queries
-      additional_info <- DBI::dbGetQuery(db_connection, "
-        SELECT
+      additional_info <- DBI::dbGetQuery(db_connection,
+        "SELECT
           current_user AS user,
           current_database() AS database,
           inet_server_addr() AS host,
           inet_server_port() AS port,
-          current_setting('server_version') AS version;
-      ")
+          current_setting('server_version') AS version;"
+      )
     }, error = function(e) {
       warning("Failed to fetch additional PostgreSQL details: ", conditionMessage(e))
     })
@@ -1187,75 +1265,70 @@ dbGetInfo <- function(readonly = TRUE) {
   return(dbGetInfoInternal(db_connection))
 }
 
-#' Get Corresponding R Data Type for a Given Database Type
+#' Reset the database by truncating all tables in the specified schemas.
 #'
-#' This function returns the corresponding R data type (as an NA value with the correct class)
-#' for a given database type, based on a mapping stored in `.lib_db_env$DB_R_TYPES_MAPPING`.
-#' The mapping is parsed only once and cached in `.lib_db_env` as `DB_R_TYPES_MAPPING_PARSED_LIST`.
+#' This function connects to the database using `dbGetAdminConnection()`, retrieves
+#' all tables in the via "DB_ADMIN_SCHEMAS" provided schemas, and truncates them using
+#' `TRUNCATE TABLE ... RESTART IDENTITY CASCADE;`. This operation deletes all rows
+#' while resetting identity sequences. After execution, the database connection is closed.
 #'
-#' @param db_type A character string representing the database type (e.g., "varchar", "int").
-#'
-#' @return An R object initialized with NA of the corresponding type (e.g., `as.character(NA)`, `as.integer(NA)`).
-#' If no matching R type is found, an error is raised.
-#'
-#' @details
-#' The mapping is expected to be a character vector stored in `.lib_db_env$DB_R_TYPES_MAPPING`
-#' with each element formatted like: "character = 'varchar'". This function splits each element
-#' and builds a named vector where names are the database types and values are NA values of the corresponding R types.
-#'
-#' @examples
-#' \dontrun{
-#' # Suppose .lib_db_env$DB_R_TYPES_MAPPING is defined as:
-#' # c("character = 'varchar'", "integer = 'int'", "numeric = 'double precision'",
-#' #   "POSIXct = 'timestamp'", "Date = 'date'", "logical = 'boolean'")
-#' dbGetRType("varchar")    # Should return as.character(NA)
-#' dbGetRType("int")        # Should return as.integer(NA)
-#' }
+#' If any tables still contain data after truncation, their names and row counts
+#' are printed to help diagnose potential issues.
 #'
 #' @export
-dbGetRType <- function(db_type) {
-  # If the parsed mapping does not exist, create it from .lib_db_env$DB_R_TYPES_MAPPING
-  if (!exists("DB_R_TYPES_MAPPING_PARSED_LIST", envir = .lib_db_env)) {
-    if (!exists("DB_R_TYPES_MAPPING", envir = .lib_db_env)) {
-      stop("Mapping not found: .lib_db_env$DB_R_TYPES_MAPPING does not exist.")
+dbReset <- function() {
+  con <- dbGetAdminConnection()
+
+  # Convert schemas vector into SQL-friendly format
+  schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
+
+  query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
+
+  lock_id <- "Clear database"
+  dbLock(lock_id)
+
+  # Get all tables to clear
+  tables <- DBI::dbGetQuery(con, query)
+
+  # Clear all tables in the provided schemas
+  for (i in seq_len(nrow(tables))) {
+    schema <- tables$schemaname[i]
+    table_name <- tables$tablename[i]
+
+    truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
+
+    tryCatch({
+      DBI::dbExecute(con, truncate_statement)
+    }, error = function(e) {
+      message("Error truncating table: ", schema, ".", table_name)
+      message("Error message: ", e$message)
+    })
+  }
+
+  # Check if tables still contain data after truncation
+  remaining_data <- data.table()
+  for (i in seq_len(nrow(tables))) {
+    schema <- tables$schemaname[i]
+    table_name <- tables$tablename[i]
+
+    query <- paste0("SELECT COUNT(*) AS row_count FROM ", schema, ".", table_name, ";")
+    row_count <- DBI::dbGetQuery(con, query)$row_count
+
+    if (row_count > 0) {
+      remaining_data <- data.table::rbindlist(list(remaining_data, data.table(SCHEMA = schema, TABLE = table_name, ROWS = row_count)))
     }
+  }
 
-    # Split each string by " = " to separate the key (R type) and the value (database type)
-    split_list <- strsplit(.lib_db_env$DB_R_TYPES_MAPPING, " = ")
-
-    # Create a named vector using a for-loop.
-    mapping_vector <- c()
-    for (i in seq_along(split_list)) {
-      parts <- split_list[[i]]
-      r_type <- switch(tolower(trimws(parts[1])),
-                       "integer" = as.integer(NA),
-                       "character" = as.character(NA),
-                       "numeric" = as.numeric(NA),
-                       "logical" = as.logical(NA),
-                       "date" = as.Date(NA),
-                       "posixct" = as.POSIXct(NA, tz = GLOBAL_TIMEZONE),
-                       stop("Unknown R type '", parts[1], "' defined in DB_R_TYPES_MAPPING_PARSED_LIST in file cds_hub_db_config.toml") # Error for unknown types
-      )
-      db_type_key <- gsub("'", "", trimws(parts[2]))
-      mapping_vector[[db_type_key]] <- r_type
-    }
-
-    # Cache the parsed mapping in the environment.
-    assign("DB_R_TYPES_MAPPING_PARSED_LIST", mapping_vector, envir = .lib_db_env)
+  # Print results
+  if (nrow(remaining_data) > 0) {
+    print("The following tables still contain data after truncation:")
+    print(remaining_data)
   } else {
-    mapping_vector <- get("DB_R_TYPES_MAPPING_PARSED_LIST", envir = .lib_db_env)
+    print("All tables have been successfully truncated.")
   }
 
-  # Default to character if db_type is empty or NA.
-  if (is.na(db_type) || nchar(trimws(db_type)) == 0) {
-    return(as.character(NA))
-  }
+  dbUnlock(lock_id)
 
-  # Directly return the R type (NA with correct class) based on db_type.
-  if (db_type %in% names(mapping_vector)) {
-    return(mapping_vector[[db_type]])
-  }
-
-  stop(paste("No matching R type found for db type:", db_type))
+  # Close connection
+  DBI::dbDisconnect(con)
 }
-

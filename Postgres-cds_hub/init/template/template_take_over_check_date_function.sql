@@ -5,10 +5,9 @@ SECURITY DEFINER
 AS $$
 DECLARE
     current_record record;
-    new_last_pro_nr INT:=0; -- New processing number for these sync
-    last_raw_pro_nr INT; -- Last processing number in raw data - last new dataimport (offset)
-    max_last_pro_nr INT; -- Last processing number over all entities
-    max_ent_pro_nr INT;  -- Max processing number from a entiti
+    new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
+    max_last_pro_nr INT:=0; -- Last processing number over all entities
+    max_ent_pro_nr INT:=0;  -- Max processing number from a entiti
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
     temp VARCHAR; -- Temporary variable for INTerim results
@@ -51,21 +50,21 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''vor max_lpn'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-<%LOOP_TABS_SUB_take_over_check_date_function4%>
+<%LOOP_TABS_SUB_take_over_check_date_function1%>
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
     IF data_count_pro_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
-        err_section:='HEAD-15';    err_schema:='db_config';    err_table:='db_parameter';
+        err_section:='MAIN-15';    err_schema:='db_config';    err_table:='db_parameter';
 	-- Get value for documentation of each individual data record
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';
 
     	-- Number of data records then status have to be set
     	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
-        err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
+        err_section:='MAIN-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
         SELECT res FROM pg_background_result(pg_background_launch(
         'UPDATE db_config.db_process_control set pc_value=''db.<%COPY_FUNC_NAME%>()'', last_change_timestamp=CURRENT_TIMESTAMP
@@ -82,13 +81,25 @@ BEGIN
         WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
-        err_section:='HEAD-30';    err_schema:='db_log';    err_table:='/';
+        IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
+
+        err_section:='MAIN-30';    err_schema:='db_log';    err_table:='lpn_collection';
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Vor Einzelnen Tabellen'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
-    
-    	<%LOOP_TABS_SUB_take_over_check_date_function%>
+
+        ---------------------------------------------------------------------------------------------
+        CREATE TEMP TABLE lpn_collection
+        ON COMMIT DROP 
+        AS (
+            SELECT DISTINCT LPN FROM (
+                SELECT -1 AS LPN
+<%LOOP_TABS_SUB_take_over_check_date_function2%>
+            )
+        );
+
+<%LOOP_TABS_SUB_take_over_check_date_function3%>
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Nach Einzelnen Tabellen'' );'
@@ -146,7 +157,7 @@ EXCEPTION
         last_processing_nr => CAST(new_last_pro_nr AS INT)            -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 
-    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_raw_pro_nr:'||last_raw_pro_nr;
+    RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
 $$ LANGUAGE plpgsql;
 

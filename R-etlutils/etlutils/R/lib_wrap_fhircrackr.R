@@ -1,3 +1,17 @@
+#' Get the global curl timeout value for fhir search requests
+#'
+#' Retrieves the CURL timeout value from the global environment if it exists;
+#' otherwise, returns a default value of 1800 seconds.
+#'
+#' @return An integer representing the timeout in seconds.
+getFhirSearchCurlTimeout <- function() {
+  if (exists("FHIR_SEARCH_CURL_TIMEOUT", envir = .GlobalEnv)) {
+    as.integer(FHIR_SEARCH_CURL_TIMEOUT)
+  } else {
+    1800
+  }
+}
+
 #' Wrapper for fhircrackr::fhir_search with automatic Authentication
 #'
 #' @param request A string containing a fhir search request.
@@ -34,7 +48,10 @@ executeFHIRSearchVariation <- function(
   delay_between_bundles  = 0
 ) {
 
-  if (!is.null(FHIR_TOKEN) && FHIR_TOKEN != "") {
+  # Set new timeout (e.g., 30 minutes)
+  httr::set_config(httr::timeout(getFhirSearchCurlTimeout()))
+
+  result <- if (!is.null(FHIR_TOKEN) && FHIR_TOKEN != "") {
 
     fhircrackr::fhir_search(
       request                = request,
@@ -74,4 +91,9 @@ executeFHIRSearchVariation <- function(
       delay_between_bundles  = delay_between_bundles
     )
   }
+
+  # Reset httr config to defaults
+  httr::reset_config()
+
+  return(result)
 }
