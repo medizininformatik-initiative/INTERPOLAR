@@ -63,6 +63,14 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*"
 # Accept any type/coding/code with pattern ".*" (Default).
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 
+# Accepts only type/coding/sytem from the "Einrichtungskontakt" with the exact value. For the
+# encounter identifier system defined here, the corresponding value from type/coding/value is taken
+# (if there are several values for a system, these are concatenated). This identifier is entered in
+# the table Fall_fe and displayed in the frontend as fall_id.
+# For example: FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
+# Alternative variant to accept any value in 'type/coding/system' with pattern ".*" (Default).
+FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ".*"
+
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
 # in the frontend. This match must be exact, i.e. no patterns may be specified here.
 # This can be used to ensure that, for example, no outpatient Encounters are displayed even though
