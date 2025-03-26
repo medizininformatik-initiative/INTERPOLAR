@@ -578,6 +578,12 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
+        first_pid_encounter_row <- pid_encounter[1]
+        enc_id               <- first_pid_encounter_row$enc_id
+        enc_identifier_value <- first_pid_encounter_row$enc_identifier_value
+        enc_period_start     <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_start)
+        enc_period_end       <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_end)
+        enc_status           <- first_pid_encounter_row$enc_status
         enc_id <- pid_encounter$enc_id[1]
         enc_identifier_value <- pid_encounter$enc_identifier_value[1]
         enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_start[1])
