@@ -1,3 +1,4 @@
+.dataprocessor_env <- new.env()
 
 #' Get the most relevant current datetime
 #'
@@ -371,6 +372,23 @@ createFrontendTables <- function() {
     return(patients)
   }
 
+  getExistingRecordID <- function(pat_id, default = NA_character_) {
+    existing_record_id <- .dataprocessor_env[[pat_id]]
+    if (is.null(existing_record_id)) {
+      query <- paste0("SELECT record_id FROM v_patient_fe WHERE pat_id = '", pat_id, "'")
+      existing_record_id <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createPatientFrontendTable()[1]")
+      if (nrow(existing_record_id) == 0) {
+        existing_record_id <- default
+      } else {
+        # take the very first 'record_id' value
+        existing_record_id <- existing_record_id[["record_id"]][1]
+      }
+      if (!is.na(existing_record_id)) {
+        .dataprocessor_env[[pat_id]] <- existing_record_id
+      }
+    }
+    return(existing_record_id)
+  }
 
   # This function creates a table for frontend display containing patient information
   # based on the provided patient IDs per ward. It retrieves patient information from
@@ -395,9 +413,15 @@ createFrontendTables <- function() {
 
     # Iterate over each unique patient ID to populate the frontend table
     for (i in seq_len(pids_count)) {
+
       patient <- patients[pat_id %in% pids[i]]
-      patient_frontend_table$record_id[i] <- patient$patient_id
-      patient_frontend_table$patient_fe_id[i] <- patient$patient_id
+
+      # Get an existing record_id for the patient from the database patient_fe
+      # table via the pat_id. If there is no record_id for the pat_id, then the
+      # existing_record_id will be patient$patient_id.
+      record_id <- getExistingRecordID(pids[i], default = patient$patient_id)
+      patient_frontend_table$record_id[i] <- record_id
+      patient_frontend_table$patient_fe_id[i] <- record_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
@@ -535,10 +559,12 @@ createFrontendTables <- function() {
         enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_start[1])
         enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_end[1])
         enc_status <- pid_encounter$enc_status[1]
-        data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
+
+        record_id <- getExistingRecordID(pid_patient$pat_id)
+        data.table::set(enc_frontend_table, target_index, "record_id", record_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
-        data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, "patient_id_fk", record_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
         data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
         data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
