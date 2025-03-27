@@ -90,17 +90,6 @@ parseQueryList <- function(list_string, split = " ") {
 # Load Resources by ID (= own ID or PID or Enc ID) #
 ####################################################
 
-#' Get Full Table Name for Resource
-#'
-#' This function constructs the full table name for a given resource by converting the
-#' resource name to lowercase and appending it to a prefix and suffix.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the full table name for the specified resource.
-#'
-getViewTableName <- function(resource_name) paste0("v_", tolower(resource_name))
-
 #' Load Resources Last Status From Database Query
 #'
 #' This function constructs a SQL statement to retrieve the last status of load resources
@@ -113,13 +102,9 @@ getViewTableName <- function(resource_name) paste0("v_", tolower(resource_name))
 #' @return A character string representing the SQL query.
 #'
 getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
-  last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
-  table_name <- getViewTableName(resource_name)
-  id_column <- etlutils::getIDColumn(resource_name)
   query <-paste0(
-    "SELECT * FROM ", table_name, "\n",
-    " WHERE last_processing_nr = ", last_processing_nr,
+    "SELECT * FROM v_", resource_name, "_last_version\n",
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
@@ -139,7 +124,10 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
 #'
 #' @return A character string representing the filter statement for the SQL query.
 #'
-getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
+getStatementFilter <- function(resource_name, filter_column = NA, filter_column_values = NA) {
+  if (is.na(filter_column) || is.na(filter_column_values)) {
+    return("")
+  }
   resource_id_column <- etlutils::getIDColumn(resource_name)
   if (filter_column == resource_id_column) {
     # remove resource name and the slash if the IDs are references and not pure IDs
@@ -147,7 +135,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
   }
   # quote every pid and collapse the vector comma separated
   filter_column_values <- paste0("'", filter_column_values, "'", collapse = ",")
-  filter_line <- paste0("AND ", filter_column, " IN (", filter_column_values, ")\n")
+  filter_line <- paste0("WHERE ", filter_column, " IN (", filter_column_values, ")\n")
   return(filter_line)
 }
 
@@ -164,7 +152,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
 #' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-loadResourcesFromDB <- function(resource_name, filter_column, ids, lock_id) {
+loadResourcesFromDB <- function(resource_name, filter_column = NA, ids = NA, lock_id) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
   query <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
   etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
@@ -181,8 +169,8 @@ loadResourcesFromDB <- function(resource_name, filter_column, ids, lock_id) {
 #' @return A data frame containing the last status of load resources.
 #'
 loadResourcesLastStatusFromDB <- function(resource_name) {
-  query <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
-  etlutils::dbGetReadOnlyQuery(query, lock_id = "loadResourcesLastStatusFromDB()")
+  query <- getQueryToLoadResourcesLastStatusFromDB(resource_name)
+  etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("loadResourcesLastStatusFromDB(", resource_name, ")"))
 }
 
 #' Retrieve the last status of load resources from the database by their own IDs.
@@ -452,7 +440,7 @@ createFrontendTables <- function() {
     # load Encounters for all PIDs from pids_per_ward database table
     query_ids <- getQueryList(pids_per_ward$encounter_id)
 
-    query <- paste0( "SELECT * FROM v_encounter\n",
+    query <- paste0( "SELECT * FROM v_encounter_last_version\n",
                      "  WHERE encounter_raw_id in (\n",
                      "    SELECT MAX(encounter_raw_id) FROM v_encounter\n",
                      "      WHERE enc_id IN (", query_ids, ")\n",
