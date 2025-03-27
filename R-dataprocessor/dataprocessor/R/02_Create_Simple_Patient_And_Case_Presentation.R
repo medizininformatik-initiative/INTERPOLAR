@@ -1,5 +1,3 @@
-.dataprocessor_env <- new.env()
-
 #' Get the most relevant current datetime
 #'
 #' This function retrieves the latest encounter end datetime from the `encounters` table.
@@ -240,7 +238,7 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
     resource_name = resource_name,
     filter_column = enc_id_column,
     ids = enc_ids,
-    lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
+    lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(", resource_name, ")"))
 }
 
 #' Find Related Partof Encounters for a Main Encounter
@@ -372,20 +370,17 @@ createFrontendTables <- function() {
     return(patients)
   }
 
-  getExistingRecordID <- function(pat_id, default = NA_character_) {
-    existing_record_id <- .dataprocessor_env[[pat_id]]
-    if (is.null(existing_record_id)) {
-      query <- paste0("SELECT record_id FROM v_patient_fe WHERE pat_id = '", pat_id, "'")
-      existing_record_id <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createPatientFrontendTable()[1]")
-      if (nrow(existing_record_id) == 0) {
-        existing_record_id <- default
-      } else {
-        # take the very first 'record_id' value
-        existing_record_id <- existing_record_id[["record_id"]][1]
-      }
-      if (!is.na(existing_record_id)) {
-        .dataprocessor_env[[pat_id]] <- existing_record_id
-      }
+  loadExistingRecordIDsFromDB <- function(pat_ids, default = NULL) {
+    query_ids <- getQueryList(pat_ids)
+    query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
+    existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
+    return(existing_record_ids)
+  }
+
+  getExistingRecordID <- function(pat_id, default = NA_character_, existing_record_ids) {
+    existing_record_id <- existing_record_ids[pat_id == pat_id, record_id]
+    if (!length(existing_record_id)) {
+      existing_record_id <- default
     }
     return(existing_record_id)
   }
@@ -393,7 +388,7 @@ createFrontendTables <- function() {
   # This function creates a table for frontend display containing patient information
   # based on the provided patient IDs per ward. It retrieves patient information from
   # the database and constructs the frontend table.
-  createPatientFrontendTable <- function(patients) {
+  createPatientFrontendTable <- function(patients, existing_record_ids) {
 
     pids <- unique(patients$pat_id)
     pids_count <- length(pids)
@@ -419,7 +414,7 @@ createFrontendTables <- function() {
       # Get an existing record_id for the patient from the database patient_fe
       # table via the pat_id. If there is no record_id for the pat_id, then the
       # existing_record_id will be patient$patient_id.
-      record_id <- getExistingRecordID(pids[i], default = patient$patient_id)
+      record_id <- getExistingRecordID(pids[i], default = patient$patient_id, existing_record_ids)
       patient_frontend_table$record_id[i] <- record_id
       patient_frontend_table$patient_fe_id[i] <- record_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
@@ -437,7 +432,7 @@ createFrontendTables <- function() {
   # This function creates a table for frontend display containing encounter information
   # based on the provided patient IDs per ward. It retrieves encounter information from
   # the database and constructs the frontend table.
-  createEncounterFrontendTable <- function(pids_per_ward, patients) {
+  createEncounterFrontendTable <- function(pids_per_ward, patients, existing_record_ids) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
       record_id	= character(), # v_patient -> patient_id
@@ -560,7 +555,7 @@ createFrontendTables <- function() {
         enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_end[1])
         enc_status <- pid_encounter$enc_status[1]
 
-        record_id <- getExistingRecordID(pid_patient$pat_id)
+        record_id <- getExistingRecordID(pid_patient$pat_id, default = pid_patient$patient_id, existing_record_ids)
         data.table::set(enc_frontend_table, target_index, "record_id", record_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
@@ -772,8 +767,10 @@ createFrontendTables <- function() {
   # TODO: Wenn dieser Fall auftritt, dann muss hier mit einem harten Fehler abgebrochen werden. Ein Patient darf immer nur genau einen gültigen Datensatz haben.
   patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
 
-  patient_fe <- createPatientFrontendTable(patients_from_database)
-  fall_fe <- createEncounterFrontendTable(pids_per_ward, patients_from_database)
+  # Load the existing record IDs from the database
+  existing_record_ids <- loadExistingRecordIDsFromDB(patients_from_database$pat_id)
+  patient_fe <- createPatientFrontendTable(patients_from_database, existing_record_ids)
+  fall_fe <- createEncounterFrontendTable(pids_per_ward, patients_from_database, existing_record_ids)
   # Create and write frontend table for patients and encounters
   etlutils::dbWriteTables(
     tables = etlutils::namedListByParam(patient_fe, fall_fe),
