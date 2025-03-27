@@ -3,6 +3,10 @@
 # Environment for saving the connections
 .lib_db_connection_env <- new.env()
 
+isDebugTest <- function() {
+  return(interactive() && exists("DEBUG_DAY"))
+}
+
 dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
   constants <- initConstants(path_to_db_toml, envir = .lib_db_env)
   module_name_upper <- toupper(module_name)
@@ -276,6 +280,17 @@ dbGetSingleValue <- function(query) {
 #'
 dbGetStatus <- function() {
   status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+  if (isDebugTest()) {
+    if (grepl("WaitForCronJob", status)) {
+      admin_connection <- dbGetAdminConnection()
+      DBI::dbGetQuery(admin_connection,
+                      "UPDATE db_config.db_process_control
+                       SET pc_value = 'ReadyToConnect', last_change_timestamp = CURRENT_TIMESTAMP
+                       WHERE pc_name = 'semaphor_cron_job_data_transfer';")
+      status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+    }
+  }
+  return(status)
 }
 
 #' Check Database Semaphore Status
@@ -451,9 +466,9 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
            "The current status is: " , status, "\n",
            dbGetInfo(readonly))
     }
-    # if (!readonly) {
-    #   dbTransferDataInternal()
-    # }
+    if (!readonly && isDebugTest()) {
+      dbTransferDataInternal()
+    }
   }
   return(unlock_successful)
 }
