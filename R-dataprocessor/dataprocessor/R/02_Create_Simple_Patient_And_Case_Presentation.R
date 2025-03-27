@@ -1,39 +1,3 @@
-#' Retrieve the Last Processing Number from the Database
-#'
-#' This function connects to the database and retrieves the maximum `last_processing_nr`
-#' from the `data_import_hist` table within the `db_log` schema. It specifically looks
-#' for records where the `function_name` is `'copy_type_cds_in_to_db_log'` and the
-#' `table_name` does not contain `'_raw'`.
-#'
-#' @return A data frame containing the maximum `last_processing_nr` from the specified
-#'         records in the `db_log.data_import_hist` table.
-#'
-getLastProcessingNumber <- function() {
-  query <- "SELECT db.get_last_processing_nr_typed();"
-  etlutils::dbGetReadOnlyQuery(query, lock_id = "getLastProcessingNumber()")
-}
-
-#' Load All Data with Last Timestamp from Database
-#'
-#' This function loads all data from a database table that has the most recent timestamp.
-#' It constructs a SQL query to fetch records where the timestamp is the latest in the table.
-#'
-#' @param table_name The table name.
-#' @return A data frame containing the records with the most recent timestamp from the specified table.
-#'
-loadLastImportedDatasetsFromDB <- function(table_name) {
-  last_processing_nr <- getLastProcessingNumber()
-  # Create the SQL query to get the records with the maximum last_processing_nr
-  query <- paste0("SELECT * FROM ", table_name, "\n",
-                  " WHERE last_processing_nr = ", last_processing_nr, ";")
-  # This only occurs if the database has been reset and the dataprocessor was executed too quickly
-  if (is.na(last_processing_nr)) {
-    stop(paste0("In table ", table_name, " the content of column last_processing_nr in the ",
-                "database is NA, so the following SQL query will return an error:\n", query,
-                "\nThis should never happen..."))
-  }
-  etlutils::dbGetReadOnlyQuery(query, lock_id = "loadLastImportedDatasetsFromDB()")
-}
 
 #' Get the most relevant current datetime
 #'
@@ -712,7 +676,9 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward <- loadLastImportedDatasetsFromDB("v_pids_per_ward")
+  pids_per_ward <- etlutils::dbGetReadOnlyQuery(
+    query = paste0("SELECT * FROM v_pids_per_ward_last\n"),
+    lock_id = "load last imported datasets from pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
