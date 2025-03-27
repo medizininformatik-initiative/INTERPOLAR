@@ -629,6 +629,7 @@ createFrontendTables <- function() {
             enc_location_physicaltype_code %in% c("ro", "bd")
         ]
         # 2. Select all rows with the maximum 'enc_period_start'
+        if (nrow(filtered_pid_part_of_encounters)) {
         filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
         # 3. For each type ("ro" and "bd"), select the first row based on the original order
         first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
@@ -641,6 +642,9 @@ createFrontendTables <- function() {
         # Call the function with the filtered_pid_part_of_encounters data and the location_labels
         combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
         data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
+        } else {
+          data.table::set(enc_frontend_table, target_index, "fall_zimmernr", NA_character_)
+        }
         #####End: Find Locations for column 'fall_zimmernr'#####
 
         # Function to extract specific observations for the encounter

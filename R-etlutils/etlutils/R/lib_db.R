@@ -276,14 +276,6 @@ dbGetSingleValue <- function(query) {
 #'
 dbGetStatus <- function() {
   status <- dbGetSingleValue("SELECT db.data_transfer_status();")
-  if (grepl("WaitForCronJob", status)) {
-    admin_connection <- dbGetAdminConnection()
-    DBI::dbGetQuery(admin_connection, "UPDATE db_config.db_process_control
-                    SET pc_value='ReadyToConnect', last_change_timestamp=CURRENT_TIMESTAMP
-                    WHERE pc_name='semaphor_cron_job_data_transfer';")
-    status <- dbGetSingleValue("SELECT db.data_transfer_status();")
-  }
-  return(status)
 }
 
 #' Check Database Semaphore Status
