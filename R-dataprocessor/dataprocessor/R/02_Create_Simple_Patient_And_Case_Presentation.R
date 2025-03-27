@@ -769,6 +769,7 @@ createFrontendTables <- function() {
   # make sure that it is a single patient resource by choosing the last of the potential list
   # if there are multiple rows then all different values of a column will be pasted as stings
   # delimited by "; " in one row
+  # TODO: Wenn dieser Fall auftritt, dann muss hier mit einem harten Fehler abgebrochen werden. Ein Patient darf immer nur genau einen gültigen Datensatz haben.
   patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
 
   patient_fe <- createPatientFrontendTable(patients_from_database)
