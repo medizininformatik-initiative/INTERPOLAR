@@ -124,7 +124,7 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
 #' @return A character string representing the filter statement for the SQL query.
 #'
 getStatementFilter <- function(resource_name, filter_column = NA, filter_column_values = NA) {
-  if (is.na(filter_column) || is.na(filter_column_values)) {
+  if (is.na(filter_column) || all(is.na(filter_column_values))) {
     return("")
   }
   resource_id_column <- etlutils::getIDColumn(resource_name)
