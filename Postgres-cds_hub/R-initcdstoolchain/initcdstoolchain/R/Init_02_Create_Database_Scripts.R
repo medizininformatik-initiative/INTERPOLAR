@@ -20,7 +20,6 @@ getRightsDefinitionSheetName <- function() "rights_and_functions"
 getConvertDefinitionSheetName <- function() "table_description_convert_def"
 
 writeResultFile <- function(scriptname, content) {
-  message(scriptname)
   content <- gsub("\r\n", "\n", content, fixed = TRUE)
   writeLines(content, paste0(getDBScriptsTargetDir(), scriptname), useBytes = TRUE, sep = "\n")
 }
@@ -332,6 +331,8 @@ convertTemplate <- function(tables_descriptions,
   if (recursion == 0) {
     header <- createHeader(script_rights_definition)
     content <- paste0(header, content)
+    file_name <- rights_first_row[[result_file_name_column]]
+    cat("create file ", file_name, "...", sep = "")
   }
 
   placeholders <- extractPlaceholders(content)
@@ -465,7 +466,6 @@ convertTemplate <- function(tables_descriptions,
       } else {
         content <- removePlaceholderLines(content, placeholder)
       }
-
     } else {
       placeholder_name <- extractPlaceholderName(placeholder)
       if (placeholder_name %in% names(rights_first_row)) {
@@ -478,10 +478,10 @@ convertTemplate <- function(tables_descriptions,
 
     placeholders <- extractPlaceholders(content)
     if (length(placeholders)) {
-      file_name <- rights_first_row[[result_file_name_column]]
       warning("There are unreplaced placeholders in the file ", file_name, ":\n", placeholders)
     }
-    writeResultFile(rights_first_row[[result_file_name_column]], content)
+    writeResultFile(file_name, content)
+    cat(" done\n")
   }
   # Write the modified content to the file
   return(content)
