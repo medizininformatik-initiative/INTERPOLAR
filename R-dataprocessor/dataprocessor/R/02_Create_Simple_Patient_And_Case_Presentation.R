@@ -380,7 +380,10 @@ createFrontendTables <- function() {
 
   # Function to retrieve an existing record_id for a given patient ID
   getExistingRecordID <- function(pat_id, default = NA_character_, existing_record_ids) {
-    existing_record_id <- existing_record_ids[pat_id == pat_id, record_id]
+    specific_pat_id <- pat_id
+    # Get existing_record_id for the specific pat_id
+    existing_record_id <- unique(existing_record_ids[pat_id == specific_pat_id, record_id])
+
     if (!length(existing_record_id)) {
       existing_record_id <- default
     }
