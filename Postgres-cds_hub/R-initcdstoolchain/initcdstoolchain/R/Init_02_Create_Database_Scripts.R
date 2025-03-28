@@ -223,13 +223,6 @@ getTemplateContent <- function(filename_or_placeholder) {
   return(template_content)
 }
 
-copyTemplate <- function(script_rights_definition) {
-  scriptname <- script_rights_definition[1]$SCRIPTNAME
-  content <- getTemplateContent(paste0("template_", scriptname))
-  # Write the unmodified content to the file
-  writeResultFile(scriptname, content)
-}
-
 getFullTableName <- function(tablename, script_rights_definition, name_index = 1) {
   rights_first_row <- script_rights_definition[1]
   table_prefix_colname <- "TABLE_PREFIX"
