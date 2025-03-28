@@ -445,9 +445,7 @@ convertTemplate <- function(tables_descriptions,
       } else {
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
-      if (( condition_arguments$invert && !grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE)) ||
-          (!condition_arguments$invert &&  grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
-
+      if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
         # quotes at the beginning of the result indicate that not a subtemplate name is given but
         # directly the content
         if (startsWith(condition_arguments$result, "\"")) {
