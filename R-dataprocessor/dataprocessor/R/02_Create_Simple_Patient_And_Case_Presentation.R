@@ -702,19 +702,6 @@ createFrontendTables <- function() {
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
 
-  #########################
-  # START: FOR DEBUG ONLY #
-  #########################
-  # Set parameter DEBUG_ADD_MULTIPLE_DIFFERENT_PATIENT_LINES = true in dataprocessor_config.toml
-  # Add new rows with a changed postal code to test the following code line which should
-  # identify one valid Identifier.value from one patient_id (= source record ID).
-  if (etlutils::isDefinedAndTrue("DEBUG_ADD_MULTIPLE_DIFFERENT_PATIENT_LINES")) {
-    patients_from_database <- debugAddMultiplePatientLines(patients_from_database)
-  }
-  #######################
-  # END: FOR DEBUG ONLY #
-  #######################
-
   # check error no Patient exists in the current patinet database table
   if (!nrow(patients_from_database)) { #
     etlutils::catErrorMessage(paste0("No Patient resources found."))
