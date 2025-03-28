@@ -754,10 +754,12 @@ createFrontendTables <- function() {
   patients_from_database[, patient_id := max(patient_id), by = pat_id]
 
   # make sure that it is a single patient resource by choosing the last of the potential list
-  # if there are multiple rows then all different values of a column will be pasted as stings
-  # delimited by "; " in one row
-  # TODO: Wenn dieser Fall auftritt, dann muss hier mit einem harten Fehler abgebrochen werden. Ein Patient darf immer nur genau einen gültigen Datensatz haben.
-  patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
+  # Filter the dataset to select the row with the highest 'last_processing_nr' within each 'pat_id'
+  # group. If there are multiple rows with the same 'last_processing_nr', we select the last row by
+  # using '.N', which gives the number of rows in each group.
+  patients_from_database <- patients_from_database[
+    , .SD[.N], by = pat_id
+  ][order(pat_id, -last_processing_nr)]
 
   # Load the existing record IDs from the database
   existing_record_ids <- loadExistingRecordIDsFromDB(patients_from_database$pat_id)
