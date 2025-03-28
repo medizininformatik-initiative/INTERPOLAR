@@ -19,9 +19,39 @@ getRightsDefinitionFileName <- function() paste0(getRightsDefinitionDirName(), "
 getRightsDefinitionSheetName <- function() "rights_and_functions"
 getConvertDefinitionSheetName <- function() "table_description_convert_def"
 
+isContentChanged <- function(existing_file_path, new_file_content) {
+
+  # Check if file exists
+  if (!file.exists(existing_file_path)) return(TRUE)
+
+  # Read existing file content
+  existing_lines <- readLines(existing_file_path, warn = FALSE)
+
+  # Split new content into lines
+  new_lines <- strsplit(new_file_content, "\n", fixed = TRUE)[[1]]
+
+  # Define patterns of lines to ignore (last pattern is for empty lines)
+  drop_patterns <- c("Rights definition file last update", "Create time", "^\\s*$")
+
+  # Function to remove lines containing any of the drop patterns
+  cleanLines <- function(lines) {
+    lines[!grepl(paste(drop_patterns, collapse = "|"), lines)]
+  }
+
+  # Clean both contents
+  existing_lines <- cleanLines(existing_lines)
+  new_lines <- cleanLines(new_lines)
+
+  # Compare cleaned contents
+  return(!identical(existing_lines, new_lines))
+}
+
 writeResultFile <- function(scriptname, content) {
   content <- gsub("\r\n", "\n", content, fixed = TRUE)
-  writeLines(content, paste0(getDBScriptsTargetDir(), scriptname), useBytes = TRUE, sep = "\n")
+  path <- paste0(getDBScriptsTargetDir(), scriptname)
+  if (isContentChanged(path, content)) {
+    writeLines(content, path, useBytes = TRUE, sep = "\n")
+  }
 }
 
 #' Get Common Prefix Before First Underscore
