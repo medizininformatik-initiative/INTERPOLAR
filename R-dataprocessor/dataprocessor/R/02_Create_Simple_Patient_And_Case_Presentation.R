@@ -370,6 +370,7 @@ createFrontendTables <- function() {
     return(patients)
   }
 
+  # Function to load existing record IDs from the database for a list of patient IDs
   loadExistingRecordIDsFromDB <- function(pat_ids, default = NULL) {
     query_ids <- getQueryList(pat_ids)
     query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
@@ -377,6 +378,7 @@ createFrontendTables <- function() {
     return(existing_record_ids)
   }
 
+  # Function to retrieve an existing record_id for a given patient ID
   getExistingRecordID <- function(pat_id, default = NA_character_, existing_record_ids) {
     existing_record_id <- existing_record_ids[pat_id == pat_id, record_id]
     if (!length(existing_record_id)) {
@@ -603,18 +605,18 @@ createFrontendTables <- function() {
         ]
         # 2. Select all rows with the maximum 'enc_period_start'
         if (nrow(filtered_pid_part_of_encounters)) {
-        filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
-        # 3. For each type ("ro" and "bd"), select the first row based on the original order
-        first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
-        first_bed_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "bd"][1, ]
-        # 4. Combine the results: first room row, and first bed row
-        filtered_pid_part_of_encounters <- rbind(first_room_row, first_bed_row)
+          filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
+          # 3. For each type ("ro" and "bd"), select the first row based on the original order
+          first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
+          first_bed_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "bd"][1, ]
+          # 4. Combine the results: first room row, and first bed row
+          filtered_pid_part_of_encounters <- rbind(first_room_row, first_bed_row)
 
-        # Define the mapping of location codes to labels
-        location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
-        # Call the function with the filtered_pid_part_of_encounters data and the location_labels
-        combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
-        data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
+          # Define the mapping of location codes to labels
+          location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
+          # Call the function with the filtered_pid_part_of_encounters data and the location_labels
+          combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
+          data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
         } else {
           data.table::set(enc_frontend_table, target_index, "fall_zimmernr", NA_character_)
         }
