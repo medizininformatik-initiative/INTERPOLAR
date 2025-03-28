@@ -554,13 +554,29 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        enc_id <- pid_encounter$enc_id[1]
-        enc_identifier_value <- pid_encounter$enc_identifier_value[1]
-        enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_start[1])
-        enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_end[1])
-        enc_status <- pid_encounter$enc_status[1]
-
+        first_pid_encounter_row <- pid_encounter[1]
+        enc_id               <- first_pid_encounter_row$enc_id
+        enc_period_start     <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_start)
+        enc_period_end       <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_end)
+        enc_status           <- first_pid_encounter_row$enc_status
         record_id <- getExistingRecordID(pid_patient$pat_id, default = pid_patient$patient_id, existing_record_ids)
+
+        # Extract the FHIR identifier value for the frontend table
+        # There can be multiple rows with different identifier systems, so we need to filter them
+        # out first and then combine the values into a single string, if there are multiple values.
+        if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM") &&
+            nzchar(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)) {
+          filtered_rows <- pid_encounter[grepl(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM, enc_identifier_system)]
+          if (nrow(filtered_rows)) {
+            enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
+          } else {
+            enc_identifier_value <- NA_character_
+          }
+        } else {
+          enc_identifier_value <- first_pid_encounter_row$enc_identifier_value
+        }
+
+        # Set the values for the encounter frontend table
         data.table::set(enc_frontend_table, target_index, "record_id", record_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
