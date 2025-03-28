@@ -1,9 +1,9 @@
 -- Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
-  <%IF TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int, -- Primary key of the entity - already filled in this schema - History via timestamp"%>
-  <%IF NOT TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity"%>
-  <%IF TAGS "\bTYPED\b" "<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table"%>
+  <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int, -- Primary key of the entity - already filled in this schema - History via timestamp"%>
+  <%IF NOT RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity"%>
+  <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table"%>
   <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(

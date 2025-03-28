@@ -292,19 +292,27 @@ createHeader <- function(script_rights_definition) {
 ########################
 # Convert Create Table #
 ########################
+# expression <- "<%IF NOT RIGHTS_DEFINITION:TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>"
 
 parseIFExpression <- function(expression) {
-  # Examples
-  # expression <- "<%IF NOT TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>"
-  # expression <- "<%IF TAGS \"^TYPED$\" TEMPLATE_SUB_LOOP_TABLES_CREATE_TABLE_IF_TYPED%>"
-  #patternInlineIf <- "^<%[IF]\\s+([a-zA-Z0-9_]+)\\s+(['\"].*['\"])\\s+(.*)%>$"
-  patternInlineIf <- "^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+)\\s+(['\"].*?['\"])\\s+(.*?)%>$"
+  # Updated pattern to support expressions like:
+  # <%IF NOT TABLE_DESCRIPTION:TAGS "pattern" "result"%>
+  patternInlineIf <- '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"].*?[\'\"])\\s+(.*?)%>$'
+
   # Extract the parts of the expression
   matches <- regmatches(expression, regexec(patternInlineIf, expression))
-  if (length(matches[[1]]) != 5 || is.na(matches[[1]][1])) {
-    stop(paste0("Can not parse expression '", expression, "'"))
+
+  if (length(matches[[1]]) != 6 || is.na(matches[[1]][1])) {
+    stop(paste0("Cannot parse expression: '", expression, "'"))
   }
-  return(list(field = matches[[1]][3], invert = trimws(toupper(matches[[1]][2])) == "NOT", pattern = extractBetweenQuotes(matches[[1]][4]), result = matches[[1]][5]))
+
+  return(list(
+    source = matches[[1]][3],
+    field = matches[[1]][4],
+    invert = trimws(toupper(matches[[1]][2])) == "NOT",
+    pattern = extractBetweenQuotes(matches[[1]][5]),
+    result = matches[[1]][6]
+  ))
 }
 
 convertTemplate <- function(tables_descriptions,
@@ -428,9 +436,14 @@ convertTemplate <- function(tables_descriptions,
 
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
-      condition_compare_value <- rights_first_row[[condition_arguments$field]]
-      if (is.na(condition_compare_value)) {
-        condition_compare_value <- ""
+      condition_compare_value <- ""
+      if (condition_arguments$source %in% "RIGHTS_DEFINITION") {
+        condition_compare_value <- rights_first_row[[condition_arguments$field]]
+      } else if (condition_arguments$source %in% "TABLE_DESCRIPTION") {
+        # take the first row of the table description which exists for each table description
+        condition_compare_value <- tables_descriptions[[table_name]][1][[condition_arguments$field]]
+      } else {
+        stop("Unknown source in IF expression: ", condition_arguments$source)
       }
       if (( condition_arguments$invert && !grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE)) ||
           (!condition_arguments$invert &&  grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {

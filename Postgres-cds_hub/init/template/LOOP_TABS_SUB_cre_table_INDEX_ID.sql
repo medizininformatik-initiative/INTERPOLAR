@@ -1,6 +1,6 @@
 ------------------------- Index for <%OWNER_SCHEMA%> - <%TABLE_NAME%> ---------------------------------
-  <%IF TAGS "\bINT_ID\b" "CREATE INDEX IF NOT EXISTS idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> ( <%TABLE_NAME%>_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp"%>
-  <%IF TAGS "\bTYPED\b" "CREATE INDEX IF NOT EXISTS idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> ( <%TABLE_NAME%>_raw_id DESC); -- Primary key of the corresponding raw table"%>
+  <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "CREATE INDEX IF NOT EXISTS idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> ( <%TABLE_NAME%>_id DESC); -- Primary key of the entity - already filled in this schema - History via timestamp"%>
+  <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "CREATE INDEX IF NOT EXISTS idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> ( <%TABLE_NAME%>_raw_id DESC); -- Primary key of the corresponding raw table"%>
 
 -- Index idx_<%OWNER_SCHEMA%>_<%TABLE_NAME%>_input_dt for Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 ----------------------------------------------------
