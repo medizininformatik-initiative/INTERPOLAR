@@ -33,7 +33,8 @@ importRedcap2DB <- function() {
     if(!(form_name %in% c("risikofaktor", "trigger"))) {
 
       dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
-      redcapAPI::reviewInvalidRecords(dt)
+      # TODO: Dieses Validieren wurde mal ganz am Anfang hinzugefügt, das Ergebnis aber nie benutzt. Wofür ist das, was wird validiert und brauchen wir das, um irgendwelchen invaliden Datensätze loszuwerden?
+      validation_result <- redcapAPI::reviewInvalidRecords(dt)
       data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
 
       # Redcap creates invalid entries for unknown reasons where the _complete column is NA, which

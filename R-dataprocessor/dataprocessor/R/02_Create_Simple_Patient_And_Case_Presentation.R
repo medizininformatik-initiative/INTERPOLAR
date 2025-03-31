@@ -1,40 +1,3 @@
-#' Retrieve the Last Processing Number from the Database
-#'
-#' This function connects to the database and retrieves the maximum `last_processing_nr`
-#' from the `data_import_hist` table within the `db_log` schema. It specifically looks
-#' for records where the `function_name` is `'copy_type_cds_in_to_db_log'` and the
-#' `table_name` does not contain `'_raw'`.
-#'
-#' @return A data frame containing the maximum `last_processing_nr` from the specified
-#'         records in the `db_log.data_import_hist` table.
-#'
-getLastProcessingNumber <- function() {
-  query <- "SELECT db.get_last_processing_nr_typed();"
-  etlutils::dbGetReadOnlyQuery(query, lock_id = "getLastProcessingNumber()")
-}
-
-#' Load All Data with Last Timestamp from Database
-#'
-#' This function loads all data from a database table that has the most recent timestamp.
-#' It constructs a SQL query to fetch records where the timestamp is the latest in the table.
-#'
-#' @param table_name The table name.
-#' @return A data frame containing the records with the most recent timestamp from the specified table.
-#'
-loadLastImportedDatasetsFromDB <- function(table_name) {
-  last_processing_nr <- getLastProcessingNumber()
-  # Create the SQL query to get the records with the maximum last_processing_nr
-  query <- paste0("SELECT * FROM ", table_name, "\n",
-                  " WHERE last_processing_nr = ", last_processing_nr, ";")
-  # This only occurs if the database has been reset and the dataprocessor was executed too quickly
-  if (is.na(last_processing_nr)) {
-    stop(paste0("In table ", table_name, " the content of column last_processing_nr in the ",
-                "database is NA, so the following SQL query will return an error:\n", query,
-                "\nThis should never happen..."))
-  }
-  etlutils::dbGetReadOnlyQuery(query, lock_id = "loadLastImportedDatasetsFromDB()")
-}
-
 #' Get the most relevant current datetime
 #'
 #' This function retrieves the latest encounter end datetime from the `encounters` table.
@@ -126,17 +89,6 @@ parseQueryList <- function(list_string, split = " ") {
 # Load Resources by ID (= own ID or PID or Enc ID) #
 ####################################################
 
-#' Get Full Table Name for Resource
-#'
-#' This function constructs the full table name for a given resource by converting the
-#' resource name to lowercase and appending it to a prefix and suffix.
-#'
-#' @param resource_name A character string representing the name of the resource.
-#'
-#' @return A character string containing the full table name for the specified resource.
-#'
-getViewTableName <- function(resource_name) paste0("v_", tolower(resource_name))
-
 #' Load Resources Last Status From Database Query
 #'
 #' This function constructs a SQL statement to retrieve the last status of load resources
@@ -149,13 +101,9 @@ getViewTableName <- function(resource_name) paste0("v_", tolower(resource_name))
 #' @return A character string representing the SQL query.
 #'
 getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") {
-  last_processing_nr <- getLastProcessingNumber()
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
-  table_name <- getViewTableName(resource_name)
-  id_column <- etlutils::getIDColumn(resource_name)
   query <-paste0(
-    "SELECT * FROM ", table_name, "\n",
-    " WHERE last_processing_nr = ", last_processing_nr,
+    "SELECT * FROM v_", resource_name, "_last_version\n",
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
@@ -175,7 +123,10 @@ getQueryToLoadResourcesLastStatusFromDB <- function(resource_name, filter = "") 
 #'
 #' @return A character string representing the filter statement for the SQL query.
 #'
-getStatementFilter <- function(resource_name, filter_column, filter_column_values) {
+getStatementFilter <- function(resource_name, filter_column = NA, filter_column_values = NA) {
+  if (is.na(filter_column) || all(is.na(filter_column_values))) {
+    return("")
+  }
   resource_id_column <- etlutils::getIDColumn(resource_name)
   if (filter_column == resource_id_column) {
     # remove resource name and the slash if the IDs are references and not pure IDs
@@ -183,7 +134,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
   }
   # quote every pid and collapse the vector comma separated
   filter_column_values <- paste0("'", filter_column_values, "'", collapse = ",")
-  filter_line <- paste0("AND ", filter_column, " IN (", filter_column_values, ")\n")
+  filter_line <- paste0("WHERE ", filter_column, " IN (", filter_column_values, ")\n")
   return(filter_line)
 }
 
@@ -200,7 +151,7 @@ getStatementFilter <- function(resource_name, filter_column, filter_column_value
 #' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-loadResourcesFromDB <- function(resource_name, filter_column, ids, lock_id) {
+loadResourcesFromDB <- function(resource_name, filter_column = NA, ids = NA, lock_id) {
   filter <- getStatementFilter(resource_name, filter_column, ids)
   query <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter)
   etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
@@ -217,8 +168,8 @@ loadResourcesFromDB <- function(resource_name, filter_column, ids, lock_id) {
 #' @return A data frame containing the last status of load resources.
 #'
 loadResourcesLastStatusFromDB <- function(resource_name) {
-  query <- getQueryToLoadResourcesLastStatusFromDB(resource_name, filter = "")
-  etlutils::dbGetReadOnlyQuery(query, lock_id = "loadResourcesLastStatusFromDB()")
+  query <- getQueryToLoadResourcesLastStatusFromDB(resource_name)
+  etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("loadResourcesLastStatusFromDB(", resource_name, ")"))
 }
 
 #' Retrieve the last status of load resources from the database by their own IDs.
@@ -287,7 +238,7 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
     resource_name = resource_name,
     filter_column = enc_id_column,
     ids = enc_ids,
-    lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(",resource_name,")"))
+    lock_id = paste0("loadResourcesLastStatusByEncIDFromDB(", resource_name, ")"))
 }
 
 #' Find Related Partof Encounters for a Main Encounter
@@ -419,11 +370,30 @@ createFrontendTables <- function() {
     return(patients)
   }
 
+  # Function to load existing record IDs from the database for a list of patient IDs
+  loadExistingRecordIDsFromDB <- function(pat_ids, default = NULL) {
+    query_ids <- getQueryList(pat_ids)
+    query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
+    existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
+    return(existing_record_ids)
+  }
+
+  # Function to retrieve an existing record_id for a given patient ID
+  getExistingRecordID <- function(pat_id, default = NA_character_, existing_record_ids) {
+    specific_pat_id <- pat_id
+    # Get existing_record_id for the specific pat_id
+    existing_record_id <- unique(existing_record_ids[pat_id == specific_pat_id, record_id])
+
+    if (!length(existing_record_id)) {
+      existing_record_id <- default
+    }
+    return(existing_record_id)
+  }
 
   # This function creates a table for frontend display containing patient information
   # based on the provided patient IDs per ward. It retrieves patient information from
   # the database and constructs the frontend table.
-  createPatientFrontendTable <- function(patients) {
+  createPatientFrontendTable <- function(patients, existing_record_ids) {
 
     pids <- unique(patients$pat_id)
     pids_count <- length(pids)
@@ -443,9 +413,15 @@ createFrontendTables <- function() {
 
     # Iterate over each unique patient ID to populate the frontend table
     for (i in seq_len(pids_count)) {
+
       patient <- patients[pat_id %in% pids[i]]
-      patient_frontend_table$record_id[i] <- patient$patient_id
-      patient_frontend_table$patient_fe_id[i] <- patient$patient_id
+
+      # Get an existing record_id for the patient from the database patient_fe
+      # table via the pat_id. If there is no record_id for the pat_id, then the
+      # existing_record_id will be patient$patient_id.
+      record_id <- getExistingRecordID(pids[i], default = patient$patient_id, existing_record_ids)
+      patient_frontend_table$record_id[i] <- record_id
+      patient_frontend_table$patient_fe_id[i] <- record_id
       patient_frontend_table$pat_id[i] <- patient$pat_id
       patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
       patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
@@ -461,7 +437,7 @@ createFrontendTables <- function() {
   # This function creates a table for frontend display containing encounter information
   # based on the provided patient IDs per ward. It retrieves encounter information from
   # the database and constructs the frontend table.
-  createEncounterFrontendTable <- function(pids_per_ward, patients) {
+  createEncounterFrontendTable <- function(pids_per_ward, patients, existing_record_ids) {
     # Initialize an empty data table to store encounter information
     enc_frontend_table <- data.table(
       record_id	= character(), # v_patient -> patient_id
@@ -488,7 +464,7 @@ createFrontendTables <- function() {
     # load Encounters for all PIDs from pids_per_ward database table
     query_ids <- getQueryList(pids_per_ward$encounter_id)
 
-    query <- paste0( "SELECT * FROM v_encounter\n",
+    query <- paste0( "SELECT * FROM v_encounter_last_version\n",
                      "  WHERE encounter_raw_id in (\n",
                      "    SELECT MAX(encounter_raw_id) FROM v_encounter\n",
                      "      WHERE enc_id IN (", query_ids, ")\n",
@@ -578,15 +554,33 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        enc_id <- pid_encounter$enc_id[1]
-        enc_identifier_value <- pid_encounter$enc_identifier_value[1]
-        enc_period_start <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_start[1])
-        enc_period_end <- etlutils::as.POSIXctWithTimezone(pid_encounter$enc_period_end[1])
-        enc_status <- pid_encounter$enc_status[1]
-        data.table::set(enc_frontend_table, target_index, "record_id", pid_patient$patient_id)
+        first_pid_encounter_row <- pid_encounter[1]
+        enc_id               <- first_pid_encounter_row$enc_id
+        enc_period_start     <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_start)
+        enc_period_end       <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_end)
+        enc_status           <- first_pid_encounter_row$enc_status
+        record_id <- getExistingRecordID(pid_patient$pat_id, default = pid_patient$patient_id, existing_record_ids)
+
+        # Extract the FHIR identifier value for the frontend table
+        # There can be multiple rows with different identifier systems, so we need to filter them
+        # out first and then combine the values into a single string, if there are multiple values.
+        if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM") &&
+            nzchar(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)) {
+          filtered_rows <- pid_encounter[grepl(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM, enc_identifier_system)]
+          if (nrow(filtered_rows)) {
+            enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
+          } else {
+            enc_identifier_value <- NA_character_
+          }
+        } else {
+          enc_identifier_value <- first_pid_encounter_row$enc_identifier_value
+        }
+
+        # Set the values for the encounter frontend table
+        data.table::set(enc_frontend_table, target_index, "record_id", record_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
         data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
-        data.table::set(enc_frontend_table, target_index, "patient_id_fk", pid_patient$patient_id)
+        data.table::set(enc_frontend_table, target_index, "patient_id_fk", record_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
         data.table::set(enc_frontend_table, target_index, "fall_aufn_dat", enc_period_start)
         data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
@@ -630,18 +624,18 @@ createFrontendTables <- function() {
         ]
         # 2. Select all rows with the maximum 'enc_period_start'
         if (nrow(filtered_pid_part_of_encounters)) {
-        filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
-        # 3. For each type ("ro" and "bd"), select the first row based on the original order
-        first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
-        first_bed_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "bd"][1, ]
-        # 4. Combine the results: first room row, and first bed row
-        filtered_pid_part_of_encounters <- rbind(first_room_row, first_bed_row)
+          filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
+          # 3. For each type ("ro" and "bd"), select the first row based on the original order
+          first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
+          first_bed_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "bd"][1, ]
+          # 4. Combine the results: first room row, and first bed row
+          filtered_pid_part_of_encounters <- rbind(first_room_row, first_bed_row)
 
-        # Define the mapping of location codes to labels
-        location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
-        # Call the function with the filtered_pid_part_of_encounters data and the location_labels
-        combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
-        data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
+          # Define the mapping of location codes to labels
+          location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
+          # Call the function with the filtered_pid_part_of_encounters data and the location_labels
+          combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
+          data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
         } else {
           data.table::set(enc_frontend_table, target_index, "fall_zimmernr", NA_character_)
         }
@@ -712,7 +706,9 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  pids_per_ward <- loadLastImportedDatasetsFromDB("v_pids_per_ward")
+  pids_per_ward <- etlutils::dbGetReadOnlyQuery(
+    query = paste0("SELECT * FROM v_pids_per_ward_last\n"),
+    lock_id = "load last imported datasets from pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
   if (!nrow(pids_per_ward)) {
@@ -724,19 +720,6 @@ createFrontendTables <- function() {
 
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
-
-  #########################
-  # START: FOR DEBUG ONLY #
-  #########################
-  # Set parameter DEBUG_ADD_MULTIPLE_DIFFERENT_PATIENT_LINES = true in dataprocessor_config.toml
-  # Add new rows with a changed postal code to test the following code line which should
-  # identify one valid Identifier.value from one patient_id (= source record ID).
-  if (etlutils::isDefinedAndTrue("DEBUG_ADD_MULTIPLE_DIFFERENT_PATIENT_LINES")) {
-    patients_from_database <- debugAddMultiplePatientLines(patients_from_database)
-  }
-  #######################
-  # END: FOR DEBUG ONLY #
-  #######################
 
   # check error no Patient exists in the current patinet database table
   if (!nrow(patients_from_database)) { #
@@ -787,12 +770,17 @@ createFrontendTables <- function() {
   patients_from_database[, patient_id := max(patient_id), by = pat_id]
 
   # make sure that it is a single patient resource by choosing the last of the potential list
-  # if there are multiple rows then all different values of a column will be pasted as stings
-  # delimited by "; " in one row
-  patients_from_database <- etlutils::collapseRowsByGroup(patients_from_database, group_col = "pat_id")
+  # Filter the dataset to select the row with the highest 'last_processing_nr' within each 'pat_id'
+  # group. If there are multiple rows with the same 'last_processing_nr', we select the last row by
+  # using '.N', which gives the number of rows in each group.
+  patients_from_database <- patients_from_database[
+    , .SD[.N], by = pat_id
+  ][order(pat_id, -last_processing_nr)]
 
-  patient_fe <- createPatientFrontendTable(patients_from_database)
-  fall_fe <- createEncounterFrontendTable(pids_per_ward, patients_from_database)
+  # Load the existing record IDs from the database
+  existing_record_ids <- loadExistingRecordIDsFromDB(patients_from_database$pat_id)
+  patient_fe <- createPatientFrontendTable(patients_from_database, existing_record_ids)
+  fall_fe <- createEncounterFrontendTable(pids_per_ward, patients_from_database, existing_record_ids)
   # Create and write frontend table for patients and encounters
   etlutils::dbWriteTables(
     tables = etlutils::namedListByParam(patient_fe, fall_fe),
