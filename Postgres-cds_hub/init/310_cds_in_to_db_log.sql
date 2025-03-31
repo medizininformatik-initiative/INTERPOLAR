@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file last update : 2025-03-25 12:36:13
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-18 13:56:05
+-- Create time: 2025-03-31 15:39:58
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1307,6 +1307,7 @@ BEGIN
                                 medreq_statusreason_display,
                                 medreq_statusreason_text,
                                 medreq_intend,
+                                medreq_intent,
                                 medreq_category_system,
                                 medreq_category_version,
                                 medreq_category_code,
@@ -1553,6 +1554,7 @@ BEGIN
                                 current_record.medreq_statusreason_display,
                                 current_record.medreq_statusreason_text,
                                 current_record.medreq_intend,
+                                current_record.medreq_intent,
                                 current_record.medreq_category_system,
                                 current_record.medreq_category_version,
                                 current_record.medreq_category_code,

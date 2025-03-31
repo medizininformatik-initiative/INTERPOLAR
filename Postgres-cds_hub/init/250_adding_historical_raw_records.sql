@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-21 14:16:29
+-- Rights definition file last update : 2025-03-25 12:36:13
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-03-31 12:00:01
+-- Create time: 2025-03-31 15:40:00
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -504,6 +504,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     medreq_statusreason_display,
     medreq_statusreason_text,
     medreq_intend,
+    medreq_intent,
     medreq_category_system,
     medreq_category_version,
     medreq_category_code,
@@ -747,6 +748,7 @@ SELECT
     medreq_statusreason_display,
     medreq_statusreason_text,
     medreq_intend,
+    medreq_intent,
     medreq_category_system,
     medreq_category_version,
     medreq_category_code,

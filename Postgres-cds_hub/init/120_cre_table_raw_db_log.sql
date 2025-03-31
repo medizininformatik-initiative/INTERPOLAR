@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file last update : 2025-03-25 12:36:13
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-18 13:55:15
+-- Create time: 2025-03-31 15:39:44
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -692,6 +692,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
   medreq_statusreason_display VARCHAR,   -- statusReason/coding/display (VARCHAR)
   medreq_statusreason_text VARCHAR,   -- statusReason/text (VARCHAR)
   medreq_intend VARCHAR,   -- intend (VARCHAR)
+  medreq_intent VARCHAR,   -- intent (VARCHAR)
   medreq_category_system VARCHAR,   -- category/coding/system (VARCHAR)
   medreq_category_version VARCHAR,   -- category/coding/version (VARCHAR)
   medreq_category_code VARCHAR,   -- category/coding/code (VARCHAR)
@@ -932,6 +933,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
              COALESCE(db.to_char_immutable(medreq_statusreason_display), '#NULL#') || '|||' || -- hash from: statusReason/coding/display (medreq_statusreason_display)
              COALESCE(db.to_char_immutable(medreq_statusreason_text), '#NULL#') || '|||' || -- hash from: statusReason/text (medreq_statusreason_text)
              COALESCE(db.to_char_immutable(medreq_intend), '#NULL#') || '|||' || -- hash from: intend (medreq_intend)
+             COALESCE(db.to_char_immutable(medreq_intent), '#NULL#') || '|||' || -- hash from: intent (medreq_intent)
              COALESCE(db.to_char_immutable(medreq_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (medreq_category_system)
              COALESCE(db.to_char_immutable(medreq_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (medreq_category_version)
              COALESCE(db.to_char_immutable(medreq_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (medreq_category_code)
@@ -3239,6 +3241,7 @@ COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_statusreason_code IS 'stat
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_statusreason_display IS 'statusReason/coding/display (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_statusreason_text IS 'statusReason/text (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_intend IS 'intend (varchar)';
+COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_intent IS 'intent (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_category_system IS 'category/coding/system (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_category_version IS 'category/coding/version (varchar)';
 COMMENT ON COLUMN db_log.medicationrequest_raw.medreq_category_code IS 'category/coding/code (varchar)';
