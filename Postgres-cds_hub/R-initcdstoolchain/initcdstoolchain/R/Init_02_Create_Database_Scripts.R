@@ -379,11 +379,16 @@ convertTemplate <- function(tables_descriptions,
       if (startsWith(placeholder, "<%LOOP_TABS_")) {
         for (table_name in names(tables_descriptions)) {
           column_prefix <- getCommonPrefix(tables_descriptions[[table_name]][["COLUMN_NAME"]])
+
           single_table_content <- convertTemplate(tables_descriptions,
                                                   script_rights_definition,
+                                                  result_file_name_column,
+                                                  template_content,
                                                   template_name = placeholder,
-                                                  table_name = table_name,
-                                                  column_prefix = column_prefix,
+                                                  table_name,
+                                                  column_prefix,
+                                                  column_name,
+                                                  indentation,
                                                   recursion = recursion + 1)
           if (!is.na(single_table_content)) {
             loop_content <- paste0(loop_content, single_table_content)
@@ -395,12 +400,15 @@ convertTemplate <- function(tables_descriptions,
         for (row in seq_len(nrow(single_table_description))) {
           column_row <- single_table_description[row]
           single_loop_content <- convertTemplate(tables_descriptions,
-                                                   script_rights_definition,
-                                                   template_name = template_name,
-                                                   template_content = loop_template_content,
-                                                   table_name = table_name,
-                                                   column_prefix = column_prefix,
-                                                   recursion = recursion + 1)
+                                                 script_rights_definition,
+                                                 result_file_name_column,
+                                                 template_content = loop_template_content,
+                                                 template_name = template_name,
+                                                 table_name = table_name,
+                                                 column_prefix = column_prefix,
+                                                 column_name,
+                                                 indentation,
+                                                 recursion = recursion + 1)
           single_loop_content_placeholders <- extractPlaceholders(single_loop_content)
           for (sub_placeholder in single_loop_content_placeholders) {
             # parse the columns value separator. this is a special tag which defines the separator
@@ -430,16 +438,20 @@ convertTemplate <- function(tables_descriptions,
             sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
             if (sub_placeholder_name %in% names(rights_row)) {
               value <- rights_row[[sub_placeholder_name]]
-              # missing values in the current rigths row are replaced by the value in the first row
+              # missing values in the current rights row are replaced by the value in the first row
               if (is.na(value)) value <- rights_first_row[[sub_placeholder_name]]
               sub_content <- replace(sub_placeholder, value, sub_content)
             }
           }
           sub_content <- convertTemplate(tables_descriptions,
                                          script_rights_definition,
+                                         result_file_name_column,
                                          template_content = sub_content,
-                                         table_name = table_name,
-                                         column_prefix = column_prefix,
+                                         template_name,
+                                         table_name,
+                                         column_prefix,
+                                         column_name,
+                                         indentation,
                                          recursion = recursion + 1)
           loop_content <- paste0(loop_content, sub_content)
         }
@@ -491,9 +503,11 @@ convertTemplate <- function(tables_descriptions,
                                              template_content,
                                              template_name,
                                              table_name,
+                                             column_prefix,
                                              column_name,
                                              indentation,
                                              recursion = recursion + 1)
+
         condition_content <- gsub("^\"|\"$", "", condition_content)
         condition_content <- gsub("\n$", "", condition_content)
         content <- replace(placeholder, condition_content, content)
@@ -535,7 +549,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
 
   ### rights definition ###
 
-  # read the excel file with the rigths and copy functions definition and extract the specific table
+  # read the excel file with the rights and copy functions definition and extract the specific table
   rights_definition <- rights_and_convert_definition[[rights_definition_sheet_name]]
 
   # this are *exactly* the names of the columns in the excel file
