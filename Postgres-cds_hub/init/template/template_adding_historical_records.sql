@@ -11,8 +11,7 @@ BEGIN
 -- cds2db_in.v_location_raw_last_version Block entfernen / allgemeiner Code der nur die notwendige raw_id kopiert ist statisch unten aufgeführt
 -- ToDo Error log einbauen
 
-<%LOOP_TABS_SUB_add_hist_records%>
-
+<%LOOP_TABS_SUB_adding_historical_records%>
 -- Zur Zeit noch statisch - Nachladen Resourcen ohne direkten Patientenbezug
 
     ---- aus cds2db_out.v_location_raw_last_--------------------------------------------
