@@ -49,9 +49,11 @@ isContentChanged <- function(existing_file_path, new_file_content) {
 writeResultFile <- function(scriptname, content) {
   content <- gsub("\r\n", "\n", content, fixed = TRUE)
   path <- paste0(getDBScriptsTargetDir(), scriptname)
-  if (isContentChanged(path, content)) {
+  changed <- isContentChanged(path, content)
+  if (changed) {
     writeLines(content, path, useBytes = TRUE, sep = "\n")
   }
+  return(changed)
 }
 
 #' Get Common Prefix Before First Underscore
@@ -528,8 +530,13 @@ convertTemplate <- function(tables_descriptions,
     if (length(placeholders)) {
       warning("There are unreplaced placeholders in the file ", file_name, ":\n", placeholders)
     }
-    writeResultFile(file_name, content)
-    cat(" done\n")
+    changed <- writeResultFile(file_name, content)
+    if (changed) {
+      cat(" #### changed ####\n")
+    } else {
+      cat(" skipped\n")
+    }
+
   }
   # Write the modified content to the file
   return(content)
