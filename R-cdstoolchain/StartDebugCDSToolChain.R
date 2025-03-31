@@ -33,7 +33,7 @@ for (i in seq_along(DEBUG_DATES)) {
 end_full <- Sys.time()
 
 
-print("\nAll days took:")
+cat("\nAll days took:")
 for (i in seq_along(day_times)) {
   print(day_times[i])
 }
