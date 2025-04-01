@@ -269,9 +269,14 @@ getResourcesByIDs <- function(
     }
     fhircrackr::fhir_bundle_list(bundles) # return bundles list as fhir_crackr class bundle_list
   }
+
   getResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
-    parameters_list <- list(paste0(ids, collapse = ","), COUNT_PER_BUNDLE) # add all ids
-    names(parameters_list) <- c(id_param_str, '_count') # name arguments
+    parameters_list <- list(paste0(ids, collapse = ",")) # add all ids
+    names(parameters_list) <- c(id_param_str) # name arguments
+
+    if (exists("COUNT_PER_BUNDLE")) {
+      parameters_list[["_count"]] <- COUNT_PER_BUNDLE
+    }
 
     # Create FHIR-search request
     request <- fhircrackr::fhir_url(# get resources
@@ -829,7 +834,7 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated,
       table_enc <- merge(table_enc, table_pat, by = "pat_id")
       min_age_pat_ids <- table_enc[pat_birthdate < min_pat_birthdate]$pat_id
 
-      # behalte alle pids die schon mal in der db waren
+      # keep all pids that were already in the db
       already_known_min_age_pids <- pids_with_last_updated[which(!is.na(names(pids_with_last_updated)))]
       min_age_pat_ids <- unique(c(min_age_pat_ids, unlist(already_known_min_age_pids, use.names = FALSE)))
 
