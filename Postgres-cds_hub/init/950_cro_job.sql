@@ -17,6 +17,11 @@ DECLARE
 BEGIN
     SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
 
+    -- Document changes to the database
+    SELECT res FROM public.pg_background_result(public.pg_background_launch(
+    'SELECT db.log_table_view_structure()'
+    )) AS t(res TEXT) INTO erg;
+
     -- Doppelt angelegte Cron-Jobs deaktivieren
     err_section:='cron_job_data_transfer_break-01';    err_schema:='cron';    err_table:='job';
     UPDATE cron.job m SET active = FALSE WHERE m.command in
