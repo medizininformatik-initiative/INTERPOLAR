@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file last update : 2025-03-25 12:36:13
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-18 13:56:25
+-- Create time: 2025-04-01 13:44:15
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -164,6 +164,7 @@ BEGIN
                                 pat_gebdat,
                                 pat_aktuell_alter,
                                 pat_geschlecht,
+                                pat_additional_values,
                                 patient_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -183,6 +184,7 @@ BEGIN
                                 current_record.pat_gebdat,
                                 current_record.pat_aktuell_alter,
                                 current_record.pat_geschlecht,
+                                current_record.pat_additional_values,
                                 current_record.patient_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -317,6 +319,7 @@ BEGIN
                                 redcap_repeat_instrument,
                                 redcap_repeat_instance,
                                 redcap_data_access_group,
+                                fall_fhir_enc_id,
                                 patient_id_fk,
                                 fall_pat_id,
                                 fall_id,
@@ -332,6 +335,7 @@ BEGIN
                                 fall_bmi,
                                 fall_status,
                                 fall_ent_dat,
+                                fall_additional_values,
                                 fall_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -344,6 +348,7 @@ BEGIN
                                 current_record.redcap_repeat_instrument,
                                 current_record.redcap_repeat_instance,
                                 current_record.redcap_data_access_group,
+                                current_record.fall_fhir_enc_id,
                                 current_record.patient_id_fk,
                                 current_record.fall_pat_id,
                                 current_record.fall_id,
@@ -359,6 +364,7 @@ BEGIN
                                 current_record.fall_bmi,
                                 current_record.fall_status,
                                 current_record.fall_ent_dat,
+                                current_record.fall_additional_values,
                                 current_record.fall_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -515,6 +521,7 @@ BEGIN
                                 meda_aufwand_zeit,
                                 meda_aufwand_zeit_and,
                                 meda_notiz,
+                                meda_additional_values,
                                 medikationsanalyse_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -549,6 +556,7 @@ BEGIN
                                 current_record.meda_aufwand_zeit,
                                 current_record.meda_aufwand_zeit_and,
                                 current_record.meda_notiz,
+                                current_record.meda_additional_values,
                                 current_record.medikationsanalyse_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -756,6 +764,7 @@ BEGIN
                                 mrp_dokup_hand_emp_akz,
                                 mrp_merp,
                                 mrp_merp_info___1,
+                                mrp_additional_values,
                                 mrpdokumentation_validierung_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -841,6 +850,7 @@ BEGIN
                                 current_record.mrp_dokup_hand_emp_akz,
                                 current_record.mrp_merp,
                                 current_record.mrp_merp_info___1,
+                                current_record.mrp_additional_values,
                                 current_record.mrpdokumentation_validierung_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -1043,6 +1053,7 @@ BEGIN
                                 ret_massn_orga2___7,
                                 ret_massn_orga2___8,
                                 ret_notiz2,
+                                ret_additional_values,
                                 retrolektive_mrpbewertung_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -1123,6 +1134,7 @@ BEGIN
                                 current_record.ret_massn_orga2___7,
                                 current_record.ret_massn_orga2___8,
                                 current_record.ret_notiz2,
+                                current_record.ret_additional_values,
                                 current_record.retrolektive_mrpbewertung_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,

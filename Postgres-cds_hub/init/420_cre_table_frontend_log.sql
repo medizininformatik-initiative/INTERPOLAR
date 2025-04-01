@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-17 23:22:37
+-- Rights definition file last update : 2025-03-25 12:36:13
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-18 13:56:22
+-- Create time: 2025-04-01 13:44:14
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   pat_gebdat date,   -- Geburtsdatum (date)
   pat_aktuell_alter double precision,   -- aktuelles Patientenalter (Jahre) (double precision)
   pat_geschlecht varchar,   -- Geschlecht (varchar)
+  pat_additional_values varchar,   -- Reserviertes Feld für zusätzliche Werte (varchar)
   patient_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
              COALESCE(db.to_char_immutable(pat_gebdat), '#NULL#') || '|||' || -- hash from: Geburtsdatum (pat_gebdat)
              COALESCE(db.to_char_immutable(pat_aktuell_alter), '#NULL#') || '|||' || -- hash from: aktuelles Patientenalter (Jahre) (pat_aktuell_alter)
              COALESCE(db.to_char_immutable(pat_geschlecht), '#NULL#') || '|||' || -- hash from: Geschlecht (pat_geschlecht)
+             COALESCE(db.to_char_immutable(pat_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (pat_additional_values)
              COALESCE(db.to_char_immutable(patient_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (patient_complete)
              '#'
       )
@@ -80,9 +82,10 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   redcap_repeat_instrument varchar,   -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
   redcap_data_access_group varchar,   -- Function as dataset filter by stations (varchar)
+  fall_fhir_enc_id varchar,   -- verstecktes Feld für FHIR-ID des Encounters (varchar)
   patient_id_fk int,   -- verstecktes Feld für patient_id_fk (int)
   fall_pat_id varchar,   -- verstecktes Feld für fall_pat_id (varchar)
-  fall_id varchar,   -- Fall-ID (varchar)
+  fall_id varchar,   -- Fall-ID Encounter-Identifier (KIS) (varchar)
   fall_studienphase varchar,   -- Studienphase (varchar)
   fall_station varchar,   -- Station (varchar)
   fall_aufn_dat timestamp,   -- Aufnahmedatum (timestamp)
@@ -95,6 +98,7 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_bmi double precision,   -- BMI (double precision)
   fall_status varchar,   -- Fallstatus (varchar)
   fall_ent_dat timestamp,   -- Entlassdatum (timestamp)
+  fall_additional_values varchar,   -- Reserviertes Feld für zusätzliche Werte (varchar)
   fall_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -102,9 +106,10 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
              COALESCE(db.to_char_immutable(redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
              COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
              COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
+             COALESCE(db.to_char_immutable(fall_fhir_enc_id), '#NULL#') || '|||' || -- hash from: verstecktes Feld für FHIR-ID des Encounters (fall_fhir_enc_id)
              COALESCE(db.to_char_immutable(patient_id_fk), '#NULL#') || '|||' || -- hash from: verstecktes Feld für patient_id_fk (patient_id_fk)
              COALESCE(db.to_char_immutable(fall_pat_id), '#NULL#') || '|||' || -- hash from: verstecktes Feld für fall_pat_id (fall_pat_id)
-             COALESCE(db.to_char_immutable(fall_id), '#NULL#') || '|||' || -- hash from: Fall-ID (fall_id)
+             COALESCE(db.to_char_immutable(fall_id), '#NULL#') || '|||' || -- hash from: Fall-ID Encounter-Identifier (KIS) (fall_id)
              COALESCE(db.to_char_immutable(fall_studienphase), '#NULL#') || '|||' || -- hash from: Studienphase (fall_studienphase)
              COALESCE(db.to_char_immutable(fall_station), '#NULL#') || '|||' || -- hash from: Station (fall_station)
              COALESCE(db.to_char_immutable(fall_aufn_dat), '#NULL#') || '|||' || -- hash from: Aufnahmedatum (fall_aufn_dat)
@@ -117,6 +122,7 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
              COALESCE(db.to_char_immutable(fall_bmi), '#NULL#') || '|||' || -- hash from: BMI (fall_bmi)
              COALESCE(db.to_char_immutable(fall_status), '#NULL#') || '|||' || -- hash from: Fallstatus (fall_status)
              COALESCE(db.to_char_immutable(fall_ent_dat), '#NULL#') || '|||' || -- hash from: Entlassdatum (fall_ent_dat)
+             COALESCE(db.to_char_immutable(fall_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (fall_additional_values)
              COALESCE(db.to_char_immutable(fall_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (fall_complete)
              '#'
       )
@@ -138,8 +144,8 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   redcap_data_access_group varchar,   -- Function as dataset filter by stations (varchar)
   meda_anlage varchar,   -- Formular angelegt von (varchar)
   meda_edit varchar,   -- Formular zuletzt bearbeitet von (varchar)
-  fall_meda_id varchar,   -- Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> Fall (varchar)
-  meda_id varchar,   -- ID Medikationsanalyse (varchar)
+  fall_meda_id varchar,   -- Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS)) Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.   (varchar)
+  meda_id varchar,   -- ID Medikationsanalyse (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert (varchar)
   meda_typ varchar,   -- Typ der Medikationsanalyse (MA) (varchar)
   meda_dat timestamp,   -- Datum der Medikationsanalyse (timestamp)
   meda_gewicht_aktuell double precision,   -- aktuelles Gewicht (double precision)
@@ -158,6 +164,7 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   meda_aufwand_zeit varchar,   -- Zeitaufwand Medikationsanalyse (varchar)
   meda_aufwand_zeit_and int,   -- genaue Dauer in Minuten (int)
   meda_notiz varchar,   -- Notizfeld (varchar)
+  meda_additional_values varchar,   -- Reserviertes Feld für zusätzliche Werte (varchar)
   medikationsanalyse_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -167,8 +174,8 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
              COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
              COALESCE(db.to_char_immutable(meda_anlage), '#NULL#') || '|||' || -- hash from: Formular angelegt von (meda_anlage)
              COALESCE(db.to_char_immutable(meda_edit), '#NULL#') || '|||' || -- hash from: Formular zuletzt bearbeitet von (meda_edit)
-             COALESCE(db.to_char_immutable(fall_meda_id), '#NULL#') || '|||' || -- hash from: Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> Fall (fall_meda_id)
-             COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: ID Medikationsanalyse (meda_id)
+             COALESCE(db.to_char_immutable(fall_meda_id), '#NULL#') || '|||' || -- hash from: Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS)) Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.   (fall_meda_id)
+             COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: ID Medikationsanalyse (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert (meda_id)
              COALESCE(db.to_char_immutable(meda_typ), '#NULL#') || '|||' || -- hash from: Typ der Medikationsanalyse (MA) (meda_typ)
              COALESCE(db.to_char_immutable(meda_dat), '#NULL#') || '|||' || -- hash from: Datum der Medikationsanalyse (meda_dat)
              COALESCE(db.to_char_immutable(meda_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (meda_gewicht_aktuell)
@@ -187,6 +194,7 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
              COALESCE(db.to_char_immutable(meda_aufwand_zeit), '#NULL#') || '|||' || -- hash from: Zeitaufwand Medikationsanalyse (meda_aufwand_zeit)
              COALESCE(db.to_char_immutable(meda_aufwand_zeit_and), '#NULL#') || '|||' || -- hash from: genaue Dauer in Minuten (meda_aufwand_zeit_and)
              COALESCE(db.to_char_immutable(meda_notiz), '#NULL#') || '|||' || -- hash from: Notizfeld (meda_notiz)
+             COALESCE(db.to_char_immutable(meda_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (meda_additional_values)
              COALESCE(db.to_char_immutable(medikationsanalyse_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (medikationsanalyse_complete)
              '#'
       )
@@ -208,8 +216,8 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   redcap_data_access_group varchar,   -- Function as dataset filter by stations (varchar)
   mrp_anlage varchar,   -- Formular angelegt von (varchar)
   mrp_edit varchar,   -- Formular zuletzt bearbeitet von (varchar)
-  mrp_meda_id varchar,   -- Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> MRP (varchar)
-  mrp_id varchar,   -- MRP-ID (varchar)
+  mrp_meda_id varchar,   -- Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP   Auswahlfeld falls die aktuell dokumentiertes MRP  sich nicht auf die letzte Instanz der Medikationsanalyse bezieht.   (varchar)
+  mrp_id varchar,   -- MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)
   mrp_entd_dat timestamp,   -- Datum des MRP (timestamp)
   mrp_entd_algorithmisch varchar,   -- MRP vom INTERPOLAR-Algorithmus entdeckt? (varchar)
   mrp_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
@@ -279,6 +287,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrp_dokup_hand_emp_akz varchar,   -- Handlungsempfehlung akzeptiert? (varchar)
   mrp_merp varchar,   -- NCC MERP Score (varchar)
   mrp_merp_info___1 varchar,   -- 1 - NCC MERP Index (varchar)
+  mrp_additional_values varchar,   -- Reserviertes Feld für zusätzliche Werte (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -288,8 +297,8 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
              COALESCE(db.to_char_immutable(mrp_anlage), '#NULL#') || '|||' || -- hash from: Formular angelegt von (mrp_anlage)
              COALESCE(db.to_char_immutable(mrp_edit), '#NULL#') || '|||' || -- hash from: Formular zuletzt bearbeitet von (mrp_edit)
-             COALESCE(db.to_char_immutable(mrp_meda_id), '#NULL#') || '|||' || -- hash from: Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> MRP (mrp_meda_id)
-             COALESCE(db.to_char_immutable(mrp_id), '#NULL#') || '|||' || -- hash from: MRP-ID (mrp_id)
+             COALESCE(db.to_char_immutable(mrp_meda_id), '#NULL#') || '|||' || -- hash from: Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP   Auswahlfeld falls die aktuell dokumentiertes MRP  sich nicht auf die letzte Instanz der Medikationsanalyse bezieht.   (mrp_meda_id)
+             COALESCE(db.to_char_immutable(mrp_id), '#NULL#') || '|||' || -- hash from: MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (mrp_id)
              COALESCE(db.to_char_immutable(mrp_entd_dat), '#NULL#') || '|||' || -- hash from: Datum des MRP (mrp_entd_dat)
              COALESCE(db.to_char_immutable(mrp_entd_algorithmisch), '#NULL#') || '|||' || -- hash from: MRP vom INTERPOLAR-Algorithmus entdeckt? (mrp_entd_algorithmisch)
              COALESCE(db.to_char_immutable(mrp_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (mrp_kurzbeschr)
@@ -359,6 +368,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
              COALESCE(db.to_char_immutable(mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || -- hash from: Handlungsempfehlung akzeptiert? (mrp_dokup_hand_emp_akz)
              COALESCE(db.to_char_immutable(mrp_merp), '#NULL#') || '|||' || -- hash from: NCC MERP Score (mrp_merp)
              COALESCE(db.to_char_immutable(mrp_merp_info___1), '#NULL#') || '|||' || -- hash from: 1 - NCC MERP Index (mrp_merp_info___1)
+             COALESCE(db.to_char_immutable(mrp_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (mrp_additional_values)
              COALESCE(db.to_char_immutable(mrpdokumentation_validierung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (mrpdokumentation_validierung_complete)
              '#'
       )
@@ -379,7 +389,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
   redcap_data_access_group varchar,   -- Function as dataset filter by stations (varchar)
   ret_bewerter1 varchar,   -- 1. Bewertung von (varchar)
-  ret_id varchar,   -- Retrolektive MRP-ID (varchar)
+  ret_id varchar,   -- Retrolektive MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)
   ret_meda_id varchar,   -- Zuordnung Meda -> rMRP (varchar)
   ret_meda_dat1 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
   ret_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
@@ -446,6 +456,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   ret_massn_orga2___7 varchar,   -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
   ret_massn_orga2___8 varchar,   -- 8 - Sensibilisierung/Schulung (varchar)
   ret_notiz2 varchar,   -- Notiz (varchar)
+  ret_additional_values varchar,   -- Reserviertes Feld für zusätzliche Werte (varchar)
   retrolektive_mrpbewertung_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -454,7 +465,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
              COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
              COALESCE(db.to_char_immutable(ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
-             COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (ret_id)
+             COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (ret_id)
              COALESCE(db.to_char_immutable(ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
              COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
              COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
@@ -521,6 +532,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
              COALESCE(db.to_char_immutable(ret_massn_orga2___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga2___7)
              COALESCE(db.to_char_immutable(ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
              COALESCE(db.to_char_immutable(ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
+             COALESCE(db.to_char_immutable(ret_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (ret_additional_values)
              COALESCE(db.to_char_immutable(retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (retrolektive_mrpbewertung_complete)
              '#'
       )
@@ -743,6 +755,7 @@ COMMENT ON COLUMN db_log.patient_fe.pat_vorname IS 'Patientenvorname (varchar)';
 COMMENT ON COLUMN db_log.patient_fe.pat_gebdat IS 'Geburtsdatum (date)';
 COMMENT ON COLUMN db_log.patient_fe.pat_aktuell_alter IS 'aktuelles Patientenalter (Jahre) (double precision)';
 COMMENT ON COLUMN db_log.patient_fe.pat_geschlecht IS 'Geschlecht (varchar)';
+COMMENT ON COLUMN db_log.patient_fe.pat_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
 COMMENT ON COLUMN db_log.patient_fe.patient_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.patient_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.patient_fe.last_check_datetime IS 'Time at which data record was last checked';
@@ -754,9 +767,10 @@ COMMENT ON COLUMN db_log.fall_fe.record_id IS 'Record ID RedCap - predefined wit
 COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_fhir_enc_id IS 'verstecktes Feld für FHIR-ID des Encounters (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.patient_id_fk IS 'verstecktes Feld für patient_id_fk (int)';
 COMMENT ON COLUMN db_log.fall_fe.fall_pat_id IS 'verstecktes Feld für fall_pat_id (varchar)';
-COMMENT ON COLUMN db_log.fall_fe.fall_id IS 'Fall-ID (varchar)';
+COMMENT ON COLUMN db_log.fall_fe.fall_id IS 'Fall-ID Encounter-Identifier (KIS) (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_studienphase IS 'Studienphase (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_station IS 'Station (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_aufn_dat IS 'Aufnahmedatum (timestamp)';
@@ -769,6 +783,7 @@ COMMENT ON COLUMN db_log.fall_fe.fall_groesse_einheit IS 'Größe: Einheit (varc
 COMMENT ON COLUMN db_log.fall_fe.fall_bmi IS 'BMI (double precision)';
 COMMENT ON COLUMN db_log.fall_fe.fall_status IS 'Fallstatus (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_ent_dat IS 'Entlassdatum (timestamp)';
+COMMENT ON COLUMN db_log.fall_fe.fall_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.fall_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.fall_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.fall_fe.last_check_datetime IS 'Time at which data record was last checked';
@@ -782,8 +797,8 @@ COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_repeat_instance IS 'Fronte
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_anlage IS 'Formular angelegt von (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_edit IS 'Formular zuletzt bearbeitet von (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.fall_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> Fall (varchar)';
-COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_id IS 'ID Medikationsanalyse (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.fall_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS)) Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.   (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_id IS 'ID Medikationsanalyse (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_typ IS 'Typ der Medikationsanalyse (MA) (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_dat IS 'Datum der Medikationsanalyse (timestamp)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_gewicht_aktuell IS 'aktuelles Gewicht (double precision)';
@@ -802,6 +817,7 @@ COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_mrp_detekt IS 'MRP detektier
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit IS 'Zeitaufwand Medikationsanalyse (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_aufwand_zeit_and IS 'genaue Dauer in Minuten (int)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_notiz IS 'Notizfeld (varchar)';
+COMMENT ON COLUMN db_log.medikationsanalyse_fe.meda_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.medikationsanalyse_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.medikationsanalyse_fe.last_check_datetime IS 'Time at which data record was last checked';
@@ -815,8 +831,8 @@ COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_repeat_instance 
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_anlage IS 'Formular angelegt von (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_edit IS 'Formular zuletzt bearbeitet von (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse -> MRP (varchar)';
-COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_id IS 'MRP-ID (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_meda_id IS 'Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP   Auswahlfeld falls die aktuell dokumentiertes MRP  sich nicht auf die letzte Instanz der Medikationsanalyse bezieht.   (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_id IS 'MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_dat IS 'Datum des MRP (timestamp)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_entd_algorithmisch IS 'MRP vom INTERPOLAR-Algorithmus entdeckt? (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
@@ -886,6 +902,7 @@ COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_notiz IS 'Notiz (va
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz IS 'Handlungsempfehlung akzeptiert? (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp IS 'NCC MERP Score (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_merp_info___1 IS '1 - NCC MERP Index (varchar)';
+COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrp_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.mrpdokumentation_validierung_fe.last_check_datetime IS 'Time at which data record was last checked';
@@ -898,7 +915,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_repeat_instrument I
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter1 IS '1. Bewertung von (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung Meda -> rMRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
@@ -965,6 +982,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___6 IS '6 
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___7 IS '7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___8 IS '8 - Sensibilisierung/Schulung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_notiz2 IS 'Notiz (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.last_check_datetime IS 'Time at which data record was last checked';
