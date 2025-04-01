@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-31 15:39:54
+-- Create time: 2025-04-01 13:44:07
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -231,6 +231,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
   pat_name_given varchar,   -- name/given (varchar)
   pat_gender varchar,   -- gender (varchar)
   pat_birthdate date,   -- birthDate (date)
+  pat_deceaseddatetime timestamp,   -- deceasedDateTime (timestamp)
   pat_address_postalcode varchar,   -- address/postalCode (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -253,6 +254,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
              COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
              COALESCE(db.to_char_immutable(pat_gender), '#NULL#') || '|||' || -- hash from: gender (pat_gender)
              COALESCE(db.to_char_immutable(pat_birthdate), '#NULL#') || '|||' || -- hash from: birthDate (pat_birthdate)
+             COALESCE(db.to_char_immutable(pat_deceaseddatetime), '#NULL#') || '|||' || -- hash from: deceasedDateTime (pat_deceaseddatetime)
              COALESCE(db.to_char_immutable(pat_address_postalcode), '#NULL#') || '|||' || -- hash from: address/postalCode (pat_address_postalcode)
              '#'
       )
@@ -3044,6 +3046,7 @@ COMMENT ON COLUMN db_log.patient.pat_name_family IS 'name/family (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_name_given IS 'name/given (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_gender IS 'gender (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_birthdate IS 'birthDate (date)';
+COMMENT ON COLUMN db_log.patient.pat_deceaseddatetime IS 'deceasedDateTime (timestamp)';
 COMMENT ON COLUMN db_log.patient.pat_address_postalcode IS 'address/postalCode (varchar)';
 COMMENT ON COLUMN db_log.patient.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.patient.last_check_datetime IS 'Time at which data record was last checked';

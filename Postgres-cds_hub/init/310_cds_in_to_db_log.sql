@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-31 15:39:58
+-- Create time: 2025-04-01 13:44:11
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -476,6 +476,7 @@ BEGIN
                                 pat_name_given,
                                 pat_gender,
                                 pat_birthdate,
+                                pat_deceaseddatetime,
                                 pat_address_postalcode,
                                 input_datetime,
                                 last_check_datetime,
@@ -504,6 +505,7 @@ BEGIN
                                 current_record.pat_name_given,
                                 current_record.pat_gender,
                                 current_record.pat_birthdate,
+                                current_record.pat_deceaseddatetime,
                                 current_record.pat_address_postalcode,
                                 current_record.input_datetime,
                                 last_pro_datetime,

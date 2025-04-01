@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15699 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-03-31 15:39:36
+-- Create time: 2025-04-01 13:43:54
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -227,6 +227,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   pat_name_given VARCHAR,   -- name/given (VARCHAR)
   pat_gender VARCHAR,   -- gender (VARCHAR)
   pat_birthdate VARCHAR,   -- birthDate (VARCHAR)
+  pat_deceaseddatetime VARCHAR,   -- deceasedDateTime (VARCHAR)
   pat_address_postalcode VARCHAR,   -- address/postalCode (VARCHAR)
   hash_index_col TEXT GENERATED ALWAYS AS (
       md5(
@@ -249,6 +250,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
              COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
              COALESCE(db.to_char_immutable(pat_gender), '#NULL#') || '|||' || -- hash from: gender (pat_gender)
              COALESCE(db.to_char_immutable(pat_birthdate), '#NULL#') || '|||' || -- hash from: birthDate (pat_birthdate)
+             COALESCE(db.to_char_immutable(pat_deceaseddatetime), '#NULL#') || '|||' || -- hash from: deceasedDateTime (pat_deceaseddatetime)
              COALESCE(db.to_char_immutable(pat_address_postalcode), '#NULL#') || '|||' || -- hash from: address/postalCode (pat_address_postalcode)
              '#'
       )
@@ -3012,6 +3014,7 @@ COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_family IS 'name/family (varchar
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_given IS 'name/given (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_gender IS 'gender (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_birthdate IS 'birthDate (varchar)';
+COMMENT ON COLUMN cds2db_in.patient_raw.pat_deceaseddatetime IS 'deceasedDateTime (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_address_postalcode IS 'address/postalCode (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.patient_raw.last_check_datetime IS 'Time at which data record was last checked';
