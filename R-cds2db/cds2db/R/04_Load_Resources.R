@@ -371,7 +371,7 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
                                                                                 additional_search_parameter = resources_add_search_parameter)
       } else {
         # if there are no IDs -> create an empty table with all needed columns as character columns
-        resource_tables <- etlutils::createResourceTable(
+        resource_tables <- etlutils::fhirCreateResourceTable(
           referenced_table_description,
           resource_key = resource_name,
           resource_collection = resource_tables

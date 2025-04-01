@@ -695,7 +695,7 @@ fhirLoadResourcesByOwnID <- function(ids, table_description, last_updated = NA, 
     )
   } else {
     # if there are no IDs -> create an empty table with all needed columns as character columns
-    resource_table <- createResourceTable(table_description)
+    resource_table <- fhirCreateResourceTable(table_description)
 
   }
   return(resource_table)
@@ -809,7 +809,7 @@ fhirLoadMultipleResourcesByPID <- function(pids_with_last_updated,
       } else {
         # if there are no IDs -> create an empty table with all needed columns as character columns
         resource_name <- table_description@resource@.Data
-        raw_fhir_resources <- createResourceTable(
+        raw_fhir_resources <- fhirCreateResourceTable(
           table_description,
           resource_key = resource_name,
           resource_collection = raw_fhir_resources
@@ -968,7 +968,7 @@ fhirCompleteTable <- function(table, table_description) {
 #'         `resource_collection`. Otherwise, returns the initialized `data.table`.
 #'
 #' @export
-createResourceTable <- function(
+fhirCreateResourceTable <- function(
     table_description,
     resource_key = NULL,
     resource_collection = NULL
