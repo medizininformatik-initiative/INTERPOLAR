@@ -284,14 +284,14 @@ fhirGetResourcesByIDs <- function(
       resource = resource,
       url_enc  = TRUE
     )
-    logRequest(VERBOSE, resource, request)
+    fhirLogRequest(VERBOSE, resource, request)
 
     # Create FHIR-search Content ( = parameters)
     content <- fhirCombineSearchParams(
       existing_params = parameters_list,
       new_params      = parameters
     )
-    logRequest(VERBOSE, resource, content)
+    fhirLogRequest(VERBOSE, resource, content)
     # Create FHIR-search Body
     body <- fhircrackr::fhir_body(
       content = content,
@@ -351,7 +351,7 @@ fhirGetResourcesByIDs <- function(
 #' @return This function does not return a value, focusing instead on side effects such as
 #' writing to a file and potentially printing to the console.
 #'
-logRequest <- function(verbose, resource_name, bundles) {
+fhirLogRequest <- function(verbose, resource_name, bundles) {
   bundles_requests <- try(paste0("Request for ", resource_name, ":\n", toString(bundles[[1]]@self_link), "\n"), silent = TRUE)
   if (isError(bundles_requests)) {
     bundles_requests <- bundles
@@ -603,7 +603,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
                 Sys.sleep(WAIT_TIMES[[trial]])
                 trial <- trial + 1
               } else {
-                logRequest(verbose, resource_name, bundles)
+                fhirLogRequest(verbose, resource_name, bundles)
                 break
               }
             }
