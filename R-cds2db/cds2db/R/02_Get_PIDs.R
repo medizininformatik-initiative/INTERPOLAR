@@ -256,7 +256,7 @@ getEncounters <- function(table_description, current_datetime) {
         parameters <- c(parameters, "subject" = encounter_pids)
       }
 
-      parameters <- etlutils::addParamToFHIRRequest(parameters)
+      parameters <- etlutils::fhirAddParamToRequest(parameters)
 
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,

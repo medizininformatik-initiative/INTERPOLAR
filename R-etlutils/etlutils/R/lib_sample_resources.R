@@ -200,7 +200,7 @@ fhirGetResourcesByIDs <- function(
     resource,
     ids,
     id_param_str = '_id',
-    parameters   = addParamToFHIRRequest(c()),
+    parameters   = fhirAddParamToRequest(c()),
     verbose      = 0
 ) {
 
@@ -250,7 +250,7 @@ fhirGetResourcesByIDs <- function(
         resource = resource,
         parameters = fhirCombineSearchParams(
           existing_params = setNames(ids_$str, id_param_str),
-          new_params = addParamToFHIRRequest(parameters)
+          new_params = fhirAddParamToRequest(parameters)
         )
       )
 
@@ -914,13 +914,13 @@ mapDatesToPids <- function(pids_with_last_updated) {
 #' parameters <- list('_id' = '12345')
 #' COUNT_PER_BUNDLE <- 50
 #' SORT <- 'date'
-#' result <- addParamToFHIRRequest(parameters)
+#' result <- fhirAddParamToRequest(parameters)
 #' print(result)
-#' result <- addParamToFHIRRequest(NULL)
+#' result <- fhirAddParamToRequest(NULL)
 #' print(result)
 #'
 #' @export
-addParamToFHIRRequest <- function(parameters = NULL) {
+fhirAddParamToRequest <- function(parameters = NULL) {
   parameters <- parameters[!is.na(parameters)]
   if (!"_count" %in% names(parameters) && exists("COUNT_PER_BUNDLE") && !is.null(COUNT_PER_BUNDLE) && !is.na(COUNT_PER_BUNDLE) && COUNT_PER_BUNDLE != "") {
     parameters <- c(parameters, c("_count" = COUNT_PER_BUNDLE))
