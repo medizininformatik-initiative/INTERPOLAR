@@ -53,7 +53,7 @@ limitAvailableCoreNumber <- function(ncores) {
 #' This function refreshes the FHIR token if it is defined.
 #'
 #' @export
-refreshFHIRToken <- function() {
+fhirRefreshToken <- function() {
 
   # Refresh FHIR-Server authentication Token
   #
@@ -61,7 +61,7 @@ refreshFHIRToken <- function() {
   #
   # @return A character string representing the refreshed FHIR-Server authentication token.
   #
-  refreshFHIRTokenInternal <- function() {
+  fhirRefreshTokenInternal <- function() {
     if (FHIR_TOKEN_REFRESH_URL == '' || FHIR_TOKEN_REFRESH_USER == '' || FHIR_TOKEN_REFRESH_PASSWORD == '') {
       return ("")
     }
@@ -79,7 +79,7 @@ refreshFHIRToken <- function() {
   # refresh token, if defined
   if (FHIR_TOKEN != '') {
     runLevel3IgnoreError('Refresh FHIR_TOKEN', {
-      FHIR_TOKEN <- refreshFHIRTokenInternal()
+      FHIR_TOKEN <- fhirRefreshTokenInternal()
     })
   }
 }

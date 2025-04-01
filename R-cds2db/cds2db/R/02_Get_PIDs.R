@@ -194,7 +194,7 @@ getEncounters <- function(table_description, current_datetime) {
   runLevel3("Get Enconters", {
 
     # Refresh token, if defined
-    refreshFHIRToken()
+    etlutils::fhirRefreshToken()
 
     resource <- "Encounter"
 
