@@ -758,7 +758,7 @@ fhirLoadResourcesByPID <- function(patient_IDs, table_description, last_updated 
 #'
 #' @return A list containing a data table for each resource type, with resource type names as the keys.
 #' @export
-loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated,
+fhirLoadMultipleResourcesByPID <- function(pids_with_last_updated,
                                            table_descriptions,
                                            resources_add_search_parameter = NA,
                                            patient_age_at_enc_start = if (exists("MIN_PATIENT_AGE", envir = .GlobalEnv)) as.integer(MIN_PATIENT_AGE) else 0,
