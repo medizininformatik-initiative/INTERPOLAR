@@ -366,7 +366,7 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
       resource_name <- referenced_table_description@resource@.Data
       if (!(resource_name %in% names(resources_add_search_parameter)) ||
           nchar(resources_add_search_parameter[[resource_name]]) != 0) {
-        resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids,
+        resource_tables[[reference_type]] <- etlutils::fhirLoadResourcesByOwnID(referenced_ids,
                                                                                 referenced_table_description,
                                                                                 additional_search_parameter = resources_add_search_parameter)
       } else {

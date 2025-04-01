@@ -681,7 +681,7 @@ fhirDownloadAndCrackResourcesByPIDs <- function(
 #' `table_description` parameter and the data processing within `fhirDownloadAndCrackResourcesByPIDs`.
 #'
 #' @export
-loadFHIRResourcesByOwnID <- function(ids, table_description, last_updated = NA, additional_search_parameter = NA) {
+fhirLoadResourcesByOwnID <- function(ids, table_description, last_updated = NA, additional_search_parameter = NA) {
   resource <- table_description@resource@.Data
   if (!rlang::is_empty(ids)) {
     resource_table <- fhirDownloadAndCrackResourcesByPIDs(
@@ -724,7 +724,7 @@ loadFHIRResourcesByOwnID <- function(ids, table_description, last_updated = NA, 
 loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated = NA, additional_search_parameter = NA) {
   resource <- table_description@resource@.Data
   if (resource == "Patient") {
-    resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description, last_updated, additional_search_parameter)
+    resource_table <- fhirLoadResourcesByOwnID(patient_IDs, table_description, last_updated, additional_search_parameter)
   } else {
     resource_table <- fhirDownloadAndCrackResourcesByPIDs(
       resource = resource,
