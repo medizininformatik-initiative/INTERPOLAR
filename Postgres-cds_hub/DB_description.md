@@ -132,6 +132,9 @@ Erstellt die Überführungsfunktion (db.copy_raw_cds_in_to_db_log) für die FHIR
 ### 310_cds_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_type_cds_in_to_db_log) für die FHIR-Daten vom Schnittstellenschema cds2db_in in den Kern (db_log) für die getypten und aufgeschlüsselten Daten. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
+### 035_db_log_table_structure
+Dokumentationstabelle und Funktion um die interne Datenbankstrucktur zu speichern und den Zeitpunkt von Veränderungen für Auswertungen zur Verfügung zu stellen. 
+
 ### 400_cre_table_typ_dataproc_in
 Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für das Frontend im Schnittstellenschema db2dataprocessor_in. Dabei werden eindeutige Primärschlüssel vergeben, die technischen Primärschlüssel der FHIR-Daten referenziert sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
 
