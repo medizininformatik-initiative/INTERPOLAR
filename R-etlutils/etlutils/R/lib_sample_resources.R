@@ -106,38 +106,38 @@ fhirRefreshToken <- function() {
 #' # Example 1: Basic usage with existing and new parameters
 #' existing_params <- c("_summary" = "count", "gender" = "male")
 #' new_params <- c("age" = "30", "gender" = "female")  # gender will appear twice
-#' combineFHIRSearchParams(existing_params, new_params)
+#' fhirCombineSearchParams(existing_params, new_params)
 #' # Returns: "_summary=count&gender=male&age=30&gender=female"
 #'
 #' # Example 2: Handling NA values in parameters
 #' existing_params <- c("_summary" = "count", "gender" = NA)
 #' new_params <- c("age" = "30", "gender" = "female")
-#' combineFHIRSearchParams(existing_params, new_params)
+#' fhirCombineSearchParams(existing_params, new_params)
 #' # Returns: "_summary=count&age=30&gender=female"
 #'
 #' # Example 3: Handling NULL values in new parameters
 #' existing_params <- c("_summary" = "count")
 #' new_params <- c("age" = NULL, "gender" = "female")
-#' combineFHIRSearchParams(existing_params, new_params)
+#' fhirCombineSearchParams(existing_params, new_params)
 #' # Returns: "_summary=count&gender=female"
 #'
 #' # Example 4: Only existing parameters provided
 #' existing_params <- c("gender" = "male")
-#' combineFHIRSearchParams(existing_params)
+#' fhirCombineSearchParams(existing_params)
 #' # Returns: "gender=male"
 #'
 #' # Example 5: No parameters provided
-#' combineFHIRSearchParams()
+#' fhirCombineSearchParams()
 #' # Returns: ""
 #'
 #' # Example 6: new_params provided as a single string
 #' existing_params <- c("status" = "active")
 #' new_params <- "gender=male"
-#' combineFHIRSearchParams(existing_params, new_params)
+#' fhirCombineSearchParams(existing_params, new_params)
 #' # Returns: "status=active&gender=male"
 #'
 #' @export
-combineFHIRSearchParams <- function(existing_params = NULL, new_params = NULL) {
+fhirCombineSearchParams <- function(existing_params = NULL, new_params = NULL) {
 
   # Helper function to convert a named vector or list into a parameter string
   convertToParamString <- function(params) {
@@ -248,7 +248,7 @@ getResourcesByIDs <- function(
       url_ <- fhircrackr::fhir_url(
         url = endpoint,
         resource = resource,
-        parameters = combineFHIRSearchParams(
+        parameters = fhirCombineSearchParams(
           existing_params = setNames(ids_$str, id_param_str),
           new_params = addParamToFHIRRequest(parameters)
         )
@@ -287,7 +287,7 @@ getResourcesByIDs <- function(
     logRequest(VERBOSE, resource, request)
 
     # Create FHIR-search Content ( = parameters)
-    content <- combineFHIRSearchParams(
+    content <- fhirCombineSearchParams(
       existing_params = parameters_list,
       new_params      = parameters
     )
