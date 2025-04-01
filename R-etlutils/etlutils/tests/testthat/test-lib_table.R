@@ -1007,9 +1007,9 @@ test_that("dataTableAsCharacter handles single column data.table with header and
   expect_equal(dataTableAsCharacter(dt, header = TRUE, footer = TRUE), expected_output)
 })
 
-#################
-# completeTable #
-#################
+#####################
+# fhirCompleteTable #
+#####################
 
 # define class TableDescription
 setClass(
@@ -1021,38 +1021,38 @@ setClass(
 # example table description
 table_description <- new("TableDescription", cols = list(a = "character", b = "character", c = "character"))
 
-test_that("completeTable adds missing columns to the table", {
+test_that("fhirCompleteTable adds missing columns to the table", {
   dt <- data.table(a = 1:3, b = c("x", "y", "z"))
   expected_output <- data.table(a = as.character(1:3), b = c("x", "y", "z"), c = NA_character_)
-  result <- completeTable(dt, table_description)
+  result <- fhirCompleteTable(dt, table_description)
   expect_equal(result, expected_output)
 })
 
-test_that("completeTable handles empty input table", {
+test_that("fhirCompleteTable handles empty input table", {
   dt <- data.table()
   expected_output <- data.table(a = character(0), b = character(0), c = character(0))
-  result <- completeTable(dt, table_description)
+  result <- fhirCompleteTable(dt, table_description)
   expect_equal(result, expected_output)
 })
 
-test_that("completeTable handles table with all columns present", {
+test_that("fhirCompleteTable handles table with all columns present", {
   dt <- data.table(a = 1:3, b = c("x", "y", "z"), c = c("p", "q", "r"))
   expected_output <- data.table(a = as.character(1:3), b = c("x", "y", "z"), c = c("p", "q", "r"))
-  result <- completeTable(dt, table_description)
+  result <- fhirCompleteTable(dt, table_description)
   expect_equal(result, expected_output)
 })
 
-test_that("completeTable converts column types to character", {
+test_that("fhirCompleteTable converts column types to character", {
   dt <- data.table(a = 1:3, b = c("x", "y", "z"), c = c(TRUE, FALSE, TRUE))
   expected_output <- data.table(a = as.character(1:3), b = c("x", "y", "z"), c = as.character(c(TRUE, FALSE, TRUE)))
-  result <- completeTable(dt, table_description)
+  result <- fhirCompleteTable(dt, table_description)
   expect_equal(result, expected_output)
 })
 
-test_that("completeTable handles input table with additional columns", {
+test_that("fhirCompleteTable handles input table with additional columns", {
   dt <- data.table(a = 1:3, b = c("x", "y", "z"), d = c("extra1", "extra2", "extra3"))
   expected_output <- data.table(a = as.character(1:3), b = c("x", "y", "z"), c = NA_character_)
-  result <- completeTable(dt, table_description)
+  result <- fhirCompleteTable(dt, table_description)
   expect_equal(result[, .(a, b, c)], expected_output)
 })
 

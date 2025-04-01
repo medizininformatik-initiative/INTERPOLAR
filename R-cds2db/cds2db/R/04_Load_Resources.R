@@ -286,7 +286,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
                     na_replacement = "Not present in DB")
 
   # Load all data of relevant patients from FHIR server
-  resource_tables_fhir <- etlutils::loadMultipleFHIRResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
+  resource_tables_fhir <- etlutils::fhirLoadMultipleResourcesByPID(pids_with_last_updated, table_descriptions, resources_add_search_parameter)
 
   raw_fhir_resources <- resource_tables_fhir$raw_fhir_resources
   # The pids_with_last_updated now only contains persons who were older than MIN_PATIENT_AGE at
@@ -366,12 +366,12 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
       resource_name <- referenced_table_description@resource@.Data
       if (!(resource_name %in% names(resources_add_search_parameter)) ||
           nchar(resources_add_search_parameter[[resource_name]]) != 0) {
-        resource_tables[[reference_type]] <- etlutils::loadFHIRResourcesByOwnID(referenced_ids,
+        resource_tables[[reference_type]] <- etlutils::fhirLoadResourcesByOwnID(referenced_ids,
                                                                                 referenced_table_description,
                                                                                 additional_search_parameter = resources_add_search_parameter)
       } else {
         # if there are no IDs -> create an empty table with all needed columns as character columns
-        resource_tables <- etlutils::createResourceTable(
+        resource_tables <- etlutils::fhirCreateResourceTable(
           referenced_table_description,
           resource_key = resource_name,
           resource_collection = resource_tables

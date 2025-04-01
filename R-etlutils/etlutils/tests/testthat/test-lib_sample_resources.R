@@ -1,12 +1,12 @@
 ###########################
-# combineFHIRSearchParams #
+# fhirCombineSearchParams #
 ###########################
 
 # Test basic usage with existing and new parameters as vector
 test_that("Basic usage with existing and new parameters (vector)", {
   existing_params <- c("_summary" = "count", "gender" = "male")
   new_params <- c("age" = "30", "gender" = "female")  # gender will appear twice
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "_summary=count&gender=male&age=30&gender=female")
 })
 
@@ -14,7 +14,7 @@ test_that("Basic usage with existing and new parameters (vector)", {
 test_that("Basic usage with existing and new parameters (list)", {
   existing_params <- list("_summary" = "count", "gender" = "male")
   new_params <- list("age" = "30", "gender" = "female")  # gender will appear twice
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "_summary=count&gender=male&age=30&gender=female")
 })
 
@@ -22,7 +22,7 @@ test_that("Basic usage with existing and new parameters (list)", {
 test_that("Handling NA values (vector)", {
   existing_params <- c("_summary" = "count", "gender" = NA)
   new_params <- c("age" = "30", "gender" = "female")
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "_summary=count&age=30&gender=female")
 })
 
@@ -30,7 +30,7 @@ test_that("Handling NA values (vector)", {
 test_that("Handling NA values (list)", {
   existing_params <- list("_summary" = "count", "gender" = NA)
   new_params <- list("age" = "30", "gender" = "female")
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "_summary=count&age=30&gender=female")
 })
 
@@ -38,7 +38,7 @@ test_that("Handling NA values (list)", {
 test_that("Handling NULL values (vector)", {
   existing_params <- c("_summary" = "count")
   new_params <- c("age" = NULL, "gender" = "female")
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "_summary=count&gender=female")
 })
 
@@ -46,34 +46,34 @@ test_that("Handling NULL values (vector)", {
 test_that("Handling NULL values (list)", {
   existing_params <- list("_summary" = "count")
   new_params <- list("age" = NULL, "gender" = "female")
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "_summary=count&gender=female")
 })
 
 # Test case with only existing parameters provided as vector
 test_that("Only existing parameters (vector)", {
   existing_params <- c("gender" = "male")
-  expect_equal(combineFHIRSearchParams(existing_params),
+  expect_equal(fhirCombineSearchParams(existing_params),
                "gender=male")
 })
 
 # Test case with only existing parameters provided as list
 test_that("Only existing parameters (list)", {
   existing_params <- list("gender" = "male")
-  expect_equal(combineFHIRSearchParams(existing_params),
+  expect_equal(fhirCombineSearchParams(existing_params),
                "gender=male")
 })
 
 # Test case with no parameters provided
 test_that("No parameters provided", {
-  expect_equal(combineFHIRSearchParams(), "")
+  expect_equal(fhirCombineSearchParams(), "")
 })
 
 # Test new_params provided as a single string
 test_that("new_params as a single string", {
   existing_params <- c("status" = "active")
   new_params <- "gender=male"
-  expect_equal(combineFHIRSearchParams(existing_params, new_params),
+  expect_equal(fhirCombineSearchParams(existing_params, new_params),
                "status=active&gender=male")
 })
 
@@ -127,18 +127,18 @@ test_that("mapDatesToPids handles PIDs without names by setting all names to NA"
 })
 
 ##########################
-# addParamToFHIRRequest  #
+# fhirAddParamToRequest  #
 ##########################
 
 # Test: Add common parameters (_count and _sort) to FHIR request
-test_that("addParamToFHIRRequest correctly adds common parameters", {
+test_that("fhirAddParamToRequest correctly adds common parameters", {
   # Temporarily set global variables for the tests
   COUNT_PER_BUNDLE <<- "50"  # Set as a numeric value, not as a string
   SORT <<- "date"
 
   # Test case 1: No _count or _sort provided, global variables exist
   parameters <- list('_id' = '12345')
-  result <- addParamToFHIRRequest(parameters)
+  result <- fhirAddParamToRequest(parameters)
 
   expect_equal(result[["_count"]], "50")
   expect_equal(result[["_sort"]], 'date')
@@ -146,7 +146,7 @@ test_that("addParamToFHIRRequest correctly adds common parameters", {
 
   # Test case 2a: _count is provided, _sort is missing
   parameters <- list('_id' = '12345', '_count' = 100)
-  result <- addParamToFHIRRequest(parameters)
+  result <- fhirAddParamToRequest(parameters)
 
   # _count should remain as 100
   expect_equal(result[["_count"]], 100)
@@ -154,7 +154,7 @@ test_that("addParamToFHIRRequest correctly adds common parameters", {
 
   # Test case 2b: _count is provided as string, _sort is missing
   parameters <- list('_id' = '12345', '_count' = "100")
-  result <- addParamToFHIRRequest(parameters)
+  result <- fhirAddParamToRequest(parameters)
 
   # _count should remain as 100
   expect_equal(result[["_count"]], "100")
@@ -162,7 +162,7 @@ test_that("addParamToFHIRRequest correctly adds common parameters", {
 
   # Test case 3: _sort is provided, _count is missing
   parameters <- list('_id' = '12345', '_sort' = 'name')
-  result <- addParamToFHIRRequest(parameters)
+  result <- fhirAddParamToRequest(parameters)
 
   # _sort should remain as 'name'
   expect_equal(result[["_count"]], "50")
@@ -170,14 +170,14 @@ test_that("addParamToFHIRRequest correctly adds common parameters", {
 
   # Test case 4: Both _count and _sort are already provided
   parameters <- list('_id' = '12345', '_count' = 200, '_sort' = 'name')
-  result <- addParamToFHIRRequest(parameters)
+  result <- fhirAddParamToRequest(parameters)
 
   # Neither should be overwritten
   expect_equal(result[["_count"]], 200)
   expect_equal(result[["_sort"]], 'name')
 
   # Test case 5: NULL parameters, global variables exist
-  result <- addParamToFHIRRequest(NULL)
+  result <- fhirAddParamToRequest(NULL)
 
   expect_equal(result[["_count"]], "50")  # Expect string comparison
   expect_equal(result[["_sort"]], 'date')
@@ -186,7 +186,7 @@ test_that("addParamToFHIRRequest correctly adds common parameters", {
   COUNT_PER_BUNDLE <<- NULL
   SORT <<- NULL
   parameters <- list()
-  result <- addParamToFHIRRequest(parameters)
+  result <- fhirAddParamToRequest(parameters)
 
   expect_false('_count' %in% names(result))
   expect_false('_sort' %in% names(result))
