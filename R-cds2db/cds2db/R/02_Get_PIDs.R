@@ -271,7 +271,7 @@ getEncounters <- function(table_description, current_datetime) {
       # stop the execution and print the current result of FHIR search request (DEBUG)
       etlutils::checkDebugTestError("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST", request_encounter)
 
-      table_enc <- etlutils::downloadAndCrackFHIRResources(request = request_encounter,
+      table_enc <- etlutils::fhirDownloadAndCrackResources(request = request_encounter,
                                                            table_description = table_description,
                                                            max_bundles = MAX_ENCOUNTER_BUNDLES,
                                                            log_errors  = "enc_error.xml")

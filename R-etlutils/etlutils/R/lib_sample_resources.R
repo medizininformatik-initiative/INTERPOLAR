@@ -387,7 +387,7 @@ fhirLogRequest <- function(verbose, resource_name, bundles) {
 #'   `table_description`.
 #'
 #' @export
-downloadAndCrackFHIRResources <- function(
+fhirDownloadAndCrackResources <- function(
     request,
     max_bundles,
     table_description,
@@ -432,7 +432,7 @@ downloadAndCrackFHIRResources <- function(
 #'
 #' @return A data.table containing the cracked FHIR resources.
 #' @export
-downloadAndCrackFHIRResourcesByPIDs <- function(
+fhirDownloadAndCrackResourcesByPIDs <- function(
     resource,
     ids,
     table_description,
@@ -678,13 +678,13 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
 #'
 #' @return Returns a table of the downloaded resources, processed and cracked open according to the
 #' specifications in `table_description`. The exact structure of the returned table depends on the
-#' `table_description` parameter and the data processing within `downloadAndCrackFHIRResourcesByPIDs`.
+#' `table_description` parameter and the data processing within `fhirDownloadAndCrackResourcesByPIDs`.
 #'
 #' @export
 loadFHIRResourcesByOwnID <- function(ids, table_description, last_updated = NA, additional_search_parameter = NA) {
   resource <- table_description@resource@.Data
   if (!rlang::is_empty(ids)) {
-    resource_table <- downloadAndCrackFHIRResourcesByPIDs(
+    resource_table <- fhirDownloadAndCrackResourcesByPIDs(
       resource = resource,
       id_param_str = '_id',
       ids = getAfterLastSlash(ids),
@@ -726,7 +726,7 @@ loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated 
   if (resource == "Patient") {
     resource_table <- loadFHIRResourcesByOwnID(patient_IDs, table_description, last_updated, additional_search_parameter)
   } else {
-    resource_table <- downloadAndCrackFHIRResourcesByPIDs(
+    resource_table <- fhirDownloadAndCrackResourcesByPIDs(
       resource = resource,
       id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
       ids = patient_IDs,
@@ -742,7 +742,7 @@ loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated 
 #' Download FHIR resources by patient IDs and perform parallel cracking for each resource type.
 #'
 #' This function iterates over the resource types defined in table_description, and for each resource type,
-#' it calls the downloadAndCrackFHIRResourcesByPIDs function to download and crack FHIR resources
+#' it calls the fhirDownloadAndCrackResourcesByPIDs function to download and crack FHIR resources
 #' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
 #'
 #' @param pids_with_last_updated A named vector where the names are the last updated dates and the values
