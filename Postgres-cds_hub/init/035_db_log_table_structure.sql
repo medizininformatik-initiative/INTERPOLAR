@@ -3,13 +3,13 @@
 CREATE TABLE IF NOT EXISTS db_config.log_table_structure (
   id SERIAL PRIMARY KEY,
   object_type VARCHAR, -- TABLE, VIEW, FUNCTION, TRIGGER
-  schema_name VARCHAR,
-  table_name VARCHAR,
-  column_name VARCHAR,
+  schema_name VARCHAR, -- Schemaname
+  table_name VARCHAR, -- Tabellen- / View- / Funktions- oder Triggername
+  column_name VARCHAR, -- Spaltenbezeichnung (Tabelle) bzw. Triggereigenschaften
   data_type VARCHAR,
   is_nullable VARCHAR,
   column_default VARCHAR,
-  definition VARCHAR,
+  definition VARCHAR, -- SQL Definition von View, Funktionen bzw. Trigger
   status VARCHAR, -- A -Aktuell  / H - Historie für Wiederkehrende Änderungen im zeitlichen Verlauf 
   version_info VARCHAR, -- Dokumentation der Release-Version und des Datums
   input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
