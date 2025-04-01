@@ -721,7 +721,7 @@ fhirLoadResourcesByOwnID <- function(ids, table_description, last_updated = NA, 
 #' parameter string based on the resource type, ensuring correct processing.
 #'
 #' @export
-loadFHIRResourcesByPID <- function(patient_IDs, table_description, last_updated = NA, additional_search_parameter = NA) {
+fhirLoadResourcesByPID <- function(patient_IDs, table_description, last_updated = NA, additional_search_parameter = NA) {
   resource <- table_description@resource@.Data
   if (resource == "Patient") {
     resource_table <- fhirLoadResourcesByOwnID(patient_IDs, table_description, last_updated, additional_search_parameter)
@@ -789,7 +789,7 @@ loadMultipleFHIRResourcesByPID <- function(pids_with_last_updated,
       }
       if (!nchar(additional_search_parameter) == 0 || is.null(additional_search_parameter)) {
         # Load and process FHIR resources for the current patient IDs and resource_name type
-        resource_table <- loadFHIRResourcesByPID(date_to_pids[[i]], table_description, last_updated, additional_search_parameter)
+        resource_table <- fhirLoadResourcesByPID(date_to_pids[[i]], table_description, last_updated, additional_search_parameter)
         # If `resource_table` is valid (not NA), add it to `raw_fhir_resources`
         if (!isSimpleNA(resource_table)) {
           # Combine resources for each resource type across multiple patient IDs
