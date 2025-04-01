@@ -482,7 +482,7 @@ fhirDownloadAndCrackResourcesByPIDs <- function(
   curr_len <- min(ids_at_once, length(ids))
 
   if (curr_len < 1) {# if no ids for download. return empty data.table with required columns
-    return(completeTable(data.table::data.table(), table_description))
+    return(fhirCompleteTable(data.table::data.table(), table_description))
   }
 
   os <- getOperationSystem()
@@ -658,7 +658,7 @@ fhirDownloadAndCrackResourcesByPIDs <- function(
     run <- run + 1
   }
   MAX_ENCOUNTER_BUNDLES <<- mb
-  completeTable(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
+  fhirCompleteTable(unique(data.table::rbindlist(tables, fill = TRUE)), table_description)
 }
 
 #' Load Resources by Their Own IDs
@@ -940,7 +940,7 @@ fhirAddParamToRequest <- function(parameters = NULL) {
 #'
 #' @return A completed data.table with missing columns added.
 #' @export
-completeTable <- function(table, table_description) {
+fhirCompleteTable <- function(table, table_description) {
   # Binding the variable .SD locally to the function, so the R CMD check has nothing to complain about
   .SD <- NULL
   col_names <- names(table_description@cols)
