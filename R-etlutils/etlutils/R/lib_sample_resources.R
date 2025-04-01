@@ -195,7 +195,7 @@ fhirCombineSearchParams <- function(existing_params = NULL, new_params = NULL) {
 #'
 #' @return A list of FHIR resources in the form of a fhir_bundle_list.
 #' @export
-getResourcesByIDs <- function(
+fhirGetResourcesByIDs <- function(
     endpoint,
     resource,
     ids,
@@ -204,7 +204,7 @@ getResourcesByIDs <- function(
     verbose      = 0
 ) {
 
-  getResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
+  fhirGetResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
     collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS - MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE) {
       if (length(ids) < 1) {# if there are no more ids to stringify
@@ -270,7 +270,7 @@ getResourcesByIDs <- function(
     fhircrackr::fhir_bundle_list(bundles) # return bundles list as fhir_crackr class bundle_list
   }
 
-  getResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
+  fhirGetResourcesByIDs_post <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     parameters_list <- list(paste0(ids, collapse = ",")) # add all ids
     names(parameters_list) <- c(id_param_str) # name arguments
 
@@ -308,7 +308,7 @@ getResourcesByIDs <- function(
 
   # if getting resources via post fails, the try to get them via get
   bundles <- try(
-    getResourcesByIDs_post(
+    fhirGetResourcesByIDs_post(
       endpoint   = endpoint,
       resource   = resource,
       ids        = ids,
@@ -319,7 +319,7 @@ getResourcesByIDs <- function(
 
   if (inherits(bundles, "try-error")) {
     if (0 < verbose) cat("Getting Bundles via POST failed. Try to get them via GET.\n")
-    bundles <- getResourcesByIDs_get(
+    bundles <- fhirGetResourcesByIDs_get(
       endpoint   = endpoint,
       resource   = resource,
       ids        = ids,
@@ -575,7 +575,7 @@ downloadAndCrackFHIRResourcesByPIDs <- function(
           if (0 < length(element)) {
             trial <- 1
             while (trial <= max_trials) {
-              bundles <- try(getResourcesByIDs(
+              bundles <- try(fhirGetResourcesByIDs(
                 endpoint     = FHIR_SERVER_ENDPOINT,
                 resource     = resource,
                 ids          = element,
