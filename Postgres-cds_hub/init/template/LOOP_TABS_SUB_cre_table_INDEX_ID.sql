@@ -37,3 +37,4 @@ ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
+<%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES_INDEX%>
