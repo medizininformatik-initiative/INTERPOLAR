@@ -1,0 +1,1 @@
+<%IF TABLE_DESCRIPTION:COLUMN_DESCRIPTION "^meta/" "UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record SET <%COLUMN_NAME%> = current_record.<%COLUMN_NAME%> WHERE target_record.hash_index_col = current_record.hash_index_col AND <%COLUMN_NAME%> != current_record.<%COLUMN_NAME%>;"%>
