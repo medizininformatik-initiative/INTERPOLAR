@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-02 15:36:47
--- Rights definition file size        : 15725 Byte
+-- Rights definition file last update : 2025-04-02 15:42:59
+-- Rights definition file size        : 15721 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-02 15:39:45
+-- Create time: 2025-04-03 00:10:06
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -4258,10 +4258,10 @@ ON cds2db_in.encounter_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_raw_enc_id ON cds2db_in.encounter_raw ( enc_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_raw_enc_meta_versionid ON cds2db_in.encounter_raw ( enc_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_raw_enc_meta_lastupdated ON cds2db_in.encounter_raw ( enc_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_encounter_raw_enc_meta_profile ON cds2db_in.encounter_raw ( enc_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_encounter_raw_enc_id ON cds2db_in.encounter_raw ( enc_id );
+CREATE INDEX IF NOT EXISTS idx_encounter_raw_enc_meta_versionid ON cds2db_in.encounter_raw ( enc_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_encounter_raw_enc_meta_lastupdated ON cds2db_in.encounter_raw ( enc_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_encounter_raw_enc_meta_profile ON cds2db_in.encounter_raw ( enc_meta_profile );
 ------------------------- Index for cds2db_in - patient_raw ---------------------------------
 
 -- Index idx_cds2db_in_patient_raw_input_dt for Table "patient_raw" in schema "cds2db_in"
@@ -4299,10 +4299,10 @@ ON cds2db_in.patient_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_raw_pat_id ON cds2db_in.patient_raw ( pat_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_raw_pat_meta_versionid ON cds2db_in.patient_raw ( pat_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_raw_pat_meta_lastupdated ON cds2db_in.patient_raw ( pat_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_patient_raw_pat_meta_profile ON cds2db_in.patient_raw ( pat_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_patient_raw_pat_id ON cds2db_in.patient_raw ( pat_id );
+CREATE INDEX IF NOT EXISTS idx_patient_raw_pat_meta_versionid ON cds2db_in.patient_raw ( pat_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_patient_raw_pat_meta_lastupdated ON cds2db_in.patient_raw ( pat_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_patient_raw_pat_meta_profile ON cds2db_in.patient_raw ( pat_meta_profile );
 ------------------------- Index for cds2db_in - condition_raw ---------------------------------
 
 -- Index idx_cds2db_in_condition_raw_input_dt for Table "condition_raw" in schema "cds2db_in"
@@ -4340,10 +4340,10 @@ ON cds2db_in.condition_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_raw_con_id ON cds2db_in.condition_raw ( con_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_raw_con_meta_versionid ON cds2db_in.condition_raw ( con_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_raw_con_meta_lastupdated ON cds2db_in.condition_raw ( con_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_condition_raw_con_meta_profile ON cds2db_in.condition_raw ( con_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_condition_raw_con_id ON cds2db_in.condition_raw ( con_id );
+CREATE INDEX IF NOT EXISTS idx_condition_raw_con_meta_versionid ON cds2db_in.condition_raw ( con_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_condition_raw_con_meta_lastupdated ON cds2db_in.condition_raw ( con_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_condition_raw_con_meta_profile ON cds2db_in.condition_raw ( con_meta_profile );
 ------------------------- Index for cds2db_in - medication_raw ---------------------------------
 
 -- Index idx_cds2db_in_medication_raw_input_dt for Table "medication_raw" in schema "cds2db_in"
@@ -4381,10 +4381,10 @@ ON cds2db_in.medication_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_raw_med_id ON cds2db_in.medication_raw ( med_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_raw_med_meta_versionid ON cds2db_in.medication_raw ( med_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_raw_med_meta_lastupdated ON cds2db_in.medication_raw ( med_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medication_raw_med_meta_profile ON cds2db_in.medication_raw ( med_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medication_raw_med_id ON cds2db_in.medication_raw ( med_id );
+CREATE INDEX IF NOT EXISTS idx_medication_raw_med_meta_versionid ON cds2db_in.medication_raw ( med_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medication_raw_med_meta_lastupdated ON cds2db_in.medication_raw ( med_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medication_raw_med_meta_profile ON cds2db_in.medication_raw ( med_meta_profile );
 ------------------------- Index for cds2db_in - medicationrequest_raw ---------------------------------
 
 -- Index idx_cds2db_in_medicationrequest_raw_input_dt for Table "medicationrequest_raw" in schema "cds2db_in"
@@ -4422,10 +4422,10 @@ ON cds2db_in.medicationrequest_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_raw_medreq_id ON cds2db_in.medicationrequest_raw ( medreq_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_raw_medreq_meta_versionid ON cds2db_in.medicationrequest_raw ( medreq_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_raw_medreq_meta_lastupdated ON cds2db_in.medicationrequest_raw ( medreq_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationrequest_raw_medreq_meta_profile ON cds2db_in.medicationrequest_raw ( medreq_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_medreq_id ON cds2db_in.medicationrequest_raw ( medreq_id );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_medreq_meta_versionid ON cds2db_in.medicationrequest_raw ( medreq_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_medreq_meta_lastupdated ON cds2db_in.medicationrequest_raw ( medreq_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_medreq_meta_profile ON cds2db_in.medicationrequest_raw ( medreq_meta_profile );
 ------------------------- Index for cds2db_in - medicationadministration_raw ---------------------------------
 
 -- Index idx_cds2db_in_medicationadministration_raw_input_dt for Table "medicationadministration_raw" in schema "cds2db_in"
@@ -4463,10 +4463,10 @@ ON cds2db_in.medicationadministration_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_raw_medadm_id ON cds2db_in.medicationadministration_raw ( medadm_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_raw_medadm_meta_versionid ON cds2db_in.medicationadministration_raw ( medadm_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_raw_medadm_meta_lastupdated ON cds2db_in.medicationadministration_raw ( medadm_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationadministration_raw_medadm_meta_profile ON cds2db_in.medicationadministration_raw ( medadm_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_medadm_id ON cds2db_in.medicationadministration_raw ( medadm_id );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_medadm_meta_versionid ON cds2db_in.medicationadministration_raw ( medadm_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_medadm_meta_lastupdated ON cds2db_in.medicationadministration_raw ( medadm_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_medadm_meta_profile ON cds2db_in.medicationadministration_raw ( medadm_meta_profile );
 ------------------------- Index for cds2db_in - medicationstatement_raw ---------------------------------
 
 -- Index idx_cds2db_in_medicationstatement_raw_input_dt for Table "medicationstatement_raw" in schema "cds2db_in"
@@ -4504,10 +4504,10 @@ ON cds2db_in.medicationstatement_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_raw_medstat_id ON cds2db_in.medicationstatement_raw ( medstat_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_raw_medstat_meta_versionid ON cds2db_in.medicationstatement_raw ( medstat_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_raw_medstat_meta_lastupdated ON cds2db_in.medicationstatement_raw ( medstat_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_medicationstatement_raw_medstat_meta_profile ON cds2db_in.medicationstatement_raw ( medstat_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_medstat_id ON cds2db_in.medicationstatement_raw ( medstat_id );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_medstat_meta_versionid ON cds2db_in.medicationstatement_raw ( medstat_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_medstat_meta_lastupdated ON cds2db_in.medicationstatement_raw ( medstat_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_medstat_meta_profile ON cds2db_in.medicationstatement_raw ( medstat_meta_profile );
 ------------------------- Index for cds2db_in - observation_raw ---------------------------------
 
 -- Index idx_cds2db_in_observation_raw_input_dt for Table "observation_raw" in schema "cds2db_in"
@@ -4545,10 +4545,10 @@ ON cds2db_in.observation_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_raw_obs_id ON cds2db_in.observation_raw ( obs_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_raw_obs_meta_versionid ON cds2db_in.observation_raw ( obs_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_raw_obs_meta_lastupdated ON cds2db_in.observation_raw ( obs_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_observation_raw_obs_meta_profile ON cds2db_in.observation_raw ( obs_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_observation_raw_obs_id ON cds2db_in.observation_raw ( obs_id );
+CREATE INDEX IF NOT EXISTS idx_observation_raw_obs_meta_versionid ON cds2db_in.observation_raw ( obs_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_observation_raw_obs_meta_lastupdated ON cds2db_in.observation_raw ( obs_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_observation_raw_obs_meta_profile ON cds2db_in.observation_raw ( obs_meta_profile );
 ------------------------- Index for cds2db_in - diagnosticreport_raw ---------------------------------
 
 -- Index idx_cds2db_in_diagnosticreport_raw_input_dt for Table "diagnosticreport_raw" in schema "cds2db_in"
@@ -4586,10 +4586,10 @@ ON cds2db_in.diagnosticreport_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_raw_diagrep_id ON cds2db_in.diagnosticreport_raw ( diagrep_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_raw_diagrep_meta_versionid ON cds2db_in.diagnosticreport_raw ( diagrep_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_raw_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport_raw ( diagrep_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_diagnosticreport_raw_diagrep_meta_profile ON cds2db_in.diagnosticreport_raw ( diagrep_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_diagrep_id ON cds2db_in.diagnosticreport_raw ( diagrep_id );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_diagrep_meta_versionid ON cds2db_in.diagnosticreport_raw ( diagrep_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport_raw ( diagrep_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_diagrep_meta_profile ON cds2db_in.diagnosticreport_raw ( diagrep_meta_profile );
 ------------------------- Index for cds2db_in - servicerequest_raw ---------------------------------
 
 -- Index idx_cds2db_in_servicerequest_raw_input_dt for Table "servicerequest_raw" in schema "cds2db_in"
@@ -4627,10 +4627,10 @@ ON cds2db_in.servicerequest_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_raw_servreq_id ON cds2db_in.servicerequest_raw ( servreq_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_raw_servreq_meta_versionid ON cds2db_in.servicerequest_raw ( servreq_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_raw_servreq_meta_lastupdated ON cds2db_in.servicerequest_raw ( servreq_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_servicerequest_raw_servreq_meta_profile ON cds2db_in.servicerequest_raw ( servreq_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_servreq_id ON cds2db_in.servicerequest_raw ( servreq_id );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_servreq_meta_versionid ON cds2db_in.servicerequest_raw ( servreq_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_servreq_meta_lastupdated ON cds2db_in.servicerequest_raw ( servreq_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_servreq_meta_profile ON cds2db_in.servicerequest_raw ( servreq_meta_profile );
 ------------------------- Index for cds2db_in - procedure_raw ---------------------------------
 
 -- Index idx_cds2db_in_procedure_raw_input_dt for Table "procedure_raw" in schema "cds2db_in"
@@ -4668,10 +4668,10 @@ ON cds2db_in.procedure_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_raw_proc_id ON cds2db_in.procedure_raw ( proc_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_raw_proc_meta_versionid ON cds2db_in.procedure_raw ( proc_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_raw_proc_meta_lastupdated ON cds2db_in.procedure_raw ( proc_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_procedure_raw_proc_meta_profile ON cds2db_in.procedure_raw ( proc_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_procedure_raw_proc_id ON cds2db_in.procedure_raw ( proc_id );
+CREATE INDEX IF NOT EXISTS idx_procedure_raw_proc_meta_versionid ON cds2db_in.procedure_raw ( proc_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_procedure_raw_proc_meta_lastupdated ON cds2db_in.procedure_raw ( proc_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_procedure_raw_proc_meta_profile ON cds2db_in.procedure_raw ( proc_meta_profile );
 ------------------------- Index for cds2db_in - consent_raw ---------------------------------
 
 -- Index idx_cds2db_in_consent_raw_input_dt for Table "consent_raw" in schema "cds2db_in"
@@ -4709,10 +4709,10 @@ ON cds2db_in.consent_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_raw_cons_id ON cds2db_in.consent_raw ( cons_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_raw_cons_meta_versionid ON cds2db_in.consent_raw ( cons_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_raw_cons_meta_lastupdated ON cds2db_in.consent_raw ( cons_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_consent_raw_cons_meta_profile ON cds2db_in.consent_raw ( cons_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_consent_raw_cons_id ON cds2db_in.consent_raw ( cons_id );
+CREATE INDEX IF NOT EXISTS idx_consent_raw_cons_meta_versionid ON cds2db_in.consent_raw ( cons_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_consent_raw_cons_meta_lastupdated ON cds2db_in.consent_raw ( cons_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_consent_raw_cons_meta_profile ON cds2db_in.consent_raw ( cons_meta_profile );
 ------------------------- Index for cds2db_in - location_raw ---------------------------------
 
 -- Index idx_cds2db_in_location_raw_input_dt for Table "location_raw" in schema "cds2db_in"
@@ -4750,10 +4750,10 @@ ON cds2db_in.location_raw (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_raw_loc_id ON cds2db_in.location_raw ( loc_id );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_raw_loc_meta_versionid ON cds2db_in.location_raw ( loc_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_raw_loc_meta_lastupdated ON cds2db_in.location_raw ( loc_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_cds2db_in_location_raw_loc_meta_profile ON cds2db_in.location_raw ( loc_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_location_raw_loc_id ON cds2db_in.location_raw ( loc_id );
+CREATE INDEX IF NOT EXISTS idx_location_raw_loc_meta_versionid ON cds2db_in.location_raw ( loc_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_location_raw_loc_meta_lastupdated ON cds2db_in.location_raw ( loc_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_location_raw_loc_meta_profile ON cds2db_in.location_raw ( loc_meta_profile );
 ------------------------- Index for cds2db_in - pids_per_ward_raw ---------------------------------
 
 -- Index idx_cds2db_in_pids_per_ward_raw_input_dt for Table "pids_per_ward_raw" in schema "cds2db_in"

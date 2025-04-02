@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-02 15:36:47
--- Rights definition file size        : 15725 Byte
+-- Rights definition file last update : 2025-04-02 15:42:59
+-- Rights definition file size        : 15721 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-02 15:40:58
+-- Create time: 2025-04-03 00:11:17
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -4303,10 +4303,10 @@ ON db_log.encounter (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_enc_id ON db_log.encounter ( enc_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_enc_meta_versionid ON db_log.encounter ( enc_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_enc_meta_lastupdated ON db_log.encounter ( enc_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_encounter_enc_meta_profile ON db_log.encounter ( enc_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_encounter_enc_id ON db_log.encounter ( enc_id );
+CREATE INDEX IF NOT EXISTS idx_encounter_enc_meta_versionid ON db_log.encounter ( enc_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_encounter_enc_meta_lastupdated ON db_log.encounter ( enc_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_encounter_enc_meta_profile ON db_log.encounter ( enc_meta_profile );
 ------------------------- Index for db_log - patient ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_patient_raw_id ON db_log.patient ( patient_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4345,10 +4345,10 @@ ON db_log.patient (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_pat_id ON db_log.patient ( pat_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_pat_meta_versionid ON db_log.patient ( pat_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_pat_meta_lastupdated ON db_log.patient ( pat_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_patient_pat_meta_profile ON db_log.patient ( pat_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_patient_pat_id ON db_log.patient ( pat_id );
+CREATE INDEX IF NOT EXISTS idx_patient_pat_meta_versionid ON db_log.patient ( pat_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_patient_pat_meta_lastupdated ON db_log.patient ( pat_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_patient_pat_meta_profile ON db_log.patient ( pat_meta_profile );
 ------------------------- Index for db_log - condition ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_condition_raw_id ON db_log.condition ( condition_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4387,10 +4387,10 @@ ON db_log.condition (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_con_id ON db_log.condition ( con_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_con_meta_versionid ON db_log.condition ( con_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_con_meta_lastupdated ON db_log.condition ( con_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_condition_con_meta_profile ON db_log.condition ( con_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_condition_con_id ON db_log.condition ( con_id );
+CREATE INDEX IF NOT EXISTS idx_condition_con_meta_versionid ON db_log.condition ( con_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_condition_con_meta_lastupdated ON db_log.condition ( con_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_condition_con_meta_profile ON db_log.condition ( con_meta_profile );
 ------------------------- Index for db_log - medication ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_medication_raw_id ON db_log.medication ( medication_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4429,10 +4429,10 @@ ON db_log.medication (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_med_id ON db_log.medication ( med_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_med_meta_versionid ON db_log.medication ( med_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_med_meta_lastupdated ON db_log.medication ( med_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_medication_med_meta_profile ON db_log.medication ( med_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medication_med_id ON db_log.medication ( med_id );
+CREATE INDEX IF NOT EXISTS idx_medication_med_meta_versionid ON db_log.medication ( med_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medication_med_meta_lastupdated ON db_log.medication ( med_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medication_med_meta_profile ON db_log.medication ( med_meta_profile );
 ------------------------- Index for db_log - medicationrequest ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_medicationrequest_raw_id ON db_log.medicationrequest ( medicationrequest_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4471,10 +4471,10 @@ ON db_log.medicationrequest (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_medreq_id ON db_log.medicationrequest ( medreq_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_medreq_meta_versionid ON db_log.medicationrequest ( medreq_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_medreq_meta_lastupdated ON db_log.medicationrequest ( medreq_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationrequest_medreq_meta_profile ON db_log.medicationrequest ( medreq_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_medreq_id ON db_log.medicationrequest ( medreq_id );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_medreq_meta_versionid ON db_log.medicationrequest ( medreq_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_medreq_meta_lastupdated ON db_log.medicationrequest ( medreq_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medicationrequest_medreq_meta_profile ON db_log.medicationrequest ( medreq_meta_profile );
 ------------------------- Index for db_log - medicationadministration ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_medicationadministration_raw_id ON db_log.medicationadministration ( medicationadministration_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4513,10 +4513,10 @@ ON db_log.medicationadministration (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_medadm_id ON db_log.medicationadministration ( medadm_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_medadm_meta_versionid ON db_log.medicationadministration ( medadm_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_medadm_meta_lastupdated ON db_log.medicationadministration ( medadm_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationadministration_medadm_meta_profile ON db_log.medicationadministration ( medadm_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_medadm_id ON db_log.medicationadministration ( medadm_id );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_medadm_meta_versionid ON db_log.medicationadministration ( medadm_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_medadm_meta_lastupdated ON db_log.medicationadministration ( medadm_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medicationadministration_medadm_meta_profile ON db_log.medicationadministration ( medadm_meta_profile );
 ------------------------- Index for db_log - medicationstatement ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_medicationstatement_raw_id ON db_log.medicationstatement ( medicationstatement_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4555,10 +4555,10 @@ ON db_log.medicationstatement (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_medstat_id ON db_log.medicationstatement ( medstat_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_medstat_meta_versionid ON db_log.medicationstatement ( medstat_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_medstat_meta_lastupdated ON db_log.medicationstatement ( medstat_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_medicationstatement_medstat_meta_profile ON db_log.medicationstatement ( medstat_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_medstat_id ON db_log.medicationstatement ( medstat_id );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_medstat_meta_versionid ON db_log.medicationstatement ( medstat_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_medstat_meta_lastupdated ON db_log.medicationstatement ( medstat_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_medicationstatement_medstat_meta_profile ON db_log.medicationstatement ( medstat_meta_profile );
 ------------------------- Index for db_log - observation ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_observation_raw_id ON db_log.observation ( observation_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4597,10 +4597,10 @@ ON db_log.observation (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_obs_id ON db_log.observation ( obs_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_obs_meta_versionid ON db_log.observation ( obs_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_obs_meta_lastupdated ON db_log.observation ( obs_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_observation_obs_meta_profile ON db_log.observation ( obs_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_observation_obs_id ON db_log.observation ( obs_id );
+CREATE INDEX IF NOT EXISTS idx_observation_obs_meta_versionid ON db_log.observation ( obs_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_observation_obs_meta_lastupdated ON db_log.observation ( obs_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_observation_obs_meta_profile ON db_log.observation ( obs_meta_profile );
 ------------------------- Index for db_log - diagnosticreport ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_diagnosticreport_raw_id ON db_log.diagnosticreport ( diagnosticreport_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4639,10 +4639,10 @@ ON db_log.diagnosticreport (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_diagrep_id ON db_log.diagnosticreport ( diagrep_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_diagrep_meta_versionid ON db_log.diagnosticreport ( diagrep_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_diagrep_meta_lastupdated ON db_log.diagnosticreport ( diagrep_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_diagnosticreport_diagrep_meta_profile ON db_log.diagnosticreport ( diagrep_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_diagrep_id ON db_log.diagnosticreport ( diagrep_id );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_diagrep_meta_versionid ON db_log.diagnosticreport ( diagrep_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_diagrep_meta_lastupdated ON db_log.diagnosticreport ( diagrep_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_diagnosticreport_diagrep_meta_profile ON db_log.diagnosticreport ( diagrep_meta_profile );
 ------------------------- Index for db_log - servicerequest ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_servicerequest_raw_id ON db_log.servicerequest ( servicerequest_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4681,10 +4681,10 @@ ON db_log.servicerequest (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_servreq_id ON db_log.servicerequest ( servreq_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_servreq_meta_versionid ON db_log.servicerequest ( servreq_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_servreq_meta_lastupdated ON db_log.servicerequest ( servreq_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_servicerequest_servreq_meta_profile ON db_log.servicerequest ( servreq_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_servreq_id ON db_log.servicerequest ( servreq_id );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_servreq_meta_versionid ON db_log.servicerequest ( servreq_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_servreq_meta_lastupdated ON db_log.servicerequest ( servreq_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_servicerequest_servreq_meta_profile ON db_log.servicerequest ( servreq_meta_profile );
 ------------------------- Index for db_log - procedure ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_procedure_raw_id ON db_log.procedure ( procedure_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4723,10 +4723,10 @@ ON db_log.procedure (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_proc_id ON db_log.procedure ( proc_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_proc_meta_versionid ON db_log.procedure ( proc_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_proc_meta_lastupdated ON db_log.procedure ( proc_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_procedure_proc_meta_profile ON db_log.procedure ( proc_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_procedure_proc_id ON db_log.procedure ( proc_id );
+CREATE INDEX IF NOT EXISTS idx_procedure_proc_meta_versionid ON db_log.procedure ( proc_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_procedure_proc_meta_lastupdated ON db_log.procedure ( proc_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_procedure_proc_meta_profile ON db_log.procedure ( proc_meta_profile );
 ------------------------- Index for db_log - consent ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_consent_raw_id ON db_log.consent ( consent_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4765,10 +4765,10 @@ ON db_log.consent (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_cons_id ON db_log.consent ( cons_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_cons_meta_versionid ON db_log.consent ( cons_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_cons_meta_lastupdated ON db_log.consent ( cons_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_consent_cons_meta_profile ON db_log.consent ( cons_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_consent_cons_id ON db_log.consent ( cons_id );
+CREATE INDEX IF NOT EXISTS idx_consent_cons_meta_versionid ON db_log.consent ( cons_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_consent_cons_meta_lastupdated ON db_log.consent ( cons_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_consent_cons_meta_profile ON db_log.consent ( cons_meta_profile );
 ------------------------- Index for db_log - location ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_location_raw_id ON db_log.location ( location_raw_id DESC); -- Primary key of the corresponding raw table
 
@@ -4807,10 +4807,10 @@ ON db_log.location (
    hash_index_col -- Column for automatic hash value for comparing FHIR data
 );
 
-CREATE INDEX IF NOT EXISTS idx_db_log_location_loc_id ON db_log.location ( loc_id );
-CREATE INDEX IF NOT EXISTS idx_db_log_location_loc_meta_versionid ON db_log.location ( loc_meta_versionid );
-CREATE INDEX IF NOT EXISTS idx_db_log_location_loc_meta_lastupdated ON db_log.location ( loc_meta_lastupdated );
-CREATE INDEX IF NOT EXISTS idx_db_log_location_loc_meta_profile ON db_log.location ( loc_meta_profile );
+CREATE INDEX IF NOT EXISTS idx_location_loc_id ON db_log.location ( loc_id );
+CREATE INDEX IF NOT EXISTS idx_location_loc_meta_versionid ON db_log.location ( loc_meta_versionid );
+CREATE INDEX IF NOT EXISTS idx_location_loc_meta_lastupdated ON db_log.location ( loc_meta_lastupdated );
+CREATE INDEX IF NOT EXISTS idx_location_loc_meta_profile ON db_log.location ( loc_meta_profile );
 ------------------------- Index for db_log - pids_per_ward ---------------------------------
   CREATE INDEX IF NOT EXISTS idx_pids_per_ward_raw_id ON db_log.pids_per_ward ( pids_per_ward_raw_id DESC); -- Primary key of the corresponding raw table
 
