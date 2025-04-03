@@ -43,9 +43,16 @@ CREATE OR REPLACE FUNCTION db.log_table_view_structure()
 RETURNS VOID 
 SECURITY DEFINER
 AS $$
+DECLARE
+    temp VARCHAR;
+    err_section VARCHAR;
+    err_schema VARCHAR;
+    err_table VARCHAR;
+    num INT;
 BEGIN
     ----------------------------------------------------------------------------------------------------------------------------
     -- TABLE Nicht vorhandene Einträge hinzfügen
+    err_section:='log_table_view_structure-01';    err_schema:='db_config';    err_table:='TABLE';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, column_name, data_type, is_nullable, column_default, status, version_info, input_datetime, last_change_timestamp)
     (SELECT 
         'TABLE' AS object_type,
@@ -71,6 +78,7 @@ BEGIN
     );
 
     -- TABLE Alle nicht aktuellen Einträge auf Historie setzen
+    err_section:='log_table_view_structure-02';    err_schema:='db_config';    err_table:='TABLE';
     UPDATE db_config.log_table_structure l SET status='H'
     WHERE COALESCE(l.schema_name,'#')||'#'||COALESCE(l.table_name,'#')||'#'||COALESCE(l.column_name,'#')||'#'||COALESCE(l.data_type,'#')||'#'||COALESCE(l.is_nullable,'#')||'#'||COALESCE(l.column_default,'#')
     NOT IN (SELECT COALESCE(c.table_schema,'#')||'#'||COALESCE(c.table_name,'#')||'#'||COALESCE(c.column_name,'#')||'#'||COALESCE(c.data_type,'#')||'#'||COALESCE(c.is_nullable,'#')||'#'||COALESCE(c.column_default,'#')
@@ -81,10 +89,12 @@ BEGIN
     ;
     
     -- TABLE Alle aktuellen Einträge das last_change_timestamp neu setzen
+    err_section:='log_table_view_structure-03';    err_schema:='db_config';    err_table:='TABLE';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='TABLE';
 
     ----------------------------------------------------------------------------------------------------------------------------
     -- VIEW Nicht vorhandene Einträge hinzfügen
+    err_section:='log_table_view_structure-05';    err_schema:='db_config';    err_table:='VIEW';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, definition, status, version_info, input_datetime, last_change_timestamp)
     (SELECT * FROM
         (SELECT
@@ -109,6 +119,7 @@ BEGIN
     );
 
     -- VIEW Alle nicht aktuellen Einträge auf Historie setzen
+    err_section:='log_table_view_structure-06';    err_schema:='db_config';    err_table:='VIEW';
     UPDATE db_config.log_table_structure SET status='H'
     WHERE  COALESCE(schema_name,'#')||'#'||COALESCE(table_name,'#')||'#'||COALESCE(md5(definition),'#')
     NOT IN (SELECT
@@ -120,10 +131,12 @@ BEGIN
     ;
     
     -- VIEW Alle aktuellen Einträge das last_change_timestamp neu setzen
+    err_section:='log_table_view_structure-07';    err_schema:='db_config';    err_table:='VIEW';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='VIEW';
 
     ----------------------------------------------------------------------------------------------------------------------------
     -- FUNCTION Nicht vorhandene Einträge hinzfügen
+    err_section:='log_table_view_structure-10';    err_schema:='db_config';    err_table:='FUNCTION';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, definition, status, version_info, input_datetime, last_change_timestamp)
     (SELECT * FROM
         (SELECT 
@@ -148,6 +161,7 @@ BEGIN
     );
 
     -- FUNCTION Alle nicht aktuellen Einträge auf Historie setzen
+    err_section:='log_table_view_structure-11';    err_schema:='db_config';    err_table:='FUNCTION';
     UPDATE db_config.log_table_structure SET status='H'
     WHERE  COALESCE(schema_name,'#')||'#'||COALESCE(table_name,'#')||'#'||COALESCE(md5(definition),'#')
     NOT IN (SELECT
@@ -159,10 +173,12 @@ BEGIN
     ;
     
     -- FUNCTION Alle aktuellen Einträge das last_change_timestamp neu setzen
+    err_section:='log_table_view_structure-12';    err_schema:='db_config';    err_table:='FUNCTION';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='FUNCTION';
 
     ----------------------------------------------------------------------------------------------------------------------------
     -- TRIGGER Nicht vorhandene Einträge hinzfügen
+    err_section:='log_table_view_structure-15';    err_schema:='db_config';    err_table:='TRIGGER';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, column_name, definition, status, version_info, input_datetime, last_change_timestamp)
     (SELECT 
         'TRIGGER' AS object_type,
@@ -186,6 +202,7 @@ BEGIN
     );
 
     -- TRIGGER Alle nicht aktuellen Einträge auf Historie setzen
+    err_section:='log_table_view_structure-16';    err_schema:='db_config';    err_table:='TRIGGER';
     UPDATE db_config.log_table_structure l SET status='H'
     WHERE COALESCE(l.schema_name,'#')||'#'||COALESCE(l.table_name,'#')||'#'||COALESCE(l.column_name,'#')||'#'||COALESCE(md5(l.definition),'#')
     NOT IN (SELECT COALESCE(c.trigger_schema,'#')||'#'||COALESCE(c.trigger_name,'#')||'#'||COALESCE(c.action_timing||' '||event_manipulation||' - ('||action_orientation||') ON '||event_object_schema||'.'||event_object_table,'#')||'#'||md5(c.action_statement)
@@ -196,9 +213,24 @@ BEGIN
     ;
     
     -- TABLE Alle aktuellen Einträge das last_change_timestamp neu setzen
+    err_section:='log_table_view_structure-17';    err_schema:='db_config';    err_table:='TRIGGER';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='TRIGGER';
 
+    err_section:='log_table_view_structure-99';    err_schema:='db_config';    err_table:='-';
     ----------------------------------------------------------------------------------------------------------------------------
+EXCEPTION
+    WHEN OTHERS THEN
+    SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
+
+    SELECT db.error_log(
+        err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
+        err_objekt => CAST('db.log_table_view_structure()' AS VARCHAR), -- err_objekt (VARCHAR) Objekt (Tabelle, Funktion, etc.)
+        err_user => CAST(current_user AS VARCHAR),                    -- err_user (VARCHAR) Benutzer (kann durch current_user ersetzt werden)
+        err_msg => CAST(SQLSTATE || ' - ' || SQLERRM AS VARCHAR),     -- err_msg (VARCHAR) Fehlernachricht
+        err_line => CAST(err_section AS VARCHAR),                     -- err_line (VARCHAR) Zeilennummer oder Abschnitt
+        err_variables => CAST('Tab: ' ||err_table||' lastErg:'||erg AS VARCHAR), -- err_variables (VARCHAR) Debug-Informationen zu Variablen
+        last_processing_nr => CAST(num AS INT)                          -- last_processing_nr (INT) Letzte Verarbeitungsnummer - wenn vorhanden
+    ) INTO temp;
 END;
 $$ LANGUAGE plpgsql; -- db.log_table_view_structure
 

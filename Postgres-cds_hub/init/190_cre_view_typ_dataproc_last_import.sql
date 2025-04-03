@@ -3,14 +3,14 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-02 15:42:59
--- Rights definition file size        : 15721 Byte
+-- Rights definition file last update : 2025-04-03 09:25:20
+-- Rights definition file size        : 15719 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-04-03 00:11:46
+-- Create time: 2025-04-03 09:34:34
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  190_cre_view_typ_dataproc_last_import.sql
--- TEMPLATE:  template_cre_view3.sql
+-- TEMPLATE:  template_cre_view4.sql
 -- OWNER_USER:  db2dataprocessor_user
 -- OWNER_SCHEMA:  db2dataprocessor_out
 -- TAGS:  
@@ -27,7 +27,7 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
---Create View for frontend tables for schema db2dataprocessor_out
+--Create SQL View for schema db2dataprocessor_out
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_encounter_last_import AS (
 SELECT * FROM db_log.encounter
@@ -139,7 +139,7 @@ GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 GRANT SELECT ON TABLE db2dataprocessor_out.v_location_last_import TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-GRANT SELECT ON TABLE db2dataprocessor_out.v_pids_per_ward_last_import TO db2dataprocessor_user;
+
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 

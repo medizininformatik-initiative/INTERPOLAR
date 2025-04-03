@@ -15,15 +15,15 @@ DECLARE
     err_pid VARCHAR;
     set_sem_erg BOOLEAN;
 BEGIN
+    err_section:='cron_job_data_transfer_break-01';    err_schema:='';    err_table:='pg_sleep';
     SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
 
     -- Document changes to the database
-    SELECT res FROM public.pg_background_result(public.pg_background_launch(
-    'SELECT db.log_table_view_structure()'
-    )) AS t(res TEXT) INTO erg;
+    err_section:='cron_job_data_transfer_break-02';    err_schema:='db_config';    err_table:='db.log_table_view_structure';
+    SELECT db.log_table_view_structure() INTO erg;
 
     -- Doppelt angelegte Cron-Jobs deaktivieren
-    err_section:='cron_job_data_transfer_break-01';    err_schema:='cron';    err_table:='job';
+    err_section:='cron_job_data_transfer_break-03';    err_schema:='cron';    err_table:='job';
     UPDATE cron.job m SET active = FALSE WHERE m.command in
     (select i.command as t from (select command, count(1) anz from cron.job group by command) i where anz>1)
     and m.jobid not in (select min(f.jobid) from cron.job f where f.command in (select i.command as t from (select command, count(1) anz from cron.job group by       command) i where anz>1));
