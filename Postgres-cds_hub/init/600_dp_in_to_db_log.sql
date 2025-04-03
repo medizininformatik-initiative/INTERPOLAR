@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-25 12:36:13
--- Rights definition file size        : 15699 Byte
+-- Rights definition file last update : 2025-04-03 08:57:49
+-- Rights definition file size        : 15722 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-01 13:44:15
+-- Create time: 2025-04-03 09:00:35
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -205,6 +205,9 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+                            err_section:='patient_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='patient_fe';
+                            
+
                             -- Delete updatet datasets
                             err_section:='patient_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='patient_fe';
                             DELETE FROM db2dataprocessor_in.patient_fe WHERE patient_fe_id = current_record.patient_fe_id;
@@ -384,6 +387,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='fall_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='fall_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='fall_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='fall_fe';
@@ -576,6 +582,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='medikationsanalyse_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='medikationsanalyse_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='medikationsanalyse_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='medikationsanalyse_fe';
@@ -871,6 +880,9 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+                            err_section:='mrpdokumentation_validierung_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='mrpdokumentation_validierung_fe';
+                            
+
                             -- Delete updatet datasets
                             err_section:='mrpdokumentation_validierung_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='mrpdokumentation_validierung_fe';
                             DELETE FROM db2dataprocessor_in.mrpdokumentation_validierung_fe WHERE mrpdokumentation_validierung_fe_id = current_record.mrpdokumentation_validierung_fe_id;
@@ -1155,6 +1167,9 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+                            err_section:='retrolektive_mrpbewertung_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='retrolektive_mrpbewertung_fe';
+                            
+
                             -- Delete updatet datasets
                             err_section:='retrolektive_mrpbewertung_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='retrolektive_mrpbewertung_fe';
                             DELETE FROM db2dataprocessor_in.retrolektive_mrpbewertung_fe WHERE retrolektive_mrpbewertung_fe_id = current_record.retrolektive_mrpbewertung_fe_id;
@@ -1328,6 +1343,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='risikofaktor_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='risikofaktor_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='risikofaktor_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='risikofaktor_fe';
@@ -1518,6 +1536,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='trigger_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='trigger_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='trigger_fe-30';    err_schema:='db2dataprocessor_in';    err_table:='trigger_fe';

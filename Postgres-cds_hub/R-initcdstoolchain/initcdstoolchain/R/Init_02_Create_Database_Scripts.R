@@ -324,15 +324,40 @@ createHeader <- function(script_rights_definition) {
 ########################
 # Convert Create Table #
 ########################
-# expression <- "<%IF NOT RIGHTS_DEFINITION:TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>"
-
+#' Parse a special IF expression used in templated input strings
+#'
+#' This function parses expressions that match a special templating syntax of the form:
+#' `<%IF [NOT] SOURCE:FIELD "pattern" result%>`, and extracts its components. The pattern must
+#' be enclosed in single or double quotes. The result may include any characters, including
+#' embedded quotes or template tags, and can span multiple lines.
+#'
+#' @param expression A character string of the templated IF expression to parse.
+#'
+#' @return A list with the following elements:
+#' \describe{
+#'   \item{source}{The source part before the colon (e.g., "TABLE_DESCRIPTION").}
+#'   \item{field}{The field part after the colon (e.g., "TAGS").}
+#'   \item{invert}{Logical indicating whether the NOT modifier is present.}
+#'   \item{pattern}{The extracted pattern string (unquoted).}
+#'   \item{result}{The full result expression string (as-is, may contain quotes or tags).}
+#' }
+#'
+#' @examples
+#' parseIFExpression('<%IF NOT TABLE_DESCRIPTION:TAGS "pattern" "result text"%>')
+#'
+#' parseIFExpression(
+#'   '<%IF NOT TABLE_DESCRIPTION:COLUMN_DESCRIPTION "^meta/" "COALESCE(db.to_char_immutable(<%COLUMN_NAME%>), \'#NULL#\') || \'|||\' ||"%>'
+#' )
+#'
+#' @export
 parseIFExpression <- function(expression) {
-  # Updated pattern to support expressions like:
-  # <%IF NOT TABLE_DESCRIPTION:TAGS "pattern" "result"%>
-  patternInlineIf <- '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"].*?[\'\"])\\s+(.*?)%>$'
+
+  # Pattern: Support multiline and embedded quotes in the result
+  patternInlineIf <-
+    '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"].*?[\'\"])\\s+(.*)%>$'
 
   # Extract the parts of the expression
-  matches <- regmatches(expression, regexec(patternInlineIf, expression))
+  matches <- regmatches(expression, regexec(patternInlineIf, expression, perl = TRUE))
 
   if (length(matches[[1]]) != 6 || is.na(matches[[1]][1])) {
     stop(paste0("Cannot parse expression: '", expression, "'"))
@@ -347,6 +372,14 @@ parseIFExpression <- function(expression) {
   ))
 }
 
+# for testing
+# expression <- parseIFExpression("<%IF NOT RIGHTS_DEFINITION:TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>")
+# expression <- parseIFExpression("<%IF NOT TABLE_DESCRIPTION:TAGS \"pattern\" \"result\"%>")
+# expression <- parseIFExpression("<%IF NOT RIGHTS_DESCRIPTION:TAGS \"\\bTYPED\\b\" \"<%TABLE_NAME%>_raw_id int NOT NULL, -- Primary key of the corresponding raw table\"%>")
+# expression <- parseIFExpression("<%IF NOT TABLE_DESCRIPTION:TABLE_NAME \"^patient$|^medication$|^location$|^pids_per_ward$\" SUB_LOOP_TABS_SUB_adding_historical_records%>")
+# result <- parseIFExpression("<%IF NOT TABLE_DESCRIPTION:COLUMN_DESCRIPTION \"^meta/\" \"COALESCE(db.to_char_immutable(<%COLUMN_NAME%>), '#NULL#') || '|||' ||\"%>")
+
+
 convertTemplate <- function(tables_descriptions,
                             script_rights_definition,
                             result_file_name_column = "SCRIPTNAME",
@@ -355,6 +388,7 @@ convertTemplate <- function(tables_descriptions,
                             table_name = NA,
                             column_prefix = NA,
                             column_name = NA,
+                            loop_row = 1,
                             indentation = "",
                             recursion = 0) {
 
@@ -390,6 +424,7 @@ convertTemplate <- function(tables_descriptions,
                                                   table_name,
                                                   column_prefix,
                                                   column_name,
+                                                  loop_row,
                                                   indentation,
                                                   recursion = recursion + 1)
           if (!is.na(single_table_content)) {
@@ -399,8 +434,8 @@ convertTemplate <- function(tables_descriptions,
 
       } else if (startsWith(placeholder, "<%LOOP_COLS")) {
         single_table_description <- tables_descriptions[[table_name]]
-        for (row in seq_len(nrow(single_table_description))) {
-          column_row <- single_table_description[row]
+        for (loop_row in seq_len(nrow(single_table_description))) {
+          column_row <- single_table_description[loop_row]
           single_loop_content <- convertTemplate(tables_descriptions,
                                                  script_rights_definition,
                                                  result_file_name_column,
@@ -409,6 +444,7 @@ convertTemplate <- function(tables_descriptions,
                                                  table_name = table_name,
                                                  column_prefix = column_prefix,
                                                  column_name,
+                                                 loop_row,
                                                  indentation,
                                                  recursion = recursion + 1)
           single_loop_content_placeholders <- extractPlaceholders(single_loop_content)
@@ -416,7 +452,7 @@ convertTemplate <- function(tables_descriptions,
             # parse the columns value separator. this is a special tag which defines the separator
             # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
             if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
-              replace = if (row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
+              replace = if (loop_row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
               single_loop_content <- replace(sub_placeholder, replace, single_loop_content)
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
@@ -427,15 +463,17 @@ convertTemplate <- function(tables_descriptions,
           }
           # set indentation, but not for the first column (first column gets its indentation from
           # the line with the placeholder itself
-          indent <- ifelse(row == 1, "", indentation)
-          loop_content <- paste0(loop_content, indent, single_loop_content)
+          indent <- ifelse(loop_row == 1, "", indentation)
+          if (nchar(trimws(single_loop_content))) {
+            loop_content <- paste0(loop_content, indent, single_loop_content)
+          }
         }
 
       } else if (startsWith(placeholder, "<%LOOP_DEF_")) {
-        for (row in seq_len(nrow(script_rights_definition))) {
+        for (loop_row in seq_len(nrow(script_rights_definition))) {
           sub_content <- loop_template_content
           sub_content_placeholders <- extractPlaceholders(sub_content)
-          rights_row <- script_rights_definition[row]
+          rights_row <- script_rights_definition[loop_row]
           for (sub_placeholder in sub_content_placeholders) {
             sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
             if (sub_placeholder_name %in% names(rights_row)) {
@@ -453,6 +491,7 @@ convertTemplate <- function(tables_descriptions,
                                          table_name,
                                          column_prefix,
                                          column_name,
+                                         loop_row,
                                          indentation,
                                          recursion = recursion + 1)
           loop_content <- paste0(loop_content, sub_content)
@@ -484,11 +523,11 @@ convertTemplate <- function(tables_descriptions,
       if (condition_arguments$source %in% "RIGHTS_DEFINITION") {
         condition_compare_value <- rights_first_row[[condition_arguments$field]]
       } else if (condition_arguments$source %in% "TABLE_DESCRIPTION") {
-        # take the first row of the table description which exists for each table description
-        condition_compare_value <- tables_descriptions[[table_name]][1][[condition_arguments$field]]
+        condition_compare_value <- tables_descriptions[[table_name]][loop_row][[condition_arguments$field]]
       } else {
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
+      #if (startsWith(placeholder, "<%IF NOT TABLE_DESCRIPTION:COLUMN_DESCRIPTION \"^meta/\"")) browser()
       if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
         # quotes at the beginning of the result indicate that not a subtemplate name is given but
         # directly the content
@@ -507,6 +546,7 @@ convertTemplate <- function(tables_descriptions,
                                              table_name,
                                              column_prefix,
                                              column_name,
+                                             loop_row,
                                              indentation,
                                              recursion = recursion + 1)
 
