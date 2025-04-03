@@ -708,7 +708,7 @@ createFrontendTables <- function() {
   }
 
   pids_per_ward <- etlutils::dbGetReadOnlyQuery(
-    query = paste0("SELECT * FROM v_pids_per_ward_last\n"),
+    query = paste0("SELECT * FROM v_pids_per_ward_last_import\n"),
     lock_id = "load last imported datasets from pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
