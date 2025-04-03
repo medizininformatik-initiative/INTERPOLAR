@@ -255,7 +255,7 @@ fhirGetResourcesByIDs <- function(
       )
 
       # get bundle
-      bnd_ <- executeFHIRSearchVariation(request = url_, verbose = verbose)
+      bnd_ <- executeFHIRSearchVariation(request = url_, verbose = VERBOSE)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
         print (bnd_)
       }

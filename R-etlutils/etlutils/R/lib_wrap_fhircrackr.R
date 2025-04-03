@@ -39,7 +39,7 @@ executeFHIRSearchVariation <- function(
   request                = fhircrackr::fhir_current_request(),
   body                   = NULL,
   max_bundles            = MAX_ENCOUNTER_BUNDLES,
-  verbose                = 1,
+  verbose                = VERBOSE,
   max_attempts           = 5,
   log_errors             = NULL,
   save_to_disc           = NULL,
