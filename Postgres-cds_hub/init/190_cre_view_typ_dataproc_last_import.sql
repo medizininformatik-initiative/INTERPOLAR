@@ -13,18 +13,18 @@
 -- TEMPLATE:  template_cre_view4.sql
 -- OWNER_USER:  db2dataprocessor_user
 -- OWNER_SCHEMA:  db2dataprocessor_out
--- TAGS:  
+-- TAGS:
 -- TABLE_PREFIX:  v_
 -- TABLE_POSTFIX:  _last_import
 -- RIGHTS:  SELECT
 -- GRANT_TARGET_USER:  db2dataprocessor_user
--- COPY_FUNC_SCRIPTNAME:  
--- COPY_FUNC_TEMPLATE:  
--- COPY_FUNC_NAME:  
+-- COPY_FUNC_SCRIPTNAME:
+-- COPY_FUNC_TEMPLATE:
+-- COPY_FUNC_NAME:
 -- SCHEMA_2:  db_log
--- TABLE_POSTFIX_2:  
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- TABLE_POSTFIX_2:
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
 
 --Create SQL View for schema db2dataprocessor_out
@@ -139,7 +139,7 @@ GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 GRANT SELECT ON TABLE db2dataprocessor_out.v_location_last_import TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
-
+GRANT SELECT ON TABLE db2dataprocessor_out.v_pids_per_ward_last_import TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 
