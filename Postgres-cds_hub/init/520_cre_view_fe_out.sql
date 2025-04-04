@@ -3,14 +3,14 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-03 10:11:30
--- Rights definition file size        : 15721 Byte
+-- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2025-04-03 10:13:49
+-- Create time: 2025-04-04 08:42:43
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  520_cre_view_fe_out.sql
--- TEMPLATE:  template_cre_view3.sql
+-- TEMPLATE:  template_cre_view_last_import.sql
 -- OWNER_USER:  db2frontend_user
 -- OWNER_SCHEMA:  db2frontend_out
 -- TAGS:  
@@ -67,31 +67,31 @@ WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI'
 
 --SQL Role for Views in Schema db2frontend_out
 GRANT SELECT ON TABLE db2frontend_out.v_patient TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_patient TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_patient TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_fall TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_fall TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_fall TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_medikationsanalyse TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_medikationsanalyse TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_medikationsanalyse TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_mrpdokumentation_validierung TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_retrolektive_mrpbewertung TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_risikofaktor TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_risikofaktor TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_risikofaktor TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db2frontend_user;
-GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db2frontend_user;
+GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
 

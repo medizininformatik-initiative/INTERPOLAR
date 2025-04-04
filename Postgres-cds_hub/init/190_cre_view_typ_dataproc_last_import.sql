@@ -3,14 +3,14 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-03 09:25:20
--- Rights definition file size        : 15719 Byte
+-- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-04-03 09:34:34
+-- Create time: 2025-04-04 08:42:20
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  190_cre_view_typ_dataproc_last_import.sql
--- TEMPLATE:  template_cre_view4.sql
+-- TEMPLATE:  template_cre_view_last_import.sql
 -- OWNER_USER:  db2dataprocessor_user
 -- OWNER_SCHEMA:  db2dataprocessor_out
 -- TAGS:
@@ -27,7 +27,7 @@
 -- TABLE_POSTFIX_3:
 -- ########################################################################################################
 
---Create SQL View for schema db2dataprocessor_out
+--Create View for frontend tables for schema db2dataprocessor_out
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_encounter_last_import AS (
 SELECT * FROM db_log.encounter

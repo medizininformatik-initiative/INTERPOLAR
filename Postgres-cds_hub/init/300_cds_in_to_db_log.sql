@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-02 15:42:59
--- Rights definition file size        : 15721 Byte
+-- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-03 08:12:38
+-- Create time: 2025-04-04 08:41:20
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -341,8 +341,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='encounter_raw-37';    err_schema:='cds2db_in';    err_table:='encounter_raw';
+
+                            err_section:='encounter_raw-37';    err_schema:='cds2db_in';    err_table:='encounter_raw';
                                                         UPDATE db_log.encounter_raw target_record SET enc_meta_versionid = current_record.enc_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(enc_meta_versionid) != db.to_char_immutable(current_record.enc_meta_versionid);
                             UPDATE db_log.encounter_raw target_record SET enc_meta_lastupdated = current_record.enc_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(enc_meta_lastupdated) != db.to_char_immutable(current_record.enc_meta_lastupdated);
                             UPDATE db_log.encounter_raw target_record SET enc_meta_profile = current_record.enc_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(enc_meta_profile) != db.to_char_immutable(current_record.enc_meta_profile);
@@ -524,8 +524,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='patient_raw-37';    err_schema:='cds2db_in';    err_table:='patient_raw';
+
+                            err_section:='patient_raw-37';    err_schema:='cds2db_in';    err_table:='patient_raw';
                                                         UPDATE db_log.patient_raw target_record SET pat_meta_versionid = current_record.pat_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(pat_meta_versionid) != db.to_char_immutable(current_record.pat_meta_versionid);
                             UPDATE db_log.patient_raw target_record SET pat_meta_lastupdated = current_record.pat_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(pat_meta_lastupdated) != db.to_char_immutable(current_record.pat_meta_lastupdated);
                             UPDATE db_log.patient_raw target_record SET pat_meta_profile = current_record.pat_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(pat_meta_profile) != db.to_char_immutable(current_record.pat_meta_profile);
@@ -913,8 +913,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='condition_raw-37';    err_schema:='cds2db_in';    err_table:='condition_raw';
+
+                            err_section:='condition_raw-37';    err_schema:='cds2db_in';    err_table:='condition_raw';
                                                         UPDATE db_log.condition_raw target_record SET con_meta_versionid = current_record.con_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(con_meta_versionid) != db.to_char_immutable(current_record.con_meta_versionid);
                             UPDATE db_log.condition_raw target_record SET con_meta_lastupdated = current_record.con_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(con_meta_lastupdated) != db.to_char_immutable(current_record.con_meta_lastupdated);
                             UPDATE db_log.condition_raw target_record SET con_meta_profile = current_record.con_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(con_meta_profile) != db.to_char_immutable(current_record.con_meta_profile);
@@ -1178,8 +1178,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='medication_raw-37';    err_schema:='cds2db_in';    err_table:='medication_raw';
+
+                            err_section:='medication_raw-37';    err_schema:='cds2db_in';    err_table:='medication_raw';
                                                         UPDATE db_log.medication_raw target_record SET med_meta_versionid = current_record.med_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(med_meta_versionid) != db.to_char_immutable(current_record.med_meta_versionid);
                             UPDATE db_log.medication_raw target_record SET med_meta_lastupdated = current_record.med_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(med_meta_lastupdated) != db.to_char_immutable(current_record.med_meta_lastupdated);
                             UPDATE db_log.medication_raw target_record SET med_meta_profile = current_record.med_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(med_meta_profile) != db.to_char_immutable(current_record.med_meta_profile);
@@ -1797,8 +1797,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='medicationrequest_raw-37';    err_schema:='cds2db_in';    err_table:='medicationrequest_raw';
+
+                            err_section:='medicationrequest_raw-37';    err_schema:='cds2db_in';    err_table:='medicationrequest_raw';
                                                         UPDATE db_log.medicationrequest_raw target_record SET medreq_meta_versionid = current_record.medreq_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medreq_meta_versionid) != db.to_char_immutable(current_record.medreq_meta_versionid);
                             UPDATE db_log.medicationrequest_raw target_record SET medreq_meta_lastupdated = current_record.medreq_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medreq_meta_lastupdated) != db.to_char_immutable(current_record.medreq_meta_lastupdated);
                             UPDATE db_log.medicationrequest_raw target_record SET medreq_meta_profile = current_record.medreq_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medreq_meta_profile) != db.to_char_immutable(current_record.medreq_meta_profile);
@@ -2174,8 +2174,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='medicationadministration_raw-37';    err_schema:='cds2db_in';    err_table:='medicationadministration_raw';
+
+                            err_section:='medicationadministration_raw-37';    err_schema:='cds2db_in';    err_table:='medicationadministration_raw';
                                                         UPDATE db_log.medicationadministration_raw target_record SET medadm_meta_versionid = current_record.medadm_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medadm_meta_versionid) != db.to_char_immutable(current_record.medadm_meta_versionid);
                             UPDATE db_log.medicationadministration_raw target_record SET medadm_meta_lastupdated = current_record.medadm_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medadm_meta_lastupdated) != db.to_char_immutable(current_record.medadm_meta_lastupdated);
                             UPDATE db_log.medicationadministration_raw target_record SET medadm_meta_profile = current_record.medadm_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medadm_meta_profile) != db.to_char_immutable(current_record.medadm_meta_profile);
@@ -2761,8 +2761,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='medicationstatement_raw-37';    err_schema:='cds2db_in';    err_table:='medicationstatement_raw';
+
+                            err_section:='medicationstatement_raw-37';    err_schema:='cds2db_in';    err_table:='medicationstatement_raw';
                                                         UPDATE db_log.medicationstatement_raw target_record SET medstat_meta_versionid = current_record.medstat_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medstat_meta_versionid) != db.to_char_immutable(current_record.medstat_meta_versionid);
                             UPDATE db_log.medicationstatement_raw target_record SET medstat_meta_lastupdated = current_record.medstat_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medstat_meta_lastupdated) != db.to_char_immutable(current_record.medstat_meta_lastupdated);
                             UPDATE db_log.medicationstatement_raw target_record SET medstat_meta_profile = current_record.medstat_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medstat_meta_profile) != db.to_char_immutable(current_record.medstat_meta_profile);
@@ -3186,8 +3186,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='observation_raw-37';    err_schema:='cds2db_in';    err_table:='observation_raw';
+
+                            err_section:='observation_raw-37';    err_schema:='cds2db_in';    err_table:='observation_raw';
                                                         UPDATE db_log.observation_raw target_record SET obs_meta_versionid = current_record.obs_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(obs_meta_versionid) != db.to_char_immutable(current_record.obs_meta_versionid);
                             UPDATE db_log.observation_raw target_record SET obs_meta_lastupdated = current_record.obs_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(obs_meta_lastupdated) != db.to_char_immutable(current_record.obs_meta_lastupdated);
                             UPDATE db_log.observation_raw target_record SET obs_meta_profile = current_record.obs_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(obs_meta_profile) != db.to_char_immutable(current_record.obs_meta_profile);
@@ -3425,8 +3425,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='diagnosticreport_raw-37';    err_schema:='cds2db_in';    err_table:='diagnosticreport_raw';
+
+                            err_section:='diagnosticreport_raw-37';    err_schema:='cds2db_in';    err_table:='diagnosticreport_raw';
                                                         UPDATE db_log.diagnosticreport_raw target_record SET diagrep_meta_versionid = current_record.diagrep_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(diagrep_meta_versionid) != db.to_char_immutable(current_record.diagrep_meta_versionid);
                             UPDATE db_log.diagnosticreport_raw target_record SET diagrep_meta_lastupdated = current_record.diagrep_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(diagrep_meta_lastupdated) != db.to_char_immutable(current_record.diagrep_meta_lastupdated);
                             UPDATE db_log.diagnosticreport_raw target_record SET diagrep_meta_profile = current_record.diagrep_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(diagrep_meta_profile) != db.to_char_immutable(current_record.diagrep_meta_profile);
@@ -3700,8 +3700,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='servicerequest_raw-37';    err_schema:='cds2db_in';    err_table:='servicerequest_raw';
+
+                            err_section:='servicerequest_raw-37';    err_schema:='cds2db_in';    err_table:='servicerequest_raw';
                                                         UPDATE db_log.servicerequest_raw target_record SET servreq_meta_versionid = current_record.servreq_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(servreq_meta_versionid) != db.to_char_immutable(current_record.servreq_meta_versionid);
                             UPDATE db_log.servicerequest_raw target_record SET servreq_meta_lastupdated = current_record.servreq_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(servreq_meta_lastupdated) != db.to_char_immutable(current_record.servreq_meta_lastupdated);
                             UPDATE db_log.servicerequest_raw target_record SET servreq_meta_profile = current_record.servreq_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(servreq_meta_profile) != db.to_char_immutable(current_record.servreq_meta_profile);
@@ -3995,8 +3995,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='procedure_raw-37';    err_schema:='cds2db_in';    err_table:='procedure_raw';
+
+                            err_section:='procedure_raw-37';    err_schema:='cds2db_in';    err_table:='procedure_raw';
                                                         UPDATE db_log.procedure_raw target_record SET proc_meta_versionid = current_record.proc_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(proc_meta_versionid) != db.to_char_immutable(current_record.proc_meta_versionid);
                             UPDATE db_log.procedure_raw target_record SET proc_meta_lastupdated = current_record.proc_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(proc_meta_lastupdated) != db.to_char_immutable(current_record.proc_meta_lastupdated);
                             UPDATE db_log.procedure_raw target_record SET proc_meta_profile = current_record.proc_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(proc_meta_profile) != db.to_char_immutable(current_record.proc_meta_profile);
@@ -4210,8 +4210,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='consent_raw-37';    err_schema:='cds2db_in';    err_table:='consent_raw';
+
+                            err_section:='consent_raw-37';    err_schema:='cds2db_in';    err_table:='consent_raw';
                                                         UPDATE db_log.consent_raw target_record SET cons_meta_versionid = current_record.cons_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(cons_meta_versionid) != db.to_char_immutable(current_record.cons_meta_versionid);
                             UPDATE db_log.consent_raw target_record SET cons_meta_lastupdated = current_record.cons_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(cons_meta_lastupdated) != db.to_char_immutable(current_record.cons_meta_lastupdated);
                             UPDATE db_log.consent_raw target_record SET cons_meta_profile = current_record.cons_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(cons_meta_profile) != db.to_char_immutable(current_record.cons_meta_profile);
@@ -4387,8 +4387,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='location_raw-37';    err_schema:='cds2db_in';    err_table:='location_raw';
+
+                            err_section:='location_raw-37';    err_schema:='cds2db_in';    err_table:='location_raw';
                                                         UPDATE db_log.location_raw target_record SET loc_meta_versionid = current_record.loc_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(loc_meta_versionid) != db.to_char_immutable(current_record.loc_meta_versionid);
                             UPDATE db_log.location_raw target_record SET loc_meta_lastupdated = current_record.loc_meta_lastupdated WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(loc_meta_lastupdated) != db.to_char_immutable(current_record.loc_meta_lastupdated);
                             UPDATE db_log.location_raw target_record SET loc_meta_profile = current_record.loc_meta_profile WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(loc_meta_profile) != db.to_char_immutable(current_record.loc_meta_profile);
@@ -4534,8 +4534,8 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
-			    
-			    err_section:='pids_per_ward_raw-37';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
+
+                            err_section:='pids_per_ward_raw-37';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
                             
 
                             -- Delete updatet datasets
