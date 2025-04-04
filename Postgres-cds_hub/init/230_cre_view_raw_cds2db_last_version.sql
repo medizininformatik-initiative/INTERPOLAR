@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file last update : 2025-04-04 13:40:55
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-04-04 08:42:20
+-- Create time: 2025-04-04 14:23:48
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  230_cre_view_raw_cds2db_last_version.sql
 -- TEMPLATE:  template_cre_view_last_version.sql
@@ -30,7 +30,7 @@
 --Create SQL View for latest Version of the FHIR-Data for schema cds2db_out
 -------- VIEW cds2db_out.v_encounter_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_encounter_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.encounter_raw q
   , (SELECT MAX(COALESCE(i.enc_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.enc_id AS ID
       FROM db_log.encounter_raw i GROUP BY i.enc_id) w
@@ -39,7 +39,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_encounter_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_patient_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_patient_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.patient_raw q
   , (SELECT MAX(COALESCE(i.pat_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.pat_id AS ID
       FROM db_log.patient_raw i GROUP BY i.pat_id) w
@@ -48,7 +48,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_patient_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_condition_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_condition_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.condition_raw q
   , (SELECT MAX(COALESCE(i.con_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.con_id AS ID
       FROM db_log.condition_raw i GROUP BY i.con_id) w
@@ -57,7 +57,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_condition_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_medication_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_medication_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.medication_raw q
   , (SELECT MAX(COALESCE(i.med_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.med_id AS ID
       FROM db_log.medication_raw i GROUP BY i.med_id) w
@@ -66,7 +66,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medication_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_medicationrequest_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_medicationrequest_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.medicationrequest_raw q
   , (SELECT MAX(COALESCE(i.medreq_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.medreq_id AS ID
       FROM db_log.medicationrequest_raw i GROUP BY i.medreq_id) w
@@ -75,7 +75,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medicationrequest_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_medicationadministration_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_medicationadministration_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.medicationadministration_raw q
   , (SELECT MAX(COALESCE(i.medadm_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.medadm_id AS ID
       FROM db_log.medicationadministration_raw i GROUP BY i.medadm_id) w
@@ -84,7 +84,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medicationadministration_raw_last_version AS
 
 -------- VIEW cds2db_out.v_medicationstatement_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_medicationstatement_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.medicationstatement_raw q
   , (SELECT MAX(COALESCE(i.medstat_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.medstat_id AS ID
       FROM db_log.medicationstatement_raw i GROUP BY i.medstat_id) w
@@ -93,7 +93,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medicationstatement_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_observation_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_observation_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.observation_raw q
   , (SELECT MAX(COALESCE(i.obs_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.obs_id AS ID
       FROM db_log.observation_raw i GROUP BY i.obs_id) w
@@ -102,7 +102,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_observation_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_diagnosticreport_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_diagnosticreport_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.diagnosticreport_raw q
   , (SELECT MAX(COALESCE(i.diagrep_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.diagrep_id AS ID
       FROM db_log.diagnosticreport_raw i GROUP BY i.diagrep_id) w
@@ -111,7 +111,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_diagnosticreport_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_servicerequest_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_servicerequest_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.servicerequest_raw q
   , (SELECT MAX(COALESCE(i.servreq_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.servreq_id AS ID
       FROM db_log.servicerequest_raw i GROUP BY i.servreq_id) w
@@ -120,7 +120,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_servicerequest_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_procedure_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_procedure_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.procedure_raw q
   , (SELECT MAX(COALESCE(i.proc_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.proc_id AS ID
       FROM db_log.procedure_raw i GROUP BY i.proc_id) w
@@ -129,7 +129,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_procedure_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_consent_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_consent_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.consent_raw q
   , (SELECT MAX(COALESCE(i.cons_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.cons_id AS ID
       FROM db_log.consent_raw i GROUP BY i.cons_id) w
@@ -138,7 +138,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_consent_raw_last_version AS (
 
 -------- VIEW cds2db_out.v_location_raw_last_version ------------ raw
 CREATE OR REPLACE VIEW cds2db_out.v_location_raw_last_version AS (
-  SELECT * 
+  SELECT *
   FROM db_log.location_raw q
   , (SELECT MAX(COALESCE(i.loc_meta_lastupdated, TO_CHAR(i.last_check_datetime,'YYYY-MM-DD HH24:MI:SS'))) AS LAST_VERSION_DATE, i.loc_id AS ID
       FROM db_log.location_raw i GROUP BY i.loc_id) w
