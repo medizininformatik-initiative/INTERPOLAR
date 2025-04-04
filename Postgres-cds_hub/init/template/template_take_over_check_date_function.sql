@@ -24,6 +24,7 @@ DECLARE
     err_table VARCHAR;
     err_pid VARCHAR;
     erg VARCHAR;
+    copy_fhir_metadata_from_raw_to_typed VARCHAR;
 BEGIN
     -- Take over last check datetime Functionname: <%COPY_FUNC_NAME%> the last_pro_nr - From: <%SCHEMA_2%> (raw) -> To: <%OWNER_SCHEMA%>
    
@@ -50,13 +51,21 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''vor max_lpn'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-<%LOOP_TABS_SUB_take_over_check_date_function1%>
+<%LOOP_TABS_SUB_take_over_check_date_function_count%>
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
     IF data_count_pro_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+        -- Copy FHIR metadata from raw to typed
+        err_section:='MAIN-12';    err_schema:='db_log';    err_table:='copy_fhir_metadata_from_raw_to_typed';
+        SELECT parameter_value INTO copy_fhir_metadata_from_raw_to_typed FROM db_config.db_parameter WHERE parameter_name='copy_fhir_metadata_from_raw_to_typed';
+        IF copy_fhir_metadata_from_raw_to_typed like 'Y%' THEN
+            <%LOOP_TABS_SUB_take_over_check_date_function_update_fhir_data%>
+        END IF;
+
+        -- Main takeover
         err_section:='MAIN-15';    err_schema:='db_config';    err_table:='db_parameter';
 	-- Get value for documentation of each individual data record
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';
@@ -95,11 +104,11 @@ BEGIN
         AS (
             SELECT DISTINCT LPN FROM (
                 SELECT -1 AS LPN
-<%LOOP_TABS_SUB_take_over_check_date_function2%>
+<%LOOP_TABS_SUB_take_over_check_date_function_lpn_collection%>
             )
         );
 
-<%LOOP_TABS_SUB_take_over_check_date_function3%>
+<%LOOP_TABS_SUB_take_over_check_date_function_update_data%>
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Nach Einzelnen Tabellen'' );'

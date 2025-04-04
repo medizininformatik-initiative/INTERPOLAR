@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-17 23:22:37
--- Rights definition file size        : 15699 Byte
+-- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-18 13:56:10
+-- Create time: 2025-04-04 10:36:17
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -53,6 +53,7 @@ DECLARE
     err_table VARCHAR;
     err_pid VARCHAR;
     erg VARCHAR;
+    copy_fhir_metadata_from_raw_to_typed VARCHAR;
 BEGIN
     -- Take over last check datetime Functionname: take_over_last_check_date the last_pro_nr - From: db_log (raw) -> To: db_log
    
@@ -323,6 +324,205 @@ BEGIN
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
     IF data_count_pro_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+        -- Copy FHIR metadata from raw to typed
+        err_section:='MAIN-12';    err_schema:='db_log';    err_table:='copy_fhir_metadata_from_raw_to_typed';
+        SELECT parameter_value INTO copy_fhir_metadata_from_raw_to_typed FROM db_config.db_parameter WHERE parameter_name='copy_fhir_metadata_from_raw_to_typed';
+        IF copy_fhir_metadata_from_raw_to_typed like 'Y%' THEN
+                        ---- Start check db_log.encounter ---- Update FHIR Metadata
+            UPDATE db_log.encounter z SET
+                                z.enc_meta_versionid = q.enc_meta_versionid,
+                z.enc_meta_lastupdated = q.enc_meta_lastupdated,
+                z.enc_meta_profile = q.enc_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.encounter_raw q
+            WHERE z.encounter_raw_id = q.encounter_raw_id AND (
+                                z.enc_meta_versionid != q.enc_meta_versionid OR
+                z.enc_meta_lastupdated != q.enc_meta_lastupdated OR
+                z.enc_meta_profile != q.enc_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.encounter ---- Update FHIR Metadata
+            ---- Start check db_log.patient ---- Update FHIR Metadata
+            UPDATE db_log.patient z SET
+                                z.pat_meta_versionid = q.pat_meta_versionid,
+                z.pat_meta_lastupdated = q.pat_meta_lastupdated,
+                z.pat_meta_profile = q.pat_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.patient_raw q
+            WHERE z.patient_raw_id = q.patient_raw_id AND (
+                                z.pat_meta_versionid != q.pat_meta_versionid OR
+                z.pat_meta_lastupdated != q.pat_meta_lastupdated OR
+                z.pat_meta_profile != q.pat_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.patient ---- Update FHIR Metadata
+            ---- Start check db_log.condition ---- Update FHIR Metadata
+            UPDATE db_log.condition z SET
+                                z.con_meta_versionid = q.con_meta_versionid,
+                z.con_meta_lastupdated = q.con_meta_lastupdated,
+                z.con_meta_profile = q.con_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.condition_raw q
+            WHERE z.condition_raw_id = q.condition_raw_id AND (
+                                z.con_meta_versionid != q.con_meta_versionid OR
+                z.con_meta_lastupdated != q.con_meta_lastupdated OR
+                z.con_meta_profile != q.con_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.condition ---- Update FHIR Metadata
+            ---- Start check db_log.medication ---- Update FHIR Metadata
+            UPDATE db_log.medication z SET
+                                z.med_meta_versionid = q.med_meta_versionid,
+                z.med_meta_lastupdated = q.med_meta_lastupdated,
+                z.med_meta_profile = q.med_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.medication_raw q
+            WHERE z.medication_raw_id = q.medication_raw_id AND (
+                                z.med_meta_versionid != q.med_meta_versionid OR
+                z.med_meta_lastupdated != q.med_meta_lastupdated OR
+                z.med_meta_profile != q.med_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.medication ---- Update FHIR Metadata
+            ---- Start check db_log.medicationrequest ---- Update FHIR Metadata
+            UPDATE db_log.medicationrequest z SET
+                                z.medreq_meta_versionid = q.medreq_meta_versionid,
+                z.medreq_meta_lastupdated = q.medreq_meta_lastupdated,
+                z.medreq_meta_profile = q.medreq_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.medicationrequest_raw q
+            WHERE z.medicationrequest_raw_id = q.medicationrequest_raw_id AND (
+                                z.medreq_meta_versionid != q.medreq_meta_versionid OR
+                z.medreq_meta_lastupdated != q.medreq_meta_lastupdated OR
+                z.medreq_meta_profile != q.medreq_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.medicationrequest ---- Update FHIR Metadata
+            ---- Start check db_log.medicationadministration ---- Update FHIR Metadata
+            UPDATE db_log.medicationadministration z SET
+                                z.medadm_meta_versionid = q.medadm_meta_versionid,
+                z.medadm_meta_lastupdated = q.medadm_meta_lastupdated,
+                z.medadm_meta_profile = q.medadm_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.medicationadministration_raw q
+            WHERE z.medicationadministration_raw_id = q.medicationadministration_raw_id AND (
+                                z.medadm_meta_versionid != q.medadm_meta_versionid OR
+                z.medadm_meta_lastupdated != q.medadm_meta_lastupdated OR
+                z.medadm_meta_profile != q.medadm_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.medicationadministration ---- Update FHIR Metadata
+            ---- Start check db_log.medicationstatement ---- Update FHIR Metadata
+            UPDATE db_log.medicationstatement z SET
+                                z.medstat_meta_versionid = q.medstat_meta_versionid,
+                z.medstat_meta_lastupdated = q.medstat_meta_lastupdated,
+                z.medstat_meta_profile = q.medstat_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.medicationstatement_raw q
+            WHERE z.medicationstatement_raw_id = q.medicationstatement_raw_id AND (
+                                z.medstat_meta_versionid != q.medstat_meta_versionid OR
+                z.medstat_meta_lastupdated != q.medstat_meta_lastupdated OR
+                z.medstat_meta_profile != q.medstat_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.medicationstatement ---- Update FHIR Metadata
+            ---- Start check db_log.observation ---- Update FHIR Metadata
+            UPDATE db_log.observation z SET
+                                z.obs_meta_versionid = q.obs_meta_versionid,
+                z.obs_meta_lastupdated = q.obs_meta_lastupdated,
+                z.obs_meta_profile = q.obs_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.observation_raw q
+            WHERE z.observation_raw_id = q.observation_raw_id AND (
+                                z.obs_meta_versionid != q.obs_meta_versionid OR
+                z.obs_meta_lastupdated != q.obs_meta_lastupdated OR
+                z.obs_meta_profile != q.obs_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.observation ---- Update FHIR Metadata
+            ---- Start check db_log.diagnosticreport ---- Update FHIR Metadata
+            UPDATE db_log.diagnosticreport z SET
+                                z.diagrep_meta_versionid = q.diagrep_meta_versionid,
+                z.diagrep_meta_lastupdated = q.diagrep_meta_lastupdated,
+                z.diagrep_meta_profile = q.diagrep_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.diagnosticreport_raw q
+            WHERE z.diagnosticreport_raw_id = q.diagnosticreport_raw_id AND (
+                                z.diagrep_meta_versionid != q.diagrep_meta_versionid OR
+                z.diagrep_meta_lastupdated != q.diagrep_meta_lastupdated OR
+                z.diagrep_meta_profile != q.diagrep_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.diagnosticreport ---- Update FHIR Metadata
+            ---- Start check db_log.servicerequest ---- Update FHIR Metadata
+            UPDATE db_log.servicerequest z SET
+                                z.servreq_meta_versionid = q.servreq_meta_versionid,
+                z.servreq_meta_lastupdated = q.servreq_meta_lastupdated,
+                z.servreq_meta_profile = q.servreq_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.servicerequest_raw q
+            WHERE z.servicerequest_raw_id = q.servicerequest_raw_id AND (
+                                z.servreq_meta_versionid != q.servreq_meta_versionid OR
+                z.servreq_meta_lastupdated != q.servreq_meta_lastupdated OR
+                z.servreq_meta_profile != q.servreq_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.servicerequest ---- Update FHIR Metadata
+            ---- Start check db_log.procedure ---- Update FHIR Metadata
+            UPDATE db_log.procedure z SET
+                                z.proc_meta_versionid = q.proc_meta_versionid,
+                z.proc_meta_lastupdated = q.proc_meta_lastupdated,
+                z.proc_meta_profile = q.proc_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.procedure_raw q
+            WHERE z.procedure_raw_id = q.procedure_raw_id AND (
+                                z.proc_meta_versionid != q.proc_meta_versionid OR
+                z.proc_meta_lastupdated != q.proc_meta_lastupdated OR
+                z.proc_meta_profile != q.proc_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.procedure ---- Update FHIR Metadata
+            ---- Start check db_log.consent ---- Update FHIR Metadata
+            UPDATE db_log.consent z SET
+                                z.cons_meta_versionid = q.cons_meta_versionid,
+                z.cons_meta_lastupdated = q.cons_meta_lastupdated,
+                z.cons_meta_profile = q.cons_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.consent_raw q
+            WHERE z.consent_raw_id = q.consent_raw_id AND (
+                                z.cons_meta_versionid != q.cons_meta_versionid OR
+                z.cons_meta_lastupdated != q.cons_meta_lastupdated OR
+                z.cons_meta_profile != q.cons_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.consent ---- Update FHIR Metadata
+            ---- Start check db_log.location ---- Update FHIR Metadata
+            UPDATE db_log.location z SET
+                                z.loc_meta_versionid = q.loc_meta_versionid,
+                z.loc_meta_lastupdated = q.loc_meta_lastupdated,
+                z.loc_meta_profile = q.loc_meta_profile,
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.location_raw q
+            WHERE z.location_raw_id = q.location_raw_id AND (
+                                z.loc_meta_versionid != q.loc_meta_versionid OR
+                z.loc_meta_lastupdated != q.loc_meta_lastupdated OR
+                z.loc_meta_profile != q.loc_meta_profile OR
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.location ---- Update FHIR Metadata
+            ---- Start check db_log.pids_per_ward ---- Update FHIR Metadata
+            UPDATE db_log.pids_per_ward z SET
+                
+                z.last_check_datetime = q.last_check_datetime
+            FROM db_log.pids_per_ward_raw q
+            WHERE z.pids_per_ward_raw_id = q.pids_per_ward_raw_id AND (
+                
+                z.last_check_datetime != q.last_check_datetime
+            );
+            ---- End check db_log.pids_per_ward ---- Update FHIR Metadata
+        END IF;
+
+        -- Main takeover
         err_section:='MAIN-15';    err_schema:='db_config';    err_table:='db_parameter';
 	-- Get value for documentation of each individual data record
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';

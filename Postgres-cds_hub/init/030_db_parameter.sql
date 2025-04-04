@@ -1,7 +1,7 @@
 -- ###################### PARAMETER ############################
 -- >>>> WICHTIG Standort / Zeitabhängig <<<<
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-values ('release_version','2.9','GitHup release version');
+values ('release_version','2.10','GitHup release version');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='release_version';
 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
@@ -28,3 +28,7 @@ values ('data_import_hist_every_dataset','no','Documentation of each individual 
 insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
 values ('max_process_time_set_ready','120','Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]');
 --update db_config.db_parameter set parameter_value='?' where parameter_name='max_process_time_set_ready';
+
+insert into db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+values ('copy_fhir_metadata_from_raw_to_typed','N','Optionale Einstellung (Yes/No) ob die FHIR-Metadaten beim Kopiervorgang auch von RAW in die TYPED Tabellen übernommen werden soll.');
+--update db_config.db_parameter set parameter_value='?' where parameter_name='copy_fhir_metadata_from_raw_to_typed';
