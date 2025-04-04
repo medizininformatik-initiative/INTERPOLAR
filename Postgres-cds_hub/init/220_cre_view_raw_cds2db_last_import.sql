@@ -3,14 +3,14 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-03 09:25:20
--- Rights definition file size        : 15719 Byte
+-- Rights definition file last update : 2025-04-04 03:10:10
+-- Rights definition file size        : 15749 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-04-03 09:34:35
+-- Create time: 2025-04-04 03:11:16
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  220_cre_view_raw_cds2db_last_import.sql
--- TEMPLATE:  template_cre_view4.sql
+-- TEMPLATE:  template_cre_view_last_import.sql
 -- OWNER_USER:  cds2db_user
 -- OWNER_SCHEMA:  cds2db_out
 -- TAGS:  
@@ -27,7 +27,7 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
---Create SQL View for schema cds2db_out
+--Create View for frontend tables for schema cds2db_out
 
 CREATE OR REPLACE VIEW cds2db_out.v_encounter_raw_last_import AS (
 SELECT * FROM db_log.encounter_raw
@@ -139,7 +139,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 GRANT SELECT ON TABLE cds2db_out.v_location_raw_last_import TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
-
+GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward_raw_last_import TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 
