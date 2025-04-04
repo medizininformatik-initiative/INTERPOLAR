@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 03:10:10
--- Rights definition file size        : 15749 Byte
+-- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-04-04 03:11:16
+-- Create time: 2025-04-04 08:42:20
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  230_cre_view_typ_cds2db_last_version.sql
 -- TEMPLATE:  template_cre_view_last_version.sql
@@ -36,6 +36,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_encounter_last_version AS (
       FROM db_log.encounter i GROUP BY i.enc_id) w
   WHERE COALESCE(q.enc_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.enc_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_patient_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_patient_last_version AS (
   SELECT * 
@@ -44,6 +45,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_patient_last_version AS (
       FROM db_log.patient i GROUP BY i.pat_id) w
   WHERE COALESCE(q.pat_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.pat_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_condition_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_condition_last_version AS (
   SELECT * 
@@ -52,6 +54,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_condition_last_version AS (
       FROM db_log.condition i GROUP BY i.con_id) w
   WHERE COALESCE(q.con_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.con_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_medication_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_medication_last_version AS (
   SELECT * 
@@ -60,6 +63,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medication_last_version AS (
       FROM db_log.medication i GROUP BY i.med_id) w
   WHERE COALESCE(q.med_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.med_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_medicationrequest_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_medicationrequest_last_version AS (
   SELECT * 
@@ -68,6 +72,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medicationrequest_last_version AS (
       FROM db_log.medicationrequest i GROUP BY i.medreq_id) w
   WHERE COALESCE(q.medreq_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.medreq_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_medicationadministration_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_medicationadministration_last_version AS (
   SELECT * 
@@ -76,6 +81,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medicationadministration_last_version AS (
       FROM db_log.medicationadministration i GROUP BY i.medadm_id) w
   WHERE COALESCE(q.medadm_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.medadm_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_medicationstatement_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_medicationstatement_last_version AS (
   SELECT * 
@@ -84,6 +90,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_medicationstatement_last_version AS (
       FROM db_log.medicationstatement i GROUP BY i.medstat_id) w
   WHERE COALESCE(q.medstat_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.medstat_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_observation_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_observation_last_version AS (
   SELECT * 
@@ -92,6 +99,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_observation_last_version AS (
       FROM db_log.observation i GROUP BY i.obs_id) w
   WHERE COALESCE(q.obs_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.obs_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_diagnosticreport_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_diagnosticreport_last_version AS (
   SELECT * 
@@ -100,6 +108,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_diagnosticreport_last_version AS (
       FROM db_log.diagnosticreport i GROUP BY i.diagrep_id) w
   WHERE COALESCE(q.diagrep_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.diagrep_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_servicerequest_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_servicerequest_last_version AS (
   SELECT * 
@@ -108,6 +117,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_servicerequest_last_version AS (
       FROM db_log.servicerequest i GROUP BY i.servreq_id) w
   WHERE COALESCE(q.servreq_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.servreq_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_procedure_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_procedure_last_version AS (
   SELECT * 
@@ -116,6 +126,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_procedure_last_version AS (
       FROM db_log.procedure i GROUP BY i.proc_id) w
   WHERE COALESCE(q.proc_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.proc_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_consent_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_consent_last_version AS (
   SELECT * 
@@ -124,6 +135,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_consent_last_version AS (
       FROM db_log.consent i GROUP BY i.cons_id) w
   WHERE COALESCE(q.cons_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.cons_id = w.ID
 );
+
 -------- VIEW cds2db_out.v_location_last_version ------------typed
 CREATE OR REPLACE VIEW cds2db_out.v_location_last_version AS (
   SELECT * 
@@ -132,6 +144,7 @@ CREATE OR REPLACE VIEW cds2db_out.v_location_last_version AS (
       FROM db_log.location i GROUP BY i.loc_id) w
   WHERE COALESCE(q.loc_meta_lastupdated,q.last_check_datetime) = w.LAST_VERSION_DATE AND q.loc_id = w.ID
 );
+
 
 --SQL Role for Views in Schema cds2db_out
 GRANT SELECT ON TABLE cds2db_out.v_encounter_last_version TO cds2db_user;
