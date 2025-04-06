@@ -17,7 +17,8 @@ BEGIN
    IF NOT EXISTS (
       SELECT 1 FROM cron.job WHERE command = 'DELETE FROM cron.job_run_details WHERE status='succeeded' AND end_time < now() - interval '2 days'
    ) THEN
-      SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details WHERE status='succeeded' AND end_time < now() - interval '2 days'$$);
+      SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details 
+      WHERE status='succeeded' AND end_time < now() - interval '2 days'$$);
    END IF;
 END
 $$;
