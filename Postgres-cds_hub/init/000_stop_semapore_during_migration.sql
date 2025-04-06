@@ -4,7 +4,7 @@ BEGIN
     -- Set semapore if exit --------------------------------------------------------------------------
     IF EXISTS (
         SELECT 1
-        FROM pg_catalog.pg_columns
+        FROM information_schema.columns
         WHERE table_schema = 'db_config'
           AND table_name = 'db_process_control'
           AND column_name = 'pc_name'
@@ -12,7 +12,7 @@ BEGIN
         -- Erste Bedingung: pc_name existiert, also weiter prüfen
         IF EXISTS (
             SELECT 1
-            FROM pg_catalog.pg_columns
+            FROM information_schema.columns
             WHERE table_schema = 'db_config'
               AND table_name = 'db_process_control'
               AND column_name = 'pc_value'
