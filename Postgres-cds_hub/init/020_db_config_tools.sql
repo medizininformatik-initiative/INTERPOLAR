@@ -11,17 +11,15 @@ GRANT SELECT ON db_config.v_cron_jobs TO db_user;
 
 -- Cronjpob der immer um Mitternacht alle erfolgreichen cronjob-logs löscht, die älter als 2 Tage sind
 ------------------------------------------------------------------------------------------------
-DO
-$$
-BEGIN
-   IF NOT EXISTS (
-      SELECT 1 FROM cron.job WHERE command = 'DELETE FROM cron.job_run_details WHERE status='succeeded' AND end_time < now() - interval '2 days'
-   ) THEN
-      SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details 
-      WHERE status='succeeded' AND end_time < now() - interval '2 days'$$);
-   END IF;
-END
-$$;
+-- Cron-Job nur anlegen, wenn er noch nicht existiert
+WITH check_job AS (
+    SELECT 1 FROM cron.job
+    WHERE command = $$DELETE FROM db_config.db_process_control WHERE pc_name = 'semaphor_cron_job_data_transfer';$$
+    LIMIT 1
+)
+INSERT INTO cron.job (schedule, command)
+SELECT '0 0 * * *', $$DELETE FROM db_config.db_process_control WHERE pc_name = 'semaphor_cron_job_data_transfer';$$
+WHERE NOT EXISTS (SELECT 1 FROM check_job);
 
 -- Table "db_parameter" in schema "db_config" - Parameter für Ablauf in der Datenbank
 ------------------------------------------------------------------------------------------------
