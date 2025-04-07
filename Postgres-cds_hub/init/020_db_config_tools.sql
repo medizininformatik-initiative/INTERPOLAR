@@ -24,7 +24,7 @@ BEGIN
         ) THEN
 
       SELECT res FROM public.pg_background_result(public.pg_background_launch(
-         'SELECT cron.schedule(''0 0 * * *'', $$DELETE FROM cron.job_run_details WHERE status=''succeeded'' AND end_time < now() - interval ''2 days''$$);'
+         'SELECT cron.schedule(''0 0 * * *'', DELETE FROM cron.job_run_details WHERE status=''succeeded'' AND end_time < now() - interval ''2 days'');'
     ) ) AS t(res TEXT) INTO erg;
    END IF;
 END
