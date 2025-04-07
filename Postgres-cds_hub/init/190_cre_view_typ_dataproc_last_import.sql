@@ -13,18 +13,18 @@
 -- TEMPLATE:  template_cre_view_last_import.sql
 -- OWNER_USER:  db2dataprocessor_user
 -- OWNER_SCHEMA:  db2dataprocessor_out
--- TAGS:  
+-- TAGS:
 -- TABLE_PREFIX:  v_
 -- TABLE_POSTFIX:  _last_import
 -- RIGHTS:  SELECT
 -- GRANT_TARGET_USER:  db2dataprocessor_user
--- COPY_FUNC_SCRIPTNAME:  
--- COPY_FUNC_TEMPLATE:  
--- COPY_FUNC_NAME:  
+-- COPY_FUNC_SCRIPTNAME:
+-- COPY_FUNC_TEMPLATE:
+-- COPY_FUNC_NAME:
 -- SCHEMA_2:  db_log
--- TABLE_POSTFIX_2:  
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- TABLE_POSTFIX_2:
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
 
 --Create View for frontend tables for schema db2dataprocessor_out
