@@ -9,7 +9,7 @@ DECLARE
    project_participants VARCHAR := 'IMISE Leipzig'  -- project participants to distinguish between different instances
    pause_after_process_execution VARCHAR := '10'    -- Pause after copy process execution in second [5-30 sec] - ready to connect
    data_import_hist_every_dataset VARCHAR := 'no'   -- Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no] - large resource requirements only for debugging
-   max_process_time_set_ready VALUES := '120'       -- Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]
+   max_process_time_set_ready VARCHAR := '120'       -- Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]
    copy_fhir_metadata_from_raw_to_typed VARCHAR := 'N' -- Optionale Einstellung (Yes/No) ob die FHIR-Metadaten beim Kopiervorgang auch von RAW in die TYPED Tabellen übernommen werden soll.
 ---------------------------------------------------------------------------------------
 BEGIN
