@@ -14,7 +14,7 @@ DECLARE
 ---------------------------------------------------------------------------------------
 BEGIN
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'release_version'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('release_version',release_version,'GitHup release version');
@@ -23,7 +23,7 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'release_version_date'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version_date'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('release_version_date',release_version_date,'GitHup release version date');
@@ -32,7 +32,7 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'project_participants'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'project_participants'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('project_participants',release_version_date,'project participants to distinguish between different instances');
@@ -41,14 +41,14 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'database_initialization_time'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'database_initialization_time'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('database_initialization_time',to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'),'Timestamp of database initialization');
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'last_migration_date'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'last_migration_date'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('last_migration_date',to_char(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'),'last_migration_date');
@@ -57,7 +57,7 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'pause_after_process_execution'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'pause_after_process_execution'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('pause_after_process_execution',pause_after_process_execution,'Pause after copy process execution in second [5-30 sec] - ready to connect');
@@ -66,7 +66,7 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'data_import_hist_every_dataset'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'data_import_hist_every_dataset'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('data_import_hist_every_dataset',data_import_hist_every_dataset,'Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no] - large resource requirements only for debugging');
@@ -75,7 +75,7 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'max_process_time_set_ready'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'max_process_time_set_ready'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('max_process_time_set_ready',max_process_time_set_ready,'Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]');
@@ -84,7 +84,7 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE pc_name = 'copy_fhir_metadata_from_raw_to_typed'
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'copy_fhir_metadata_from_raw_to_typed'
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('copy_fhir_metadata_from_raw_to_typed',copy_fhir_metadata_from_raw_to_typed,'Optionale Einstellung (Yes/No) ob die FHIR-Metadaten beim Kopiervorgang auch von RAW in die TYPED Tabellen übernommen werden soll.');
