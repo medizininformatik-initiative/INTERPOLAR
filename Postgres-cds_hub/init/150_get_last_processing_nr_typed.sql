@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file last update : 2025-04-04 14:40:51
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-04 08:41:48
+-- Create time: 2025-04-07 11:53:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -73,7 +73,7 @@ EXCEPTION
         err_variables => CAST('Tab: all db_log Tables e:'||erg AS VARCHAR),  -- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(0 AS INT)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
-    
+
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;

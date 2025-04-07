@@ -27,13 +27,13 @@ DECLARE
     copy_fhir_metadata_from_raw_to_typed VARCHAR;
 BEGIN
     -- Take over last check datetime Functionname: <%COPY_FUNC_NAME%> the last_pro_nr - From: <%SCHEMA_2%> (raw) -> To: <%OWNER_SCHEMA%>
-   
+
     -- set start time
     err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
 	SELECT res FROM public.pg_background_result(public.pg_background_launch(
     'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
     ))  AS t(res TEXT) INTO timestamp_start;
-    
+
     SELECT res FROM public.pg_background_result(public.pg_background_launch(
     'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' <%COPY_FUNC_NAME%>'', last_change_timestamp=CURRENT_TIMESTAMP
     WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
@@ -100,7 +100,7 @@ BEGIN
 
         ---------------------------------------------------------------------------------------------
         CREATE TEMP TABLE lpn_collection
-        ON COMMIT DROP 
+        ON COMMIT DROP
         AS (
             SELECT DISTINCT LPN FROM (
                 SELECT -1 AS LPN
@@ -113,16 +113,16 @@ BEGIN
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Nach Einzelnen Tabellen'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
-  
+
         -- Collect and save counts for the function
         err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
         SELECT res FROM pg_background_result(pg_background_launch(
         'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
         ))  AS t(res TEXT) INTO timestamp_end;
-    
+
         err_section:='BOTTOM-05';    err_schema:='/';    err_table:='/';
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
-    
+
         err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( new_last_pro_nr,'data_count_pro_all', '<%OWNER_SCHEMA%>', '<%COPY_FUNC_NAME%>', last_pro_datetime, '<%COPY_FUNC_NAME%>', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
