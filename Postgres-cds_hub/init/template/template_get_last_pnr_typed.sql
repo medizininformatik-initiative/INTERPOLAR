@@ -30,7 +30,7 @@ EXCEPTION
         err_variables => CAST('Tab: all db_log Tables e:'||erg AS VARCHAR),  -- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(0 AS INT)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
-    
+
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;

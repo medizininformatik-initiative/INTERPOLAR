@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 03:35:29
+-- Rights definition file last update : 2025-04-04 14:40:51
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-04 10:36:17
+-- Create time: 2025-04-07 11:53:29
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -56,13 +56,13 @@ DECLARE
     copy_fhir_metadata_from_raw_to_typed VARCHAR;
 BEGIN
     -- Take over last check datetime Functionname: take_over_last_check_date the last_pro_nr - From: db_log (raw) -> To: db_log
-   
+
     -- set start time
     err_section:='HEAD-01';    err_schema:='db_config';    err_table:='db_process_control';
 	SELECT res FROM public.pg_background_result(public.pg_background_launch(
     'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
     ))  AS t(res TEXT) INTO timestamp_start;
-    
+
     SELECT res FROM public.pg_background_result(public.pg_background_launch(
     'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' take_over_last_check_date'', last_change_timestamp=CURRENT_TIMESTAMP
     WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
@@ -342,6 +342,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.encounter ---- Update FHIR Metadata
+
             ---- Start check db_log.patient ---- Update FHIR Metadata
             UPDATE db_log.patient z SET
                                 z.pat_meta_versionid = q.pat_meta_versionid,
@@ -356,6 +357,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.patient ---- Update FHIR Metadata
+
             ---- Start check db_log.condition ---- Update FHIR Metadata
             UPDATE db_log.condition z SET
                                 z.con_meta_versionid = q.con_meta_versionid,
@@ -370,6 +372,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.condition ---- Update FHIR Metadata
+
             ---- Start check db_log.medication ---- Update FHIR Metadata
             UPDATE db_log.medication z SET
                                 z.med_meta_versionid = q.med_meta_versionid,
@@ -384,6 +387,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.medication ---- Update FHIR Metadata
+
             ---- Start check db_log.medicationrequest ---- Update FHIR Metadata
             UPDATE db_log.medicationrequest z SET
                                 z.medreq_meta_versionid = q.medreq_meta_versionid,
@@ -398,6 +402,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.medicationrequest ---- Update FHIR Metadata
+
             ---- Start check db_log.medicationadministration ---- Update FHIR Metadata
             UPDATE db_log.medicationadministration z SET
                                 z.medadm_meta_versionid = q.medadm_meta_versionid,
@@ -412,6 +417,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.medicationadministration ---- Update FHIR Metadata
+
             ---- Start check db_log.medicationstatement ---- Update FHIR Metadata
             UPDATE db_log.medicationstatement z SET
                                 z.medstat_meta_versionid = q.medstat_meta_versionid,
@@ -426,6 +432,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.medicationstatement ---- Update FHIR Metadata
+
             ---- Start check db_log.observation ---- Update FHIR Metadata
             UPDATE db_log.observation z SET
                                 z.obs_meta_versionid = q.obs_meta_versionid,
@@ -440,6 +447,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.observation ---- Update FHIR Metadata
+
             ---- Start check db_log.diagnosticreport ---- Update FHIR Metadata
             UPDATE db_log.diagnosticreport z SET
                                 z.diagrep_meta_versionid = q.diagrep_meta_versionid,
@@ -454,6 +462,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.diagnosticreport ---- Update FHIR Metadata
+
             ---- Start check db_log.servicerequest ---- Update FHIR Metadata
             UPDATE db_log.servicerequest z SET
                                 z.servreq_meta_versionid = q.servreq_meta_versionid,
@@ -468,6 +477,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.servicerequest ---- Update FHIR Metadata
+
             ---- Start check db_log.procedure ---- Update FHIR Metadata
             UPDATE db_log.procedure z SET
                                 z.proc_meta_versionid = q.proc_meta_versionid,
@@ -482,6 +492,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.procedure ---- Update FHIR Metadata
+
             ---- Start check db_log.consent ---- Update FHIR Metadata
             UPDATE db_log.consent z SET
                                 z.cons_meta_versionid = q.cons_meta_versionid,
@@ -496,6 +507,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.consent ---- Update FHIR Metadata
+
             ---- Start check db_log.location ---- Update FHIR Metadata
             UPDATE db_log.location z SET
                                 z.loc_meta_versionid = q.loc_meta_versionid,
@@ -510,6 +522,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.location ---- Update FHIR Metadata
+
             ---- Start check db_log.pids_per_ward ---- Update FHIR Metadata
             UPDATE db_log.pids_per_ward z SET
                 
@@ -520,6 +533,7 @@ BEGIN
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.pids_per_ward ---- Update FHIR Metadata
+
         END IF;
 
         -- Main takeover
@@ -557,7 +571,7 @@ BEGIN
 
         ---------------------------------------------------------------------------------------------
         CREATE TEMP TABLE lpn_collection
-        ON COMMIT DROP 
+        ON COMMIT DROP
         AS (
             SELECT DISTINCT LPN FROM (
                 SELECT -1 AS LPN
@@ -578,7 +592,7 @@ BEGIN
             )
         );
 
-            ----------------- Update for encounter_raw ----------------------------------    
+            ----------------- Update for encounter_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='encounter';
 	    UPDATE db_log.encounter SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -588,7 +602,7 @@ BEGIN
             UPDATE db_log.encounter_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for patient_raw ----------------------------------    
+            ----------------- Update for patient_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='patient';
 	    UPDATE db_log.patient SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -598,7 +612,7 @@ BEGIN
             UPDATE db_log.patient_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for condition_raw ----------------------------------    
+            ----------------- Update for condition_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='condition';
 	    UPDATE db_log.condition SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -608,7 +622,7 @@ BEGIN
             UPDATE db_log.condition_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for medication_raw ----------------------------------    
+            ----------------- Update for medication_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medication';
 	    UPDATE db_log.medication SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -618,7 +632,7 @@ BEGIN
             UPDATE db_log.medication_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for medicationrequest_raw ----------------------------------    
+            ----------------- Update for medicationrequest_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationrequest';
 	    UPDATE db_log.medicationrequest SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -628,7 +642,7 @@ BEGIN
             UPDATE db_log.medicationrequest_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for medicationadministration_raw ----------------------------------    
+            ----------------- Update for medicationadministration_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationadministration';
 	    UPDATE db_log.medicationadministration SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -638,7 +652,7 @@ BEGIN
             UPDATE db_log.medicationadministration_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for medicationstatement_raw ----------------------------------    
+            ----------------- Update for medicationstatement_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationstatement';
 	    UPDATE db_log.medicationstatement SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -648,7 +662,7 @@ BEGIN
             UPDATE db_log.medicationstatement_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for observation_raw ----------------------------------    
+            ----------------- Update for observation_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='observation';
 	    UPDATE db_log.observation SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -658,7 +672,7 @@ BEGIN
             UPDATE db_log.observation_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for diagnosticreport_raw ----------------------------------    
+            ----------------- Update for diagnosticreport_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='diagnosticreport';
 	    UPDATE db_log.diagnosticreport SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -668,7 +682,7 @@ BEGIN
             UPDATE db_log.diagnosticreport_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for servicerequest_raw ----------------------------------    
+            ----------------- Update for servicerequest_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='servicerequest';
 	    UPDATE db_log.servicerequest SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -678,7 +692,7 @@ BEGIN
             UPDATE db_log.servicerequest_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for procedure_raw ----------------------------------    
+            ----------------- Update for procedure_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='procedure';
 	    UPDATE db_log.procedure SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -688,7 +702,7 @@ BEGIN
             UPDATE db_log.procedure_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for consent_raw ----------------------------------    
+            ----------------- Update for consent_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='consent';
 	    UPDATE db_log.consent SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -698,7 +712,7 @@ BEGIN
             UPDATE db_log.consent_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for location_raw ----------------------------------    
+            ----------------- Update for location_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='location';
 	    UPDATE db_log.location SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -708,7 +722,7 @@ BEGIN
             UPDATE db_log.location_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
             AND last_processing_nr!=new_last_pro_nr;
-            ----------------- Update for pids_per_ward_raw ----------------------------------    
+            ----------------- Update for pids_per_ward_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='pids_per_ward';
 	    UPDATE db_log.pids_per_ward SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
             WHERE pids_per_ward_raw_id IN (SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -722,16 +736,16 @@ BEGIN
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Nach Einzelnen Tabellen'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
-  
+
         -- Collect and save counts for the function
         err_section:='BOTTOM-01';    err_schema:='/';    err_table:='/';
         SELECT res FROM pg_background_result(pg_background_launch(
         'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
         ))  AS t(res TEXT) INTO timestamp_end;
-    
+
         err_section:='BOTTOM-05';    err_schema:='/';    err_table:='/';
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
-    
+
         err_section:='BOTTOM-10';    err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( new_last_pro_nr,'data_count_pro_all', 'db_log', 'take_over_last_check_date', last_pro_datetime, 'take_over_last_check_date', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );

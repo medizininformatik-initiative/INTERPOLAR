@@ -19,7 +19,6 @@ getFhirSearchCurlTimeout <- function() {
 #' @param max_bundles An integer. How many bundles should be retrieved.
 #' @param verbose An integer. Selects the verbosity. Defaults to 1.
 #' @param max_attempts An integer. The number of attempts, if some error occurs.
-#' @param delay_between_attempts An number. The time between two attempts in seconds.
 #' @param log_errors Either NULL or a string indicating the name of a file
 #'  in which to save the http errors.
 #'  NULL means no error logging. When a file name is provided, the errors are saved in the specified file.
@@ -40,9 +39,8 @@ executeFHIRSearchVariation <- function(
   request                = fhircrackr::fhir_current_request(),
   body                   = NULL,
   max_bundles            = MAX_ENCOUNTER_BUNDLES,
-  verbose                = 1,
+  verbose                = VERBOSE,
   max_attempts           = 5,
-  delay_between_attempts = 10,
   log_errors             = NULL,
   save_to_disc           = NULL,
   delay_between_bundles  = 0
@@ -59,7 +57,6 @@ executeFHIRSearchVariation <- function(
       token                  = FHIR_TOKEN,
       max_bundles            = max_bundles,
       verbose                = verbose,
-      delay_between_attempts = delay_between_attempts,
       log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
@@ -73,7 +70,6 @@ executeFHIRSearchVariation <- function(
       password               = FHIR_SERVER_PASS,
       max_bundles            = max_bundles,
       verbose                = verbose,
-      delay_between_attempts = delay_between_attempts,
       log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
@@ -85,7 +81,6 @@ executeFHIRSearchVariation <- function(
       body                   = body,
       max_bundles            = max_bundles,
       verbose                = verbose,
-      delay_between_attempts = delay_between_attempts,
       log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles

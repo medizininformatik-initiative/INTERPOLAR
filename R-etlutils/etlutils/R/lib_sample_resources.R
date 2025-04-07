@@ -255,7 +255,7 @@ fhirGetResourcesByIDs <- function(
       )
 
       # get bundle
-      bnd_ <- executeFHIRSearchVariation(request = url_, verbose = verbose)
+      bnd_ <- executeFHIRSearchVariation(request = url_, verbose = VERBOSE)
       if (VL_90_FHIR_RESPONSE <= VERBOSE) {
         print (bnd_)
       }
@@ -357,7 +357,7 @@ fhirLogRequest <- function(verbose, resource_name, bundles) {
     bundles_requests <- bundles
   }
   if (verbose >= VL_90_FHIR_RESPONSE) {
-    cat(bundles_requests)
+    cat(bundles_requests, "\n")
   }
   log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("cds2db_total_bundles.txt"))
   log_file <- file(log_filename, open = "at")
