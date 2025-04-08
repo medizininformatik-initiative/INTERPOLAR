@@ -53,6 +53,11 @@ FHIR_TOKEN_REFRESH_PASSWORD = ""
 
 FHIR_SEARCH_CURL_TIMEOUT = 1800 # timeout for curl requests on a FHIR server in seconds
 
+# Per default FHIR search request for resources with a specific subject (e.g. patient) are
+# performed with patient="patient_id". If there are any reasons this behaviour can be changed
+# to "subject=patient_id" by setting the following parameter to TRUE.
+# FHIR_SEARCH_PIDS_BY_SUBJECT = TRUE
+
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests [ehemals MAX_LEN]
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE = 300  # reserve 300 characters for further parameters, whose length cannot estimated [ehemals RES_LEN]
 
