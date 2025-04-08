@@ -3,8 +3,14 @@ services:
   # FHIR Server for testing/simulating
   # replace it with the productive FHIR Server and/or configure this
   # FHIR Server in the services below.
+  # Handle the "deploy" section with care and configure it according to your setup and needs. 
+  #   The "deploy" section should only be commented out if necessary.
 #  blaze-DIC:
 #    image: "samply/blaze:latest"
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 16G
 #    restart: unless-stopped
 #    environment:
 #      BASE_URL: "http://localhost:8080"
@@ -112,11 +118,17 @@ services:
   # This section is no service, but for building the R-environment
   # to execute (manualy) R scripts for r-cds2db and r-db2frontend,
   # e.g. StartRetrieval.R
+  # Handle the "deploy" section with care and configure it according to your setup and needs. 
+  #   The "deploy" section should only be commented out if necessary.
   r-env:
     build:
       context: ./
       dockerfile: Dockerfile_R
     working_dir: /src
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 16G
     restart: "no"
     environment:
       TZ: Europe/Berlin
