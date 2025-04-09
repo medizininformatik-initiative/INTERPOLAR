@@ -491,7 +491,7 @@ createFrontendTables <- function() {
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
 
       pid <- unique_pid_ward$patient_id[pid_index]
-      pid_ref <- etlutils::getFHIRPatientReference(pid)
+      pid_ref <- etlutils::fhirGetPatientReference(pid)
       pid_encounters <- main_encounters[enc_patient_ref == pid_ref]
       pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
 
