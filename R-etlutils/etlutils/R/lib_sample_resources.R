@@ -701,34 +701,41 @@ fhirLoadResourcesByOwnID <- function(ids, table_description, last_updated = NA, 
   return(resource_table)
 }
 
-#' Load Resources by Patient IDs
+#' Load FHIR Resources by Patient IDs
 #'
-#' This function is designed to load resources based on patient IDs. It checks if the requested
-#' resource is "Patient" and uses a specific loading function or the general downloading and
-#' cracking function for other types of resources. It's tailored for handling resources described
-#' in a table structure, specifically for patient-related data.
+#' This function loads FHIR resources based on a vector of patient IDs. If the resource type is
+#' "Patient", a specialized loader function is used. For all other resource types, a general
+#' download and cracking function is applied. The function automatically adjusts the patient ID
+#' parameter according to the resource type and ensures the correct construction of the FHIR
+#' query. The resource type must be specified in the `resource` slot of the provided table
+#' description.
 #'
-#' @param patient_IDs A vector of patient IDs, which are the unique identifiers for the patients
-#' whose resources you wish to download and process.
-#' @param table_description An object describing the table where the resources are to be found.
-#' This object must have a specific structure, including a resource slot that contains the URL or
-#' identifier needed for downloading the resources.
-#' @param last_updated Date of the last_update parameters for the FHIR search request. Default: NA
-#' @param additional_search_parameter Optional parameter for the FHIR search request. Default: NA
+#' @param patient_IDs A character vector of patient IDs that identify which resources should be
+#' downloaded and processed.
+#' @param id_param_str A character string indicating the parameter name to be used in the FHIR
+#' request for referencing the patient ID. Must be either "patient" or "subject". Defaults to
+#' "patient".
+#' @param table_description An object describing the structure of the resource table. It must
+#' include a slot `resource` containing the type of the FHIR resource to be loaded.
+#' @param last_updated Optional date for the `lastUpdated` parameter in the FHIR search request.
+#' Default is NA.
+#' @param additional_search_parameter Optional string to include additional search parameters in
+#' the FHIR query. Default is NA.
 #'
-#' @return Returns a table of the downloaded resources, processed according to the specifications
-#' in `table_description`. The function handles different types of resources by adapting the ID
-#' parameter string based on the resource type, ensuring correct processing.
+#' @return A table containing the downloaded and processed resources, structured according to the
+#' provided `table_description`. The function ensures the correct handling of both patient and
+#' non-patient resource types.
 #'
 #' @export
-fhirLoadResourcesByPID <- function(patient_IDs, table_description, last_updated = NA, additional_search_parameter = NA) {
+fhirLoadResourcesByPID <- function(patient_IDs, id_param_str = c("patient", "subject"), table_description, last_updated = NA, additional_search_parameter = NA) {
+  id_param_str <- match.arg(id_param_str)
   resource <- table_description@resource@.Data
   if (resource == "Patient") {
     resource_table <- fhirLoadResourcesByOwnID(patient_IDs, table_description, last_updated, additional_search_parameter)
   } else {
     resource_table <- fhirDownloadAndCrackResourcesByPIDs(
       resource = resource,
-      id_param_str = ifelse(resource == 'Consent', 'patient', 'subject'),
+      id_param_str = id_param_str,
       ids = patient_IDs,
       table_description = table_description,
       last_updated = last_updated,
@@ -739,30 +746,43 @@ fhirLoadResourcesByPID <- function(patient_IDs, table_description, last_updated 
   return(resource_table)
 }
 
-#' Download FHIR resources by patient IDs and perform parallel cracking for each resource type.
+#' Download FHIR Resources by Patient IDs and Perform Parallel Cracking for Each Resource Type
 #'
-#' This function iterates over the resource types defined in table_description, and for each resource type,
-#' it calls the fhirDownloadAndCrackResourcesByPIDs function to download and crack FHIR resources
-#' associated with the given patient IDs. The download behavior is adjusted based on the resource type.
+#' This function iterates over all resource types defined in `table_descriptions` and, for each one,
+#' calls `fhirLoadResourcesByPID` to download and crack the FHIR resources associated with the given
+#' patient IDs. It handles optional filtering by patient age at encounter start and supports the use of
+#' additional search parameters per resource type. If configured, only patients above a specified
+#' minimum age at the time of an encounter will be included in the final dataset.
 #'
-#' @param pids_with_last_updated A named vector where the names are the last updated dates and the values
-#' are the patient IDs. These are the patient IDs for whom FHIR resources should be retrieved. The last
-#' updated date indicates the point from which updated FHIR resources for the respective PID should be downloaded.
-#' @param table_descriptions A list of table descriptions for different FHIR resource types.
-#' @param resources_add_search_parameter A named list of additional search parameters for each resource type (optional).
-#' @param patient_age_at_enc_start Patient minimum age at encounter start time.
-#' @param index_brackets A character of length one or two used for the indices of multiple entries.
-#' The first one is the opening bracket and the second one the closing bracket. Vectors of length
-#' one will be recycled. Defaults to character(0), i.e. no brackets, meaning that multiple entries
-#' won't be indexed.
+#' @param pids_with_last_updated A named character vector where the names are last updated dates and
+#' the values are patient IDs. Each entry indicates from which date onward FHIR resources should be
+#' downloaded for the respective patient ID.
+#' @param table_descriptions A named list of table descriptions, each corresponding to a FHIR resource
+#' type and containing the structural information needed for parsing and processing.
+#' @param id_param_str A character string indicating which FHIR search parameter should be used to
+#' reference the patient ID. Must be either "patient" or "subject". Defaults to "patient".
+#' @param resources_add_search_parameter A named list of optional additional FHIR search parameters,
+#' where each name corresponds to a resource type.
+#' @param patient_age_at_enc_start An integer defining the minimum patient age at the time of an
+#' encounter. Used to filter patients after resource download. Defaults to `MIN_PATIENT_AGE` if
+#' defined in the global environment, otherwise 0.
+#' @param index_brackets A character vector of length one or two used to specify the brackets applied
+#' to indexed fields. If only one value is given, it is used as the opening bracket and recycled. If
+#' empty, no indexing is applied.
 #'
-#' @return A list containing a data table for each resource type, with resource type names as the keys.
+#' @return A named list with two elements: `raw_fhir_resources`, a list of data tables with one entry
+#' per resource type, and `pids_with_last_updated`, the final list of patient IDs used after all
+#' filtering steps.
+#'
 #' @export
 fhirLoadMultipleResourcesByPID <- function(pids_with_last_updated,
                                            table_descriptions,
+                                           id_param_str = c("patient", "subject"),
                                            resources_add_search_parameter = NA,
                                            patient_age_at_enc_start = if (exists("MIN_PATIENT_AGE", envir = .GlobalEnv)) as.integer(MIN_PATIENT_AGE) else 0,
                                            index_brackets = c("[", "]")) {
+
+  id_param_str <- match.arg(id_param_str)
   # Split patient IDs by their last updated date
   date_to_pids <- mapDatesToPids(pids_with_last_updated)
   # Initialize an empty list to store the results for each resource type
@@ -789,7 +809,7 @@ fhirLoadMultipleResourcesByPID <- function(pids_with_last_updated,
       }
       if (!nchar(additional_search_parameter) == 0 || is.null(additional_search_parameter)) {
         # Load and process FHIR resources for the current patient IDs and resource_name type
-        resource_table <- fhirLoadResourcesByPID(date_to_pids[[i]], table_description, last_updated, additional_search_parameter)
+        resource_table <- fhirLoadResourcesByPID(date_to_pids[[i]], id_param_str, table_description, last_updated, additional_search_parameter)
         # If `resource_table` is valid (not NA), add it to `raw_fhir_resources`
         if (!isSimpleNA(resource_table)) {
           # Combine resources for each resource type across multiple patient IDs
