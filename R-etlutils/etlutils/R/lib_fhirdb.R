@@ -74,7 +74,7 @@ fhirdbGetIDColumn <- function(resource_name) {
 #' @return A character string containing the name of the Encounter ID column for the specified resource.
 #'
 #' @export
-getEncIDColumn <- function(resource_name) {
+fhirdbGetEncIDColumn <- function(resource_name) {
   resource_name <- tolower(resource_name)
   if (resource_name == "encounter") {
     enc_id_column <- "id"

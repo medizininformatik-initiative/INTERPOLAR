@@ -212,7 +212,7 @@ loadResourcesLastStatusByEncIDFromDB <- function(resource_name, enc_ids) {
   if (tolower(resource_name) %in% "encounter") {
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, enc_ids))
   }
-  enc_id_column <- etlutils::getEncIDColumn(resource_name)
+  enc_id_column <- etlutils::fhirdbGetEncIDColumn(resource_name)
   loadResourcesFromDB(
     resource_name = resource_name,
     filter_column = enc_id_column,
