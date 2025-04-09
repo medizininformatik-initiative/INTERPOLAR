@@ -10,7 +10,6 @@
 #' @return A `POSIXct` object representing the most recent encounter end datetime
 #'         or the current system time if no valid datetime is found.
 #'
-#' @export
 getCurrentDatetime <- function(encounters) {
   encounters_end <- na.omit(encounters$enc_period_end)
   datetime <- if (length(encounters_end)) min(encounters_end) - 1 else Sys.time()
@@ -27,28 +26,8 @@ getCurrentDatetime <- function(encounters) {
 #'
 #' @return A character string representing the formatted SQL datetime.
 #'
-#' @export
 getQueryDatetime <- function(encounters) {
   format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
-}
-
-#' Extract IDs from References
-#'
-#' This function extracts IDs from a vector of references by getting the
-#' substring after the last slash in each reference.Optionally, duplicate IDs
-#' can be removed.
-#'
-#' @param references A character vector of references from which to extract IDs.
-#' @param unique A logical value indicating whether to return only unique IDs.
-#' Default is TRUE.
-#' @return A character vector containing the extracted IDs, optionally unique.
-#'
-extractIDsFromReferences <- function(references, unique = TRUE) {
-  ids <- etlutils::getAfterLastSlash(na.omit(references))
-  if (unique) {
-    ids <- unique(ids)
-  }
-  return(ids)
 }
 
 #' Get Query List
@@ -64,7 +43,7 @@ extractIDsFromReferences <- function(references, unique = TRUE) {
 getQueryList <- function(collection, remove_ref_type = FALSE) {
   collection <- unique(na.omit(collection))
   if (remove_ref_type) {
-    collection <- extractIDsFromReferences(collection)
+    collection <- etlutils::extractIDsFromReferences(collection)
   }
   paste0("'", collection, "'", collapse = ", ")
 }
@@ -365,7 +344,7 @@ createFrontendTables <- function() {
     # too! This error has to be fixed by the DIZ at the beginning of the process (preventing same
     # patient multiple times on the same or different wards)
     pids <- unique(pids_per_ward$patient_id)
-    pids <- extractIDsFromReferences(pids)
+    pids <- etlutils::extractIDsFromReferences(pids)
     patients <- loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
     return(patients)
   }
@@ -599,7 +578,7 @@ createFrontendTables <- function() {
         # Extract the admission diagnosis
         admission_diagnoses <- pid_encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
         admission_diagnoses <- unique(admission_diagnoses)
-        admission_diagnoses <- extractIDsFromReferences(admission_diagnoses)
+        admission_diagnoses <- etlutils::extractIDsFromReferences(admission_diagnoses)
         admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
