@@ -1009,3 +1009,23 @@ fhirCreateResourceTable <- function(
   # Otherwise, return the resource_table directly
   return(resource_table)
 }
+
+#' Extract IDs from References
+#'
+#' This function extracts IDs from a vector of references by getting the
+#' substring after the last slash in each reference.Optionally, duplicate IDs
+#' can be removed.
+#'
+#' @param references A character vector of references from which to extract IDs.
+#' @param unique A logical value indicating whether to return only unique IDs.
+#' Default is TRUE.
+#' @return A character vector containing the extracted IDs, optionally unique.
+#'
+#' @export
+fhirExtractIDsFromReferences <- function(references, unique = TRUE) {
+  ids <- etlutils::getAfterLastSlash(na.omit(references))
+  if (unique) {
+    ids <- unique(ids)
+  }
+  return(ids)
+}
