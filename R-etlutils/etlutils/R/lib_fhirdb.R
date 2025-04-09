@@ -38,7 +38,7 @@ fhirdbGetResourceAbbreviation <- function(resource_name) {
 #' @return A character string containing the name of the PID column for the specified resource.
 #'
 #' @export
-getPIDColumn <- function(resource_name) {
+fhirdbGetPIDColumn <- function(resource_name) {
   resource_name <- tolower(resource_name)
   if (resource_name == "patient") {
     pid_column <- "id"

@@ -186,7 +186,7 @@ loadResourcesLastStatusByPIDFromDB <- function(resource_name, pids) {
   if (tolower(resource_name) %in% "patient") {
     return(loadResourcesLastStatusByOwnIDFromDB(resource_name, pids))
   }
-  pid_column <- etlutils::getPIDColumn(resource_name)
+  pid_column <- etlutils::fhirdbGetPIDColumn(resource_name)
   loadResourcesFromDB(
     resource_name = resource_name,
     filter_column = pid_column,
