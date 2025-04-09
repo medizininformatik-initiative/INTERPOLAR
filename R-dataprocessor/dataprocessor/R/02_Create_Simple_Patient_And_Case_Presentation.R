@@ -106,7 +106,7 @@ getStatementFilter <- function(resource_name, filter_column = NA, filter_column_
   if (is.na(filter_column) || all(is.na(filter_column_values))) {
     return("")
   }
-  resource_id_column <- etlutils::getIDColumn(resource_name)
+  resource_id_column <- etlutils::fhirdbGetIDColumn(resource_name)
   if (filter_column == resource_id_column) {
     # remove resource name and the slash if the IDs are references and not pure IDs
     filter_column_values <- gsub(paste0("^", resource_name, "/"), "", filter_column_values)
@@ -163,7 +163,7 @@ loadResourcesLastStatusFromDB <- function(resource_name) {
 #' @return A data frame containing the last status of load resources.
 #'
 loadResourcesLastStatusByOwnIDFromDB <- function(resource_name, ids) {
-  id_column <- etlutils::getIDColumn(resource_name)
+  id_column <- etlutils::fhirdbGetIDColumn(resource_name)
   loadResourcesFromDB(
     resource_name = resource_name,
     filter_column = id_column,

@@ -58,7 +58,7 @@ fhirdbGetPIDColumn <- function(resource_name) {
 #' @return A character string containing the name of the ID column for the specified resource.
 #'
 #' @export
-getIDColumn <- function(resource_name) {
+fhirdbGetIDColumn <- function(resource_name) {
   resource_name <- tolower(resource_name)
   id_column <- paste0(fhirdbGetResourceAbbreviation(resource_name), "_id")
   return(id_column)
