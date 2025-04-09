@@ -194,7 +194,7 @@ getEncounters <- function(table_description, current_datetime) {
   runLevel3("Get Enconters", {
 
     # Refresh token, if defined
-    etlutils::fhirRefreshToken()
+    etlutils::fhirsearchRefreshToken()
 
     resource <- "Encounter"
 
@@ -256,7 +256,7 @@ getEncounters <- function(table_description, current_datetime) {
         parameters <- c(parameters, "subject" = encounter_pids)
       }
 
-      parameters <- etlutils::fhirAddParamToRequest(parameters)
+      parameters <- etlutils::fhirsearchAddGlobalParams(parameters)
 
       request_encounter <- fhircrackr::fhir_url(
         url        = FHIR_SERVER_ENDPOINT,
@@ -271,10 +271,10 @@ getEncounters <- function(table_description, current_datetime) {
       # stop the execution and print the current result of FHIR search request (DEBUG)
       etlutils::checkDebugTestError("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST", request_encounter)
 
-      table_enc <- etlutils::fhirDownloadAndCrackResources(request = request_encounter,
-                                                           table_description = table_description,
-                                                           max_bundles = MAX_ENCOUNTER_BUNDLES,
-                                                           log_errors  = "enc_error.xml")
+      table_enc <- etlutils::fhirsearchDownloadAndCrackResources(request = request_encounter,
+                                                         table_description = table_description,
+                                                         max_bundles = MAX_ENCOUNTER_BUNDLES,
+                                                         log_errors  = "enc_error.xml")
 
       if (etlutils::isSimpleNA(table_enc)) {
         stop("The FHIR request did not return any available Encounter bundles.\n Request: ",

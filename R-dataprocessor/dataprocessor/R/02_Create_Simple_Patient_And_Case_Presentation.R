@@ -43,7 +43,7 @@ getQueryDatetime <- function(encounters) {
 getQueryList <- function(collection, remove_ref_type = FALSE) {
   collection <- unique(na.omit(collection))
   if (remove_ref_type) {
-    collection <- etlutils::fhirExtractIDsFromReferences(collection)
+    collection <- etlutils::fhirdataExtractIDs(collection)
   }
   paste0("'", collection, "'", collapse = ", ")
 }
@@ -344,7 +344,7 @@ createFrontendTables <- function() {
     # too! This error has to be fixed by the DIZ at the beginning of the process (preventing same
     # patient multiple times on the same or different wards)
     pids <- unique(pids_per_ward$patient_id)
-    pids <- etlutils::fhirExtractIDsFromReferences(pids)
+    pids <- etlutils::fhirdataExtractIDs(pids)
     patients <- loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
     return(patients)
   }
@@ -491,7 +491,7 @@ createFrontendTables <- function() {
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
 
       pid <- unique_pid_ward$patient_id[pid_index]
-      pid_ref <- etlutils::fhirGetPatientReference(pid)
+      pid_ref <- etlutils::fhirdataGetPatientReference(pid)
       pid_encounters <- main_encounters[enc_patient_ref == pid_ref]
       pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
 
@@ -578,7 +578,7 @@ createFrontendTables <- function() {
         # Extract the admission diagnosis
         admission_diagnoses <- pid_encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
         admission_diagnoses <- unique(admission_diagnoses)
-        admission_diagnoses <- etlutils::fhirExtractIDsFromReferences(admission_diagnoses)
+        admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
         admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
         admission_diagnoses <- unique(admission_diagnoses$con_code_text)
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")

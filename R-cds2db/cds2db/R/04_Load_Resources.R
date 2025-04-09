@@ -290,7 +290,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(patient_ids_per_ward, table_d
   id_param_str <- ifelse (etlutils::isDefinedAndTrue("FHIR_SEARCH_PIDS_BY_SUBJECT"), "subject", "patient")
 
   # Load all data of relevant patients from FHIR server
-  resource_tables_fhir <- etlutils::fhirLoadMultipleResourcesByPID(pids_with_last_updated,
+  resource_tables_fhir <- etlutils::fhirsearchMultipleResourcesByPID(pids_with_last_updated,
                                                                    table_descriptions,
                                                                    id_param_str,
                                                                    resources_add_search_parameter)
@@ -373,12 +373,12 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
       resource_name <- referenced_table_description@resource@.Data
       if (!(resource_name %in% names(resources_add_search_parameter)) ||
           nchar(resources_add_search_parameter[[resource_name]]) != 0) {
-        resource_tables[[reference_type]] <- etlutils::fhirLoadResourcesByOwnID(referenced_ids,
-                                                                                referenced_table_description,
-                                                                                additional_search_parameter = resources_add_search_parameter)
+        resource_tables[[reference_type]] <- etlutils::fhirsearchResourcesByOwnID(referenced_ids,
+                                                                                  referenced_table_description,
+                                                                                  additional_search_parameter = resources_add_search_parameter)
       } else {
         # if there are no IDs -> create an empty table with all needed columns as character columns
-        resource_tables <- etlutils::fhirCreateResourceTable(
+        resource_tables <- etlutils::fhirdataCreateResourceTable(
           referenced_table_description,
           resource_key = resource_name,
           resource_collection = resource_tables
