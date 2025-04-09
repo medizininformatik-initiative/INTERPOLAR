@@ -24,7 +24,7 @@ resource_to_abbreviation <- list(
 #' @return A character string containing the abbreviation for the specified resource name.
 #'
 #' @export
-getResourceAbbreviation <- function(resource_name) {
+fhirdbGetResourceAbbreviation <- function(resource_name) {
   resource_name <- tolower(resource_name)
   resource_to_abbreviation[[resource_name]]
 }
@@ -45,7 +45,7 @@ getPIDColumn <- function(resource_name) {
   } else {
     pid_column <- "patient_ref"
   }
-  pid_column <- paste0(getResourceAbbreviation(resource_name), "_", pid_column)
+  pid_column <- paste0(fhirdbGetResourceAbbreviation(resource_name), "_", pid_column)
   return(pid_column)
 }
 
@@ -60,7 +60,7 @@ getPIDColumn <- function(resource_name) {
 #' @export
 getIDColumn <- function(resource_name) {
   resource_name <- tolower(resource_name)
-  id_column <- paste0(getResourceAbbreviation(resource_name), "_id")
+  id_column <- paste0(fhirdbGetResourceAbbreviation(resource_name), "_id")
   return(id_column)
 }
 
@@ -81,7 +81,7 @@ getEncIDColumn <- function(resource_name) {
   } else {
     enc_id_column <- "encounter_ref"
   }
-  enc_id_column <- paste0(getResourceAbbreviation(resource_name), "_", enc_id_column)
+  enc_id_column <- paste0(fhirdbGetResourceAbbreviation(resource_name), "_", enc_id_column)
   return(enc_id_column)
 }
 
