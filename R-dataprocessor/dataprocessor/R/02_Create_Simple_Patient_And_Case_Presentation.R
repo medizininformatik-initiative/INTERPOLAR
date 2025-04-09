@@ -350,7 +350,7 @@ createFrontendTables <- function() {
   }
 
   # Function to load existing record IDs from the database for a list of patient IDs
-  loadExistingRecordIDsFromDB <- function(pat_ids, default = NULL) {
+  loadExistingRecordIDsFromDB <- function(pat_ids) {
     query_ids <- getQueryList(pat_ids)
     query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
     existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
