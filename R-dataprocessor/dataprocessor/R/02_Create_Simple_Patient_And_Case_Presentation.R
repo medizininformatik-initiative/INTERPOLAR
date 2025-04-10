@@ -129,7 +129,7 @@ createFrontendTables <- function() {
     pids <- unique(patients$pat_id)
     pids_count <- length(pids)
 
-    # Initialize an empty data table to store patient information
+    # Initialize an empty data table with a fix number of rows to store patient information
     patient_frontend_table <- data.table(
       record_id = rep(NA_character_, times = pids_count), # v_patient -> patient_id
       patient_fe_id = NA_character_, # v_patient -> patient_id
@@ -169,7 +169,8 @@ createFrontendTables <- function() {
   # based on the provided patient IDs per ward. It retrieves encounter information from
   # the database and constructs the frontend table.
   createEncounterFrontendTable <- function(pids_per_ward, patients, existing_record_ids) {
-    # Initialize an empty data table to store encounter information
+    # Initialize an empty data table with no rows to store encounter information.
+    # The rows will be added later via rbind in the function addEmptyRows().
     enc_frontend_table <- data.table(
       record_id	= character(), # v_patient -> patient_id
       fall_id	= character(), # v_encounter -> enc_id
@@ -438,11 +439,13 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
+  # Read the latest imported datasets from the pids_per_ward table
   pids_per_ward <- etlutils::dbGetReadOnlyQuery(
     query = paste0("SELECT * FROM v_pids_per_ward_last_import\n"),
     lock_id = "load last imported datasets from pids_per_ward")
   pids_per_ward <- pids_per_ward[!is.na(patient_id)]
 
+  # No pids_per_ward table found -> stop
   if (!nrow(pids_per_ward)) {
     message <- getErrorOrWarningMessage(
       text = "WARNING: The pids_per_ward table is empty.\n",
@@ -453,33 +456,16 @@ createFrontendTables <- function() {
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
 
-  # check error no Patient exists in the current patinet database table
+  # Check error no Patient exists in the current patient database table
   if (!nrow(patients_from_database)) { #
     etlutils::catErrorMessage(paste0("No Patient resources found."))
     return(NA)
   }
 
-  # filter rows in the patients_from_database table by the given filter patterns for the
-  # Identifier
-  filterRows <- function(pattern, column_name) {
-    # If the pattern is empty (same as any string) or matches any string, return the original table
-    if (pattern %in% c("", ".*")) {
-      return(patients_from_database)
-    }
-    # remove rows for the patient where row does not match the pattern
-    patients_from_database <- patients_from_database[grepl(pattern, get(column_name))]
-    # check error no Patient left after identifier filtering
-    if (!nrow(patients_from_database)) { #
-      etlutils::catErrorMessage(paste0("No Patient resources found with a '", column_name, "' matching pattern '", pattern, "'"))
-      return(NA)
-    }
-    return(patients_from_database)
-  }
-
   # Apply the filterRows function for each identifier system and return NA if no patients are left
-  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM , "pat_identifier_system"))) return(NA)
-  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM , "pat_identifier_type_system"))) return(NA)
-  if (etlutils::isSimpleNA(patients_from_database <- filterRows(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE , "pat_identifier_type_code"))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- etlutils::dtFilterRows(patients_from_database, "pat_identifier_system", FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- etlutils::dtFilterRows(patients_from_database, "pat_identifier_type_system", FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM))) return(NA)
+  if (etlutils::isSimpleNA(patients_from_database <- etlutils::dtFilterRows(patients_from_database, "pat_identifier_type_code", FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE))) return(NA)
 
   # If a patient has been given any list value, e.g. an additional identifier to an existing
   # identifier that is not changed, then at least 2 data records are created in the patient table
