@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.4.3
+FROM rocker/r-ver:4.5.0
 
 # Select cran mirror
 
