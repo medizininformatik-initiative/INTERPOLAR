@@ -11,7 +11,7 @@
 #'
 #' @export
 fhirdataExtractIDs <- function(references, unique = TRUE) {
-  ids <- etlutils::getAfterLastSlash(na.omit(references))
+  ids <- getAfterLastSlash(na.omit(references))
   if (unique) {
     ids <- unique(ids)
   }
@@ -127,4 +127,105 @@ fhirdataCreateResourceTable <- function(
   }
   # Otherwise, return the resource_table directly
   return(resource_table)
+}
+
+#' Retrieve All Related FHIR Encounter Records
+#'
+#' Collects a comprehensive set of FHIR Encounter records that are part of the same medical case.
+#' This includes the originally specified encounters, those sharing the same identifier, and those
+#' related through FHIR partOf references, either as parent or child encounters. The function
+#' ensures uniqueness of the returned encounters.
+#'
+#' @param encounter_ids A character vector of FHIR Encounter resource IDs.
+#' @param lock_id_extension A character string used to extend the lock ID for database queries.
+#'
+#' @return A `data.table` containing all relevant and deduplicated encounter records.
+#'
+#' @export
+fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension) {
+
+  getEncounters <- function(encounter_ids, sub_lock_id_extension) {
+    if (length(encounter_ids)) {
+      query_ids <- fhirdbGetQueryList(encounter_ids)
+      query <- paste0( "SELECT * FROM v_encounter_last_version\n",
+                       "WHERE enc_id IN (", query_ids, ")\n")
+      encounters <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[", lock_id_extension, sub_lock_id_extension, "]"))
+      return(encounters)
+    }
+    return(NA)
+  }
+
+  joinEncounters <- function(encounters_1, encounters_2) {
+    encounters <- rbind(encounters_1, encounters_2)
+    encounters <- unique(encounters)
+    return(encounters)
+  }
+
+  appendEncounters <- function(encounters, encounter_ids, sub_lock_id_extension) {
+    encounters_2 <- getEncounters(encounter_ids, sub_lock_id_extension)
+    encounters <- joinEncounters(encounters, encounters_2)
+    return(encounters)
+  }
+
+  getParentEncounters <- function(encounters, sub_lock_id_extension) {
+    if (nrow(encounters)) {
+      encounter_refs <- na.omit(encounters$enc_partof_ref)
+      if (length(encounter_refs)) {
+        query_ids <- fhirdataExtractIDs(encounter_refs)
+        parent_encounters <- getEncounters(query_ids, sub_lock_id_extension)
+        # are there any new encounters?
+        parent_encounters <- data.table::fsetdiff(parent_encounters, encounters)
+        return(parent_encounters)
+      }
+    }
+    return(data.table::data.table())
+  }
+
+  getPartEncounters <- function(encounters, sub_lock_id_extension) {
+    if (nrow(encounters)) {
+      query_ids <- fhirdbGetQueryList(fhirdataGetReference("Encounter", encounters$enc_id))
+      query <- paste0( "SELECT * FROM v_encounter_last_version\n",
+                       "WHERE enc_partof_ref IN (", query_ids, ")\n")
+      part_encounters <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[", lock_id_extension, sub_lock_id_extension, "]"))
+      # are there any new encounters?
+      part_encounters <- data.table::fsetdiff(part_encounters, encounters)
+      return(part_encounters)
+    }
+    return(data.table::data.table())
+  }
+
+  encounters <- getEncounters(encounter_ids, 1)
+
+  # Assumption 1: All Encounters of the same medical case have the same enc_identifier_value for
+  # the enc_identifier_system given by FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM
+  if (isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+    query_ids <- fhirdbGetQueryList(encounters$enc_identifier_value)
+    query <- paste0( "SELECT * FROM v_encounter_last_version\n",
+                     "WHERE enc_identifier_value IN (", query_ids, ")\n")
+    encounters_with_same_identifier <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[2]"))
+    encounters <- joinEncounters(encounters, encounters_with_same_identifier)
+  }
+
+  # Assumption 2: If there are partOf references in the FHIR Encounter resources so
+  # we can collect all Encounters of the same medical case by this references
+
+  parent_encounters <- getParentEncounters(encounters, "getParentEncounters_1")
+  if (nrow(parent_encounters)) {
+    encounters <- joinEncounters(encounters, parent_encounters)
+    parent_encounters <- getParentEncounters(parent_encounters, "getParentEncounters_2")
+    if (nrow(parent_encounters)) {
+      encounters <- joinEncounters(encounters, parent_encounters)
+    }
+  }
+
+  part_encounters <- getPartEncounters(encounters, "getPartEncounters_1")
+  if (nrow(part_encounters)) {
+    encounters <- joinEncounters(encounters, part_encounters)
+    part_encounters <- getPartEncounters(part_encounters, "getPartEncounters_2")
+    if (nrow(part_encounters)) {
+      encounters <- joinEncounters(encounters, part_encounters)
+    }
+  }
+
+  return(encounters)
 }
