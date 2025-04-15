@@ -299,5 +299,5 @@ getFirstNonNAValue <- function(vector_or_list) {
   if (is.list(vector_or_list)) vector_or_list <- unlist(vector_or_list, use.names = FALSE)
 
   # Return first non-NA value
-  x[!is.na(vector_or_list)][1]
+  vector_or_list[!is.na(vector_or_list)][1]
 }
