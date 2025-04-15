@@ -84,3 +84,27 @@ fhirdbGetEncIDColumn <- function(resource_name) {
   enc_id_column <- paste0(fhirdbGetResourceAbbreviation(resource_name), "_", enc_id_column)
   return(enc_id_column)
 }
+
+#' Get Query List
+#'
+#' This function takes a collection and optionally removes reference types
+#' to create a query list. It concatenates the elements of the collection
+#' into a single string, each enclosed in single quotes and separated by commas.
+#'
+#' @param collection The collection from which to create the query list.
+#' @param remove_ref_type Logical indicating whether to remove reference types.
+#' Default is \code{FALSE}.
+#' @param return_NA_if_empty Logical indicating whether to return \code{NA} if
+#' the collection is empty.
+#'
+#' @export
+fhirdbGetQueryList <- function(collection, remove_ref_type = FALSE, return_NA_if_empty = FALSE) {
+  collection <- unique(na.omit(collection))
+  if (!length(collection)) {
+    return(ifelse(return_NA_if_empty, NA, "''"))
+  }
+  if (remove_ref_type) {
+    collection <- etlutils::fhirdataExtractIDs(collection)
+  }
+  paste0("'", collection, "'", collapse = ", ")
+}

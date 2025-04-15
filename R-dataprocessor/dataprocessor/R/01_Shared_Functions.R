@@ -30,29 +30,11 @@ getQueryDatetime <- function(encounters) {
   format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
 }
 
-#' Get Query List
-#'
-#' This function takes a collection and optionally removes reference types
-#' to create a query list. It concatenates the elements of the collection
-#' into a single string, each enclosed in single quotes and separated by commas.
-#'
-#' @param collection The collection from which to create the query list.
-#' @param remove_ref_type Logical indicating whether to remove reference types.
-#' Default is \code{FALSE}.
-#'
-getQueryList <- function(collection, remove_ref_type = FALSE) {
-  collection <- unique(na.omit(collection))
-  if (remove_ref_type) {
-    collection <- etlutils::fhirdataExtractIDs(collection)
-  }
-  paste0("'", collection, "'", collapse = ", ")
-}
-
 #' Parse Query List
 #'
 #' This function takes a query list string and splits it based on a specified delimiter
-#' to create a vector of elements. It utilizes the \code{getQueryList} function to
-#' create the vector.
+#' to create a vector of elements. It utilizes the \code{etlutils::fhirdbGetQueryList}
+#' function to create the vector.
 #'
 #' @param list_string The query list string to parse.
 #' @param split The delimiter used to split the query list string. Default is a space.
@@ -61,7 +43,7 @@ getQueryList <- function(collection, remove_ref_type = FALSE) {
 #'
 parseQueryList <- function(list_string, split = " ") {
   splitted <- unlist(strsplit(list_string, split))
-  getQueryList(splitted)
+  etlutils::fhirdbGetQueryList(splitted)
 }
 
 ####################################################
