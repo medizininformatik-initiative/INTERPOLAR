@@ -4,7 +4,7 @@
 .lib_db_connection_env <- new.env()
 
 isDebugTest <- function() {
-  return(interactive() && exists("DEBUG_DAY"))
+  return(interactive() && (exists("DEBUG_DAY") || isDefinedAndTrue("DEBUG_RUN_DB_CRON_JOB_IMMEDIATELY")))
 }
 
 dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
