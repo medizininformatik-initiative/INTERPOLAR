@@ -45,7 +45,7 @@ getLocationString <- function(encounters) {
     }
   }
 
-  location_string <- sprintf("Zimmer: %s; Bett: %s", room, bed)
+  location_string <- sprintf("Zimmer: %s  Bett: %s", room, bed)
   return(location_string)
 }
 
@@ -297,7 +297,9 @@ createFrontendTables <- function() {
         enc_period_start     <- etlutils::as.POSIXctWithTimezone(etlutils::getFirstNonNAValue(pid_encounter$enc_period_start))
         enc_period_end       <- etlutils::as.POSIXctWithTimezone(etlutils::getFirstNonNAValue(pid_encounter$enc_period_end))
         enc_status           <- etlutils::getFirstNonNAValue(pid_encounter$enc_status)
-        record_id <- getExistingRecordID(pid_patient$pat_id, default = pid_patient$patient_id, existing_record_ids)
+        record_id <- getExistingRecordID(etlutils::getFirstNonNAValue(pid_patient$pat_id),
+                                         default = etlutils::getFirstNonNAValue(pid_patient$patient_id),
+                                         existing_record_ids)
 
         # Extract the FHIR identifier value for the frontend table
         # There can be multiple rows with different identifier systems, so we need to filter them
@@ -317,7 +319,8 @@ createFrontendTables <- function() {
         # Set the values for the encounter frontend table
         data.table::set(enc_frontend_table, target_index, "record_id", record_id)
         data.table::set(enc_frontend_table, target_index, "fall_id", enc_identifier_value)
-        data.table::set(enc_frontend_table, target_index, "fall_pat_id", pid_patient$pat_id)
+        # There can be multiple lines for pat_id, but the value should be always the same.
+        data.table::set(enc_frontend_table, target_index, "fall_pat_id", etlutils::getFirstNonNAValue(pid_patient$pat_id))
         data.table::set(enc_frontend_table, target_index, "fall_fhir_enc_id", enc_id)
         data.table::set(enc_frontend_table, target_index, "patient_id_fk", record_id)
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instrument", "fall")
