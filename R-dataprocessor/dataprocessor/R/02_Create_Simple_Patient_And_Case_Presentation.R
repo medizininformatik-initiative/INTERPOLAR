@@ -111,12 +111,15 @@ createFrontendTables <- function() {
 
   # Function to retrieve an existing record_id for a given patient ID
   getExistingRecordID <- function(pat_id, default = NA_character_, existing_record_ids) {
+    # Remove duplicates and keep the first record_id for each pat_id
+    existing_record_ids <- existing_record_ids[order(record_id)][, .SD[1], by = pat_id]
     specific_pat_id <- pat_id
     # Get existing_record_id for the specific pat_id
     existing_record_id <- unique(existing_record_ids[pat_id == specific_pat_id, record_id])
 
     if (!length(existing_record_id)) {
-      existing_record_id <- default
+      # If the default value is a vector, take the lowest value
+      existing_record_id <- sort(default)[1]
     }
     return(existing_record_id)
   }
