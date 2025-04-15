@@ -49,6 +49,43 @@ getLocationString <- function(encounters) {
   return(location_string)
 }
 
+#' Extract Admission Diagnoses as a Formatted String
+#'
+#' This function extracts all diagnoses with the use code \code{"AD"} (admission diagnoses)
+#' from an encounter data table, resolves the referenced condition IDs, and matches them
+#' to the corresponding condition entries. The diagnoses are then formatted as a single
+#' character string. If the diagnosis text is available, it is used along with the code in
+#' parentheses; otherwise, only the code is used.
+#'
+#' @param encounter A \code{data.table} containing encounter diagnosis information.
+#'                  Must include the columns \code{enc_diagnosis_use_code} and \code{enc_diagnosis_condition_ref}.
+#' @param conditions A \code{data.table} containing condition details.
+#'                   Must include the columns \code{con_id}, \code{con_code_text}, and \code{con_code_code}.
+#'
+#' @return A single \code{character} string with all admission diagnoses separated by \code{"; "}.
+#'         If no diagnoses are found, or no usable text/code is available, returns \code{NA_character_}.
+#'
+getAdmissionDiagnoses <- function(encounter, conditions) {
+  admission_diagnoses <- encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
+  admission_diagnoses <- unique(admission_diagnoses)
+  admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
+  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code)]
+  admission_diagnoses <- unique(admission_diagnoses)
+
+  return_value <- character()
+  for (i in seq_len(nrow(admission_diagnoses))) {
+    row <- admission_diagnoses[i]
+    if (!is.na(row$con_code_text) && nzchar(trimws(row$con_code_text))) {
+      diagnosis_text <- paste0(row$con_code_text, " (", row$con_code_code, ")")
+    } else {
+      diagnosis_text <- row$con_code_code
+    }
+    return_value <- c(return_value, diagnosis_text)
+  }
+
+  return_value <- paste0(return_value, collapse = "\n")
+  return(if (nzchar(return_value)) return_value else NA_character_)
+}
 
 #' This function creates frontend tables for displaying patient and encounter information.
 #'
@@ -297,13 +334,8 @@ createFrontendTables <- function() {
         # Extract ward name from unique_pid_ward table
         data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
 
-        # Extract the admission diagnosis
-        admission_diagnoses <- pid_encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
-        admission_diagnoses <- unique(admission_diagnoses)
-        admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
-        admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
-        admission_diagnoses <- unique(na.omit(admission_diagnoses$con_code_text))
-        admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
+        # Extract the admission diagnoses
+        admission_diagnoses <- getAdmissionDiagnoses(pid_encounter, conditions)
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
 
         # Call the function with the filtered_pid_part_of_encounters data and the location_labels
