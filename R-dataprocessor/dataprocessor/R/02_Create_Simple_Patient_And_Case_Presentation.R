@@ -1,65 +1,54 @@
-#' Function to filter rows and combine `enc_identifier_value` for multiple `location_codes`
+#' Generate Location String from Encounter Data
 #'
-#' This function filters rows from the provided data based on multiple `location_codes`
-#' and combines their corresponding `enc_identifier_value` into a single string.
-#' The function supports configurable labels for each location code.
+#' Creates a formatted location string using the most recent encounter location entries of type
+#' "ro" (room) and "bd" (bed). The displayed values are taken from the column specified by the
+#' global variable `FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN`. The function only processes
+#' encounters where `enc_location_physicaltype_code` is either "ro" or "bd", and within those only
+#' the most recent entries based on `enc_period_start`.
 #'
-#' @param data A data frame or data table that contains columns `enc_location_physicaltype_code` and `enc_identifier_value`.
-#' @param location_labels A named vector where names correspond to `location_codes` and values are the labels.
+#' The function assumes that the required column exists in the input data. If not, an error is
+#' raised intentionally and must be handled by the calling context.
 #'
-#' @details This function applies filtering to each `location_code` provided in `location_labels`. It extracts values
-#' from the `enc_identifier_value` column based on the `enc_location_physicaltype_code` column and combines
-#' the non-empty, non-NA values into a single string, separated by commas. Each filtered and combined value is
-#' associated with its corresponding label from `location_labels`.
+#' @param encounters A `data.table` containing encounter location records.
 #'
-#' @return A single string containing all filtered and combined values, grouped by location labels, separated by semicolons.
+#' @return A character string in the format "Zimmer: <room>; Bett: <bed>". If no matching entry
+#' is found, "-" is used as fallback.
 #'
 #' @examples
-#' \dontrun{
-#' # Example data
-#' library(data.table)
-#' FRONTEND_DISPLAYED_ROOM_AND_BED_PATH <- "enc_location_display"
-#' pid_part_of_encounters <- data.table(
-#'   enc_location_physicaltype_code = c("wa", "ro", "bd", "bd", "bd"),
-#'   enc_location_display = c("ID_001", "ID_002", "ID_003", "ID_004", "ID_004")
+#' FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN <- "location_display"
+#' dt <- data.table::data.table(
+#'   enc_location_physicaltype_code = c("ro", "bd"),
+#'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01")),
+#'   location_display = c("R12", "B3")
 #' )
-#' location_labels <- c(wa = "Station", ro = "Room", bd = "Bed")
-#' locations <- combineEncounterLocations(pid_part_of_encounters, location_labels)
-#' location_labels <- c(ro = "Room", bd = "Bed")
-#' combineEncounterLocations(pid_part_of_encounters, location_labels)
-#' }
+#' getLocationString(dt)
 #'
-combineEncounterLocations <- function(data, location_labels) {
-  if (!exists("FRONTEND_DISPLAYED_ROOM_AND_BED_PATH")) {
-    return("")
-  }
-  location_codes <- names(location_labels)
-  # Apply the filtering and combining for each location_code and concatenate the results
-  combined_results <- sapply(location_codes, function(location_code) {
-    # Filter rows based on the specified location_code in enc_location_physicaltype_code
-    filtered_values <- data[
-      enc_location_physicaltype_code == location_code,  # Filter condition
-      get(FRONTEND_DISPLAYED_ROOM_AND_BED_PATH) # Extract the values from enc_identifier_value
-    ]
-    # Check if there are valid values and filter out NA or empty values
-    valid_values <- filtered_values[!is.na(filtered_values) & filtered_values != ""]
-    # Remove duplicated values
-    unique_values <- unique(valid_values)
-    # Combine die einzigartigen Werte in eine Zeichenkette
-    combined_values <- paste(unique_values, collapse = ", ")
-    # Get the corresponding label for the location_code from the location_labels mapping
-    location_label <- location_labels[location_code]
-    # If there is a label, return the formatted result with the label and combined values
-    if (!is.null(location_label) && length(unique_values)) {
-      return(paste0(location_label, ": ", combined_values))
+getLocationString <- function(encounters) {
+  room <- "-"
+  bed <- "-"
+
+  if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN")) {
+    # Filter for relevant physical types
+    encounters <- encounters[enc_location_physicaltype_code %in% c("ro", "bd")]
+
+    if (nrow(encounters)) {
+      # Keep only rows with latest period start
+      encounters <- encounters[enc_period_start == max(enc_period_start)]
+
+      col_name <- FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN
+
+      room_value <- encounters[enc_location_physicaltype_code == "ro"][1, get(col_name)]
+      if (length(room_value)) room <- room_value
+
+      bed_value <- encounters[enc_location_physicaltype_code == "bd"][1, get(col_name)]
+      if (length(bed_value)) bed <- bed_value
     }
-  })
-  # Remove any NULL values if no valid values for a particular location_code
-  combined_results <- combined_results[!sapply(combined_results, is.null)]
-  # Combine all results into a single string, separated by semicolons
-  final_result <- paste(combined_results, collapse = "; ")
-  return(final_result)
+  }
+
+  location_string <- sprintf("Zimmer: %s; Bett: %s", room, bed)
+  return(location_string)
 }
+
 
 #' This function creates frontend tables for displaying patient and encounter information.
 #'
@@ -103,7 +92,7 @@ createFrontendTables <- function() {
 
   # Function to load existing record IDs from the database for a list of patient IDs
   loadExistingRecordIDsFromDB <- function(pat_ids) {
-    query_ids <- getQueryList(pat_ids)
+    query_ids <- etlutils::fhirdbGetQueryList(pat_ids)
     query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
     existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
     return(existing_record_ids)
@@ -195,50 +184,28 @@ createFrontendTables <- function() {
       fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_complete = character()
     )
-
-    # load Encounters for all PIDs from pids_per_ward database table
-    query_ids <- getQueryList(pids_per_ward$encounter_id)
-
-    query <- paste0( "SELECT * FROM v_encounter_last_version\n",
-                     "  WHERE encounter_raw_id in (\n",
-                     "    SELECT MAX(encounter_raw_id) FROM v_encounter\n",
-                     "      WHERE enc_id IN (", query_ids, ")\n",
-                     "      GROUP BY enc_id\n",
-                     "  )"
-    )
-
-    if (exists("FRONTEND_DISPLAYED_ENCOUNTER_CLASS")) {
-      enc_class_codes <- FRONTEND_DISPLAYED_ENCOUNTER_CLASS
-      # create additional condition if there are class codes defined for the accepted encounters
-      if (enc_class_codes != "") {
-        # Additional condition only if enc_class_codes is not empty
-        additional_class_code_condition <- paste0(" AND enc_class_code IN ('", paste(enc_class_codes, collapse = "', '"), "')")
-        query <- paste0(query, additional_class_code_condition)
-      }
-    }
-
-    # Get encounters from database
-    encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[1]")
+    encounters <- etlutils::fhirdataGetAllEncounters(pids_per_ward$encounter_id, "CreateEncounterFrontendTable()_")
 
     query_datetime <- getQueryDatetime(encounters)
 
     # Create a new table with rows where enc_partof_ref is NOT NA
     part_of_encounters <- encounters[!is.na(enc_partof_ref)]
 
-    # Second way to find all partof encounters if there are no partof references
-    if (!length(part_of_encounters)) {
-      part_of_encounters <- encounters[enc_type_code != "einrichtungskontakt"]
+    # Second way to find all partof encounters
+    part_of_encounters_2 <- encounters[enc_type_code != "einrichtungskontakt"]
+    part_of_encounters_2 <- data.table::fsetdiff(part_of_encounters_2, part_of_encounters)
+    if (nrow(part_of_encounters_2)) {
+      part_of_encounters <- rbind(part_of_encounters, part_of_encounters_2)
     }
 
     # Remove the rows that exist in part_of_encounters from encounters
     main_encounters <- encounters[!enc_id %in% part_of_encounters$enc_id]
 
     # load Conditions referenced by Encounters
-    query_ids <- getQueryList(main_encounters$enc_diagnosis_condition_ref, remove_ref_type = TRUE)
-
+    query_ids <- etlutils::fhirdbGetQueryList(encounters$enc_diagnosis_condition_ref,
+                                              remove_ref_type = TRUE)
     query <- paste0("SELECT * FROM v_condition\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
-
     conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
 
     # Create a new data.table with only pid and ward_name, ensuring unique rows
@@ -248,30 +215,30 @@ createFrontendTables <- function() {
 
       pid <- unique_pid_ward$patient_id[pid_index]
       pid_ref <- etlutils::fhirdataGetPatientReference(pid)
-      pid_encounters <- main_encounters[enc_patient_ref == pid_ref]
+      pid_main_encounters <- main_encounters[enc_patient_ref == pid_ref]
       pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
 
       # check possible errors
-      if (!nrow(pid_encounters)) { # no encounter for PID found
-        etlutils::catErrorMessage(paste0("No Encounter found for PID ", pid))
+      if (!nrow(pid_main_encounters)) { # no encounter for PID found
+        etlutils::catErrorMessage(paste0("No Einrichtungskontakt found for PID ", pid))
         next
       }
 
       # Extract unique encounter IDs for the current patient
-      unique_encounter_IDs <- unique(pid_encounters$enc_id)
+      unique_encounter_IDs <- unique(pid_main_encounters$enc_id)
       # if there are errors in the data then there can be more than one encounter
       if (length(unique_encounter_IDs) > 1) {
         etlutils::catErrorMessage(paste0("Multiple Encounters found for PID ", pid, "\n",
                                          "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
-      # If the data is incorrect and a patient has more than one active Encounter, this will be
-      # highlighted here.
-      pid_encounters <- split(pid_encounters, pid_encounters$enc_id)
+      # Create a list of data.tables, each containing the rows for a specific encounter
+      pid_main_encounters <- split(pid_main_encounters, pid_main_encounters$enc_id)
 
+      # Get the patient lines for the current PID
       pid_patient <- patients[pat_id == pid]
 
-      # check errors no patient resource found for PID
+      # Check errors no patient resource found for PID
       if (!nrow(pid_patient)) { # no Patient resource found for PID
         etlutils::catErrorMessage(paste0("No Patient resources found for PID ", pid))
         next
@@ -282,10 +249,10 @@ createFrontendTables <- function() {
       enc_frontend_table <- etlutils::addEmptyRows(enc_frontend_table, length(unique_encounter_IDs), "end")
 
       # Iterate over each encounter for the current patient
-      for (i in 1:length(pid_encounters)) {
+      for (i in 1:length(pid_main_encounters)) {
         target_index <- start_index + i
 
-        pid_encounter <- pid_encounters[[i]]
+        pid_encounter <- pid_main_encounters[[i]]
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
@@ -331,50 +298,17 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
 
         # Extract the admission diagnosis
-        admission_diagnoses <- pid_encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_id
+        admission_diagnoses <- pid_encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
         admission_diagnoses <- unique(admission_diagnoses)
         admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
         admission_diagnoses <- conditions[con_id %in% admission_diagnoses]
-        admission_diagnoses <- unique(admission_diagnoses$con_code_text)
+        admission_diagnoses <- unique(na.omit(admission_diagnoses$con_code_text))
         admission_diagnoses <- paste0(admission_diagnoses, collapse = "; ")
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
 
-        #####Start: Find Locations for column 'fall_zimmernr'#####
-        # Check if any partof reference NA, so find partof encounters via start- and enddate
-        # Else find partof encounters via partof reference
-        if (any(is.na(pid_part_of_encounters$enc_partof_ref))) {
-          # Find related part encounters for a main encounter
-          filtered_pid_part_of_encounters <- findPartOfEncounters(pid_encounter, pid_part_of_encounters)
-        } else {
-          searched_encounter <- paste0("Encounter/", enc_id)
-          filtered_pid_part_of_encounters <- pid_part_of_encounters[grepl(searched_encounter, enc_partof_ref)]
-        }
-
-        # Filter for newest encounter locations
-        # 1. Filter out rows where 'enc_location_physicaltype_code' is NA and only keep rows where
-        # 'enc_location_physicaltype_code' is "ro" or "bd"
-        filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[
-          !is.na(enc_location_physicaltype_code) &
-            enc_location_physicaltype_code %in% c("ro", "bd")
-        ]
-        # 2. Select all rows with the maximum 'enc_period_start'
-        if (nrow(filtered_pid_part_of_encounters)) {
-          filtered_pid_part_of_encounters <- filtered_pid_part_of_encounters[enc_period_start == max(enc_period_start), ]
-          # 3. For each type ("ro" and "bd"), select the first row based on the original order
-          first_room_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "ro"][1, ]
-          first_bed_row <- filtered_pid_part_of_encounters[enc_location_physicaltype_code == "bd"][1, ]
-          # 4. Combine the results: first room row, and first bed row
-          filtered_pid_part_of_encounters <- rbind(first_room_row, first_bed_row)
-
-          # Define the mapping of location codes to labels
-          location_labels <- c("ro" = "Zimmer", "bd" = "Bett")
-          # Call the function with the filtered_pid_part_of_encounters data and the location_labels
-          combined_location_results <- combineEncounterLocations(filtered_pid_part_of_encounters, location_labels)
-          data.table::set(enc_frontend_table, target_index, "fall_zimmernr", combined_location_results)
-        } else {
-          data.table::set(enc_frontend_table, target_index, "fall_zimmernr", NA_character_)
-        }
-        #####End: Find Locations for column 'fall_zimmernr'#####
+        # Call the function with the filtered_pid_part_of_encounters data and the location_labels
+        room_and_bed <- getLocationString(pid_part_of_encounters)
+        data.table::set(enc_frontend_table, target_index, "fall_zimmernr", room_and_bed)
 
         # Function to extract specific observations for the encounter
         getObservation <- function(codes, system, target_column_value, target_column_unit = NA, obs_by_pid = FALSE) {
