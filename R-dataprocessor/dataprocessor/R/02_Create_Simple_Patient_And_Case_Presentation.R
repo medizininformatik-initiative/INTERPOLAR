@@ -471,29 +471,19 @@ createFrontendTables <- function() {
   # identifier that is not changed, then at least 2 data records are created in the patient table
   # after the fhir_melt, whereby one was already present in the DB and the other is newly added.
   # Now it can happen, for whatever reason, that the same patient has several different values
-  # ('Identifier.value') after filtering via the Identifier.system.
-  # In this case, we assume that the last value (= the one with the highest 'patient_id') is the
+  # ('Identifier.value' or 'name.given') after filtering via the Identifier.system.
+  # In this case, we assume that the first value (= the one with the lowest 'patient_id') is the
   # valid one. We now remove all lines per patient with an 'Identifier.value' that is not the same
   # as the last added 'Identifier.value'.
-  # We then set the maximum (= last valid) 'patient_id' for all remaining lines per 'pat_id', as
+  # We then set the minimum (= last valid) 'patient_id' for all remaining lines per 'pat_id', as
   # this must be the data record ID from which all information is derived.
 
   # only keep the lines of a 'pat_id' where the 'pat_identifier_value' is the same as in the
-  # respective line with the maximum = last created 'patient_id'.
-  # Alternative notation:
-  #patients_from_database <- patients_from_database[, .SD[pat_identifier_value == .SD[which.max(patient_id), pat_identifier_value]], by = pat_id]
-  patients_from_database <- patients_from_database[, .SD[pat_identifier_value == pat_identifier_value[which.max(patient_id)]], by = pat_id]
-
-  # set the maximum (= last valid) 'patient_id' for all remaining lines per 'pat_id'
-  patients_from_database[, patient_id := max(patient_id), by = pat_id]
-
-  # make sure that it is a single patient resource by choosing the last of the potential list
-  # Filter the dataset to select the row with the highest 'last_processing_nr' within each 'pat_id'
-  # group. If there are multiple rows with the same 'last_processing_nr', we select the last row by
-  # using '.N', which gives the number of rows in each group.
-  patients_from_database <- patients_from_database[
-    , .SD[.N], by = pat_id
-  ][order(pat_id, -last_processing_nr)]
+  # respective line with the minimum = 'patient_id'. Minimum because if the patient has multiple
+  # names (e.g. an administrative and a birth name) then there is the highest chance that the very
+  # first line contains the administrative name because the DIC should put this most important name
+  # as first name in FHIR.
+  patients_from_database <- patients_from_database[, .SD[pat_identifier_value == pat_identifier_value[which.min(patient_id)]], by = pat_id]
 
   # Load the existing record IDs from the database
   existing_record_ids <- loadExistingRecordIDsFromDB(patients_from_database$pat_id)
