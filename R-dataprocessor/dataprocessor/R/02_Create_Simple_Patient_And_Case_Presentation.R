@@ -15,6 +15,7 @@
 #' is found, "-" is used as fallback.
 #'
 #' @examples
+#' \dontrun{
 #' FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN <- "location_display"
 #' dt <- data.table::data.table(
 #'   enc_location_physicaltype_code = c("ro", "bd"),
@@ -22,6 +23,7 @@
 #'   location_display = c("R12", "B3")
 #' )
 #' getLocationString(dt)
+#' }
 #'
 getLocationString <- function(encounters) {
   room <- "-"

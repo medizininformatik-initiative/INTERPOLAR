@@ -1187,7 +1187,7 @@ dtFilterRows <- function(dt, column_name, pattern) {
   # check error no row left after filtering
   if (!nrow(dt_filtered)) { #
     dt_printed <- capture.output(print(dt))
-    etlutils::catErrorMessage(paste0("No rows found with a '", column_name, "' matching pattern '", pattern, "' in table\n", dt_printed))
+    etlutils::catErrorMessage(paste0("No rows found with a '", column_name, "' matching pattern '", pattern, "' in table\n",  paste0(dt_printed, collapse = "\n")))
     return(NA)
   }
   return(dt_filtered)
