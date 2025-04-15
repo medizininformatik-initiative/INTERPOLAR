@@ -156,12 +156,12 @@ createFrontendTables <- function() {
       record_id <- getExistingRecordID(pids[i], default = patient$patient_id, existing_record_ids)
       patient_frontend_table$record_id[i] <- record_id
       patient_frontend_table$patient_fe_id[i] <- record_id
-      patient_frontend_table$pat_id[i] <- patient$pat_id
-      patient_frontend_table$pat_cis_pid[i] <- patient$pat_identifier_value
-      patient_frontend_table$pat_vorname[i] <- patient$pat_name_given
-      patient_frontend_table$pat_name[i] <- patient$pat_name_family
-      patient_frontend_table$pat_gebdat[i] <- patient$pat_birthdate
-      patient_frontend_table$pat_geschlecht[i] <- patient$pat_gender
+      patient_frontend_table$pat_id[i] <- etlutils::getFirstNonNAValue(patient$pat_id)
+      patient_frontend_table$pat_cis_pid[i] <- etlutils::getFirstNonNAValue(patient$pat_identifier_value)
+      patient_frontend_table$pat_vorname[i] <- etlutils::getFirstNonNAValue(patient$pat_name_given)
+      patient_frontend_table$pat_name[i] <- etlutils::getFirstNonNAValue(patient$pat_name_family)
+      patient_frontend_table$pat_gebdat[i] <- etlutils::getFirstNonNAValue(patient$pat_birthdate)
+      patient_frontend_table$pat_geschlecht[i] <- etlutils::getFirstNonNAValue(patient$pat_gender)
       # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
       patient_frontend_table$patient_complete[i] <- 'Complete'
     }
@@ -289,11 +289,10 @@ createFrontendTables <- function() {
         # There can be multiple lines for the same Encounter if there are multiple conditions
         # present for the case which were splitted by fhir_melt (in cds2db) to multiple lines.
         # Take the common data (ID, start, end, status) from the first line
-        first_pid_encounter_row <- pid_encounter[1]
-        enc_id               <- first_pid_encounter_row$enc_id
-        enc_period_start     <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_start)
-        enc_period_end       <- etlutils::as.POSIXctWithTimezone(first_pid_encounter_row$enc_period_end)
-        enc_status           <- first_pid_encounter_row$enc_status
+        enc_id               <- etlutils::getFirstNonNAValue(pid_encounter$enc_id)
+        enc_period_start     <- etlutils::as.POSIXctWithTimezone(etlutils::getFirstNonNAValue(pid_encounter$enc_period_start))
+        enc_period_end       <- etlutils::as.POSIXctWithTimezone(etlutils::getFirstNonNAValue(pid_encounter$enc_period_end))
+        enc_status           <- etlutils::getFirstNonNAValue(pid_encounter$enc_status)
         record_id <- getExistingRecordID(pid_patient$pat_id, default = pid_patient$patient_id, existing_record_ids)
 
         # Extract the FHIR identifier value for the frontend table
@@ -308,7 +307,7 @@ createFrontendTables <- function() {
             enc_identifier_value <- NA_character_
           }
         } else {
-          enc_identifier_value <- first_pid_encounter_row$enc_identifier_value
+          enc_identifier_value <- etlutils::getFirstNonNAValue(pid_encounter$enc_identifier_value)
         }
 
         # Set the values for the encounter frontend table
