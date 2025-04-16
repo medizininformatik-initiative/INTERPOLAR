@@ -451,12 +451,45 @@ createFrontendTables <- function() {
   # We then set the minimum (= last valid) 'patient_id' for all remaining lines per 'pat_id', as
   # this must be the data record ID from which all information is derived.
 
-  # only keep the lines of a 'pat_id' where the 'pat_identifier_value' is the same as in the
-  # respective line with the minimum = 'patient_id'. Minimum because if the patient has multiple
-  # names (e.g. an administrative and a birth name) then there is the highest chance that the very
-  # first line contains the administrative name because the DIC should put this most important name
-  # as first name in FHIR.
-  patients_from_database <- patients_from_database[, .SD[pat_identifier_value == pat_identifier_value[which.min(patient_id)]], by = pat_id]
+  # some simple test data for the following function
+  # patients_from_database <- data.table(
+  #   pat_id = c(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6),
+  #   patient_id = c(101, 102, 201, 202, 301, 302, 401, 501, 502, 601, 602),
+  #   pat_name_use = c("official", "usual", "official", "official", NA, NA, NA, NA, NA, NA, "official"),
+  #   pat_name_given = c("John", "", "", "Anna", "", "Paul", "Lara", NA, NA, NA, NA),
+  #   pat_identifier_value = c("A1", "A1", "B1", "B2", "C1", "C1", "D1", "E1", "E1", "F1", "F2")
+  # )
+
+  getUniquePatientsRowWithNameIfExists <- function(patient_rows_from_database_for_single_pat_id) {
+    pat_rows <- patient_rows_from_database_for_single_pat_id
+    # Check if the column 'pat_name_use' exists and contains any "official" entries
+    if ("pat_name_use" %in% names(pat_rows)
+        && any(pat_rows$pat_name_use == "official", na.rm = TRUE)) {
+      # Filter rows where name is "official" and there is a non-empty, non-NA given name
+      official_rows <- pat_rows[pat_name_use == "official" & pat_name_given != "" & !is.na(pat_name_given)]
+      # If such official rows exist, return the one with the smallest patient_id
+      if (nrow(official_rows)) {
+        return(official_rows[which.min(patient_id)])
+      }
+    }
+    # If no "official" name exists or the column doesn't exist, fall back to row with smallest patient_id
+    rows_with_name <- pat_rows[pat_name_given != "" & !is.na(pat_name_given)]
+    if (nrow(rows_with_name)) {
+      return(rows_with_name[which.min(patient_id)])
+    }
+    # If no rows with a name exist, return the row with the smallest patient_id
+    return(pat_rows[which.min(patient_id)])
+  }
+
+  # The following code is a workaround for the problem that the same patient can have multiple
+  # identifiers or names in the database, which can lead to multiple entries in the patient table.
+  # The code filters the patients based on the pat_name_use = "offical". If there is a official name,
+  # it keeps only the first occurrence of that name. If there is no official name, it keeps the
+  # occurrence with the minimum patient_id. This is done to ensure that only one entry per patient
+  # is kept in the patient table.
+  # Fallback: Keep only the rows of each 'pat_id' where the 'pat_identifier_value' matches the
+  # respective row with the minimum 'patient_id'.
+  patients_from_database <- patients_from_database[, getUniquePatientsRowWithNameIfExists(.SD), by = pat_id]
 
   # Load the existing record IDs from the database
   existing_record_ids <- loadExistingRecordIDsFromDB(patients_from_database$pat_id)
