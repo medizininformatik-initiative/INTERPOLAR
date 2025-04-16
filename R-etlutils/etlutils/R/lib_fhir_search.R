@@ -762,8 +762,15 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
                                            table_descriptions,
                                            id_param_str = c("patient", "subject"),
                                            resources_add_search_parameter = NA,
-                                           patient_age_at_enc_start = if (exists("MIN_PATIENT_AGE", envir = .GlobalEnv)) as.integer(MIN_PATIENT_AGE) else 0,
+                                           patient_age_at_enc_start = NULL,
                                            index_brackets = c("[", "]")) {
+  if (is.null(patient_age_at_enc_start)) {
+    patient_age_at_enc_start <- if (exists("MIN_PATIENT_AGE", envir = .GlobalEnv)) {
+      as.integer(get("MIN_PATIENT_AGE", envir = .GlobalEnv))
+    } else {
+      0L
+    }
+  }
 
   id_param_str <- match.arg(id_param_str)
   # Split patient IDs by their last updated date
