@@ -327,7 +327,8 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
                                                                                    "subject/reference",
                                                                                    "period/start",
                                                                                    "period/end",
-                                                                                   "status")
+                                                                                   "status",
+                                                                                   "meta/lastUpdated")
       # Get current or debug datetime
       current_datetime <- getQueryDatetime()
       # Replace space with 'T' in timestamp for correct time format
@@ -335,6 +336,16 @@ getPatientIDsPerWard <- function(path_to_PID_list_file = NA, log_result = TRUE) 
       # Download the Encounters and crack them in a table with the columns of the xpaths in
       # filter patterns + the additional paths above
       encounters <- getEncounters(filter_enc_table_description, current_datetime)
+
+      if (etlutils::isDefinedAndTrue("DISABLE_MULTIPLE_ENCOUNTERS_PER_PATIENT")) {
+        # Convert datetime columns to proper POSIXct format with timezone
+        etlutils::convertDateTimeFormat(encounters, c("period.start", "meta.lastUpdated"))
+        # Sort encounters by patient reference, then by most recent period start and last updated time
+        data.table::setorder(encounters, subject.reference, -period.start, -meta.lastUpdated)
+        # Keep only the first (most relevant) encounter per patient
+        encounters <- encounters[!duplicated(subject.reference)]
+      }
+
       # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data
