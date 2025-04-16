@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 14:40:51
+-- Rights definition file last update : 2025-04-15 09:49:00
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-07 11:53:12
+-- Create time: 2025-04-16 09:52:29
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -219,6 +219,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   pat_identifier_value VARCHAR,   -- identifier/value (VARCHAR)
   pat_identifier_start VARCHAR,   -- identifier/start (VARCHAR)
   pat_identifier_end VARCHAR,   -- identifier/end (VARCHAR)
+  pat_name_use VARCHAR,   -- name/use (VARCHAR)
   pat_name_text VARCHAR,   -- name/text (VARCHAR)
   pat_name_family VARCHAR,   -- name/family (VARCHAR)
   pat_name_given VARCHAR,   -- name/given (VARCHAR)
@@ -239,6 +240,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
           COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
           COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
           COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
+          COALESCE(db.to_char_immutable(pat_name_use), '#NULL#') || '|||' || -- hash from: name/use (pat_name_use)
           COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
           COALESCE(db.to_char_immutable(pat_name_family), '#NULL#') || '|||' || -- hash from: name/family (pat_name_family)
           COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
@@ -2970,6 +2972,7 @@ COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_system IS 'identifier/sys
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_end IS 'identifier/end (varchar)';
+COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_use IS 'name/use (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_text IS 'name/text (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_family IS 'name/family (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_given IS 'name/given (varchar)';
