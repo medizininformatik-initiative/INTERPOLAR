@@ -94,11 +94,16 @@ getActiveEncounterPIDsFromDB <- function() {
   query_datetime <- getQueryDatetime()
   datetime <- query_datetime[["start_datetime"]]
 
+  encounter_class_condition <- ""
+  if (exists("FHIR_SEARCH_ENCOUNTER_CLASS")) {
+    encounter_class_condition <- paste0("  AND enc_class_code IN (", paste0("'", strsplit(FHIR_SEARCH_ENCOUNTER_CLASS, ",")[[1]], "'", collapse = ", "), ")\n")
+  }
+
   query <- paste0(
     "SELECT DISTINCT enc_patient_ref\n",
     "FROM v_encounter_last_version\n",
-    "WHERE enc_class_code IN (", paste0("'", strsplit(FHIR_SEARCH_ENCOUNTER_CLASS, ",")[[1]], "'", collapse = ", "), ")\n",
-    "  AND enc_status = 'in-progress'\n",
+    "WHERE enc_status = 'in-progress'\n",
+    encounter_class_condition,
     "  AND enc_period_start <= '", datetime, "'\n",
     "  AND (enc_period_end IS NULL OR enc_period_end > '", datetime, "');\n"
   )
