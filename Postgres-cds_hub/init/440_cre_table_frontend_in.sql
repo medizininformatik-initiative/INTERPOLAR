@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-04-18 00:25:28
+-- Create time: 2025-04-18 00:31:44
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  440_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.patient_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'patient_fe'
@@ -275,7 +275,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.fall_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'fall_fe'
@@ -598,7 +598,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.medikationsanalyse_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'medikationsanalyse_fe'
@@ -981,7 +981,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.mrpdokumentation_validierung_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1874,7 +1874,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.retrolektive_mrpbewertung_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2717,7 +2717,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.risikofaktor_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'risikofaktor_fe'
@@ -3010,7 +3010,7 @@ CREATE TABLE IF NOT EXISTS db2frontend_in.trigger_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2frontend_in' AND table_name = 'trigger_fe'

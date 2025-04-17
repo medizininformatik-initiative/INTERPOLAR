@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-18 00:23:04
+-- Create time: 2025-04-18 00:29:23
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw'
@@ -914,7 +914,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw'
@@ -1218,7 +1218,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'condition_raw'
@@ -2552,7 +2552,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medication_raw'
@@ -3266,7 +3266,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest_raw'
@@ -5750,7 +5750,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw'
@@ -7024,7 +7024,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw'
@@ -9348,7 +9348,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'observation_raw'
@@ -10862,7 +10862,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport_raw'
@@ -11446,7 +11446,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest_raw'
@@ -12210,7 +12210,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'procedure_raw'
@@ -13074,7 +13074,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'consent_raw'
@@ -13538,7 +13538,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw'
@@ -13812,7 +13812,7 @@ CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward_raw'

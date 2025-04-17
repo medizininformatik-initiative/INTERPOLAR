@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-18 00:25:41
+-- Create time: 2025-04-18 00:31:56
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'patient_fe'
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'fall_fe'
@@ -596,7 +596,7 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe'
@@ -979,7 +979,7 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1872,7 +1872,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2715,7 +2715,7 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe'
@@ -3008,7 +3008,7 @@ CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'trigger_fe'

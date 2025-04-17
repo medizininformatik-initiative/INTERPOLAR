@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-04-18 00:25:22
+-- Create time: 2025-04-18 00:31:39
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe'
@@ -275,7 +275,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe'
@@ -598,7 +598,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe'
@@ -981,7 +981,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1874,7 +1874,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2717,7 +2717,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe'
@@ -3010,7 +3010,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe'

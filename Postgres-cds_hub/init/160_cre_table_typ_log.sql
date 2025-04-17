@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-18 00:24:36
+-- Create time: 2025-04-18 00:30:53
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'encounter'
@@ -917,7 +917,7 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'patient'
@@ -1222,7 +1222,7 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'condition'
@@ -2557,7 +2557,7 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medication'
@@ -3272,7 +3272,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationrequest'
@@ -5757,7 +5757,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationadministration'
@@ -7032,7 +7032,7 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationstatement'
@@ -9357,7 +9357,7 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'observation'
@@ -10872,7 +10872,7 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport'
@@ -11457,7 +11457,7 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'servicerequest'
@@ -12222,7 +12222,7 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'procedure'
@@ -13087,7 +13087,7 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'consent'
@@ -13552,7 +13552,7 @@ CREATE TABLE IF NOT EXISTS db_log.location (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'location'
@@ -13827,7 +13827,7 @@ CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
 
 DO
 $$
-DECLARE
+BEGIN
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward'
