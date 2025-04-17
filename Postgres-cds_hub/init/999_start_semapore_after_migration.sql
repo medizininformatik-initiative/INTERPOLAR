@@ -1,6 +1,25 @@
 DO
 $$
 BEGIN
+-- If the release version changes, documentation of the release version
+   IF EXISTS (
+      SELECT 1 
+      FROM (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version') a
+          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'last_valid_release_version') b
+      WHERE a.parameter_value!=b.parameter_value
+   ) THEN
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')
+      WHERE parameter_name = 'last_valid_release_version';
+
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')
+      WHERE parameter_name = 'last_valid_release_version_date';
+
+      UPDATE db_config.db_parameter SET parameter_value = 
+      (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')||'-'||(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')||' | '||parameter_name   
+      WHERE parameter_name = 'last_valid_release_version_log';
+   END IF;
+
+
 -- Set semapore if exit --------------------------------------------------------------------------
    IF EXISTS (
       SELECT 1 

@@ -5,7 +5,7 @@ DECLARE
 ---------------------------------------------------------------------------------------
    -- >>>> WICHTIG Standort / Zeitabhängig <<<< -- Hier bitte Variablen setzen
    release_version VARCHAR := '2.10';               -- GitHup release version
-   release_version_date VARCHAR := '2025-04-04';    -- GitHup release version date
+   release_version_date VARCHAR := '2025-05-01';    -- GitHup release version date
    project_participants VARCHAR := 'IMISE Leipzig'; -- project participants to distinguish between different instances
    pause_after_process_execution VARCHAR := '10';   -- Pause after copy process execution in second [5-30 sec] - ready to connect
    data_import_hist_every_dataset VARCHAR := 'no';  -- Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no] - large resource requirements only for debugging
@@ -90,6 +90,27 @@ BEGIN
       VALUES ('copy_fhir_metadata_from_raw_to_typed',copy_fhir_metadata_from_raw_to_typed,'Optionale Einstellung (Yes/No) ob die FHIR-Metadaten beim Kopiervorgang auch von RAW in die TYPED Tabellen übernommen werden soll.');
    ELSE
       UPDATE db_config.db_parameter SET parameter_value=max_process_time_set_ready WHERE parameter_name='copy_fhir_metadata_from_raw_to_typed';
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'last_valid_release_version'
+   ) THEN
+      INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+      VALUES ('last_valid_release_version','','Last version that was validly installed or migrated to');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'last_valid_release_version_date'
+   ) THEN
+      INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+      VALUES ('last_valid_release_version_date','','Last date a version was validly installed or migrated to');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'last_valid_release_version_log'
+   ) THEN
+      INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+      VALUES ('last_valid_release_version_log','','Documentation of the release version history');
    END IF;
 END
 $$;
