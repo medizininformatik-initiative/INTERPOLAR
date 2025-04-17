@@ -61,7 +61,7 @@ BEGIN
         c.column_name AS column_name,
         c.data_type AS data_type,
         c.is_nullable AS is_nullable,
-        c.column_default AS column_default,
+        c.column_default||c.generation_expression AS column_default,
         'A' AS status,
         (SELECT 'release_version: '||parameter_value||' / ' FROM db_config.db_parameter WHERE parameter_name='release_version')
         ||(SELECT 'release_version_date: '||parameter_value FROM db_config.db_parameter WHERE parameter_name='release_version_date') AS version_info,
@@ -69,10 +69,12 @@ BEGIN
         CURRENT_TIMESTAMP AS last_change_timestamp
     FROM information_schema.columns c
     WHERE c.table_schema IN ('db','db_config','db_log','cds2db_in','cds2db_out','db2dataprocessor_out','db2dataprocessor_in','db2frontend_out','db2frontend_in')
+    AND c.is_updatable = 'YES' -- Views ausschließen welche in TABLE enthalten sind
     AND COALESCE(c.table_schema,'#')||'#'||COALESCE(c.table_name,'#')||'#'||COALESCE(c.column_name,'#')||'#'||COALESCE(c.data_type,'#')||'#'||COALESCE(c.is_nullable,'#')||'#'||COALESCE(c.column_default,'#')
     NOT IN (SELECT COALESCE(l.schema_name,'#')||'#'||COALESCE(l.table_name,'#')||'#'||COALESCE(l.column_name,'#')||'#'||COALESCE(l.data_type,'#')||'#'||COALESCE(l.is_nullable,'#')||'#'||COALESCE(l.column_default,'#')
             FROM db_config.log_table_structure l
             WHERE l.status='A' AND l.object_type='TABLE'
+            AND c.is_updatable = 'YES' -- Views ausschließen welche in TABLE enthalten sind
             )
     ORDER BY table_schema, table_name, column_name
     );
@@ -84,6 +86,7 @@ BEGIN
     NOT IN (SELECT COALESCE(c.table_schema,'#')||'#'||COALESCE(c.table_name,'#')||'#'||COALESCE(c.column_name,'#')||'#'||COALESCE(c.data_type,'#')||'#'||COALESCE(c.is_nullable,'#')||'#'||COALESCE(c.column_default,'#')
             FROM information_schema.columns c
             WHERE c.table_schema IN ('db','db_config','db_log','cds2db_in','cds2db_out','db2dataprocessor_out','db2dataprocessor_in','db2frontend_out','db2frontend_in')
+            AND c.is_updatable = 'YES' -- Views ausschließen welche in TABLE enthalten sind
             )
     AND l.object_type='TABLE' AND status='A'
     ;
