@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-17 23:37:31
+-- Create time: 2025-04-18 00:07:55
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -38,14 +38,22 @@ DECLARE
 -- Table "encounter_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter_raw (
-  encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'encounter_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'encounter_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'encounter_raw'
@@ -904,14 +912,22 @@ DECLARE
 -- Table "patient_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient_raw (
-  patient_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  patient_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'patient_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'patient_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'patient_raw'
@@ -1200,14 +1216,22 @@ DECLARE
 -- Table "condition_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition_raw (
-  condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'condition_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'condition_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'condition_raw'
@@ -2526,14 +2550,22 @@ DECLARE
 -- Table "medication_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication_raw (
-  medication_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  medication_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medication_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'medication_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'medication_raw'
@@ -3232,14 +3264,22 @@ DECLARE
 -- Table "medicationrequest_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest_raw (
-  medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationrequest_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'medicationrequest_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'medicationrequest_raw'
@@ -5708,14 +5748,22 @@ DECLARE
 -- Table "medicationadministration_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration_raw (
-  medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationadministration_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'medicationadministration_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'medicationadministration_raw'
@@ -6974,14 +7022,22 @@ DECLARE
 -- Table "medicationstatement_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement_raw (
-  medicationstatement_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  medicationstatement_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationstatement_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'medicationstatement_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'medicationstatement_raw'
@@ -9290,14 +9346,22 @@ DECLARE
 -- Table "observation_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation_raw (
-  observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'observation_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'observation_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'observation_raw'
@@ -10796,14 +10860,22 @@ DECLARE
 -- Table "diagnosticreport_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport_raw (
-  diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport_raw'
@@ -11372,14 +11444,22 @@ DECLARE
 -- Table "servicerequest_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest_raw (
-  servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'servicerequest_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'servicerequest_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'servicerequest_raw'
@@ -12128,14 +12208,22 @@ DECLARE
 -- Table "procedure_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure_raw (
-  procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'procedure_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'procedure_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'procedure_raw'
@@ -12984,14 +13072,22 @@ DECLARE
 -- Table "consent_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent_raw (
-  consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'consent_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'consent_raw'
@@ -13440,14 +13536,22 @@ DECLARE
 -- Table "location_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location_raw (
-  location_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  location_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'location_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'location_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'location_raw'
@@ -13706,14 +13810,22 @@ DECLARE
 -- Table "pids_per_ward_raw" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward_raw (
-  pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward_raw'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward_raw'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward_raw'

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-17 23:38:07
+-- Create time: 2025-04-18 00:08:31
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -38,15 +38,23 @@ DECLARE
 -- Table "encounter" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
-  encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  encounter_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'encounter'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'encounter'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.encounter ADD encounter_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'encounter'
@@ -905,15 +913,23 @@ DECLARE
 -- Table "patient" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
-  patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  patient_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.patient ADD patient_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
@@ -1202,15 +1218,23 @@ DECLARE
 -- Table "condition" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition (
-  condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  condition_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'condition'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'condition'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.condition ADD condition_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'condition'
@@ -2529,15 +2553,23 @@ DECLARE
 -- Table "medication" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
-  medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  medication_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medication'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'medication'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.medication ADD medication_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'medication'
@@ -3236,15 +3268,23 @@ DECLARE
 -- Table "medicationrequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
-  medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  medicationrequest_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.medicationrequest ADD medicationrequest_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest'
@@ -5713,15 +5753,23 @@ DECLARE
 -- Table "medicationadministration" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
-  medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  medicationadministration_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.medicationadministration ADD medicationadministration_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration'
@@ -6980,15 +7028,23 @@ DECLARE
 -- Table "medicationstatement" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
-  medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  medicationstatement_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.medicationstatement ADD medicationstatement_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement'
@@ -9297,15 +9353,23 @@ DECLARE
 -- Table "observation" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
-  observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  observation_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'observation'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'observation'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.observation ADD observation_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'observation'
@@ -10804,15 +10868,23 @@ DECLARE
 -- Table "diagnosticreport" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
-  diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  diagnosticreport_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.diagnosticreport ADD diagnosticreport_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport'
@@ -11381,15 +11453,23 @@ DECLARE
 -- Table "servicerequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
-  servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  servicerequest_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.servicerequest ADD servicerequest_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest'
@@ -12138,15 +12218,23 @@ DECLARE
 -- Table "procedure" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
-  procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  procedure_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'procedure'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'procedure'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.procedure ADD procedure_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'procedure'
@@ -12995,15 +13083,23 @@ DECLARE
 -- Table "consent" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
-  consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  consent_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'consent'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'consent'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD consent_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'consent'
@@ -13452,15 +13548,23 @@ DECLARE
 -- Table "location" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
-  location_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  location_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  location_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'location'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'location'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.location ADD location_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'location'
@@ -13719,15 +13823,23 @@ DECLARE
 -- Table "pids_per_ward" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
-  pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
-  pids_per_ward_raw_id int NOT NULL -- Primary key of the corresponding raw table
+  pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward'
+            AND column_name = 'input_datetime'
+        ) THEN
+            ALTER TABLE cds2db_in.pids_per_ward ADD pids_per_ward_raw_id int NOT NULL; -- Primary key of the corresponding raw table
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward'

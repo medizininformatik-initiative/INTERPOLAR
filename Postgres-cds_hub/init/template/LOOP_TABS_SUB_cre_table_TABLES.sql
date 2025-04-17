@@ -4,16 +4,24 @@ DECLARE
 -- Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
-  <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int, -- Primary key of the entity - already filled in this schema - History via timestamp"%>
-  <%IF NOT RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity"%>
-  <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "<%TABLE_NAME%>_raw_id int NOT NULL -- Primary key of the corresponding raw table"%>
+  <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int -- Primary key of the entity - already filled in this schema - History via timestamp"%>
+  <%IF NOT RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity"%>
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
+            AND column_name = 'input_datetime'
+        ) THEN
+            <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD <%TABLE_NAME%>_raw_id int NOT NULL; -- Primary key of the corresponding raw table"%>
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'

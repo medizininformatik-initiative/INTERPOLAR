@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-17 23:39:35
+-- Create time: 2025-04-18 00:09:59
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -38,14 +38,22 @@ DECLARE
 -- Table "patient_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient_fe (
-  patient_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  patient_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'patient_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'patient_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'patient_fe'
@@ -263,14 +271,22 @@ DECLARE
 -- Table "fall_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.fall_fe (
-  fall_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  fall_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'fall_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'fall_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'fall_fe'
@@ -578,14 +594,22 @@ DECLARE
 -- Table "medikationsanalyse_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
-  medikationsanalyse_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  medikationsanalyse_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe'
@@ -953,14 +977,22 @@ DECLARE
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
-  mrpdokumentation_validierung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  mrpdokumentation_validierung_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1838,14 +1870,22 @@ DECLARE
 -- Table "retrolektive_mrpbewertung_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
-  retrolektive_mrpbewertung_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  retrolektive_mrpbewertung_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2673,14 +2713,22 @@ DECLARE
 -- Table "risikofaktor_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
-  risikofaktor_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  risikofaktor_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe'
@@ -2958,14 +3006,22 @@ DECLARE
 -- Table "trigger_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
-  trigger_fe_id int, -- Primary key of the entity - already filled in this schema - History via timestamp
+  trigger_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'trigger_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'trigger_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'trigger_fe'

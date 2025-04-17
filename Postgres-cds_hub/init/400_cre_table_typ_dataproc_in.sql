@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-04-17 23:39:24
+-- Create time: 2025-04-18 00:09:48
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -40,14 +40,22 @@ DECLARE
 -- Table "patient_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
-  patient_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  patient_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe'
@@ -265,14 +273,22 @@ DECLARE
 -- Table "fall_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
-  fall_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  fall_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe'
@@ -580,14 +596,22 @@ DECLARE
 -- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
-  medikationsanalyse_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  medikationsanalyse_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe'
@@ -955,14 +979,22 @@ DECLARE
 -- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
-  mrpdokumentation_validierung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  mrpdokumentation_validierung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1840,14 +1872,22 @@ DECLARE
 -- Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
-  retrolektive_mrpbewertung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  retrolektive_mrpbewertung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2675,14 +2715,22 @@ DECLARE
 -- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
-  risikofaktor_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  risikofaktor_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe'
@@ -2960,14 +3008,22 @@ DECLARE
 -- Table "trigger_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
-  trigger_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq'), -- Primary key of the entity
+  trigger_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
--- Organizational items - fixed for each database table -----------------------------------------
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe'
     ) THEN
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe'
+            AND column_name = 'input_datetime'
+        ) THEN
+            NULL;
+        END IF; -- column
+
+-- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe'
