@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-18 00:08:31
+-- Create time: 2025-04-18 00:24:08
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -32,15 +32,15 @@
 -- Create SQL Tables in Schema "cds2db_in" --
 -----------------------------------------------------
 
-DO
-$$
-DECLARE
 -- Table "encounter" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
   encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'encounter'
@@ -907,15 +907,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "patient" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient (
   patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
@@ -1212,15 +1212,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "condition" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition (
   condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'condition'
@@ -2547,15 +2547,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medication" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication (
   medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medication'
@@ -3262,15 +3262,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationrequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
   medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest'
@@ -5747,15 +5747,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationadministration" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
   medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration'
@@ -7022,15 +7022,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationstatement" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
   medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement'
@@ -9347,15 +9347,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "observation" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation (
   observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'observation'
@@ -10862,15 +10862,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "diagnosticreport" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
   diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport'
@@ -11447,15 +11447,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "servicerequest" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
   servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest'
@@ -12212,15 +12212,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "procedure" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
   procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'procedure'
@@ -13077,15 +13077,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "consent" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent (
   consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'consent'
@@ -13542,15 +13542,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "location" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location (
   location_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'location'
@@ -13817,15 +13817,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "pids_per_ward" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward (
   pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward'

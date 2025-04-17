@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-18 00:10:07
+-- Create time: 2025-04-18 00:25:41
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -32,15 +32,15 @@
 -- Create SQL Tables in Schema "db_log" --
 -----------------------------------------------------
 
-DO
-$$
-DECLARE
 -- Table "patient_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient_fe (
   patient_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'patient_fe'
@@ -265,15 +265,15 @@ CREATE TABLE IF NOT EXISTS db_log.patient_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "fall_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.fall_fe (
   fall_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'fall_fe'
@@ -588,15 +588,15 @@ CREATE TABLE IF NOT EXISTS db_log.fall_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medikationsanalyse_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
   medikationsanalyse_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe'
@@ -971,15 +971,15 @@ CREATE TABLE IF NOT EXISTS db_log.medikationsanalyse_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "mrpdokumentation_validierung_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
   mrpdokumentation_validierung_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1864,15 +1864,15 @@ CREATE TABLE IF NOT EXISTS db_log.mrpdokumentation_validierung_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "retrolektive_mrpbewertung_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   retrolektive_mrpbewertung_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2707,15 +2707,15 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "risikofaktor_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
   risikofaktor_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe'
@@ -3000,15 +3000,15 @@ CREATE TABLE IF NOT EXISTS db_log.risikofaktor_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "trigger_fe" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.trigger_fe (
   trigger_fe_id int -- Primary key of the entity - already filled in this schema - History via timestamp
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'trigger_fe'

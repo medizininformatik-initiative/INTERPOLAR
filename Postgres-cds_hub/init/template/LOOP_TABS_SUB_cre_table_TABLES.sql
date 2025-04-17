@@ -1,6 +1,3 @@
-DO
-$$
-DECLARE
 -- Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
@@ -8,6 +5,9 @@ CREATE TABLE IF NOT EXISTS <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
   <%IF NOT RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "<%TABLE_NAME%>_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity"%>
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'

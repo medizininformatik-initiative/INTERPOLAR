@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-04-18 00:09:48
+-- Create time: 2025-04-18 00:25:22
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -34,15 +34,15 @@
 -- Create SQL Tables in Schema "db2dataprocessor_in" --
 -----------------------------------------------------
 
-DO
-$$
-DECLARE
 -- Table "patient_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
   patient_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe'
@@ -267,15 +267,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.patient_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "fall_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
   fall_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe'
@@ -590,15 +590,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.fall_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medikationsanalyse_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
   medikationsanalyse_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe'
@@ -973,15 +973,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.medikationsanalyse_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "mrpdokumentation_validierung_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrpdokumentation_validierung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe'
@@ -1866,15 +1866,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "retrolektive_mrpbewertung_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
   retrolektive_mrpbewertung_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2709,15 +2709,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "risikofaktor_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
   risikofaktor_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe'
@@ -3002,15 +3002,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.risikofaktor_fe (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "trigger_fe" in schema "db2dataprocessor_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db2dataprocessor_in.trigger_fe (
   trigger_fe_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe'

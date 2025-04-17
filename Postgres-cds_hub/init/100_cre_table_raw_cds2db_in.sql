@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-18 00:07:28
+-- Create time: 2025-04-18 00:23:04
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -32,15 +32,15 @@
 -- Create SQL Tables in Schema "cds2db_in" --
 -----------------------------------------------------
 
-DO
-$$
-DECLARE
 -- Table "encounter_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
   encounter_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw'
@@ -906,15 +906,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.encounter_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "patient_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
   patient_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw'
@@ -1210,15 +1210,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.patient_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "condition_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
   condition_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'condition_raw'
@@ -2544,15 +2544,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.condition_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medication_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
   medication_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medication_raw'
@@ -3258,15 +3258,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medication_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationrequest_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
   medicationrequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest_raw'
@@ -5742,15 +5742,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationrequest_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationadministration_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
   medicationadministration_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw'
@@ -7016,15 +7016,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationadministration_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationstatement_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
   medicationstatement_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw'
@@ -9340,15 +9340,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.medicationstatement_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "observation_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
   observation_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'observation_raw'
@@ -10854,15 +10854,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.observation_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "diagnosticreport_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
   diagnosticreport_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport_raw'
@@ -11438,15 +11438,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.diagnosticreport_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "servicerequest_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
   servicerequest_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest_raw'
@@ -12202,15 +12202,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.servicerequest_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "procedure_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
   procedure_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'procedure_raw'
@@ -13066,15 +13066,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.procedure_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "consent_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
   consent_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'consent_raw'
@@ -13530,15 +13530,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.consent_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "location_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
   location_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw'
@@ -13804,15 +13804,15 @@ CREATE TABLE IF NOT EXISTS cds2db_in.location_raw (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "pids_per_ward_raw" in schema "cds2db_in"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cds2db_in.pids_per_ward_raw (
   pids_per_ward_raw_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward_raw'

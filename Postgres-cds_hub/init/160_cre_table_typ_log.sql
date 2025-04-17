@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-18 00:08:59
+-- Create time: 2025-04-18 00:24:36
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -34,15 +34,15 @@
 -- Create SQL Tables in Schema "db_log" --
 -----------------------------------------------------
 
-DO
-$$
-DECLARE
 -- Table "encounter" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.encounter (
   encounter_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'encounter'
@@ -909,15 +909,15 @@ CREATE TABLE IF NOT EXISTS db_log.encounter (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "patient" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.patient (
   patient_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'patient'
@@ -1214,15 +1214,15 @@ CREATE TABLE IF NOT EXISTS db_log.patient (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "condition" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.condition (
   condition_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'condition'
@@ -2549,15 +2549,15 @@ CREATE TABLE IF NOT EXISTS db_log.condition (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medication" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medication (
   medication_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medication'
@@ -3264,15 +3264,15 @@ CREATE TABLE IF NOT EXISTS db_log.medication (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationrequest" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
   medicationrequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationrequest'
@@ -5749,15 +5749,15 @@ CREATE TABLE IF NOT EXISTS db_log.medicationrequest (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationadministration" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
   medicationadministration_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationadministration'
@@ -7024,15 +7024,15 @@ CREATE TABLE IF NOT EXISTS db_log.medicationadministration (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "medicationstatement" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
   medicationstatement_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'medicationstatement'
@@ -9349,15 +9349,15 @@ CREATE TABLE IF NOT EXISTS db_log.medicationstatement (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "observation" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.observation (
   observation_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'observation'
@@ -10864,15 +10864,15 @@ CREATE TABLE IF NOT EXISTS db_log.observation (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "diagnosticreport" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
   diagnosticreport_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport'
@@ -11449,15 +11449,15 @@ CREATE TABLE IF NOT EXISTS db_log.diagnosticreport (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "servicerequest" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.servicerequest (
   servicerequest_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'servicerequest'
@@ -12214,15 +12214,15 @@ CREATE TABLE IF NOT EXISTS db_log.servicerequest (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "procedure" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.procedure (
   procedure_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'procedure'
@@ -13079,15 +13079,15 @@ CREATE TABLE IF NOT EXISTS db_log.procedure (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "consent" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.consent (
   consent_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'consent'
@@ -13544,15 +13544,15 @@ CREATE TABLE IF NOT EXISTS db_log.consent (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "location" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.location (
   location_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'location'
@@ -13819,15 +13819,15 @@ CREATE TABLE IF NOT EXISTS db_log.location (
     END IF; -- Table
 END
 $$;
-DO
-$$
-DECLARE
 -- Table "pids_per_ward" in schema "db_log"
 -------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_log.pids_per_ward (
   pids_per_ward_id int PRIMARY KEY DEFAULT nextval('db.db_seq') -- Primary key of the entity
 );
 
+DO
+$$
+DECLARE
     IF EXISTS ( -- Table exists
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward'
