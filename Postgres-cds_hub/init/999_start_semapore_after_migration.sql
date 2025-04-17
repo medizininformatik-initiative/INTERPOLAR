@@ -15,7 +15,7 @@ BEGIN
       WHERE parameter_name = 'last_valid_release_version_date';
 
       UPDATE db_config.db_parameter SET parameter_value = 
-      (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')||'-'||(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')||' | '||parameter_name   
+      (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')||'-'||(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')||' | '||parameter_value
       WHERE parameter_name = 'last_valid_release_version_log';
    END IF;
 
