@@ -33,8 +33,8 @@ retrieve <- function(reset_lock_only = FALSE) {
       if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
         PATH_TO_PID_LIST_FILE <- fhircrackr::paste_paths(DEBUG_PATH_TO_RAW_RDATA_FILES, "pids_per_ward_raw.RData")
       }
-      patient_IDs_per_ward <- getPatientIDsPerWard(ifelse(exists("PATH_TO_PID_LIST_FILE"), PATH_TO_PID_LIST_FILE, NA))
-      all_wards_empty <- length(unlist(patient_IDs_per_ward)) == 0
+      pids_splitted_by_ward <- getPIDsSplittedByWard(ifelse(exists("PATH_TO_PID_LIST_FILE"), PATH_TO_PID_LIST_FILE, NA))
+      all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })
 
     if (!all_wards_empty) {
@@ -49,7 +49,7 @@ retrieve <- function(reset_lock_only = FALSE) {
         # the pids_per_ward table. But it contains only tables which have at least 1 row. Tables
         # for resources which could not be downloaded (generally missing or not present for the
         # current date) are not included here.
-        resource_tables <- loadResourcesFromFHIRServer(patient_IDs_per_ward, fhir_table_descriptions)
+        resource_tables <- loadResourcesFromFHIRServer(pids_splitted_by_ward, fhir_table_descriptions)
         all_empty_fhir <- all(sapply(names(resource_tables), function(name) {
           if (name == "pids_per_ward") TRUE else nrow(resource_tables[[name]]) == 0
         }))
