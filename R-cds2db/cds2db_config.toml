@@ -162,11 +162,6 @@ ENCOUNTER_FILTER_PATTERN_3 = [
   "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
 ]
 
-# If this parameter is set to true, multiple Encounters per Patients (i.e. two different locations on
-# the same time) are not allowed in the pids_per_ward table.
-# In this case the Encounter with the latest start date will be selected, fallback if there are two
-# datasets with the same start date is the latest meta.lastUpdated date.
-DISABLE_MULTIPLE_ENCOUNTERS_PER_PATIENT = true
 
 [retrieve.debug]
 

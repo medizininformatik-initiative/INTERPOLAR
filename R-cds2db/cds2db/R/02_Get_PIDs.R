@@ -335,15 +335,6 @@ getPIDsSplittedByWard <- function(path_to_PID_list_file = NA, log_result = TRUE)
       # filter patterns + the additional paths above
       encounters <- getEncounters(filter_enc_table_description, current_datetime)
 
-      if (etlutils::isDefinedAndTrue("DISABLE_MULTIPLE_ENCOUNTERS_PER_PATIENT")) {
-        # Convert datetime columns to proper POSIXct format with timezone
-        etlutils::convertDateTimeFormat(encounters, c("period.start", "meta.lastUpdated"))
-        # Sort encounters by patient reference, then by most recent period start and last updated time
-        data.table::setorder(encounters, subject.reference, -period.start, -meta.lastUpdated)
-        # Keep only the first (most relevant) encounter per patient
-        encounters <- encounters[!duplicated(subject.reference)]
-      }
-
       # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
       # names for the filtering -> set them here
       names(encounters) <- filter_enc_table_description@cols@.Data
@@ -375,10 +366,49 @@ getPIDsSplittedByWard <- function(path_to_PID_list_file = NA, log_result = TRUE)
       }
       error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward in file '", path_to_PID_list_file, "'.\n",
                               error_message_part,
-                              etlutils::getPrintString(duplicates_pids_per_ward))
+                              etlutils::getPrintString(duplicates_pids_per_ward), "\n",
+                              "Hint: To ensure that a patient only has exactly one Encounter assigned to exactly one ward, all but one Encounter will be removed.\n",
+                              "      Only the encounters with the latest start date are left.\n",
+                              "      If there are several, then the lastUpdateDate of the Encounter is checked.\n",
+                              "      If there are still several, the first Encounter in the list is simply left.\n")
       etlutils::catWarningMessage(error_message) # first this was an stop error but now it is a warning
     }
   })
+
+  filterEncountersPerPatient <- function(pids_per_ward, encounters) {
+
+    # Join encounter info (start + meta) to combined table
+    pids_per_ward <- merge(
+      pids_per_ward,
+      encounters[, .(encounter_id = id, `period/start`, `meta/lastUpdated`)],
+      by = "encounter_id",
+      all.x = TRUE
+    )
+
+    # Step 1: Keep only the encounters with the **latest `period/start`** per patient_id
+    pids_per_ward <- pids_per_ward[
+      pids_per_ward[, .I[`period/start` == max(`period/start`, na.rm = TRUE)], by = patient_id]$V1
+    ]
+
+    # Step 2: If multiple entries per patient_id remain, keep those with latest meta-lastUpdateDate
+    pids_per_ward <- pids_per_ward[
+      pids_per_ward[, .I[`meta/lastUpdated` == max(`meta/lastUpdated`, na.rm = TRUE)], by = patient_id]$V1
+    ]
+
+    # Step 3: If still multiple per patient_id: keep only the first (arbitrary stable choice)
+    pids_per_ward <- pids_per_ward[
+      pids_per_ward[, .I[1], by = patient_id]$V1
+    ]
+
+    # Re-split into station-wise list
+    pids_splitted_by_ward <- split(pids_per_ward[, .(patient_id, encounter_id, ward_name)], by = "ward_name")
+    # Remove the ward_name column from all subtables
+    pids_splitted_by_ward <- lapply(pids_splitted_by_ward, function(dt) dt[, ward_name := NULL])
+
+    return(pids_splitted_by_ward)
+  }
+
+  pids_splitted_by_ward <- filterEncountersPerPatient(pids_per_ward, encounters)
 
   if (log_result) {
     no_wards <- !length(pids_splitted_by_ward)
