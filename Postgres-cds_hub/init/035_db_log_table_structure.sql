@@ -74,7 +74,6 @@ BEGIN
     NOT IN (SELECT COALESCE(l.schema_name,'#')||'#'||COALESCE(l.table_name,'#')||'#'||COALESCE(l.column_name,'#')||'#'||COALESCE(l.data_type,'#')||'#'||COALESCE(l.is_nullable,'#')||'#'||COALESCE(l.column_default,'#')
             FROM db_config.log_table_structure l
             WHERE l.status='A' AND l.object_type='TABLE'
-            AND c.is_updatable = 'YES' -- Views ausschließen welche in TABLE enthalten sind
             )
     ORDER BY table_schema, table_name, column_name
     );
