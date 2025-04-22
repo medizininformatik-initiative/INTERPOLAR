@@ -42,6 +42,11 @@ startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "",
     createClock()
     # Start logging console outputs
     startLogging(module_name)
+    # Log github active tag and branch
+    cat("\n---------------------------\nGithub Script Version:\n---------------------------\n")
+    cat("Tag: ", system("git describe --tags", intern = TRUE), "\n")
+    cat("Branch: ", system("git branch --show-current", intern = TRUE), "\n")
+    cat("Current Time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
     # Log all configuration parameters, optionally hiding values based on the pattern
     catList(config, prefix = "\n---------------------------\nConfiguration:\n---------------------------\n", suffix = "\n", hide_value_pattern)
   }
