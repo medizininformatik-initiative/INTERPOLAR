@@ -14,7 +14,8 @@ ENV NCPUS=1
 RUN apt-get update && apt-get install -y -q \
         apt-utils \
         vim less \
-        wget curl
+        wget curl \
+		git
 
 # etlutils
 
