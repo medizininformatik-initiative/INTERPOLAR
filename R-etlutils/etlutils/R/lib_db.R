@@ -114,6 +114,15 @@ dbIsLog <- function() .lib_db_env[["DB_LOG"]]
 #' @export
 dbGetModuleName <- function() .lib_db_env[["MODULE_NAME"]]
 
+#' If true, the database cron job will be startet by R code alwas if it is necessary.
+#' This should prevent unnecessary waiting times if the cron job is only started once
+#' a minute by the database itself.
+#'
+#' #' @return A logical value. \code{TRUE} if the cron job should be started immediately,
+#' \code{FALSE} otherwise.
+#'
+dbIsRunCronJobImmediately <- function() isDefinedAndTrue("DB_RUN_CRON_JOB_IMMEDIATELY", envir = .lib_db_env)
+
 #' Log Messages to the Console if Logging is Enabled
 #'
 #' This function logs messages to the console if logging is enabled.
@@ -276,6 +285,17 @@ dbGetSingleValue <- function(query) {
 #'
 dbGetStatus <- function() {
   status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+  if (dbIsRunCronJobImmediately()) {
+    if (grepl("WaitForCronJob", status)) {
+      admin_connection <- dbGetAdminConnection()
+      DBI::dbExecute(admin_connection,
+                    "UPDATE db_config.db_process_control
+                     SET pc_value = 'ReadyToConnect', last_change_timestamp = CURRENT_TIMESTAMP
+                     WHERE pc_name = 'semaphor_cron_job_data_transfer';")
+      status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+    }
+  }
+  return(status)
 }
 
 #' Check Database Semaphore Status
@@ -413,7 +433,7 @@ dbTransferDataInternal <- function() {
     "SELECT db.copy_fe_fe_in_to_db_log();"
   )
   for (query in queries) {
-    DBI::dbGetQuery(admin_connection, query)
+    DBI::dbExecute(admin_connection, query)
   }
 }
 
@@ -451,9 +471,9 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
            "The current status is: " , status, "\n",
            dbGetInfo(readonly))
     }
-    # if (!readonly) {
-    #   dbTransferDataInternal()
-    # }
+    if (!readonly && dbIsRunCronJobImmediately()) {
+      dbTransferDataInternal()
+    }
   }
   return(unlock_successful)
 }

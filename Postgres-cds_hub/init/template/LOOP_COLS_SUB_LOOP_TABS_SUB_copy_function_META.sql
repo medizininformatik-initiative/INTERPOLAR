@@ -1,0 +1,1 @@
+<%IF TABLE_DESCRIPTION:COLUMN_DESCRIPTION "^meta/" "UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record SET <%COLUMN_NAME%> = current_record.<%COLUMN_NAME%> WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(<%COLUMN_NAME%>) != db.to_char_immutable(current_record.<%COLUMN_NAME%>);"%>

@@ -10,6 +10,8 @@ library(db2frontend)
 # Reset error status
 options(error = NULL)
 
+#DEBUG_RUN_DB_CRON_JOB_IMMEDIATELY <- TRUE
+
 if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
 }
@@ -30,14 +32,21 @@ for (arg in args) {
   }
 }
 
+resetMemory <- function() {
+  rm(list = setdiff(ls(), c("DEBUG_DAY", "DEBUG_DATES")))
+}
+
 tryCatch({
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     cds2db::retrieve()
   }
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     dataprocessor::processData()
   }
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     db2frontend::startDB2Frontend()
   }
   if (etlutils::isErrorOccured()) {

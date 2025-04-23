@@ -1170,3 +1170,40 @@ mergeTablesUnion <- function(list1, list2) {
   }
   return(combined_list)
 }
+
+#' Filter rows of a data.table by regex pattern on a specific column
+#'
+#' This function filters the given data.table by applying a regular expression pattern to a specified
+#' column. If the pattern is empty or matches any string (e.g., ".*"), the original table is returned
+#' unmodified. If no rows match the pattern, an error message is printed using
+#' \code{etlutils::catErrorMessage()} and \code{NA} is returned.
+#'
+#' @param dt A \code{data.table} to filter.
+#' @param column_name The name of the column (as string) to apply the pattern to.
+#' @param pattern A regular expression used to match against the specified column.
+#'
+#' @return A filtered \code{data.table} if matching rows exist, otherwise \code{NA}. If the pattern is
+#'         empty or matches any string, the original table is returned.
+#'
+#' @examples
+#' dt <- data.table::data.table(name = c("Alice", "Bob", "Charlie"))
+#' dtFilterRows(dt, "name", "^A")  # Returns only row with Alice
+#' dtFilterRows(dt, "name", ".*")  # Returns original table
+#' dtFilterRows(dt, "name", "^Z")  # Returns NA and prints error
+#'
+#' @export
+dtFilterRows <- function(dt, column_name, pattern) {
+  # If the pattern is empty (same as any string) or matches any string, return the original table
+  if (pattern %in% c("", ".*")) {
+    return(dt)
+  }
+  # remove rows where colum value does not match the pattern
+  dt_filtered <- dt[grepl(pattern, get(column_name))]
+  # check error no row left after filtering
+  if (!nrow(dt_filtered)) { #
+    dt_printed <- capture.output(print(dt))
+    etlutils::catErrorMessage(paste0("No rows found with a '", column_name, "' matching pattern '", pattern, "' in table\n",  paste0(dt_printed, collapse = "\n")))
+    return(NA)
+  }
+  return(dt_filtered)
+}

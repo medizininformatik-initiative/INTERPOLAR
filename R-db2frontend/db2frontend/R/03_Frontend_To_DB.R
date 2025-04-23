@@ -33,7 +33,13 @@ importRedcap2DB <- function() {
     if(!(form_name %in% c("risikofaktor", "trigger"))) {
 
       dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
-      redcapAPI::reviewInvalidRecords(dt)
+
+      # Remove the redcap_data_access_group values, as they are not needed in the database
+      dt[, redcap_data_access_group := NA]
+
+      # Ensure that the redcap_repeat_instrument column is set to the form name
+      # For unknown reasons, Redcap sometimes creates invalid entries where the
+      # redcap_repeat_instrument column is not NA but does not contain the form name.
       data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
 
       # Redcap creates invalid entries for unknown reasons where the _complete column is NA, which

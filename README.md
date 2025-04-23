@@ -77,6 +77,7 @@ Daraus kommen wir zu folgender Abschätzung der IT-Ressourcen:
  | RAM | 8-16 Gb |
  | Storage | 500 Gb |
 
+Es handelt sich dabei um eine Schätzung. Je nach Datenbestand kann es erforderlich sein, die IT-Ressourcen anzupassen. Nach bisherigen Rückmeldungen kann eine Erhöhung der IT-Ressourcen auf 8 CPU-Kerne und 64 Gb RAM die Verarbeitung ggf. stark beschleunigen.
 
 ## Installation
 

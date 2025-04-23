@@ -14,7 +14,8 @@ ENV NCPUS=1
 RUN apt-get update && apt-get install -y -q \
         apt-utils \
         vim less \
-        wget curl
+        wget curl \
+		git
 
 # etlutils
 
@@ -33,10 +34,7 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS httr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS rlang
 RUN /rocker_scripts/bin/install2.r -n $NCPUS stringr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS xml2
-RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
-#RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
-RUN R -e "install.packages('remotes')"
-RUN R -e "remotes::install_github('POLAR-fhiR/fhircrackr@142-optimize-fhir_melt_all')"
+RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
 
 WORKDIR /src
 
