@@ -88,8 +88,10 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #'
 parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 
-  # this should be only used for debug/tests
-  if (endsWith(path_to_PID_list_file, ".RData")) {
+  # This should be only used for debug/tests.
+  # Parse Patient_id from text file is deactivated. The code below this hunk is deactivated.
+  # DIC should go the way of assigning the encounter/patients to the wards via the 3-stage encounter system.
+  if (TRUE || endsWith(path_to_PID_list_file, ".RData")) {
     return(readRDS(path_to_PID_list_file))
   }
 
