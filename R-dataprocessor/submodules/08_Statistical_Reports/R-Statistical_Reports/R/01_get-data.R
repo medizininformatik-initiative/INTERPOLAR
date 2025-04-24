@@ -1,39 +1,52 @@
 #' Get Patient Data
 #'
-#' This function retrieves patient data, specifically patient IDs and birthdates,
-#' from a specified database table. It ensures data consistency by checking for
-#' duplicate birthdates for the same patient.
+#' This function retrieves patient data—including patient IDs, birthdates, and metadata—
+#' from a specified database table. It ensures data consistency by removing duplicate entries
+#' and warning the user if multiple records exist for the same patient ID or identifier.
 #'
 #' @param lock_id A character string specifying the lock ID for the database query.
-#'   This ensures safe access to the database during the query execution.
+#'   This ensures safe access to the database during query execution and may support concurrent processing.
 #' @param table_name A character string specifying the name of the database table to query.
-#'   The table must contain `pat_id` and `pat_birthdate` columns.
+#'   The table must contain at least the following columns: `pat_id`, `pat_identifier_value`,
+#'   `pat_birthdate`, `pat_deceaseddatetime`, `pat_meta_lastupdated`, and `input_datetime`.
 #'
-#' @return A data frame containing unique patient IDs (`pat_id`) and birthdates
-#'   (`pat_birthdate`), sorted by `pat_id`.
+#' @return A data frame containing:
+#'   - `pat_id`: Patient FHIR identifier
+#'   - `pat_identifier_value`: KIS (hospital system) patient identifier
+#'   - `pat_birthdate`: Patient's birthdate (expected in `Date` format)
+#'   - `pat_deceaseddatetime`: Date and time of death, if available
+#'   - `pat_meta_lastupdated`: Timestamp of last update to patient data
+#'   - `input_datetime`: Timestamp of data input
+#'   The result is sorted by `pat_id` and includes only distinct rows.
 #'
 #' @details
 #' The function performs the following steps:
-#' 1. Executes an SQL query to retrieve the `pat_id` and `pat_birthdate` columns
-#'    from the specified `table_name`.
-#' 2. Removes duplicate rows from the result.
-#' 3. Sorts the table by `pat_id`.
-#' 4. Checks for duplicate birthdates for the same patient using the
-#'    `check_multiple_rows` function. If duplicates are found, a warning message is printed.
-#'
+#' 1. Executes a SQL query to retrieve required patient-related columns from the specified table.
+#' 2. Removes any exact duplicate rows from the result.
+#' 3. Sorts the data by `pat_id`.
+#' 4. Checks for potential duplicates in:
+#'    - `pat_id`: should uniquely identify patients in FHIR
+#'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
+#'    If duplicates are found, warnings are issued for manual inspection.
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
 getPatientData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT pat_id, pat_birthdate FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, pat_identifier_value, pat_birthdate, ",
+  "pat_deceaseddatetime, ",
+  "pat_meta_lastupdated, input_datetime FROM ", table_name, "\n")
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
 
   if (checkMultipleRows(patient_table, c("pat_id"))) {
-    warning("The patient table contains multiple birth dates for the same patient. Please check the data.")
+    warning("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+  }
+
+  if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
+    warning("The patient table contains multiple rows for the same patient identifier (KIS). Please check the data.")
   }
 
   return(patient_table)
@@ -43,45 +56,61 @@ getPatientData <- function(lock_id, table_name) {
 
 #' Get Encounter Data
 #'
-#' This function retrieves encounter data from a specified database table and returns a clean,
-#' sorted data frame containing distinct encounter records.
+#' This function retrieves detailed encounter data from a specified database table and
+#' returns a clean, sorted data frame containing distinct encounter records.
 #'
 #' @param lock_id A character string specifying the lock ID for the database query.
-#'   This ensures safe access to the database during the query execution.
+#'   This ensures safe and consistent access to the database during query execution.
 #' @param table_name A character string specifying the name of the database table to query.
-#'   The table must contain the following columns: `enc_id`, `enc_patient_ref`, `enc_partof_ref`,
-#'   `enc_class_code`, `enc_type_code`, `enc_period_start`,
-#'   `enc_period_end`, `enc_status`, `enc_servicetype_display`,
-#'   `enc_location_ref`, `enc_location_display`, and `input_datetime`.
+#'   The table must contain the following columns (at a minimum):
+#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_ref`
+#'   - `enc_class_system`, `enc_class_code`
+#'   - `enc_type_system`, `enc_type_code`
+#'   - `enc_servicetype_system`, `enc_servicetype_code`
+#'   - `enc_period_start`, `enc_period_end`, `enc_status`
+#'   - `enc_hospitalization_admitsource_system`, `enc_hospitalization_admitsource_code`
+#'   - `enc_hospitalization_dischargedisposition_system`, `enc_hospitalization_dischargedisposition_code`
+#'   - `enc_location_ref`, `enc_location_identifier_value`, `enc_location_status`
+#'   - `enc_location_physicaltype_system`, `enc_location_physicaltype_code`
+#'   - `enc_serviceprovider_identifier_type_system`, `enc_serviceprovider_identifier_type_code`
+#'   - `enc_serviceprovider_identifier_system`, `enc_serviceprovider_identifier_value`
+#'   - `enc_meta_lastupdated`, `input_datetime`
 #'
-#' @return A data frame containing distinct encounter records with the following columns:
-#'   - `enc_id`: Encounter ID
-#'   - `enc_patient_ref`: Reference to the patient associated with the encounter
-#'   - `enc_partof_ref`: Reference to the parent encounter in the style: "Encounter/enc_id"
-#'   - `enc_class_code`: Class code of the encounter i.e. IMP for inpatients
-#'   - `enc_type_code`: Type code of the encounter i.e. einrichtungskontakt, versorgungsstellenkontakt
-#'   - `enc_period_start`: Start date of the encounter period (for the entire stay or for the stay on the ward depending on enc_type_code)
-#'   - `enc_period_end`: End date of the encounter period (for the entire stay or for the stay on the ward depending on enc_type_code)
-#'   - `enc_status`: Status of the encounter i.e. 'in-progress', 'finished'
-#'   - `enc_servicetype_display`: Display name of the service type associated with the encounter
-#'   - `enc_location_ref`: Reference to the location where the encounter took place (ward)
-#'   - `enc_location_display`: Display name of the location where the encounter took place (ward)
-#'   - `input_datetime`: Date and time when the record was input
+#' @return A data frame with distinct encounter records, including:
+#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`)
+#'   - Classification and type (`enc_class_*`, `enc_type_*`)
+#'   - Service and hospitalization info (`enc_servicetype_*`, `enc_status`, `enc_hospitalization_*`)
+#'   - Encounter period (`enc_period_start`, `enc_period_end`)
+#'   - Location and physical type (`enc_location_*`, `enc_location_physicaltype_*`)
+#'   - Service provider identifiers (`enc_serviceprovider_*`)
+#'   - Metadata (`enc_meta_lastupdated`, `input_datetime`)
 #'
 #' @details
-#' The function executes an SQL query to fetch the specified columns from the given table.
-#' It removes duplicate rows from the result and sorts the table by
-#' `enc_patient_ref`, `enc_partof_ref`, `enc_id`, `enc_period_start`, `enc_period_end`,
-#' `enc_status`,`enc_servicetype_display`,`enc_location_ref`, `enc_location_display`, and `input_datetime`
-#' to ensure the output is well-organized.
+#' This function performs the following:
+#' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
+#' 2. Removes any exact duplicates using `dplyr::distinct()`.
+#' 3. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
+#'    to ensure consistency and clarity in downstream processing.
+#'
+#' Note:
+#' - The function assumes that all required columns exist in the source table.
+#' - It is recommended to inspect the schema if issues arise due to missing columns or mismatched field types.
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
+
 getEncounterData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT enc_id, enc_patient_ref, enc_partof_ref, enc_class_code, enc_type_code, ",
-                  "enc_period_start, enc_period_end, enc_status, enc_servicetype_display, ",
-                  "enc_location_ref, enc_location_display, input_datetime ",
+  query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, enc_class_system, enc_class_code, ",
+                  "enc_type_system, enc_type_code, enc_servicetype_system, enc_servicetype_code, ",
+                  "enc_period_start, enc_period_end, enc_status, ",
+                  "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
+                  "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
+                  "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
+                  "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
+                  "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
+                  "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
+                  "enc_meta_lastupdated, input_datetime ",
                   "FROM ", table_name, "\n")
 
   encounter_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
@@ -104,8 +133,8 @@ getEncounterData <- function(lock_id, table_name) {
 #'
 #' @return A data frame containing distinct records with the following columns:
 #'   - `ward_name`: The name of the ward.
-#'   - `patient_id`: The unique identifier of the patient.
-#'   - `encounter_id`: The unique identifier of the encounter.
+#'   - `patient_id`: The unique identifier of the patient (FHIR)
+#'   - `encounter_id`: The unique identifier of the encounter (FHIR)
 #'   - `input_datetime`: The timestamp of when the record was entered.
 #'
 #' @details
