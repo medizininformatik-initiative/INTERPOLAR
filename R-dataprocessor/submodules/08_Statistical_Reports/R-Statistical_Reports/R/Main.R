@@ -45,6 +45,19 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
 
   encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
                                         table_name = "v_encounter")
+# ---------------------------------------------------------------------------#
+# DEBUG: test data with added enc_type_code "versorgungsstellenkontakt" -------
+  encounter_table <- encounter_table |>
+    dplyr::filter(enc_type_code == "abteilungskontakt") |>
+    dplyr::mutate(enc_partof_ref = paste0("Encounter/",enc_id),
+                  enc_id = paste0(enc_id,"-V-1"),
+                  enc_type_code = "versorgungsstellenkontakt",
+                  enc_servicetype_system = NA,
+                  enc_servicetype_code = NA,
+                  enc_location_physicaltype_code = "wa") |>
+    dplyr::bind_rows(encounter_table) |>
+    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
+# ---------------------------------------------------------------------------#
 
   pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
                                                 table_name = "v_pids_per_ward")
