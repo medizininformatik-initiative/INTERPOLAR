@@ -19,7 +19,7 @@
 #' 2. Fetches patient data from the database using `getPatientData()`.
 #' 3. Fetches encounter data from the database using `getEncounterData()`.
 #' 4. Fetches data related to patients per ward using `getPidsPerWardData()`.
-#' 5. Merges the patient, encounter, and ward data using `mergePatEncWard()`, adds the main encounter ID
+#' 5. Merges the patient, encounter, and ward data using `mergePatEnc()`, adds the main encounter ID
 #'    using `addMainEncId()`, adds the main encounter period start using `addMainEncPeriodStart()`, and
 #'    calculates patient age using `calculateAge()`.
 #' 6. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
@@ -28,7 +28,7 @@
 #' 8. Prints the reporting period and the number of cases in the FAS1 dataset.
 #'
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#'   [mergePatEncWard()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
+#'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
                                     REPORT_PERIOD_END = "2025-03-05") {

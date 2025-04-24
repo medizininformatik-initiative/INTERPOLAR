@@ -1,33 +1,50 @@
-#' Merge Patient, Encounter, and Ward Data
+#' Merge Patient and Encounter Data
 #'
-#' This function merges patient data, encounter data, and ward-related patient data into a single dataset.
-#' It performs a series of joins to link patients, encounters, and ward-related data using appropriate keys.
+#' This function merges patient-level data with encounter-level data into a unified dataset.
+#' It extracts the patient ID from the `enc_patient_ref` column in the encounter data and
+#' then joins the patient details using that ID.
 #'
-#' @param patient_table A data frame containing patient information (e.g., patient ID and other patient details).
-#' @param encounter_table A data frame containing encounter data (e.g., encounter ID, patient reference, etc.).
-#' @param pids_per_ward_table A data frame containing ward-related patient data (e.g., patient ID, encounter ID, ward name).
+#' @param patient_table A data frame containing patient information, including at least:
+#'   - `pat_id`: FHIR patient ID
+#'   - Additional patient attributes such as birthdate, identifier, etc.
+#' @param encounter_table A data frame containing encounter information, including at least:
+#'   - `enc_patient_ref`: A reference to the patient (format: "Patient/<pat_id>")
+#'   - Other encounter attributes such as `enc_id`, `enc_type_code`, etc.
 #'
-#' @return A data frame containing merged data from the patient, encounter, and ward datasets.
-#'   The resulting dataset will include columns from all three input tables.
+#' @return A data frame that merges the encounter data with patient data, based on the extracted patient ID.
+#'   The resulting table includes all columns from both input tables.
 #'
 #' @details
-#' This function performs the following steps:
-#' 1. It modifies the `encounter_table` by extracting the patient ID from the `enc_patient_ref` column.
-#' 2. It performs a left join with the `patient_table` to include patient details in the encounter data.
-#' 3. It performs another left join with the `pids_per_ward_table` to include ward-related data for each patient and encounter.
-#' 4. The function returns the resulting merged data frame.
+#' The function performs the following steps:
+#' 1. Extracts the `pat_id` from the `enc_patient_ref` string in the `encounter_table`.
+#' 2. Performs a left join between the encounter table and the patient table using `pat_id` as the key.
+#' 3. Adds suffixes to overlapping column names (`_enc`, `_pat`) to distinguish their origin.
+#'
+#' This merged dataset is used for further filtering, enrichment, or analysis involving both patient
+#' and encounter context.
 #'
 #' @importFrom dplyr mutate left_join
 #' @export
-mergePatEncWard <- function(patient_table, encounter_table, pids_per_ward_table) {
+
+mergePatEnc <- function(patient_table, encounter_table) {
 
   merged_table <- encounter_table |>
-    dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref)) |>
-    dplyr::left_join(patient_table) |>
-    dplyr::left_join(pids_per_ward_table,
-                     by = c("pat_id" = "patient_id",
-                            "enc_id" = "encounter_id"),
-                     suffix = c("_encounter", "_pids_per_ward"))
+    dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref), .keep = "unused") |>
+    dplyr::left_join(patient_table, by = "pat_id", suffix = c("_enc", "_pat")) |>
+    dplyr::relocate(
+      enc_identifier_value,
+      pat_id,
+      pat_identifier_value,
+      enc_partof_ref,
+      enc_class_code,
+      enc_type_code,
+      pat_birthdate,
+      enc_period_start,
+      enc_period_end,
+      pat_deceaseddatetime,
+      enc_status,
+      .after = enc_id
+    )
   return(merged_table)
 }
 
