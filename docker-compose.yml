@@ -133,6 +133,7 @@ services:
     environment:
       TZ: Europe/Berlin
     volumes:
+      - ./.git:/src/.git:ro
       - ./outputLocal:/src/outputLocal
       - ./outputGlobal:/src/outputGlobal
       - ./R-cds2db/cds2db_config.toml:/src/R-cds2db/cds2db_config.toml
