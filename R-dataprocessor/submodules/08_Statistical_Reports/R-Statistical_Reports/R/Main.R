@@ -39,12 +39,17 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   if (!exists("LOCATION_IDENTIFIER")) {
     stop("LOCATION_IDENTIFIER is not defined. Please define it in the dataprocessor_config.toml")
   }
-
+  # TOASK: Sicherstellen, dass immer nur der aktuellste bzw. vollständigste Datensatz betrachtet wird -----
+  # z.B. durch Auswahl eines anderen views oder durch Filterung der Datensätze über input_datetime
+  # oder meta_last_updated?
   patient_table <- getPatientData(lock_id = "statistical reports[1]",
                                     table_name = "v_patient")
+  # --> this table should only have one entry per patient (warning if not)
 
   encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
                                         table_name = "v_encounter")
+  # TOASK: Can this table have multiple rows per encounter? ----------
+  # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 # ---------------------------------------------------------------------------#
 # DEBUG: test data with added enc_type_code "versorgungsstellenkontakt" -------
   encounter_table <- encounter_table |>
@@ -59,36 +64,45 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
 # ---------------------------------------------------------------------------#
 
+
+
   pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
                                                 table_name = "v_pids_per_ward")
+  # this table can have multiple entries per main encounter due to transferral to another ward
 
-  complete_table <- mergePatEncWard(patient_table, encounter_table, pids_per_ward_table) |>
-    addMainEncId() |>
-    addMainEncPeriodStart() |>
-    calculateAge()
+  print(patient_table)
+  print(encounter_table)
+  print(pids_per_ward_table)
+
+  complete_table <- mergePatEnc(patient_table, encounter_table) |>
+    addMainEncId() #|>
+    # addMainEncPeriodStart() |>
+    # calculateAge() |>
+    # add_ward_name() |>
 
   # DEBUG: for test reasons the start and end dates for abteilungskontakt -----------
   #        instead of versorgungsstellenkontakt are used
 
-  FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
+  # FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
 
   # Print the patient, encounter, and FAS1 datasets for verification
-  print(complete_table, width = Inf)
-  print(FAS1, width = Inf)
-
-  # Print the reporting period
-  print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
-
-  # Print the number of cases in the FAS1 dataset
-
-  print(FAS1 |>
-          dplyr::distinct(enc_partof_ref,ward_name) |>
-          dplyr::group_by(ward_name) |>
-          dplyr::tally())
-
-  print(paste0("Number of cases in FAS1: ",
-               FAS1 |>
-                 dplyr::distinct(enc_partof_ref, ward_name) |>
-                 nrow()))
+  print(complete_table)
+  # print(FAS1, width = Inf, n=50)
+  # class(FAS1)
+  #
+  # # Print the reporting period
+  # print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
+  #
+  # # Print the number of cases in the FAS1 dataset
+  #
+  # print(FAS1 |>
+  #         dplyr::distinct(enc_partof_ref,ward_name) |>
+  #         dplyr::group_by(ward_name) |>
+  #         dplyr::tally())
+  #
+  # print(paste0("Number of cases in FAS1: ",
+  #              FAS1 |>
+  #                dplyr::distinct(enc_partof_ref, ward_name) |>
+  #                nrow()))
 
 }

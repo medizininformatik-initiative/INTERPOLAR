@@ -33,6 +33,10 @@
 #'
 #' @importFrom dplyr filter distinct arrange pull
 #' @export
+#'
+
+# TODO: implement KW week stratification ----------
+
 defineFAS1 <- function(complete_table, REPORT_PERIOD_START, REPORT_PERIOD_END) {
 
   inpatient_encounters <- complete_table |>

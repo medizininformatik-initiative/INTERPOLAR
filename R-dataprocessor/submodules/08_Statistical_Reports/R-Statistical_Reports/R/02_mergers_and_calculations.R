@@ -111,7 +111,7 @@ addMainEncId <- function(encounter_table) {
 #' If so, it assigns the encounter’s own start date as `main_enc_period_start` and assigns it
 #' within the same main encounter group.
 #'
-#' @param merged_table A data frame or tibble containing patient and encounter data.
+#' @param encounter_table_with_main_enc A data frame or tibble containing patient and encounter data.
 #'   This table must include columns such as `enc_partof_ref`, `enc_type_code`,
 #'   `enc_class_code`, `enc_id`, and `enc_period_start`.
 #'
@@ -177,3 +177,10 @@ calculateAge <- function(merged_table) {
   return(merged_table_with_calc)
 }
 
+#------------------------------------------------------------------------------#
+addWardName <- function(merged_table,pids_per_ward_table) {
+  # TODO: Add the ward name for each encounter from the pids_per_ward_table while respecting possible ward changes
+  return(merged_table)
+}
+
+#------------------------------------------------------------------------------#
