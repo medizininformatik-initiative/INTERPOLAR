@@ -50,39 +50,56 @@ mergePatEnc <- function(patient_table, encounter_table) {
 
 #------------------------------------------------------------------------------#
 
-#' Add Main Encounter ID to Merged Table
+#' Add Main Encounter ID to Encounter Table
 #'
-#' This function adds a new column `main_enc_id` to the merged dataset. It determines
-#' the main encounter ID by checking whether an encounter is an inpatient facility
-#' contact (`einrichtungskontakt`) of class `IMP`. If so, the encounter ID itself
-#' is used as the `main_enc_id`; otherwise, the function extracts the reference ID
-#' from `enc_partof_ref`.
+#' This function adds a new column `main_enc_id` to the encounter table, identifying
+#' the top-level inpatient encounter (e.g., a facility-level "einrichtungskontakt" encounter)
+#' for each record. It determines the main encounter by walking up the encounter hierarchy
+#' based on encounter type and `enc_partof_ref` relationships.
 #'
-#' @param merged_table A data frame or tibble containing patient and encounter data.
-#'   This table must include columns such as `enc_partof_ref`, `enc_type_code`,
-#'   `enc_class_code`, and `enc_id`.
+#' @param encounter_table A data frame or tibble containing FHIR-based encounter data.
+#'   Must include the following columns:
+#'   - `enc_id`: Unique identifier of the encounter.
+#'   - `enc_partof_ref`: Reference to the parent encounter (e.g., "Encounter/123").
+#'   - `enc_type_code`: Type of the encounter (e.g., "einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt").
+#'   - `enc_class_code`: Class of the encounter (e.g., "IMP" for inpatient).
 #'
-#' @return A data frame or tibble with an additional column `main_enc_id`,
-#'   representing the primary inpatient encounter ID.
+#' @return A data frame or tibble identical to the input but with an additional column:
+#'   - `main_enc_id`: The ID of the top-level (main) encounter associated with each record.
+#'     For top-level encounters themselves, this is simply their own `enc_id`.
 #'
 #' @details
-#' The function performs the following steps:
-#' 1. Checks if `enc_partof_ref` is `NA` and if the encounter is an inpatient facility contact (`einrichtungskontakt`) of class `IMP`.
-#' 2. If both conditions are met, assigns the `enc_id` as the `main_enc_id`.
-#' 3. If not, extracts the reference ID from `enc_partof_ref`, removing the `"Encounter/"` prefix.
+#' The main encounter ID is determined using the following logic:
+#' 1. If the encounter has no parent (`enc_partof_ref` is `NA`), is of type `"einrichtungskontakt"`,
+#'    and class `"IMP"`, it is considered a top-level encounter, and its own `enc_id` is used.
+#' 2. If the encounter is of type `"abteilungskontakt"` (departmental contact), its parent is assumed to be the main encounter.
+#' 3. If the encounter is of type `"versorgungsstellenkontakt"` (sub-departmental contact), the function extracts the parent encounter's
+#'    `enc_id`, finds its parent, and uses that as the top-level `main_enc_id`.
 #'
-#' @importFrom dplyr mutate if_else
+#' @importFrom dplyr mutate case_when relocate
 #' @export
-addMainEncId <- function(merged_table) {
-  merged_table <- merged_table |>
-    dplyr::mutate(main_enc_id = dplyr::if_else(is.na(enc_partof_ref) &
-                                                 enc_type_code == "einrichtungskontakt" &
-                                                 enc_class_code == "IMP",
-                                               enc_id,
-                                               sub("^Encounter/", "", enc_partof_ref)))
+addMainEncId <- function(encounter_table) {
+  encounter_table_with_main_enc <- encounter_table |>
+    dplyr::mutate(main_enc_id = dplyr::case_when(
+      # Top-level: einrichtungskontakt
+      is.na(enc_partof_ref) &
+        enc_type_code == "einrichtungskontakt" &
+        enc_class_code == "IMP" ~ enc_id,
 
-  return(merged_table)
+      # Middle-level: abteilungskontakt
+      enc_type_code == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_ref),
+
+      # Bottom-level: versorgungsstellenkontakt
+      enc_type_code == "versorgungsstellenkontakt" ~ {
+        parent_id <- sub("^Encounter/", "", enc_partof_ref)
+        grandparent_ref <- encounter_table$enc_partof_ref[match(parent_id, encounter_table$enc_id)]
+        sub("^Encounter/", "", grandparent_ref)
+      })) |>
+    dplyr::relocate(main_enc_id, .after = enc_id)
+
+  return(encounter_table_with_main_enc)
 }
+
 
 #------------------------------------------------------------------------------#
 
