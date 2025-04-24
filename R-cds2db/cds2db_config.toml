@@ -38,10 +38,12 @@ MAX_DIR_COUNT = 5
 
 [retrieve.fhir_server]
 
+#################
 # If you use self-signed certificates to secure the FHIR server (SSL/TLS), please configure
 # the corresponding certificates in the 'r-env' service in the 'volumes' section of
 # docker-compose.yml so that these certificates can be checked in the CDS Tool Chain.
 # Otherwise the connection cannot be established.
+#################
 FHIR_SERVER_ENDPOINT = "https://mii-agiop-3p.life.uni-leipzig.de/blaze"
 FHIR_SERVER_USER = ""
 FHIR_SERVER_PASS = ""
@@ -53,10 +55,12 @@ FHIR_TOKEN_REFRESH_PASSWORD = ""
 
 FHIR_SEARCH_CURL_TIMEOUT = 1800 # timeout for curl requests on a FHIR server in seconds
 
+#################
 # Per default FHIR search request for resources with a specific subject (e.g. patient) are
 # performed with patient="patient_id". If there are any reasons this behaviour can be changed
 # to "subject=patient_id" by setting the following parameter to TRUE.
-# FHIR_SEARCH_PIDS_BY_SUBJECT = TRUE
+#################
+#FHIR_SEARCH_PIDS_BY_SUBJECT = TRUE
 
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests [ehemals MAX_LEN]
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE = 300  # reserve 300 characters for further parameters, whose length cannot estimated [ehemals RES_LEN]
@@ -76,13 +80,12 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 
 [retrieve.fhir_search]
 
+#################
 # Only encounters with exactly this status are found. If this Debug parameter is not set, the default
 # status "in-progress" applies.
 #
-# The following expression styles are allowed:
-#
+# Multiple status can be written as comma separated list.
 #################
-# multiple status can be written as comma separated list:
 #FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
 
 #################
@@ -101,8 +104,8 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 #
 # 2. For the SQL query on the database to find the active PIDs in the Encounter table.
 #
+# Multiple classes can be written as comma separated list:
 #################
-# multiple classes can be written as comma separated list:
 #FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 
 
@@ -127,11 +130,14 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 
 [retrieve.patient_id_filtering]
 
+#################
 # Enable the following parameter, if the relevant patient IDs (PID) are provided by an external
 # system and they are stored in a text file (1 PID pr line). This deactivates the search for
 # relevant PIDs via encounters (see ENCOUNTER_FILTER_PATTERNS).
+#################
 #PATH_TO_PID_LIST_FILE = "./R-cds2db/source_PIDs.txt"
 
+#################
 # Use this defintion to set the filters to identify all Encounters of the relevant wards. This is
 # only necessary if the relevant Patient IDs should be derived from this Encounters and are not
 # provided in any other way (e.g PATH_TO_PID_LIST_FILE).
@@ -142,6 +148,7 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
 # If 2 or more patterns overlap, then the same Encounter will be assigned to multiple wards. This
 # is not allowed and will lead to an error.
+#################
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
   "location/location/reference = 'Location/location_id_1'",
