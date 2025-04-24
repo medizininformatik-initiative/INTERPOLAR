@@ -4,9 +4,9 @@
 
 [general]
 
-###
+#################
 # VERBOSE LEVELS
-###
+#
 # VL_00_NOTHING             = 0
 # VL_10_MAIN_INFO           = 1
 # VL_20_OUTER_SCRIPTS       = 2
@@ -17,6 +17,7 @@
 # VL_70_DOWNLOAD            = 7
 # VL_80_COI_PROCESSING      = 8
 # VL_90_FHIR_RESPONSE       = 9
+#################
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
