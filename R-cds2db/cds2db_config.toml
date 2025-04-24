@@ -137,8 +137,16 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 # value. The values can be defined as grep patterns. Multilpe subconditions can be connected by '+'
 # (logcal AND). All Patterns are Case INSENSITIVE!
 # A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
-# If 2 or more patterns overlap, then the same Encounter will be assigned to multiple wards. This
-# is not allowed and will lead to an error.
+# If 2 or more patterns overlap, then the same Encounter could be assigned to multiple wards. In this
+# cases the Encounter will be assigned to the first matching ward.
+# If the same patient has different encounters in different wards, then the patient will be assigned to
+# the first matching ward. At the end, it is ensured that the same patient ID appears with exactly one
+# Encounter at exactly one ward. The earliest started Encounters are removed first (period/start). If
+# several are left over, the Encounters with the lowest meta/lastUpdated value are removed. If there
+# are still several left, the first one is taken as the only one.
+# The ward_name values given here are ultimately created in REDCap as Data Access Groups (DAG) and
+# exactly the names assigned here are also displayed there as ward names. The ward names from the
+# FHIR location reference in Encountern are ignored!
 #################
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
