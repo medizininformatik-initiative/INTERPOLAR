@@ -10,8 +10,6 @@ library(db2frontend)
 # Reset error status
 options(error = NULL)
 
-#DEBUG_RUN_DB_CRON_JOB_IMMEDIATELY <- TRUE
-
 if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
 }
