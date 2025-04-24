@@ -89,6 +89,75 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   return(if (nzchar(return_value)) return_value else NA_character_)
 }
 
+getObservations <- function(encounters, query_datetime, obs_codes, obs_system, obs_by_pid = FALSE) {
+
+  obs_codes <- parseQueryList(obs_codes)
+  # Query template to get desired Observations from DB
+  query_template <- paste0("SELECT * FROM v_observation\n",
+                           "  WHERE obs_code_code IN (", obs_codes, ") AND\n",
+                           "        obs_code_system = '", obs_system, "' AND\n",
+                           "        obs_effectivedatetime < '", query_datetime, "' AND\n")
+
+  enc_patient_refs <- unique(encounters$enc_patient_ref)
+
+  if (isFALSE(obs_by_pid)) {
+    enc_refs <- fhirdataGetReference("Encounter", (unique(encounters$enc_id)))
+    enc_query_refs <- etlutils::fhirdbGetQueryList(enc_refs)
+    # Extract the Observations by direct encounter references
+    additional_query_condition <- paste0("        obs_encounter_ref IN (", enc_query_refs, ")\n")
+    query <- paste0(query_template, additional_query_condition)
+    observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
+
+    obs_patient_refs <- unique(observations$obs_patient_ref)
+
+    # Check if the patient references in the Observations match the patient references in the Encounters
+    pat_refs_without_obs <- setdiff(enc_patient_refs, obs_patient_refs)
+
+    # If there are patients with no Observations found with the direct encounter
+    # link, so identify potential Observations by time overlap with the encounter
+    # period start and current date
+    if (length(pat_refs_without_obs)) {
+      pat_query_refs <- etlutils::fhirdbGetQueryList(pat_refs_without_obs)
+      enc_without_obs <- encounters[enc_patient_ref %in% pat_refs_without_obs]
+      min_enc_period_start <- min(enc_without_obs$enc_period_start)
+
+      additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ") AND\n",
+                                           "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
+      query <- paste0(query_template, additional_query_condition)
+      more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
+
+      # Check if the new observations are already in the first set
+      # and remove them
+      more_observations <- more_observations[!obs_id %in% observations$obs_id]
+      # Combine the two sets of observations
+      observations <- rbind(observations, more_observations, use.names = TRUE, fill = TRUE)
+    }
+
+  } else {
+    pat_query_refs <- etlutils::fhirdbGetQueryList(enc_patient_refs)
+    # Extract Observations by patient ID, but without any references to the encounter
+    additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ")\n")
+    query <- paste0(query_template, additional_query_condition)
+
+    observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[3]")
+  }
+
+  # keep the very first Observation with the latest date (should be only 1 but sure is sure)
+  # for every patient
+  if (nrow(observations)) {
+    unique_pat_refs <- unique(observations$obs_patient_ref)
+    result <- data.table::data.table()  # initialize empty result table
+    for (pat_ref in unique_pat_refs) {
+      patient_obs <- observations[obs_patient_ref == pat_ref]
+      # Select the first Observation with the latest effective date
+      selected_obs <- patient_obs[obs_effectivedatetime == max(obs_effectivedatetime)][1]
+      result <- rbind(result, selected_obs, use.names = TRUE)
+    }
+    observations <- result
+  }
+  return(observations)
+}
+
 #' This function creates frontend tables for displaying patient and encounter information.
 #'
 #' The function retrieves data from the database regarding patient and encounter information
@@ -223,9 +292,10 @@ createFrontendTables <- function() {
       fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
       fall_complete = character()
     )
+
     encounters <- etlutils::fhirdataGetAllEncounters(pids_per_ward$encounter_id, "CreateEncounterFrontendTable()_")
 
-    query_datetime <- getQueryDatetime(encounters)
+    query_datetime_obs <- getObservationQueryDatetime(encounters)
 
     # Create a new table with rows where enc_partof_ref is NOT NA
     part_of_encounters <- encounters[!is.na(enc_partof_ref)]
@@ -246,6 +316,9 @@ createFrontendTables <- function() {
     query <- paste0("SELECT * FROM v_condition\n",
                     "  WHERE con_id IN (", query_ids, ")\n")
     conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
+
+    observations_weight <- getObservations(encounters, query_datetime_obs, OBSERVATION_BODY_WEIGHT_CODES, OBSERVATION_BODY_WEIGHT_SYSTEM)
+    observations_height <- getObservations(encounters, query_datetime_obs, OBSERVATION_BODY_HEIGHT_CODES, OBSERVATION_BODY_HEIGHT_SYSTEM, obs_by_pid = TRUE)
 
     # Create a new data.table with only pid and ward_name, ensuring unique rows
     unique_pid_ward <- unique(pids_per_ward[, .(patient_id, ward_name)])
@@ -347,53 +420,17 @@ createFrontendTables <- function() {
         room_and_bed <- getLocationString(pid_part_of_encounters)
         data.table::set(enc_frontend_table, target_index, "fall_zimmernr", room_and_bed)
 
-        # Function to extract specific observations for the encounter
-        getObservation <- function(codes, system, target_column_value, target_column_unit = NA, obs_by_pid = FALSE) {
-          codes <- parseQueryList(codes)
-
-          # Query template to get desired Observations from DB
-          query_template <- paste0("SELECT * FROM v_observation\n",
-                                   "  WHERE obs_code_code IN (", codes, ") AND\n",
-                                   "        obs_code_system = '", system, "' AND\n",
-                                   "        obs_effectivedatetime < '", query_datetime, "' AND\n")
-
-          if (isFALSE(obs_by_pid)) {
-            # Extract the Observations by direct encounter references
-            additional_query_condition <- paste0("        obs_encounter_ref = 'Encounter/", enc_id, "'\n")
-            query <- paste0(query_template, additional_query_condition)
-
-            observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
-
-            # If no Observations found with the direct encounter link, so identify potencial
-            # Observations by time overlap with the encounter period start and current date
-            if (!nrow(observations)) {
-              additional_query_condition <- paste0("        obs_patient_ref = 'Patient/", pid, "' AND\n",
-                                                   "        obs_effectivedatetime > '", enc_period_start, "'\n")
-              query <- paste0(query_template, additional_query_condition)
-
-              observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
-            }
-
-          } else {
-            # Extract Observations by patient ID, but without any references to the encounter
-            additional_query_condition <- paste0("        obs_patient_ref = 'Patient/", pid, "'\n")
-            query <- paste0(query_template, additional_query_condition)
-
-            observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[3]")
-          }
-
-          if (nrow(observations)) {
-            # take the very first Observation with the latest date (should be only 1 but sure is sure)
-            observations <- observations[obs_effectivedatetime == max(obs_effectivedatetime)][1]
-            data.table::set(enc_frontend_table, target_index, target_column_value, observations$obs_valuequantity_value)
-            if (!is.na(target_column_unit)) {
-              data.table::set(enc_frontend_table, target_index, target_column_unit, observations$obs_valuequantity_code)
-            }
-          }
+        obs_weight <- observations_weight[obs_patient_ref == pid_ref]
+        if (nrow(obs_weight)) {
+          data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktuell", obs_weight$obs_valuequantity_value)
+          data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktl_einheit", obs_weight$obs_valuequantity_code)
+        }
+        obs_height <- observations_height[obs_patient_ref == pid_ref]
+        if (nrow(obs_height)) {
+          data.table::set(enc_frontend_table, target_index, "fall_groesse", obs_height$obs_valuequantity_value)
+          data.table::set(enc_frontend_table, target_index, "fall_groesse_einheit", obs_height$obs_valuequantity_code)
         }
 
-        getObservation(OBSERVATION_BODY_WEIGHT_CODES, OBSERVATION_BODY_WEIGHT_SYSTEM, "fall_gewicht_aktuell", "fall_gewicht_aktl_einheit")
-        getObservation(OBSERVATION_BODY_HEIGHT_CODES, OBSERVATION_BODY_HEIGHT_SYSTEM, "fall_groesse", "fall_groesse_einheit", obs_by_pid = TRUE)
         # For unknown reasons, a BMI written to the RedCap is always written back from the
         # RedCap to the database as an empty value, which duplicates the entire data record.
         # As the cause could not be found, we have simply deactivated the field for the time

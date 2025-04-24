@@ -4,6 +4,10 @@
 #' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
 #' The result is converted to a `POSIXct` object with the appropriate timezone.
 #'
+#' NOTE: If the cds2db modules runs with a dubug start and end date, then there can
+#' be encounters with a start date after the end date of another encounter. This should
+#' never happens in a non debug run and can lead to irregularities in the results.
+#'
 #' @param encounters A `data.table` or `data.frame` containing encounter records,
 #'                   where `enc_period_end` represents the encounter end timestamps.
 #'
@@ -12,11 +16,11 @@
 #'
 getCurrentDatetime <- function(encounters) {
   encounters_end <- na.omit(encounters$enc_period_end)
-  datetime <- if (length(encounters_end)) min(encounters_end) - 1 else Sys.time()
+  datetime <- if (length(encounters_end)) max(encounters_end) - 1 else Sys.time()
   return(etlutils::as.POSIXctWithTimezone(datetime))
 }
 
-#' Format datetime for SQL queries
+#' Format datetime for SQL queries for Observations.
 #'
 #' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
 #' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
@@ -26,7 +30,7 @@ getCurrentDatetime <- function(encounters) {
 #'
 #' @return A character string representing the formatted SQL datetime.
 #'
-getQueryDatetime <- function(encounters) {
+getObservationQueryDatetime <- function(encounters) {
   format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
 }
 
