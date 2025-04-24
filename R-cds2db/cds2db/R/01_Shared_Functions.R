@@ -10,12 +10,13 @@
 #'   and patient ID for each combination extracted from the provided list.
 #'
 #' @examples
+#' \dontrun{
 #' library(data.table)
 #' # Example: A list of patient IDs per ward
 #' pids_splitted_by_ward <- list(
-#'   Ward_A = c("PID_A001", "PID_A002", "PID_A003"),
-#'   Ward_B = c("PID_B001", "PID_B002"),
-#'   Ward_C = c("PID_C001", "PID_C002", "PID_C003", "PID_C004")
+#'   Ward_A = data.table(patient_id = c("PID_A001", "PID_A002", "PID_A003")),
+#'   Ward_B = data.table(patient_id = c("PID_B001", "PID_B002")),
+#'   Ward_C = data.table(patient_id = c("PID_C001", "PID_C002", "PID_C003", "PID_C004"))
 #' )
 #'
 #' # Applying the function
@@ -23,6 +24,7 @@
 #'
 #' # Displaying the result
 #' print(result_table)
+#' }
 #'
 rbindPidsSplittedByWard <- function(pids_splitted_by_ward) {
   # Combine all ward tables into one data.table

@@ -88,8 +88,10 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #'
 parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
 
-  # this should be only used for debug/tests
-  if (endsWith(path_to_PID_list_file, ".RData")) {
+  # This should be only used for debug/tests.
+  # Parse Patient_id from text file is deactivated. The code below this hunk is deactivated.
+  # DIC should go the way of assigning the encounter/patients to the wards via the 3-stage encounter system.
+  if (TRUE || endsWith(path_to_PID_list_file, ".RData")) {
     return(readRDS(path_to_PID_list_file))
   }
 
@@ -276,11 +278,24 @@ getEncounters <- function(table_description, current_datetime) {
                                                                  max_bundles = MAX_ENCOUNTER_BUNDLES,
                                                                  log_errors  = "enc_error.xml")
 
-      if (etlutils::isSimpleNA(table_enc)) {
-        stop("The FHIR request did not return any available Encounter bundles.\n Request: ",
+      if (etlutils::isSimpleNA(table_enc) || !nrow(table_enc)) {
+        stop("The FHIR request did not return any available Encounter bundles.\nRequest: ",
              etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE))
       }
 
+    })
+
+    runLevel3Line("Validate encounter subject reference", {
+      invalid_encounters <- table_enc[is.na(subject.reference)]
+      table_enc <- table_enc[!is.na(subject.reference)]
+      if (!nrow(table_enc)) {
+        stop("No valid Encounter found. All found encounters have no valid subject reference.\n",
+             "Request: ", etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE), "\n",
+             "Encounters: ", paste0(invalid_encounters$id, collapse = ", "), "\n")
+      } else if (nrow(invalid_encounters)) {
+        etlutils::catWarningMessage(paste0("The following encounters have no valid subject reference:\n",
+                                    paste0(invalid_encounters$id, collapse = ", ")), "\n")
+      }
     })
 
     runLevel3Line("change column classes", {
