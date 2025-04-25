@@ -5,9 +5,11 @@
 # Project Definition for module dataprocessor    #
 ##################################################
 
-###
+[general]
+
+#################
 # VERBOSE LEVELS
-###
+#
 # VL_00_NOTHING             = 0
 # VL_10_MAIN_INFO           = 1
 # VL_20_OUTER_SCRIPTS       = 2
@@ -18,21 +20,27 @@
 # VL_70_DOWNLOAD            = 7
 # VL_80_COI_PROCESSING      = 8
 # VL_90_FHIR_RESPONSE       = 9
+#################
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
+#################
 # Set true if every sourcing of the 00_Main file should create result
 # directories in the otuputGlobal and otuputLocal directores with a timestamp
 # suffix. If false then every run will write in the same subdirectory without
 # a timestamp. The default behaviour should write in subdirectories with only
 # the project name (false) or in or in a subdirectory with the project name
 # and the suffix '_timestamp'. (true)
+#################
 USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
+#################
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
+#################
 MAX_DIR_COUNT = 5
 
 [analyse]
 
+#################
 # In the patient table of the frontend, the patient ID should be displayed, which
 # can be used to search for further information on the patient in other systems.
 # This is normally specified as one of several possible identifiers for a FHIR
@@ -47,44 +55,62 @@ MAX_DIR_COUNT = 5
 # ".*" as the pattern, which means "any characters any number of times".
 # If the filter result on a single Patient resoruce will provide more than one
 # Identifier, then they are written one after the other, separated by semicolons.
-#
-# acceppts every system:
+# Accepts any system with pattern ".*" (Default).
+#################
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*"
 
+#################
 # Accepts only type/coding/sytem with the exact value 'http://terminology.hl7.org/CodeSystem/v2-0203'
 # this system is the binded system for the clinical information system patient ID.
 # FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
-# alternative variant to accept every value in 'type/coding/system':
-FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ""
+# Alternative variant to accept any value in 'type/coding/system' with pattern ".*" (Default).
+#################
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*"
 
+#################
 # Accepts only type/coding/code with the exact value 'MR'. This value means
 # 'medical record number' in the system http://terminology.hl7.org/CodeSystem/v2-0203
-# and is the recommended code for the patient ID in the hospital (if the variable
-# is commented out then every value will be accepted). To match the start and end of the exact
-# value, use caret (^) and dollar ($) symbols.
-#FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+# and is the recommended code for the patient ID in the hospital.
+# For example: FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
+# To match the start and end of the exact value, use caret (^) and dollar ($) symbols.
+# Accept any type/coding/code with pattern ".*" (Default).
+#################
+FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 
+#################
+# Accepts only type/coding/sytem from the "Einrichtungskontakt" with the exact value. For the
+# encounter identifier system defined here, the corresponding value from type/coding/value is taken
+# (if there are several values for a system, these are concatenated). This identifier is entered in
+# the table Fall_fe and displayed in the frontend as fall_id.
+# For example: FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
+#################
+FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+
+#################
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
 # in the frontend. This match must be exact, i.e. no patterns may be specified here.
 # This can be used to ensure that, for example, no outpatient Encounters are displayed even though
 # they have not yet ended.
+#################
 FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 
-# Additional filter with which all encounters are filtered out for which the following filters do
-# not apply. This can be used if, for example, the "Fachabteilungskontakt" do not have a partof
-# relationship with the "Einrichtungskontakt" and can therefore only be removed using this filter.
-# Same for the "Versorgungsstellenkontakt".
-# An Encounter will be accepted, if at least one condition is fulfilled (OR connected). A condition
-# defines which expressions of the Encounter should have which value. The values can be defined as
-# grep patterns. Multilpe subconditions can be connected by '+' (logcal AND). All Patterns are Case
-# INSENSITIVE!
-FRONTEND_DISPLAYED_ENCOUNTER_FILTER = [
-          "enc_type_code = 'einrichtungskontakt' + enc_type_display = 'Einrichtungskontakt'",
-          "enc_type_system = 'http://fhir.de/CodeSystem/Kontaktebene'"
-          ]
+#################
+# This parameter should contain the FHIR element where the name of the room and bed can be found.
+# This must be the name of a column in the encounter database table or if the location is a real
+# reference to a Location resource, the name of a column in the location table. (see
+# Table_Description.xlsx in the cds2db module)
+#
+# Examples (choose exact one or create your own):
+#################
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_display"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_identifier_value"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "loc_name"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "loc_identifier_type_display"
 
+#################
 # The codes for height, weight and BMI can be customised here. If several codes
 # can occur, these must be entered in the respective list separated by spaces.
+#################
 OBSERVATION_BODY_WEIGHT_SYSTEM = "http://loinc.org"
 OBSERVATION_BODY_WEIGHT_CODES  = "3142-7 29463-7"
 OBSERVATION_BODY_HEIGHT_SYSTEM = "http://loinc.org"

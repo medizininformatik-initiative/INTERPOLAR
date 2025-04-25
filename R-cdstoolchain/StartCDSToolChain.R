@@ -30,14 +30,21 @@ for (arg in args) {
   }
 }
 
+resetMemory <- function() {
+  rm(list = setdiff(ls(), c("DEBUG_DAY", "DEBUG_DATES")))
+}
+
 tryCatch({
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     cds2db::retrieve()
   }
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     dataprocessor::processData()
   }
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     db2frontend::startDB2Frontend()
   }
   if (etlutils::isErrorOccured()) {

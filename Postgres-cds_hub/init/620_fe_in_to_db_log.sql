@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-03-17 23:22:37
--- Rights definition file size        : 15699 Byte
+-- Rights definition file last update : 2025-04-23 11:14:45
+-- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-03-18 13:56:29
+-- Create time: 2025-04-25 12:01:53
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -67,7 +67,7 @@ BEGIN
 	SELECT res FROM public.pg_background_result(public.pg_background_launch(
     'SELECT to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')'
     ))  AS t(res TEXT) INTO timestamp_start;
- 
+
     SELECT res FROM public.pg_background_result(public.pg_background_launch(
     'UPDATE db_config.db_process_control SET pc_value=to_char(CURRENT_TIMESTAMP,''YYYY-MM-DD HH24:MI:SS.US'')||'' copy_fe_fe_in_to_db_log'', last_change_timestamp=CURRENT_TIMESTAMP
     WHERE pc_name=''timepoint_1_cron_job_data_transfer'''
@@ -86,7 +86,7 @@ BEGIN
     UNION SELECT COUNT(1) AS anz FROM db2frontend_in.trigger_fe
     );
 
-    -- Counting 
+    -- Counting
     IF data_count_pro_all>0 THEN
          -- Copy Functionname: copy_fe_fe_in_to_db_log - From: db2frontend_in -> To: db_log
         err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
@@ -112,7 +112,7 @@ BEGIN
         WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
-    
+
 
         -----------------------------------------------------------------------------------------------------------------------
         -- Start patient_fe  --------   patient_fe  --------   patient_fe  --------   patient_fe
@@ -164,6 +164,7 @@ BEGIN
                                 pat_gebdat,
                                 pat_aktuell_alter,
                                 pat_geschlecht,
+                                pat_additional_values,
                                 patient_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -183,6 +184,7 @@ BEGIN
                                 current_record.pat_gebdat,
                                 current_record.pat_aktuell_alter,
                                 current_record.pat_geschlecht,
+                                current_record.pat_additional_values,
                                 current_record.patient_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -202,6 +204,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='patient_fe-37';    err_schema:='db2frontend_in';    err_table:='patient_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='patient_fe-30';    err_schema:='db2frontend_in';    err_table:='patient_fe';
@@ -317,6 +322,7 @@ BEGIN
                                 redcap_repeat_instrument,
                                 redcap_repeat_instance,
                                 redcap_data_access_group,
+                                fall_fhir_enc_id,
                                 patient_id_fk,
                                 fall_pat_id,
                                 fall_id,
@@ -332,6 +338,7 @@ BEGIN
                                 fall_bmi,
                                 fall_status,
                                 fall_ent_dat,
+                                fall_additional_values,
                                 fall_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -344,6 +351,7 @@ BEGIN
                                 current_record.redcap_repeat_instrument,
                                 current_record.redcap_repeat_instance,
                                 current_record.redcap_data_access_group,
+                                current_record.fall_fhir_enc_id,
                                 current_record.patient_id_fk,
                                 current_record.fall_pat_id,
                                 current_record.fall_id,
@@ -359,6 +367,7 @@ BEGIN
                                 current_record.fall_bmi,
                                 current_record.fall_status,
                                 current_record.fall_ent_dat,
+                                current_record.fall_additional_values,
                                 current_record.fall_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -378,6 +387,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='fall_fe-37';    err_schema:='db2frontend_in';    err_table:='fall_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='fall_fe-30';    err_schema:='db2frontend_in';    err_table:='fall_fe';
@@ -515,6 +527,7 @@ BEGIN
                                 meda_aufwand_zeit,
                                 meda_aufwand_zeit_and,
                                 meda_notiz,
+                                meda_additional_values,
                                 medikationsanalyse_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -549,6 +562,7 @@ BEGIN
                                 current_record.meda_aufwand_zeit,
                                 current_record.meda_aufwand_zeit_and,
                                 current_record.meda_notiz,
+                                current_record.meda_additional_values,
                                 current_record.medikationsanalyse_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -568,6 +582,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='medikationsanalyse_fe-37';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='medikationsanalyse_fe-30';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
@@ -756,6 +773,7 @@ BEGIN
                                 mrp_dokup_hand_emp_akz,
                                 mrp_merp,
                                 mrp_merp_info___1,
+                                mrp_additional_values,
                                 mrpdokumentation_validierung_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -841,6 +859,7 @@ BEGIN
                                 current_record.mrp_dokup_hand_emp_akz,
                                 current_record.mrp_merp,
                                 current_record.mrp_merp_info___1,
+                                current_record.mrp_additional_values,
                                 current_record.mrpdokumentation_validierung_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -860,6 +879,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='mrpdokumentation_validierung_fe-37';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='mrpdokumentation_validierung_fe-30';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
@@ -1017,13 +1039,14 @@ BEGIN
                                 ret_2ndbewertung___1,
                                 ret_bewerter2_pipeline,
                                 ret_bewerter2,
+                                ret_bewerter3,
                                 ret_gewissheit2,
                                 ret_mrp_zuordnung2,
                                 ret_gewissheit2_oth,
                                 ret_gewiss_grund2_abl,
                                 ret_gewiss_grund_abl_sonst2,
                                 ret_gewiss_grund_abl_klin2,
-                                ret_gewiss_grund_abl_klin_neg___1,
+                                ret_gewiss_grund_abl_klin2_neg___1,
                                 ret_massn_am2___1,
                                 ret_massn_am2___2,
                                 ret_massn_am2___3,
@@ -1043,6 +1066,7 @@ BEGIN
                                 ret_massn_orga2___7,
                                 ret_massn_orga2___8,
                                 ret_notiz2,
+                                ret_additional_values,
                                 retrolektive_mrpbewertung_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -1097,13 +1121,14 @@ BEGIN
                                 current_record.ret_2ndbewertung___1,
                                 current_record.ret_bewerter2_pipeline,
                                 current_record.ret_bewerter2,
+                                current_record.ret_bewerter3,
                                 current_record.ret_gewissheit2,
                                 current_record.ret_mrp_zuordnung2,
                                 current_record.ret_gewissheit2_oth,
                                 current_record.ret_gewiss_grund2_abl,
                                 current_record.ret_gewiss_grund_abl_sonst2,
                                 current_record.ret_gewiss_grund_abl_klin2,
-                                current_record.ret_gewiss_grund_abl_klin_neg___1,
+                                current_record.ret_gewiss_grund_abl_klin2_neg___1,
                                 current_record.ret_massn_am2___1,
                                 current_record.ret_massn_am2___2,
                                 current_record.ret_massn_am2___3,
@@ -1123,6 +1148,7 @@ BEGIN
                                 current_record.ret_massn_orga2___7,
                                 current_record.ret_massn_orga2___8,
                                 current_record.ret_notiz2,
+                                current_record.ret_additional_values,
                                 current_record.retrolektive_mrpbewertung_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -1142,6 +1168,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='retrolektive_mrpbewertung_fe-37';    err_schema:='db2frontend_in';    err_table:='retrolektive_mrpbewertung_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='retrolektive_mrpbewertung_fe-30';    err_schema:='db2frontend_in';    err_table:='retrolektive_mrpbewertung_fe';
@@ -1316,6 +1345,9 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='risikofaktor_fe-37';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
+                            
 
                             -- Delete updatet datasets
                             err_section:='risikofaktor_fe-30';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
@@ -1507,6 +1539,9 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+                            err_section:='trigger_fe-37';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
+                            
+
                             -- Delete updatet datasets
                             err_section:='trigger_fe-30';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
                             DELETE FROM db2frontend_in.trigger_fe WHERE trigger_fe_id = current_record.trigger_fe_id;
@@ -1586,7 +1621,7 @@ BEGIN
         )'))  AS t(res TEXT) INTO timestamp_end;
 
         SELECT EXTRACT(EPOCH FROM (to_timestamp(timestamp_end,'YYYY-MM-DD HH24:MI:SS.US') - to_timestamp(timestamp_start,'YYYY-MM-DD HH24:MI:SS.US'))), ' '||timestamp_start||' o '||timestamp_end INTO tmp_sec, temp;
-    
+
         err_section:='BOTTON-05';  err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_all', 'db_log', 'copy_fe_fe_in_to_db_log', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_pro_all, tmp_sec, 'Count all Datasetzs '||temp );
@@ -1594,7 +1629,7 @@ BEGIN
         err_section:='BOTTON-10';  err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_new', 'db_log', 'copy_fe_fe_in_to_db_log', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_pro_new, tmp_sec, 'Count all new Datasetzs '||temp);
-    
+
         err_section:='BOTTON-15';  err_schema:='db_log';    err_table:='data_import_hist';
         INSERT INTO db.data_import_hist (last_processing_nr, variable_name, schema_name, table_name, last_check_datetime, function_name, dataset_count, copy_time_in_sec, current_dataset_status)
         VALUES ( last_pro_nr,'data_count_pro_upd', 'db_log', 'copy_fe_fe_in_to_db_log', last_pro_datetime, 'copy_fe_fe_in_to_db_log', data_count_pro_upd, tmp_sec, 'Count all updatetd Datasetzs '||temp);

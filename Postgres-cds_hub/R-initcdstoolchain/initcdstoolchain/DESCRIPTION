@@ -2,8 +2,16 @@ Package: initcdstoolchain
 Title: Initializes the Table Description and Database Scripts
 Version: 0.0.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+    c(person(given = "Alexander",
+             family = "Struebing",
+             email = "alexander.struebing@imise.uni-leipzig.de",
+             role = c("aut", "cre"),
+             comment = c(ORCID = "0000-0001-5151-7665")),
+      person(given = "Florian",
+             family = "Schmidt",
+             role = "aut",
+             email = "florian.schmidt@imise.uni-leipzig.de",
+             comment = c(ORCID = "0000-0003-2027-8213")))
 Description: What the package does (one paragraph).
 License: Apache License (>= 2)
 Encoding: UTF-8
