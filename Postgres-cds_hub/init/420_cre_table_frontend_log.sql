@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-25 12:01:49
+-- Create time: 2025-04-25 14:38:09
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -429,7 +429,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
   ret_meda_dat2 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
   ret_2ndbewertung___1 varchar,   -- 1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)
   ret_bewerter2_pipeline varchar,   -- Bewerter2 Pipeline (varchar)
-  ret_bewerter2 varchar,   -- 2. Bewertung von  @DEFAULT = @SETVALUE = '[ret_bewerter2_pipeline]' (varchar)
+  ret_bewerter2 varchar,   -- 2. Bewertung von  @DEFAULT = @SETVALUE = ret_bewerter2_pipeline (varchar)
   ret_bewerter3 varchar,   -- 2. Bewertung von (varchar)
   ret_gewissheit2 varchar,   -- Sicherheit des detektierten MRP (varchar)
   ret_mrp_zuordnung2 varchar,   -- Zuordnung zu manuellem MRP (varchar)
@@ -506,7 +506,7 @@ CREATE TABLE IF NOT EXISTS db_log.retrolektive_mrpbewertung_fe (
           COALESCE(db.to_char_immutable(ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
           COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
           COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from: Bewerter2 Pipeline (ret_bewerter2_pipeline)
-          COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von  @DEFAULT = @SETVALUE = '[ret_bewerter2_pipeline]' (ret_bewerter2)
+          COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von  @DEFAULT = @SETVALUE = ret_bewerter2_pipeline (ret_bewerter2)
           COALESCE(db.to_char_immutable(ret_bewerter3), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter3)
           COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
@@ -957,7 +957,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_notiz1 IS 'Notiz (varc
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat2 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS 'Bewerter2 Pipeline (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von  @DEFAULT = @SETVALUE = '[ret_bewerter2_pipeline]' (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von  @DEFAULT = @SETVALUE = ret_bewerter2_pipeline (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter3 IS '2. Bewertung von (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
