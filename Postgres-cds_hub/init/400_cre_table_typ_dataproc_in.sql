@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 14:40:51
+-- Rights definition file last update : 2025-04-23 11:14:45
 -- Rights definition file size        : 15808 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-04-07 11:53:31
+-- Create time: 2025-04-25 14:38:05
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -288,7 +288,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
   mrp_notiz varchar,   -- Notiz (varchar)
   mrp_dokup_hand_emp_akz varchar,   -- Handlungsempfehlung akzeptiert? (varchar)
   mrp_merp varchar,   -- NCC MERP Score (varchar)
-  mrp_merp_info___1 varchar,   -- 1 - NCC MERP Index (varchar)
+  mrp_merp_info___1 varchar,   -- 1 - NCC MERP Index anzeigen (varchar)
   mrp_additional_values varchar,   -- Reserviertes Feld für zusätzliche Werte (varchar)
   mrpdokumentation_validierung_complete varchar,   -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
   hash_index_col TEXT GENERATED ALWAYS AS (
@@ -369,7 +369,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.mrpdokumentation_validierung_fe (
           COALESCE(db.to_char_immutable(mrp_notiz), '#NULL#') || '|||' || -- hash from: Notiz (mrp_notiz)
           COALESCE(db.to_char_immutable(mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || -- hash from: Handlungsempfehlung akzeptiert? (mrp_dokup_hand_emp_akz)
           COALESCE(db.to_char_immutable(mrp_merp), '#NULL#') || '|||' || -- hash from: NCC MERP Score (mrp_merp)
-          COALESCE(db.to_char_immutable(mrp_merp_info___1), '#NULL#') || '|||' || -- hash from: 1 - NCC MERP Index (mrp_merp_info___1)
+          COALESCE(db.to_char_immutable(mrp_merp_info___1), '#NULL#') || '|||' || -- hash from: 1 - NCC MERP Index anzeigen (mrp_merp_info___1)
           COALESCE(db.to_char_immutable(mrp_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (mrp_additional_values)
           COALESCE(db.to_char_immutable(mrpdokumentation_validierung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (mrpdokumentation_validierung_complete)
                  '#'
@@ -391,7 +391,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
   redcap_repeat_instance varchar,   -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
   redcap_data_access_group varchar,   -- Function as dataset filter by stations (varchar)
   ret_bewerter1 varchar,   -- 1. Bewertung von (varchar)
-  ret_id varchar,   -- Retrolektive MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)
+  ret_id varchar,   -- Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (varchar)
   ret_meda_id varchar,   -- Zuordnung Meda -> rMRP (varchar)
   ret_meda_dat1 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
   ret_kurzbeschr varchar,   -- Kurzbeschreibung des MRPs (varchar)
@@ -431,14 +431,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
   ret_meda_dat2 timestamp,   -- Datum der retrolektiven Betrachtung* (timestamp)
   ret_2ndbewertung___1 varchar,   -- 1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)
   ret_bewerter2_pipeline varchar,   -- Bewerter2 Pipeline (varchar)
-  ret_bewerter2 varchar,   -- 2. Bewertung von (varchar)
+  ret_bewerter2 varchar,   -- 2. Bewertung von  @DEFAULT = @SETVALUE = ret_bewerter2_pipeline (varchar)
+  ret_bewerter3 varchar,   -- 2. Bewertung von (varchar)
   ret_gewissheit2 varchar,   -- Sicherheit des detektierten MRP (varchar)
   ret_mrp_zuordnung2 varchar,   -- Zuordnung zu manuellem MRP (varchar)
   ret_gewissheit2_oth varchar,   -- Weitere Informationen (varchar)
   ret_gewiss_grund2_abl varchar,   -- Grund für nicht Bestätigung (varchar)
   ret_gewiss_grund_abl_sonst2 varchar,   -- Bitte näher beschreiben (varchar)
   ret_gewiss_grund_abl_klin2 varchar,   -- WARUM ist das MRP nicht klinisch relevant (varchar)
-  ret_gewiss_grund_abl_klin_neg___1 varchar,   -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
+  ret_gewiss_grund_abl_klin2_neg___1 varchar,   -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
   ret_massn_am2___1 varchar,   -- 1 - Anweisung für die Applikation geben (varchar)
   ret_massn_am2___2 varchar,   -- 2 - Arzneimittel ändern (varchar)
   ret_massn_am2___3 varchar,   -- 3 - Arzneimittel stoppen/pausieren (varchar)
@@ -467,7 +468,7 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
           COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
           COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
           COALESCE(db.to_char_immutable(ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
-          COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (ret_id)
+          COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (ret_id)
           COALESCE(db.to_char_immutable(ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
           COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
           COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
@@ -507,14 +508,15 @@ CREATE TABLE IF NOT EXISTS db2dataprocessor_in.retrolektive_mrpbewertung_fe (
           COALESCE(db.to_char_immutable(ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
           COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
           COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from: Bewerter2 Pipeline (ret_bewerter2_pipeline)
-          COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
+          COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von  @DEFAULT = @SETVALUE = ret_bewerter2_pipeline (ret_bewerter2)
+          COALESCE(db.to_char_immutable(ret_bewerter3), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter3)
           COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin2)
-          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin_neg___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
           COALESCE(db.to_char_immutable(ret_massn_am2___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am2___3)
@@ -910,7 +912,7 @@ COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_massn_
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_notiz IS 'Notiz (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_hand_emp_akz IS 'Handlungsempfehlung akzeptiert? (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp IS 'NCC MERP Score (varchar)';
-COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info___1 IS '1 - NCC MERP Index (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_merp_info___1 IS '1 - NCC MERP Index anzeigen (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.input_datetime IS 'Time at which the data record is inserted';
@@ -924,7 +926,7 @@ COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_repeat
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter1 IS '1. Bewertung von (varchar)';
-COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung Meda -> rMRP (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
@@ -964,14 +966,15 @@ COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_notiz1 IS
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_meda_dat2 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS 'Bewerter2 Pipeline (varchar)';
-COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von  @DEFAULT = @SETVALUE = ret_bewerter2_pipeline (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_bewerter3 IS '2. Bewertung von (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl IS 'Grund für nicht Bestätigung (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Bitte näher beschreiben (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
-COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___2 IS '2 - Arzneimittel ändern (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.ret_massn_am2___3 IS '3 - Arzneimittel stoppen/pausieren (varchar)';
