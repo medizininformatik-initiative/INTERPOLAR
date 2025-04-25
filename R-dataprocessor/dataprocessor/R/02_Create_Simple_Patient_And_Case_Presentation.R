@@ -194,7 +194,7 @@ createFrontendTables <- function() {
     # patient multiple times on the same or different wards)
     pids <- unique(pids_per_ward$patient_id)
     pids <- etlutils::fhirdataExtractIDs(pids)
-    patients <- loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
+    patients <- loadResourcesLastVersionByOwnIDFromDB("Patient", pids)
     return(patients)
   }
 
