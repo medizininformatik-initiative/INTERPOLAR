@@ -151,7 +151,7 @@ dt[, COLUMN_DESCRIPTION := trimws(COLUMN_DESCRIPTION)]
 dt[, COLUMN_DESCRIPTION := gsub("<[^>]+>", "", COLUMN_DESCRIPTION)]
 
 # Remove special characters from COLUMN_DESCRIPTION
-dt[, COLUMN_DESCRIPTION := etlutils::dbRemoveSpecialChars(COLUMN_DESCRIPTION)]
+dt[, COLUMN_DESCRIPTION := etlutils::dbRemoveSpecialCharsInComments(COLUMN_DESCRIPTION)]
 
 # Add the "This file is generated..." header to the resut file
 header <- c(

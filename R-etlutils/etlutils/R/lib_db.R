@@ -1363,10 +1363,10 @@ dbReset <- function() {
 #' @return A cleaned character string with special characters removed.
 #'
 #' @examples
-#' dbRemoveSpecialChars("This is a comment with [brackets] and 'quotes';")
+#' dbRemoveSpecialCharsInComments("This is a comment with [brackets] and 'quotes';")
 #' # Returns: "This is a comment with brackets and quotes"
 #'
 #' @export
-dbRemoveSpecialChars <- function(comment) {
+dbRemoveSpecialCharsInComments <- function(comment) {
   gsub("[\\[\\]'\";]", "", comment, perl = TRUE)
 }
