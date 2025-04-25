@@ -87,10 +87,8 @@ startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "",
     # Start logging console outputs
     startLogging(module_name)
     # Log github active tag and branch
-    if (nzchar(Sys.which("git"))) {
-      cat("\n---------------------------\nGithub Script Version:\n---------------------------\n")
-      cat(getGitInfo())
-    }
+    cat("\n---------------------------\nGithub Script Version:\n---------------------------\n")
+    cat(getGitInfo())
     # Log all configuration parameters, optionally hiding values based on the pattern
     catList(config, prefix = "\n---------------------------\nConfiguration:\n---------------------------\n", suffix = "\n", hide_value_pattern)
   }
