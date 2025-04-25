@@ -96,11 +96,16 @@ FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 
 #################
 # This parameter should contain the FHIR element where the name of the room and bed can be found.
-# This must be the name of a column in the encounter database table (see Table_Description.xlsx in
-# the cds2db module). Examples:
+# This must be the name of a column in the encounter database table or if the location is a real
+# reference to a Location resource, the name of a column in the location table. (see
+# Table_Description.xlsx in the cds2db module)
+#
+# Examples (choose exact one or create your own):
 #################
-#FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN = "enc_location_display"
-#FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN = "enc_location_identifier_value"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_display"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_identifier_value"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "loc_name"
+#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "loc_identifier_type_display"
 
 #################
 # The codes for height, weight and BMI can be customised here. If several codes

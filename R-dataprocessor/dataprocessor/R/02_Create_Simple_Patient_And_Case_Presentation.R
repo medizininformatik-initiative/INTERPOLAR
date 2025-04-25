@@ -2,7 +2,7 @@
 #'
 #' Creates a formatted location string using the most recent encounter location entries of type
 #' "ro" (room) and "bd" (bed). The displayed values are taken from the column specified by the
-#' global variable `FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN`. The function only processes
+#' global variable `FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN`. The function only processes
 #' encounters where `enc_location_physicaltype_code` is either "ro" or "bd", and within those only
 #' the most recent entries based on `enc_period_start`.
 #'
@@ -10,13 +10,14 @@
 #' raised intentionally and must be handled by the calling context.
 #'
 #' @param encounters A `data.table` containing encounter location records.
+#' @param locations A `data.table` containing location details.
 #'
 #' @return A character string in the format "Zimmer: <room>; Bett: <bed>". If no matching entry
 #' is found, "-" is used as fallback.
 #'
 #' @examples
 #' \dontrun{
-#' FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN <- "location_display"
+#' FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN <- "location_display"
 #' dt <- data.table::data.table(
 #'   enc_location_physicaltype_code = c("ro", "bd"),
 #'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01")),
@@ -25,11 +26,12 @@
 #' getLocationString(dt)
 #' }
 #'
-getLocationString <- function(encounters) {
+getLocationString <- function(encounters, locations) {
   room <- "-"
   bed <- "-"
 
-  if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN")) {
+  if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN")) {
+
     # Filter for relevant physical types
     encounters <- encounters[enc_location_physicaltype_code %in% c("ro", "bd")]
 
@@ -37,13 +39,28 @@ getLocationString <- function(encounters) {
       # Keep only rows with latest period start
       encounters <- encounters[enc_period_start == max(enc_period_start)]
 
-      col_name <- FRONTEND_DISPLAYED_ROOM_AND_BED_ENCOUNTER_COLUMN
+      room_encounter <- encounters[enc_location_physicaltype_code == "ro"][1]
+      bed_encounter <- encounters[enc_location_physicaltype_code == "bd"][1]
 
-      room_value <- encounters[enc_location_physicaltype_code == "ro"][1, get(col_name)]
-      if (length(room_value)) room <- room_value
+      col_name <- FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN
 
-      bed_value <- encounters[enc_location_physicaltype_code == "bd"][1, get(col_name)]
-      if (length(bed_value)) bed <- bed_value
+      if (startsWith(col_name, "loc_")) {
+        # Room
+        room_location_ref <- room_encounter[, get("enc_location_ref")]
+        room_location_id <- etlutils::fhirdataExtractIDs(room_location_ref)
+        room_value <- locations[loc_id == room_location_id, get(col_name)]
+        # Bed
+        bed_location_ref <- bed_encounter[, get("enc_location_ref")]
+        bed_location_id <- etlutils::fhirdataExtractIDs(bed_location_ref)
+        bed_value <- locations[loc_id == bed_location_id, get(col_name)]
+      } else if (startsWith(col_name, "enc_")) {
+        # Room
+        room_value <- room_encounter[, get(col_name)]
+        # Bed
+        bed_value <- bed_encounter[, get(col_name)]
+      }
+      if (etlutils::isSimpleNotEmptyString(room_value)) room <- room_value
+      if (etlutils::isSimpleNotEmptyString(bed_value)) bed <- bed_value
     }
   }
 
@@ -194,7 +211,7 @@ createFrontendTables <- function() {
     # patient multiple times on the same or different wards)
     pids <- unique(pids_per_ward$patient_id)
     pids <- etlutils::fhirdataExtractIDs(pids)
-    patients <- loadResourcesLastStatusByOwnIDFromDB("Patient", pids)
+    patients <- loadResourcesLastVersionByOwnIDFromDB("Patient", pids)
     return(patients)
   }
 
@@ -294,6 +311,8 @@ createFrontendTables <- function() {
     )
 
     encounters <- etlutils::fhirdataGetAllEncounters(pids_per_ward$encounter_id, "CreateEncounterFrontendTable()_")
+    location_refs <- na.omit(unique(encounters$enc_location_ref))
+    locations <- loadResourcesLastVersionByOwnIDFromDB("Location", location_refs)
 
     query_datetime_obs <- getObservationQueryDatetime(encounters)
 
@@ -417,7 +436,7 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_aufn_diag", admission_diagnoses)
 
         # Call the function with the filtered_pid_part_of_encounters data and the location_labels
-        room_and_bed <- getLocationString(pid_part_of_encounters)
+        room_and_bed <- getLocationString(pid_part_of_encounters, locations)
         data.table::set(enc_frontend_table, target_index, "fall_zimmernr", room_and_bed)
 
         obs_weight <- observations_weight[obs_patient_ref == pid_ref]
