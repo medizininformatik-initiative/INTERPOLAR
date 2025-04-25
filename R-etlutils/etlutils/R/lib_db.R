@@ -1352,3 +1352,21 @@ dbReset <- function() {
   # Close connection
   DBI::dbDisconnect(con)
 }
+
+#' Remove Special Characters from a SQL comment.
+#'
+#' This function removes potentially problematic special characters from SQL comment strings.
+#' It is useful when generating SQL scripts where characters like `[`, `]`, `'`, `"`, or `;` might cause syntax errors.
+#'
+#' @param comment A character string representing the SQL comment.
+#'
+#' @return A cleaned character string with special characters removed.
+#'
+#' @examples
+#' dbRemoveSpecialChars("This is a comment with [brackets] and 'quotes';")
+#' # Returns: "This is a comment with brackets and quotes"
+#'
+#' @export
+dbRemoveSpecialChars <- function(comment) {
+  gsub("[\\[\\]'\";]", "", comment, perl = TRUE)
+}
