@@ -137,12 +137,14 @@ fhirdataCreateResourceTable <- function(
 #' ensures uniqueness of the returned encounters.
 #'
 #' @param encounter_ids A character vector of FHIR Encounter resource IDs.
+#' @param common_encounter_fhir_identifier_system A character string representing the common FHIR
+#' identifier system for a group of encounters which should be interpreted as the same medical case.
 #' @param lock_id_extension A character string used to extend the lock ID for database queries.
 #'
 #' @return A `data.table` containing all relevant and deduplicated encounter records.
 #'
 #' @export
-fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension) {
+fhirdataGetAllEncounters <- function(encounter_ids, common_encounter_fhir_identifier_system = NULL, lock_id_extension) {
 
   getEncounters <- function(encounter_ids, sub_lock_id_extension) {
     if (length(encounter_ids)) {
@@ -197,11 +199,12 @@ fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension) {
   encounters <- getEncounters(encounter_ids, 1)
 
   # Assumption 1: All Encounters of the same medical case have the same enc_identifier_value for
-  # the enc_identifier_system given by FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM
-  if (isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+  # the common_encounter_fhir_identifier_system
+  if (isSimpleNotEmptyString(common_encounter_fhir_identifier_system)) {
     query_ids <- fhirdbGetQueryList(encounters$enc_identifier_value)
     query <- paste0( "SELECT * FROM v_encounter_last_version\n",
-                     "WHERE enc_identifier_value IN (", query_ids, ")\n")
+                     "WHERE enc_identifier_system = '", common_encounter_fhir_identifier_system, "'\n",
+                     "AND enc_identifier_value IN (", query_ids, ")\n")
     encounters_with_same_identifier <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[2]"))
     encounters <- joinEncounters(encounters, encounters_with_same_identifier)
   }
