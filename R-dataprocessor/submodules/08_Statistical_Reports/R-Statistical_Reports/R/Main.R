@@ -48,7 +48,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
 
   encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
                                         table_name = "v_encounter")
-  # TOASK: Can this table have multiple rows per encounter? ----------
+  # this table can have multiple rows per encounter
   # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 # ---------------------------------------------------------------------------#
 # DEBUG: test data with added enc_type_code "versorgungsstellenkontakt" -------
@@ -64,8 +64,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
 # ---------------------------------------------------------------------------#
 
-
-
   pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
                                                 table_name = "v_pids_per_ward")
   # this table can have multiple entries per main encounter due to transferral to another ward
@@ -75,9 +73,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   print(pids_per_ward_table)
 
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
-    addMainEncId() #|>
-    # addMainEncPeriodStart() |>
-    # calculateAge() |>
+    addMainEncId() |>
+    addMainEncPeriodStart() |>
+    calculateAge() #|>
     # add_ward_name() |>
 
   # DEBUG: for test reasons the start and end dates for abteilungskontakt -----------

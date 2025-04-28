@@ -103,78 +103,71 @@ addMainEncId <- function(encounter_table) {
 
 #------------------------------------------------------------------------------#
 
-#' Add Main Encounter Period Start to Merged Table
+#' Add Main Encounter Period Start to Encounter Table
 #'
-#' This function adds a new column `main_enc_period_start` to the merged dataset.
-#' It determines the start date of the main inpatient encounter by checking whether
-#' an encounter is an inpatient facility contact (`einrichtungskontakt`) of class `IMP`.
-#' If so, it assigns the encounter’s own start date as `main_enc_period_start` and assigns it
-#' within the same main encounter group.
+#' This function adds a new column `main_enc_period_start` to the encounter table.
+#' It retrieves the `enc_period_start` date from the main (Einrichtungskontakt) encounter associated
+#' with each record and joins it based on the `main_enc_id`.
 #'
-#' @param encounter_table_with_main_enc A data frame or tibble containing patient and encounter data.
-#'   This table must include columns such as `enc_partof_ref`, `enc_type_code`,
-#'   `enc_class_code`, `enc_id`, and `enc_period_start`.
+#' @param encounter_table_with_main_enc A data frame or tibble that contains encounter records
+#'   with an existing `main_enc_id` column (usually created by \code{\link{addMainEncId}}).
+#'   The table must include at least:
+#'   - `enc_id`: Encounter ID
+#'   - `main_enc_id`: ID of the main (Einrichtungskontakt) encounter
+#'   - `enc_period_start`: Start date of the encounter period
 #'
-#' @return A data frame or tibble with an additional column `main_enc_period_start`,
-#'   representing start date of the main inpatient encounter.
+#' @return A data frame or tibble with an additional column:
+#'   - `main_enc_period_start`: The `enc_period_start` date corresponding to the `main_enc_id`.
+#'     This represents the start date of the primary encounter for each record.
 #'
 #' @details
-#' The function performs the following steps:
-#' 1. Checks if `enc_partof_ref` is `NA` and if the encounter is an inpatient facility
-#'    contact (`einrichtungskontakt`) of class `IMP`.
-#' 2. If both conditions are met, assigns `enc_period_start` as `main_enc_period_start`.
-#' 3. Otherwise, sets `main_enc_period_start` as `NA`.
-#' 4. Groups the dataset by `main_enc_id` and assigns the (only) non-NA
-#'    `main_enc_period_start` within the group.
-#' 5. Ungroups the dataset to return the final modified table.
+#' The function performs a left join between the encounter table and a mapping
+#' of `main_enc_id` to `enc_period_start`. It ensures that each encounter record
+#' has easy access to the start date of its top-level (Einrichtungskontakt) encounter period.
+#' The new column is relocated immediately after `main_enc_id` for better readability.
 #'
-#' @importFrom dplyr mutate if_else group_by ungroup
+#' @importFrom dplyr left_join select rename relocate
 #' @export
-addMainEncPeriodStart <- function(merged_table) {
-  merged_table <- merged_table |>
-    dplyr::mutate(main_enc_period_start = dplyr::if_else(is.na(enc_partof_ref) &
-                                                           enc_type_code == "einrichtungskontakt" &
-                                                           enc_class_code == "IMP",
-                                                         enc_period_start,
-                                                         NA)) |>
-    dplyr::group_by(main_enc_id) |>
-    dplyr::mutate(main_enc_period_start = dplyr::if_else(is.na(main_enc_period_start),
-                                                         min(main_enc_period_start, na.rm = TRUE),
-                                                         main_enc_period_start)) |>
-    dplyr::ungroup()
+addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
+  encounter_table_with_MainEncPeriodStart <- encounter_table_with_main_enc |>
+      dplyr::left_join(encounter_table_with_main_enc |>
+                         dplyr::select(enc_id, enc_period_start) |>
+                         dplyr::rename(main_enc_id = enc_id, main_enc_period_start = enc_period_start),
+        by = "main_enc_id") |>
+      dplyr::relocate(main_enc_period_start, .after = main_enc_id)
 
-  return(merged_table)
+  return(encounter_table_with_MainEncPeriodStart)
 }
 
 
 #------------------------------------------------------------------------------#
 
-#' Calculate Additional Variables for the Merged Table
+#' Calculate Patient Age at Main Encounter Start
 #'
-#' This function calculates additional variables based on the merged patient and encounter data.
-#' Specifically, it calculates the age of the patient at the start of the encounter period by
-#' calculating the difference between the encounter's start date and the patient's birthdate.
+#' This function calculates the patient's age at the start of the main encounter period (Einrichtungskontakt)
+#' by computing the difference between the main encounter start date and the patient's birthdate.
 #'
-#' @param merged_table A data frame or tibble containing the merged patient and encounter data.
-#'   It should include columns such as `pat_birthdate` and `main_enc_period_start`.
+#' @param merged_table_with_MainEncPeriodStart A data frame or tibble containing merged patient
+#'   and encounter data. It must include the columns `pat_birthdate` (patient's birth date)
+#'   and `main_enc_period_start` (start date of the main encounter (Einrichtungskontakt)).
 #'
-#' @return A data frame or tibble that includes the original data with an additional `age` column,
-#'   representing the age of the patient at the start of the main encounter period.
+#' @return A data frame or tibble with an additional column:
+#'   - `age_at_hospitalization`: The patient's age in completed years at the time of the main encounter start.
 #'
 #' @details
-#' This function calculates the age by using the `main_enc_period_start` (the start date of the main encounter)
-#' and `pat_birthdate` (the patient's birthdate) columns in the merged data. The result is a new
-#' column `age` that is the patient's age at the time of the encounter start date, calculated in years
-#' (with precision to the nearest whole number).
+#' The function calculates age by taking the difference between `main_enc_period_start` and
+#' `pat_birthdate`, converting it into days, dividing by 365.25 to account for leap years,
+#' and rounding down to the nearest whole number.
 #'
 #' @importFrom dplyr mutate
 #' @export
-calculateAge <- function(merged_table) {
+calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 
-  merged_table_with_calc <- merged_table |>
-    dplyr::mutate(age = floor(as.numeric(difftime(as.Date(main_enc_period_start), pat_birthdate)) / 365.25))
+  merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
+    dplyr::mutate(age_at_hospitalization = floor(as.numeric(difftime(as.Date(main_enc_period_start), pat_birthdate)) / 365.25)) |>
+    dplyr::relocate(age_at_hospitalization, .after = pat_birthdate)
 
-  return(merged_table_with_calc)
+  return(merged_table_with_age)
 }
 
 #------------------------------------------------------------------------------#
