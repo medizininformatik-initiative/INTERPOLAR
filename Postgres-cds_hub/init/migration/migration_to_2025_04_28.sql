@@ -3,14 +3,14 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-18 02:27:27
--- Rights definition file size        : 16219 Byte
+-- Rights definition file last update : 2025-04-28 16:00:57
+-- Rights definition file size        : 13663 Byte
 --
 -- Create SQL Tables in Schema "NA"
--- Create time: 2025-04-18 02:30:01
+-- Create time: 2025-04-28 16:03:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
--- SCRIPTNAME:  micration_x_to_2025_04_18.sql
--- TEMPLATE:  template_micration.sql
+-- SCRIPTNAME:  migration/migration_to_2025_04_28.sql
+-- TEMPLATE:  template_migration.sql
 -- OWNER_USER:  
 -- OWNER_SCHEMA:  
 -- TAGS:  

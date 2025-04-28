@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-18 00:56:43
--- Rights definition file size        : 15800 Byte
+-- Rights definition file last update : 2025-04-28 16:00:57
+-- Rights definition file size        : 13663 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-18 01:01:50
+-- Create time: 2025-04-28 16:03:27
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1039,13 +1039,14 @@ BEGIN
                                 ret_2ndbewertung___1,
                                 ret_bewerter2_pipeline,
                                 ret_bewerter2,
+                                ret_bewerter3,
                                 ret_gewissheit2,
                                 ret_mrp_zuordnung2,
                                 ret_gewissheit2_oth,
                                 ret_gewiss_grund2_abl,
                                 ret_gewiss_grund_abl_sonst2,
                                 ret_gewiss_grund_abl_klin2,
-                                ret_gewiss_grund_abl_klin_neg___1,
+                                ret_gewiss_grund_abl_klin2_neg___1,
                                 ret_massn_am2___1,
                                 ret_massn_am2___2,
                                 ret_massn_am2___3,
@@ -1120,13 +1121,14 @@ BEGIN
                                 current_record.ret_2ndbewertung___1,
                                 current_record.ret_bewerter2_pipeline,
                                 current_record.ret_bewerter2,
+                                current_record.ret_bewerter3,
                                 current_record.ret_gewissheit2,
                                 current_record.ret_mrp_zuordnung2,
                                 current_record.ret_gewissheit2_oth,
                                 current_record.ret_gewiss_grund2_abl,
                                 current_record.ret_gewiss_grund_abl_sonst2,
                                 current_record.ret_gewiss_grund_abl_klin2,
-                                current_record.ret_gewiss_grund_abl_klin_neg___1,
+                                current_record.ret_gewiss_grund_abl_klin2_neg___1,
                                 current_record.ret_massn_am2___1,
                                 current_record.ret_massn_am2___2,
                                 current_record.ret_massn_am2___3,

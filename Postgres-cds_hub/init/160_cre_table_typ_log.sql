@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-18 00:56:43
--- Rights definition file size        : 15800 Byte
+-- Rights definition file last update : 2025-04-28 16:00:57
+-- Rights definition file size        : 13663 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-18 01:00:49
+-- Create time: 2025-04-28 16:03:16
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1071,6 +1071,13 @@ BEGIN
         ) THEN
             ALTER TABLE db_log.patient ADD pat_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (pat_identifier_end)
+        IF NOT EXISTS ( -- column not exists (pat_name_use)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'patient'
+            AND column_name = 'pat_name_use'
+        ) THEN
+            ALTER TABLE db_log.patient ADD pat_name_use varchar;   -- name/use (varchar)
+        END IF; -- column (pat_name_use)
         IF NOT EXISTS ( -- column not exists (pat_name_text)
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'patient'
@@ -1140,6 +1147,7 @@ BEGIN
           COALESCE(db.to_char_immutable(pat_identifier_value), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_identifier_start), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_identifier_end), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(pat_name_use), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_name_text), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_name_family), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_name_given), ''#NULL#'') || ''|||'' ||
@@ -1167,6 +1175,7 @@ BEGIN
           COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
           COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
           COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
+          COALESCE(db.to_char_immutable(pat_name_use), '#NULL#') || '|||' || -- hash from: name/use (pat_name_use)
           COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
           COALESCE(db.to_char_immutable(pat_name_family), '#NULL#') || '|||' || -- hash from: name/family (pat_name_family)
           COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
@@ -1200,6 +1209,7 @@ BEGIN
           COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
           COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
           COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
+          COALESCE(db.to_char_immutable(pat_name_use), '#NULL#') || '|||' || -- hash from: name/use (pat_name_use)
           COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
           COALESCE(db.to_char_immutable(pat_name_family), '#NULL#') || '|||' || -- hash from: name/family (pat_name_family)
           COALESCE(db.to_char_immutable(pat_name_given), '#NULL#') || '|||' || -- hash from: name/given (pat_name_given)
@@ -13353,6 +13363,83 @@ BEGIN
         ) THEN
             ALTER TABLE db_log.consent ADD cons_provision_actor_role_text varchar;   -- provision/actor/role/text (varchar)
         END IF; -- column (cons_provision_actor_role_text)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_ref)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_ref'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_ref varchar;   -- provision/actor/reference (varchar)
+        END IF; -- column (cons_provision_actor_ref)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_type)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_type'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_type varchar;   -- provision/actor/type (varchar)
+        END IF; -- column (cons_provision_actor_type)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_use)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_use'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_use varchar;   -- provision/actor/identifier/use (varchar)
+        END IF; -- column (cons_provision_actor_identifier_use)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_system)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_type_system'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_type_system varchar;   -- provision/actor/identifier/type/coding/system (varchar)
+        END IF; -- column (cons_provision_actor_identifier_type_system)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_version)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_type_version'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_type_version varchar;   -- provision/actor/identifier/type/coding/version (varchar)
+        END IF; -- column (cons_provision_actor_identifier_type_version)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_code)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_type_code'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_type_code varchar;   -- provision/actor/identifier/type/coding/code (varchar)
+        END IF; -- column (cons_provision_actor_identifier_type_code)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_display)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_type_display'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_type_display varchar;   -- provision/actor/identifier/type/coding/display (varchar)
+        END IF; -- column (cons_provision_actor_identifier_type_display)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_text)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_type_text'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_type_text varchar;   -- provision/actor/identifier/type/text (varchar)
+        END IF; -- column (cons_provision_actor_identifier_type_text)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_system)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_system'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_system varchar;   -- provision/actor/identifier/system (varchar)
+        END IF; -- column (cons_provision_actor_identifier_system)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_value)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_identifier_value'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_identifier_value varchar;   -- provision/actor/identifier/value (varchar)
+        END IF; -- column (cons_provision_actor_identifier_value)
+        IF NOT EXISTS ( -- column not exists (cons_provision_actor_display)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_actor_display'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_actor_display varchar;   -- provision/actor/display (varchar)
+        END IF; -- column (cons_provision_actor_display)
         IF NOT EXISTS ( -- column not exists (cons_provision_code_system)
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'consent'
@@ -13402,6 +13489,188 @@ BEGIN
         ) THEN
             ALTER TABLE db_log.consent ADD cons_provision_dataperiod_end timestamp;   -- provision/dataPeriod/end (timestamp)
         END IF; -- column (cons_provision_dataperiod_end)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_type)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_type'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_type varchar;   -- provision/provision/type (varchar)
+        END IF; -- column (cons_provision_provision_type)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_period_start)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_period_start'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_period_start timestamp;   -- provision/provision/period/start (timestamp)
+        END IF; -- column (cons_provision_provision_period_start)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_period_end)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_period_end'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_period_end timestamp;   -- provision/provision/period/end (timestamp)
+        END IF; -- column (cons_provision_provision_period_end)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_system)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_role_system'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_role_system varchar;   -- provision/provision/actor/role/coding/system (varchar)
+        END IF; -- column (cons_provision_provision_actor_role_system)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_version)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_role_version'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_role_version varchar;   -- provision/provision/actor/role/coding/version (varchar)
+        END IF; -- column (cons_provision_provision_actor_role_version)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_code)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_role_code'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_role_code varchar;   -- provision/provision/actor/role/coding/code (varchar)
+        END IF; -- column (cons_provision_provision_actor_role_code)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_display)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_role_display'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_role_display varchar;   -- provision/provision/actor/role/coding/display (varchar)
+        END IF; -- column (cons_provision_provision_actor_role_display)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_text)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_role_text'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_role_text varchar;   -- provision/provision/actor/role/text (varchar)
+        END IF; -- column (cons_provision_provision_actor_role_text)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_ref)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_ref'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_ref varchar;   -- provision/provision/actor/reference (varchar)
+        END IF; -- column (cons_provision_provision_actor_ref)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_type)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_type'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_type varchar;   -- provision/provision/actor/type (varchar)
+        END IF; -- column (cons_provision_provision_actor_type)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_use)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_use'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_use varchar;   -- provision/provision/actor/identifier/use (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_use)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_system)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_type_system'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_type_system varchar;   -- provision/provision/actor/identifier/type/coding/system (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_type_system)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_version)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_type_version'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_type_version varchar;   -- provision/provision/actor/identifier/type/coding/version (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_type_version)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_code)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_type_code'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_type_code varchar;   -- provision/provision/actor/identifier/type/coding/code (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_type_code)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_display)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_type_display'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_type_display varchar;   -- provision/provision/actor/identifier/type/coding/display (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_type_display)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_text)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_type_text'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_type_text varchar;   -- provision/provision/actor/identifier/type/text (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_type_text)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_system)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_system'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_system varchar;   -- provision/provision/actor/identifier/system (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_system)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_value)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_identifier_value'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_identifier_value varchar;   -- provision/provision/actor/identifier/value (varchar)
+        END IF; -- column (cons_provision_provision_actor_identifier_value)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_display)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_actor_display'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_actor_display varchar;   -- provision/provision/actor/display (varchar)
+        END IF; -- column (cons_provision_provision_actor_display)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_system)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_code_system'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_code_system varchar;   -- provision/provision/code/coding/system (varchar)
+        END IF; -- column (cons_provision_provision_code_system)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_version)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_code_version'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_code_version varchar;   -- provision/provision/code/coding/version (varchar)
+        END IF; -- column (cons_provision_provision_code_version)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_code)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_code_code'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_code_code varchar;   -- provision/provision/code/coding/code (varchar)
+        END IF; -- column (cons_provision_provision_code_code)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_display)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_code_display'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_code_display varchar;   -- provision/provision/code/coding/display (varchar)
+        END IF; -- column (cons_provision_provision_code_display)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_text)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_code_text'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_code_text varchar;   -- provision/provision/code/text (varchar)
+        END IF; -- column (cons_provision_provision_code_text)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_dataperiod_start)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_dataperiod_start'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_dataperiod_start timestamp;   -- provision/provision/dataPeriod/start (timestamp)
+        END IF; -- column (cons_provision_provision_dataperiod_start)
+        IF NOT EXISTS ( -- column not exists (cons_provision_provision_dataperiod_end)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'consent'
+            AND column_name = 'cons_provision_provision_dataperiod_end'
+        ) THEN
+            ALTER TABLE db_log.consent ADD cons_provision_provision_dataperiod_end timestamp;   -- provision/provision/dataPeriod/end (timestamp)
+        END IF; -- column (cons_provision_provision_dataperiod_end)
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -13438,13 +13707,50 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_provision_actor_role_code), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_actor_role_display), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_actor_role_text), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_ref), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_type), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_use), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_version), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_text), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_value), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_actor_display), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_code_system), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_code_version), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_code_code), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_code_display), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_code_text), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_dataperiod_start), ''#NULL#'') || ''|||'' ||
-          COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), ''#NULL#'') || ''|||'' ||''#''
+          COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_type), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_period_start), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_period_end), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_version), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_text), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_ref), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_type), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_use), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_version), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_text), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_value), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_version), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_text), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_dataperiod_start), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_provision_provision_dataperiod_end), ''#NULL#'') || ''|||'' ||''#''
                 ','(',''),')',''))
             ) THEN
             -- Delete the old hash column so that a new one can be created
@@ -13481,6 +13787,17 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_provision_actor_role_code), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/code (cons_provision_actor_role_code)
           COALESCE(db.to_char_immutable(cons_provision_actor_role_display), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/display (cons_provision_actor_role_display)
           COALESCE(db.to_char_immutable(cons_provision_actor_role_text), '#NULL#') || '|||' || -- hash from: provision/actor/role/text (cons_provision_actor_role_text)
+          COALESCE(db.to_char_immutable(cons_provision_actor_ref), '#NULL#') || '|||' || -- hash from: provision/actor/reference (cons_provision_actor_ref)
+          COALESCE(db.to_char_immutable(cons_provision_actor_type), '#NULL#') || '|||' || -- hash from: provision/actor/type (cons_provision_actor_type)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_use), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/use (cons_provision_actor_identifier_use)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_system), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/system (cons_provision_actor_identifier_type_system)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_version), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/version (cons_provision_actor_identifier_type_version)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_code), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/code (cons_provision_actor_identifier_type_code)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_display), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/display (cons_provision_actor_identifier_type_display)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_text), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/text (cons_provision_actor_identifier_type_text)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_system), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/system (cons_provision_actor_identifier_system)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_value), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/value (cons_provision_actor_identifier_value)
+          COALESCE(db.to_char_immutable(cons_provision_actor_display), '#NULL#') || '|||' || -- hash from: provision/actor/display (cons_provision_actor_display)
           COALESCE(db.to_char_immutable(cons_provision_code_system), '#NULL#') || '|||' || -- hash from: provision/code/coding/system (cons_provision_code_system)
           COALESCE(db.to_char_immutable(cons_provision_code_version), '#NULL#') || '|||' || -- hash from: provision/code/coding/version (cons_provision_code_version)
           COALESCE(db.to_char_immutable(cons_provision_code_code), '#NULL#') || '|||' || -- hash from: provision/code/coding/code (cons_provision_code_code)
@@ -13488,6 +13805,32 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_provision_code_text), '#NULL#') || '|||' || -- hash from: provision/code/text (cons_provision_code_text)
           COALESCE(db.to_char_immutable(cons_provision_dataperiod_start), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/start (cons_provision_dataperiod_start)
           COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/end (cons_provision_dataperiod_end)
+          COALESCE(db.to_char_immutable(cons_provision_provision_type), '#NULL#') || '|||' || -- hash from: provision/provision/type (cons_provision_provision_type)
+          COALESCE(db.to_char_immutable(cons_provision_provision_period_start), '#NULL#') || '|||' || -- hash from: provision/provision/period/start (cons_provision_provision_period_start)
+          COALESCE(db.to_char_immutable(cons_provision_provision_period_end), '#NULL#') || '|||' || -- hash from: provision/provision/period/end (cons_provision_provision_period_end)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_system), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/system (cons_provision_provision_actor_role_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_version), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/version (cons_provision_provision_actor_role_version)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_code), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/code (cons_provision_provision_actor_role_code)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_display), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/display (cons_provision_provision_actor_role_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_text), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/text (cons_provision_provision_actor_role_text)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_ref), '#NULL#') || '|||' || -- hash from: provision/provision/actor/reference (cons_provision_provision_actor_ref)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_type), '#NULL#') || '|||' || -- hash from: provision/provision/actor/type (cons_provision_provision_actor_type)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_use), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/use (cons_provision_provision_actor_identifier_use)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_system), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/system (cons_provision_provision_actor_identifier_type_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_version), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/version (cons_provision_provision_actor_identifier_type_version)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_code), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/code (cons_provision_provision_actor_identifier_type_code)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_display), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/display (cons_provision_provision_actor_identifier_type_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_text), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/text (cons_provision_provision_actor_identifier_type_text)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_system), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/system (cons_provision_provision_actor_identifier_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_value), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/value (cons_provision_provision_actor_identifier_value)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_display), '#NULL#') || '|||' || -- hash from: provision/provision/actor/display (cons_provision_provision_actor_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_system), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/system (cons_provision_provision_code_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_version), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/version (cons_provision_provision_code_version)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_code), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/code (cons_provision_provision_code_code)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_display), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/display (cons_provision_provision_code_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_text), '#NULL#') || '|||' || -- hash from: provision/provision/code/text (cons_provision_provision_code_text)
+          COALESCE(db.to_char_immutable(cons_provision_provision_dataperiod_start), '#NULL#') || '|||' || -- hash from: provision/provision/dataPeriod/start (cons_provision_provision_dataperiod_start)
+          COALESCE(db.to_char_immutable(cons_provision_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/provision/dataPeriod/end (cons_provision_provision_dataperiod_end)
                  '#'
                )
             ) STORED; -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -13530,6 +13873,17 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_provision_actor_role_code), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/code (cons_provision_actor_role_code)
           COALESCE(db.to_char_immutable(cons_provision_actor_role_display), '#NULL#') || '|||' || -- hash from: provision/actor/role/coding/display (cons_provision_actor_role_display)
           COALESCE(db.to_char_immutable(cons_provision_actor_role_text), '#NULL#') || '|||' || -- hash from: provision/actor/role/text (cons_provision_actor_role_text)
+          COALESCE(db.to_char_immutable(cons_provision_actor_ref), '#NULL#') || '|||' || -- hash from: provision/actor/reference (cons_provision_actor_ref)
+          COALESCE(db.to_char_immutable(cons_provision_actor_type), '#NULL#') || '|||' || -- hash from: provision/actor/type (cons_provision_actor_type)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_use), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/use (cons_provision_actor_identifier_use)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_system), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/system (cons_provision_actor_identifier_type_system)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_version), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/version (cons_provision_actor_identifier_type_version)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_code), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/code (cons_provision_actor_identifier_type_code)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_display), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/coding/display (cons_provision_actor_identifier_type_display)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_type_text), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/type/text (cons_provision_actor_identifier_type_text)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_system), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/system (cons_provision_actor_identifier_system)
+          COALESCE(db.to_char_immutable(cons_provision_actor_identifier_value), '#NULL#') || '|||' || -- hash from: provision/actor/identifier/value (cons_provision_actor_identifier_value)
+          COALESCE(db.to_char_immutable(cons_provision_actor_display), '#NULL#') || '|||' || -- hash from: provision/actor/display (cons_provision_actor_display)
           COALESCE(db.to_char_immutable(cons_provision_code_system), '#NULL#') || '|||' || -- hash from: provision/code/coding/system (cons_provision_code_system)
           COALESCE(db.to_char_immutable(cons_provision_code_version), '#NULL#') || '|||' || -- hash from: provision/code/coding/version (cons_provision_code_version)
           COALESCE(db.to_char_immutable(cons_provision_code_code), '#NULL#') || '|||' || -- hash from: provision/code/coding/code (cons_provision_code_code)
@@ -13537,6 +13891,32 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_provision_code_text), '#NULL#') || '|||' || -- hash from: provision/code/text (cons_provision_code_text)
           COALESCE(db.to_char_immutable(cons_provision_dataperiod_start), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/start (cons_provision_dataperiod_start)
           COALESCE(db.to_char_immutable(cons_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/dataPeriod/end (cons_provision_dataperiod_end)
+          COALESCE(db.to_char_immutable(cons_provision_provision_type), '#NULL#') || '|||' || -- hash from: provision/provision/type (cons_provision_provision_type)
+          COALESCE(db.to_char_immutable(cons_provision_provision_period_start), '#NULL#') || '|||' || -- hash from: provision/provision/period/start (cons_provision_provision_period_start)
+          COALESCE(db.to_char_immutable(cons_provision_provision_period_end), '#NULL#') || '|||' || -- hash from: provision/provision/period/end (cons_provision_provision_period_end)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_system), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/system (cons_provision_provision_actor_role_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_version), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/version (cons_provision_provision_actor_role_version)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_code), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/code (cons_provision_provision_actor_role_code)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_display), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/coding/display (cons_provision_provision_actor_role_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_role_text), '#NULL#') || '|||' || -- hash from: provision/provision/actor/role/text (cons_provision_provision_actor_role_text)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_ref), '#NULL#') || '|||' || -- hash from: provision/provision/actor/reference (cons_provision_provision_actor_ref)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_type), '#NULL#') || '|||' || -- hash from: provision/provision/actor/type (cons_provision_provision_actor_type)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_use), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/use (cons_provision_provision_actor_identifier_use)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_system), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/system (cons_provision_provision_actor_identifier_type_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_version), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/version (cons_provision_provision_actor_identifier_type_version)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_code), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/code (cons_provision_provision_actor_identifier_type_code)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_display), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/coding/display (cons_provision_provision_actor_identifier_type_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_type_text), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/type/text (cons_provision_provision_actor_identifier_type_text)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_system), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/system (cons_provision_provision_actor_identifier_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_identifier_value), '#NULL#') || '|||' || -- hash from: provision/provision/actor/identifier/value (cons_provision_provision_actor_identifier_value)
+          COALESCE(db.to_char_immutable(cons_provision_provision_actor_display), '#NULL#') || '|||' || -- hash from: provision/provision/actor/display (cons_provision_provision_actor_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_system), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/system (cons_provision_provision_code_system)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_version), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/version (cons_provision_provision_code_version)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_code), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/code (cons_provision_provision_code_code)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_display), '#NULL#') || '|||' || -- hash from: provision/provision/code/coding/display (cons_provision_provision_code_display)
+          COALESCE(db.to_char_immutable(cons_provision_provision_code_text), '#NULL#') || '|||' || -- hash from: provision/provision/code/text (cons_provision_provision_code_text)
+          COALESCE(db.to_char_immutable(cons_provision_provision_dataperiod_start), '#NULL#') || '|||' || -- hash from: provision/provision/dataPeriod/start (cons_provision_provision_dataperiod_start)
+          COALESCE(db.to_char_immutable(cons_provision_provision_dataperiod_end), '#NULL#') || '|||' || -- hash from: provision/provision/dataPeriod/end (cons_provision_provision_dataperiod_end)
                  '#'
                )
             ) STORED; -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -14207,6 +14587,7 @@ COMMENT ON COLUMN db_log.patient.pat_identifier_system IS 'identifier/system (va
 COMMENT ON COLUMN db_log.patient.pat_identifier_value IS 'identifier/value (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_identifier_start IS 'identifier/start (timestamp)';
 COMMENT ON COLUMN db_log.patient.pat_identifier_end IS 'identifier/end (timestamp)';
+COMMENT ON COLUMN db_log.patient.pat_name_use IS 'name/use (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_name_text IS 'name/text (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_name_family IS 'name/family (varchar)';
 COMMENT ON COLUMN db_log.patient.pat_name_given IS 'name/given (varchar)';
@@ -15415,6 +15796,17 @@ COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_version IS 'provision
 COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_code IS 'provision/actor/role/coding/code (varchar)';
 COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_display IS 'provision/actor/role/coding/display (varchar)';
 COMMENT ON COLUMN db_log.consent.cons_provision_actor_role_text IS 'provision/actor/role/text (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_ref IS 'provision/actor/reference (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_type IS 'provision/actor/type (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_use IS 'provision/actor/identifier/use (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_type_system IS 'provision/actor/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_type_version IS 'provision/actor/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_type_code IS 'provision/actor/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_type_display IS 'provision/actor/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_type_text IS 'provision/actor/identifier/type/text (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_system IS 'provision/actor/identifier/system (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_identifier_value IS 'provision/actor/identifier/value (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_actor_display IS 'provision/actor/display (varchar)';
 COMMENT ON COLUMN db_log.consent.cons_provision_code_system IS 'provision/code/coding/system (varchar)';
 COMMENT ON COLUMN db_log.consent.cons_provision_code_version IS 'provision/code/coding/version (varchar)';
 COMMENT ON COLUMN db_log.consent.cons_provision_code_code IS 'provision/code/coding/code (varchar)';
@@ -15422,6 +15814,32 @@ COMMENT ON COLUMN db_log.consent.cons_provision_code_display IS 'provision/code/
 COMMENT ON COLUMN db_log.consent.cons_provision_code_text IS 'provision/code/text (varchar)';
 COMMENT ON COLUMN db_log.consent.cons_provision_dataperiod_start IS 'provision/dataPeriod/start (timestamp)';
 COMMENT ON COLUMN db_log.consent.cons_provision_dataperiod_end IS 'provision/dataPeriod/end (timestamp)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_type IS 'provision/provision/type (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_period_start IS 'provision/provision/period/start (timestamp)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_period_end IS 'provision/provision/period/end (timestamp)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_role_system IS 'provision/provision/actor/role/coding/system (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_role_version IS 'provision/provision/actor/role/coding/version (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_role_code IS 'provision/provision/actor/role/coding/code (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_role_display IS 'provision/provision/actor/role/coding/display (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_role_text IS 'provision/provision/actor/role/text (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_ref IS 'provision/provision/actor/reference (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_type IS 'provision/provision/actor/type (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_use IS 'provision/provision/actor/identifier/use (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_type_system IS 'provision/provision/actor/identifier/type/coding/system (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_type_version IS 'provision/provision/actor/identifier/type/coding/version (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_type_code IS 'provision/provision/actor/identifier/type/coding/code (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_type_display IS 'provision/provision/actor/identifier/type/coding/display (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_type_text IS 'provision/provision/actor/identifier/type/text (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_system IS 'provision/provision/actor/identifier/system (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_identifier_value IS 'provision/provision/actor/identifier/value (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_actor_display IS 'provision/provision/actor/display (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_code_system IS 'provision/provision/code/coding/system (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_code_version IS 'provision/provision/code/coding/version (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_code_code IS 'provision/provision/code/coding/code (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_code_display IS 'provision/provision/code/coding/display (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_code_text IS 'provision/provision/code/text (varchar)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_dataperiod_start IS 'provision/provision/dataPeriod/start (timestamp)';
+COMMENT ON COLUMN db_log.consent.cons_provision_provision_dataperiod_end IS 'provision/provision/dataPeriod/end (timestamp)';
 COMMENT ON COLUMN db_log.consent.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.consent.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN db_log.consent.current_dataset_status IS 'Processing status of the data record';
