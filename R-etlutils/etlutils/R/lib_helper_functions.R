@@ -120,6 +120,7 @@ isSimpleFalseOr0 <- function(x) {
 #' isSimpleNotEmptyString("")      # Returns FALSE
 #' isSimpleNotEmptyString(NA)      # Returns FALSE
 #' isSimpleNotEmptyString(123)     # Returns FALSE
+#' isSimpleNotEmptyString(NULL)    # Returns FALSE
 #' @export
 isSimpleNotEmptyString <- function(s) {
   is.atomic(s) && length(s) == 1 && !is.na(s) && is.character(s) && nchar(s) > 0
