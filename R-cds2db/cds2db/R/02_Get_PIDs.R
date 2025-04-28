@@ -298,7 +298,7 @@ getEncounters <- function(table_description, current_datetime) {
       }
     })
 
-    runLevel3Line("change column classes", {
+    runLevel3Line("Change column classes", {
       table_enc <- table_enc[, lapply(.SD, as.character), ]
     })
 
@@ -331,31 +331,52 @@ getPIDsSplittedByWard <- function(path_to_PID_list_file = NA, log_result = TRUE)
     })
   } else {
     etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
-      filter_patterns <- convertFilterPatterns()
-      # the subject reference is needed in every case to extract them if the encounter matches the pattern
-      # the period end is needed to check if the Encounter is still finished
-      # maybe some other columns (state or something like this) could be important, so we had to add them here in future
-      filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns,
-                                                                                   "id",
-                                                                                   "subject/reference",
-                                                                                   "period/start",
-                                                                                   "period/end",
-                                                                                   "status",
-                                                                                   "meta/lastUpdated")
-      # Get current or debug datetime
-      current_datetime <- getQueryDatetime()
-      # Replace space with 'T' in timestamp for correct time format
-      current_datetime <- gsub(" ", "T", current_datetime)
-      # Download the Encounters and crack them in a table with the columns of the xpaths in
-      # filter patterns + the additional paths above
-      encounters <- getEncounters(filter_enc_table_description, current_datetime)
+      etlutils::runLevel3("Load Encounters", {
+        filter_patterns <- convertFilterPatterns()
+        # the subject reference is needed in every case to extract them if the encounter matches the pattern
+        # the period end is needed to check if the Encounter is still finished
+        # maybe some other columns (state or something like this) could be important, so we had to add them here in future
+        filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns,
+                                                                                     "id",
+                                                                                     "subject/reference",
+                                                                                     "period/start",
+                                                                                     "period/end",
+                                                                                     "status",
+                                                                                     "meta/lastUpdated")
+        # Get current or debug datetime
+        current_datetime <- getQueryDatetime()
+        # Replace space with 'T' in timestamp for correct time format
+        current_datetime <- gsub(" ", "T", current_datetime)
+        # Download the Encounters and crack them in a table with the columns of the xpaths in
+        # filter patterns + the additional paths above
+        encounters <- getEncounters(filter_enc_table_description, current_datetime)
+        # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
+        # names for the filtering -> set them here
+        names(encounters) <- filter_enc_table_description@cols@.Data
+      })
 
-      # the fhircrackr does not accept same column names and xpath expessions but we need the xpath expressions as column
-      # names for the filtering -> set them here
-      names(encounters) <- filter_enc_table_description@cols@.Data
-      # now filter the encounters with the patterns and then extract the PIDs
-      pids_splitted_by_ward <- extractPIDsSplittedByWard(encounters, filter_patterns)
+      etlutils::runLevel3("Validate Encounter Filters", {
+        # Check if any column except the period/end column has only NA values -> generate warning
+        cols_to_check <- setdiff(names(encounters), "period/end")
+        # find columns with all values NA
+        na_columns <- cols_to_check[
+          sapply(encounters[, ..cols_to_check], function(col) all(is.na(col)))
+        ]
+        if (length(na_columns)) {
+          warning_message <- paste0("The following columns have only NA values:\n",
+                                  paste(na_columns, collapse = ", "), "\n",
+                                  "Please check the filter patterns in the toml file.\n",
+                                  "This may indicate that invalid column names are specified in",
+                                  " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
+                                  " column names will never be able to contain patients.\n")
+          etlutils::catWarningMessage(warning_message)
+        }
+      })
 
+      etlutils::runLevel3("Split Encounters", {
+        # now filter the encounters with the patterns and then extract the PIDs
+        pids_splitted_by_ward <- extractPIDsSplittedByWard(encounters, filter_patterns)
+      })
     })
   }
 
