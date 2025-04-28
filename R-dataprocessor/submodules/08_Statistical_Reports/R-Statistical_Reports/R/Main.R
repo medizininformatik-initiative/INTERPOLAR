@@ -52,6 +52,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 # ---------------------------------------------------------------------------#
 # DEBUG: test data with added enc_type_code "versorgungsstellenkontakt" -------
+  # add one Versorgungsstellenkontakt to each abteilungskontakt starting 2 days later
   encounter_table <- encounter_table |>
     dplyr::filter(enc_type_code == "abteilungskontakt") |>
     dplyr::mutate(enc_partof_ref = paste0("Encounter/",enc_id),
@@ -59,14 +60,43 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
                   enc_type_code = "versorgungsstellenkontakt",
                   enc_servicetype_system = NA,
                   enc_servicetype_code = NA,
-                  enc_location_physicaltype_code = "wa") |>
+                  enc_location_physicaltype_code = "wa",
+                  enc_period_start = enc_period_start+172800) |>
     dplyr::bind_rows(encounter_table) |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
+  # add one additional Versorgungsstellenkontakt to the last abteilungskontakt with same start date
+  # and end date one day later
+  encounter_table <- encounter_table |>
+    dplyr::add_row(encounter_table |>
+                     dplyr::slice_tail() |>
+                     dplyr::mutate(enc_id = paste0(sub("^Encounter/", "", enc_partof_ref),"-V-0"),
+                                   enc_period_start = enc_period_start-172800,
+                                   enc_period_end = enc_period_start+86400) |>
+                     dplyr::relocate(enc_period_start, .before = enc_period_end))
 # ---------------------------------------------------------------------------#
 
   pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
                                                 table_name = "v_pids_per_ward")
   # this table can have multiple entries per main encounter due to transferral to another ward
+
+  # ---------------------------------------------------------------------------#
+  # DEBUG: test data with different wards in pids_per_ward table (patient transferral) -------
+  # change the input datetime for the last and the added versorgungstellenkontakt
+  pids_per_ward_table <- pids_per_ward_table |>
+    dplyr::mutate(input_datetime = dplyr::if_else(
+      dplyr::row_number() == nrow(pids_per_ward_table),
+      encounter_table |>
+        dplyr::slice_tail() |>
+        dplyr::mutate(enc_period_end = enc_period_end+86400) |>
+        dplyr::pull(enc_period_end),
+      input_datetime)) |>
+    dplyr::add_row(pids_per_ward_table |>
+                     dplyr::slice_tail() |>
+                     dplyr::mutate(ward_name = "Station X",
+                                   input_datetime = encounter_table |>
+                                     dplyr::slice_tail() |>
+                                     dplyr::pull(enc_period_end)))
+  # ---------------------------------------------------------------------------#
 
   print(patient_table)
   print(encounter_table)
@@ -84,7 +114,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   # FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
 
   # Print the patient, encounter, and FAS1 datasets for verification
-  print(complete_table)
+  print(data.table::as.data.table(complete_table))
   # print(FAS1, width = Inf, n=50)
   # class(FAS1)
   #
