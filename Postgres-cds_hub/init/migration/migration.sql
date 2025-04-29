@@ -1,3 +1,32 @@
+-- ########################################################################################################
+--
+-- This file is generated. Changes should only be made by regenerating the file.
+--
+-- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2025-04-29 12:54:13
+-- Rights definition file size        : 15631 Byte
+--
+-- Create SQL Tables in Schema "NA"
+-- Create time: 2025-04-29 12:57:00
+-- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
+-- SCRIPTNAME:  migration/migration.sql
+-- TEMPLATE:  template_migration.sql
+-- OWNER_USER:  
+-- OWNER_SCHEMA:  
+-- TAGS:  
+-- TABLE_PREFIX:  
+-- TABLE_POSTFIX:  
+-- RIGHTS:  
+-- GRANT_TARGET_USER:  
+-- COPY_FUNC_SCRIPTNAME:  
+-- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_NAME:  
+-- SCHEMA_2:  
+-- TABLE_POSTFIX_2:  
+-- SCHEMA_3:  
+-- TABLE_POSTFIX_3:  
+-- ########################################################################################################
+
 ----------------------------------------------------------------------------
 \i migration/000_stop_semapore_during_migration.sql
 \i ./001_main_user_schema_sequence.sql
@@ -34,3 +63,4 @@
 \i ./620_fe_in_to_db_log.sql
 \i ./950_cro_job.sql
 \i migration/999_start_semapore_after_migration.sql
+
