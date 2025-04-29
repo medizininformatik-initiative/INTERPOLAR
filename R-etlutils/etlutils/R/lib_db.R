@@ -177,7 +177,11 @@ dbGetConnection <- function(readonly) {
   schema_name <- if (readonly) .lib_db_env[["DB_SCHEMA_OUT"]] else .lib_db_env[["DB_SCHEMA_IN"]]
   db_connection <- .lib_db_connection_env[[schema_name]]
 
-  if (is.null(db_connection) || !DBI::dbIsValid(db_connection)) {
+  if (!is.null(db_connection) && DBI::dbIsValid(db_connection)) {
+    DBI::dbDisconnect(db_connection)
+  }
+
+  if (is.null(db_connection)) {
     dbLog(
       "Attempting to connect with: \n",
       "dbname=", .lib_db_env[["DB_NAME"]], "\n",
@@ -186,24 +190,24 @@ dbGetConnection <- function(readonly) {
       "user=", .lib_db_env[["DB_USER"]], "\n",
       "schema=", schema_name, "\n"
     )
-
-    db_connection <- DBI::dbConnect(
-      RPostgres::Postgres(),
-      dbname = .lib_db_env[["DB_NAME"]],
-      host = .lib_db_env[["DB_HOST"]],
-      port = .lib_db_env[["DB_PORT"]],
-      user = .lib_db_env[["DB_USER"]],
-      password = .lib_db_env[["DB_PASSWORD"]],
-      options = paste0("-c search_path=", schema_name),
-      timezone = "Europe/Berlin"
-    )
-
-    # Increase memory allocation
-    DBI::dbExecute(db_connection, "set work_mem to '32MB';")
-
-    # Store the connection in the environment
-    .lib_db_connection_env[[schema_name]] <- db_connection
   }
+
+  db_connection <- DBI::dbConnect(
+    RPostgres::Postgres(),
+    dbname = .lib_db_env[["DB_NAME"]],
+    host = .lib_db_env[["DB_HOST"]],
+    port = .lib_db_env[["DB_PORT"]],
+    user = .lib_db_env[["DB_USER"]],
+    password = .lib_db_env[["DB_PASSWORD"]],
+    options = paste0("-c search_path=", schema_name),
+    timezone = "Europe/Berlin"
+  )
+
+  # Increase memory allocation
+  DBI::dbExecute(db_connection, "set work_mem to '32MB';")
+
+  # Store the connection in the environment
+  .lib_db_connection_env[[schema_name]] <- db_connection
 
   return(db_connection)
 }
