@@ -77,3 +77,21 @@ deleteRedcapContent <- function() {
     message("No records found in the project.")
   }
 }
+
+#' Get all actual field names from REDCap records, including *_complete fields
+#'
+#' @param rcon A REDCap connection object from redcapAPI
+#'
+#' @return A character vector of all field names present in actual REDCap records
+#'
+getRedcapFieldNames <- function(rcon) {
+  # Export minimal data (1 record) to retrieve full field structure
+  data_sample <- redcapAPI::exportRecords(
+    rcon = rcon,
+    rawOrLabel = "raw",
+    exportSurveyFields = TRUE,
+    exportDataAccessGroups = TRUE,
+    includeRepeatHeaders = TRUE
+  )
+  return(names(data_sample))
+}

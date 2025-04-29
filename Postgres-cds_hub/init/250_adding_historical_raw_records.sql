@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-04 14:40:51
--- Rights definition file size        : 15808 Byte
+-- Rights definition file last update : 2025-04-29 15:00:37
+-- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-04-07 11:53:31
+-- Create time: 2025-04-29 15:06:23
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -2452,6 +2452,17 @@ SELECT res FROM pg_background_result(pg_background_launch(
     cons_provision_actor_role_code,
     cons_provision_actor_role_display,
     cons_provision_actor_role_text,
+    cons_provision_actor_ref,
+    cons_provision_actor_type,
+    cons_provision_actor_identifier_use,
+    cons_provision_actor_identifier_type_system,
+    cons_provision_actor_identifier_type_version,
+    cons_provision_actor_identifier_type_code,
+    cons_provision_actor_identifier_type_display,
+    cons_provision_actor_identifier_type_text,
+    cons_provision_actor_identifier_system,
+    cons_provision_actor_identifier_value,
+    cons_provision_actor_display,
     cons_provision_code_system,
     cons_provision_code_version,
     cons_provision_code_code,
@@ -2459,6 +2470,32 @@ SELECT res FROM pg_background_result(pg_background_launch(
     cons_provision_code_text,
     cons_provision_dataperiod_start,
     cons_provision_dataperiod_end,
+    cons_provision_provision_type,
+    cons_provision_provision_period_start,
+    cons_provision_provision_period_end,
+    cons_provision_provision_actor_role_system,
+    cons_provision_provision_actor_role_version,
+    cons_provision_provision_actor_role_code,
+    cons_provision_provision_actor_role_display,
+    cons_provision_provision_actor_role_text,
+    cons_provision_provision_actor_ref,
+    cons_provision_provision_actor_type,
+    cons_provision_provision_actor_identifier_use,
+    cons_provision_provision_actor_identifier_type_system,
+    cons_provision_provision_actor_identifier_type_version,
+    cons_provision_provision_actor_identifier_type_code,
+    cons_provision_provision_actor_identifier_type_display,
+    cons_provision_provision_actor_identifier_type_text,
+    cons_provision_provision_actor_identifier_system,
+    cons_provision_provision_actor_identifier_value,
+    cons_provision_provision_actor_display,
+    cons_provision_provision_code_system,
+    cons_provision_provision_code_version,
+    cons_provision_provision_code_code,
+    cons_provision_provision_code_display,
+    cons_provision_provision_code_text,
+    cons_provision_provision_dataperiod_start,
+    cons_provision_provision_dataperiod_end,
     current_dataset_status
 )
 (
@@ -2494,6 +2531,17 @@ SELECT
     cons_provision_actor_role_code,
     cons_provision_actor_role_display,
     cons_provision_actor_role_text,
+    cons_provision_actor_ref,
+    cons_provision_actor_type,
+    cons_provision_actor_identifier_use,
+    cons_provision_actor_identifier_type_system,
+    cons_provision_actor_identifier_type_version,
+    cons_provision_actor_identifier_type_code,
+    cons_provision_actor_identifier_type_display,
+    cons_provision_actor_identifier_type_text,
+    cons_provision_actor_identifier_system,
+    cons_provision_actor_identifier_value,
+    cons_provision_actor_display,
     cons_provision_code_system,
     cons_provision_code_version,
     cons_provision_code_code,
@@ -2501,6 +2549,32 @@ SELECT
     cons_provision_code_text,
     cons_provision_dataperiod_start,
     cons_provision_dataperiod_end,
+    cons_provision_provision_type,
+    cons_provision_provision_period_start,
+    cons_provision_provision_period_end,
+    cons_provision_provision_actor_role_system,
+    cons_provision_provision_actor_role_version,
+    cons_provision_provision_actor_role_code,
+    cons_provision_provision_actor_role_display,
+    cons_provision_provision_actor_role_text,
+    cons_provision_provision_actor_ref,
+    cons_provision_provision_actor_type,
+    cons_provision_provision_actor_identifier_use,
+    cons_provision_provision_actor_identifier_type_system,
+    cons_provision_provision_actor_identifier_type_version,
+    cons_provision_provision_actor_identifier_type_code,
+    cons_provision_provision_actor_identifier_type_display,
+    cons_provision_provision_actor_identifier_type_text,
+    cons_provision_provision_actor_identifier_system,
+    cons_provision_provision_actor_identifier_value,
+    cons_provision_provision_actor_display,
+    cons_provision_provision_code_system,
+    cons_provision_provision_code_version,
+    cons_provision_provision_code_code,
+    cons_provision_provision_code_display,
+    cons_provision_provision_code_text,
+    cons_provision_provision_dataperiod_start,
+    cons_provision_provision_dataperiod_end,
     ''reimported from database''
     FROM cds2db_out.v_consent_raw_last_version q
     WHERE q.cons_patient_ref IN (SELECT pat_id FROM cds2db_in.patient_raw)

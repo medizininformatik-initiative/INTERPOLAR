@@ -234,7 +234,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
     reference_type <- new_table[row, REFERENCE_TYPES]
     if (!is.na(reference_type) && nchar(reference_type)) {
       new_table[row, FHIR_ID_COLUMN_NAME := paste0(resource_prefix, "id")]
-      reference_prefix <- etlutils::fhirdbGetResourceAbbreviation(table_description_collapsed, reference_type)
+      reference_prefix <- getResourceAbbreviation(table_description_collapsed, reference_type)
       new_table[row, REFERENCE_ID_COLUMN_NAME := paste0(reference_prefix, "_id")]
     }
 
