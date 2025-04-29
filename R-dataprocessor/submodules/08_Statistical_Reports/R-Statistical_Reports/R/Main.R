@@ -30,8 +30,8 @@
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
 #'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
 #' @export
-createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
-                                    REPORT_PERIOD_END = "2025-03-05") {
+createStatisticalReport <- function(REPORT_PERIOD_START ="2019-10-01",
+                                    REPORT_PERIOD_END = "2020-02-01") {
 
   # TODO: include the start and end date in an interactive way ----------
 
@@ -58,8 +58,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
     dplyr::mutate(enc_partof_ref = paste0("Encounter/",enc_id),
                   enc_id = paste0(enc_id,"-V-1"),
                   enc_type_code = "versorgungsstellenkontakt",
-                  enc_servicetype_system = NA,
-                  enc_servicetype_code = NA,
+                  enc_servicetype_system = NA_character_,
+                  enc_servicetype_code = NA_character_,
                   enc_location_physicaltype_code = "wa",
                   enc_period_start = enc_period_start+172800) |>
     dplyr::bind_rows(encounter_table) |>
@@ -108,26 +108,28 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
     calculateAge() |>
     addWardName(pids_per_ward_table)
 
-  # FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
+  FAS1 <- defineFAS1(complete_table)
+
+  F1 <- calculateF1(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # Print the patient, encounter, and FAS1 datasets for verification
   print(data.table::as.data.table(complete_table))
-  # print(FAS1, width = Inf, n=50)
-  # class(FAS1)
-  #
-  # # Print the reporting period
-  # print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
-  #
-  # # Print the number of cases in the FAS1 dataset
-  #
-  # print(FAS1 |>
-  #         dplyr::distinct(enc_partof_ref,ward_name) |>
-  #         dplyr::group_by(ward_name) |>
-  #         dplyr::tally())
-  #
-  # print(paste0("Number of cases in FAS1: ",
-  #              FAS1 |>
-  #                dplyr::distinct(enc_partof_ref, ward_name) |>
-  #                nrow()))
+  print(data.table::as.data.table(FAS1))
+  print(data.table::as.data.table(F1))
+
+  # Print the reporting period
+  print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
+
+  # Print the number of cases in the F1 dataset
+
+  print(F1 |>
+          dplyr::distinct(main_enc_id,ward_name) |>
+          dplyr::group_by(ward_name) |>
+          dplyr::tally())
+
+  print(paste0("Number of cases in F1: ",
+               F1 |>
+                 dplyr::distinct(main_enc_id, ward_name) |>
+                 nrow()))
 
 }

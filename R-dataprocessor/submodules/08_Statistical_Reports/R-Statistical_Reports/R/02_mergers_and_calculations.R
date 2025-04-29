@@ -205,9 +205,9 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' @importFrom dplyr left_join select relocate mutate case_when distinct arrange group_by ungroup row_number
 #' @export
 addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
-  # TOASK: check if this is logical workaround ---------
+  # TODO: how to identify non-INTERPOLAR ward encounters -----------------
   merged_table_with_ward <-merged_table_with_main_enc |>
-    dplyr::arrange(pat_id, main_enc_id, enc_class_code, enc_type_code, enc_period_start, enc_period_end) |>
+    dplyr::arrange(main_enc_period_start, enc_class_code, enc_type_code, enc_period_start, enc_period_end) |>
     dplyr::group_by(main_enc_id,enc_partof_ref) |>
     dplyr::mutate(grouped_row_number = dplyr::row_number()) |>
     dplyr::ungroup() |>
