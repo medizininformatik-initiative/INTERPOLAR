@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-29 08:30:22
+-- Rights definition file last update : 2025-04-28 16:00:57
 -- Rights definition file size        : 13663 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-04-29 10:42:25
+-- Create time: 2025-04-28 16:03:11
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1055,13 +1055,13 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (pat_identifier_value)
-        IF NOT EXISTS ( -- column not exists (pat_identifier_start_full_test)
+        IF NOT EXISTS ( -- column not exists (pat_identifier_start)
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
-            AND column_name = 'pat_identifier_start_full_test'
+            AND column_name = 'pat_identifier_start'
         ) THEN
-            ALTER TABLE cds2db_in.patient ADD pat_identifier_start_full_test timestamp;   -- identifier/start (timestamp)
-        END IF; -- column (pat_identifier_start_full_test)
+            ALTER TABLE cds2db_in.patient ADD pat_identifier_start timestamp;   -- identifier/start (timestamp)
+        END IF; -- column (pat_identifier_start)
         IF NOT EXISTS ( -- column not exists (pat_identifier_end)
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
@@ -1143,7 +1143,7 @@ BEGIN
           COALESCE(db.to_char_immutable(pat_identifier_type_text), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_identifier_system), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_identifier_value), ''#NULL#'') || ''|||'' ||
-          COALESCE(db.to_char_immutable(pat_identifier_start_full_test), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(pat_identifier_start), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_identifier_end), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_name_use), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(pat_name_text), ''#NULL#'') || ''|||'' ||
@@ -1171,7 +1171,7 @@ BEGIN
           COALESCE(db.to_char_immutable(pat_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (pat_identifier_type_text)
           COALESCE(db.to_char_immutable(pat_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (pat_identifier_system)
           COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
-          COALESCE(db.to_char_immutable(pat_identifier_start_full_test), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start_full_test)
+          COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
           COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
           COALESCE(db.to_char_immutable(pat_name_use), '#NULL#') || '|||' || -- hash from: name/use (pat_name_use)
           COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
@@ -1205,7 +1205,7 @@ BEGIN
           COALESCE(db.to_char_immutable(pat_identifier_type_text), '#NULL#') || '|||' || -- hash from: identifier/type/text (pat_identifier_type_text)
           COALESCE(db.to_char_immutable(pat_identifier_system), '#NULL#') || '|||' || -- hash from: identifier/system (pat_identifier_system)
           COALESCE(db.to_char_immutable(pat_identifier_value), '#NULL#') || '|||' || -- hash from: identifier/value (pat_identifier_value)
-          COALESCE(db.to_char_immutable(pat_identifier_start_full_test), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start_full_test)
+          COALESCE(db.to_char_immutable(pat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (pat_identifier_start)
           COALESCE(db.to_char_immutable(pat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (pat_identifier_end)
           COALESCE(db.to_char_immutable(pat_name_use), '#NULL#') || '|||' || -- hash from: name/use (pat_name_use)
           COALESCE(db.to_char_immutable(pat_name_text), '#NULL#') || '|||' || -- hash from: name/text (pat_name_text)
@@ -14569,7 +14569,7 @@ COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_display IS 'identifier/t
 COMMENT ON COLUMN cds2db_in.patient.pat_identifier_type_text IS 'identifier/type/text (varchar)';
 COMMENT ON COLUMN cds2db_in.patient.pat_identifier_system IS 'identifier/system (varchar)';
 COMMENT ON COLUMN cds2db_in.patient.pat_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN cds2db_in.patient.pat_identifier_start_full_test IS 'identifier/start (timestamp)';
+COMMENT ON COLUMN cds2db_in.patient.pat_identifier_start IS 'identifier/start (timestamp)';
 COMMENT ON COLUMN cds2db_in.patient.pat_identifier_end IS 'identifier/end (timestamp)';
 COMMENT ON COLUMN cds2db_in.patient.pat_name_use IS 'name/use (varchar)';
 COMMENT ON COLUMN cds2db_in.patient.pat_name_text IS 'name/text (varchar)';
