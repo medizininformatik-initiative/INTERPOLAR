@@ -4,9 +4,8 @@ $$
 DECLARE
 ---------------------------------------------------------------------------------------
    -- >>>> WICHTIG Standort / Zeitabhängig <<<< -- Hier bitte Variablen setzen
-   release_version VARCHAR := '2.10';               -- GitHup release version
+   release_version VARCHAR := '0.2.10';               -- GitHup release version
    release_version_date VARCHAR := '2025-05-01';    -- GitHup release version date
-   project_participants VARCHAR := 'IMISE Leipzig'; -- project participants to distinguish between different instances
    pause_after_process_execution VARCHAR := '10';   -- Pause after copy process execution in second [5-30 sec] - ready to connect
    data_import_hist_every_dataset VARCHAR := 'no';  -- Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no] - large resource requirements only for debugging
    max_process_time_set_ready VARCHAR := '120';     -- Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]
@@ -29,15 +28,6 @@ BEGIN
       VALUES ('release_version_date',release_version_date,'GitHup release version date');
    ELSE
       UPDATE db_config.db_parameter SET parameter_value=release_version_date WHERE parameter_name='release_version_date';
-   END IF;
-
-   IF NOT EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'project_participants'
-   ) THEN
-      INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
-      VALUES ('project_participants',release_version_date,'project participants to distinguish between different instances');
-   ELSE
-      UPDATE db_config.db_parameter SET parameter_value=release_version_date WHERE parameter_name='project_participants';
    END IF;
 
    IF NOT EXISTS (
