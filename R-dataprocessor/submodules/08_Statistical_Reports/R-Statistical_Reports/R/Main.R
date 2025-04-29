@@ -105,11 +105,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-01-01",
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
-    calculateAge() #|>
-    # add_ward_name() |>
-
-  # DEBUG: for test reasons the start and end dates for abteilungskontakt -----------
-  #        instead of versorgungsstellenkontakt are used
+    calculateAge() |>
+    addWardName(pids_per_ward_table)
 
   # FAS1 <- defineFAS1(complete_table,REPORT_PERIOD_START,REPORT_PERIOD_END)
 

@@ -171,9 +171,61 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 }
 
 #------------------------------------------------------------------------------#
-addWardName <- function(merged_table,pids_per_ward_table) {
-  # TODO: Add the ward name for each encounter from the pids_per_ward_table while respecting possible ward changes
-  return(merged_table)
+
+#' Add Ward Name to Merged Patient-Encounter Data
+#'
+#' This function enriches the merged patient-encounter table with ward names from a
+#' `pids_per_ward_table`, taking into account potential ward changes during a single encounter.
+#' Ward names are assigned only to encounters of type `"versorgungsstellenkontakt"`, as higher-level
+#' encounters like `"einrichtungskontakt"` and `"abteilungskontakt"` may span multiple wards.
+#'
+#' @param merged_table_with_main_enc A data frame or tibble containing merged patient and
+#'   encounter data. It must include the columns `main_enc_id`, `pat_id`, `enc_type_code`,
+#'   `enc_partof_ref`, `enc_class_code`, `enc_period_start`, and `enc_period_end`.
+#' @param pids_per_ward_table A data frame or tibble containing the mapping between patients,
+#'   encounters, and their associated ward names, including the columns `encounter_id`,
+#'   `patient_id`, `ward_name`, and `input_datetime` (indicating the timing of the ward assignment).
+#'
+#' @return A data frame or tibble that includes the original merged data with an additional
+#'   `ward_name` column. The `ward_name` column is placed immediately after `enc_period_end`.
+#'
+#' @details
+#' The function performs the following steps:
+#' \itemize{
+#'   \item Assigns a row number within each `main_enc_id` + `enc_partof_ref` group in the merged data.
+#'   \item Assigns a row number within each `encounter_id` + `patient_id` group in the ward mapping table,
+#'         ordered by `input_datetime`.
+#'   \item Performs a left join on `main_enc_id = encounter_id`, `pat_id = patient_id`, and
+#'         `grouped_row_number` to align corresponding ward records with sub-encounters.
+#'   \item For higher-level encounters (`"einrichtungskontakt"` and `"abteilungskontakt"`),
+#'         sets the ward name to `NA_character_`.
+#'   \item Removes temporary grouping columns and ensures distinct rows in the result.
+#' }
+#'
+#' @importFrom dplyr left_join select relocate mutate case_when distinct arrange group_by ungroup row_number
+#' @export
+addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
+  # TOASK: check if this is logical workaround ---------
+  merged_table_with_ward <-merged_table_with_main_enc |>
+    dplyr::arrange(pat_id, main_enc_id, enc_class_code, enc_type_code, enc_period_start, enc_period_end) |>
+    dplyr::group_by(main_enc_id,enc_partof_ref) |>
+    dplyr::mutate(grouped_row_number = dplyr::row_number()) |>
+    dplyr::ungroup() |>
+    dplyr::left_join(pids_per_ward_table |>
+                       dplyr::arrange(patient_id, encounter_id, input_datetime) |>
+                       dplyr::group_by(patient_id, encounter_id) |>
+                       dplyr::mutate(grouped_row_number = dplyr::row_number()) |>
+                       dplyr::ungroup() |>
+                       dplyr::select(ward_name, patient_id, encounter_id, grouped_row_number),
+                     by = c("main_enc_id" = "encounter_id", "pat_id" = "patient_id", "grouped_row_number")) |>
+    dplyr::select(-grouped_row_number) |>
+    dplyr::relocate(ward_name, .after = enc_period_end) |>
+    dplyr::mutate(ward_name = dplyr::case_when(
+      enc_type_code == "einrichtungskontakt" ~ NA_character_,
+      enc_type_code == "abteilungskontakt" ~ NA_character_,
+      enc_type_code == "versorgungsstellenkontakt" ~ ward_name)) |>
+    dplyr::distinct()
+  return(merged_table_with_ward)
 }
 
 #------------------------------------------------------------------------------#
