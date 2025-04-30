@@ -30,10 +30,7 @@ retrieve <- function(reset_lock_only = FALSE) {
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
-        PATH_TO_PID_LIST_FILE <- fhircrackr::paste_paths(DEBUG_PATH_TO_RAW_RDATA_FILES, "pids_per_ward_raw.RData")
-      }
-      pids_splitted_by_ward <- getPIDsSplittedByWard(ifelse(exists("PATH_TO_PID_LIST_FILE"), PATH_TO_PID_LIST_FILE, NA))
+      pids_splitted_by_ward <- getPIDsSplittedByWard()
       all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })
 
