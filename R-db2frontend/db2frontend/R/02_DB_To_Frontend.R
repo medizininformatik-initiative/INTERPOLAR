@@ -66,7 +66,6 @@ importDB2Redcap <- function() {
     }
   })
 
-
   etlutils::runLevel2Line("Update data access groups", {
 
     if (exists("record_ids_with_data_access_group") && nrow(record_ids_with_data_access_group)) {

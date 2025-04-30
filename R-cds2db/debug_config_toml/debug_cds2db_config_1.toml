@@ -13,17 +13,17 @@
 # Since the end date of Encounters cannot be queried without a FHIR Custom Search parameter, all
 # queries for the Encounter date always refer to its start date.
 #################
-#DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
+DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
 #DEBUG_ENCOUNTER_DATETIME_END = "2020-08-30 21:25:00"
 
 #################
 # If this parameter is activated, only those whose subject ID is in this list are found in the initial
 # encounter request.
 #################
-#DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
-#                                 "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
-#                                 "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015"
-#                                 ]
+DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
+                                 "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
+                                 "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015"
+                                 ]
 
 #################
 # Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.

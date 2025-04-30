@@ -82,17 +82,20 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #' This function reads patient IDs from a file specified by the provided path.
 #' The patient IDs are then returned as a unique, sorted list.
 #'
-#' @param path_to_PID_list_file The path to the file containing patient IDs.
+#' @param path_to_files The path to the files containing patient IDs and encounters.
 #'
 #' @return A unique, sorted list of patient IDs.
 #'
-parsePatientIDsPerWardFromFile <- function(path_to_PID_list_file) {
+loadInitialPatientsAndEncountersFromFiles <- function(path_to_files) {
+  path_to_PID_list_file <- fhircrackr::paste_paths(path_to_files, "pids_per_ward_raw.RData")
+  path_to_encounter_file <- fhircrackr::paste_paths(path_to_files, "initial_encounters.RData")
 
   # This should be only used for debug/tests.
   # Parse Patient_id from text file is deactivated. The code below this hunk is deactivated.
   # DIC should go the way of assigning the encounter/patients to the wards via the 3-stage encounter system.
   if (TRUE || endsWith(path_to_PID_list_file, ".RData")) {
-    return(readRDS(path_to_PID_list_file))
+    return(list(pids_per_ward = readRDS(path_to_PID_list_file),
+                initial_encounters = readRDS(path_to_encounter_file)))
   }
 
   # Helper function to process the PIDs of a single ward
@@ -317,17 +320,19 @@ getEncounters <- function(table_description, current_datetime) {
 #' the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file name
 #' parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
 #'
-#' @param path_to_PID_list_file file name if the list of patient IDs should be loaded from a file (if not then NA)
 #' @param log_result logical indicating that the result of the functions should be logged via cat. Default is TRUE.
 #'
 #' @return the relevant patient IDs per ward
 #'
-getPIDsSplittedByWard <- function(path_to_PID_list_file = NA, log_result = TRUE) {
-  read_pids_from_file <- !is.na(path_to_PID_list_file)
+getPIDsSplittedByWard <- function(log_result = TRUE) {
+
+  read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
   if (read_pids_from_file) {
-    etlutils::runLevel3(paste("Get Patient IDs by file", path_to_PID_list_file), {
-      pids_splitted_by_ward <- parsePatientIDsPerWardFromFile(path_to_PID_list_file)
-      pids_splitted_by_ward <- split(pids_splitted_by_ward[, !("ward_name"), with = FALSE], pids_splitted_by_ward$ward_name)
+
+    etlutils::runLevel3(paste("Get Patient IDs by file from path ", DEBUG_PATH_TO_RAW_RDATA_FILES), {
+      file_data <- loadInitialPatientsAndEncountersFromFiles(DEBUG_PATH_TO_RAW_RDATA_FILES)
+      pids_splitted_by_ward <- split(file_data$pids_per_ward[, !("ward_name"), with = FALSE], file_data$pids_per_ward$ward_name)
+      encounters <- file_data$initial_encounters
     })
   } else {
     etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
@@ -400,7 +405,7 @@ getPIDsSplittedByWard <- function(path_to_PID_list_file = NA, log_result = TRUE)
       } else {
         error_message_part <- "Please fix the variables 'ENCOUNTER_FILTER_PATTERN' in the toml file.\n"
       }
-      error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward in file '", path_to_PID_list_file, "'.\n",
+      error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward.\n",
                               error_message_part,
                               etlutils::getPrintString(duplicates_pids_per_ward), "\n",
                               "Hint: To ensure that a patient only has exactly one Encounter assigned to exactly one ward, all but one Encounter will be removed.\n",

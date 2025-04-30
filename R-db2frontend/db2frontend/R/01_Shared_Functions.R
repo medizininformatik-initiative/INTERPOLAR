@@ -85,13 +85,38 @@ deleteRedcapContent <- function() {
 #' @return A character vector of all field names present in actual REDCap records
 #'
 getRedcapFieldNames <- function(rcon) {
-  # Export minimal data (1 record) to retrieve full field structure
-  data_sample <- redcapAPI::exportRecords(
+
+  # Export data to retrieve full field structure, if no data found empty data frame is returned
+  # Is this case warning messages are suppressed
+  data_sample <-  suppressWarnings(redcapAPI::exportRecords(
     rcon = rcon,
     rawOrLabel = "raw",
     exportSurveyFields = TRUE,
     exportDataAccessGroups = TRUE,
     includeRepeatHeaders = TRUE
-  )
+  ))
+
+  # Convert to data.table
+  data_sample <- data.table::as.data.table(data_sample)
+
+  # Define required columns
+  required_cols <- c("redcap_repeat_instrument",
+                     "redcap_repeat_instance",
+                     "redcap_data_access_group")
+
+  # Add one "_complete" column per instrument
+  instruments <- redcapAPI::exportInstruments(rcon)
+  complete_cols <- paste0(instruments$instrument_name, "_complete")
+
+  # Combine all required columns
+  all_required_cols <- c(required_cols, complete_cols)
+
+  # Add any missing columns to data_sample
+  for (col in all_required_cols) {
+    if (!col %in% names(data_sample)) {
+      data_sample[ , (col) := character()]
+    }
+  }
+
   return(names(data_sample))
 }

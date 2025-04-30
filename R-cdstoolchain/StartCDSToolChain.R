@@ -10,6 +10,8 @@ library(db2frontend)
 # Reset error status
 options(error = NULL)
 
+start <- Sys.time()
+
 if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
 }
@@ -75,6 +77,12 @@ tryCatch({
   }
 })
 
-if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
-  cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+if (!etlutils::isErrorOccured()){
+  if (exists("DEBUG_DAY")) {
+    cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  } else {
+    # Print the elapsed time
+    end <- Sys.time()
+    cat("Full toolchain took ", capture.output(print(end - start)))
+  }
 }
