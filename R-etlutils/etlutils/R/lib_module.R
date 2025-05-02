@@ -1,3 +1,47 @@
+#' Retrieve Git Branch and Commit Information
+#'
+#' This function reads the `.git/HEAD` file and resolves the current branch name and commit hash.
+#' It supports both symbolic references (e.g., pointing to a branch) and detached HEAD states.
+#'
+#' @param git_dir Character. Path to the `.git` directory. Defaults to the current directory's `.git`.
+#'
+#' @return Invisibly returns a list with elements `branch` and `commit`, and prints them to the console along with the current time.
+#'
+getGitInfo <- function(git_dir = ".git") {
+  tryCatch({
+    # Path to HEAD file
+    head_path <- file.path(git_dir, "HEAD")
+    if (!file.exists(head_path)) {
+      stop("HEAD file not found. Is this a valid .git directory?")
+    }
+    head_content <- readLines(head_path, warn = FALSE)
+    # Check if HEAD points to a ref or is a detached commit
+    if (grepl("^ref:", head_content)) {
+      ref_rel_path <- sub("^ref: ", "", head_content)
+      ref_path <- file.path(git_dir, ref_rel_path)
+      if (!file.exists(ref_path)) {
+        stop("Reference file not found: ", ref_path)
+      }
+      commit_id <- readLines(ref_path, warn = FALSE)
+      branch_name <- basename(ref_rel_path)
+    } else {
+      commit_id <- head_content
+      branch_name <- "-"
+    }
+
+    info <- paste0(
+      "Branch: ", branch_name, "\n",
+      "Commit: ", commit_id, "\n",
+      "Current Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n"
+    )
+
+    return(info)
+
+  }, error = function(e) {
+    paste0("Git info could not be retrieved: ", e$message, "\n")
+  })
+}
+
 #' Initialize and Start a Module
 #'
 #' This function initializes the module by setting up necessary constants,
@@ -42,6 +86,9 @@ startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "",
     createClock()
     # Start logging console outputs
     startLogging(module_name)
+    # Log github active tag and branch
+    cat("\n---------------------------\nGithub Script Version:\n---------------------------\n")
+    cat(getGitInfo())
     # Log all configuration parameters, optionally hiding values based on the pattern
     catList(config, prefix = "\n---------------------------\nConfiguration:\n---------------------------\n", suffix = "\n", hide_value_pattern)
   }

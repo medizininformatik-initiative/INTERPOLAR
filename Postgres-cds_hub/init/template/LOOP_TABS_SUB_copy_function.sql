@@ -38,7 +38,7 @@
                             data_count_new:=data_count_new+1;
                             INSERT INTO <%OWNER_SCHEMA%>.<%TABLE_NAME%> (
                                 <%TABLE_NAME%>_id,
-                                <%IF TAGS "\bTYPED\b" "<%SIMPLE_TABLE_NAME%>_raw_id,"%>
+                                <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "<%SIMPLE_TABLE_NAME%>_raw_id,"%>
                                 <%LOOP_COLS "<%COLUMN_NAME%>,"%>
                                 input_datetime,
                                 last_check_datetime,
@@ -47,7 +47,7 @@
                             )
                             VALUES (
                                 current_record.<%TABLE_NAME%>_id,
-                                <%IF TAGS "\bTYPED\b" "current_record.<%SIMPLE_TABLE_NAME%>_raw_id,"%>
+                                <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "current_record.<%SIMPLE_TABLE_NAME%>_raw_id,"%>
                                 <%LOOP_COLS "current_record.<%COLUMN_NAME%>,"%>
                                 current_record.input_datetime,
                                 last_pro_datetime,
@@ -67,6 +67,9 @@
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
+                            err_section:='<%TABLE_NAME%>-37';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
+                            <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_META%>
 
                             -- Delete updatet datasets
                             err_section:='<%TABLE_NAME%>-30';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';

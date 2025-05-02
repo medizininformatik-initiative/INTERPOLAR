@@ -1,4 +1,4 @@
-  1. Bitte laden Sie Redcap (Install, zip) herunter: [https://redcap.vanderbilt.edu/community/custom/download.php](https://redcap.vanderbilt.edu/community/custom/download.php)
+  1. Bitte laden Sie Redcap (Install, zip) herunter: [https://redcap.vumc.org/community/custom/download.php](https://redcap.vumc.org/community/custom/download.php)
   1. Entpacken Sie die Zip-Datei, z.B. _redcap14.6.2.zip_ in den Ordner 'html'. \
     ``` cd REDCap-app/html/ ``` \
     ``` unzip redcap14.6.2.zip ```

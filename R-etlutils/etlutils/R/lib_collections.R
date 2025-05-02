@@ -277,3 +277,27 @@ catList <- function(input_list, prefix = "", suffix = "", hide_value_pattern = "
   # Print the suffix
   cat(suffix)
 }
+
+#' Extract First Non-NA Value from Vector or List
+#'
+#' Returns the first non-NA value from a given vector or list. If the input is a list, it is first
+#' flattened using `unlist()` with `use.names = FALSE`. The function then returns the first element
+#' that is not `NA`. If all elements are `NA` or the input is empty, `NA` is returned.
+#'
+#' @param vector_or_list A vector or list from which to extract the first non-NA value.
+#'
+#' @return The first non-NA value, or `NA` if none found.
+#'
+#' @examples
+#' getFirstNonNAValue(c(NA, NA, 3, 4))           # returns 3
+#' getFirstNonNAValue(list(NA, NULL, 5, NA))     # returns 5
+#' getFirstNonNAValue(c(NA, NA))                 # returns NA
+#'
+#' @export
+getFirstNonNAValue <- function(vector_or_list) {
+  # If input is a list, flatten it first
+  if (is.list(vector_or_list)) vector_or_list <- unlist(vector_or_list, use.names = FALSE)
+
+  # Return first non-NA value
+  vector_or_list[!is.na(vector_or_list)][1]
+}

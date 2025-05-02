@@ -75,11 +75,14 @@ Bei der Initalisierung der Datenbank ist darauf zu achten das alle Skripte fehle
 ### 001_main_user_schema_sequence
 Initialisierung aller Schemata, Nutzer und Sequenzen. Passwörter für die verschiedenen Datenbanknutzer der Bereiche (Module / Schnittstellen) sind hier zu setzen.
 
-### 002_db_config_tools
+### 020_db_config_tools
 Allgemeines Skript zur Anlage von Hilfsansichten oder Hilfs-Jobs, z.B. eine Übersicht der Cron-Jobs oder der Bereinigung von Cron-Job-Berichten.
 
-### 003_db_parameter.sql
+### 030_db_parameter
 Allgemeines Skript zum anlegen und initialiesieren von Parametern. Teils allgemein teils Standortspeziefisch (ab Release v0.2.5).
+
+### 035_db_log_table_structure
+Tabelle und Funktion um die Strucktur ((Tabellen, Views, Funktionen, Trigger)) der CDS-HUB Datenbank über die beteiligten Schemata hinweg unabhängig zu dokumentieren. Diese Änderungen können bei einer späteren Auswertung helfen, Migrationsübergänge besser festzustellen und zu berücksichtigen.
 
 ### 100_cre_table_raw_cds2db_in
 Erstellen der Strukturen für die FHIR-Daten (Rohdaten) im Importschema cds2db_in. Dabei werden eindeutige Primärschlüssel vergeben sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
@@ -102,13 +105,16 @@ Erstellt Views im Schnittstellenschema cds2db_out um alle Datensätze zu listen,
 ### 190_cre_view_typ_dataproc_all
 Erstellt Views im Schnittstellenschema db2dataprocessor_out um alle verwendbaren (getypten, aufgeschlüsselt) FHIR-Daten dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
+### 190_cre_view_typ_dataproc_last_import
+Erstellt Views im Schnittstellenschema db2dataprocessor_out um von allen jemals importierten FHIR-Daten (raw) die letzte Version anzuzeigen. Wird in der Funktion db.add_hist_raw_records() (siehe 250_adding_historical_raw_records) verwendet um den Import der FHIR Daten zu optimieren indem durch abgleich des Zeitstempels der letzten Änderung doppeltes Nachladen vermieden wird. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer
+
 ### 200_take_over_check_date
 Funktion welche in den Datensätzen übergreifend dokumentiert in welchem Zeitraum die Datensätze barbeitet wurden - mit (Start- / Last-) Processing-Nr.
 
 ### 210_cre_view_typ_cds2db_all
 Erstellt Views im Schnittstellenschema cds2db_out um Daten die für den Import der FHIR Daten notwenig sind zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
-### 220_cre_view_raw_cds2db_last
+### 220_cre_view_raw_cds2db_last_import
 Erstellt Views im Schnittstellenschema cds2db_out um die beim letzten Import übertragenen Raw-Daten anzuzeigen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
 ### 230_cre_view_raw_cds2db_last_version
@@ -164,6 +170,20 @@ Erstellt eine zentralen cron-job der alle Überführungsfunktionen der Datenbank
 
 ### 980_dev_and_test
 Anlegen von Hilfstabellen für Tests und Entwicklung - nicht Produktiv.
+
+## Migration
+Wenn es eine Neuer Version der Datenbank gibt (z.B. nach aktualiesierung des Frontends) ist nach dem Auschecken des neuen Releases folgender Befehl auszuführen, damit die Datenbank auf den aktuellen Stand migriert wird. Dabei werden neue Spalten hinzugefügt, alte Spalten die nicht mehr dokumentiert werden, bleiben erhalten.
+ 
+docker compose exec -w /docker-entrypoint-initdb.d/ cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f migration/migration.sql
+
+### migration/migration
+Skript welches alle Notwendigen Skripte zur Migration ausführt und die Datenbank auf aktuellen Stand bringt.
+
+### 000_stop_semapore_during_migration
+Verarbeitung der Datenbank wird angehalten damit Migration durchgeführt werden kann.
+
+### 999_start_semapore_after_migration
+Verarbeitung der Datenbank wird normal gestartet nach Abschluss der Migration.
 
 ## Namenskonvention Views und Tabellen
 In der Datenbank gibt es für verschiedene Aufgaben verschiedene Views welche auf dieselbe Datenquelle zugreifen. Um diese voneinander zu unterscheiden werden den Tabellen/Views verschiedene Pre- und Postfix hinzugefügt. Aufgrund der begrenzten Zeichenanzahl geben diese teilweise nicht eine vollständige Beschreibung, sondern nur Hinweise (Genaue Funktionalität ist im SQL-Skript/Code nachzulesen).

@@ -25,6 +25,7 @@ if (exists("DEBUG_DAY")) {
   resource_tables <- getFilteredRAWResources(pats)
   # short reference to Encounter table
   dt_enc <- resource_tables[["Encounter"]]
+  dt_pat <- resource_tables[["Patient"]]
 
   # Identify columns starting with "enc_diagnosis_" and "enc_servicetype_" as
   # vector of column names
@@ -85,10 +86,13 @@ if (exists("DEBUG_DAY")) {
     # Set all encounter to "in-progress", delete end date and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     for (i in seq_along(pats)) {
+      # Encounter
       changeDataForPID(dt_enc, pats[[i]], "enc_status", "in-progress")
       changeDataForPID(dt_enc, pats[[i]], "enc_period_end", NA)
       changeDataForPID(dt_enc, pats[[i]], colnames_pattern_diagnosis, NA)
       changeDataForPID(dt_enc, pats[[i]], "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
+      # Patient
+      changeDataForPID(dt_pat, pats[[i]], "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
     }
 
   } else if (DEBUG_DAY == 2) {
@@ -98,6 +102,11 @@ if (exists("DEBUG_DAY")) {
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_end", NA)
     changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
+    # Patient 1: changed Patient to day 1
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_name_given", "[1.1]Alex")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_gender", "[1]divers")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_birthdate", "[1]1976-02-02")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2))
 
     # Patient 2: set all encounter to "in-progress", delete end date set
     # the encounter last updated date to the current date with a small offset
@@ -122,13 +131,28 @@ if (exists("DEBUG_DAY")) {
     changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_period_end", NA)
     changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
 
-    # # Patient 10: neuer Fall ohne Diagnose
-    # dt_enc[pats_enc$p10, enc_status := "in-progress"]
-    # dt_enc[pats_enc$p10, enc_period_end := NA]
-    # dt_enc[pats_enc$p10, (enc_diagnosis_cols) := NA]
-
-
   } else if (DEBUG_DAY == 3) {
+
+    # Patient 1: unchanged to day 1
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_status", "in-progress")
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_end", NA)
+    changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
+    # Patient 1: unchanged to day 2
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_name_given", "[1.1]Alex")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_gender", "[1]divers")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_birthdate", "[1]1976-02-02")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2))
+
+    # Patient 2: not in the data anymore (left the ward) and the existing
+    # diagnosis from the loaded RAW data is not removed
+    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_period_end", getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.5))
+    changeDataForPID(dt_enc, pats$`UKB-0002`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.1))
+
+    # Patient 5: not in the data anymore (left the ward) and the existing
+    # diagnosis from the loaded RAW data is not removed
+    changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_period_end", getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.6))
+    changeDataForPID(dt_enc, pats$`UKB-0005`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.1))
 
   } else if (DEBUG_DAY == 4) {
 

@@ -6,7 +6,7 @@
 
 #################
 # VERBOSE LEVELS
-#################
+#
 # VL_00_NOTHING             = 0
 # VL_10_MAIN_INFO           = 1
 # VL_20_OUTER_SCRIPTS       = 2
@@ -17,14 +17,15 @@
 # VL_70_DOWNLOAD            = 7
 # VL_80_COI_PROCESSING      = 8
 # VL_90_FHIR_RESPONSE       = 9
+#################
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
 # Set true if every sourcing of the 00_Main file should create result directories in the
-# otuputGlobal and otuputLocal directores with a timestamp suffix. If false then every run will
+# otuputGlobal and otuputLocal directories with a timestamp suffix. If false then every run will
 # write in the same subdirectory without a timestamp.
-# The default behaviour should write in subdirectories with only the project name (false) or in or
-# in a subdirectorywith the project name and the suffix '_timestamp'.
+# The default behavior should write in subdirectories with only the project name (false) or in or
+# in a subdirectory with the project name and the suffix '_timestamp'.
 #################
 USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 
@@ -38,10 +39,12 @@ MAX_DIR_COUNT = 5
 
 [retrieve.fhir_server]
 
+#################
 # If you use self-signed certificates to secure the FHIR server (SSL/TLS), please configure
 # the corresponding certificates in the 'r-env' service in the 'volumes' section of
 # docker-compose.yml so that these certificates can be checked in the CDS Tool Chain.
 # Otherwise the connection cannot be established.
+#################
 FHIR_SERVER_ENDPOINT = "https://mii-agiop-3p.life.uni-leipzig.de/blaze"
 FHIR_SERVER_USER = ""
 FHIR_SERVER_PASS = ""
@@ -53,7 +56,14 @@ FHIR_TOKEN_REFRESH_PASSWORD = ""
 
 FHIR_SEARCH_CURL_TIMEOUT = 1800 # timeout for curl requests on a FHIR server in seconds
 
-MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests [ehemals MAX_LEN]
+#################
+# Per default FHIR search request for resources with a specific subject (e.g. patient) are
+# performed with patient="patient_id". If there are any reasons this behavior can be changed
+# to "subject=patient_id" by setting the following parameter to TRUE.
+#################
+#FHIR_SEARCH_PIDS_BY_SUBJECT = TRUE
+
+MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS         = 2083 # max character length for GET-Requests
 MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE = 300  # reserve 300 characters for further parameters, whose length cannot estimated [ehemals RES_LEN]
 
 MIN_BIRTHDAY                       = "1910-01-01" # lowest possible birthday
@@ -71,14 +81,13 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 
 [retrieve.fhir_search]
 
+#################
 # Only encounters with exactly this status are found. If this Debug parameter is not set, the default
 # status "in-progress" applies.
 #
-# The following expression styles are allowed:
-#
+# Multiple status can be written as comma separated list.
 #################
-# multiple status can be written as comma separated list:
-#FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
+FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
 
 #################
 # Attention: This filter is relevant for two queries:
@@ -96,10 +105,9 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 #
 # 2. For the SQL query on the database to find the active PIDs in the Encounter table.
 #
+# Multiple classes can be written as comma separated list:
 #################
-# multiple classes can be written as comma separated list:
-#FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
-
+FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 
 #################
 # If the IDs of the Locations to which the Encounters refer are known, they can be entered here as
@@ -122,39 +130,39 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 
 [retrieve.patient_id_filtering]
 
-# Enable the following parameter, if the relevant patient IDs (PID) are provided by an external
-# system and they are stored in a text file (1 PID pr line). This deactivates the search for
-# relevant PIDs via encounters (see ENCOUNTER_FILTER_PATTERNS).
-#PATH_TO_PID_LIST_FILE = "./R-cds2db/source_PIDs.txt"
-
-# Use this defintion to set the filters to identify all Encounters of the relevant wards. This is
-# only necessary if the relevant Patient IDs should be derived from this Encounters and are not
-# provided in any other way (e.g PATH_TO_PID_LIST_FILE).
+#################
+# Use this definition to set the filters to identify all Encounters of the relevant wards.
 # Every entry defines a single condition. An Encounter will be accepted, if at least one condition is
 # fulfilled (OR connected). A condition defines which expressions of the Encounter should have which
-# value. The values can be defined as grep patterns. Multilpe subconditions can be connected by '+'
-# (logcal AND). All Patterns are Case INSENSITIVE!
+# value. The values can be defined as grep patterns. Multiple subconditions can be connected by '+'
+# (logical AND). All Patterns are Case INSENSITIVE!
 # A valid patterns variable name must start with 'ENCOUNTER_FILTER_PATTERN'.
-# If 2 or more patterns overlap, then the same Encounter will be assigned to multiple wards. This
-# is not allowed and will lead to an error.
+#
+# If 2 or more patterns overlap, then the same Encounter could be assigned to multiple wards. In this
+# cases the Encounter will be assigned to the first matching ward.
+# If the same patient has different encounters in different wards, then the patient will be assigned to
+# the first matching ward. At the end, it is ensured that the same patient ID appears with exactly one
+# Encounter at exactly one ward. The earliest started Encounters are removed first (period/start). If
+# several are left over, the Encounters with the lowest meta/lastUpdated value are removed. If there
+# are still several left, the first one is taken as the only one.
+#
+# The ward_name values given here are ultimately created in REDCap as Data Access Groups (DAG) and
+# exactly the names assigned here are also displayed there as ward names. The ward names from the
+# FHIR location reference in Encounters are ignored!
+#################
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
-  "location/location/reference = 'Location/location_id_1'",
-  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "location/location/reference = 'Location/location_id_1'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_2 = [
   "ward_name = 'Station 2'",
-  "location/location/reference = 'Location/location_id_2'",
-  "serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "location/location/reference = 'Location/location_id_2'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_3 = [
   "ward_name = 'Station 3'",
-  "location/location/reference = 'Location/location_id_3'",
-  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "location/location/reference = 'Location/location_id_3'"
 ]
 
 
@@ -163,7 +171,7 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #################
 # Sets path for debug config toml files. This referenced toml file can contain
 # additional or changed parameters and values for parameters. It can be used to
-# enable quick changes of a lot of parameters wihout changing this main file.
+# enable quick changes of a lot of parameters without changing this main file.
 # This mechanism is also used for running integration tests.
 #################
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"

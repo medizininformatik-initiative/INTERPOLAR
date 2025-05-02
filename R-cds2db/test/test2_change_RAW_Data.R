@@ -28,6 +28,7 @@ if (exists("DEBUG_DAY")) {
   resource_tables <- getFilteredRAWResources(pats)
   # short reference to Encounter table
   dt_enc <- resource_tables[["Encounter"]]
+  dt_pat <- resource_tables[["Patient"]]
 
   # Identify columns starting with "enc_diagnosis_" and "enc_servicetype_" as
   # vector of column names
@@ -43,7 +44,7 @@ if (exists("DEBUG_DAY")) {
   # set the enc_period_start of all encounters of a patient to the current date
   # minus an offset
   for (i in c(1:5)) {
-    changeDataForPID(dt_enc, paste0("UKB-000", i), "enc_period_start", getFormattedRAWDateTime(offset_days = i))
+    changeDataForPID(dt_enc, paste0("UKB-000", i), "enc_period_start", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = i))
   }
 
   ### Add encounters with type "Versorgungstellenkontakt" ###
@@ -58,7 +59,7 @@ if (exists("DEBUG_DAY")) {
     # Set correct partof reference to the Abteilungskontakt for every new created
     # Versorgungsstellenkontakt (same value as the still existing Abteilungskontakt
     # enc_id of the row)
-    rows_to_duplicate[, enc_partof_ref := paste0("Encounter/", sub(".*]", "", enc_id))]
+    rows_to_duplicate <- rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*", paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
 
     # Extract the number at the end of the enc_id and append "-V-<number>" to
     # create a new unique enc_id for every Versorgungsstellenkontakt
@@ -75,7 +76,7 @@ if (exists("DEBUG_DAY")) {
     # Delete Fachabteilungsschlüssel
     rows_to_duplicate[, (enc_servicetype_cols) := NA]
 
-    # Add room and bed
+    # Add room and bed as two new locations
     rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [2.1.1.1]bd"]
     rows_to_duplicate[, enc_location_identifier_value := paste0("[1.1.1.1]Raum", .I, " ~ [2.1.1.1]Bett ", .I)]
 
@@ -88,19 +89,27 @@ if (exists("DEBUG_DAY")) {
     # Set all encounter to "in-progress", delete end date and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     for (i in seq_along(pats)) {
+      # Encounter
       changeDataForPID(dt_enc, pats[[i]], "enc_status", "in-progress")
       changeDataForPID(dt_enc, pats[[i]], "enc_period_end", NA)
       changeDataForPID(dt_enc, pats[[i]], colnames_pattern_diagnosis, NA)
       changeDataForPID(dt_enc, pats[[i]], "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
+      # Patient
+      changeDataForPID(dt_pat, pats[[i]], "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
     }
 
   } else if (DEBUG_DAY == 2) {
 
-    # Patient 1: unchanged to day 1
+    # Patient 1: unchanged Encounter to day 1
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_status", "in-progress")
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_end", NA)
     changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.1))
+    # Patient 1: changed Patient to day 1
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_name_given", "[1.1]Alex")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_gender", "[1]divers")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_birthdate", "[1]1976-02-02")
+    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2))
 
   } else if (DEBUG_DAY == 3) {
 
@@ -130,5 +139,6 @@ if (exists("DEBUG_DAY")) {
 
   # Update the Encounter table in the resource_tables list
   resource_tables[["Encounter"]] <- dt_enc
+  resource_tables[["Patient"]] <- dt_pat
   resource_tables[["pids_per_ward"]] <- pids_per_wards
 }

@@ -1,5 +1,7 @@
+#################
 # If this parameter is given, then no request is sent to the FHIR server, but
 # all data is loaded from this folder from RData files
+#################
 DEBUG_PATH_TO_RAW_RDATA_FILES = "./R-cds2db/test/tables/"
 
 #################
@@ -9,11 +11,13 @@ DEBUG_PATH_TO_RAW_RDATA_FILES = "./R-cds2db/test/tables/"
 #################
 DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES = [
    "./R-cds2db/test/test_common_data_preparation.R",
-   "./R-cds2db/test/test1_change_RAW_Data.R",
+   "./R-cds2db/test/test1_change_RAW_Data.R"
 ]
 
+#################
 # With this filter patterns the data in the tables directory were loaded
 # from the FHIR server
+#################
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
   "id = 'UKE-0001-E-1'",
@@ -127,6 +131,7 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 ]
 
 
+#################
 # If the DEBUG_ENCOUNTER_DATETIME_START parameter is activated, only Encounters whose start date is
 # before this date are searched for.
 # If it is not activated, the current date is automatically assumed.
@@ -135,12 +140,15 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # DEBUG_ENCOUNTER_DATETIME_START and before the DEBUG_ENCOUNTER_DATETIME_END are found.
 # Since the end date of Encounters cannot be queried without a FHIR Custom Search parameter, all
 # queries for the Encounter date always refer to its start date.
+#################
 #DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
 #DEBUG_ENCOUNTER_DATETIME_END = "2020-08-30 21:25:00"
 DEBUG_ENCOUNTER_DATETIME_END = ""
 
+#################
 # If this parameter is activated, only those whose subject ID is in this list are found in the initial
 # encounter request.
+#################
 DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
                                  "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
                                  "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015",
@@ -155,14 +163,17 @@ DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004",
                                  "UKFAU-0011"
                                  ]
 
+#################
 # Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.
 # This will only output the request, but not execute the entire 'cds2db' module.
 # Use this to see the result of the above debug parameters or, without the debug parameters, the
 # first FHIR search request for Encounter.
+#################
 #DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
 
 [retrieve.debug.all_resource.fhir_search]
 
+#################
 # These parameters can set additional FHIR-search parameters for downloading Requests. It is possible
 # to set parameters for each FHIR resource or set specific parameters for all FHIR resources with the
 # parameter DEBUG_ADD_FHIR_SEARCH_GENERAL. Several parameters can be customised by linking the FHIR
@@ -190,8 +201,10 @@ DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004",
 #DEBUG_ADD_FHIR_SEARCH_PROCEDURE = ""
 #DEBUG_ADD_FHIR_SEARCH_SERVICEREQUEST = ""
 
+#################
 # Set this parameter to "true" if last_update_date should be ignored. In this case all data will be downloaded
 # from FHIR-server without checking last implemented data in database.
+#################
 DEBUG_IGNORE_LAST_UPDATE_DATE = true
 
 [retrieve.debug.filtering.after_download]
@@ -220,9 +233,11 @@ DEBUG_IGNORE_LAST_UPDATE_DATE = true
 #DEBUG_FILTER_PROCEDURE = ""
 #DEBUG_FILTER_SERVICEREQUEST = ""
 
+#################
 # This debug parameter ensures that the observation RAW table has exactly as many entries as
 # specified here. If there are too few, they are duplicated. If there are more, they are truncated.
 # This can be used to test the performance of large amounts of data.
+#################
 #DEBUG_RESOURCE_COUNT_OBSERVATION_RAW = 100
 
 #################
@@ -231,5 +246,5 @@ DEBUG_IGNORE_LAST_UPDATE_DATE = true
 # This parameter can also be used to allow only certain data of a query to pass in test cases.
 # NOTE: This filter does not affect any FHIR search request, but only filters the patients found
 # afterwards.
+#################
 #DEBUG_FILTER_PIDS_PATTERN = "UKB"
-

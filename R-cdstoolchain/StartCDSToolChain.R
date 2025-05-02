@@ -10,6 +10,8 @@ library(db2frontend)
 # Reset error status
 options(error = NULL)
 
+start <- Sys.time()
+
 if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
 }
@@ -30,14 +32,21 @@ for (arg in args) {
   }
 }
 
+resetMemory <- function() {
+  rm(list = setdiff(ls(), c("DEBUG_DAY", "DEBUG_DATES")))
+}
+
 tryCatch({
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     cds2db::retrieve()
   }
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     dataprocessor::processData()
   }
   if (!etlutils::isErrorOccured()) {
+    resetMemory()
     db2frontend::startDB2Frontend()
   }
   if (etlutils::isErrorOccured()) {
@@ -68,6 +77,12 @@ tryCatch({
   }
 })
 
-if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
-  cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+if (!etlutils::isErrorOccured()){
+  if (exists("DEBUG_DAY")) {
+    cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  } else {
+    # Print the elapsed time
+    end <- Sys.time()
+    cat("Full toolchain took ", capture.output(print(end - start)), "\n")
+  }
 }

@@ -1,7 +1,8 @@
+
 -- <%OWNER_SCHEMA%>.<%TABLE_NAME%>
 ------------------------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION <%OWNER_SCHEMA%>.<%TABLE_NAME%>_ins_fkt()
-RETURNS TRIGGER 
+RETURNS TRIGGER
 SECURITY DEFINER
 AS $$
 BEGIN
