@@ -83,6 +83,6 @@ if (!etlutils::isErrorOccured()){
   } else {
     # Print the elapsed time
     end <- Sys.time()
-    cat("Full toolchain took ", capture.output(print(end - start)))
+    cat("Full toolchain took ", capture.output(print(end - start)), "\n")
   }
 }
