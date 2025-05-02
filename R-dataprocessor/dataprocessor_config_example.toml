@@ -78,11 +78,13 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*"
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 
 #################
-# Accepts only type/coding/sytem from the "Einrichtungskontakt" with the exact value. For the
-# encounter identifier system defined here, the corresponding value from type/coding/value is taken
-# (if there are several values for a system, these are concatenated). This identifier is entered in
-# the table Fall_fe and displayed in the frontend as fall_id.
-# For example: FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
+# This pattern can be used to specify what should be displayed in REDCap as the ID of the overall medical case.
+# This should usually be an identifier for a 'Einrichtungskontakt'. To find the correct identifier/value, a
+# pattern that matches the corresponding identifier/system must be specified here.
+# This variable has a further meaning. To find all sub-encounters of a medical case, the partOf references are
+# normally evaluated. If these are not completely available, the identifier/value found here is used as a
+# fallback. To do this, all encounters and all sub-encounters must each have this identifier as a common identifier.
+# For example: FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "http://terminology.hl7.org/CodeSystem/v2-0203"
 #################
 FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 

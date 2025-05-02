@@ -1,5 +1,5 @@
 -- View "v_cron_jobs" in schema "db_config" - Übersicht der cron jobs
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_cron_jobs AS
 SELECT command, count(1) anzahl
 ,  (SELECT to_char(max(s.end_time),'YYYY-MM-DD HH24:MI:SS') FROM cron.job_run_details s WHERE command=m.command AND s.status='succeeded') last_succeeded_run
@@ -10,11 +10,28 @@ FROM cron.job_run_details m group by command ORDER BY 3 desc;
 GRANT SELECT ON db_config.v_cron_jobs TO db_user;
 
 -- Cronjpob der immer um Mitternacht alle erfolgreichen cronjob-logs löscht, die älter als 2 Tage sind
-SELECT cron.schedule('0 0 * * *', $$DELETE FROM cron.job_run_details 
-WHERE status='succeeded' AND end_time < now() - interval '2 days'$$);
+------------------------------------------------------------------------------------------------
+-- Cron-Job nur anlegen, wenn er noch nicht existiert
+DO
+$$
+DECLARE
+   erg VARCHAR;
+BEGIN
+   IF EXISTS (
+      SELECT 1 FROM cron.job
+      WHERE command = 'DELETE FROM cron.job_run_details WHERE status=''succeeded'' AND end_time < now() - interval ''2 days'''
+      LIMIT 1
+        ) THEN
+
+      SELECT res FROM public.pg_background_result(public.pg_background_launch(
+         'SELECT cron.schedule(''0 0 * * *'', DELETE FROM cron.job_run_details WHERE status=''succeeded'' AND end_time < now() - interval ''2 days'');'
+    ) ) AS t(res TEXT) INTO erg;
+   END IF;
+END
+$$;
 
 -- Table "db_parameter" in schema "db_config" - Parameter für Ablauf in der Datenbank
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_config.db_parameter (
   id SERIAL,
   parameter_name VARCHAR UNIQUE,
@@ -25,7 +42,7 @@ CREATE TABLE IF NOT EXISTS db_config.db_parameter (
 );
 
 -- Index idx_db_config_db_parameter_name for Table "db_parameter" in schema "db_config"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_config_db_parameter_name
 ON db_config.db_parameter (   parameter_name );
 
@@ -34,7 +51,7 @@ GRANT SELECT ON db_config.db_parameter TO db_user;
 GRANT UPDATE ON db_config.db_parameter TO db_user;
 
 -- Table "db_process_control" in schema "db_config" - Tabele für Semaphore und Fortschrittskennzahlen
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_config.db_process_control (
   id SERIAL,
   pc_name VARCHAR UNIQUE,
@@ -45,7 +62,7 @@ CREATE TABLE IF NOT EXISTS db_config.db_process_control (
 );
 
 -- Index idx_db_config_db_db_process_control_name for Table "db_process_control" in schema "db_config"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_config_db_db_process_control_name
 ON db_config.db_process_control (   pc_name );
 
@@ -58,27 +75,71 @@ GRANT SELECT ON db_config.db_process_control TO db2dataprocessor_user;
 GRANT SELECT ON db_config.db_process_control TO db_log_user;
 
 -- initialiesieren der notwendigen values
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
--- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('timepoint_1_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function started) Format: YYYY-MM-DD HH24:MI:SS.US');
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('timepoint_2_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function / table started) Format: YYYY-MM-DD HH24:MI:SS.US');
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('timepoint_3_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('waitpoint_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('current_executed_function','','current executed function (db.data_transfer_status)');
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('current_total_number_of_records_in_the_function','','current total number of records in the function (db.data_transfer_status)');
-INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
-VALUES ('currently_processed_number_of_data_records_in_the_function','','currently processed number of data records in the function (db.data_transfer_status)');
+------------------------------------------------------------------------------------------------
+DO
+$$
+BEGIN
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'semaphor_cron_job_data_transfer'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('semaphor_cron_job_data_transfer','WaitForCronJob','semaphore to control the cron_job_data_transfer job, contains the current processing status - Ongoing / ReadyToConnect / WaitForCronJob / Interrupted');
+   END IF;
 
+   -- Normal Status are: WaitForCronJo--> Ongoing --> ReadyToConnect --> WaitForCronJob 
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'timepoint_1_cron_job_data_transfer'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('timepoint_1_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function started) Format: YYYY-MM-DD HH24:MI:SS.US');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'timepoint_2_cron_job_data_transfer'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('timepoint_2_cron_job_data_transfer','none','start time that needs to be remembered (last time copy function / table started) Format: YYYY-MM-DD HH24:MI:SS.US');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'timepoint_3_cron_job_data_transfer'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('timepoint_3_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'waitpoint_cron_job_data_transfer'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('waitpoint_cron_job_data_transfer','none','start time that needs to be remembered Format: YYYY-MM-DD HH24:MI:SS.US');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'current_executed_function'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('current_executed_function','','current executed function (db.data_transfer_status)');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'current_total_number_of_records_in_the_function'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('current_total_number_of_records_in_the_function','','current total number of records in the function (db.data_transfer_status)');
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'currently_processed_number_of_data_records_in_the_function'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('currently_processed_number_of_data_records_in_the_function','','currently processed number of data records in the function (db.data_transfer_status)');
+   END IF;
+END
+$$;
 
 -- Table "data_import_hist" in schema "db"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db.data_import_hist (
   id SERIAL,
   table_primary_key INT, -- Primary key in the documentet table
@@ -95,27 +156,27 @@ CREATE TABLE IF NOT EXISTS db.data_import_hist (
 );
 
 -- Index idx_db_data_import_hist_last_processing_nr for Table "data_import_hist" in schema "db"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_last_processing_nr
 ON db.data_import_hist (   last_processing_nr );
 
 -- Index idx_db_data_import_hist_schema_name for Table "data_import_hist" in schema "db"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_schema_name
 ON db.data_import_hist (   schema_name );
 
 -- Index idx_db_data_import_hist_table_name for Table "data_import_hist" in schema "db"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_table_name
 ON db.data_import_hist (   table_name );
 
 -- Index idx_db_data_import_hist_function_name for Table "data_import_hist" in schema "db"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_function_name
 ON db.data_import_hist (   function_name );
 
 -- Index idx_db_data_import_hist_variable_name for Table "data_import_hist" in schema "db"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_variable_name
 ON db.data_import_hist (   variable_name );
 
@@ -131,7 +192,7 @@ GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db2dataprocessor_user;
 GRANT INSERT, SELECT ON TABLE db.data_import_hist TO db2frontend_user;
 
 -- View "data_count_report" in "db_config"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_data_count_report AS
 SELECT a.*, b.dataset_count_new_ds, b.new_ds_per_sec
 FROM
@@ -158,7 +219,7 @@ ORDER BY day_sum DESC, function_name
 GRANT SELECT ON db_config.v_data_count_report TO db_user;
 
 -- Table "db_error_log" in schema "db_config" - Dokumentation bei Auftretenden Fehlern in der Datenbank
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS db_config.db_error_log (
   id SERIAL,
   err_schema VARCHAR, -- Schema in which the error occurred
@@ -176,7 +237,7 @@ GRANT SELECT ON db_config.db_error_log TO db_user;
 GRANT UPDATE ON db_config.db_error_log TO db_user;
 
 -- View "v_db_error_log" in "db_config"
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_db_error_log AS
 SELECT input_datetime, id, err_schema, err_objekt, err_line, err_msg, err_variables, err_user, last_processing_nr FROM db_config.db_error_log
 ORDER BY input_datetime desc, id desc;
@@ -184,7 +245,7 @@ ORDER BY input_datetime desc, id desc;
 GRANT SELECT ON db_config.v_db_error_log TO db_user;
 
 -- Funktion zur Dokumentation von Fehlern
-----------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.error_log(
   err_schema VARCHAR DEFAULT current_schema, -- Schema in which the error occurred
   err_objekt VARCHAR DEFAULT NULL, -- Table or function or other object WHEREthe error occurred
@@ -224,11 +285,9 @@ GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,V
 GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.error_log(VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,VARCHAR,INT) TO db_user;
 
-----------------------------------------------------------------------
-
 -- Funktionen zur einheitlichen Darstellung als String
 -- 1. immutable overloaded function for TEXT / VARCHAR / CHAR
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TEXT)
 RETURNS TEXT
 SECURITY DEFINER
@@ -242,7 +301,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(TEXT) TO db_user;
 
 -- 2. immutable overloaded function for SMALLINT / INTEGER / BIGINT
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BIGINT)
 RETURNS TEXT
 SECURITY DEFINER
@@ -256,7 +315,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(BIGINT) TO db_user;
 
 -- 3. immutable overloaded function for REAL / FLOAT4 / DOUBLE PRECISION
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data DOUBLE PRECISION)
 RETURNS TEXT
 SECURITY DEFINER
@@ -270,7 +329,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db2frontend_
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(DOUBLE PRECISION) TO db_user;
 
 -- 4. immutable overloaded function for NUMERIC / DECIMAL
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data NUMERIC)
 RETURNS TEXT
 SECURITY DEFINER
@@ -284,7 +343,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(NUMERIC) TO db_user;
 
 -- 5. immutable overloaded function for DATE / TIMESTAMP - !!! NOT TIMESTAMPTZ !!!
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TIMESTAMP)
 RETURNS TEXT
 SECURITY DEFINER
@@ -298,7 +357,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIMESTAMP) TO db_user;
 
 -- 6. immutable overloaded function for TIME - !!! NOT TIMETZ !!!
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data TIME)
 RETURNS TEXT
 SECURITY DEFINER
@@ -312,7 +371,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(TIME) TO db_user;
 
 -- 7. immutable overloaded function for BOOLEAN (TRUE, FALSE, NULL)
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BOOLEAN)
 RETURNS TEXT
 SECURITY DEFINER
@@ -326,7 +385,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(BOOLEAN) TO db_user;
 
 -- 8. immutable overloaded function for BYTEA (Binärdaten)
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data BYTEA)
 RETURNS TEXT
 SECURITY DEFINER
@@ -340,7 +399,7 @@ GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.to_char_immutable(BYTEA) TO db_user;
 
 -- 9. immutable overloaded function for UUID (Universally Unique Identifier)
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION db.to_char_immutable(input_data UUID)
 RETURNS TEXT
 SECURITY DEFINER

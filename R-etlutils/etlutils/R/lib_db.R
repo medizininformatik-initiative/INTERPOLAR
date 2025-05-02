@@ -177,7 +177,11 @@ dbGetConnection <- function(readonly) {
   schema_name <- if (readonly) .lib_db_env[["DB_SCHEMA_OUT"]] else .lib_db_env[["DB_SCHEMA_IN"]]
   db_connection <- .lib_db_connection_env[[schema_name]]
 
-  if (is.null(db_connection) || !DBI::dbIsValid(db_connection)) {
+  if (!is.null(db_connection) && DBI::dbIsValid(db_connection)) {
+    dbDisconnect(db_connection)
+  }
+
+  if (is.null(db_connection)) {
     dbLog(
       "Attempting to connect with: \n",
       "dbname=", .lib_db_env[["DB_NAME"]], "\n",
@@ -186,24 +190,24 @@ dbGetConnection <- function(readonly) {
       "user=", .lib_db_env[["DB_USER"]], "\n",
       "schema=", schema_name, "\n"
     )
-
-    db_connection <- DBI::dbConnect(
-      RPostgres::Postgres(),
-      dbname = .lib_db_env[["DB_NAME"]],
-      host = .lib_db_env[["DB_HOST"]],
-      port = .lib_db_env[["DB_PORT"]],
-      user = .lib_db_env[["DB_USER"]],
-      password = .lib_db_env[["DB_PASSWORD"]],
-      options = paste0("-c search_path=", schema_name),
-      timezone = "Europe/Berlin"
-    )
-
-    # Increase memory allocation
-    DBI::dbExecute(db_connection, "set work_mem to '32MB';")
-
-    # Store the connection in the environment
-    .lib_db_connection_env[[schema_name]] <- db_connection
   }
+
+  db_connection <- DBI::dbConnect(
+    RPostgres::Postgres(),
+    dbname = .lib_db_env[["DB_NAME"]],
+    host = .lib_db_env[["DB_HOST"]],
+    port = .lib_db_env[["DB_PORT"]],
+    user = .lib_db_env[["DB_USER"]],
+    password = .lib_db_env[["DB_PASSWORD"]],
+    options = paste0("-c search_path=", schema_name),
+    timezone = "Europe/Berlin"
+  )
+
+  # Increase memory allocation
+  DBI::dbExecute(db_connection, "set work_mem to '32MB';")
+
+  # Store the connection in the environment
+  .lib_db_connection_env[[schema_name]] <- db_connection
 
   return(db_connection)
 }
@@ -464,7 +468,6 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
       cat("Current database status after lock request:", status, "\n")
     }
     if (!unlock_successful) {
-      db_connection <- dbGetConnection(readonly)
       status <- dbGetStatus()
       stop("Could not unlock the database for lock_id:\n",
            full_lock_id, "\n",
@@ -514,6 +517,19 @@ dbResetLock <- function() {
   return(unlock_successful)
 }
 
+#' Disconnect from a database connection
+#'
+#' Closes an active database connection and suppresses any warnings that may occur
+#' during disconnection (e.g., if the connection is already closed).
+#'
+#' @param db_connection A `DBIConnection` object representing the active database connection
+#'
+#' @return Invisible `TRUE` (if disconnection succeeds) or `FALSE`
+#'
+dbDisconnect <- function(db_connection) {
+  suppressWarnings(DBI::dbDisconnect(db_connection))
+}
+
 #' Close All Database Connections
 #'
 #' This function closes all active database connections stored in the global
@@ -532,7 +548,7 @@ dbCloseAllConnections <- function() {
   for (db_connection_variable_name in ls(.lib_db_connection_env)) {
     db_connection <- get(db_connection_variable_name, envir = .lib_db_connection_env)
     if (DBI::dbIsValid(db_connection)) {
-      DBI::dbDisconnect(db_connection)
+      dbDisconnect(db_connection)
       rm(list = db_connection_variable_name, envir = .lib_db_connection_env)
     }
   }
@@ -585,8 +601,6 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
   # Convert table name to lowercase for PostgreSQL compatibility
   table_name <- tolower(table_name)
 
-  #there isno need to check the column width for read connections
-  db_connection <- dbGetWriteConnection()
 
   # Construct SQL query to retrieve column widths
   sql_query <- paste0(
@@ -598,7 +612,10 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
   dbLog("dbCheckColumsWidthBeforeWrite:\n", sql_query)
 
   # Retrieve column widths
+  #there is no need to check the column width for read connections
+  db_connection <- dbGetWriteConnection()
   column_widths <- DBI::dbGetQuery(db_connection, sql_query)
+  dbDisconnect(db_connection)
   column_widths <- unique(column_widths)
 
   # Filter relevant columns
@@ -699,10 +716,11 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
     char_cols <- names(table)[sapply(table, is.character)]
     table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
 
-    db_connection <- dbGetWriteConnection()
     # Append table content
     dbLock(lock_id)
+    db_connection <- dbGetWriteConnection()
     RPostgres::dbAppendTable(db_connection, table_name, table)
+    dbDisconnect(db_connection)
     dbUnlock(lock_id)
   }
   # Calculate and print duration of operation
@@ -761,10 +779,11 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
 #' @seealso \code{\link[DBI]{dbExecute}} for executing SQL statements.
 #'
 dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
-  db_connection <- dbGetConnection(readonly)
   dbLock(lock_id)
   dbLog("dbExecute:\n", statement)
+  db_connection <- dbGetConnection(readonly)
   DBI::dbExecute(db_connection, statement)
+  dbDisconnect(db_connection)
   dbUnlock(lock_id, readonly)
 }
 
@@ -793,13 +812,14 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 #'
 #' @export
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
-  db_connection <- dbGetConnection(readonly)
   # Lock the database
   dbLock(lock_id)
   # Log the query
   dbLog("dbGetQuery:\n", query)
   # Execute the query with parameters
+  db_connection <- dbGetConnection(readonly)
   table <- data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
+  dbDisconnect(db_connection)
   # Unlock the database
   dbUnlock(lock_id, readonly)
   return(table)
@@ -849,10 +869,11 @@ dbGetReadOnlyQuery <- function(query, params = NULL, lock_id = NULL) {
 dbReadTable <- function(table_name, lock_id = NULL) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
-  db_connection <- dbGetReadConnection()
   dbLock(lock_id)
   dbLog("dbReadTable: ", table_name)
+  db_connection <- dbGetReadConnection()
   table <- data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
+  dbDisconnect(db_connection)
   dbUnlock(lock_id, readonly = TRUE)
   return(table)
 }
@@ -916,6 +937,7 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
   table_names <- names(tables)
   db_connection <- dbGetWriteConnection()
   db_table_names <- dbListTableNames(db_connection)
+  dbDisconnect(db_connection)
 
   # Stop with error if there are tables that do not exist in the database
   missing_db_table_names <- setdiff(table_names, db_table_names)
@@ -930,9 +952,11 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
   # 1. Check if any tables are not empty when `stop_if_table_not_empty` is TRUE
   # Check if tables are empty if required
   if (stop_if_table_not_empty) {
+    db_connection <- dbGetWriteConnection()
     non_empty_tables <- table_names[!sapply(table_names, function(table_name) {
       dbIsTableEmpty(db_connection, table_name)
     })]
+    dbDisconnect(db_connection)
     if (length(non_empty_tables) > 0) {
       stop("The following tables are not empty:\n",
            paste(non_empty_tables, collapse = "\n"))
@@ -1013,6 +1037,7 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
   db_connection <- dbGetReadConnection()
   # Get the list of tables in the database
   db_table_names <- dbListTableNames(db_connection)
+  dbDisconnect(db_connection)
 
   # If no table names are provided, read all available tables
   if (isSimpleNA(table_names)) {
@@ -1125,7 +1150,6 @@ dbGetCurrentSchema <- function(db_connection) {
 #' - Logs the executed SQL query if `log = TRUE`.
 #'
 dbGetTableColumnTypes <- function(table_name, readonly = FALSE) {
-  db_connection <- dbGetConnection(readonly)
   schema <- dbGetCurrentSchema()
   # SQL query to retrieve column names and data types
   query <- paste0(
@@ -1282,7 +1306,9 @@ dbGetInfoInternal <- function(db_connection = dbGetReadConnection()) {
 #' @export
 dbGetInfo <- function(readonly = TRUE) {
   db_connection <- dbGetConnection(readonly)
-  return(dbGetInfoInternal(db_connection))
+  info <- dbGetInfoInternal(db_connection)
+  dbDisconnect(db_connection)
+  return(info)
 }
 
 #' Reset the database by truncating all tables in the specified schemas.
@@ -1350,7 +1376,7 @@ dbReset <- function() {
   dbUnlock(lock_id)
 
   # Close connection
-  DBI::dbDisconnect(con)
+  dbDisconnect(con)
 }
 
 #' Remove Special Characters from a SQL comment.

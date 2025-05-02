@@ -156,22 +156,17 @@ FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 #################
 ENCOUNTER_FILTER_PATTERN_1 = [
   "ward_name = 'Station 1'",
-  "location/location/reference = 'Location/location_id_1'",
-  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "location/location/reference = 'Location/location_id_1'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_2 = [
   "ward_name = 'Station 2'"#,
-  #"location/location/reference = 'Location/location_id_2'",
-  #"serviceType/coding/code = '0500' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  #"location/location/reference = 'Location/location_id_2'"
 ]
 
 ENCOUNTER_FILTER_PATTERN_3 = [
   "ward_name = 'Station 3'",
-  "location/location/reference = 'Location/location_id_3'",
-  "serviceType/coding/code = '1600' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'",
-  "serviceType/coding/display = 'Unfallchirurgie' + class/code = 'station|IMP|inpatient|emer|ACUTE|NONAC'"
+  "location/location/reference = 'Location/location_id_3'"
 ]
 
 
@@ -183,7 +178,7 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # enable quick changes of a lot of parameters without changing this main file.
 # This mechanism is also used for running integration tests.
 #################
-#DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
+DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/test/test1_cds2db_config.toml"
 
 

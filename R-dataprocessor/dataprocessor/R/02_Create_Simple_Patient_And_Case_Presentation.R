@@ -310,7 +310,9 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
-    encounters <- etlutils::fhirdataGetAllEncounters(pids_per_ward$encounter_id, "CreateEncounterFrontendTable()_")
+    encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
+                                                     common_encounter_fhir_identifier_system = FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
+                                                     lock_id_extension = "CreateEncounterFrontendTable()_")
     location_refs <- na.omit(unique(encounters$enc_location_ref))
     locations <- loadResourcesLastVersionByOwnIDFromDB("Location", location_refs)
 

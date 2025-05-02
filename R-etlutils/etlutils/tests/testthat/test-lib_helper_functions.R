@@ -40,6 +40,61 @@ test_that("isSimpleNA returns FALSE for empty values or NULL", {
   expect_false(isSimpleNA(null_val))
 })
 
+#####################
+# isSimpleNAorNULL #
+#####################
+
+# Test for simple NA
+test_that("isSimpleNAorNULL returns TRUE for a simple NA", {
+  x <- NA
+  expect_true(isSimpleNAorNULL(x))
+})
+
+# Test for NULL
+test_that("isSimpleNAorNULL returns TRUE for NULL", {
+  null_val <- NULL
+  expect_true(isSimpleNAorNULL(null_val))
+})
+
+# Test for empty atomic vectors
+test_that("isSimpleNAorNULL returns TRUE for empty atomic vectors", {
+  empty_char <- character(0)
+  expect_true(isSimpleNAorNULL(empty_char))
+
+  empty_num <- numeric(0)
+  expect_true(isSimpleNAorNULL(empty_num))
+
+  empty_logical <- logical(0)
+  expect_true(isSimpleNAorNULL(empty_logical))
+})
+
+# Test for non-NA atomic values
+test_that("isSimpleNAorNULL returns FALSE for non-NA atomic values", {
+  z <- 1
+  expect_false(isSimpleNAorNULL(z))
+
+  a <- "Hello"
+  expect_false(isSimpleNAorNULL(a))
+})
+
+# Test for vectors with multiple elements
+test_that("isSimpleNAorNULL returns FALSE for vectors with multiple elements", {
+  y <- c(1, NA, 3)
+  expect_false(isSimpleNAorNULL(y))
+})
+
+# Test for lists and other non-atomic types
+test_that("isSimpleNAorNULL returns FALSE for non-atomic types", {
+  lst <- list()
+  expect_false(isSimpleNAorNULL(lst))
+
+  df <- data.frame()
+  expect_false(isSimpleNAorNULL(df))
+
+  env <- new.env()
+  expect_false(isSimpleNAorNULL(env))
+})
+
 ######################
 # isSimpleTrueOrNot0 #
 ######################
