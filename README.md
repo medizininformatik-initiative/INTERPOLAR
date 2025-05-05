@@ -77,6 +77,7 @@ Daraus kommen wir zu folgender Abschätzung der IT-Ressourcen:
  | RAM | 8-16 Gb |
  | Storage | 500 Gb |
 
+Es handelt sich dabei um eine Schätzung. Je nach Datenbestand kann es erforderlich sein, die IT-Ressourcen anzupassen. Nach bisherigen Rückmeldungen kann eine Erhöhung der IT-Ressourcen auf 8 CPU-Kerne und 64 Gb RAM die Verarbeitung ggf. stark beschleunigen.
 
 ## Installation
 
@@ -104,7 +105,13 @@ Ein typischer Ablauf sieht wie folgt aus:
     docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
     ```
 
-Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) auszuführen. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
+Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
+
+Laufen die manuellen Schritte ohne Fehler, kann der folgende Befehl genutzt werden, um alle Schritte hintereinander auszuführen:
+```console
+docker compose run --rm --no-deps r-env Rscript R-cdstoolchain/StartCDSToolChain.R
+```
+
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

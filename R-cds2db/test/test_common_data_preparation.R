@@ -22,7 +22,7 @@ getFilteredRAWResources <- function(patient_ids) {
   refs <- paste0("[1.1]Patient/", ids)
 
   for (resource_name in names(resource_tables)) {
-    pid_column <- if (resource_name == "pids_per_ward") "patient_id" else etlutils::getPIDColumn(resource_name)
+    pid_column <- if (resource_name == "pids_per_ward") "patient_id" else etlutils::fhirdbGetPIDColumn(resource_name)
     resource_table <- resource_tables[[resource_name]]
     if (pid_column %in% names(resource_table)) {
       filtered_resources[[resource_name]] <- if (endsWith(pid_column, "patient_ref")) {

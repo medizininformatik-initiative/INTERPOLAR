@@ -2,48 +2,87 @@
 if (grepl('/cdstoolchain$', getwd())) setwd("../..")
 if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
 
-# free memory
-rm(list = ls())
-
 library(etlutils)
 library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
-DEBUG_DATES <- c("2025-03-05 13:55:45 CET",
-                 "2025-03-06 13:55:45 CET")
+# Reset error status
+options(error = NULL)
 
-for (i in seq_along(DEBUG_DATES)) {
-  DEBUG_DAY <- i
+start <- Sys.time()
 
+if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
-  tryCatch({
-    # Fehlerstatus zurücksetzen
-    options(error = NULL)
-    # browser()
-    cds2db::retrieve()
-    # browser()
-    dataprocessor::processData()
-    # browser()
-    db2frontend::startDB2Frontend()
-  }, error = function(e) {
-    # Zerlege die Fehlermeldung in einzelne Zeilen
-    error_lines <- unlist(strsplit(e$message, "\n"))
+}
 
-    # Definiere das Muster für die SQL-Spaltenfehler
-    allowed_pattern <- "column .* of relation .* does not exist"
-
-    # Prüfe, ob eine der Zeilen das Muster enthält
-    if (any(grepl(allowed_pattern, error_lines))) {
-      message("Ignoring expected error: ", e$message)
-
-      # `next` nur ausführen, wenn nicht im letzten Schleifendurchlauf
-      if (i < length(DEBUG_DATES)) {
-        next
-      }
-    } else {
-      stop(e)  # Andere Fehler abbrechen
+args <- commandArgs(trailingOnly = TRUE)
+for (arg in args) {
+  if (arg %in% c("--resetLock", "--resetLockAndStop")) {
+    message("Resetting lock")
+    cds2db::retrieve(reset_lock_only = TRUE)
+    dataprocessor::processData(reset_lock_only = TRUE)
+    db2frontend::startDB2Frontend(reset_lock_only = TRUE)
+    message("All locks resettet")
+    if (arg == "--resetLockAndStop") {
+      quit(status = 0, save = "no")  # clean exit without error
     }
-  })
-  cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  } else {
+    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop")
+  }
+}
+
+resetMemory <- function() {
+  rm(list = setdiff(ls(), c("DEBUG_DAY", "DEBUG_DATES")))
+}
+
+tryCatch({
+  if (!etlutils::isErrorOccured()) {
+    resetMemory()
+    cds2db::retrieve()
+  }
+  if (!etlutils::isErrorOccured()) {
+    resetMemory()
+    dataprocessor::processData()
+  }
+  if (!etlutils::isErrorOccured()) {
+    resetMemory()
+    db2frontend::startDB2Frontend()
+  }
+  if (etlutils::isErrorOccured()) {
+    stop(etlutils::getErrorMessage())
+  }
+}, error = function(e) {
+  # Split the error message into individual lines
+  error_lines <- unlist(strsplit(e$message, "\n"))
+
+  # Define the pattern for SQL column errors
+  allowed_pattern <- "column .* of relation .* does not exist"
+
+  # Check if any of the lines contain the pattern
+  if (any(grepl(allowed_pattern, error_lines))) {
+    message("Ignoring expected error: ", e$message)
+
+    # Execute `next` only if not in the last iteration of the loop
+    if (i < length(DEBUG_DATES)) {
+      next
+    }
+  } else {
+    # the submodules log their errors itself -> we must check
+    # if etlutils::isErrorOccured() and if TRUE then do nothing
+    # here. Stop hard only if the error comes not from a submodule.
+    if (!etlutils::isErrorOccured()) {
+      stop(e)  # Abort on other errors
+    }
+  }
+})
+
+if (!etlutils::isErrorOccured()){
+  if (exists("DEBUG_DAY")) {
+    cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  } else {
+    # Print the elapsed time
+    end <- Sys.time()
+    cat("Full toolchain took ", capture.output(print(end - start)), "\n")
+  }
 }

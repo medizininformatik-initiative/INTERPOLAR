@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.4.1
+FROM rocker/r-ver:4.5.0
 
 # Select cran mirror
 
@@ -33,9 +33,7 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS httr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS rlang
 RUN /rocker_scripts/bin/install2.r -n $NCPUS stringr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS xml2
-#RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
-RUN R -e "install.packages('remotes')"
-RUN R -e "remotes::install_github('POLAR-fhiR/fhircrackr@142-optimize-fhir_melt_all')"
+RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
 
 WORKDIR /src
 
@@ -76,6 +74,11 @@ COPY R-dataprocessor R-dataprocessor
 RUN R CMD build R-dataprocessor/dataprocessor
 
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-dataprocessor/dataprocessor
+
+# R-cdstoolchain
+
+COPY R-cdstoolchain R-cdstoolchain
+
 
 # cleanup
 
