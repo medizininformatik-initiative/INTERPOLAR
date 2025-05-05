@@ -15,6 +15,16 @@
 #'
 importDB2Redcap <- function() {
 
+  tryRedcap <- function(redcap_process) {
+    tryCatch({
+      redcap_process()
+    }, error = function(e) {
+      message("This error may have occurred because the user preferences in the Redcap project ",
+              "have been changed. Use the default values if possible.")
+      stop(e$message)
+    })
+  }
+
   etlutils::runLevel2Line("Update frontend data from DB", {
     # Connect to REDCap
     frontend_connection <- getRedcapConnection()
@@ -23,6 +33,9 @@ importDB2Redcap <- function() {
     table_description <- getFrontendTableDescription()
 
     table_names <- names(table_description)
+
+    # Get REDCap metadata to retrieve valid field names
+    valid_fields <- tryRedcap(function() getRedcapFieldNames(frontend_connection))
 
     # Iterate over tables and columns to fetch and send data
     for (i in seq_along(table_names)) {
@@ -42,19 +55,16 @@ importDB2Redcap <- function() {
       etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name))
 
       # Import data to REDCap
-      tryCatch({
-        redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db)
-        if (table_name %in% "fall") {
-          record_ids_with_data_access_group <- unique(data_from_db[, c("record_id", "fall_station")])
-        }
-      }, error = function(e) {
-        message("This error may have occurred because the user preferences in the Redcap project ",
-                "have been changed. Use the default values if possible.")
-        stop(e$message)
-      })
+      # Keep only columns that exist in REDCap
+      data_from_db <- data_from_db[, names(data_from_db) %in% valid_fields, with = FALSE]
+
+      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db))
+
+      if (table_name %in% "fall") {
+        record_ids_with_data_access_group <- unique(data_from_db[, c("record_id", "fall_station")])
+      }
     }
   })
-
 
   etlutils::runLevel2Line("Update data access groups", {
 
@@ -93,9 +103,12 @@ importDB2Redcap <- function() {
       # and the renamed column redcap_data_access_group)
       record_ids_with_data_access_group <- record_ids_with_data_access_group[, .(record_id, redcap_data_access_group = unique_group_name)]
 
+    }
+
+    etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
       redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group)
+    })
 
-    }
   })
 }

@@ -171,6 +171,20 @@ Erstellt eine zentralen cron-job der alle Überführungsfunktionen der Datenbank
 ### 980_dev_and_test
 Anlegen von Hilfstabellen für Tests und Entwicklung - nicht Produktiv.
 
+## Migration
+Wenn es eine Neuer Version der Datenbank gibt (z.B. nach aktualiesierung des Frontends) ist nach dem Auschecken des neuen Releases folgender Befehl auszuführen, damit die Datenbank auf den aktuellen Stand migriert wird. Dabei werden neue Spalten hinzugefügt, alte Spalten die nicht mehr dokumentiert werden, bleiben erhalten.
+ 
+docker compose exec -w /docker-entrypoint-initdb.d/ cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f migration/migration.sql
+
+### migration/migration
+Skript welches alle Notwendigen Skripte zur Migration ausführt und die Datenbank auf aktuellen Stand bringt.
+
+### 000_stop_semapore_during_migration
+Verarbeitung der Datenbank wird angehalten damit Migration durchgeführt werden kann.
+
+### 999_start_semapore_after_migration
+Verarbeitung der Datenbank wird normal gestartet nach Abschluss der Migration.
+
 ## Namenskonvention Views und Tabellen
 In der Datenbank gibt es für verschiedene Aufgaben verschiedene Views welche auf dieselbe Datenquelle zugreifen. Um diese voneinander zu unterscheiden werden den Tabellen/Views verschiedene Pre- und Postfix hinzugefügt. Aufgrund der begrenzten Zeichenanzahl geben diese teilweise nicht eine vollständige Beschreibung, sondern nur Hinweise (Genaue Funktionalität ist im SQL-Skript/Code nachzulesen).
 *_raw* - Tabellen/Views mit diesem Postfix beinhalten Raw-Daten - ohne diesen Postfix sind es typisierte Daten
