@@ -28,6 +28,7 @@ Imports:
     methods,
     openxlsx,
     RcppTOML,
+    rlang,
     RPostgres,
     stringr,
     xml2
