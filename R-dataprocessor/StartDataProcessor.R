@@ -5,8 +5,8 @@
 ####################################################################################
 
 # chance the working directory to the main directory
-if (grepl('/dataprocessor$', getwd())) setwd("../..")
-if (grepl('/R-dataprocessor$', getwd())) setwd("../")
+if (grepl("/dataprocessor$", getwd())) setwd("../..")
+if (grepl("/R-dataprocessor$", getwd())) setwd("../")
 
 # free memory
 rm(list = ls())

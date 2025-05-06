@@ -375,64 +375,102 @@ test_that("trimTableValues handles NA and empty strings correctly", {
   expect_equal(dt, expected_dt)
 })
 
-#####################
-# splitColumnToRows #
-#####################
+######################
+# splitColumnsToRows #
+######################
 
-# Test for basic functionality with "~" as delimiter
-test_that("splitColumnToRows splits column into separate rows correctly using ' ~ ' as delimiter", {
+test_that("splitColumnsToRows splits a single column correctly", {
   dt <- data.table(
-    ID = c(1, 2),
-    Text = c("A ~ B", "C ~ D"),
-    Other = c(100, 200)
+    ID = 1:3,
+    ColumnToSplit = c("A B C", "D E", "F"),
+    AnotherColumn = c("X", "Y", "Z")
   )
-  result <- splitColumnToRows(dt, "Text", split = " ~ ")
+
+  result <- splitColumnsToRows(dt, c("ColumnToSplit"))
+
+  # Expected result
   expected <- data.table(
-    ID = c(1, 1, 2, 2),
-    Text = c("A", "B", "C", "D"),
-    Other = c(100, 100, 200, 200)
+    ID = c(1, 1, 1, 2, 2, 3),
+    ColumnToSplit = c("A", "B", "C", "D", "E", "F"),
+    AnotherColumn = c("X", "X", "X", "Y", "Y", "Z")
   )
+
   expect_equal(result, expected)
 })
 
-# Test for handling of columns with no "~" characters
-test_that("splitColumnToRows handles columns with no ' ~ ' characters correctly", {
+test_that("splitColumnsToRows handles multiple columns correctly", {
   dt <- data.table(
-    ID = c(1, 2),
-    Text = c("A", "B"),
-    Other = c(100, 200)
+    ID = 1:3,
+    Column1 = c("A B", "C D", "E"),
+    Column2 = c("1 2", "3", "4 5 6")
   )
-  result <- splitColumnToRows(dt, "Text", split = " ~ ")
-  expect_equal(result, dt) # Should remain unchanged
-})
 
-# Test for preservation of other column values with "~" as delimiter
-test_that("splitColumnToRows preserves other column values correctly using ' ~ ' as delimiter", {
-  dt <- data.table(
-    ID = c(1),
-    Text = c("A ~ B"),
-    Other = c(100)
-  )
-  result <- splitColumnToRows(dt, "Text", split = " ~ ")
-  expect_equal(result$Other, rep(100, 2))
-})
+  result <- splitColumnsToRows(dt, c("Column1", "Column2"))
 
-# Test for edge cases with " ~ " as delimiter
-test_that("splitColumnToRows handles edge cases correctly using ' ~ ' as delimiter", {
-  dt <- data.table(
-    ID = c(1, 2, 3, 4),
-    Text = c("  ", NA, "A ~ ~ B", "C ~  ~  ~ D"),
-    Other = c(100, 200, 300, 400)
-  )
-  result <- splitColumnToRows(dt, "Text", split = " ~ ")
+  # Expected result
   expected <- data.table(
-    ID = c(1, 2, 3, 3, 4, 4, 4, 4),
-    Text = c("  ", NA, "A", "~ B", "C", "", "", "D"),
-    Other = c(100, 200, 300, 300, 400, 400, 400, 400)
+    ID = c(1, 1, 1, 1, 2, 2, 3, 3, 3),
+    Column1 = c("A", "A", "B", "B", "C", "D", "E", "E", "E"),
+    Column2 = c("1", "2", "1", "2", "3", "3", "4", "5", "6")
   )
-  # The NA value remains unchanged, and "A ~ ~ B" correctly splits into "A" and "B",
-  # considering the delimiter " ~ " and ignoring the empty string between two "~".
+
   expect_equal(result, expected)
+})
+
+test_that("splitColumnsToRows skips non-character columns", {
+  dt <- data.table(
+    ID = 1:3,
+    Column1 = c("A B", "C D", "E"),
+    NonCharacterColumn = 1:3
+  )
+
+  result <- splitColumnsToRows(dt, c("Column1", "NonCharacterColumn"))
+
+  # Expected result (NonCharacterColumn remains unchanged)
+  expected <- data.table(
+    ID = c(1, 1, 2, 2, 3),
+    Column1 = c("A", "B", "C", "D", "E"),
+    NonCharacterColumn = c(1, 1, 2, 2, 3)
+  )
+
+  expect_equal(result, expected)
+})
+
+test_that("splitColumnsToRows returns original table when no valid columns are given", {
+  dt <- data.table(
+    ID = 1:3,
+    Column1 = c("A B", "C D", "E")
+  )
+
+  result <- splitColumnsToRows(dt, c("NonExistentColumn"))
+
+  # Expected result (unchanged table)
+  expect_equal(result, dt)
+})
+
+test_that("splitColumnsToRows handles empty input table gracefully", {
+  dt <- data.table(
+    ID = integer(),
+    Column1 = character()
+  )
+
+  result <- splitColumnsToRows(dt, c("Column1"))
+
+  # Expected result (unchanged empty table)
+  expect_equal(result, dt)
+})
+
+test_that("splitColumnsToRows handles rows with no splits gracefully", {
+  dt <- data.table(
+    ID = 1:2,
+    ColumnToSplit = c("A", "B"),
+    AnotherColumn = c("X", "Y")
+  )
+
+  result <- splitColumnsToRows(dt, c("ColumnToSplit"))
+
+  # Expected result (same as input since no splitting is needed)
+  expect_equal(result, dt)
 })
 
 #####################

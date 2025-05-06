@@ -1,6 +1,6 @@
-Package: etlutils
-Title: These are the specific utils for ETL processing
-Version: 0.0.1
+Package: study1a
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.1
 Authors@R: 
     c(person(given = "Alexander",
              family = "Struebing",
@@ -12,26 +12,15 @@ Authors@R:
              role = "aut",
              email = "florian.schmidt@imise.uni-leipzig.de",
              comment = c(ORCID = "0000-0003-2027-8213")))
-Description: This package was created for shared functions as utils in ETL processing contexts (file, database, table, etc).
+Description: What the package does (one paragraph).
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     data.table,
-    DBI,
-    fhircrackr,
-    hms,
-    httr,
-    ICD10gm,
-    lubridate,
-    methods,
-    openxlsx,
-    RcppTOML,
-    rlang,
-    RPostgres,
-    stringr,
-    xml2
+    etlutils,
+    methods
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
