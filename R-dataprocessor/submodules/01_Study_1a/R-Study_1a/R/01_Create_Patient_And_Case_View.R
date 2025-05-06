@@ -247,7 +247,7 @@ createFrontendTables <- function() {
     pids_count <- length(pids)
 
     # Initialize an empty data table with a fix number of rows to store patient information
-    patient_frontend_table <- data.table(
+    patient_frontend_table <- data.table::data.table(
       record_id = rep(NA_character_, times = pids_count), # v_patient -> patient_id
       patient_fe_id = NA_character_, # v_patient -> patient_id
       pat_id = NA_character_, # v_patient -> pat_id
@@ -288,7 +288,7 @@ createFrontendTables <- function() {
   createEncounterFrontendTable <- function(pids_per_ward, patients, existing_record_ids) {
     # Initialize an empty data table with no rows to store encounter information.
     # The rows will be added later via rbind in the function addEmptyRows().
-    enc_frontend_table <- data.table(
+    enc_frontend_table <- data.table::data.table(
       record_id	= character(), # v_patient -> patient_id
       fall_id	= character(), # v_encounter -> enc_id
       fall_pat_id	= character(), # v_patient -> pat_id
