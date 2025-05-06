@@ -65,7 +65,7 @@ runSubmodules <- function() {
 #' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
 #'
 #' @export
-processData <- function() {
+processData <- function(reset_lock_only = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("dataprocessor",
@@ -85,7 +85,7 @@ processData <- function() {
     })
 
     etlutils::runLevel2("Source function script", {
-      source("./R-dataprocessor/dataprocessor/R/00_Functions.R")
+      source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
     })
 
     etlutils::runLevel2("Run dataprocessor submodules", {
