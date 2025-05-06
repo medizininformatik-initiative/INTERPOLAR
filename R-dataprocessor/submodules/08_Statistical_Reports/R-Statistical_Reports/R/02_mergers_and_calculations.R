@@ -206,6 +206,8 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' @export
 addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
   # TODO: how to identify non-INTERPOLAR ward encounters -----------------
+  # TDDO: fix logic, numbering doesn't work as expected (non interpolar ward),
+  # also multiple rows for one encounter
   merged_table_with_ward <-merged_table_with_main_enc |>
     dplyr::arrange(main_enc_period_start, enc_class_code, enc_type_code, enc_period_start, enc_period_end) |>
     dplyr::group_by(main_enc_id,enc_partof_ref) |>

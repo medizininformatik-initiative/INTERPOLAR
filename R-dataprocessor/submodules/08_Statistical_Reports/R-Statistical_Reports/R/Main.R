@@ -30,8 +30,8 @@
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
 #'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
 #' @export
-createStatisticalReport <- function(REPORT_PERIOD_START ="2019-10-01",
-                                    REPORT_PERIOD_END = "2020-02-01") {
+createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
+                                    REPORT_PERIOD_END = "2025-04-30") {
 
   # TODO: include the start and end date in an interactive way ----------
 
@@ -43,64 +43,60 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-10-01",
   # z.B. durch Auswahl eines anderen views oder durch Filterung der Datensätze über input_datetime
   # oder meta_last_updated?
   patient_table <- getPatientData(lock_id = "statistical reports[1]",
-                                    table_name = "v_patient")
+                                    table_name = "v_patient_last_version")
   # --> this table should only have one entry per patient (warning if not)
 
   encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
-                                        table_name = "v_encounter")
+                                        table_name = "v_encounter_last_version")
   # this table can have multiple rows per encounter
   # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
-# ---------------------------------------------------------------------------#
-# DEBUG: test data with added enc_type_code "versorgungsstellenkontakt" -------
-  # add one Versorgungsstellenkontakt to each abteilungskontakt starting 2 days later
-  encounter_table <- encounter_table |>
-    dplyr::filter(enc_type_code == "abteilungskontakt") |>
-    dplyr::mutate(enc_partof_ref = paste0("Encounter/",enc_id),
-                  enc_id = paste0(enc_id,"-V-1"),
-                  enc_type_code = "versorgungsstellenkontakt",
-                  enc_servicetype_system = NA_character_,
-                  enc_servicetype_code = NA_character_,
-                  enc_location_physicaltype_code = "wa",
-                  enc_period_start = enc_period_start+172800) |>
-    dplyr::bind_rows(encounter_table) |>
-    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
-  # add one additional Versorgungsstellenkontakt to the last abteilungskontakt with same start date
-  # and end date one day later
-  encounter_table <- encounter_table |>
-    dplyr::add_row(encounter_table |>
-                     dplyr::slice_tail() |>
-                     dplyr::mutate(enc_id = paste0(sub("^Encounter/", "", enc_partof_ref),"-V-0"),
-                                   enc_period_start = enc_period_start-172800,
-                                   enc_period_end = enc_period_start+86400) |>
-                     dplyr::relocate(enc_period_start, .before = enc_period_end))
-# ---------------------------------------------------------------------------#
+          # ---------------------------------------------------------------------------#
+          # DEBUG: test data with added enc_type_code "versorgungsstellenkontakt" -------
+            # add one Versorgungsstellenkontakt to each abteilungskontakt starting 2 days later
+            encounter_table <- encounter_table |>
+              dplyr::filter(enc_type_code == "abteilungskontakt") |>
+              dplyr::mutate(enc_partof_ref = paste0("Encounter/",enc_id),
+                            enc_id = paste0(enc_id,"-V-1"),
+                            enc_type_code = "versorgungsstellenkontakt",
+                            enc_servicetype_system = NA_character_,
+                            enc_servicetype_code = NA_character_,
+                            enc_location_physicaltype_code = "wa",
+                            enc_period_start = enc_period_start+172800) |>
+              dplyr::bind_rows(encounter_table) |>
+              dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
+            # add one additional Versorgungsstellenkontakt to the last abteilungskontakt with same start date
+            # and end date one day later
+            encounter_table <- encounter_table |>
+              dplyr::add_row(encounter_table |>
+                               dplyr::slice_tail() |>
+                               dplyr::mutate(enc_id = paste0(sub("^Encounter/", "", enc_partof_ref),"-V-0"),
+                                             enc_period_start = enc_period_start-172800,
+                                             enc_period_end = enc_period_start+86400) |>
+                               dplyr::relocate(enc_period_start, .before = enc_period_end))
+          # ---------------------------------------------------------------------------#
 
   pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
                                                 table_name = "v_pids_per_ward")
   # this table can have multiple entries per main encounter due to transferral to another ward
 
-  # ---------------------------------------------------------------------------#
-  # DEBUG: test data with different wards in pids_per_ward table (patient transferral) -------
-  # change the input datetime for the last and the added versorgungstellenkontakt
-  pids_per_ward_table <- pids_per_ward_table |>
-    dplyr::mutate(input_datetime = dplyr::if_else(
-      dplyr::row_number() == nrow(pids_per_ward_table),
-      encounter_table |>
-        dplyr::slice_tail() |>
-        dplyr::mutate(enc_period_end = enc_period_end+86400) |>
-        dplyr::pull(enc_period_end),
-      input_datetime)) |>
-    dplyr::add_row(pids_per_ward_table |>
-                     dplyr::slice_tail() |>
-                     dplyr::mutate(ward_name = "Station X",
-                                   input_datetime = encounter_table |>
-                                     dplyr::slice_tail() |>
-                                     dplyr::pull(enc_period_end)))
-  # ---------------------------------------------------------------------------#
-
-  print(patient_table)
-  print(encounter_table)
-  print(pids_per_ward_table)
+          # ---------------------------------------------------------------------------#
+          # DEBUG: test data with different wards in pids_per_ward table (patient transferral) -------
+          # change the input datetime for the last and the added versorgungstellenkontakt
+          pids_per_ward_table <- pids_per_ward_table |>
+            dplyr::mutate(input_datetime = dplyr::if_else(
+              dplyr::row_number() == nrow(pids_per_ward_table),
+              encounter_table |>
+                dplyr::slice_tail() |>
+                dplyr::mutate(enc_period_end = enc_period_end+86400) |>
+                dplyr::pull(enc_period_end),
+              input_datetime)) |>
+            dplyr::add_row(pids_per_ward_table |>
+                             dplyr::slice_tail() |>
+                             dplyr::mutate(ward_name = "Station X",
+                                           input_datetime = encounter_table |>
+                                             dplyr::slice_tail() |>
+                                             dplyr::pull(enc_period_end)))
+          # ---------------------------------------------------------------------------#
 
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
@@ -112,24 +108,43 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2019-10-01",
 
   F1 <- calculateF1(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  # Print the patient, encounter, and FAS1 datasets for verification
+  FAS2_1 <- defineFAS2_1(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END)
+  F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
+
+
+  print(patient_table)
+  print(encounter_table)
+  print(pids_per_ward_table)
+
+  # Print the patient, encounter, F1 and F2 datasets for verification
   print(data.table::as.data.table(complete_table))
-  print(data.table::as.data.table(FAS1))
-  print(data.table::as.data.table(F1))
-
-  # Print the reporting period
-  print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
-
-  # Print the number of cases in the F1 dataset
-
-  print(F1 |>
-          dplyr::distinct(main_enc_id,ward_name) |>
-          dplyr::group_by(ward_name) |>
-          dplyr::tally())
-
-  print(paste0("Number of cases in F1: ",
-               F1 |>
-                 dplyr::distinct(main_enc_id, ward_name) |>
-                 nrow()))
+  # print(data.table::as.data.table(FAS2_1))
+  #
+  # # Print the reporting period
+  # print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
+  #
+  # # Print the number of cases in the F1 dataset
+  #
+  # print(F1 |>
+  #         dplyr::distinct(main_enc_id,ward_name) |>
+  #         dplyr::group_by(ward_name) |>
+  #         dplyr::tally())
+  #
+  # print(paste0("Number of cases in F1: ",
+  #              F1 |>
+  #                dplyr::distinct(main_enc_id, ward_name) |>
+  #                nrow()))
+  #
+  # # Print the number of cases in the F2 dataset
+  #
+  # print(F2 |>
+  #         dplyr::distinct(main_enc_id,ward_name) |>
+  #         dplyr::group_by(ward_name) |>
+  #         dplyr::tally())
+  #
+  # print(paste0("Number of cases in F2: ",
+  #              F2 |>
+  #                dplyr::distinct(main_enc_id, ward_name) |>
+  #                nrow()))
 
 }

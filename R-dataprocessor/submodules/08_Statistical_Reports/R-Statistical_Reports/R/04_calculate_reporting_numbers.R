@@ -33,3 +33,38 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
 
   return(F1)
 }
+
+#------------------------------------------------------------------------------#
+
+#' Calculate F2 Subset from FAS2.1 Dataset
+#'
+#' This function filters the FAS2.1 dataset to produce the F2 subset, which includes
+#' only those ward contacts that meet the FAS2.1 criteria and have a start date within
+#' the specified reporting period.
+#'
+#' @param FAS2_1 A data frame or tibble containing the FAS2.1 dataset. It must include:
+#'   a logical column `FAS2_1`, and a `enc_period_start` column of type POSIXct.
+#' @param REPORT_PERIOD_START A POSIXct object or character string convertible to POSIXct, indicating the start of the reporting period.
+#' @param REPORT_PERIOD_END A POSIXct object or character string convertible to POSIXct, indicating the end of the reporting period.
+#'
+#' @return A filtered data frame or tibble containing only those FAS2.1 encounters where:
+#'   \itemize{
+#'     \item `FAS2_1` is TRUE, and
+#'     \item `enc_period_start` falls within the defined reporting period
+#'           (`REPORT_PERIOD_START` <= `enc_period_start` < `REPORT_PERIOD_END`).
+#'   }
+#' The resulting dataset is also deduplicated.
+#'
+#' @importFrom dplyr filter distinct
+#' @export
+
+
+calculateF2 <- function(FAS2_1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
+  F2 <- FAS2_1 |>
+    dplyr::filter(FAS2_1 == TRUE) |>
+    dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
+    dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
+    dplyr::distinct()
+
+  return(F2)
+}
