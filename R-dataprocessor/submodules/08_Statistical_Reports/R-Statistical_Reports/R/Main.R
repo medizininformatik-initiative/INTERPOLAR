@@ -15,17 +15,16 @@
 #'
 #' @details
 #' The function performs the following steps:
-#' 1. Checks if `LOCATION_IDENTIFIER` is defined. If not, the function stops with an error message.
-#' 2. Fetches patient data from the database using `getPatientData()`.
-#' 3. Fetches encounter data from the database using `getEncounterData()`.
-#' 4. Fetches data related to patients per ward using `getPidsPerWardData()`.
-#' 5. Merges the patient, encounter, and ward data using `mergePatEnc()`, adds the main encounter ID
+#' 1. Fetches patient data from the database using `getPatientData()`.
+#' 2. Fetches encounter data from the database using `getEncounterData()`.
+#' 3. Fetches data related to patients per ward using `getPidsPerWardData()`.
+#' 4. Merges the patient, encounter, and ward data using `mergePatEnc()`, adds the main encounter ID
 #'    using `addMainEncId()`, adds the main encounter period start using `addMainEncPeriodStart()`, and
 #'    calculates patient age using `calculateAge()`.
-#' 6. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
+#' 5. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
 #'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
-#' 7. Prints the resulting datasets (`complete_table` and `FAS1`) for verification.
-#' 8. Prints the reporting period and the number of cases in the FAS1 dataset.
+#' 6. Prints the resulting datasets (`complete_table` and `FAS1`) for verification.
+#' 7. Prints the reporting period and the number of cases in the FAS1 dataset.
 #'
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
 #'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
@@ -35,10 +34,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   # TODO: include the start and end date in an interactive way ----------
 
-  # Check if LOCATION_IDENTIFIER is defined (needed for mapping of the report to a site)
-  if (!exists("LOCATION_IDENTIFIER")) {
-    stop("LOCATION_IDENTIFIER is not defined. Please define it in the dataprocessor_config.toml")
-  }
   # TOASK: Sicherstellen, dass immer nur der aktuellste bzw. vollständigste Datensatz betrachtet wird -----
   # z.B. durch Auswahl eines anderen views oder durch Filterung der Datensätze über input_datetime
   # oder meta_last_updated?
