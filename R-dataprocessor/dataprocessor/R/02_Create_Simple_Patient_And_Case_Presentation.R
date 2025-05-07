@@ -136,18 +136,22 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     if (length(pat_refs_without_obs)) {
       pat_query_refs <- etlutils::fhirdbGetQueryList(pat_refs_without_obs)
       enc_without_obs <- encounters[enc_patient_ref %in% pat_refs_without_obs]
-      min_enc_period_start <- min(enc_without_obs$enc_period_start)
+      # If the FHIR data is correct, there should be no enc_period_start = NA. However, it has occurred in practice.
+      valid_dates <- na.omit(enc_without_obs$enc_period_start)
 
-      additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ") AND\n",
-                                           "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
-      query <- paste0(query_template, additional_query_condition)
-      more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
+      if (length(valid_dates)) {
+        min_enc_period_start <- min(valid_dates)
+        additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ") AND\n",
+                                             "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
+        query <- paste0(query_template, additional_query_condition)
+        more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
 
-      # Check if the new observations are already in the first set
-      # and remove them
-      more_observations <- more_observations[!obs_id %in% observations$obs_id]
-      # Combine the two sets of observations
-      observations <- rbind(observations, more_observations, use.names = TRUE, fill = TRUE)
+        # Check if the new observations are already in the first set
+        # and remove them
+        more_observations <- more_observations[!obs_id %in% observations$obs_id]
+        # Combine the two sets of observations
+        observations <- rbind(observations, more_observations, use.names = TRUE, fill = TRUE)
+      }
     }
 
   } else {
