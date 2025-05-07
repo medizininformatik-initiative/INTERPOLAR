@@ -100,6 +100,6 @@ processData <- function(reset_lock_only = FALSE) {
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
 
-  etlutils::finalize(finish_message)
+  return(etlutils::finalize(finish_message))
 
 }
