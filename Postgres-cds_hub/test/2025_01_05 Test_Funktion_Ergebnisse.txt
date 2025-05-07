@@ -1,0 +1,41 @@
+select  (select count(1) from cds2db_in.patient_raw) raw_count, (select count(1) from db_log.patient_raw) log_raw_count , (select count(1) from cds2db_in.patient) typed_count, (select count(1) from db_log.patient) log_typed_count
+, db.data_transfer_status();
+
+select (floor((((raw_copy_with_oh)*100000)/raw_ds_all))/1000) raw_sek_sum_fuer_100ds , (floor((((raw_copy_with_oh+typ_copy_with_oh+takeover_t)*100000)/raw_ds_all))/1000) sek_sum_fuer_100ds 
+, a.* 
+, raw_ds_all||', '||floor((((raw_copy_with_oh)*100000)/raw_ds_all))/1000||', '||(floor((((raw_copy_with_oh+typ_copy_with_oh+takeover_t)*100000)/raw_ds_all))/1000) AS smt
+--, '---- # --aktuell--' as trenn
+--, (select count(1) from cds2db_in.patient_raw) raw_count, (select count(1) from db_log.patient_raw) log_raw_count, (select count(1) from cds2db_in.patient) typed_count, (select count(1) from db_log.patient) log_typed_count
+--, db.data_transfer_status()
+from db_config.dev_sql_measurement a order by 
+--raw_ds_all,
+cre_datetime desc
+;
+
+select from db_config.dev_sql_measurement a order by cre_datetime desc;
+select * from cron.job_run_details order by 3 desc;
+select * from db_config.db_error_log order by id desc;
+
+select raw_ds_new||', '||floor((((raw_copy_with_oh)*100000)/raw_ds_all))/1000||', '||(floor((((raw_copy_with_oh+typ_copy_with_oh+takeover_t)*100000)/raw_ds_all))/1000) AS smt
+from db_config.dev_sql_measurement a where msg like 'A-%' order by cre_datetime;
+
+select * from db_config.db_error_log;
+
+-- Tabelle für Messwerte
+create table db_config.dev_sql_measurement (
+cre_datetime timestamp without time zone
+,msg varchar
+,raw_ds_all integer
+,raw_ds_target integer
+,raw_copy_t double precision
+,raw_copy_with_oh double precision
+,raw_ds_new integer
+,raw_ds_upd integer
+,typ_ds_all integer
+,typ_ds_target integer
+,typ_copy_t double precision
+,typ_copy_with_oh double precision
+,typ_ds_new integer
+,typ_ds_upd integer
+,takeover_t double precision
+);

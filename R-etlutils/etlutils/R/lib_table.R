@@ -269,13 +269,13 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
 #'
 #' @export
 readFirstExcelFileAsTableList <- function(path, namePattern) {
-  pattern <- paste0('.*', namePattern, '.*\\.xlsx$')
+  pattern <- paste0(".*", namePattern, ".*\\.xlsx$")
   excelFileNames <- list.files(path)
   excelFileNames <- excelFileNames[grepl(pattern, excelFileNames, perl = TRUE)]
 
   if (length(excelFileNames)) {
     for (i in 1:length(excelFileNames)) {
-      if (!startsWith(excelFileNames[i], '~')) {
+      if (!startsWith(excelFileNames[i], "~")) {
         excelFile <- file.path(path, excelFileNames[i])
         return(readExcelFileAsTableList(excelFile))
       }
@@ -407,16 +407,17 @@ trimTableValues <- function(dt, colnames = NA) {
   return(dt)
 }
 
-#' Split a column into separate rows.
+#' Split one or multiple columns into separate rows.
 #'
-#' This function takes a data.table and a column name containing strings with whitespace-separated values
-#' and splits each value into a separate row, while retaining all other columns.
+#' This function takes a data.table and one or more column names containing strings with
+#' whitespace-separated values and splits each value into a separate row, while retaining
+#' all other columns.
 #'
 #' @param dt The input data.table.
-#' @param name_of_column_to_split The name of the column to split.
+#' @param names_of_columns_to_split A character vector of column names to split.
 #' @param split The regular expression used to split values (default is '\\s+' for whitespace).
 #'
-#' @return A new data.table with the specified column split into separate rows, while retaining all other columns.
+#' @return A new data.table with the specified columns split into separate rows, while retaining all other columns.
 #'
 #' @examples
 #' library(data.table)
@@ -426,18 +427,32 @@ trimTableValues <- function(dt, colnames = NA) {
 #'   SOMETHING_ELSE = 1:5
 #' )
 #' print(table2)
-#' splitColumnToRows(table2, "ICD")
+#' splitColumnsToRows(table2, c("ICD", "ATC"))
 #'
 #' @export
-splitColumnToRows <- function(dt, name_of_column_to_split, split = '\\s+') {
-  if (isValidTable(dt) && is.character(dt[[name_of_column_to_split]])) { # works only for character columns
-    colNames <- names(dt)
-    splitted <- strsplit(dt[[name_of_column_to_split]], split)
-    dt <- cbind(dt[rep(seq_len(nrow(dt)), lengths(splitted)), !(..name_of_column_to_split)], irrelevant_column_name = unlist(splitted))
-    names(dt)[length(names(dt))] <- name_of_column_to_split
-    data.table::setcolorder(dt, colNames)
+splitColumnsToRows <- function(dt, names_of_columns_to_split, split = "\\s+") {
+  if (isValidTable(dt)) {
+    # Save the original column order to ensure consistency in the output
+    original_col_order <- names(dt)
+    # Initialize the result as the input data.table
+    result <- dt
+    # Process each column to split
+    for (col in names_of_columns_to_split) {
+      if (is.character(result[[col]])) { # Ensure the column is character type
+        # Split the column values based on the specified delimiter
+        splitted <- strsplit(result[[col]], split)
+        # Replicate rows based on the number of splits for the current column
+        result <- result[rep(seq_len(nrow(result)), lengths(splitted))]
+        # Replace the column with the split values
+        result[[col]] <- unlist(splitted)
+      }
+    }
+    # Restore the original column order
+    data.table::setcolorder(result, original_col_order)
+    return(result)
   }
-  dt
+  # If the table is invalid, return it unchanged
+  return(dt)
 }
 
 #' Combine a List of data.tables into a single large data.table
@@ -1014,6 +1029,7 @@ fillNAWithLastRowValue <- function(dt, columns = NA) {
 #' print(result)
 #' @export
 splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = TRUE) {
+  dt[get(split_columnname) == "", (split_columnname) := NA]
   if (fill_na_in_split_columnname) {
     fillNAWithLastRowValue(dt, split_columnname)
   }
@@ -1153,4 +1169,41 @@ mergeTablesUnion <- function(list1, list2) {
     combined_list[[table_name]] <- combined_table
   }
   return(combined_list)
+}
+
+#' Filter rows of a data.table by regex pattern on a specific column
+#'
+#' This function filters the given data.table by applying a regular expression pattern to a specified
+#' column. If the pattern is empty or matches any string (e.g., ".*"), the original table is returned
+#' unmodified. If no rows match the pattern, an error message is printed using
+#' \code{etlutils::catErrorMessage()} and \code{NA} is returned.
+#'
+#' @param dt A \code{data.table} to filter.
+#' @param column_name The name of the column (as string) to apply the pattern to.
+#' @param pattern A regular expression used to match against the specified column.
+#'
+#' @return A filtered \code{data.table} if matching rows exist, otherwise \code{NA}. If the pattern is
+#'         empty or matches any string, the original table is returned.
+#'
+#' @examples
+#' dt <- data.table::data.table(name = c("Alice", "Bob", "Charlie"))
+#' dtFilterRows(dt, "name", "^A")  # Returns only row with Alice
+#' dtFilterRows(dt, "name", ".*")  # Returns original table
+#' dtFilterRows(dt, "name", "^Z")  # Returns NA and prints error
+#'
+#' @export
+dtFilterRows <- function(dt, column_name, pattern) {
+  # If the pattern is empty (same as any string) or matches any string, return the original table
+  if (pattern %in% c("", ".*")) {
+    return(dt)
+  }
+  # remove rows where colum value does not match the pattern
+  dt_filtered <- dt[grepl(pattern, get(column_name))]
+  # check error no row left after filtering
+  if (!nrow(dt_filtered)) { #
+    dt_printed <- capture.output(print(dt))
+    etlutils::catErrorMessage(paste0("No rows found with a '", column_name, "' matching pattern '", pattern, "' in table\n",  paste0(dt_printed, collapse = "\n")))
+    return(NA)
+  }
+  return(dt_filtered)
 }

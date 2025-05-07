@@ -1,4 +1,4 @@
-  1. Bitte laden Sie Redcap (Install, zip) herunter: [https://redcap.vanderbilt.edu/community/custom/download.php](https://redcap.vanderbilt.edu/community/custom/download.php)
+  1. Bitte laden Sie Redcap (Install, zip) herunter: [https://redcap.vumc.org/community/custom/download.php](https://redcap.vumc.org/community/custom/download.php)
   1. Entpacken Sie die Zip-Datei, z.B. _redcap14.6.2.zip_ in den Ordner 'html'. \
     ``` cd REDCap-app/html/ ``` \
     ``` unzip redcap14.6.2.zip ```
@@ -38,6 +38,7 @@
           ```
         * STEP 5) Klicken Sie auf "REDCap Configuration Check". Es werden einige Rot gefärbte Meldungen erscheinen, die für eine produktive Umgebung noch behoben werden sollten. Dies kann zu einem späteren Zeitpunkt erfolgen. Ist im unteren Bereich "CONGRATULATIONS!" zu lesen, können Sie die REDCap mit Klick auf [http://127.0.0.1:8082/redcap/](http://127.0.0.1:8082/redcap/) starten.
      * Hinweis: Diese Schritte müssen nur wiederholt werden, wenn eine neue REDCap Version zum Einsazt kommen soll. Das Update kann auch über die REDCap Weboberfläche im "Control Center" eingespielt werden.
+  1. Setzen Sie im "Control Center" unter "File Upload Setting" (Left Menu) das Upload-Verzeichnis "Local Server File Storage" auf diesen Wert: ```/var/www/html/redcapdocs```
   1. Das INTERPOLAR-Projekt in REDCap importieren:
      * Die INTERPOLAR REDCap Projekt Datei ist in INTERPOLAR erarbeitet worden und steht im MII SharePoint Ordner [Release v0.2.x](https://tmfev.sharepoint.com/:f:/r/sites/tmf/mi-i/Modul3Projekte/INTERPOLAR/5_Referenzarchitektur/eDataCapture/Release%20v0.2.x?csf=1&web=1&e=7bycOQ) verfügbar. Bitte laden Sie sich die Datei "INTERPOLARDev_*.**REDCap.xml**" herunter.
      * Wechseln Sie im Browser zur REDCap Weboberfläche und klicken Sie auf "New Project" (Menu-Leiste oben).

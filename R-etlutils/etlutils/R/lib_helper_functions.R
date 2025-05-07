@@ -17,6 +17,40 @@ isSimpleNA <- function(x) {
   is.atomic(x) && length(x) == 1 && is.na(x)
 }
 
+#' Check if a value is a simple NA, NULL, or empty atomic vector
+#'
+#' This function checks whether a value is either:
+#' - NULL
+#' - a simple NA (atomic, length 1, and NA)
+#' - an empty atomic vector (length 0)
+#'
+#' Non-atomic objects like lists, data.frames, or environments always return FALSE,
+#' even if they are empty.
+#'
+#' @param x The value to be checked.
+#'
+#' @return TRUE if the value is NULL, a simple NA, or an empty atomic vector; otherwise FALSE.
+#'
+#' @examples
+#' isSimpleNAorNULL(NA)                 # TRUE
+#' isSimpleNAorNULL(NULL)               # TRUE
+#' isSimpleNAorNULL(character(0))       # TRUE
+#' isSimpleNAorNULL(numeric(0))         # TRUE
+#' isSimpleNAorNULL(list())             # FALSE
+#' isSimpleNAorNULL(data.frame())       # FALSE
+#' isSimpleNAorNULL(c(1, NA))            # FALSE
+#'
+#' @export
+isSimpleNAorNULL <- function(x) {
+  if (is.null(x)) {
+    return(TRUE)
+  }
+  if (is.atomic(x)) {
+    return(length(x) == 0 || (length(x) == 1 && is.na(x)))
+  }
+  return(FALSE)
+}
+
 #' Check if a value is a simple true value (TRUE) or not zero (0).
 #'
 #' This function evaluates whether the input value is an atomic element, has a length of 1,
@@ -86,6 +120,7 @@ isSimpleFalseOr0 <- function(x) {
 #' isSimpleNotEmptyString("")      # Returns FALSE
 #' isSimpleNotEmptyString(NA)      # Returns FALSE
 #' isSimpleNotEmptyString(123)     # Returns FALSE
+#' isSimpleNotEmptyString(NULL)    # Returns FALSE
 #' @export
 isSimpleNotEmptyString <- function(s) {
   is.atomic(s) && length(s) == 1 && !is.na(s) && is.character(s) && nchar(s) > 0

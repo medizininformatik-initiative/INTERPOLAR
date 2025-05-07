@@ -109,8 +109,8 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #' @export
 createDIRS <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
   SUB_PROJECTS_DIRS <<- getProjectDirNames(project_name)
-  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
-  renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
+  SUB_PROJECTS_DIRS$last_global_dir <<- renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
+  SUB_PROJECTS_DIRS$last_al_dir <<- renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
   for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
     dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
@@ -225,44 +225,136 @@ readFileAsString <- function(file_path, normalize_newlines = TRUE) {
   return(file_content)
 }
 
-#' #' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
-#' #'
-#' #' a <- ReadRData('a')
-#' #'
-#' #' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' #' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
-#' #' then the tables will be loaded from outputLocal/tables'.
-#' #'
-#' #' @return the object
-#' #'
-#' #' @export
-#' readRData <- function(filename_without_extension, project_sub_dir = NA) {
-#'   # default project_sub_dir is NA -> load tables from outputLocal/tables
-#'   if (is.na(project_sub_dir)) {
-#'     project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
-#'   } else {
-#'     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
-#'   }
-#'   fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
-#'   data <- NULL
-#'   if (file.exists(fname)) {
-#'     # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
-#'     # 5.3 Reading data.table from RDS or RData file
-#'     # ---------------------------------------------
-#'     # *.RDS and *.RData are file types which can store in-memory R objects
-#'     # on disk efficiently. However, storing data.table into the binary file
-#'     # loses its column over-allocation. This isn't a big deal – your
-#'     # data.table will be copied in memory on the next by reference
-#'     # operation and throw a warning. Therefore it is recommended to call
-#'     # setalloccol() on each data.table loaded with readRDS() or load() calls.
-#'     data <- readRDS(fname)
-#'     if ('data.table' %in% class(data)) {
-#'       invisible(data.table::setalloccol(data))
-#'     }
-#'   }
-#'   data
-#' }
+#' Get All Files Matching a Pattern
 #'
+#' This function retrieves all files matching a specified pattern from a flexible set
+#' of inputs, which can be a string (directory or file), a vector, or a list of mixed
+#' directory and file paths. It removes duplicates from the results.
+#'
+#' @param paths A string, vector, or list containing file paths and/or directory paths.
+#' @param pattern A regular expression pattern to filter the files (e.g., "*.xlsx" or "\\.csv$").
+#' @param recursive Logical, indicating whether to search directories recursively. Default is `FALSE`.
+#'
+#' @return A character vector containing all unique file paths that match the pattern.
+#'
+getFilesByPattern <- function(paths, pattern, recursive = FALSE) {
+  # Ensure `paths` is a character vector
+  paths <- unlist(paths)
+
+  # Initialize an empty vector to store matching files
+  matching_files <- c()
+
+  for (path in paths) {
+    if (file.exists(path)) {
+      if (file.info(path)$isdir) {
+        # If it's a directory, list files matching the pattern
+        files <- list.files(path, pattern = pattern, full.names = TRUE, recursive = recursive)
+        matching_files <- c(matching_files, files)
+      } else {
+        # If it's a file, check if it matches the pattern
+        if (grepl(pattern, path)) {
+          matching_files <- c(matching_files, path)
+        }
+      }
+    }
+  }
+
+  # Remove duplicates and return the result
+  return(unique(matching_files))
+}
+
+#' Get Full List of Excel Files
+#'
+#' This function retrieves a full list of `.xlsx` files from a mix of directories and file paths.
+#' It identifies whether each input is a directory or file, and applies a filter to only include
+#' files matching the `.xlsx` extension. Duplicate file paths are removed from the result.
+#'
+#' @param filesOrDirs A character vector or list containing file paths and/or directory paths.
+#' @param recursive Logical, indicating whether to search directories recursively. Default is `FALSE`.
+#'
+#' @return A character vector containing unique file paths to `.xlsx` files.
+#'
+#' @export
+getFullExcelFilesList <- function(filesOrDirs, recursive = FALSE) {
+  getFilesByPattern(filesOrDirs, ".*\\.xlsx$", recursive = recursive)
+}
+
+#' Retrieve files matching a given prefix in specified directories
+#'
+#' Searches for files with a given prefix within one or more directories. Optionally filters by file extension.
+#' If `extension` is `NA` or an empty string, the function retrieves all files matching the prefix
+#' without filtering by extension.
+#'
+#' This function internally calls `getFilesByPattern` for flexible pattern-based searching.
+#'
+#' @param prefix A string specifying the prefix that the files must start with.
+#' @param directories A character vector specifying the directories to search in.
+#' @param extension A string specifying the file extension (e.g., `"xlsx"`, `"csv"`). Can be `NA` or `""`
+#'   to disable extension filtering. If provided with a leading dot (e.g., `".csv"`), it will be removed.
+#' @param recursive Logical, indicating whether to search directories recursively. Default is `FALSE`.
+#'
+#' @return A character vector containing the full paths of the matching files.
+#' @export
+getFilesByPrefix <- function(prefix, directories, extension = NA, recursive = FALSE) {
+  # Build the pattern based on prefix and optional extension
+  if (is.na(extension) || extension == "") {
+    pattern <- paste0("^", prefix)
+  } else {
+    extension <- sub("^\\.", "", extension)  # Remove leading dot if present
+    pattern <- paste0("^", prefix, ".*\\.", extension, "$")
+  }
+
+  # Use getFilesByPattern to retrieve matching files
+  return(getFilesByPattern(paths = directories, pattern = pattern, recursive = recursive))
+}
+
+#' Retrieve all Excel files with a given prefix from directories and subdirectories
+#'
+#' Searches for `.xlsx` files that start with a specified prefix in one or more directories,
+#' including all subdirectories.
+#'
+#' @param prefix A string specifying the prefix that the Excel files must start with.
+#' @param directories A character vector specifying the directories to search in.
+#'
+#' @return A character vector containing the full paths of the matching `.xlsx` files.
+#' @export
+getExcelFilesByPrefixInDirsAndSubdirs <- function(prefix, directories) {
+  return(getFilesByPrefix(prefix = prefix, directories = directories, extension = "xlsx", recursive = TRUE))
+}
+
+#' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
+#'
+#' a <- ReadRData('a')
+#'
+#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
+#' @param load_from_last_run fehlende Beschreibung
+#'
+#' @return the object
+#'
+#' @export
+readRData <- function(filename_without_extension, load_from_last_run = FALSE) {
+  if (load_from_last_run) dir <- SUB_PROJECTS_DIRS$local_dir else SUB_PROJECTS_DIRS$last_local_dir
+  project_sub_dir <- fhircrackr::pastep(dir, "tables")
+  fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
+  data <- NULL
+  if (file.exists(fname)) {
+    # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
+    # 5.3 Reading data.table from RDS or RData file
+    # ---------------------------------------------
+    # *.RDS and *.RData are file types which can store in-memory R objects
+    # on disk efficiently. However, storing data.table into the binary file
+    # loses its column over-allocation. This isn't a big deal – your
+    # data.table will be copied in memory on the next by reference
+    # operation and throw a warning. Therefore it is recommended to call
+    # setalloccol() on each data.table loaded with readRDS() or load() calls.
+    data <- readRDS(fname)
+    if ('data.table' %in% class(data)) {
+      invisible(data.table::setalloccol(data))
+    }
+  }
+  data
+}
+
 #' #' Get the filename for an RData file corresponding to a table
 #' #'
 #' #' This function constructs the filename for an RData file corresponding to the specified table.

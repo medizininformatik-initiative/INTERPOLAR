@@ -162,8 +162,51 @@ isATC7orSmaller <- function(codes) {
   grepl(MED_CODES_PATTERN$ATC7orSmaller, codes, perl = TRUE)
 }
 
+#' Check if codes match the ATC7 pattern.
+#'
+#' This function determines whether the input codes match the ATC7 pattern
+#' defined in the `MED_CODES_PATTERN` object, while ignoring `NA` values.
+#'
+#' @param codes A character vector of codes to check.
+#'
+#' @return A logical vector indicating whether each code matches the ATC7 pattern.
+#' `NA` values in the input will remain `NA` in the output.
+#'
+#' @details The function uses a regular expression from `MED_CODES_PATTERN$ATC7`
+#' to validate if the provided codes conform to the ATC7 format.
+#'
+#' @examples
+#' # Example usage:
+#' codes <- c("A01AB07", "B03AA02", "INVALID", NA)
+#' isATC7(codes)
+#' # Returns: TRUE, TRUE, FALSE, NA
+#'
+#' @export
 isATC7 <- function(codes) {
-  grepl(MED_CODES_PATTERN$ATC7, codes, perl = TRUE)
+  ifelse(is.na(codes), NA, grepl(MED_CODES_PATTERN$ATC7, codes, perl = TRUE))
+}
+
+#' Validate LOINC Codes
+#'
+#' This function checks if the input values are valid LOINC codes.
+#'
+#' @param codes A character vector of codes to validate.
+#'
+#' @return A logical vector indicating whether each code is a valid LOINC code.
+#'
+#' @details A valid LOINC code matches the pattern `^\d{1,5}-\d$`:
+#' - 1 to 5 digits
+#' - Followed by a hyphen (`-`)
+#' - Ending with exactly 1 digit.
+#'
+#' @examples
+#' codes <- c("12345-6", "987-2", "INVALID", NA)
+#' isLOINC(codes)
+#' # Returns: TRUE, TRUE, FALSE, NA
+#'
+#' @export
+isLOINC <- function(codes) {
+  ifelse(is.na(codes), NA, grepl("^\\d{1,5}-\\d$", codes, perl = TRUE))
 }
 
 ###########

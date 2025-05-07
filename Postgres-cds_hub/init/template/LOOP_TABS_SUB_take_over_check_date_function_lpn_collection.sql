@@ -1,0 +1,1 @@
+                UNION ALL SELECT last_processing_nr AS lpn FROM <%SCHEMA_2%>.<%TABLE_NAME%> r, (SELECT <%TABLE_NAME%>_id FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> WHERE last_processing_nr=max_last_pro_nr) t WHERE r.<%TABLE_NAME%>_id=t.<%TABLE_NAME%>_id
