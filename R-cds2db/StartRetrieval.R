@@ -14,4 +14,7 @@ rm(list = ls())
 library(etlutils)
 library(cds2db)
 
-cds2db::retrieve()
+status <- cds2db::retrieve()
+if (!interactive()) {
+  quit(status = status, save = "no")
+}

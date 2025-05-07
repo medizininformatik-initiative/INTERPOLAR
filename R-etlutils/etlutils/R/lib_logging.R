@@ -117,6 +117,7 @@ finalize <- function(lastLogMessage = NA) {
   # Save all console logs
   ###
   endLogging()
+  return(if (isErrorOccured()) 1 else 0)
 }
 
 #' Check if an error has occurred
