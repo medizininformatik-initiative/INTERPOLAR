@@ -739,13 +739,16 @@ generateFinishMessage <- function(PROJECT_NAME) {
     error_message <- as.character(etlutils::getErrorMessage())
 
     # Remove irrelevant part from the error message
-    error_message <- sub("^[^\n]*\n?", "", error_message)
+    #error_message <- sub("^[^\n]*\n?", "", error_message)
 
     finish_message <- paste0(finish_message, error_message)
 
   } else {
     finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with no errors.\n")
+    error_message <- NA_character_
   }
+
+  storeFinishData(finish_message, error_message)
 
   return(finish_message)
 }
