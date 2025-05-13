@@ -133,6 +133,52 @@ initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir
   return(constants)
 }
 
+#' Get the module name from the internal package environment
+#'
+#' @return A character string containing the module name stored in the package environment
+#'
+#' @export
+getModuleName <- function() {
+  get("MODULE_NAME", envir = .GlobalEnv)
+}
+
+#' Set the submodule name in the specified environment
+#'
+#' @param submodule_name A character string specifying the submodule name to store
+#'
+#' @return No return value, called for side effects
+#'
+#' @export
+setSubmoduleName <- function(submodule_name) {
+  # Set the submodule name in the specified environment
+  assign("SUBMODULE_NAME", submodule_name, envir = .GlobalEnv)
+}
+
+#' Get the submodule name from the specified environment
+#'
+#' @return A character string containing the submodule name or an empty string if not set
+#'
+#' @export
+getSubmoduleName <- function() {
+  # Get the submodule name from the specified environment
+  if (exists("SUBMODULE_NAME", envir = .GlobalEnv)) {
+    return(get("SUBMODULE_NAME", envir = .GlobalEnv))
+  }
+  return("")
+}
+
+#' Remove the submodule name from the specified environment
+#'
+#' @return No return value, called for side effects
+#'
+#' @export
+removeSubmoduleName <- function() {
+  # Remove the submodule name from the specified environment
+  if (exists("SUBMODULE_NAME", envir = .GlobalEnv)) {
+    rm("SUBMODULE_NAME", envir = .GlobalEnv)
+  }
+}
+
 #' Initialize Submodule Constants from TOML Files
 #'
 #' This function initializes constants for a submodule by loading one or multiple TOML files.
