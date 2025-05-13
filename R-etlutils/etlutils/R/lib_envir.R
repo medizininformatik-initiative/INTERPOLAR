@@ -104,7 +104,8 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
 
   # Set the project name in the specified environment
-  assign("PROJECT_NAME", module_name, envir = envir)
+  assign("MODULE_NAME", module_name, envir = envir)
+  assign("MODULE_NAME", module_name, envir = .GlobalEnv)
 
   # Initialize constants from the main TOML file
   constants <- initConstants(path_to_toml, defaults, envir)
@@ -115,12 +116,12 @@ initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir
   }
 
   # Initialize the project timestamp if not already set
-  if (!exists("PROJECT_TIME_STAMP", envir = envir)) {
+  if (!exists("MODULE_TIME_STAMP", envir = envir)) {
     project_time_stamp <- ""
     if (isDefinedAndTrue("USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX", envir = envir)) {
       project_time_stamp <- format(Sys.time(), "-%Y-%m%d-%H%M%S")
     }
-    assign("PROJECT_TIME_STAMP", project_time_stamp, envir = envir)
+    assign("MODULE_TIME_STAMP", project_time_stamp, envir = envir)
   }
   # Initialize the database context if the database TOML path is provided
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]

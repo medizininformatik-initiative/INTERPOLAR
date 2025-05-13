@@ -11,10 +11,7 @@
 #' @return A named list containing directory names for global and local project outputs.
 #'
 #' @export
-getProjectDirNames <- function(project_name = PROJECT_NAME, project_time_stamp = PROJECT_TIME_STAMP) {
-
-  PROJECT_NAME <<- project_name
-  PROJECT_TIME_STAMP <<- project_time_stamp
+getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_STAMP) {
 
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
@@ -25,8 +22,8 @@ getProjectDirNames <- function(project_name = PROJECT_NAME, project_time_stamp =
   global_dir <- fhircrackr::pastep(global_dir, project_name)
   local_dir <- fhircrackr::pastep(local_dir, project_name)
 
-  global_dir <- paste0(global_dir, PROJECT_TIME_STAMP)
-  local_dir <- paste0(local_dir, PROJECT_TIME_STAMP)
+  global_dir <- paste0(global_dir, MODULE_TIME_STAMP)
+  local_dir <- paste0(local_dir, MODULE_TIME_STAMP)
 
   namedListByParam(
     global_dir,
@@ -107,27 +104,26 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #' @param showWarnings logical; should the warnings on failure be shown?
 #'
 #' @export
-createDIRS <- function(project_name = PROJECT_NAME, showWarnings = FALSE) {
-  SUB_PROJECTS_DIRS <<- getProjectDirNames(project_name)
-  SUB_PROJECTS_DIRS$last_global_dir <<- renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$global_dir, MAX_DIR_COUNT)
-  SUB_PROJECTS_DIRS$last_al_dir <<- renameWithCreationTimeIfDirExists(SUB_PROJECTS_DIRS$local_dir, MAX_DIR_COUNT)
-  for (rd in SUB_PROJECTS_DIRS$global_results_directories_names) {
-    dir.create(paste0(SUB_PROJECTS_DIRS$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
+createDIRS <- function(project_name, showWarnings = FALSE) {
+  module_dirs <- getProjectDirNames(project_name)
+  module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, MAX_DIR_COUNT)
+  module_dirs$last_al_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
+  for (rd in module_dirs$global_results_directories_names) {
+    dir.create(paste0(module_dirs$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
-  for (rd in SUB_PROJECTS_DIRS$local_results_directories_names) {
-    dir.create(paste0(SUB_PROJECTS_DIRS$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
+  for (rd in module_dirs$local_results_directories_names) {
+    dir.create(paste0(module_dirs$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
   }
+  assign("MODULE_DIRS", module_dirs, envir = .GlobalEnv)
 }
 
 #' Return the path to the log directory of the specific sub project
 #'
-#' @param project_name name of the project
-#'
 #' @return A character of length one containing the path to the sub project specific log directory.
 #'
 #' @export
-returnPathToLogDir <- function(project_name = PROJECT_NAME) {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "log")
+getLoggingDirectory <- function() {
+  fhircrackr::pastep(MODULE_DIRS$local_dir, "log")
 }
 
 #' Return the combined paths of the log directory of the specific sub project and a new path
@@ -137,8 +133,8 @@ returnPathToLogDir <- function(project_name = PROJECT_NAME) {
 #' @return A character of length one containing the path to add to the sub project specific log directory.
 #'
 #' @export
-combineLogPaths <- function(path) {
-  fhircrackr::pastep(returnPathToLogDir(), path)
+combineLoggingPaths <- function(path) {
+  fhircrackr::pastep(getLoggingDirectory(), path)
 }
 
 #' Return the path to the bundles directory of the specific sub project
@@ -147,7 +143,7 @@ combineLogPaths <- function(path) {
 #'
 #' @export
 returnPathToBundlesDir <- function() {
-  fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "bundles")
+  fhircrackr::pastep(MODULE_DIRS$local_dir, "bundles")
 }
 
 #' Return the combined paths of the bundles directory of the specific sub project and a new path
@@ -168,8 +164,8 @@ combineBundlePaths <- function(path) {
 #'
 #' @export
 savePerformance <- function(filename_without_extension = "Performance_informations", clock = getClock()) {
-  clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
-  clock$write(filename_without_extension = fhircrackr::pastep(SUB_PROJECTS_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
+  clock$write(filename_without_extension = fhircrackr::pastep(MODULE_DIRS$local_dir, "performance", filename_without_extension), hide_errors = FALSE)
+  clock$write(filename_without_extension = fhircrackr::pastep(MODULE_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
 
 #' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
@@ -190,8 +186,8 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
   if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables")
-    #saveRDS(object = object, file = fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", filename_without_extension, ext = '.RData'))
+    project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "tables")
+    #saveRDS(object = object, file = fhircrackr::pastep(MODULE_DIRS$local_dir, "tables", filename_without_extension, ext = '.RData'))
   } else {
     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
   }
@@ -333,7 +329,7 @@ getExcelFilesByPrefixInDirsAndSubdirs <- function(prefix, directories) {
 #'
 #' @export
 readRData <- function(filename_without_extension, load_from_last_run = FALSE) {
-  if (load_from_last_run) dir <- SUB_PROJECTS_DIRS$local_dir else SUB_PROJECTS_DIRS$last_local_dir
+  if (load_from_last_run) dir <- MODULE_DIRS$local_dir else MODULE_DIRS$last_local_dir
   project_sub_dir <- fhircrackr::pastep(dir, "tables")
   fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
   data <- NULL
@@ -364,7 +360,7 @@ readRData <- function(filename_without_extension, load_from_last_run = FALSE) {
 #' #'
 #' #' @export
 #' getLocalRdataFileName <- function(table_name) {
-#'   fhircrackr::pastep(SUB_PROJECTS_DIRS$local_dir, "tables", table_name, ext = '.RData')
+#'   fhircrackr::pastep(MODULE_DIRS$local_dir, "tables", table_name, ext = '.RData')
 #' }
 #'
 #' #' Get file information for an RData file
