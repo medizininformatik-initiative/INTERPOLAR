@@ -142,7 +142,7 @@ combineLoggingPaths <- function(path) {
 #' @return A character of length one containing the path to the sub project specific log directory.
 #'
 #' @export
-returnPathToBundlesDir <- function() {
+getBundlesDirectory <- function() {
   fhircrackr::pastep(MODULE_DIRS$local_dir, "bundles")
 }
 
@@ -154,7 +154,7 @@ returnPathToBundlesDir <- function() {
 #'
 #' @export
 combineBundlePaths <- function(path) {
-  fhircrackr::pastep(returnPathToBundlesDir(), path)
+  fhircrackr::pastep(getBundlesDirectory(), path)
 }
 
 #' Save a Clock history in the *public* `performance` directory to which was created for the specific subproject.
