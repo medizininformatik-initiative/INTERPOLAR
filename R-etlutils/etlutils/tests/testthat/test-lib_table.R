@@ -276,8 +276,12 @@ test_that("readFirstExcelFileAsTableList reads the first matching Excel file cor
   expect_true(is.list(result), info = "The result should be a list.")
   expect_equal(length(result), 2, info = "The result list should contain two data.tables for the two sheets.")
 
-  # Further checks can be added to verify the content of the data.tables if needed
-  # For example, checking the number of rows and columns of each data.table in the list
+  # Verify file name
+  expect_equal(basename(result$excel_file_name), "test_excel_file.xlsx")
+
+  # Verify file content
+  expect_true(is.list(result$excel_file_content), info = "The result should be a list.")
+  expect_equal(length(result$excel_file_content), 2, info = "The result list should contain two data.tables for the two sheets.")
 })
 
 ###########################
