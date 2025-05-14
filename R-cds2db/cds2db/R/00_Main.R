@@ -128,6 +128,6 @@ retrieve <- function(reset_lock_only = FALSE) {
   # Add warning if any DEBUG_ variables are active
   finish_message <- etlutils::appendDebugWarning(finish_message)
 
-  etlutils::finalize(finish_message)
+  return(etlutils::finalize(finish_message))
 
 }
