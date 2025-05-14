@@ -1,37 +1,11 @@
-#' Get the most relevant current datetime
-#'
-#' This function retrieves the latest encounter end datetime from the `encounters` table.
-#' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
-#' The result is converted to a `POSIXct` object with the appropriate timezone.
-#'
-#' NOTE: If the cds2db modules runs with a dubug start and end date, then there can
-#' be encounters with a start date after the end date of another encounter. This should
-#' never happens in a non debug run and can lead to irregularities in the results.
-#'
-#' @param encounters A `data.table` or `data.frame` containing encounter records,
-#'                   where `enc_period_end` represents the encounter end timestamps.
-#'
-#' @return A `POSIXct` object representing the most recent encounter end datetime
-#'         or the current system time if no valid datetime is found.
-#'
-getCurrentDatetime <- function(encounters) {
-  encounters_end <- na.omit(encounters$enc_period_end)
-  datetime <- if (length(encounters_end)) max(encounters_end) - 1 else Sys.time()
-  return(etlutils::as.POSIXctWithTimezone(datetime))
-}
-
-#' Format datetime for SQL queries for Observations.
-#'
-#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
-#' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
-#'
-#' @param encounters A `data.table` or `data.frame` containing encounter records.
-#'                   Used to determine the latest encounter end datetime.
-#'
-#' @return A character string representing the formatted SQL datetime.
-#'
-getObservationQueryDatetime <- function(encounters) {
-  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
+# This function constructs an error or warning message with optional additional
+# information such as related tables and database connection details. It can be
+# used to provide more context when reporting errors or warnings.
+getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
+  tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
+  db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
+  text <- paste0(text, tables, db_connection)
+  return(text)
 }
 
 #' Parse Query List
@@ -50,9 +24,19 @@ parseQueryList <- function(list_string, split = " ") {
   etlutils::fhirdbGetQueryList(splitted)
 }
 
-####################################################
-# Load Resources by ID (= own ID or PID or Enc ID) #
-####################################################
+#' Format datetime for SQL queries for Observations.
+#'
+#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
+#' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
+#'
+#' @param encounters A `data.table` or `data.frame` containing encounter records.
+#'                   Used to determine the latest encounter end datetime.
+#'
+#' @return A character string representing the formatted SQL datetime.
+#'
+getObservationQueryDatetime <- function(encounters) {
+  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
+}
 
 #' Load Resources Last Version From Database Query
 #'

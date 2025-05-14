@@ -191,16 +191,6 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
 #'
 createFrontendTables <- function() {
 
-  # This function constructs an error or warning message with optional additional
-  # information such as related tables and database connection details. It can be
-  # used to provide more context when reporting errors or warnings.
-  getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
-    tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
-    db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
-    text <- paste0(text, tables, db_connection)
-    return(text)
-  }
-
   # This functions loads the last version of a patient.
   # NOTE: THIS IS ALWAYS THE VERY LAST VERSION. THE current_date IS CURRENTLY IGNORED HERE.
   # If there will be

@@ -270,18 +270,48 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
 #' @export
 readFirstExcelFileAsTableList <- function(path, namePattern) {
   pattern <- paste0(".*", namePattern, ".*\\.xlsx$")
-  excelFileNames <- list.files(path)
-  excelFileNames <- excelFileNames[grepl(pattern, excelFileNames, perl = TRUE)]
+  excel_file_names <- list.files(path)
+  excel_file_names <- excel_file_names[grepl(pattern, excel_file_names, perl = TRUE)]
 
-  if (length(excelFileNames)) {
-    for (i in 1:length(excelFileNames)) {
-      if (!startsWith(excelFileNames[i], "~")) {
-        excelFile <- file.path(path, excelFileNames[i])
-        return(readExcelFileAsTableList(excelFile))
+  if (length(excel_file_names)) {
+    for (i in 1:length(excel_file_names)) {
+      if (!startsWith(excel_file_names[i], "~")) {
+        excel_file_name <- file.path(path, excel_file_names[i])
+        excel_file_content <- readExcelFileAsTableList(excel_file_name)
+        return(list(excel_file_name = excel_file_name, excel_file_content = excel_file_content))
       }
     }
   }
-  return(NA)
+  return(NULL)
+}
+
+#' Read the first matching Excel sheet that contains required columns
+#'
+#' Searches Excel files matching a pattern in a given path and returns the first sheet
+#' containing the specified columns. If the columns are not present, it attempts to fix
+#' the header and re-validate the sheet.
+#'
+#' @param path A character string indicating the directory path to search for Excel files.
+#' @param namePattern A regular expression pattern to identify Excel files of interest.
+#' @param columnNames A character vector of required column names that must be present in the sheet.
+#'
+#' @return A data.table containing the first matching and valid sheet, or NULL if no such sheet is found.
+#'
+#' @export
+readFirstExcelFileSheet <- function(path, namePattern, columnNames) {
+  excel_sheets <- readFirstExcelFileAsTableList(path, namePattern)
+  if (is.null(excel_sheets)) {
+    return(NULL)
+  }
+  for (i in seq_along(excel_sheets)) {
+    sheet <- etlutils::removeTableHeader(excel_sheets$excel_file_content[[i]], columnNames)
+    # Return first valid sheet
+    if (etlutils::isValidTable(sheet)) {
+      return(list(excel_file_name = excel_sheets$excel_file_name[[i]],
+                  excel_file_content = sheet))
+    }
+  }
+  return(NULL)
 }
 
 #' Replace Multiple Patterns in a Specific Column of a Data.Table
@@ -397,7 +427,7 @@ trimTableValues <- function(dt, colnames = NA) {
   # Apply trimws only on character columns
   for (col in colnames) {
     if (is.character(dt[[col]]))
-    dt[, (col) := trimws(get(col))]
+      dt[, (col) := trimws(get(col))]
   }
 
   if (isDataFrame) {
