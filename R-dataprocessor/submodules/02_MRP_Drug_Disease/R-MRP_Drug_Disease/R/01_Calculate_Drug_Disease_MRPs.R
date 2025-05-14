@@ -10,15 +10,6 @@
 #' @export
 cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 
-  # Remove table header
-  columnnames <- c("MEDICATION_NAME", "ATC_DISPLAY", "ATC")
-  if (!all(columnnames %in% names(drug_disease_mrp_definition))) {
-    drug_disease_mrp_definition <- etlutils::removeTableHeader(drug_disease_mrp_definition, columnnames)
-    if (!etlutils::isValidTable(drug_disease_mrp_definition)) {
-      stop("drug_disease_mrp_definition table has invalid structure")
-    }
-  }
-
   # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS)
   proxy_column_names <- names(drug_disease_mrp_definition)[grepl("PROXY", names(drug_disease_mrp_definition))]
   relevant_column_names <- c("ICD", proxy_column_names)
@@ -108,8 +99,9 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 #'
 calculateDrugDiseaseMRPs <- function() {
 
-  # Load and expand Drug-Disease Definition
-  drug_disease_mrp_tables <- loadMRPTables("Drug-Disease", MRP_PAIR_LISTS_PATHS)
+  etlutils::runLevel2("Load and expand Drug-Disease Definition", {
+    drug_disease_mrp_tables <- getExpandedContent("Drug-Disease", MRP_PAIR_LISTS_PATHS)
+  })
 
   # Load all active PIDs
   patient_ids <- getPIDs()
