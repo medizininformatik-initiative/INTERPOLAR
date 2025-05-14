@@ -61,7 +61,7 @@ fhirsearchLogRequest <- function(verbose, resource_name, bundles) {
   if (verbose >= VL_90_FHIR_RESPONSE) {
     cat(bundles_requests, "\n")
   }
-  log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("cds2db_total_bundles.txt"))
+  log_filename <- fhircrackr::paste_paths(getBundlesDirectory(), paste0("cds2db_total_bundles.txt"))
   log_file <- file(log_filename, open = "at")
   writeLines(bundles_requests, log_file, useBytes = TRUE)
   close(log_file)

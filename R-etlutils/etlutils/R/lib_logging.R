@@ -15,7 +15,7 @@
 #'
 #' @export
 startLogging <- function(prefix) {
-  log_filename <- fhircrackr::paste_paths(returnPathToLogDir(), paste0(prefix, "-log.txt"))
+  log_filename <- fhircrackr::paste_paths(getLoggingDirectory(), paste0(prefix, "-log.txt"))
   # Make sure that the environment does not have an open connection to this file
   if (!is.null(.lib_logging_env[[log_filename]])) {
     warning("A log file is already open for '", log_filename, "'")
@@ -719,34 +719,35 @@ appendDebugWarning <- function(finish_message) {
 #' If an error has occurred, it extracts the relevant error message and appends it to the finish message.
 #' If no error has occurred, it returns a success message.
 #'
-#' @param PROJECT_NAME A character string specifying the name of the module.
-#'
 #' @return A character string containing the generated finish message.
 #'
 #' @examples
-#' PROJECT_NAME <- "cds2db"
-#' finish_message <- generateFinishMessage(PROJECT_NAME)
+#' MODULE_NAME <<- "cds2db"
+#' finish_message <- generateFinishMessage()
 #' cat(finish_message)
 #'
 #' @export
-generateFinishMessage <- function(PROJECT_NAME) {
+generateFinishMessage <- function() {
   if (etlutils::isErrorOccured()) {
     if (etlutils::isDebugTestError()) {
-      finish_message <- paste0("\nModule '", PROJECT_NAME, "' Debug Test Message:\n")
+      finish_message <- paste0("\nModule '", MODULE_NAME, "' Debug Test Message:\n")
     } else {
-      finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with ERRORS (see details above).\n")
+      finish_message <- paste0("\nModule '", MODULE_NAME, "' finished with ERRORS (see details above).\n")
     }
 
     error_message <- as.character(etlutils::getErrorMessage())
 
     # Remove irrelevant part from the error message
-    error_message <- sub("^[^\n]*\n?", "", error_message)
+    #error_message <- sub("^[^\n]*\n?", "", error_message)
 
     finish_message <- paste0(finish_message, error_message)
 
   } else {
-    finish_message <- paste0("\nModule '", PROJECT_NAME, "' finished with no errors.\n")
+    finish_message <- paste0("\nModule '", MODULE_NAME, "' finished with no errors.\n")
+    error_message <- NA_character_
   }
+
+  storeFinishData(finish_message, error_message)
 
   return(finish_message)
 }
