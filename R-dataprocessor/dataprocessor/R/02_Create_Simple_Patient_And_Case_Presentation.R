@@ -404,9 +404,8 @@ createFrontendTables <- function() {
         # Extract the FHIR identifier value for the frontend table
         # There can be multiple rows with different identifier systems, so we need to filter them
         # out first and then combine the values into a single string, if there are multiple values.
-        if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM") &&
-            nzchar(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)) {
-          filtered_rows <- pid_encounter[grepl(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM, enc_identifier_system)]
+        if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+          filtered_rows <- pid_encounter[, enc_identifier_system == FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
           if (nrow(filtered_rows)) {
             enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
           } else {
