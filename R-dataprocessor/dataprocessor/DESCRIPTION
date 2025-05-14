@@ -20,6 +20,7 @@ RoxygenNote: 7.3.2
 Imports: 
     data.table,
     etlutils,
+    base64enc,
     methods
 Suggests: 
     testthat (>= 3.0.0)
