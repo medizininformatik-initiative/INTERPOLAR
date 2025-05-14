@@ -16,5 +16,5 @@ REDCap-app/html/redcap
 REDCap-app/html/redcapdocs
 REDCap-app/log
 *.~lock.*.xlsx\#
-Input-Repo/*.xlsx
+*Input-Repo*
 *- Kopie*
