@@ -47,9 +47,14 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
   # check column ATC and ATC_PROXY for correct ATC codes
-  etlutils::validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
+  code_errors <- validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
   # check column LOINC_PROXY for correct LOINC codes
-  etlutils::validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
+  code_errors <- c(code_errors, validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY"))
+
+  code_errors <- paste0(code_errors, collapse = "\n")
+  if (nchar(code_errors)) {
+    stop(paste0("The following errors were found in the ATC and LOINC codes:\n", code_errors))
+  }
 
   # Expand and concatenate ICD codes in a vectorized manner.
   # If there are multiple ICD codes separated by "+", each code is expanded separately, and
