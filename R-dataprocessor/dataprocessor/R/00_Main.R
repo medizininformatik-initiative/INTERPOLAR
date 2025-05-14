@@ -14,7 +14,9 @@ runSubmodules <- function() {
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
+
     submodule_name <- basename(dir)
+    etlutils::setSubmoduleName(submodule_name)
 
     # Source all R scripts in the directory
     etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
@@ -52,6 +54,9 @@ runSubmodules <- function() {
       }
 
     })
+
+    etlutils::removeSubmoduleName()
+
   }
 }
 
@@ -99,8 +104,8 @@ processData <- function(reset_lock_only = FALSE) {
   etlutils::dbCloseAllConnections()
 
   # Generate finish message
-  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
+  finish_message <- etlutils::generateFinishMessage()
 
-  etlutils::finalize(finish_message)
+  return(etlutils::finalize(finish_message))
 
 }

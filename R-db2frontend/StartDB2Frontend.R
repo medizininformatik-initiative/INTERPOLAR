@@ -8,4 +8,7 @@ rm(list = ls())
 library(etlutils)
 library(db2frontend)
 
-db2frontend::startDB2Frontend()
+status <- db2frontend::startDB2Frontend()
+if (!interactive()) {
+  quit(status = status, save = "no")
+}

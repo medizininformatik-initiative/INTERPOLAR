@@ -36,7 +36,7 @@ for (i in 1:nrow(dt)) {
 
   # Falls es eine Checkbox ist, spalte sie in mehrere Zeilen auf
   if (row$COLUMN_TYPE == "checkbox") {
-    options <- unlist(strsplit(row$CHOICES, " \\| "))  # Split bei " | "
+    options <- trimws(unlist(strsplit(row$CHOICES, "\\|")))  # Split bei "|"
 
     # Erstelle für jede Option eine neue Zeile
     for (option in options) {

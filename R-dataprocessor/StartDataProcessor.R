@@ -14,4 +14,7 @@ rm(list = ls())
 library(etlutils)
 library(dataprocessor)
 
-dataprocessor::processData()
+status <- dataprocessor::processData()
+if (!interactive()) {
+  quit(status = status, save = "no")
+}
