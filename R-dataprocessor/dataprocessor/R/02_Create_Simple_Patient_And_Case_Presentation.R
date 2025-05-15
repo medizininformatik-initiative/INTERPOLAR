@@ -413,7 +413,7 @@ createFrontendTables <- function() {
         # There can be multiple rows with different identifier systems, so we need to filter them
         # out first and then combine the values into a single string, if there are multiple values.
         if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-          filtered_rows <- pid_encounter[, enc_identifier_system == FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
+          filtered_rows <- pid_encounter[enc_identifier_system == FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
           if (nrow(filtered_rows)) {
             enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
           } else {
