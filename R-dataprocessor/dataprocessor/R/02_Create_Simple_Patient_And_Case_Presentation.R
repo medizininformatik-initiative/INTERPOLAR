@@ -317,6 +317,14 @@ createFrontendTables <- function() {
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
                                                      common_encounter_fhir_identifier_system = FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
+
+    # If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must
+    # contain "http://fhir.de/CodeSystem/Kontaktebene"
+    encounters <- encounters[enc_type_system == "http://fhir.de/CodeSystem/Kontaktebene" | enc_type_code %in% c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")]
+    if (!nrow(encounters)) {
+      stop("All Encounters has not CDS conform Encounter system. If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must contain 'http://fhir.de/CodeSystem/Kontaktebene'")
+    }
+
     location_refs <- na.omit(unique(encounters$enc_location_ref))
     locations <- loadResourcesLastVersionByOwnIDFromDB("Location", location_refs)
 
