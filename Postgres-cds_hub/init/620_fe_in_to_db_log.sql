@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-29 15:00:37
+-- Rights definition file last update : 2025-05-05 10:51:51
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-29 15:06:33
+-- Create time: 2025-05-20 19:36:51
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1067,6 +1067,8 @@ BEGIN
                                 ret_massn_orga2___8,
                                 ret_notiz2,
                                 ret_additional_values,
+                                db_ret_main_enc_id,
+                                db_ret_medical_case_id,
                                 retrolektive_mrpbewertung_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -1149,6 +1151,8 @@ BEGIN
                                 current_record.ret_massn_orga2___8,
                                 current_record.ret_notiz2,
                                 current_record.ret_additional_values,
+                                current_record.db_ret_main_enc_id,
+                                current_record.db_ret_medical_case_id,
                                 current_record.retrolektive_mrpbewertung_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,

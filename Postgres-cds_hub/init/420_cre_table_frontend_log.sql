@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-29 15:00:37
+-- Rights definition file last update : 2025-05-05 10:51:51
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-29 15:06:28
+-- Create time: 2025-05-20 19:36:38
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -2445,6 +2445,20 @@ BEGIN
         ) THEN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_additional_values varchar;   -- Reserviertes Feld für zusätzliche Werte (varchar)
         END IF; -- column (ret_additional_values)
+        IF NOT EXISTS ( -- column not exists (db_ret_main_enc_id)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
+            AND column_name = 'db_ret_main_enc_id'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD db_ret_main_enc_id varchar;   -- FHIR ID of the main Encounter to which this evaluation belongs (varchar)
+        END IF; -- column (db_ret_main_enc_id)
+        IF NOT EXISTS ( -- column not exists (db_ret_medical_case_id)
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
+            AND column_name = 'db_ret_medical_case_id'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD db_ret_medical_case_id varchar;   -- HIS internal Identifier of the medical case to which this evaluation belongs (varchar)
+        END IF; -- column (db_ret_medical_case_id)
         IF NOT EXISTS ( -- column not exists (retrolektive_mrpbewertung_complete)
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe'
@@ -2535,6 +2549,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_massn_orga2___8), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_notiz2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_additional_values), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(db_ret_main_enc_id), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(db_ret_medical_case_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(retrolektive_mrpbewertung_complete), ''#NULL#'') || ''|||'' ||''#''
                 ','(',''),')',''))
             ) THEN
@@ -2619,6 +2635,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
           COALESCE(db.to_char_immutable(ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
           COALESCE(db.to_char_immutable(ret_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (ret_additional_values)
+          COALESCE(db.to_char_immutable(db_ret_main_enc_id), '#NULL#') || '|||' || -- hash from: FHIR ID of the main Encounter to which this evaluation belongs (db_ret_main_enc_id)
+          COALESCE(db.to_char_immutable(db_ret_medical_case_id), '#NULL#') || '|||' || -- hash from: HIS internal Identifier of the medical case to which this evaluation belongs (db_ret_medical_case_id)
           COALESCE(db.to_char_immutable(retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (retrolektive_mrpbewertung_complete)
                  '#'
                )
@@ -2709,6 +2727,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
           COALESCE(db.to_char_immutable(ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
           COALESCE(db.to_char_immutable(ret_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (ret_additional_values)
+          COALESCE(db.to_char_immutable(db_ret_main_enc_id), '#NULL#') || '|||' || -- hash from: FHIR ID of the main Encounter to which this evaluation belongs (db_ret_main_enc_id)
+          COALESCE(db.to_char_immutable(db_ret_medical_case_id), '#NULL#') || '|||' || -- hash from: HIS internal Identifier of the medical case to which this evaluation belongs (db_ret_medical_case_id)
           COALESCE(db.to_char_immutable(retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (retrolektive_mrpbewertung_complete)
                  '#'
                )
@@ -3700,6 +3720,8 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___7 IS '7 
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_orga2___8 IS '8 - Sensibilisierung/Schulung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_notiz2 IS 'Notiz (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_additional_values IS 'Reserviertes Feld für zusätzliche Werte (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.db_ret_main_enc_id IS 'FHIR ID of the main Encounter to which this evaluation belongs (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.db_ret_medical_case_id IS 'HIS internal Identifier of the medical case to which this evaluation belongs (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.last_check_datetime IS 'Time at which data record was last checked';
