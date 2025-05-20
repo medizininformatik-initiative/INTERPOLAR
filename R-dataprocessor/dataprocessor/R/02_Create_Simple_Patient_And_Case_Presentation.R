@@ -95,7 +95,14 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   for (i in seq_len(nrow(admission_diagnoses))) {
     row <- admission_diagnoses[i]
     if (!is.na(row$con_code_text) && nzchar(trimws(row$con_code_text))) {
-      diagnosis_text <- paste0(row$con_code_text, " (", row$con_code_code, ")")
+      diagnosis_text <- row$con_code_text
+    } else if (!is.na(row$con_code_display) && nzchar(trimws(row$con_code_display))) {
+      diagnosis_text <- row$con_code_display
+    } else {
+      diagnosis_text <- NULL
+    }
+    if (!is.null(diagnosis_text)) {
+      diagnosis_text <- paste0(diagnosis_text, " (", row$con_code_code, ")")
     } else {
       diagnosis_text <- row$con_code_code
     }
