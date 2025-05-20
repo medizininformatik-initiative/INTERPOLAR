@@ -502,6 +502,10 @@ createFrontendTables <- function() {
     stop(message)
   }
 
+  # Take the latest imported dataset in pids_per_ward. Prevent multiple encounter entries from older runs.
+  # This code is necessary because in version 0.2.10 the Last_Import View on the pids_per_ward does not work correctly.
+  pids_per_ward <- pids_per_ward[input_datetime == max(input_datetime)]
+
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
 
