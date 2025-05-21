@@ -89,6 +89,7 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #' based on configuration values. Default values can also be specified for missing variables.
 #'
 #' @param module_name A string specifying the name of the module being initialized.
+#' @param db_schema_base_name The base name of the database schema. If NULL the module name is used.
 #' @param path_to_toml A string specifying the path to the primary configuration TOML file.
 #' @param defaults A named vector of default values for variables. Missing variables after loading
 #'        the TOML file are initialized with these values.
@@ -101,7 +102,7 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #'         and merged constants from the database configuration, if provided.
 #'
 #' @export
-initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
+initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
 
   # Set the project name in the specified environment
   assign("PROJECT_NAME", module_name, envir = envir)
@@ -126,7 +127,10 @@ initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]
   if (!is.null(path_to_db_toml)) {
     log_db <- exists("VERBOSE") && VERBOSE >= VL_90_FHIR_RESPONSE
-    dbInitModuleContext(module_name, path_to_db_toml, log_db)
+    if (is.null(db_schema_base_name)) {
+      db_schema_base_name <- module_name
+    }
+    dbInitModuleContext(db_schema_base_name, path_to_db_toml, log_db)
   }
 
   return(constants)
