@@ -51,6 +51,8 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''vor max_lpn'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
+<%LOOP_TABS_SUB_take_over_check_date_function_last_pnr%>
+
 <%LOOP_TABS_SUB_take_over_check_date_function_count%>
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
