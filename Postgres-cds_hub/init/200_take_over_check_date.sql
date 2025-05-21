@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-04-29 15:00:37
+-- Rights definition file last update : 2025-05-05 10:51:51
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-04-29 15:06:21
+-- Create time: 2025-05-20 23:44:39
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -80,11 +80,93 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''vor max_lpn'' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-    ---- Start check db_log.encounter_raw ----
+    ---- Start check db_log.encounter_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.encounter_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.encounter;
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.encounter - last_processing_nr ----
 
+    ---- Start check db_log.patient_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.patient_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.patient;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.patient - last_processing_nr ----
+
+    ---- Start check db_log.condition_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.condition_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.condition;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.condition - last_processing_nr ----
+
+    ---- Start check db_log.medication_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medication_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medication;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.medication - last_processing_nr ----
+
+    ---- Start check db_log.medicationrequest_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationrequest_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationrequest;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.medicationrequest - last_processing_nr ----
+
+    ---- Start check db_log.medicationadministration_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationadministration_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationadministration;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.medicationadministration - last_processing_nr ----
+
+    ---- Start check db_log.medicationstatement_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationstatement_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationstatement;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.medicationstatement - last_processing_nr ----
+
+    ---- Start check db_log.observation_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.observation_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.observation;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.observation - last_processing_nr ----
+
+    ---- Start check db_log.diagnosticreport_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.diagnosticreport_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.diagnosticreport;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.diagnosticreport - last_processing_nr ----
+
+    ---- Start check db_log.servicerequest_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.servicerequest_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.servicerequest;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.servicerequest - last_processing_nr ----
+
+    ---- Start check db_log.procedure_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.procedure_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.procedure;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.procedure - last_processing_nr ----
+
+    ---- Start check db_log.consent_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.consent_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.consent;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.consent - last_processing_nr ----
+
+    ---- Start check db_log.location_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.location_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.location;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.location - last_processing_nr ----
+
+    ---- Start check db_log.pids_per_ward_raw - last_processing_nr ----
+    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.pids_per_ward_raw';
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.pids_per_ward;
+    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    ---- End check db_log.pids_per_ward - last_processing_nr ----
+
+
+    ---- Start check db_log.encounter_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.encounter_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.encounter_raw r, db_log.encounter_raw r2, db_log.encounter t
@@ -95,13 +177,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.encounter ----
+    ---- End check db_log.encounter - count ----
 
-    ---- Start check db_log.patient_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.patient_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.patient;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.patient_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.patient_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.patient_raw r, db_log.patient_raw r2, db_log.patient t
@@ -112,13 +191,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.patient ----
+    ---- End check db_log.patient - count ----
 
-    ---- Start check db_log.condition_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.condition_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.condition;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.condition_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.condition_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.condition_raw r, db_log.condition_raw r2, db_log.condition t
@@ -129,13 +205,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.condition ----
+    ---- End check db_log.condition - count ----
 
-    ---- Start check db_log.medication_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medication_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medication;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.medication_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medication_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.medication_raw r, db_log.medication_raw r2, db_log.medication t
@@ -146,13 +219,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.medication ----
+    ---- End check db_log.medication - count ----
 
-    ---- Start check db_log.medicationrequest_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationrequest_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationrequest;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.medicationrequest_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationrequest_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.medicationrequest_raw r, db_log.medicationrequest_raw r2, db_log.medicationrequest t
@@ -163,13 +233,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.medicationrequest ----
+    ---- End check db_log.medicationrequest - count ----
 
-    ---- Start check db_log.medicationadministration_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationadministration_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationadministration;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.medicationadministration_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationadministration_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.medicationadministration_raw r, db_log.medicationadministration_raw r2, db_log.medicationadministration t
@@ -180,13 +247,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.medicationadministration ----
+    ---- End check db_log.medicationadministration - count ----
 
-    ---- Start check db_log.medicationstatement_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationstatement_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationstatement;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.medicationstatement_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationstatement_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.medicationstatement_raw r, db_log.medicationstatement_raw r2, db_log.medicationstatement t
@@ -197,13 +261,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.medicationstatement ----
+    ---- End check db_log.medicationstatement - count ----
 
-    ---- Start check db_log.observation_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.observation_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.observation;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.observation_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.observation_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.observation_raw r, db_log.observation_raw r2, db_log.observation t
@@ -214,13 +275,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.observation ----
+    ---- End check db_log.observation - count ----
 
-    ---- Start check db_log.diagnosticreport_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.diagnosticreport_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.diagnosticreport;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.diagnosticreport_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.diagnosticreport_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.diagnosticreport_raw r, db_log.diagnosticreport_raw r2, db_log.diagnosticreport t
@@ -231,13 +289,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.diagnosticreport ----
+    ---- End check db_log.diagnosticreport - count ----
 
-    ---- Start check db_log.servicerequest_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.servicerequest_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.servicerequest;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.servicerequest_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.servicerequest_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.servicerequest_raw r, db_log.servicerequest_raw r2, db_log.servicerequest t
@@ -248,13 +303,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.servicerequest ----
+    ---- End check db_log.servicerequest - count ----
 
-    ---- Start check db_log.procedure_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.procedure_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.procedure;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.procedure_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.procedure_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.procedure_raw r, db_log.procedure_raw r2, db_log.procedure t
@@ -265,13 +317,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.procedure ----
+    ---- End check db_log.procedure - count ----
 
-    ---- Start check db_log.consent_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.consent_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.consent;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.consent_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.consent_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.consent_raw r, db_log.consent_raw r2, db_log.consent t
@@ -282,13 +331,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.consent ----
+    ---- End check db_log.consent - count ----
 
-    ---- Start check db_log.location_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.location_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.location;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.location_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.location_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.location_raw r, db_log.location_raw r2, db_log.location t
@@ -299,13 +345,10 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.location ----
+    ---- End check db_log.location - count ----
 
-    ---- Start check db_log.pids_per_ward_raw ----
-    err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.pids_per_ward_raw';
-    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.pids_per_ward;
-    IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
-
+    ---- Start check db_log.pids_per_ward_raw - count ----
+    err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.pids_per_ward_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM db_log.pids_per_ward_raw r, db_log.pids_per_ward_raw r2, db_log.pids_per_ward t
@@ -316,7 +359,7 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
-    ---- End check db_log.pids_per_ward ----
+    ---- End check db_log.pids_per_ward - count ----
 
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
