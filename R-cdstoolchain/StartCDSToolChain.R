@@ -43,6 +43,10 @@ tryCatch({
   }
   if (!etlutils::isErrorOccured()) {
     resetMemory()
+    db2frontend::startFrontend2DB()
+  }
+  if (!etlutils::isErrorOccured()) {
+    resetMemory()
     dataprocessor::processData()
   }
   if (!etlutils::isErrorOccured()) {

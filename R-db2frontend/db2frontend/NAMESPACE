@@ -2,6 +2,7 @@
 
 export(getRedcapConnection)
 export(startDB2Frontend)
+export(startFrontend2DB)
 importFrom(data.table,":=")
 importFrom(data.table,data.table)
 importFrom(data.table,is.data.table)
