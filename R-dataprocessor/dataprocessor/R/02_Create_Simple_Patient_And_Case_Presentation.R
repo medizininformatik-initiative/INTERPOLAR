@@ -88,7 +88,7 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   admission_diagnoses <- encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
   admission_diagnoses <- unique(admission_diagnoses)
   admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
-  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code)]
+  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code, con_code_display)]
   admission_diagnoses <- unique(admission_diagnoses)
 
   return_value <- character()
