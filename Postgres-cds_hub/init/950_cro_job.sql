@@ -280,7 +280,7 @@ BEGIN
         )) AS t(res TEXT) INTO temp;
 
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value='''||modul||''-''||msg||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_last_block_modul'''
+        'UPDATE db_config.db_process_control SET pc_value='''||module||'-'||msg||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_last_block_modul'''
         )) AS t(res TEXT) INTO temp;
 
         err_section:='db.data_transfer_stop-16';    err_schema:='db_config';    err_table:='db_process_control';
