@@ -8,9 +8,11 @@ DECLARE
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
     max_last_pro_nr INT:=0; -- Last processing number over all entities
     max_ent_pro_nr INT:=0;  -- Max processing number from a entiti
+    max_ppw_pro_nr INT:=0;  -- Max processing number von pids_per_ward
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
-    temp VARCHAR; -- Temporary variable for INTerim results
+    temp VARCHAR; -- Temporary variable for interim results
+    temp_int INT; -- temporary variable for interim results
     data_count_pro_all INT:=0; -- Counting all records in this run
     data_count_update INT:=0; -- Counting updated per resource
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
@@ -53,7 +55,23 @@ BEGIN
 
 <%LOOP_TABS_SUB_take_over_check_date_function_last_pnr%>
 
+    err_section:='HEAD-11';    err_schema:='db_log';    err_table:='db_log.pids_per_ward';
+    -- Check if it is sufficient to count pids_per_ward or if counting must be done across all resources
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ppw_pro_nr FROM db_log.pids_per_ward;
+
+    IF max_ppw_pro_nr!=max_last_pro_nr THEN
+       SELECT res FROM pg_background_result(pg_background_launch(
+       'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', ''Lange Ausfuehrung - all resouces'', ''max_ppw_pro_nr:'||max_ppw_pro_nr||' / max_last_pro_nr:'||max_last_pro_nr||''' );'
+       ))  AS t(res TEXT) INTO erg;
+
 <%LOOP_TABS_SUB_take_over_check_date_function_count%>
+    ELSE
+        SELECT COUNT(1) INTO data_count_pro_all
+    	FROM (select * from db_log.pids_per_ward_raw where last_processing_nr!=max_ent_pro_nr) r
+	, (select * from db_log.pids_per_ward where last_processing_nr=max_ent_pro_nr) t
+        , db_log.pids_per_ward_raw r2
+    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
+    END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'

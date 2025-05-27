@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-05-20 23:44:39
+-- Create time: 2025-05-27 07:55:33
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -37,9 +37,11 @@ DECLARE
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
     max_last_pro_nr INT:=0; -- Last processing number over all entities
     max_ent_pro_nr INT:=0;  -- Max processing number from a entiti
+    max_ppw_pro_nr INT:=0;  -- Max processing number von pids_per_ward
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
-    temp VARCHAR; -- Temporary variable for INTerim results
+    temp VARCHAR; -- Temporary variable for interim results
+    temp_int INT; -- temporary variable for interim results
     data_count_pro_all INT:=0; -- Counting all records in this run
     data_count_update INT:=0; -- Counting updated per resource
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
@@ -165,13 +167,29 @@ BEGIN
     ---- End check db_log.pids_per_ward - last_processing_nr ----
 
 
+    err_section:='HEAD-11';    err_schema:='db_log';    err_table:='db_log.pids_per_ward';
+    -- Check if it is sufficient to count pids_per_ward or if counting must be done across all resources
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ppw_pro_nr FROM db_log.pids_per_ward;
+
+    IF max_ppw_pro_nr!=max_last_pro_nr THEN
+       SELECT res FROM pg_background_result(pg_background_launch(
+       'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', ''Lange Ausfuehrung - all resouces'', ''max_ppw_pro_nr:'||max_ppw_pro_nr||' / max_last_pro_nr:'||max_last_pro_nr||''' );'
+       ))  AS t(res TEXT) INTO erg;
+
     ---- Start check db_log.encounter_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.encounter_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.encounter_raw r, db_log.encounter_raw r2, db_log.encounter t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.encounter_raw_id=t.encounter_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.encounter_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.encounter_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.encounter_raw_id=t.encounter_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -182,10 +200,17 @@ BEGIN
     ---- Start check db_log.patient_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.patient_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.patient_raw r, db_log.patient_raw r2, db_log.patient t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.patient_raw_id=t.patient_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.patient_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.patient_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.patient_raw_id=t.patient_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -196,10 +221,17 @@ BEGIN
     ---- Start check db_log.condition_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.condition_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.condition_raw r, db_log.condition_raw r2, db_log.condition t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.condition_raw_id=t.condition_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.condition_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.condition_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.condition_raw_id=t.condition_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -210,10 +242,17 @@ BEGIN
     ---- Start check db_log.medication_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medication_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.medication_raw r, db_log.medication_raw r2, db_log.medication t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medication_raw_id=t.medication_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.medication_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.medication_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medication_raw_id=t.medication_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -224,10 +263,17 @@ BEGIN
     ---- Start check db_log.medicationrequest_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationrequest_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.medicationrequest_raw r, db_log.medicationrequest_raw r2, db_log.medicationrequest t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationrequest_raw_id=t.medicationrequest_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.medicationrequest_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.medicationrequest_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationrequest_raw_id=t.medicationrequest_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -238,10 +284,17 @@ BEGIN
     ---- Start check db_log.medicationadministration_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationadministration_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.medicationadministration_raw r, db_log.medicationadministration_raw r2, db_log.medicationadministration t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationadministration_raw_id=t.medicationadministration_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.medicationadministration_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.medicationadministration_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationadministration_raw_id=t.medicationadministration_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -252,10 +305,17 @@ BEGIN
     ---- Start check db_log.medicationstatement_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationstatement_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.medicationstatement_raw r, db_log.medicationstatement_raw r2, db_log.medicationstatement t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationstatement_raw_id=t.medicationstatement_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.medicationstatement_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.medicationstatement_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationstatement_raw_id=t.medicationstatement_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -266,10 +326,17 @@ BEGIN
     ---- Start check db_log.observation_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.observation_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.observation_raw r, db_log.observation_raw r2, db_log.observation t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.observation_raw_id=t.observation_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.observation_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.observation_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.observation_raw_id=t.observation_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -280,10 +347,17 @@ BEGIN
     ---- Start check db_log.diagnosticreport_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.diagnosticreport_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.diagnosticreport_raw r, db_log.diagnosticreport_raw r2, db_log.diagnosticreport t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.diagnosticreport_raw_id=t.diagnosticreport_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.diagnosticreport_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.diagnosticreport_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.diagnosticreport_raw_id=t.diagnosticreport_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -294,10 +368,17 @@ BEGIN
     ---- Start check db_log.servicerequest_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.servicerequest_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.servicerequest_raw r, db_log.servicerequest_raw r2, db_log.servicerequest t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.servicerequest_raw_id=t.servicerequest_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.servicerequest_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.servicerequest_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.servicerequest_raw_id=t.servicerequest_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -308,10 +389,17 @@ BEGIN
     ---- Start check db_log.procedure_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.procedure_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.procedure_raw r, db_log.procedure_raw r2, db_log.procedure t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.procedure_raw_id=t.procedure_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.procedure_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.procedure_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.procedure_raw_id=t.procedure_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -322,10 +410,17 @@ BEGIN
     ---- Start check db_log.consent_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.consent_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.consent_raw r, db_log.consent_raw r2, db_log.consent t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.consent_raw_id=t.consent_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.consent_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.consent_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.consent_raw_id=t.consent_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -336,10 +431,17 @@ BEGIN
     ---- Start check db_log.location_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.location_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.location_raw r, db_log.location_raw r2, db_log.location t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.location_raw_id=t.location_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.location_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.location_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.location_raw_id=t.location_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -350,10 +452,17 @@ BEGIN
     ---- Start check db_log.pids_per_ward_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.pids_per_ward_raw';
     IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO data_count_pro_all
-    	FROM db_log.pids_per_ward_raw r, db_log.pids_per_ward_raw r2, db_log.pids_per_ward t
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id
-        AND t.last_processing_nr=max_ent_pro_nr  AND r.last_processing_nr!=max_ent_pro_nr;
+        SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+        IF temp_int>0 THEN
+            SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            IF temp_int>0 THEN
+                SELECT COUNT(1) INTO data_count_pro_all
+    	        FROM (SELECT * FROM db_log.pids_per_ward_raw WHERE last_processing_nr!=max_ent_pro_nr) r
+                , (SELECT * FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr) t
+                , db_log.pids_per_ward_raw r2
+    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
+            END IF;
+        END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
@@ -361,6 +470,13 @@ BEGIN
     END IF;
     ---- End check db_log.pids_per_ward - count ----
 
+    ELSE
+        SELECT COUNT(1) INTO data_count_pro_all
+    	FROM (select * from db_log.pids_per_ward_raw where last_processing_nr!=max_ent_pro_nr) r
+	, (select * from db_log.pids_per_ward where last_processing_nr=max_ent_pro_nr) t
+        , db_log.pids_per_ward_raw r2
+    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
+    END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
