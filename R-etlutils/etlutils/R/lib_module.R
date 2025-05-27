@@ -49,6 +49,7 @@ getGitInfo <- function(git_dir = ".git") {
 #' It ensures that the module environment is properly configured before execution.
 #'
 #' @param module_name A character string specifying the name of the module.
+#' @param db_schema_base_name The base name of the database schema. If NULL the module name is used.
 #' @param path_to_toml (Optional) A character string specifying the path to the
 #' TOML configuration file. Default is `NA`.
 #' @param hide_value_pattern (Optional) A character string pattern used to hide
@@ -70,10 +71,11 @@ getGitInfo <- function(git_dir = ".git") {
 #' @return This function does not return a value. It performs setup operations as a side effect.
 #'
 #' @export
-startModule <- function(module_name, path_to_toml = NA, hide_value_pattern = "", mandatory_parameters = c(), init_constants_only) {
+startModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, hide_value_pattern = "", mandatory_parameters = c(), init_constants_only) {
   # Init module constants
   config <- initModuleConstants(
     module_name = module_name,
+    db_schema_base_name = db_schema_base_name,
     path_to_toml = path_to_toml
   )
 
