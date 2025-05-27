@@ -88,7 +88,7 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   admission_diagnoses <- encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
   admission_diagnoses <- unique(admission_diagnoses)
   admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
-  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code)]
+  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code, con_code_display)]
   admission_diagnoses <- unique(admission_diagnoses)
 
   return_value <- character()
@@ -491,10 +491,6 @@ createFrontendTables <- function() {
       tables = "pids_per_ward")
     stop(message)
   }
-
-  # Take the latest imported dataset in pids_per_ward. Prevent multiple encounter entries from older runs.
-  # This code is necessary because in version 0.2.10 the Last_Import View on the pids_per_ward does not work correctly.
-  pids_per_ward <- pids_per_ward[input_datetime == max(input_datetime)]
 
   # Load the Patient resources from database
   patients_from_database <- getPatientsFromDatabase(pids_per_ward)
