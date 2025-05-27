@@ -39,6 +39,12 @@ BEGIN
         status='ReadyToConnect';
     END IF;
 
+    -- db.cron_job_data_transfer nur ausführen wenn auch durch postgre cron aktuell direkt gestartet und nicht im nachhinein nachgeholt (cron job startet immer zur vollen Minute)
+    num:=to_char(CURRENT_TIMESTAMP,'SS')::INT;
+    IF num>5 THEN
+        status:='cron_job_data_transfer nicht ausführen';
+    END IF;
+
     SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory 
 
     err_section:='cron_job_data_transfer-10';    err_schema:='db_config';    err_table:='/';
