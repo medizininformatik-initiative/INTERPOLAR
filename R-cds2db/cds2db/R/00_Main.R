@@ -51,7 +51,7 @@ retrieve <- function(reset_lock_only = FALSE) {
           if (name == "pids_per_ward") TRUE else nrow(resource_tables[[name]]) == 0
         }))
         if (all_empty_fhir) {
-          etlutils::catWarningMessage("No FHIR resources found.")
+          etlutils::catWarningMessage("No FHIR resources found or no newer resources found since the last run.")
         }
         names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
       })
@@ -62,6 +62,14 @@ retrieve <- function(reset_lock_only = FALSE) {
           etlutils::dbWriteTables(
             tables = resource_tables,
             lock_id = "Write RAW tables to database",
+            stop_if_table_not_empty = TRUE)
+        })
+      } else {
+        # Write pids_per_ward table to database
+        etlutils::runLevel2("Write pids_per_ward table to database", {
+          etlutils::dbWriteTables(
+            tables = resource_tables$pids_per_ward,
+            lock_id = "Write pids_per_ward table to database",
             stop_if_table_not_empty = TRUE)
         })
       }
@@ -115,19 +123,19 @@ retrieve <- function(reset_lock_only = FALSE) {
   etlutils::dbCloseAllConnections()
 
   # Generate finish message
-  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
+  finish_message <- etlutils::generateFinishMessage()
   if (!etlutils::isErrorOccured() &&
       (etlutils::isDefinedAndTrue("all_wards_empty") ||
        etlutils::isDefinedAndTrue("all_empty_fhir") ||
        etlutils::isDefinedAndTrue("all_empty_raw"))) {
     finish_message <- paste0(
-      "\nModule '", PROJECT_NAME, "' finished with no errors but the result was empty (see warnings above).\n"
+      "\nModule '", MODULE_NAME, "' finished with no errors but the result was empty (see warnings above).\n"
     )
   }
 
   # Add warning if any DEBUG_ variables are active
   finish_message <- etlutils::appendDebugWarning(finish_message)
 
-  etlutils::finalize(finish_message)
+  return(etlutils::finalize(finish_message))
 
 }

@@ -8,4 +8,4 @@ rm(list = ls())
 library(etlutils)
 library(db2frontend)
 
-db2frontend::startDB2Frontend()
+db2frontend::startFrontend2DB()

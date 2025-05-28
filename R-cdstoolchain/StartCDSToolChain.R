@@ -43,6 +43,10 @@ tryCatch({
   }
   if (!etlutils::isErrorOccured()) {
     resetMemory()
+    db2frontend::startFrontend2DB()
+  }
+  if (!etlutils::isErrorOccured()) {
+    resetMemory()
     dataprocessor::processData()
   }
   if (!etlutils::isErrorOccured()) {
@@ -72,12 +76,14 @@ tryCatch({
     # if etlutils::isErrorOccured() and if TRUE then do nothing
     # here. Stop hard only if the error comes not from a submodule.
     if (!etlutils::isErrorOccured()) {
-      stop(e)  # Abort on other errors
+      etlutils::catErrorMessage(e$message)
+      quit(status = 1, save = "no")  # Abort with error
     }
   }
 })
 
-if (!etlutils::isErrorOccured()){
+if (!etlutils::isErrorOccured()) {
+  status <- 0
   if (exists("DEBUG_DAY")) {
     cat("END DEBUG_DAY", DEBUG_DAY, "\n")
   } else {
@@ -85,4 +91,10 @@ if (!etlutils::isErrorOccured()){
     end <- Sys.time()
     cat("Full toolchain took ", capture.output(print(end - start)), "\n")
   }
+} else {
+  status <- 1
+}
+
+if (!interactive()) {
+  quit(status = status, save = "no")
 }

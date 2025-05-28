@@ -89,6 +89,7 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #' based on configuration values. Default values can also be specified for missing variables.
 #'
 #' @param module_name A string specifying the name of the module being initialized.
+#' @param db_schema_base_name The base name of the database schema. If NULL the module name is used.
 #' @param path_to_toml A string specifying the path to the primary configuration TOML file.
 #' @param defaults A named vector of default values for variables. Missing variables after loading
 #'        the TOML file are initialized with these values.
@@ -101,10 +102,11 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #'         and merged constants from the database configuration, if provided.
 #'
 #' @export
-initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
+initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
 
   # Set the project name in the specified environment
-  assign("PROJECT_NAME", module_name, envir = envir)
+  assign("MODULE_NAME", module_name, envir = envir)
+  assign("MODULE_NAME", module_name, envir = .GlobalEnv)
 
   # Initialize constants from the main TOML file
   constants <- initConstants(path_to_toml, defaults, envir)
@@ -115,21 +117,70 @@ initModuleConstants <- function(module_name, path_to_toml, defaults = c(), envir
   }
 
   # Initialize the project timestamp if not already set
-  if (!exists("PROJECT_TIME_STAMP", envir = envir)) {
+  if (!exists("MODULE_TIME_STAMP", envir = envir)) {
     project_time_stamp <- ""
     if (isDefinedAndTrue("USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX", envir = envir)) {
       project_time_stamp <- format(Sys.time(), "-%Y-%m%d-%H%M%S")
     }
-    assign("PROJECT_TIME_STAMP", project_time_stamp, envir = envir)
+    assign("MODULE_TIME_STAMP", project_time_stamp, envir = envir)
   }
   # Initialize the database context if the database TOML path is provided
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]
   if (!is.null(path_to_db_toml)) {
     log_db <- exists("VERBOSE") && VERBOSE >= VL_90_FHIR_RESPONSE
-    dbInitModuleContext(module_name, path_to_db_toml, log_db)
+    if (is.null(db_schema_base_name)) {
+      db_schema_base_name <- module_name
+    }
+    dbInitModuleContext(db_schema_base_name, path_to_db_toml, log_db)
   }
 
   return(constants)
+}
+
+#' Get the module name from the internal package environment
+#'
+#' @return A character string containing the module name stored in the package environment
+#'
+#' @export
+getModuleName <- function() {
+  get("MODULE_NAME", envir = .GlobalEnv)
+}
+
+#' Set the submodule name in the specified environment
+#'
+#' @param submodule_name A character string specifying the submodule name to store
+#'
+#' @return No return value, called for side effects
+#'
+#' @export
+setSubmoduleName <- function(submodule_name) {
+  # Set the submodule name in the specified environment
+  assign("SUBMODULE_NAME", submodule_name, envir = .GlobalEnv)
+}
+
+#' Get the submodule name from the specified environment
+#'
+#' @return A character string containing the submodule name or an empty string if not set
+#'
+#' @export
+getSubmoduleName <- function() {
+  # Get the submodule name from the specified environment
+  if (exists("SUBMODULE_NAME", envir = .GlobalEnv)) {
+    return(get("SUBMODULE_NAME", envir = .GlobalEnv))
+  }
+  return("")
+}
+
+#' Remove the submodule name from the specified environment
+#'
+#' @return No return value, called for side effects
+#'
+#' @export
+removeSubmoduleName <- function() {
+  # Remove the submodule name from the specified environment
+  if (exists("SUBMODULE_NAME", envir = .GlobalEnv)) {
+    rm("SUBMODULE_NAME", envir = .GlobalEnv)
+  }
 }
 
 #' Initialize Submodule Constants from TOML Files
