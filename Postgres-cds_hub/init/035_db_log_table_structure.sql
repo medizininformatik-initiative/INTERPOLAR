@@ -106,7 +106,7 @@ BEGIN
 		CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
-	    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
+	    CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
         END IF; -- Index vorhanden
     END IF; -- Zielspalte
 
