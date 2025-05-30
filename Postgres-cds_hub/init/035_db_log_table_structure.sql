@@ -38,7 +38,7 @@ BEGIN
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		DROP INDEX IF EXISTS db_config.idx_db_log_table_structure_status;
 		CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
-            END IF; - aktueller Stand
+            END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
         END IF; Index vorhanden
@@ -60,7 +60,7 @@ BEGIN
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		DROP INDEX IF EXISTS db_config.idx_db_log_table_structure_object_type;
 		CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
-            END IF; - aktueller Stand
+            END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
         END IF; Index vorhanden
@@ -82,7 +82,7 @@ BEGIN
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		DROP INDEX IF EXISTS idx_db_log_table_structure_data;
 		CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
-            END IF; - aktueller Stand
+            END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
         END IF; Index vorhanden
@@ -104,7 +104,7 @@ BEGIN
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		DROP INDEX IF EXISTS db_config.idx_db_log_table_structure_definition;
 		CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
-            END IF; - aktueller Stand
+            END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
         END IF; Index vorhanden
