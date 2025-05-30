@@ -27,7 +27,7 @@ BEGIN
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'status'
     ) THEN
-        IF EXISTS ( -- INDEX vorhansden
+        IF EXISTS ( -- INDEX vorhanden
             SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_status'
         ) THEN -- aktuellen Stand überprüfen
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
@@ -41,7 +41,7 @@ BEGIN
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
-        END IF; Index vorhanden
+        END IF; -- Index vorhanden
     END IF; -- Zielspalte
 
 ------------------------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ BEGIN
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'object_type'
     ) THEN
-        IF EXISTS ( -- INDEX vorhansden
+        IF EXISTS ( -- INDEX vorhanden
             SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_object_type'
         ) THEN -- aktuellen Stand überprüfen
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
@@ -63,7 +63,7 @@ BEGIN
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
-        END IF; Index vorhanden
+        END IF; -- Index vorhanden
     END IF; -- Zielspalte
 
 ------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ BEGIN
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'schema_name'
     ) THEN
-        IF EXISTS ( -- INDEX vorhansden
+        IF EXISTS ( -- INDEX vorhanden
             SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_data'
         ) THEN -- aktuellen Stand überprüfen
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
@@ -85,7 +85,7 @@ BEGIN
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
-        END IF; Index vorhanden
+        END IF; -- Index vorhanden
     END IF; -- Zielspalte
 
 ------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ BEGIN
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'definition'
     ) THEN
-        IF EXISTS ( -- INDEX vorhansden
+        IF EXISTS ( -- INDEX vorhanden
             SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_definition'
         ) THEN -- aktuellen Stand überprüfen
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
@@ -107,7 +107,7 @@ BEGIN
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
-        END IF; Index vorhanden
+        END IF; -- Index vorhanden
     END IF; -- Zielspalte
 
 ------------------------------------------------------------------------------------------------
