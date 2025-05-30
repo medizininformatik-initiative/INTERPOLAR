@@ -28,9 +28,8 @@ BEGIN
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'status'
     ) THEN
         IF EXISTS ( -- INDEX vorhansden
-            SELECT 1 FROM FROM pg_indexes where indexname='idx_db_log_table_structure_status'
+            SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_status'
         ) THEN -- aktuellen Stand überprüfen
-
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes
                 WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
@@ -51,9 +50,8 @@ BEGIN
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'object_type'
     ) THEN
         IF EXISTS ( -- INDEX vorhansden
-            SELECT 1 FROM FROM pg_indexes where indexname='idx_db_log_table_structure_object_type'
+            SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_object_type'
         ) THEN -- aktuellen Stand überprüfen
-
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes
                 WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
@@ -74,9 +72,8 @@ BEGIN
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'schema_name'
     ) THEN
         IF EXISTS ( -- INDEX vorhansden
-            SELECT 1 FROM FROM pg_indexes where indexname='idx_db_log_table_structure_data'
+            SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_data'
         ) THEN -- aktuellen Stand überprüfen
-
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes
                 WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
@@ -97,9 +94,8 @@ BEGIN
         WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'definition'
     ) THEN
         IF EXISTS ( -- INDEX vorhansden
-            SELECT 1 FROM FROM pg_indexes where indexname='idx_db_log_table_structure_definition'
+            SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_definition'
         ) THEN -- aktuellen Stand überprüfen
-
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes
                 WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
