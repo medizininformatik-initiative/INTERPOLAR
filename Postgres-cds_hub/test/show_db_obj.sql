@@ -82,6 +82,14 @@ ORDER BY n.nspname,c.relname;
           AND c2.relam = c1.relam
         ORDER BY n.nspname, t.relname;
 
+-- rows per page ----------------------
+SELECT relname,
+       reltuples::bigint AS rows_estimate,
+       relpages::bigint AS pages
+       ,case when relpages>0 then (reltuples / relpages)::numeric(10,2) end AS rows_per_page 
+FROM pg_class
+where relname in (select table_name FROM information_schema.columns where table_schema IN ('db','db_config','db_log','cds2db_in','cds2db_out','db2dataprocessor_out','db2dataprocessor_in','db2frontend_out','db2frontend_in'))
+order by 1;
 
 -- cach ansehen -----------------
 SELECT 
