@@ -13,9 +13,7 @@ BEGIN
         WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
     ) THEN
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'input_datetime'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'input_datetime'
         ) THEN
             <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD <%TABLE_NAME%>_raw_id int NOT NULL; -- Primary key of the corresponding raw table"%>
             NULL;
@@ -23,41 +21,31 @@ BEGIN
 
 -- Organizational items - fixed for each database table -----------------------------------------
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'input_datetime'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'input_datetime'
         ) THEN
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Time at which data record was created
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'last_check_datetime'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'last_check_datetime'
         ) THEN
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD last_check_datetime TIMESTAMP DEFAULT NULL; -- Time at which data record was last checked
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'current_dataset_status'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'current_dataset_status'
         ) THEN
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD current_dataset_status VARCHAR DEFAULT 'input'; -- Processing status of the data record
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'input_processing_nr'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'input_processing_nr'
         ) THEN
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD input_processing_nr INT; -- (First) Processing number of the data record
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'last_processing_nr'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
@@ -67,8 +55,7 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'hash_index_col'
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'hash_index_col'
