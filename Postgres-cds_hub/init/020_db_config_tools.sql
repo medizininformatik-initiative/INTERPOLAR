@@ -241,11 +241,6 @@ BEGIN
         END IF; -- Index vorhanden
     END IF; -- Zielspalte
 
-------------------------------------------------------------------------------------------------
-END
-$$;
-
-
 -- Index idx_db_data_import_hist_schema_name for Table "data_import_hist" in schema "db"
 ------------------------------------------------------------------------------------------------
     IF EXISTS ( -- Zielspalte existiert
@@ -337,6 +332,8 @@ $$;
 	    CREATE INDEX idx_db_data_import_hist_variable_name ON db.data_import_hist USING btree (variable_name);
         END IF; -- Index vorhanden
     END IF; -- Zielspalte
+END
+$$;
 
 ------------------------------------------------------------------------------------------------
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
