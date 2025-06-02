@@ -36,7 +36,8 @@ BEGIN
                 AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_status'
 		AND indexdef != 'CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db_config.idx_db_log_table_structure_status;
+                ALTER INDEX db_config.idx_db_log_table_structure_status RENAME TO del_db_log_table_structure_status;
+		DROP INDEX IF EXISTS db_config.del_db_log_table_structure_status;
 		CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -58,7 +59,8 @@ BEGIN
                 AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_object_type'
 		AND indexdef != 'CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db_config.idx_db_log_table_structure_object_type;
+                ALTER INDEX db_config.idx_db_log_table_structure_object_type RENAME TO del_db_log_table_structure_object_type;
+		DROP INDEX IF EXISTS db_config.del_db_log_table_structure_object_typ;
 		CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -80,7 +82,8 @@ BEGIN
                 AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_data'
 		AND indexdef != 'CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS idx_db_log_table_structure_data;
+                ALTER INDEX db_config.idx_db_log_table_structure_data RENAME TO del_db_log_table_structure_data;
+		DROP INDEX IF EXISTS db_config.del_db_log_table_structure_data;
 		CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -102,14 +105,14 @@ BEGIN
                 AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_definition'
 		AND indexdef != 'CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text))'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db_config.idx_db_log_table_structure_definition;
+                ALTER INDEX db_config.idx_db_log_table_structure_definition RENAME TO del_db_log_table_structure_definition;
+		DROP INDEX IF EXISTS db_config.del_db_log_table_structure_definition;
 		CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
 	    CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
         END IF; -- Index vorhanden
     END IF; -- Zielspalte
-
 ------------------------------------------------------------------------------------------------
 END
 $$;

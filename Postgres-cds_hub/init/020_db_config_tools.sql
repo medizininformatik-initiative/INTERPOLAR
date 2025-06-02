@@ -60,7 +60,8 @@ BEGIN
                 AND schemaname = 'db_config' AND tablename = 'db_parameter' AND indexname='idx_db_config_db_parameter_name'
 		AND indexdef != 'CREATE INDEX idx_db_config_db_parameter_name ON db_config.db_parameter USING btree (parameter_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db_config.idx_db_config_db_parameter_name;
+                ALTER INDEX db_config.idx_db_config_db_parameter_name RENAME TO del_db_config_db_parameter_name;
+		DROP INDEX IF EXISTS db_config.del_db_config_db_parameter_name;
 		CREATE INDEX idx_db_config_db_parameter_name ON db_config.db_parameter USING btree (parameter_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -106,7 +107,8 @@ BEGIN
                 AND schemaname = 'db_config' AND tablename = 'db_parameter' AND indexname='idx_db_config_db_db_process_control_name'
 		AND indexdef != 'CREATE INDEX idx_db_config_db_db_process_control_name ON db_config.db_process_control USING btree (pc_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db_config.idx_db_config_db_db_process_control_name;
+                ALTER INDEX db_config.idx_db_config_db_db_process_control_name RENAME TO del_db_config_db_db_process_control_name;
+		DROP INDEX IF EXISTS db_config.del_db_config_db_db_process_control_name;
    	        CREATE INDEX idx_db_config_db_db_process_control_name ON db_config.db_process_control USING btree (pc_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -233,7 +235,8 @@ BEGIN
                 AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_last_processing_nr'
 		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_last_processing_nr ON db.data_import_hist USING btree (last_processing_nr)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db.idx_db_data_import_hist_last_processing_nr;
+                ALTER INDEX db.idx_db_data_import_hist_last_processing_nr RENAME TO del_idx_db_data_import_hist_last_processing_nr;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_last_processing_nr;
    	        CREATE INDEX idx_db_data_import_hist_last_processing_nr ON db.data_import_hist USING btree (last_processing_nr);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -256,7 +259,8 @@ BEGIN
                 AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_schema_name'
 		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_schema_name ON db.data_import_hist USING btree (schema_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db.idx_db_data_import_hist_schema_name;
+                ALTER INDEX db.idx_db_data_import_hist_schema_name RENAME TO del_idx_db_data_import_hist_schema_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_schema_name;
    	        CREATE INDEX idx_db_data_import_hist_schema_name ON db.data_import_hist USING btree (schema_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -279,7 +283,8 @@ BEGIN
                 AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_table_name'
 		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_table_name ON db.data_import_hist USING btree (table_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db.idx_db_data_import_hist_table_name;
+                ALTER INDEX db.idx_db_data_import_hist_table_name RENAME TO del_idx_db_data_import_hist_table_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_table_name;
    	        CREATE INDEX idx_db_data_import_hist_table_name ON db.data_import_hist USING btree (table_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -302,7 +307,8 @@ BEGIN
                 AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_function_name'
 		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_function_name ON db.data_import_hist USING btree (function_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db.idx_db_data_import_hist_function_name;
+                ALTER INDEX db.idx_db_data_import_hist_function_name RENAME TO del_idx_db_data_import_hist_function_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_function_name;
    	        CREATE INDEX idx_db_data_import_hist_function_name ON db.data_import_hist USING btree (function_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen
@@ -325,7 +331,8 @@ BEGIN
                 AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_variable_name'
 		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_variable_name ON db.data_import_hist USING btree (variable_name)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX IF EXISTS db.idx_db_data_import_hist_variable_name;
+                ALTER INDEX db.idx_db_data_import_hist_variable_name RENAME TO del_idx_db_data_import_hist_variable_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_variable_name;
    	        CREATE INDEX idx_db_data_import_hist_variable_name ON db.data_import_hist USING btree (variable_name);
             END IF; -- aktueller Stand
 	ELSE -- (einfach) Neu Anlegen

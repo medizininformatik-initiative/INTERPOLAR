@@ -345,6 +345,7 @@ IF EXISTS ( -- target column
             AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_input_dt',1,63)
 	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_raw_input_dt ON cds2db_in.patient_raw USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_input_dt RENAME TO del_cds2db_in_patient_raw_input_dt;
 	    DROP INDEX IF EXISTS idx_cds2db_in_patient_raw_input_dt;
 	    CREATE INDEX idx_cds2db_in_patient_raw_input_dt ON cds2db_in.patient_raw USING brin (input_datetime);
         END IF; -- check current status"%>
