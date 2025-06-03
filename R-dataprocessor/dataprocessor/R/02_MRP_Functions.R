@@ -2,28 +2,31 @@
 .resource_env <- new.env()
 
 MRP_TABLE_COLUMN_NAMES <- list(
-  "Drug-Disease" = etlutils::namedListByValue("MEDICATION_NAME",
+  "Drug-Disease" = etlutils::namedListByValue("SMPC_NAME",
+                                              "SMPC_VERSION",
                                               "ATC_DISPLAY",
-                                              "ATC",
+                                              "ATC_PRIMARY",
+                                              "ATC_SYSTEMIC_SY",
+                                              "ATC_DERMATIC_D",
+                                              "ATC_OPHTHALMOLOGIC_OP",
+                                              "ATC_INHALATIVE_I",
+                                              "ATC_OTHER_OT",
+                                              "ATC_INCLUSION",
                                               "CONDITION_DISPLAY",
-                                              "CONDITION_DISPLAY_2",
+                                              "CONDITION_DISPLAY_CLUSTER",
                                               "ICD",
-                                              "ICD_VALIDiTY_DAYS",
-                                              "ATC_PROXY",
+                                              "ICD_VALIDITY_DAYS",
+                                              "ICD_PROXY_ATC",
+                                              "ICD_PROXY_ATC_VALIDITY_DAYS",
+                                              "ICD_PROXY_OPS",
+                                              "ICD_PROXY_OPS_VALIDITY_DAYS",
                                               "LOINC_PRIMARY_PROXY",
                                               "LOINC_UNIT",
-                                              "LOINC_VALIDITY_DAYS",
                                               "LOINC_DISPLAY",
+                                              "LOINC_VALIDITY_DAYS",
                                               "LOINC_CUTOFF_REFERENCE",
-                                              "LOINC_CUTOFF_ABSOLUTE",
-                                              "OPS_PROXY",
-                                              "OPS_VALIDITY_DAYS")
+                                              "LOINC_CUTOFF_ABSOLUTE")
 
-  # Newer version of column names
-  #"SMPC_NAME", "SMPC_VERSION", "ATC_DISPLAY", "ATC_PRIMARY", "ATC_SYSTEMIC_SY", "ATC_DERMATIC_D",
-  # "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT", "ATC_INCLUSION", "CONDITION_DISPLAY",
-  # "CONDITION_DISPLAY_CLUSTER", "ICD", "ICD_VALIDITY_DAYS", "LOINC_PRIMARY_PROXY", "LOINC_UNIT",
-  # "LOINC_DISPLAY", "LOINC_CUTOFF_REFERENCE", "LOINC_CUTOFF_ABSOLUTE", "ICD_PROXY_ATC", "ICD_PROXY_OPS"
 )
 
 #' Validate ATC7 Codes in Multiple Columns
