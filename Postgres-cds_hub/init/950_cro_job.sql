@@ -285,6 +285,7 @@ BEGIN
         'UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         )) AS t(res TEXT) INTO temp;
 
+        -- set modul as last locked modul
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value='''||module||'-'||msg||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_last_block_modul'''
         )) AS t(res TEXT) INTO temp;
@@ -663,6 +664,7 @@ BEGIN
     FROM db_config.db_process_control
     WHERE pc_name = 'semaphor_cron_job_data_transfer';
 
+    -- get last modul locked semaphor
     SELECT  ' | last_bl_modul:'||pc_value||' (set on :'||to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||')' INTO last_bl_modul
     FROM db_config.db_process_control
     WHERE pc_name = 'semaphor_last_block_modul';
