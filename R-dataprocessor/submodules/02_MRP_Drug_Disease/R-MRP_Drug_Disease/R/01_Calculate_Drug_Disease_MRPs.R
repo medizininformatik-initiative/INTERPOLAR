@@ -48,6 +48,16 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   # Remove duplicate rows
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
+  # Clean rows with NA or empty values in relevant columns
+  for (col in relevant_column_names) {
+    drug_disease_mrp_definition[[col]] <- ifelse(
+      is.na(drug_disease_mrp_definition[[col]]) |
+        !nzchar(trimws(drug_disease_mrp_definition[[col]])),
+      NA_character_,
+      drug_disease_mrp_definition[[col]]
+    )
+  }
+
   # check column ATC and ATC_PROXY for correct ATC codes
   atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_disease_mrp_definition), value = TRUE, perl = TRUE)
   atc_errors <- validateATCCodes(drug_disease_mrp_definition, atc_columns)
