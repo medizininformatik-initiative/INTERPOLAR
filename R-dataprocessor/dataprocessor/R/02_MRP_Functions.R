@@ -122,7 +122,7 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
   content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
   file_name <- mrp_definition$excel_file_name
   content <- mrp_definition$excel_file_content
-  processed_content_hash <- getStoredProcessedContentHash(content_hash)
+  processed_content_hash <- getStoredProcessedContentHash(content_hash, path_to_mrp_tables)
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
@@ -132,14 +132,28 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
     # Write content and processed content to Excel files
-    openxlsx::write.xlsx(content, file = file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table.xlsx")), overwrite = TRUE)
-    openxlsx::write.xlsx(processed_content, file = file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
+    openxlsx::write.xlsx(content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
+                                                   paste0(table_name, "_MRP_Table.xlsx")), overwrite = TRUE)
+    openxlsx::write.xlsx(processed_content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
+                                                             paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
 
     ################START: Replace with database functionality###################
     # Load or init storage tables
     #TODO: Replace with database functionality
-    input_data_files <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files.RData")
-    input_data_files_processed_content <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files_processed_content.RData")
+    input_data_files_path <- paste0(path_to_mrp_tables, "/input_data_files.RData")
+    input_data_files_processed_path <- paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData")
+
+    if (file.exists(input_data_files_path)) {
+      input_data_files <- readRDS(input_data_files_path)
+    } else {
+      input_data_files <- data.table::data.table()
+    }
+
+    if (file.exists(input_data_files_processed_path)) {
+      input_data_files_processed_content <- readRDS(input_data_files_processed_path)
+    } else {
+      input_data_files_processed_content <- data.table::data.table()
+    }
 
     # Convert content and processed_content to base64-encoded serialized data
     content <- base64enc::base64encode(serialize(content, NULL))
@@ -169,13 +183,13 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     )
 
     # Save the updated data frames back to the RData file
-    saveRDS(input_data_files, "./Input-Repo/MRP_Drug_Disease/input_data_files.RData")
-    saveRDS(input_data_files_processed_content, "./Input-Repo/MRP_Drug_Disease/input_data_files_processed_content.RData")
+    saveRDS(input_data_files, input_data_files_path)
+    saveRDS(input_data_files_processed_content, input_data_files_processed_path)
     ################END: Replace with database functionality###################
   } else {
     # Load processed content
     #TODO: Replace with database functionality
-    input_data_files_processed_content <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files_processed_content.RData")
+    input_data_files_processed_content <- readRDS(paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData"))
     matching_row <- input_data_files_processed_content[processed_content_hash == get("processed_content_hash")]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }
@@ -186,17 +200,21 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
 #' Retrieve Stored Processed Content Hash from Input Data File Table
 #'
 #' This function loads the input data file metadata table and returns the
-#' corresponding `processed_content_hash` for a given `content_hash`, if available.
+#' corresponding `processed_content_hash` for a given `target_hash`, if available.
 #'
-#' @param content_hash A character string representing the content hash to look up.
+#' @param target_hash A character string representing the content hash to look up.
+#' @param table_path A character string representing the table path of the MRP definition.
 #'
 #' @return A character string containing the processed content hash if found; otherwise `NULL`.
 #'
-getStoredProcessedContentHash <- function(content_hash) {
-  input_data_files <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files.RData")
-  matching_row <- input_data_files[content_hash == get("content_hash")]
-  if (nrow(matching_row)) {
-    return(matching_row$processed_content_hash)
+getStoredProcessedContentHash <- function(target_hash, table_path) {
+  file_path <- paste0(table_path, "/input_data_files.RData")
+  if (file.exists(file_path)) {
+    input_data_files <- readRDS(file_path)
+    matching_row <- input_data_files[content_hash == target_hash]
+    if (nrow(matching_row)) {
+      return(matching_row$processed_content_hash)
+    }
   }
   return(NULL)
 }
