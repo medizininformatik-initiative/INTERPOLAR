@@ -22,7 +22,10 @@ formatCodeErrors <- function(error_list, code_type_label) {
 cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 
   # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS)
-  proxy_column_names <- names(drug_disease_mrp_definition)[grepl("PROXY", names(drug_disease_mrp_definition))]
+  proxy_column_names <- proxy_column_names <- names(drug_disease_mrp_definition)[
+    grepl("PROXY", names(drug_disease_mrp_definition)) &
+      !grepl("VALIDITY_DAYS", names(drug_disease_mrp_definition))
+  ]
   relevant_column_names <- c("ICD", proxy_column_names)
   drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, relevant_column_names)
 
