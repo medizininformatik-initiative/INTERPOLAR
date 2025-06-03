@@ -1,3 +1,14 @@
+formatCodeErrors <- function(error_list, code_type_label) {
+  if (length(error_list) == 0) return(character())
+
+  messages <- c(sprintf("The following errors were found in %s codes:", code_type_label))
+  for (col in names(error_list)) {
+    messages <- c(messages,
+                  sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", ")))
+  }
+  return(messages)
+}
+
 #' Clean and Expand Drug_Disease_MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -38,13 +49,19 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
   # check column ATC and ATC_PROXY for correct ATC codes
-  code_errors <- validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
-  # check column LOINC_PROXY for correct LOINC codes
-  code_errors <- c(code_errors, validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY"))
+  atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_disease_mrp_definition), value = TRUE, perl = TRUE)
+  atc_errors <- validateATCCodes(drug_disease_mrp_definition, atc_columns)
 
-  code_errors <- paste0(code_errors, collapse = "\n")
-  if (nchar(code_errors)) {
-    stop(paste0("The following errors were found in the ATC and LOINC codes:\n", code_errors))
+  # check column LOINC_PROXY for correct LOINC codes
+  loinc_errors <- validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
+
+  error_messages <- c(
+    formatCodeErrors(atc_errors, "ATC"),
+    formatCodeErrors(loinc_errors, "LOINC")
+  )
+
+  if (length(error_messages) > 0) {
+    stop(paste(error_messages, collapse = "\n"))
   }
 
   # Expand and concatenate ICD codes in a vectorized manner.

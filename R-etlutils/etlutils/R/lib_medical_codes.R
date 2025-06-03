@@ -158,6 +158,26 @@ MED_CODES_PATTERN <- list(
 # TEST_ATC[greplic(MED_CODES_PATTERN$ATCsmaller7, TEST_ATC)]
 # TEST_ATC[greplic(MED_CODES_PATTERN$ATCgreater7, TEST_ATC)]
 
+#' Check if codes match the ATC7 pattern or smaller.
+#'
+#' This function determines whether the input codes match the ATC7 pattern or smaller
+#' defined in the `MED_CODES_PATTERN` object, while ignoring `NA` values.
+#'
+#' @param codes A character vector of codes to check.
+#'
+#' @return A logical vector indicating whether each code matches the ATC7 pattern.
+#' `NA` values in the input will remain `NA` in the output.
+#'
+#' @details The function uses a regular expression from `MED_CODES_PATTERN$ATC7orSmaller`
+#' to validate if the provided codes conform to the ATC7 format.
+#'
+#' @examples
+#' # Example usage:
+#' codes <- c("A01AB07", "B03AA", "I", NA)
+#' isATC7orSmaller(codes)
+#' # Returns: TRUE, TRUE, TRUE, FALSE
+#'
+#' @export
 isATC7orSmaller <- function(codes) {
   grepl(MED_CODES_PATTERN$ATC7orSmaller, codes, perl = TRUE)
 }

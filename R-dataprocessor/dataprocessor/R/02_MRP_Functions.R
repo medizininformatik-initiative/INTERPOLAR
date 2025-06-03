@@ -29,7 +29,7 @@ MRP_TABLE_COLUMN_NAMES <- list(
 
 )
 
-#' Validate ATC7 Codes in Multiple Columns
+#' Validate ATC Codes in Multiple Columns
 #'
 #' This function checks whether the values in specified columns of a data table
 #' are valid ATC7 codes and issues warnings for any invalid values.
@@ -49,24 +49,18 @@ MRP_TABLE_COLUMN_NAMES <- list(
 #'   ATC = c("A01AB07", "INVALID", NA),
 #'   ATC_PROXY = c(NA, "WRONG", "B03AA02")
 #' )
-#' validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
+#' validateATCCodes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
 #'
 #' @export
-validateATC7Codes <- function(data, columns) {
-  warnings <- c()
+validateATCCodes <- function(data, columns) {
+  errors <- list()
   for (column in columns) {
-    # Filter out NA values and check for invalid ATC7 codes
-    invalid_codes <- data[[column]][!etlutils::isATC7(data[[column]]) & !is.na(data[[column]])]
-    # Issue a warning if there are invalid codes
+    invalid_codes <- data[[column]][!etlutils::isATC7orSmaller(data[[column]]) & !is.na(data[[column]])]
     if (length(invalid_codes) > 0) {
-      warnings <- c(warnings, sprintf(
-        "The following codes are not valid in column '%s', please check:\n%s",
-        column,
-        paste(invalid_codes, collapse = ", \n")
-      ))
+      errors[[column]] <- invalid_codes
     }
   }
-  return(warnings)
+  return(errors)
 }
 
 #' Validate LOINC Codes in a Column
@@ -97,20 +91,13 @@ validateATC7Codes <- function(data, columns) {
 #'
 #' @export
 validateLOINCCodes <- function(data, column_name) {
-  warnings <- c()
-  # Extract the column values
   column_values <- data[[column_name]]
-  # Identify invalid codes (ignore NA values)
   invalid_codes <- column_values[!etlutils::isLOINC(column_values) & !is.na(column_values)]
-  # If there are invalid codes, issue a warning
   if (length(invalid_codes) > 0) {
-    warnings <- c(warnings, sprintf(
-      "The following codes in column '%s' are not valid LOINC codes:\n%s",
-      column_name,
-      paste(invalid_codes, collapse = ", \n")
-    ))
+    return(setNames(list(invalid_codes), column_name))
+  } else {
+    return(list())
   }
-  return(warnings)
 }
 
 #' Get Processed and Expanded MRP Definition Table
