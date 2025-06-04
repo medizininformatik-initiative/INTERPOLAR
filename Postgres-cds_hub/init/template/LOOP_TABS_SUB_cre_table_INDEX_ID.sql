@@ -9,19 +9,19 @@
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "            IF EXISTS ( -- INDEX nicht auf akuellen Stand"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "                AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>' AND substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_id',1,63)"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "		  AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (idx_<%TABLE_NAME%>_id DESC)'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "		  AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (<%TABLE_NAME%>_id DESC)'"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "		ALTER INDEX <%OWNER_SCHEMA%>.idx_<%TABLE_NAME%>_id RENAME TO del_idx_<%TABLE_NAME%>_id;"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "		DROP INDEX IF EXISTS <%OWNER_SCHEMA%>.del_idx_<%TABLE_NAME%>_id;"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "   	        CREATE INDEX idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (idx_<%TABLE_NAME%>_id DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "   	        CREATE INDEX idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (<%TABLE_NAME%>_id DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "            END IF; -- check current status"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "	ELSE -- (easy) Create new"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "	    CREATE INDEX idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (idx_<%TABLE_NAME%>_id DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "	    CREATE INDEX idx_<%TABLE_NAME%>_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (<%TABLE_NAME%>_id DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "        END IF; -- INDEX available"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bINT_ID\b" "    END IF; -- target column"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "    -- Primary key of the corresponding raw table"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "    IF EXISTS ( -- target column"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "        SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'idx_<%TABLE_NAME%>_raw_id'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "        SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = '<%TABLE_NAME%>_id'"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "    ) THEN"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "        IF EXISTS ( -- INDEX available"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_raw_id',1,63) AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>'"%>
@@ -29,14 +29,14 @@
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "            IF EXISTS ( -- INDEX nicht auf akuellen Stand"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>' AND substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_raw_id',1,63)"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "		 AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (idx_<%TABLE_NAME%>_raw_id DESC)'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "		 AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (<%TABLE_NAME%>_id DESC)'"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "		ALTER INDEX <%OWNER_SCHEMA%>.idx_<%TABLE_NAME%>_id RENAME TO del_idx_<%TABLE_NAME%>_id;"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "		DROP INDEX IF EXISTS <%OWNER_SCHEMA%>.del_idx_<%TABLE_NAME%>_id;"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "   	        CREATE INDEX idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (idx_<%TABLE_NAME%>_raw_id DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "   	        CREATE INDEX idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (<%TABLE_NAME%>_id DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "            END IF; -- check current status"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "	ELSE -- (easy) Create new"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "	    CREATE INDEX idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (idx_<%TABLE_NAME%>_raw_id DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "	    CREATE INDEX idx_<%TABLE_NAME%>_raw_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (<%TABLE_NAME%>_id DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "        END IF; -- INDEX available"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "    END IF; -- target column"%>
 

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-04 12:44:17
+-- Create time: 2025-06-04 13:15:20
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -3419,14 +3419,14 @@ BEGIN
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'patient_fe' AND substr(indexname,1,63)=substr('idx_patient_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (idx_patient_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (patient_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_patient_fe_id RENAME TO del_idx_patient_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_patient_fe_id;
-   	        CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (idx_patient_fe_id DESC);
+   	        CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (patient_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (idx_patient_fe_id DESC);
+	    CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (patient_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -3558,14 +3558,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'fall_fe' AND substr(indexname,1,63)=substr('idx_fall_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (idx_fall_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (fall_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_fall_fe_id RENAME TO del_idx_fall_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_fall_fe_id;
-   	        CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (idx_fall_fe_id DESC);
+   	        CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (fall_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (idx_fall_fe_id DESC);
+	    CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (fall_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -3697,14 +3697,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'medikationsanalyse_fe' AND substr(indexname,1,63)=substr('idx_medikationsanalyse_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (idx_medikationsanalyse_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_medikationsanalyse_fe_id RENAME TO del_idx_medikationsanalyse_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_medikationsanalyse_fe_id;
-   	        CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (idx_medikationsanalyse_fe_id DESC);
+   	        CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (idx_medikationsanalyse_fe_id DESC);
+	    CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -3836,14 +3836,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'mrpdokumentation_validierung_fe' AND substr(indexname,1,63)=substr('idx_mrpdokumentation_validierung_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (idx_mrpdokumentation_validierung_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_mrpdokumentation_validierung_fe_id RENAME TO del_idx_mrpdokumentation_validierung_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_mrpdokumentation_validierung_fe_id;
-   	        CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (idx_mrpdokumentation_validierung_fe_id DESC);
+   	        CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (idx_mrpdokumentation_validierung_fe_id DESC);
+	    CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -3975,14 +3975,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'retrolektive_mrpbewertung_fe' AND substr(indexname,1,63)=substr('idx_retrolektive_mrpbewertung_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (idx_retrolektive_mrpbewertung_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_retrolektive_mrpbewertung_fe_id RENAME TO del_idx_retrolektive_mrpbewertung_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_retrolektive_mrpbewertung_fe_id;
-   	        CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (idx_retrolektive_mrpbewertung_fe_id DESC);
+   	        CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (idx_retrolektive_mrpbewertung_fe_id DESC);
+	    CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -4114,14 +4114,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'risikofaktor_fe' AND substr(indexname,1,63)=substr('idx_risikofaktor_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (idx_risikofaktor_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (risikofaktor_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_risikofaktor_fe_id RENAME TO del_idx_risikofaktor_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_risikofaktor_fe_id;
-   	        CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (idx_risikofaktor_fe_id DESC);
+   	        CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (idx_risikofaktor_fe_id DESC);
+	    CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -4253,14 +4253,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'trigger_fe' AND substr(indexname,1,63)=substr('idx_trigger_fe_id',1,63)
-		  AND indexdef != 'CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (idx_trigger_fe_id DESC)'
+		  AND indexdef != 'CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (trigger_fe_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_trigger_fe_id RENAME TO del_idx_trigger_fe_id;
 		DROP INDEX IF EXISTS db_log.del_idx_trigger_fe_id;
-   	        CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (idx_trigger_fe_id DESC);
+   	        CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (trigger_fe_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (idx_trigger_fe_id DESC);
+	    CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (trigger_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 

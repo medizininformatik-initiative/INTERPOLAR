@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-04 12:40:31
+-- Create time: 2025-06-04 13:10:35
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -14389,7 +14389,7 @@ BEGIN
 ------------------------- Index for db_log - encounter ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'idx_encounter_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'encounter_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'encounter'
@@ -14397,14 +14397,14 @@ BEGIN
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (idx_encounter_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (encounter_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_encounter_id RENAME TO del_idx_encounter_id;
 		DROP INDEX IF EXISTS db_log.del_idx_encounter_id;
-   	        CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (idx_encounter_raw_id DESC);
+   	        CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (encounter_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (idx_encounter_raw_id DESC);
+	    CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (encounter_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14615,7 +14615,7 @@ END IF; -- target column
 ------------------------- Index for db_log - patient ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'idx_patient_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'patient_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'patient'
@@ -14623,14 +14623,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (idx_patient_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (patient_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_patient_id RENAME TO del_idx_patient_id;
 		DROP INDEX IF EXISTS db_log.del_idx_patient_id;
-   	        CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (idx_patient_raw_id DESC);
+   	        CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (patient_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (idx_patient_raw_id DESC);
+	    CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (patient_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14841,7 +14841,7 @@ END IF; -- target column
 ------------------------- Index for db_log - condition ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'idx_condition_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'condition_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'condition'
@@ -14849,14 +14849,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (idx_condition_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (condition_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_condition_id RENAME TO del_idx_condition_id;
 		DROP INDEX IF EXISTS db_log.del_idx_condition_id;
-   	        CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (idx_condition_raw_id DESC);
+   	        CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (condition_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (idx_condition_raw_id DESC);
+	    CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (condition_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15067,7 +15067,7 @@ END IF; -- target column
 ------------------------- Index for db_log - medication ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'idx_medication_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'medication_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'medication'
@@ -15075,14 +15075,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (idx_medication_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (medication_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_medication_id RENAME TO del_idx_medication_id;
 		DROP INDEX IF EXISTS db_log.del_idx_medication_id;
-   	        CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (idx_medication_raw_id DESC);
+   	        CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (medication_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (idx_medication_raw_id DESC);
+	    CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (medication_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15293,7 +15293,7 @@ END IF; -- target column
 ------------------------- Index for db_log - medicationrequest ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'idx_medicationrequest_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'medicationrequest_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'medicationrequest'
@@ -15301,14 +15301,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (idx_medicationrequest_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (medicationrequest_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_medicationrequest_id RENAME TO del_idx_medicationrequest_id;
 		DROP INDEX IF EXISTS db_log.del_idx_medicationrequest_id;
-   	        CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
+   	        CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (medicationrequest_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
+	    CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (medicationrequest_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15519,7 +15519,7 @@ END IF; -- target column
 ------------------------- Index for db_log - medicationadministration ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'idx_medicationadministration_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'medicationadministration_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'medicationadministration'
@@ -15527,14 +15527,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (idx_medicationadministration_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (medicationadministration_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_medicationadministration_id RENAME TO del_idx_medicationadministration_id;
 		DROP INDEX IF EXISTS db_log.del_idx_medicationadministration_id;
-   	        CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
+   	        CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (medicationadministration_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
+	    CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (medicationadministration_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15745,7 +15745,7 @@ END IF; -- target column
 ------------------------- Index for db_log - medicationstatement ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'idx_medicationstatement_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'medicationstatement_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'medicationstatement'
@@ -15753,14 +15753,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (idx_medicationstatement_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (medicationstatement_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_medicationstatement_id RENAME TO del_idx_medicationstatement_id;
 		DROP INDEX IF EXISTS db_log.del_idx_medicationstatement_id;
-   	        CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
+   	        CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (medicationstatement_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
+	    CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (medicationstatement_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15971,7 +15971,7 @@ END IF; -- target column
 ------------------------- Index for db_log - observation ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'idx_observation_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'observation_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'observation'
@@ -15979,14 +15979,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (idx_observation_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (observation_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_observation_id RENAME TO del_idx_observation_id;
 		DROP INDEX IF EXISTS db_log.del_idx_observation_id;
-   	        CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (idx_observation_raw_id DESC);
+   	        CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (observation_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (idx_observation_raw_id DESC);
+	    CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (observation_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16197,7 +16197,7 @@ END IF; -- target column
 ------------------------- Index for db_log - diagnosticreport ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'idx_diagnosticreport_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'diagnosticreport_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'diagnosticreport'
@@ -16205,14 +16205,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (diagnosticreport_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_diagnosticreport_id RENAME TO del_idx_diagnosticreport_id;
 		DROP INDEX IF EXISTS db_log.del_idx_diagnosticreport_id;
-   	        CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
+   	        CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (diagnosticreport_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
+	    CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (diagnosticreport_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16423,7 +16423,7 @@ END IF; -- target column
 ------------------------- Index for db_log - servicerequest ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'idx_servicerequest_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'servicerequest_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'servicerequest'
@@ -16431,14 +16431,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (idx_servicerequest_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (servicerequest_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_servicerequest_id RENAME TO del_idx_servicerequest_id;
 		DROP INDEX IF EXISTS db_log.del_idx_servicerequest_id;
-   	        CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (idx_servicerequest_raw_id DESC);
+   	        CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (servicerequest_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (idx_servicerequest_raw_id DESC);
+	    CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (servicerequest_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16649,7 +16649,7 @@ END IF; -- target column
 ------------------------- Index for db_log - procedure ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'idx_procedure_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'procedure_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'procedure'
@@ -16657,14 +16657,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (idx_procedure_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (procedure_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_procedure_id RENAME TO del_idx_procedure_id;
 		DROP INDEX IF EXISTS db_log.del_idx_procedure_id;
-   	        CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (idx_procedure_raw_id DESC);
+   	        CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (procedure_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (idx_procedure_raw_id DESC);
+	    CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (procedure_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16875,7 +16875,7 @@ END IF; -- target column
 ------------------------- Index for db_log - consent ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'idx_consent_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'consent_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'consent'
@@ -16883,14 +16883,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (idx_consent_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (consent_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_consent_id RENAME TO del_idx_consent_id;
 		DROP INDEX IF EXISTS db_log.del_idx_consent_id;
-   	        CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (idx_consent_raw_id DESC);
+   	        CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (consent_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (idx_consent_raw_id DESC);
+	    CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (consent_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -17101,7 +17101,7 @@ END IF; -- target column
 ------------------------- Index for db_log - location ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'idx_location_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'location_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'location'
@@ -17109,14 +17109,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_location_raw_id ON db_log.location USING btree (idx_location_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_location_raw_id ON db_log.location USING btree (location_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_location_id RENAME TO del_idx_location_id;
 		DROP INDEX IF EXISTS db_log.del_idx_location_id;
-   	        CREATE INDEX idx_location_raw_id ON db_log.location USING btree (idx_location_raw_id DESC);
+   	        CREATE INDEX idx_location_raw_id ON db_log.location USING btree (location_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_location_raw_id ON db_log.location USING btree (idx_location_raw_id DESC);
+	    CREATE INDEX idx_location_raw_id ON db_log.location USING btree (location_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -17327,7 +17327,7 @@ END IF; -- target column
 ------------------------- Index for db_log - pids_per_ward ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'idx_pids_per_ward_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'pids_per_ward_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63) AND schemaname = 'db_log' AND tablename = 'pids_per_ward'
@@ -17335,14 +17335,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'db_log' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (pids_per_ward_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX db_log.idx_pids_per_ward_id RENAME TO del_idx_pids_per_ward_id;
 		DROP INDEX IF EXISTS db_log.del_idx_pids_per_ward_id;
-   	        CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
+   	        CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (pids_per_ward_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
+	    CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (pids_per_ward_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 

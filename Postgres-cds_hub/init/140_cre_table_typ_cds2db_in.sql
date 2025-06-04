@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-06-04 12:37:51
+-- Create time: 2025-06-04 13:06:44
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -14373,7 +14373,7 @@ BEGIN
 ------------------------- Index for cds2db_in - encounter ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'idx_encounter_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'encounter_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
@@ -14381,14 +14381,14 @@ BEGIN
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (encounter_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_encounter_id RENAME TO del_idx_encounter_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_encounter_id;
-   	        CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC);
+   	        CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (encounter_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC);
+	    CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (encounter_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14599,7 +14599,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - patient ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'idx_patient_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'patient_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
@@ -14607,14 +14607,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (patient_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_patient_id RENAME TO del_idx_patient_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_patient_id;
-   	        CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC);
+   	        CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (patient_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC);
+	    CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (patient_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14825,7 +14825,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - condition ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'idx_condition_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'condition_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
@@ -14833,14 +14833,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (condition_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_condition_id RENAME TO del_idx_condition_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_condition_id;
-   	        CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC);
+   	        CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (condition_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC);
+	    CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (condition_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15051,7 +15051,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - medication ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'idx_medication_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'medication_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
@@ -15059,14 +15059,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (medication_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_medication_id RENAME TO del_idx_medication_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_medication_id;
-   	        CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC);
+   	        CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (medication_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC);
+	    CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (medication_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15277,7 +15277,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - medicationrequest ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'idx_medicationrequest_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medicationrequest_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
@@ -15285,14 +15285,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (medicationrequest_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_medicationrequest_id RENAME TO del_idx_medicationrequest_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_medicationrequest_id;
-   	        CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
+   	        CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (medicationrequest_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
+	    CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (medicationrequest_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15503,7 +15503,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - medicationadministration ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'idx_medicationadministration_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medicationadministration_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
@@ -15511,14 +15511,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (medicationadministration_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_medicationadministration_id RENAME TO del_idx_medicationadministration_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_medicationadministration_id;
-   	        CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
+   	        CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (medicationadministration_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
+	    CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (medicationadministration_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15729,7 +15729,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - medicationstatement ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'idx_medicationstatement_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medicationstatement_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
@@ -15737,14 +15737,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (medicationstatement_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_medicationstatement_id RENAME TO del_idx_medicationstatement_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_medicationstatement_id;
-   	        CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
+   	        CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (medicationstatement_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
+	    CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (medicationstatement_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15955,7 +15955,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - observation ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'idx_observation_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'observation_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
@@ -15963,14 +15963,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (observation_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_observation_id RENAME TO del_idx_observation_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_observation_id;
-   	        CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC);
+   	        CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (observation_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC);
+	    CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (observation_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16181,7 +16181,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - diagnosticreport ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'idx_diagnosticreport_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagnosticreport_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
@@ -16189,14 +16189,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (diagnosticreport_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_diagnosticreport_id RENAME TO del_idx_diagnosticreport_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_diagnosticreport_id;
-   	        CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
+   	        CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (diagnosticreport_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
+	    CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (diagnosticreport_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16407,7 +16407,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - servicerequest ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'idx_servicerequest_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servicerequest_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
@@ -16415,14 +16415,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (servicerequest_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_servicerequest_id RENAME TO del_idx_servicerequest_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_servicerequest_id;
-   	        CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC);
+   	        CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (servicerequest_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC);
+	    CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (servicerequest_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16633,7 +16633,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - procedure ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'idx_procedure_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'procedure_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
@@ -16641,14 +16641,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (procedure_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_procedure_id RENAME TO del_idx_procedure_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_procedure_id;
-   	        CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC);
+   	        CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (procedure_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC);
+	    CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (procedure_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -16859,7 +16859,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - consent ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'idx_consent_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'consent_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
@@ -16867,14 +16867,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (consent_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_consent_id RENAME TO del_idx_consent_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_consent_id;
-   	        CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC);
+   	        CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (consent_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC);
+	    CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (consent_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -17085,7 +17085,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - location ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'idx_location_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'location_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
@@ -17093,14 +17093,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (location_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_location_id RENAME TO del_idx_location_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_location_id;
-   	        CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC);
+   	        CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (location_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC);
+	    CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (location_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -17311,7 +17311,7 @@ END IF; -- target column
 ------------------------- Index for cds2db_in - pids_per_ward ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'idx_pids_per_ward_raw_id'
+        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'pids_per_ward_id'
     ) THEN
         IF EXISTS ( -- INDEX available
             SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
@@ -17319,14 +17319,14 @@ END IF; -- target column
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63)
-		 AND indexdef != 'CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC)'
+		 AND indexdef != 'CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (pids_per_ward_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
 		ALTER INDEX cds2db_in.idx_pids_per_ward_id RENAME TO del_idx_pids_per_ward_id;
 		DROP INDEX IF EXISTS cds2db_in.del_idx_pids_per_ward_id;
-   	        CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
+   	        CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (pids_per_ward_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
+	    CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (pids_per_ward_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
