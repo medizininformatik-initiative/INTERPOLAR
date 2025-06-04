@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-06-02 01:02:08
+-- Create time: 2025-06-04 09:58:29
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -288,35 +288,6 @@ BEGIN
 END
 $$;
 
-COMMENT ON COLUMN cds2db_in.patient_raw.patient_raw_id IS 'Primary key of the entity';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_id IS 'id (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_versionid IS 'meta/versionId (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_profile IS 'meta/profile (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_use IS 'identifier/use (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_system IS 'identifier/type/coding/system (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_version IS 'identifier/type/coding/version (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_code IS 'identifier/type/coding/code (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_display IS 'identifier/type/coding/display (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_type_text IS 'identifier/type/text (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_system IS 'identifier/system (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_value IS 'identifier/value (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_start IS 'identifier/start (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_identifier_end IS 'identifier/end (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_use IS 'name/use (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_text IS 'name/text (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_family IS 'name/family (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_name_given IS 'name/given (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_gender IS 'gender (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_birthdate IS 'birthDate (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_deceaseddatetime IS 'deceasedDateTime (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.pat_address_postalcode IS 'address/postalCode (varchar)';
-COMMENT ON COLUMN cds2db_in.patient_raw.input_datetime IS 'Time at which the data record is inserted';
-COMMENT ON COLUMN cds2db_in.patient_raw.last_check_datetime IS 'Time at which data record was last checked';
-COMMENT ON COLUMN cds2db_in.patient_raw.current_dataset_status IS 'Processing status of the data record';
-COMMENT ON COLUMN cds2db_in.patient_raw.input_processing_nr IS '(First) Processing number of the data record';
-COMMENT ON COLUMN cds2db_in.patient_raw.last_processing_nr IS 'Last processing number of the data record';
-
 -- Output on
 \o
 
@@ -327,8 +298,6 @@ DO
 $$
 BEGIN
 ------------------------------------------------------------------------------------------------
-
-
 ------------------------- Index for cds2db_in - patient_raw ---------------------------------
 
 -- Index idx_cds2db_in_patient_raw_input_dt for Table "patient_raw" in schema "cds2db_in"
@@ -345,13 +314,187 @@ IF EXISTS ( -- target column
             AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_input_dt',1,63)
 	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_raw_input_dt ON cds2db_in.patient_raw USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_input_dt RENAME TO del_cds2db_in_patient_raw_input_dt;
-	    DROP INDEX IF EXISTS idx_cds2db_in_patient_raw_input_dt;
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_input_dt RENAME TO del_cds2db_in_patient_raw_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_raw_i_dt;
 	    CREATE INDEX idx_cds2db_in_patient_raw_input_dt ON cds2db_in.patient_raw USING brin (input_datetime);
-        END IF; -- check current status"%>
+        END IF; -- check current status
     ELSE -- (easy) Create new
         CREATE INDEX idx_cds2db_in_patient_raw_input_dt ON cds2db_in.patient_raw USING brin (input_datetime);
+    END IF; -- INDEX available
+END IF; -- target column
+
+-- Index idx_cds2db_in_patient_raw_input_pnr for Table "patient_raw" in schema "cds2db_in"
+----------------------------------------------------
+-- (First) Processing number of the data record
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'input_processing_nr'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_raw_input_pnr ON cds2db_in.patient_raw USING brin (input_processing_nr)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_input_pnr RENAME TO del_cds2db_in_patient_raw_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_raw_i_pnr;
+	    CREATE INDEX idx_cds2db_in_patient_raw_input_pnr ON cds2db_in.patient_raw USING brin (input_processing_nr);
+        END IF; -- check current status"%>
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_cds2db_in_patient_raw_input_pnr ON cds2db_in.patient_raw USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
+END IF; -- target column
+
+-- Index idx_cds2db_in_patient_raw_last_dt for Table "patient_raw" in schema "cds2db_in"
+----------------------------------------------------
+-- Time at which data record was last checked
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'last_check_datetime'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_raw_last_dt ON cds2db_in.patient_raw USING brin (last_check_datetime)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_last_dt RENAME TO del_cds2db_in_patient_raw_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_raw_l_dt;
+	    CREATE INDEX idx_cds2db_in_patient_raw_last_dt ON cds2db_in.patient_raw USING brin (last_check_datetime);
+        END IF; -- check current status"%>
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_cds2db_in_patient_raw_last_dt ON cds2db_in.patient_raw USING brin (last_check_datetime);
+    END IF; -- INDEX available"%>
+END IF; -- target column
+
+-- Index idx_cds2db_in_patient_raw_last_pnr for Table "patient_raw" in schema "cds2db_in"
+----------------------------------------------------
+-- Last processing number of the data record
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'last_processing_nr'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_raw_last_pnr ON cds2db_in.patient_raw USING brin (last_processing_nr)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_last_pnr RENAME TO del_cds2db_in_patient_raw_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_raw_l_pnr;
+	    CREATE INDEX idx_cds2db_in_patient_raw_last_pnr ON cds2db_in.patient_raw USING brin (last_processing_nr);
+        END IF; -- check current status"%>
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_cds2db_in_patient_raw_last_pnr ON cds2db_in.patient_raw USING brin (last_processing_nr);
+    END IF; -- INDEX available"%>
+END IF; -- target column
+
+-- Index idx_cds2db_in_patient_raw_hash for Table "patient_raw" in schema "cds2db_in"
+----------------------------------------------------
+-- Column for automatic hash value for comparing FHIR data
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'hash_index_col'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_raw_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_raw_input_dt ON cds2db_in.patient_raw USING btree (hash_index_col)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_hash RENAME TO del_cds2db_in_patient_raw_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_raw_hash;
+	    CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_raw_hash ON cds2db_in.patient_raw USING btree (hash_index_col);
+        END IF; -- check current status"%>
+    ELSE -- (easy) Create new
+        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_raw_hash ON cds2db_in.patient_raw USING btree (hash_index_col);
+    END IF; -- INDEX available"%>
+END IF; -- target column
+
+-- index by definition table for patient_raw ----------------------------------------------------
+--- idx_patient_raw_pat_id - create btree index on \bid\b --------------------
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'pat_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_raw_pat_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_patient_raw_pat_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_raw_pat_id ON cds2db_in.patient_raw USING btree (pat_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_raw_pat_id RENAME TO del_patient_raw_pat_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_raw_pat_id;
+	    CREATE INDEX idx_patient_raw_pat_id ON cds2db_in.patient_raw USING btree (pat_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_raw_pat_id ON cds2db_in.patient_raw USING btree (pat_id);
+    END IF; -- INDEX available
+END IF; -- target column
+--- idx_patient_raw_pat_meta_versionid - create btree index on ^meta/--------------------
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'pat_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_raw_pat_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_patient_raw_pat_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_raw_pat_meta_versionid ON cds2db_in.patient_raw USING btree (pat_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_raw_pat_meta_versionid RENAME TO del_patient_raw_pat_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_raw_pat_meta_versionid;
+	    CREATE INDEX idx_patient_raw_pat_meta_versionid ON cds2db_in.patient_raw USING btree (pat_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_raw_pat_meta_versionid ON cds2db_in.patient_raw USING btree (pat_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+--- idx_patient_raw_pat_meta_lastupdated - create btree index on ^meta/--------------------
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'pat_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_raw_pat_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_patient_raw_pat_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_raw_pat_meta_lastupdated ON cds2db_in.patient_raw USING btree (pat_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_raw_pat_meta_lastupdated RENAME TO del_patient_raw_pat_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_raw_pat_meta_lastupdated;
+	    CREATE INDEX idx_patient_raw_pat_meta_lastupdated ON cds2db_in.patient_raw USING btree (pat_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_raw_pat_meta_lastupdated ON cds2db_in.patient_raw USING btree (pat_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+--- idx_patient_raw_pat_meta_profile - create btree index on ^meta/--------------------
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'pat_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_raw_pat_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_patient_raw_pat_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_raw_pat_meta_profile ON cds2db_in.patient_raw USING btree (pat_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_raw_pat_meta_profile RENAME TO del_patient_raw_pat_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_raw_pat_meta_profile;
+	    CREATE INDEX idx_patient_raw_pat_meta_profile ON cds2db_in.patient_raw USING btree (pat_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_raw_pat_meta_profile ON cds2db_in.patient_raw USING btree (pat_meta_profile);
+    END IF; -- INDEX available
 END IF; -- target column
 
 ------------------------------------------------------------------------------------------------
